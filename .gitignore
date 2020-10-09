@@ -1,0 +1,11 @@
+# Compiled class file
+*.class
+
+# gradle
+.gradle
+
+# build
+/build/
+/out/
+**/build
+**/out/
