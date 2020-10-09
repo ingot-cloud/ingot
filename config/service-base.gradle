@@ -12,7 +12,7 @@ dependencies {
     implementation(deps.alibaba.nacos_discovery_starter)
 
     //mapstruct
-    implementation(deps.mapstruct.library_jdk8)
+    implementation(deps.mapstruct.library)
     annotationProcessor(deps.mapstruct.processor)
 
     // log

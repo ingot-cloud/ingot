@@ -1,0 +1,28 @@
+def ingot = [:]
+
+// common
+ingot.common_base = ":ingot-common:ingot-common-base"
+ingot.common_core = ":ingot-common:ingot-common-core"
+ingot.common_properties = ":ingot-common:ingot-common-properties"
+ingot.common_pdf = ":ingot-common:ingot-common-pdf"
+ingot.common_security = ":ingot-common:ingot-common-security"
+ingot.common_data = ":ingot-common:ingot-common-data"
+ingot.common_validatecode = ":ingot-common:ingot-common-validatecode"
+ingot.common_swagger = ":ingot-common:ingot-common-swagger"
+ingot.common_minio = ":ingot-common:ingot-common-minio"
+ingot.common_log = ":ingot-common:ingot-common-log"
+// component
+ingot.cmp_registry = ":ingot-component:ingot-registry"
+ingot.cmp_registry_client = ":ingot-component:ingot-registry-client"
+ingot.cmp_rpc = ":ingot-component:ingot-rpc"
+ingot.cmp_id = ":ingot-component:ingot-id"
+// auth center
+ingot.ac_service = ":ingot-service-ac:ingot-ac-service"
+ingot.ac_api = ":ingot-service-ac:ingot-ac-api"
+// permissions management system
+ingot.pms_service = ":ingot-service-pms:ingot-pms-service"
+ingot.pms_api = ":ingot-service-pms:ingot-pms-api"
+// gateway
+ingot.gateway = ":ingot-service-gateway:gateway-scg"
+
+ext.ingot = ingot

@@ -1,14 +1,52 @@
-plugins {
-    id 'java'
+buildscript {
+    apply from: './versions.gradle'
+    apply from: './config/ingot.gradle'
+    addRepos(repositories)
+
+    dependencies {
+        classpath(deps.spring.spring_boot.plugin)
+        classpath(deps.ltgt_apt_plugin)
+        classpath(deps.transmode_gradle_docker)
+        classpath(deps.plugins.ingot_mybatis)
+        classpath(deps.plugins.ingot_assemble)
+    }
 }
 
-group 'com.ingot'
-version '0.1.0'
+allprojects  {
+    apply plugin: 'maven'
+    apply plugin: 'java-library'
 
-repositories {
-    mavenCentral()
+    group = MODULE_GROUP
+    version = MODULE_VERSION
+
+    addRepos(repositories)
+
+    sourceCompatibility = sourceCompatibilityVersion
+    targetCompatibility = targetCompatibilityVersion
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    jar {
+        enabled = true
+    }
+
+    task cleanOut(type: Delete) {
+        group "ingot"
+        description "clean out dir"
+        delete new File(project.getProjectDir(), "out")
+    }
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+subprojects {
+    apply from: "${project.getRootDir().path}/config/lombok.gradle"
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencyManagement {
+        imports {
+            mavenBom deps.spring.spring_cloud.dependencies
+            mavenBom deps.alibaba.cloud_dependencies
+        }
+    }
 }
