@@ -1,0 +1,14 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    // spring
+    implementation(deps.spring.spring_boot.jdbc_starter)
+
+    // sql
+    runtime(deps.mysql.connector)
+    api(deps.alibaba.druid_spring_boot_starter)
+
+    implementation(deps.mybatis.plus_starter)
+    // data
+    implementation project(ingot.common_data)
+}

@@ -2,8 +2,9 @@ def deps = [:]
 def versions = [:]
 versions.spring_boot = "2.3.3.RELEASE"
 versions.spring_cloud = "Hoxton.SR8"
+versions.spring_cloud_alibaba = "2.2.2.RELEASE"
 versions.spring_framework = "5.2.8.RELEASE"
-versions.spring_cloud_alibaba = "2.1.2.RELEASE"
+
 versions.alibaba_druid = "1.1.21"
 versions.swagger = "2.9.2"
 versions.commons_lang = "3.3.2"
@@ -106,7 +107,6 @@ deps.mysql = mysql
 
 def mapstruct = [:]
 mapstruct.library = "org.mapstruct:mapstruct:${versions.mapstruct}"
-mapstruct.library_jdk8 = "org.mapstruct:mapstruct-jdk8:${versions.mapstruct}"
 mapstruct.processor = "org.mapstruct:mapstruct-processor:${versions.mapstruct}"
 deps.mapstruct = mapstruct
 
@@ -150,7 +150,7 @@ jsonwebtoken.jjwt_jackson = "io.jsonwebtoken:jjwt-jackson:0.10.5"
 deps.jsonwebtoken = jsonwebtoken
 
 deps.minio = "io.minio:minio:6.0.10"
-deps.hutool = "cn.hutool:hutool-all:4.5.11"
+deps.hutool = "cn.hutool:hutool-all:5.4.2"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
 deps.xxl_rpc_core = "com.xuxueli:xxl-rpc-core:1.4.1"
 deps.kaptcha = "com.github.penggle:kaptcha:2.3.2"

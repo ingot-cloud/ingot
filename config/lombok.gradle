@@ -1,0 +1,5 @@
+dependencies {
+    // lombok
+    api(deps.lombok)
+    annotationProcessor(deps.lombok)
+}
