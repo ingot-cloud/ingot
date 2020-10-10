@@ -1,9 +1,9 @@
 def ingot = [:]
 
 // common
-ingot.common_base = ":ingot-common:ingot-common-base"
-ingot.common_core = ":ingot-common:ingot-common-core"
-ingot.common_properties = ":ingot-common:ingot-common-properties"
+ingot.common_base = ":ingot-common:ingot-base"
+ingot.common_core = ":ingot-common:ingot-core"
+ingot.common_properties = ":ingot-common:ingot-properties"
 ingot.common_pdf = ":ingot-common:ingot-common-pdf"
 ingot.common_security = ":ingot-common:ingot-common-security"
 ingot.common_data = ":ingot-common:ingot-common-data"

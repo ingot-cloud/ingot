@@ -1,0 +1,25 @@
+
+dependencies {
+//    api(deps.java_validation_api)
+//    api(deps.apache.commons_lang3)
+//    api(deps.apache.commons_io)
+//    api(deps.apache.common_codec)
+//    api(deps.google_findbugs_jsr305)
+
+    // joda time
+    api(deps.joda_time)
+
+    // swagger cloud
+    api(deps.swagger.springfox_swagger2)
+
+    // jackson
+    api(deps.jackson.annotation)
+    api(deps.jackson.data_bind)
+    api(deps.jackson.jsr310)
+
+    // log basic
+    api(deps.log.logback_classic)
+
+    // hutool
+    api(deps.hutool)
+}
