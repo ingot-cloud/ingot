@@ -1,4 +1,4 @@
-package com.ingot.core.annotation;
+package com.ingot.common.core.annotation;
 
 import java.lang.annotation.*;
 
@@ -17,5 +17,5 @@ public @interface IngotPreconditions {
     /**
      * Preconditions 类
      */
-    Class value();
+    Class<?> value();
 }

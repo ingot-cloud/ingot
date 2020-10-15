@@ -1,4 +1,9 @@
 
 dependencies {
-    api(ingot.common_core)
+    api(deps.aspectj.aspectjweaver)
+
+    implementation(deps.spring.framework_spring_web)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+
+    api(ingot.common_base)
 }
