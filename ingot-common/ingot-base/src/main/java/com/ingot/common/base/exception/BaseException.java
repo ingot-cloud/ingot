@@ -1,6 +1,6 @@
 package com.ingot.common.base.exception;
 
-import com.ingot.common.base.http.StatusCode;
+import com.ingot.common.base.status.StatusCode;
 
 /**
  * <p>Description  : BaseException.</p>

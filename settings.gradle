@@ -1,8 +1,7 @@
 rootProject.name = 'ingot-cloud-pro'
 
+
 // common
 include 'ingot-common:ingot-base'
-findProject(':ingot-common:ingot-base')?.name = 'ingot-base'
 include 'ingot-common:ingot-core'
-findProject(':ingot-common:ingot-core')?.name = 'ingot-core'
 

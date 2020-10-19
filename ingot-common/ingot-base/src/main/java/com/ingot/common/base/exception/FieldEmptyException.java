@@ -1,6 +1,6 @@
 package com.ingot.common.base.exception;
 
-import static com.ingot.common.base.http.BaseStatusCode.FIELD_EMPTY;
+import static com.ingot.common.base.status.BaseStatusCode.FIELD_EMPTY;
 
 /**
  * <p>Description  : FieldEmptyException.</p>

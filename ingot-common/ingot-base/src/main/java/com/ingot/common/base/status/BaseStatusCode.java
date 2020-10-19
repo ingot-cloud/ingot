@@ -1,4 +1,4 @@
-package com.ingot.common.base.http;
+package com.ingot.common.base.status;
 
 /**
  * <p>Description  : BaseStatusCode.

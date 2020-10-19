@@ -1,6 +1,6 @@
 package com.ingot.common.base.exception;
 
-import static com.ingot.common.base.http.BaseStatusCode.ILLEGAL_OPERATION;
+import static com.ingot.common.base.status.BaseStatusCode.ILLEGAL_OPERATION;
 
 /**
  * <p>Description  : IllegalOperationException.</p>

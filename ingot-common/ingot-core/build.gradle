@@ -5,5 +5,5 @@ dependencies {
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
 
-    api(ingot.common_base)
+    api project(ingot.common_base)
 }
