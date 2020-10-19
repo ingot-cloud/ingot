@@ -1,9 +1,11 @@
 
 dependencies {
-    api(deps.aspectj.aspectjweaver)
+    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.spring.framework_spring_webflux)
 
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
 
+    api(deps.aspectj.aspectjweaver)
     api project(ingot.common_base)
 }
