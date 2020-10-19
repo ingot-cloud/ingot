@@ -1,0 +1,202 @@
+package com.ingot.common.core.utils;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.regex.Pattern;
+
+/**
+ * <p>Description  : IpUtils.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2019-11-07.</p>
+ * <p>Time         : 14:47.</p>
+ */
+@Slf4j
+@UtilityClass
+public class AddressUtils {
+    private final String ANY_HOST = "0.0.0.0";
+    private final String LOCALHOST = "127.0.0.1";
+    private final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
+    private volatile InetAddress LOCAL_ADDRESS = null;
+
+    /**
+     * Find first valid IP from local network card
+     *
+     * @return first valid local IP
+     */
+    public InetAddress getLocalAddress() {
+        if (LOCAL_ADDRESS != null) {
+            return LOCAL_ADDRESS;
+        }
+        InetAddress localAddress = getLocalAddress0();
+        LOCAL_ADDRESS = localAddress;
+        return localAddress;
+    }
+
+    /**
+     * get ip address
+     *
+     * @return String
+     */
+    public String getIP() {
+        return getLocalAddress().getHostAddress();
+    }
+
+    /**
+     * get ip:port
+     *
+     * @param port port
+     * @return String
+     */
+    public String getIpPort(int port) {
+        String ip = getIP();
+        return getIPort(ip, port);
+    }
+
+    /**
+     * get ip:port
+     * @param ip ip
+     * @param port port
+     * @return String
+     */
+    public String getIPort(String ip, int port) {
+        if (ip == null) {
+            return null;
+        }
+        return ip.concat(":").concat(String.valueOf(port));
+    }
+
+    /**
+     * parse ip:port
+     * @param address address
+     * @return [ip, port]
+     */
+    public Object[] parseIpPort(String address) {
+        String[] array = address.split(":");
+
+        String host = array[0];
+        int port = Integer.parseInt(array[1]);
+
+        return new Object[]{host, port};
+    }
+
+    /**
+     * valid Inet4Address
+     *
+     * @param address {@link InetAddress}
+     * @return Boolean
+     */
+    private static boolean isValidAddress(InetAddress address) {
+        if (address == null || address.isLoopbackAddress()) {
+            return false;
+        }
+        String name = address.getHostAddress();
+        return (name != null
+                && !ANY_HOST.equals(name)
+                && !LOCALHOST.equals(name)
+                && IP_PATTERN.matcher(name).matches());
+    }
+
+    /**
+     * valid Inet6Address, if an ipv6 address is reachable.
+     *
+     * @param address {@link Inet6Address}
+     * @return Boolean
+     */
+    private static boolean isValidV6Address(Inet6Address address) {
+        boolean preferIpv6 = Boolean.getBoolean("java.net.preferIPv6Addresses");
+        if (!preferIpv6) {
+            return false;
+        }
+        try {
+            return address.isReachable(100);
+        } catch (IOException e) {
+            // ignore
+        }
+        return false;
+    }
+
+    /**
+     * normalize the ipv6 Address, convert scope name to scope id.
+     *
+     * e.g.
+     * convert
+     *   fe80:0:0:0:894:aeec:f37d:23e1%en0
+     * to
+     *   fe80:0:0:0:894:aeec:f37d:23e1%5
+     *
+     * The %5 after ipv6 address is called scope id.
+     * see java doc of {@link Inet6Address} for more details.
+     *
+     * @param address the input address
+     * @return the normalized address, with scope id converted to int
+     */
+    private InetAddress normalizeV6Address(Inet6Address address) {
+        String addr = address.getHostAddress();
+        int i = addr.lastIndexOf('%');
+        if (i > 0) {
+            try {
+                return InetAddress.getByName(addr.substring(0, i) + '%' + address.getScopeId());
+            } catch (UnknownHostException e) {
+                // ignore
+                log.debug("Unknown IPV6 address: ", e);
+            }
+        }
+        return address;
+    }
+
+    private InetAddress getLocalAddress0() {
+        InetAddress localAddress = null;
+        try {
+            localAddress = InetAddress.getLocalHost();
+            if (localAddress instanceof Inet6Address) {
+                Inet6Address address = (Inet6Address) localAddress;
+                if (isValidV6Address(address)){
+                    return normalizeV6Address(address);
+                }
+            } else if (isValidAddress(localAddress)) {
+                return localAddress;
+            }
+        } catch (Throwable e) {
+            log.error(e.getMessage(), e);
+        }
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            if (null == interfaces) {
+                return localAddress;
+            }
+            while (interfaces.hasMoreElements()) {
+                try {
+                    NetworkInterface network = interfaces.nextElement();
+                    Enumeration<InetAddress> addresses = network.getInetAddresses();
+                    while (addresses.hasMoreElements()) {
+                        try {
+                            InetAddress address = addresses.nextElement();
+                            if (address instanceof Inet6Address) {
+                                Inet6Address v6Address = (Inet6Address) address;
+                                if (isValidV6Address(v6Address)){
+                                    return normalizeV6Address(v6Address);
+                                }
+                            } else if (isValidAddress(address)) {
+                                return address;
+                            }
+                        } catch (Throwable e) {
+                            log.error(e.getMessage(), e);
+                        }
+                    }
+                } catch (Throwable e) {
+                    log.error(e.getMessage(), e);
+                }
+            }
+        } catch (Throwable e) {
+            log.error(e.getMessage(), e);
+        }
+        return localAddress;
+    }
+}
