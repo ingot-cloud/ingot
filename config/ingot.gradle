@@ -3,7 +3,7 @@ def ingot = [:]
 // framework
 ingot.framework_base = ":ingot-framework:ingot-base"
 ingot.framework_core = ":ingot-framework:ingot-core"
-
+ingot.framework_store = "ingot-framework:ingot-store"
 // common
 ingot.common_properties = ":ingot-common:ingot-properties"
 ingot.common_security = ":ingot-common:ingot-security"
