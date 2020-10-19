@@ -1,7 +1,8 @@
 rootProject.name = 'ingot-cloud-pro'
 
 
-// common
-include 'ingot-common:ingot-base'
-include 'ingot-common:ingot-core'
+// framework
+include 'ingot-framework:ingot-base'
+include 'ingot-framework:ingot-core'
+include 'ingot-framework:ingot-data'
 

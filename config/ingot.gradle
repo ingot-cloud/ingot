@@ -1,8 +1,10 @@
 def ingot = [:]
 
+// framework
+ingot.framework_base = ":ingot-framework:ingot-base"
+ingot.framework_core = ":ingot-framework:ingot-core"
+
 // common
-ingot.common_base = ":ingot-common:ingot-base"
-ingot.common_core = ":ingot-common:ingot-core"
 ingot.common_properties = ":ingot-common:ingot-properties"
 ingot.common_security = ":ingot-common:ingot-security"
 ingot.common_data = ":ingot-common:ingot-common-data"

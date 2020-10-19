@@ -8,5 +8,5 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
 
     api(deps.aspectj.aspectjweaver)
-    api project(ingot.common_base)
+    api project(ingot.framework_base)
 }
