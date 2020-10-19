@@ -1,11 +1,5 @@
 
 dependencies {
-//    api(deps.java_validation_api)
-//    api(deps.apache.commons_lang3)
-//    api(deps.apache.commons_io)
-//    api(deps.apache.common_codec)
-//    api(deps.google_findbugs_jsr305)
-
     // joda time
     api(deps.joda_time)
 
