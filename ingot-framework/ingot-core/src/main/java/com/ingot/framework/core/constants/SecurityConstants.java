@@ -40,12 +40,6 @@ public interface SecurityConstants {
     String HEADER_VALIDATE_IMAGE_DISPLAY_TIME = "ingot-image-code";
 
     /**
-     * Context key
-     */
-    String CONTEXT_KEY_CURRENT_USER = "ctx-token-current-user";
-    String CONTEXT_KEY_TOKEN = "ctx-token";
-
-    /**
      * Jwt token claim key
      */
     String TOKEN_ENHANCER_KEY_USER_NAME = "username";
