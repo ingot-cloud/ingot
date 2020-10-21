@@ -1,12 +1,12 @@
 package com.ingot.framework.base.constants;
 
 /**
- * <p>Description  : GlobalConstant.</p>
+ * <p>Description  : GlobalConstants.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/5/4.</p>
  * <p>Time         : 上午11:24.</p>
  */
-public interface GlobalConstant {
+public interface GlobalConstants {
 
     String UNKNOWN = "unknown";
 

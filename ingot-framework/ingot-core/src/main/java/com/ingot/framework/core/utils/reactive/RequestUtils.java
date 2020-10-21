@@ -2,7 +2,7 @@ package com.ingot.framework.core.utils.reactive;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.base.constants.GlobalConstant;
+import com.ingot.framework.base.constants.GlobalConstants;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -34,26 +34,26 @@ public class RequestUtils {
      * @return the string
      */
     public String getRemoteIP(ServerRequest request) {
-        String ipAddress = getIPFromHeader(request, GlobalConstant.X_REAL_IP);
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = getIPFromHeader(request, GlobalConstant.X_FORWARDED_FOR);
+        String ipAddress = getIPFromHeader(request, GlobalConstants.X_REAL_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = getIPFromHeader(request, GlobalConstants.X_FORWARDED_FOR);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = getIPFromHeader(request, GlobalConstant.PROXY_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = getIPFromHeader(request, GlobalConstants.PROXY_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = getIPFromHeader(request, GlobalConstant.WL_PROXY_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = getIPFromHeader(request, GlobalConstants.WL_PROXY_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = getIPFromHeader(request, GlobalConstant.HTTP_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = getIPFromHeader(request, GlobalConstants.HTTP_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = getIPFromHeader(request, GlobalConstant.HTTP_X_FORWARDED_FOR);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = getIPFromHeader(request, GlobalConstants.HTTP_X_FORWARDED_FOR);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
             Optional<InetSocketAddress> address = request.remoteAddress();
-            ipAddress = address.isPresent() ? address.get().getHostName() : GlobalConstant.LOCALHOST_IP;
-            if (GlobalConstant.LOCALHOST_IP.equals(ipAddress) || GlobalConstant.LOCALHOST_IP_16.equals(ipAddress)) {
+            ipAddress = address.isPresent() ? address.get().getHostName() : GlobalConstants.LOCALHOST_IP;
+            if (GlobalConstants.LOCALHOST_IP.equals(ipAddress) || GlobalConstants.LOCALHOST_IP_16.equals(ipAddress)) {
                 //根据网卡取本机配置的IP
                 InetAddress inet = null;
                 try {
@@ -67,9 +67,9 @@ public class RequestUtils {
             log.info("RequestUtils reactive ServerRequest - 获取IP地址 ipAddress={}", ipAddress);
         }
         // 对于通过多个代理的情况, 第一个IP为客户端真实IP,多个IP按照','分割 //"***.***.***.***".length() = 15
-        if (ipAddress != null && ipAddress.length() > GlobalConstant.MAX_IP_LENGTH) {
-            if (ipAddress.indexOf(GlobalConstant.COMMA) > 0) {
-                ipAddress = ipAddress.substring(0, ipAddress.indexOf(GlobalConstant.COMMA));
+        if (ipAddress != null && ipAddress.length() > GlobalConstants.MAX_IP_LENGTH) {
+            if (ipAddress.indexOf(GlobalConstants.COMMA) > 0) {
+                ipAddress = ipAddress.substring(0, ipAddress.indexOf(GlobalConstants.COMMA));
             }
         }
         return ipAddress;
@@ -87,26 +87,26 @@ public class RequestUtils {
      * @return the string
      */
     public String getRemoteIP(ServerHttpRequest request) {
-        String ipAddress = request.getHeaders().getFirst(GlobalConstant.X_REAL_IP);
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeaders().getFirst(GlobalConstant.X_FORWARDED_FOR);
+        String ipAddress = request.getHeaders().getFirst(GlobalConstants.X_REAL_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeaders().getFirst(GlobalConstants.X_FORWARDED_FOR);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeaders().getFirst(GlobalConstant.PROXY_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeaders().getFirst(GlobalConstants.PROXY_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeaders().getFirst(GlobalConstant.WL_PROXY_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeaders().getFirst(GlobalConstants.WL_PROXY_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeaders().getFirst(GlobalConstant.HTTP_CLIENT_IP);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeaders().getFirst(GlobalConstants.HTTP_CLIENT_IP);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeaders().getFirst(GlobalConstant.HTTP_X_FORWARDED_FOR);
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeaders().getFirst(GlobalConstants.HTTP_X_FORWARDED_FOR);
         }
-        if (StrUtil.isEmpty(ipAddress) || GlobalConstant.UNKNOWN.equalsIgnoreCase(ipAddress)) {
+        if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
             InetSocketAddress address = request.getRemoteAddress();
-            ipAddress = address != null ? address.getHostName() : GlobalConstant.LOCALHOST_IP;
-            if (GlobalConstant.LOCALHOST_IP.equals(ipAddress) || GlobalConstant.LOCALHOST_IP_16.equals(ipAddress)) {
+            ipAddress = address != null ? address.getHostName() : GlobalConstants.LOCALHOST_IP;
+            if (GlobalConstants.LOCALHOST_IP.equals(ipAddress) || GlobalConstants.LOCALHOST_IP_16.equals(ipAddress)) {
                 //根据网卡取本机配置的IP
                 InetAddress inet = null;
                 try {
@@ -120,9 +120,9 @@ public class RequestUtils {
             log.info("RequestUtils reactive ServerHttpRequest - 获取IP地址 ipAddress={}", ipAddress);
         }
         // 对于通过多个代理的情况, 第一个IP为客户端真实IP,多个IP按照','分割 //"***.***.***.***".length() = 15
-        if (ipAddress != null && ipAddress.length() > GlobalConstant.MAX_IP_LENGTH) {
-            if (ipAddress.indexOf(GlobalConstant.COMMA) > 0) {
-                ipAddress = ipAddress.substring(0, ipAddress.indexOf(GlobalConstant.COMMA));
+        if (ipAddress != null && ipAddress.length() > GlobalConstants.MAX_IP_LENGTH) {
+            if (ipAddress.indexOf(GlobalConstants.COMMA) > 0) {
+                ipAddress = ipAddress.substring(0, ipAddress.indexOf(GlobalConstants.COMMA));
             }
         }
         return ipAddress;

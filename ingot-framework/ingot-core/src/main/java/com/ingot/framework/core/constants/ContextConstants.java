@@ -11,7 +11,7 @@ public interface ContextConstants {
     /**
      * Context key
      */
-    String CONTEXT_KEY_CURRENT_USER = "ctx-token-current-user";
-    String CONTEXT_KEY_TOKEN = "ctx-token";
-
+    String KEY_TENANT = "ctx-tenant";
+    String KEY_USER = "ctx-user";
+    String KEY_TOKEN = "ctx-token";
 }

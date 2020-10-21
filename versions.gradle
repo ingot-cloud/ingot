@@ -68,7 +68,7 @@ alibaba.cloud_dependencies = "com.alibaba.cloud:spring-cloud-alibaba-dependencie
 alibaba.nacos_config_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config"
 alibaba.nacos_discovery_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery"
 alibaba.druid_spring_boot_starter = "com.alibaba:druid-spring-boot-starter:${versions.alibaba_druid}"
-alibaba.transmittable_thread_local = "com.alibaba:transmittable-thread-local:2.10.2"
+alibaba.transmittable_thread_local = "com.alibaba:transmittable-thread-local:2.11.5"
 deps.alibaba = alibaba
 
 def swagger = [:]
