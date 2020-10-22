@@ -16,70 +16,70 @@ public class ResponseWrapper {
     /**
      * 响应成功
      */
-    public static <T> IngotResponse<T> ok() {
+    public <T> IngotResponse<T> ok() {
         return new IngotResponse<>(BaseStatusCode.OK);
     }
 
     /**
      * 响应成功附带 data
      */
-    public static <T> IngotResponse<T> ok(T data) {
+    public <T> IngotResponse<T> ok(T data) {
         return new IngotResponse<>(data, BaseStatusCode.OK);
     }
 
     /**
      * 500 error
      */
-    public static <T> IngotResponse<T> error() {
+    public <T> IngotResponse<T> error() {
         return new IngotResponse<>(BaseStatusCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 500, custom message
      */
-    public static <T> IngotResponse<T> error(String message) {
+    public <T> IngotResponse<T> error(String message) {
         return new IngotResponse<>(BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public static <T> IngotResponse<T> error(T data) {
+    public <T> IngotResponse<T> error(T data) {
         return new IngotResponse<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public static <T> IngotResponse<T> error(T data, String message) {
+    public <T> IngotResponse<T> error(T data, String message) {
         return new IngotResponse<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
-    public static <T> IngotResponse<T> error(StatusCode code) {
+    public <T> IngotResponse<T> error(StatusCode code) {
         return new IngotResponse<>(code);
     }
 
     /**
      * 响应失败，附带自定义响应体
      */
-    public static <T> IngotResponse<T> error(T data, StatusCode code) {
+    public <T> IngotResponse<T> error(T data, StatusCode code) {
         return new IngotResponse<>(data, code);
     }
 
     /**
      * 响应失败
      */
-    public static <T> IngotResponse<T> error(String code, String message) {
+    public <T> IngotResponse<T> error(String code, String message) {
         return new IngotResponse<>(code, message);
     }
 
     /**
      * 响应失败
      */
-    public static <T> IngotResponse<T> error(T data, String code, String message) {
+    public <T> IngotResponse<T> error(T data, String code, String message) {
         return new IngotResponse<>(data, code, message);
     }
 }

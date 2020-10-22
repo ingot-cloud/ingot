@@ -25,7 +25,7 @@ public class ThreadLocalMap {
      * @param key   the key
      * @param value the value
      */
-    public static void put(String key, Object value) {
+    public void put(String key, Object value) {
         getContextMap().put(key, value);
     }
 
@@ -35,7 +35,7 @@ public class ThreadLocalMap {
      * @param key the key
      * @return the object
      */
-    public static Object remove(String key) {
+    public Object remove(String key) {
         return getContextMap().remove(key);
     }
 
@@ -46,14 +46,14 @@ public class ThreadLocalMap {
      * @return the object
      */
     @SuppressWarnings("unchecked")
-    public static <T> T get(String key) {
-        return (T)getContextMap().get(key);
+    public <T> T get(String key) {
+        return (T) getContextMap().get(key);
     }
 
     /**
      * 清理线程所有被hold住的对象。以便重用！
      */
-    public static void clear() {
+    public void clear() {
         getContextMap().clear();
     }
 
@@ -62,7 +62,7 @@ public class ThreadLocalMap {
      *
      * @return thread context Map的实例
      */
-    private static Map<String, Object> getContextMap() {
+    private Map<String, Object> getContextMap() {
         return THREAD_CONTEXT.get();
     }
 
