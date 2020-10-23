@@ -1,7 +1,7 @@
 package com.ingot.framework.store.mybatis.config;
 
-import com.baomidou.mybatisplus.extension.plugins.OptimisticLockerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.ingot.framework.store.mybatis.plugins.IngotOptimisticLockerInterceptor;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -23,7 +23,7 @@ import javax.sql.DataSource;
 public class MybatisPlusConfig {
 
     @Bean
-    public OptimisticLockerInterceptor optimisticLockerInterceptor() {
+    public OptimisticLockerInnerInterceptor optimisticLockerInterceptor() {
         return new IngotOptimisticLockerInterceptor();
     }
 
@@ -33,7 +33,7 @@ public class MybatisPlusConfig {
      */
     @Bean
     @ConditionalOnMissingBean
-    public PaginationInterceptor paginationInterceptor() {
-        return new PaginationInterceptor();
+    public PaginationInnerInterceptor paginationInterceptor() {
+        return new PaginationInnerInterceptor();
     }
 }
