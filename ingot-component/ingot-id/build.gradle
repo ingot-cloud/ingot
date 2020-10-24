@@ -2,5 +2,6 @@
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
-
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation project(ingot.framework_base)
 }
