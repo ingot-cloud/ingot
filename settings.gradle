@@ -5,3 +5,6 @@ include 'ingot-framework:ingot-base'
 include 'ingot-framework:ingot-core'
 include 'ingot-framework:ingot-store'
 
+// component
+include 'ingot-component:ingot-id'
+
