@@ -2,12 +2,12 @@ package com.ingot.framework.base.status;
 
 /**
  * <p>Description  : BaseStatusCode.
- *                   格式：类型+4位状态码，类型为空时为基础状态码。eg: PMS0001</p>
+ * 格式：类型+4位状态码，类型为空时为基础状态码。eg: PMS0001</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/10/10.</p>
  * <p>Time         : 2:03 下午.</p>
  */
-public enum BaseStatusCode implements StatusCode{
+public enum BaseStatusCode implements StatusCode {
     OK("0200", "Success"),
     UNAUTHORIZED("0401", "未授权访问"),
     FORBIDDEN("0403", "无权访问"),
@@ -17,12 +17,13 @@ public enum BaseStatusCode implements StatusCode{
     MICROSERVICE_OFFLINE("0001", "微服务不在线, 或者网络超时"),
     ILLEGAL_OPERATION("0002", "操作异常, %s"),
     FIELD_EMPTY("0003", "%s不能为空"),
-    ILLEGAL_REQUEST_PARAMS("0004", "参数异常, %s");
+    ILLEGAL_REQUEST_PARAMS("0004", "参数异常, %s"),
+    ID_CLOCK_BACK("1000", "时钟回拨，当前时间小于上一次操作时间");
 
     private final String code;
     private final String message;
 
-    BaseStatusCode(String code, String message){
+    BaseStatusCode(String code, String message) {
         this.code = code;
         this.message = message;
     }
