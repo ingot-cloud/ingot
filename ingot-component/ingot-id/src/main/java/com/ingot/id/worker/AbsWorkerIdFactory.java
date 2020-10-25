@@ -2,6 +2,7 @@ package com.ingot.id.worker;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -17,15 +18,13 @@ import java.util.Properties;
  */
 @Slf4j
 public abstract class AbsWorkerIdFactory implements WorkerIdFactory {
-    private final String LOCAL_PROP_PATH;
+    private final String localCachePath;
 
-    protected final String ip;
-    protected final String port;
-
-    public AbsWorkerIdFactory(String ip, String port, String serviceName) {
-        this.ip = ip;
-        this.port = port;
-        this.LOCAL_PROP_PATH = "/data/ingot/id/" + serviceName + "/{port}/workerID.properties";
+    public AbsWorkerIdFactory(String prefix, String serviceName, String port) {
+        if (!StrUtil.endWith(prefix, "/")) {
+            prefix = prefix + "/";
+        }
+        this.localCachePath = prefix + serviceName + "/" + port + "/workerID.properties";
     }
 
     /**
@@ -36,7 +35,7 @@ public abstract class AbsWorkerIdFactory implements WorkerIdFactory {
      */
     protected int getCacheWorkId() throws Exception {
         Properties properties = new Properties();
-        properties.load(new FileInputStream(new File(LOCAL_PROP_PATH.replace("{port}", port + ""))));
+        properties.load(new FileInputStream(new File(localCachePath)));
         return Integer.parseInt(properties.getProperty("workerID"));
     }
 
@@ -46,7 +45,7 @@ public abstract class AbsWorkerIdFactory implements WorkerIdFactory {
      * @param workerID worker id
      */
     protected void updateLocalWorkerID(int workerID) {
-        File confFile = new File(LOCAL_PROP_PATH.replace("{port}", port));
+        File confFile = new File(localCachePath);
         boolean exists = confFile.exists();
         log.info(">>> AbsWorkerIdFactory - file exists status is {}", exists);
         if (exists) {
