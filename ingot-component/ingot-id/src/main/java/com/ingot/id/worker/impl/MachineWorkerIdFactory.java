@@ -28,11 +28,17 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
             this.workerID = (int) getWorkerIdWithMac();
             updateLocalWorkerID(this.workerID);
             log.info(">>> MachineWorkerIdFactory init with workID={}", workerID);
-            return true;
         } catch (Exception e) {
             log.warn(">>> MachineWorkerIdFactory - getDatacenterId: " + e.getMessage());
-            return false;
+            try {
+                this.workerID = getCacheWorkId();
+                log.info(">>> MachineWorkerIdFactory init from cache workID={}", workerID);
+            } catch (Exception exception) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     @Override public int getWorkerId() {

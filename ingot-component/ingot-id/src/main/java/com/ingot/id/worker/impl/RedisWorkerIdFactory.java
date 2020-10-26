@@ -1,5 +1,6 @@
 package com.ingot.id.worker.impl;
 
+import com.google.common.base.Preconditions;
 import com.ingot.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,31 +35,32 @@ public class RedisWorkerIdFactory extends AbsWorkerIdFactory {
 
     @Override public boolean init() {
         final String key = getKey();
-        if (hasKey(key)) {
-            workerID = (int) Optional.ofNullable(redisTemplate.opsForValue().get(key))
-                    .orElse(-1);
-            if (workerID == -1){
-                try {
-                    workerID = getCacheWorkId();
-                } catch (Exception e) {
-                    return false;
-                }
+        try {
+            if (hasKey(key)) {
+                workerID = (int) Optional.ofNullable(redisTemplate.opsForValue().get(key))
+                        .orElse(-1);
+                Preconditions.checkArgument(workerID != -1);
+            } else {
+                Long index = redisTemplate.opsForValue().increment(KEY_INDEX, 1L);
+                Preconditions.checkArgument(index != null);
+                log.info(">>> RedisWorkerIdFactory current index={}", index);
+
+                workerID = index.intValue();
+                redisTemplate.opsForValue().set(key, workerID);
             }
-        } else {
-            Long index = redisTemplate.opsForValue().increment(KEY_INDEX, 1L);
-            log.info(">>> RedisWorkerIdFactory current index={}", index);
-            if (index == null) {
-                log.error(">>> RedisWorkerIdFactory init id error，不能找到当前redis中存储的索引值");
+
+            // 更新本地缓存
+            updateLocalWorkerID(workerID);
+            log.info(">>> RedisWorkerIdFactory init with workID={}", workerID);
+        } catch (Exception e){
+            log.error(">>> RedisWorkerIdFactory init error={}", e.getMessage());
+            try {
+                workerID = getCacheWorkId();
+                log.info(">>> RedisWorkerIdFactory init from cache workID={}", workerID);
+            } catch (Exception ignore) {
                 return false;
             }
-            workerID = index.intValue();
-            redisTemplate.opsForValue().set(key, workerID);
         }
-
-        // 更新本地缓存
-        updateLocalWorkerID(workerID);
-        log.info(">>> RedisWorkerIdFactory init with workID={}", workerID);
-
         return true;
     }
 
