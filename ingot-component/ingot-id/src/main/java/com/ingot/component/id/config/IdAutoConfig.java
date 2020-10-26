@@ -1,11 +1,11 @@
-package com.ingot.id.config;
+package com.ingot.component.id.config;
 
-import com.ingot.id.IdGenerator;
-import com.ingot.id.impl.SnowFlakeIdGenerator;
-import com.ingot.id.properties.IdProperties;
-import com.ingot.id.worker.WorkerIdFactory;
-import com.ingot.id.worker.impl.MachineWorkerIdFactory;
-import com.ingot.id.worker.impl.RedisWorkerIdFactory;
+import com.ingot.component.id.IdGenerator;
+import com.ingot.component.id.impl.SnowFlakeIdGenerator;
+import com.ingot.component.id.properties.IdProperties;
+import com.ingot.component.id.worker.WorkerIdFactory;
+import com.ingot.component.id.worker.impl.MachineWorkerIdFactory;
+import com.ingot.component.id.worker.impl.RedisWorkerIdFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

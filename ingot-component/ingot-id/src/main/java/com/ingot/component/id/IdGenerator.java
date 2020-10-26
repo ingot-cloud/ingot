@@ -1,4 +1,4 @@
-package com.ingot.id;
+package com.ingot.component.id;
 
 /**
  * <p>Description  : IdGenerator.</p>

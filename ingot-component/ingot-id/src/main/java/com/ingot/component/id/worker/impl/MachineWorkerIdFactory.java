@@ -1,12 +1,11 @@
-package com.ingot.id.worker.impl;
+package com.ingot.component.id.worker.impl;
 
-import com.ingot.id.worker.AbsWorkerIdFactory;
+import com.ingot.component.id.impl.SnowFlakeIdGenerator;
+import com.ingot.component.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-
-import static com.ingot.id.impl.SnowFlakeIdGenerator.MAX_WORKER_ID;
 
 /**
  * <p>Description  : MachineWorkerIdFactory.</p>
@@ -59,7 +58,7 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
             if (null != mac) {
                 id = ((0x000000FF & (long) mac[mac.length - 2]) |
                         (0x0000FF00 & (((long) mac[mac.length - 1]) << 8))) >> 6;
-                id = id % (MAX_WORKER_ID + 1);
+                id = id % (SnowFlakeIdGenerator.MAX_WORKER_ID + 1);
             }
         }
         return id;

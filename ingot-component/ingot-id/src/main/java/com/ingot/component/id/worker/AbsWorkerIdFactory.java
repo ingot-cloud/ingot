@@ -1,4 +1,4 @@
-package com.ingot.id.worker;
+package com.ingot.component.id.worker;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;

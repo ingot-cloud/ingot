@@ -1,7 +1,7 @@
-package com.ingot.id.worker.impl;
+package com.ingot.component.id.worker.impl;
 
 import com.google.common.base.Preconditions;
-import com.ingot.id.worker.AbsWorkerIdFactory;
+import com.ingot.component.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 

@@ -1,4 +1,4 @@
-package com.ingot.id.properties;
+package com.ingot.component.id.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

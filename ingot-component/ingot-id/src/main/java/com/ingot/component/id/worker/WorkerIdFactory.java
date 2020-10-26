@@ -1,4 +1,4 @@
-package com.ingot.id.worker;
+package com.ingot.component.id.worker;
 
 /**
  * <p>Description  : WorkerIdFactory.</p>

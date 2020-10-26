@@ -1,9 +1,9 @@
-package com.ingot.id.impl;
+package com.ingot.component.id.impl;
 
 import com.google.common.base.Preconditions;
 import com.ingot.framework.base.exception.BaseException;
-import com.ingot.id.IdGenerator;
-import com.ingot.id.worker.WorkerIdFactory;
+import com.ingot.component.id.IdGenerator;
+import com.ingot.component.id.worker.WorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
