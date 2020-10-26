@@ -41,13 +41,17 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     private static final Random RANDOM = new Random();
 
 
-    private final long workerId;
+    private long workerId;
     private long sequence = 0L;
     private long lastTimestamp = -1L;
 
     public SnowFlakeIdGenerator(WorkerIdFactory factory) {
-        workerId = factory.getWorkerId();
-        log.info(">>> SnowFlakeIdGenerator START SUCCESS USE WORKER-ID={}", workerId);
+        boolean initFlag = factory.init();
+        if (initFlag){
+            workerId = factory.getWorkerId();
+            log.info(">>> SnowFlakeIdGenerator START SUCCESS USE WORKER-ID={}", workerId);
+        }
+        Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         Preconditions.checkArgument(workerId >= 0 && workerId <= MAX_WORKER_ID,
                 "workerID must gte 0 and lte 1023");
     }
@@ -56,20 +60,26 @@ public class SnowFlakeIdGenerator implements IdGenerator {
         long timestamp = timeGen();
         if (timestamp < lastTimestamp) {
             long offset = lastTimestamp - timestamp;
-            if (offset <= 5) {
-                try {
-                    wait(offset << 1);
-                    timestamp = timeGen();
-                    if (timestamp < lastTimestamp) {
-                        throw new BaseException(ID_CLOCK_BACK);
-                    }
-                } catch (InterruptedException e) {
-                    throw new BaseException(ID_CLOCK_BACK);
-                }
-            } else {
+            // 如果大于允许时间回拨的毫秒量，那么抛出异常
+            if (offset > 5) {
                 throw new BaseException(ID_CLOCK_BACK);
             }
+
+            try {
+                // 若在允许时间回拨的毫秒量范围内，则允许等待2倍的偏移量后重新获取
+                wait(offset << 1);
+            } catch (InterruptedException e) {
+                throw new BaseException(ID_CLOCK_BACK);
+            }
+
+            timestamp = timeGen();
+            if (timestamp < lastTimestamp) {
+                throw new BaseException(ID_CLOCK_BACK);
+            }
+
         }
+
+        // 相同时间，序列自增
         if (lastTimestamp == timestamp) {
             sequence = (sequence + 1) & SEQUENCE_MASK;
             if (sequence == 0) {
@@ -82,7 +92,10 @@ public class SnowFlakeIdGenerator implements IdGenerator {
             sequence = RANDOM.nextInt(100);
         }
         lastTimestamp = timestamp;
-        return  ((timestamp - START_TIMESTAMP) << TIMESTAMP_LEFT_SHIFT) | (workerId << WORKER_ID_LEFT_SHIFT) | sequence;
+
+        return ((timestamp - START_TIMESTAMP) << TIMESTAMP_LEFT_SHIFT) |
+                (workerId << WORKER_ID_LEFT_SHIFT) |
+                sequence;
     }
 
     private long tilNextMillis(long lastTimestamp) {

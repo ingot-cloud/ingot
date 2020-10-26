@@ -4,4 +4,6 @@ dependencies {
 
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_base)
+
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
 }

@@ -9,6 +9,12 @@ package com.ingot.id.worker;
 public interface WorkerIdFactory {
 
     /**
+     * 初始化
+     * @return 初始化是否成功
+     */
+    boolean init();
+
+    /**
      * 获取 worker id
      * @return Worker Id
      */

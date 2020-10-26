@@ -14,4 +14,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class IdProperties {
 
     private String localPathPrefix = "/data/ingot/id/";
+    private String mode;
 }
