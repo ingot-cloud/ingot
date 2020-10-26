@@ -4,6 +4,9 @@ def ingot = [:]
 ingot.framework_base = ":ingot-framework:ingot-base"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_store = "ingot-framework:ingot-store"
+// component
+ingot.cmp_id = ":ingot-component:ingot-id"
+
 // common
 ingot.common_properties = ":ingot-common:ingot-properties"
 ingot.common_security = ":ingot-common:ingot-security"
@@ -12,11 +15,6 @@ ingot.common_validatecode = ":ingot-common:ingot-common-validatecode"
 ingot.common_swagger = ":ingot-common:ingot-common-swagger"
 ingot.common_minio = ":ingot-common:ingot-common-minio"
 ingot.common_log = ":ingot-common:ingot-common-log"
-// component
-ingot.cmp_registry = ":ingot-component:ingot-registry"
-ingot.cmp_registry_client = ":ingot-component:ingot-registry-client"
-ingot.cmp_rpc = ":ingot-component:ingot-rpc"
-ingot.cmp_id = ":ingot-component:ingot-id"
 // auth center
 ingot.ac_service = ":ingot-service-ac:ingot-ac-service"
 ingot.ac_api = ":ingot-service-ac:ingot-ac-api"

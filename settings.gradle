@@ -1,10 +1,11 @@
 rootProject.name = 'ingot-cloud-pro'
 
-// framework
+// Framework
 include 'ingot-framework:ingot-base'
 include 'ingot-framework:ingot-core'
 include 'ingot-framework:ingot-store'
 
-// component
+// Component
 include 'ingot-component:ingot-id'
 
+// Cloud service
