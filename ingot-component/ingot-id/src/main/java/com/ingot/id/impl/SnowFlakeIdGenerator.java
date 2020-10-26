@@ -33,7 +33,7 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     /**
      * 最大能够分配的workerId = 1023
      */
-    private static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS); // -1L ^ (-1L << WORKER_ID_BITS);
+    public static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS); // -1L ^ (-1L << WORKER_ID_BITS);
     private static final long SEQUENCE_BITS = 12L;
     private static final long WORKER_ID_LEFT_SHIFT = SEQUENCE_BITS;
     private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;

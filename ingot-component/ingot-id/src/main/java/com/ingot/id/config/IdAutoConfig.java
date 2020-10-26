@@ -3,8 +3,11 @@ package com.ingot.id.config;
 import com.ingot.id.IdGenerator;
 import com.ingot.id.impl.SnowFlakeIdGenerator;
 import com.ingot.id.properties.IdProperties;
+import com.ingot.id.worker.WorkerIdFactory;
+import com.ingot.id.worker.impl.MachineWorkerIdFactory;
 import com.ingot.id.worker.impl.RedisWorkerIdFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,10 +32,20 @@ public class IdAutoConfig {
     @Bean("idGenerator")
     @ConditionalOnMissingBean(IdGenerator.class)
     @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "redis")
+    @ConditionalOnBean(RedisTemplate.class)
     public IdGenerator redisIdGenerator(RedisTemplate<String, Object> redisTemplate,
                                         IdProperties properties) {
-        RedisWorkerIdFactory factory = new RedisWorkerIdFactory(properties.getLocalPathPrefix(),
+        WorkerIdFactory factory = new RedisWorkerIdFactory(properties.getLocalPathPrefix(),
                 serverName, String.valueOf(port), redisTemplate);
+        return new SnowFlakeIdGenerator(factory);
+    }
+
+    @Bean("idGenerator")
+    @ConditionalOnMissingBean(IdGenerator.class)
+    @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "redis", matchIfMissing = true)
+    public IdGenerator machineIdGenerator(IdProperties properties){
+        WorkerIdFactory factory = new MachineWorkerIdFactory(properties.getLocalPathPrefix(),
+                serverName, String.valueOf(port));
         return new SnowFlakeIdGenerator(factory);
     }
 }
