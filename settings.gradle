@@ -10,3 +10,5 @@ include 'ingot-component:ingot-id'
 
 // Cloud service
 include 'ingot-service:ingot-acs'
+include 'ingot-framework:ingot-feign'
+

@@ -1,0 +1,10 @@
+
+dependencies {
+    api(deps.spring.spring_cloud.openfeign_starter)
+    api(deps.spring.spring_cloud.hystrix_starter)
+    api(deps.feign_okhttp)
+
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+
+    compileOnly project(ingot.framework_core)
+}
