@@ -1,7 +1,5 @@
 package com.ingot.framework.core.utils;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.UUID;
 
 /**
@@ -10,8 +8,7 @@ import java.util.UUID;
  * <p>Date         : 2018/5/2.</p>
  * <p>Time         : 下午2:45.</p>
  */
-@UtilityClass
-public class UUIDUtils {
+public final class UUIDUtils {
     private static String[] chars = new String[]{"a", "b", "c", "d", "e", "f",
             "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s",
             "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5",

@@ -1,6 +1,5 @@
 package com.ingot.framework.core.utils;
 
-import lombok.experimental.UtilityClass;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.util.StringUtils;
 
@@ -18,8 +17,7 @@ import java.security.NoSuchAlgorithmException;
  * <p>Date         : 2018/9/20.</p>
  * <p>Time         : 下午4:14.</p>
  */
-@UtilityClass
-public class DigestUtils {
+public final class DigestUtils {
     /**
      * 摘要码
      */

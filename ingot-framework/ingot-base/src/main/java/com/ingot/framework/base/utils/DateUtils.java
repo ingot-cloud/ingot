@@ -1,7 +1,6 @@
 package com.ingot.framework.base.utils;
 
 import cn.hutool.core.util.StrUtil;
-import lombok.experimental.UtilityClass;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -16,48 +15,47 @@ import java.util.TimeZone;
  * <p>Date         : 2019/2/14.</p>
  * <p>Time         : 2:15 PM.</p>
  */
-@UtilityClass
-public class DateUtils {
+public final class DateUtils {
 
     /**
      * 当前UTC时间
      */
-    public Date utc(){
+    public static Date utc(){
         return now(DateTimeZone.UTC);
     }
 
     /**
      * 当前默认时区时间
      */
-    public Date now(){
+    public static Date now(){
         return now(DateTimeZone.getDefault());
     }
 
     /**
      * 获取当前指定时区时间
      */
-    public Date now(DateTimeZone zone){
+    public static Date now(DateTimeZone zone){
         return DateTime.now(zone).toLocalDateTime().toDate();
     }
 
     /**
      * UTC时区转本地
      */
-    public String utcToLocal(String utc) throws ParseException {
+    public static String utcToLocal(String utc) throws ParseException {
         return utcToLocal(utc, "yyyy-MM-dd HH:mm:ss");
     }
 
     /**
      * UTC时区转本地
      */
-    public String utcToLocal(String utc, String pattern) throws ParseException {
+    public static String utcToLocal(String utc, String pattern) throws ParseException {
         return timeToLocal(utc, "UTC", pattern);
     }
 
     /**
      * 时区转本地
      */
-    public String timeToLocal(String time, String timeZone, String pattern) throws ParseException{
+    public static String timeToLocal(String time, String timeZone, String pattern) throws ParseException{
         if (StrUtil.isEmpty(time)){
             return time;
         }
@@ -73,7 +71,7 @@ public class DateUtils {
     /**
      * 时区转本地
      */
-    public Date timeToLocal(Date time) throws ParseException {
+    public static Date timeToLocal(Date time) throws ParseException {
         return timeToLocal(time, "yyyy-MM-dd HH:mm:ss");
     }
 

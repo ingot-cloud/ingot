@@ -2,9 +2,7 @@ package com.ingot.framework.core.utils;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.base.constants.GlobalConstants;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -20,9 +18,7 @@ import java.util.Objects;
  * <p>Time         : 上午10:25.</p>
  */
 @Slf4j
-@UtilityClass
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-public class RequestUtils {
+public final class RequestUtils {
 
     /**
      * Gets request.

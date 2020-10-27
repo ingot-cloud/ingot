@@ -3,9 +3,7 @@ package com.ingot.framework.core.utils.reactive;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.base.constants.GlobalConstants;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 
@@ -23,9 +21,7 @@ import java.util.Optional;
  * <p>Time         : 09:27.</p>
  */
 @Slf4j
-@UtilityClass
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
-public class RequestUtils {
+public final class RequestUtils {
 
     /**
      * 获得用户远程地址
@@ -33,7 +29,7 @@ public class RequestUtils {
      * @param request the request
      * @return the string
      */
-    public String getRemoteIP(ServerRequest request) {
+    public static String getRemoteIP(ServerRequest request) {
         String ipAddress = getIPFromHeader(request, GlobalConstants.X_REAL_IP);
         if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
             ipAddress = getIPFromHeader(request, GlobalConstants.X_FORWARDED_FOR);
@@ -75,7 +71,7 @@ public class RequestUtils {
         return ipAddress;
     }
 
-    private String getIPFromHeader(ServerRequest request, String header) {
+    private static String getIPFromHeader(ServerRequest request, String header) {
         List<String> headers = request.headers().header(header);
         return CollUtil.isEmpty(headers) ? null : headers.get(0);
     }
@@ -86,7 +82,7 @@ public class RequestUtils {
      * @param request the request
      * @return the string
      */
-    public String getRemoteIP(ServerHttpRequest request) {
+    public static String getRemoteIP(ServerHttpRequest request) {
         String ipAddress = request.getHeaders().getFirst(GlobalConstants.X_REAL_IP);
         if (StrUtil.isEmpty(ipAddress) || GlobalConstants.UNKNOWN.equalsIgnoreCase(ipAddress)) {
             ipAddress = request.getHeaders().getFirst(GlobalConstants.X_FORWARDED_FOR);

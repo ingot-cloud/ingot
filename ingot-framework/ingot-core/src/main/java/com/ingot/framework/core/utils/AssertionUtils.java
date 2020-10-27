@@ -3,7 +3,6 @@ package com.ingot.framework.core.utils;
 import com.ingot.framework.base.exception.BaseException;
 import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.core.wrapper.IngotResponse;
-import lombok.experimental.UtilityClass;
 
 /**
  * <p>Description  : ResponseUtils.</p>
@@ -11,8 +10,7 @@ import lombok.experimental.UtilityClass;
  * <p>Date         : 2019/5/24.</p>
  * <p>Time         : 4:45 PM.</p>
  */
-@UtilityClass
-public class AssertionUtils {
+public final class AssertionUtils {
 
     /**
      * 检测IngotResponse，如果返回失败则抛出异常

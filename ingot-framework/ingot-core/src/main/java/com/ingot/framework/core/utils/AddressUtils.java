@@ -1,6 +1,5 @@
 package com.ingot.framework.core.utils;
 
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -18,19 +17,18 @@ import java.util.regex.Pattern;
  * <p>Time         : 14:47.</p>
  */
 @Slf4j
-@UtilityClass
-public class AddressUtils {
-    private final String ANY_HOST = "0.0.0.0";
-    private final String LOCALHOST = "127.0.0.1";
-    private final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
-    private volatile InetAddress LOCAL_ADDRESS = null;
+public final class AddressUtils {
+    private static final String ANY_HOST = "0.0.0.0";
+    private static final String LOCALHOST = "127.0.0.1";
+    private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
+    private static volatile InetAddress LOCAL_ADDRESS = null;
 
     /**
      * Find first valid IP from local network card
      *
      * @return first valid local IP
      */
-    public InetAddress getLocalAddress() {
+    public static InetAddress getLocalAddress() {
         if (LOCAL_ADDRESS != null) {
             return LOCAL_ADDRESS;
         }
@@ -44,7 +42,7 @@ public class AddressUtils {
      *
      * @return String
      */
-    public String getIP() {
+    public static String getIP() {
         return getLocalAddress().getHostAddress();
     }
 
@@ -54,7 +52,7 @@ public class AddressUtils {
      * @param port port
      * @return String
      */
-    public String getIpPort(int port) {
+    public static String getIpPort(int port) {
         String ip = getIP();
         return getIPort(ip, port);
     }
@@ -65,7 +63,7 @@ public class AddressUtils {
      * @param port port
      * @return String
      */
-    public String getIPort(String ip, int port) {
+    public static String getIPort(String ip, int port) {
         if (ip == null) {
             return null;
         }
@@ -77,7 +75,7 @@ public class AddressUtils {
      * @param address address
      * @return [ip, port]
      */
-    public Object[] parseIpPort(String address) {
+    public static Object[] parseIpPort(String address) {
         String[] array = address.split(":");
 
         String host = array[0];
@@ -137,7 +135,7 @@ public class AddressUtils {
      * @param address the input address
      * @return the normalized address, with scope id converted to int
      */
-    private InetAddress normalizeV6Address(Inet6Address address) {
+    private static InetAddress normalizeV6Address(Inet6Address address) {
         String addr = address.getHostAddress();
         int i = addr.lastIndexOf('%');
         if (i > 0) {
@@ -151,7 +149,7 @@ public class AddressUtils {
         return address;
     }
 
-    private InetAddress getLocalAddress0() {
+    private static InetAddress getLocalAddress0() {
         InetAddress localAddress = null;
         try {
             localAddress = InetAddress.getLocalHost();
