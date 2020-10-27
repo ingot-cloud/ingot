@@ -1,0 +1,12 @@
+
+dependencies {
+    implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.actuator_starter)
+    implementation(deps.spring.spring_boot.configuration_processor)
+
+    implementation(deps.spring.spring_cloud.openfeign_starter)
+    implementation(deps.spring.spring_cloud.oauth2_starter)
+}
+
+apply from: "${project.getRootDir().path}/config/database.gradle"
+apply from: "${project.getRootDir().path}/config/service-base.gradle"

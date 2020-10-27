@@ -9,3 +9,4 @@ include 'ingot-framework:ingot-store'
 include 'ingot-component:ingot-id'
 
 // Cloud service
+include 'ingot-service:ingot-acs'
