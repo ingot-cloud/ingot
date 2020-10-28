@@ -4,11 +4,14 @@ rootProject.name = 'ingot-cloud-pro'
 include 'ingot-framework:ingot-base'
 include 'ingot-framework:ingot-core'
 include 'ingot-framework:ingot-store'
+include 'ingot-framework:ingot-feign'
+include 'ingot-framework:ingot-security'
 
 // Component
 include 'ingot-component:ingot-id'
 
 // Cloud service
 include 'ingot-service:ingot-acs'
-include 'ingot-framework:ingot-feign'
+include 'ingot-service:ingot-pms:ingot-pms-api'
+include 'ingot-service:ingot-pms:ingot-pms-provider'
 
