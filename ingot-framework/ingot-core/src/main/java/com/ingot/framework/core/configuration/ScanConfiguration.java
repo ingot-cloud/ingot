@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan(value = {
-        "com.ingot.common.core"
+        "com.ingot.framework.core"
 })
 public class ScanConfiguration {
 }

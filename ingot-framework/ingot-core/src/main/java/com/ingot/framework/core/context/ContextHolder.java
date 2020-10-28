@@ -19,4 +19,16 @@ public class ContextHolder {
         ThreadLocalMap.put(ContextConstants.KEY_TENANT, id);
     }
 
+    public static String token() {
+        return ThreadLocalMap.get(ContextConstants.KEY_TOKEN);
+    }
+
+    public static void setToken(String token){
+        ThreadLocalMap.put(ContextConstants.KEY_TOKEN, token);
+    }
+
+    public static void clear() {
+        ThreadLocalMap.clear();
+    }
+
 }
