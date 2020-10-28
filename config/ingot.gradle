@@ -5,24 +5,11 @@ ingot.framework_base = ":ingot-framework:ingot-base"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_store = ":ingot-framework:ingot-store"
 ingot.framework_feign = ":ingot-framework:ingot-feign"
+
 // component
 ingot.cmp_id = ":ingot-component:ingot-id"
 
-// common
-ingot.common_properties = ":ingot-common:ingot-properties"
-ingot.common_security = ":ingot-common:ingot-security"
-ingot.common_data = ":ingot-common:ingot-common-data"
-ingot.common_validatecode = ":ingot-common:ingot-common-validatecode"
-ingot.common_swagger = ":ingot-common:ingot-common-swagger"
-ingot.common_minio = ":ingot-common:ingot-common-minio"
-ingot.common_log = ":ingot-common:ingot-common-log"
-// auth center
-ingot.ac_service = ":ingot-service-ac:ingot-ac-service"
-ingot.ac_api = ":ingot-service-ac:ingot-ac-api"
-// permissions management system
-ingot.pms_service = ":ingot-service-pms:ingot-pms-service"
-ingot.pms_api = ":ingot-service-pms:ingot-pms-api"
-// gateway
-ingot.gateway = ":ingot-service-gateway:gateway-scg"
+// service api
+ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
 
 ext.ingot = ingot
