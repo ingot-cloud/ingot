@@ -1,4 +1,4 @@
-package com.ingot.framework.core.configuration;
+package com.ingot.framework.core.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

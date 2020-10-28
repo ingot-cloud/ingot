@@ -1,5 +1,7 @@
 
 dependencies {
+    api(deps.java_validation_api)
+
     // joda time
     api(deps.joda_time)
 

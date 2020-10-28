@@ -6,6 +6,8 @@ dependencies {
 
     implementation(deps.spring.spring_cloud.openfeign_starter)
     implementation(deps.spring.spring_cloud.oauth2_starter)
+    implementation(deps.spring.spring_boot.freemarker_starter)
+
 }
 
 apply from: "${project.getRootDir().path}/config/database.gradle"
