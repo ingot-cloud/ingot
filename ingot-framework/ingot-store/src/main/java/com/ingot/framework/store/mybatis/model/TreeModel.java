@@ -18,12 +18,12 @@ public class TreeModel<T extends Model<?>> extends Model<T> {
      * ID
      */
     @TableId
-    private String id;
+    private Long id;
 
     /**
      * 父ID
      */
-    private String pid;
+    private Long pid;
 
     /**
      * 层级

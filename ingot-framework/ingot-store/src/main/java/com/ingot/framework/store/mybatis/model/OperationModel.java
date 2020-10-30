@@ -25,7 +25,7 @@ public class OperationModel<T extends Model<?>> extends Model<T> {
     /**
      * 创建人ID
      */
-    private String creatorId;
+    private Long creatorId;
 
     /**
      * 创建时间
@@ -42,7 +42,7 @@ public class OperationModel<T extends Model<?>> extends Model<T> {
     /**
      * 最后操作人ID
      */
-    private String lastOperatorId;
+    private Long lastOperatorId;
 
     /**
      * 更新时间
