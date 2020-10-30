@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.encoder;
+package com.ingot.framework.security.core.password;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 

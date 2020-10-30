@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.user;
+package com.ingot.framework.security.core.userdetails;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,30 +15,25 @@ import java.util.Collection;
 public class IngotUser extends User {
 
     @Getter
-    private String id;
+    private Long id;
     @Getter
-    private String deptId;
-    @Getter
-    private String tenantId;
+    private Long tenantId;
     @Getter
     private String authType;
 
-    public IngotUser(String id,
-                     String deptId,
-                     String tenantId,
+    public IngotUser(Long id,
+                     Long tenantId,
                      String authType,
                      String username,
                      String password, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
         this.id = id;
-        this.deptId = deptId;
         this.tenantId = tenantId;
         this.authType = authType;
     }
 
-    public IngotUser(String id,
-                     String deptId,
-                     String tenantId,
+    public IngotUser(Long id,
+                     Long tenantId,
                      String authType,
                      String username,
                      String password,
@@ -48,7 +43,6 @@ public class IngotUser extends User {
                      boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
-        this.deptId = deptId;
         this.tenantId = tenantId;
         this.authType = authType;
     }

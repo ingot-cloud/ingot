@@ -1,6 +1,6 @@
 package com.ingot.framework.security.config;
 
-import com.ingot.framework.security.core.encoder.NoPasswordEncoder;
+import com.ingot.framework.security.core.password.NoPasswordEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;

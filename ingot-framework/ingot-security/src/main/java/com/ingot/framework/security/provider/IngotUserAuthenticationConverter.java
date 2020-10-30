@@ -1,7 +1,7 @@
 package com.ingot.framework.security.provider;
 
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.security.core.user.IngotUser;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,11 +36,10 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
             Collection<? extends GrantedAuthority> authorities = getAuthorities(map);
 
             String username = (String) map.get(USERNAME);
-            String id = (String) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID);
-            String deptId = (String) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_DEPT_ID);
-            String tenantId = (String) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_TENANT_ID);
+            Long id = (Long) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID);
+            Long tenantId = (Long) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_TENANT_ID);
             String authType = (String) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE);
-            IngotUser user = new IngotUser(id, deptId, tenantId, authType, username, N_A, true,
+            IngotUser user = new IngotUser(id, tenantId, authType, username, N_A, true,
                     true, true, true, authorities);
             return new UsernamePasswordAuthenticationToken(user, N_A, authorities);
         }

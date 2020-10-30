@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.feign;
+package com.ingot.framework.feign;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,15 +21,15 @@ import java.util.HashMap;
 @Slf4j
 public class OAuth2FeignErrorDecoder implements ErrorDecoder {
     private final ErrorDecoder defaultErrorDecoder = new Default();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override public Exception decode(String methodKey, Response response) {
-        ObjectMapper mapper = new ObjectMapper();
-        log.info(">>> Oauth2FeignErrorDecoder - start decode, methodKey={}", methodKey);
+        log.info(">>> OAuth2FeignErrorDecoder - start decode, methodKey={}", methodKey);
         try {
             HashMap map = mapper.readValue(response.body().asInputStream(), HashMap.class);
             String code = (String) map.get("code");
             String message = (String) map.get("message");
-            log.info(">>> Oauth2FeignErrorDecoder - map={}", map);
+            log.info(">>> OAuth2FeignErrorDecoder - map={}", map);
             if (code != null) {
                 if (StrUtil.equals(code, BaseStatusCode.ILLEGAL_REQUEST_PARAMS.code())) {
                     throw new IllegalArgumentException(message);
@@ -38,7 +38,7 @@ public class OAuth2FeignErrorDecoder implements ErrorDecoder {
                 }
             }
         } catch (IOException e) {
-            log.error(">>> Oauth2FeignErrorDecoder - IOException, message={}, e={}", e.getMessage(), e);
+            log.error(">>> OAuth2FeignErrorDecoder - IOException, message={}, e={}", e.getMessage(), e);
         }
         return defaultErrorDecoder.decode(methodKey, response);
     }

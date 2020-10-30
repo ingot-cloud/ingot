@@ -6,5 +6,6 @@ dependencies {
 
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
 
+    compileOnly(deps.javax_servlet_api)
     compileOnly project(ingot.framework_core)
 }

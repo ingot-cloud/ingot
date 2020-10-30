@@ -12,7 +12,7 @@ import com.ingot.framework.core.constants.CookieConstants;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.utils.RequestUtils;
-import com.ingot.framework.security.core.user.IngotUser;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

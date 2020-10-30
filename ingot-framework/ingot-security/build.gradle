@@ -4,9 +4,9 @@ dependencies {
     api(deps.spring.spring_boot.configuration_processor)
     api(deps.spring.spring_cloud.oauth2_starter)
     api(deps.spring.spring_cloud.bus_start)
-    api(deps.feign_okhttp)
     api project(ingot.framework_core)
 
+    implementation project(ingot.framework_feign)
     implementation project(ingot.pms_api)
 
     compileOnly(deps.javax_servlet_api)

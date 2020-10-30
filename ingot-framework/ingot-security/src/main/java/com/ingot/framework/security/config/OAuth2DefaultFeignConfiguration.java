@@ -1,8 +1,7 @@
 package com.ingot.framework.security.config;
 
-import com.ingot.framework.security.core.feign.OAuth2FeignErrorDecoder;
-import com.ingot.framework.security.core.feign.interceptor.OAuth2FeignRequestInterceptor;
-import com.ingot.framework.security.utils.ClientTokenUtils;
+import com.ingot.framework.feign.OAuth2FeignErrorDecoder;
+import com.ingot.framework.feign.OAuth2FeignRequestInterceptor;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestInterceptor;
@@ -34,8 +33,8 @@ public class OAuth2DefaultFeignConfiguration {
     }
 
     @Bean
-    public RequestInterceptor oauth2FeignRequestInterceptor(ClientTokenUtils clientTokenUtils) {
-        return new OAuth2FeignRequestInterceptor(clientTokenUtils);
+    public RequestInterceptor oauth2FeignRequestInterceptor() {
+        return new OAuth2FeignRequestInterceptor();
     }
 
 }
