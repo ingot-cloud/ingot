@@ -1,7 +1,7 @@
 package com.ingot.framework.security.core.filter;
 
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.security.utils.ResourcePermitUtils;
+import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.StringUtils;
@@ -30,7 +30,7 @@ import java.util.Enumeration;
 @Slf4j
 @AllArgsConstructor
 public class IgnoreBearerTokenFilter extends OncePerRequestFilter {
-    private final ResourcePermitUtils resourcePermitUtils;
+    private final ResourcePermitService resourcePermitService;
 
     @Override protected void doFilterInternal(@NonNull HttpServletRequest request,
                                               @NonNull HttpServletResponse response,
@@ -38,7 +38,7 @@ public class IgnoreBearerTokenFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         log.info(">>> IgnoreBearerTokenFilter, {}", requestURI);
 
-        if (!resourcePermitUtils.resourcePermit(requestURI)){
+        if (!resourcePermitService.resourcePermit(requestURI)){
             filterChain.doFilter(request, response);
             return;
         }

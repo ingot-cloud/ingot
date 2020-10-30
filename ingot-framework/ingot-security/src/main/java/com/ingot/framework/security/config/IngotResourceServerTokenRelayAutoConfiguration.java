@@ -1,5 +1,6 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.config;
 
+import com.ingot.framework.security.provider.IngotAccessTokenContextRelay;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;

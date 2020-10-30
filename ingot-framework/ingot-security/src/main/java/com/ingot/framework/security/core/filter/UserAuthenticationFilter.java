@@ -8,7 +8,7 @@ import com.ingot.framework.security.core.exception.UserTokenSignBackException;
 import com.ingot.framework.security.model.dto.UserTokenDto;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.UserAccessTokenRedisService;
-import com.ingot.framework.security.utils.ResourcePermitUtils;
+import com.ingot.framework.security.service.ResourcePermitService;
 import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ import static com.ingot.framework.core.constants.SecurityConstants.AUTH_TYPE_UNI
 @AllArgsConstructor
 public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final UserAccessTokenRedisService userAccessTokenRedisService;
-    private final ResourcePermitUtils resourcePermitUtils;
+    private final ResourcePermitService resourcePermitService;
     private final AuthenticationService authenticationService;
 
     @Override protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -44,7 +44,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         final String url = request.getRequestURI();
         String token = SecurityUtils.getBearerTokenValue(SecurityUtils.getBearerToken(request).orElse(""));
 
-        if (resourcePermitUtils.userPermit(url)){
+        if (resourcePermitService.userPermit(url)){
             log.info(">>> UserAuthenticationFilter ====> IgnoreUserAuthentication 忽略认证.url={}", url);
             filterChain.doFilter(request, response);
             return;

@@ -7,7 +7,7 @@ import com.ingot.framework.security.core.authorize.manager.IngotAuthorizeConfigM
 import com.ingot.framework.security.core.authorize.provider.ActuatorAuthorizeConfigProvider;
 import com.ingot.framework.security.core.authorize.provider.AuthorizePermitConfigProvider;
 import com.ingot.framework.security.core.authorize.provider.IngotFilterConfigProvider;
-import com.ingot.framework.security.utils.ResourcePermitUtils;
+import com.ingot.framework.security.service.ResourcePermitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -39,8 +39,8 @@ public class AuthorizeConfig {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public AuthorizePermitConfigProvider permitProvider(@Value("${spring.application.name}") String applicationName,
-                                                        ResourcePermitUtils resourcePermitUtils) {
-        return new AuthorizePermitConfigProvider(applicationName, resourcePermitUtils);
+                                                        ResourcePermitService resourcePermitService) {
+        return new AuthorizePermitConfigProvider(applicationName, resourcePermitService);
     }
 
     @Bean

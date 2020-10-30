@@ -7,7 +7,7 @@ import com.ingot.framework.security.model.dto.UserTokenDto;
 import com.ingot.framework.security.service.UserAccessTokenRedisService;
 import com.ingot.framework.security.utils.ObjectUtils;
 import com.ingot.framework.security.utils.SecurityUtils;
-import com.ingot.framework.security.utils.TokenServiceUtils;
+import com.ingot.framework.security.service.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -31,14 +31,14 @@ import static com.ingot.framework.core.constants.SecurityConstants.AUTH_TYPE_UNI
  */
 @Slf4j
 @Service
-@ConditionalOnBean(value = {TokenServiceUtils.class, RedisTemplate.class})
+@ConditionalOnBean(value = {TokenService.class, RedisTemplate.class})
 @AllArgsConstructor
 public class UserAccessTokenRedisServiceImpl implements UserAccessTokenRedisService {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final TokenServiceUtils tokenServiceUtils;
+    private final TokenService tokenService;
 
     @Override public void update(String oldToken, String newToken, int tokenValidateSeconds, UserTokenDto userTokenDto) {
-        String authType = SecurityUtils.getAuthType(tokenServiceUtils.readAccessToken(newToken));
+        String authType = SecurityUtils.getAuthType(tokenService.readAccessToken(newToken));
         if (StrUtil.isEmpty(authType) || StrUtil.endWithIgnoreCase(authType, AUTH_TYPE_STANDARD)){
             updateStandard(oldToken, newToken, tokenValidateSeconds, userTokenDto);
         } else if (StrUtil.endWithIgnoreCase(authType, AUTH_TYPE_UNIQUE)){
@@ -47,22 +47,22 @@ public class UserAccessTokenRedisServiceImpl implements UserAccessTokenRedisServ
     }
 
     @Override public void updateUnique(String accessToken, int accessTokenValidateSeconds, UserTokenDto userTokenDto) {
-        final String key = getKey(tokenServiceUtils.readAccessToken(accessToken));
+        final String key = getKey(tokenService.readAccessToken(accessToken));
         set(key, userTokenDto, accessTokenValidateSeconds);
     }
 
     @Override public void updateStandard(String oldToken, String newToken, int tokenValidateSeconds, UserTokenDto userTokenDto) {
         if (StrUtil.isNotEmpty(oldToken)){
-            String key = getKey(tokenServiceUtils.readAccessToken(oldToken));
+            String key = getKey(tokenService.readAccessToken(oldToken));
             revokeByKey(key);
         }
 
-        String key = getKey(tokenServiceUtils.readAccessToken(newToken));
+        String key = getKey(tokenService.readAccessToken(newToken));
         set(key, userTokenDto, tokenValidateSeconds);
     }
 
     @Override public void revoke(String accessToken) {
-        OAuth2AccessToken token = tokenServiceUtils.readAccessToken(accessToken);
+        OAuth2AccessToken token = tokenService.readAccessToken(accessToken);
         revokeByKey(getKey(token));
     }
 
@@ -80,7 +80,7 @@ public class UserAccessTokenRedisServiceImpl implements UserAccessTokenRedisServ
     }
 
     @Override public UserTokenDto getAccessToken(String accessToken) {
-        OAuth2AccessToken token = tokenServiceUtils.readAccessToken(accessToken);
+        OAuth2AccessToken token = tokenService.readAccessToken(accessToken);
         String key = getKey(token);
         if (StrUtil.isEmpty(key)){
             return null;

@@ -5,7 +5,7 @@ import com.ingot.framework.security.core.filter.IgnoreBearerTokenFilter;
 import com.ingot.framework.security.core.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.UserAccessTokenRedisService;
-import com.ingot.framework.security.utils.ResourcePermitUtils;
+import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
-    private final ResourcePermitUtils resourcePermitUtils;
+    private final ResourcePermitService resourcePermitService;
     @Lazy
     @Autowired(required = false)
     private UserAuthenticationFilter userAuthenticationFilter;
@@ -39,7 +39,7 @@ public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<Default
     @SneakyThrows
     @Override public void configure(HttpSecurity builder) {
         log.info(">>> IngotSecurityFilterConfig - configure.");
-        IgnoreBearerTokenFilter ignoreBearerTokenFilter = new IgnoreBearerTokenFilter(resourcePermitUtils);
+        IgnoreBearerTokenFilter ignoreBearerTokenFilter = new IgnoreBearerTokenFilter(resourcePermitService);
         builder.addFilterAfter(ignoreBearerTokenFilter, HeaderWriterFilter.class);
 
         boolean addUserAuthenticationFilter = userAuthenticationFilter != null;
@@ -54,6 +54,6 @@ public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<Default
     @ConditionalOnMissingBean(annotation = IgnoreUserAuthentication.class)
     public UserAuthenticationFilter userAuthenticationFilter(@Lazy UserAccessTokenRedisService userAccessTokenRedisService,
                                                              AuthenticationService authenticationService){
-        return new UserAuthenticationFilter(userAccessTokenRedisService, resourcePermitUtils, authenticationService);
+        return new UserAuthenticationFilter(userAccessTokenRedisService, resourcePermitService, authenticationService);
     }
 }

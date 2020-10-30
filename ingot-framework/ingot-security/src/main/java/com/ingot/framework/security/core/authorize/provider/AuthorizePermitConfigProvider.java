@@ -1,7 +1,7 @@
 package com.ingot.framework.security.core.authorize.provider;
 
 import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
-import com.ingot.framework.security.utils.ResourcePermitUtils;
+import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,10 +18,10 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthorizePermitConfigProvider implements AuthorizeConfigProvider {
     private final String applicationName;
-    private final ResourcePermitUtils resourcePermitUtils;
+    private final ResourcePermitService resourcePermitService;
 
     @Override public boolean config(HttpSecurity http) throws Exception{
-        List<String> permit = resourcePermitUtils.allResourcePermitAntPatterns();
+        List<String> permit = resourcePermitService.allResourcePermitAntPatterns();
         log.info(">>> {} AuthorizePermitConfig [configure] ========>>> http permit: {}", applicationName, permit);
 
         if (!permit.isEmpty()){

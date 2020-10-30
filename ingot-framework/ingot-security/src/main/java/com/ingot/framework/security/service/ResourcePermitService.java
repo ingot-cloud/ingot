@@ -1,9 +1,9 @@
-package com.ingot.framework.security.utils;
+package com.ingot.framework.security.service;
 
 import com.google.common.collect.Lists;
 import com.ingot.framework.security.properties.IngotPermitUrlProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
 import javax.annotation.Resource;
@@ -17,30 +17,11 @@ import java.util.List;
  * <p>Time         : 10:47 AM.</p>
  */
 @Slf4j
-@Component
-public class ResourcePermitUtils {
-    private AntPathMatcher antPathMatcher = new AntPathMatcher();
+@Service
+public class ResourcePermitService {
     @Resource
     private IngotPermitUrlProperties ingotPermitUrlProperties;
-
-    /**
-     * Resource permit ant patterns
-     */
-    private List<String> commonResourcePermitAntPatterns(){
-        return Lists.newArrayList(
-                "/druid/**",
-                "/login",
-                "/error",
-                "/favicon.ico"
-        );
-    }
-
-    /**
-     * User permit ant patterns
-     */
-    private List<String> commonUserPermitAntPatterns(){
-        return Lists.newArrayList("/actuator/**");
-    }
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     /**
      * Resource permit ant patterns
@@ -73,4 +54,24 @@ public class ResourcePermitUtils {
         list.addAll(ingotPermitUrlProperties.getIgnoreUserUrls());
         return list.stream().anyMatch(url -> antPathMatcher.match(url, requestURI));
     }
+
+    /**
+     * Resource permit ant patterns
+     */
+    private List<String> commonResourcePermitAntPatterns(){
+        return Lists.newArrayList(
+                "/druid/**",
+                "/login",
+                "/error",
+                "/favicon.ico"
+        );
+    }
+
+    /**
+     * User permit ant patterns
+     */
+    private List<String> commonUserPermitAntPatterns(){
+        return Lists.newArrayList("/actuator/**");
+    }
+
 }

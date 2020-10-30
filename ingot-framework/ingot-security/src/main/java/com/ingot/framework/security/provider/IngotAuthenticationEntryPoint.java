@@ -4,15 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-
-import static com.ingot.framework.core.constants.BeanIds.AUTHENTICATION_ENTRY_POINT;
 
 /**
  * <p>Description  : IngotAuthenticationEntryPoint.</p>
@@ -21,7 +18,6 @@ import static com.ingot.framework.core.constants.BeanIds.AUTHENTICATION_ENTRY_PO
  * <p>Time         : 下午2:59.</p>
  */
 @Slf4j
-@Component(AUTHENTICATION_ENTRY_POINT)
 @AllArgsConstructor
 public class IngotAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final HandlerExceptionResolver handlerExceptionResolver;

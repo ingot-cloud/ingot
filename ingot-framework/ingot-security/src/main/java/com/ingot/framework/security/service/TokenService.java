@@ -1,15 +1,16 @@
-package com.ingot.framework.security.utils;
+package com.ingot.framework.security.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.model.dto.UserTokenDto;
+import com.ingot.framework.security.utils.ObjectUtils;
 import lombok.NonNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -22,9 +23,9 @@ import java.util.Map;
  * <p>Date         : 2019/7/1.</p>
  * <p>Time         : 3:54 PM.</p>
  */
-@Component
+@Service
 @ConditionalOnBean(TokenStore.class)
-public class TokenServiceUtils {
+public class TokenService {
 
     @Resource
     private TokenStore tokenStore;

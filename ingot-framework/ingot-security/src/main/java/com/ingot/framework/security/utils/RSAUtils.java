@@ -1,7 +1,6 @@
 package com.ingot.framework.security.utils;
 
 import com.google.common.base.Preconditions;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.DataInputStream;
@@ -21,10 +20,9 @@ import java.util.Map;
  * <p>Time         : 下午3:00.</p>
  */
 @Slf4j
-@UtilityClass
-public class RSAUtils {
-    public final String KEY_PUB = "pub";
-    public final String KEY_PRI = "pri";
+public final class RSAUtils {
+    public static final String KEY_PUB = "pub";
+    public static final String KEY_PRI = "pri";
 
     /**
      * 获取RSA公钥
@@ -33,7 +31,7 @@ public class RSAUtils {
      * @return {@link PublicKey}
      * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException, IOException
      */
-    public PublicKey getPublicKey(String filename) throws Exception {
+    public static PublicKey getPublicKey(String filename) throws Exception {
         InputStream resourceAsStream = getResourceAsStream(filename);
         DataInputStream dis = new DataInputStream(resourceAsStream);
         byte[] keyBytes = new byte[resourceAsStream.available()];
@@ -51,7 +49,7 @@ public class RSAUtils {
      * @return {@link PrivateKey}
      * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException, IOException
      */
-    public PrivateKey getPrivateKey(String filename) throws Exception {
+    public static PrivateKey getPrivateKey(String filename) throws Exception {
         InputStream resourceAsStream = getResourceAsStream(filename);
         DataInputStream dis = new DataInputStream(resourceAsStream);
         byte[] keyBytes = new byte[resourceAsStream.available()];
@@ -69,7 +67,7 @@ public class RSAUtils {
      * @return {@link PublicKey}
      * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
      */
-    public PublicKey getPublicKey(byte[] publicKey) throws Exception {
+    public static PublicKey getPublicKey(byte[] publicKey) throws Exception {
         X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePublic(spec);
@@ -82,7 +80,7 @@ public class RSAUtils {
      * @return {@link PrivateKey}
      * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
      */
-    public PrivateKey getPrivateKey(byte[] privateKey) throws Exception {
+    public static PrivateKey getPrivateKey(byte[] privateKey) throws Exception {
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKey);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePrivate(spec);
@@ -96,7 +94,7 @@ public class RSAUtils {
      * @param password           密码
      * @throws Exception IOException, NoSuchAlgorithmException
      */
-    public void generateKey(String publicKeyFilename,
+    public static void generateKey(String publicKeyFilename,
                             String privateKeyFilename,
                             String password) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -120,7 +118,7 @@ public class RSAUtils {
      * @return bytes
      * @throws Exception NoSuchAlgorithmException
      */
-    public byte[] generatePublicKey(String password) throws Exception {
+    public static byte[] generatePublicKey(String password) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         SecureRandom secureRandom = new SecureRandom(password.getBytes());
         keyPairGenerator.initialize(1024, secureRandom);
@@ -135,7 +133,7 @@ public class RSAUtils {
      * @return bytes
      * @throws Exception NoSuchAlgorithmException
      */
-    public byte[] generatePrivateKey(String password) throws Exception {
+    public static byte[] generatePrivateKey(String password) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         SecureRandom secureRandom = new SecureRandom(password.getBytes());
         keyPairGenerator.initialize(1024, secureRandom);
@@ -150,7 +148,7 @@ public class RSAUtils {
      * @return Map
      * @throws Exception NoSuchAlgorithmException
      */
-    public Map<String, byte[]> generateKey(String password) throws Exception {
+    public static Map<String, byte[]> generateKey(String password) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         SecureRandom secureRandom = new SecureRandom(password.getBytes());
         keyPairGenerator.initialize(1024, secureRandom);
@@ -163,15 +161,15 @@ public class RSAUtils {
         return map;
     }
 
-    public String toHexString(byte[] b) {
+    public static String toHexString(byte[] b) {
         return Base64.getEncoder().encodeToString(b);
     }
 
-    public byte[] toBytes(String s) {
+    public static byte[] toBytes(String s) {
         return Base64.getDecoder().decode(s);
     }
 
-    private InputStream getResourceAsStream(String filename) {
+    private static InputStream getResourceAsStream(String filename) {
         InputStream stream = RSAUtils.class.getClassLoader().getResourceAsStream(filename);
         Preconditions.checkArgument(stream != null);
         return stream;
