@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.provider.token;
 
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;

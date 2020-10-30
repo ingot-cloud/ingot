@@ -1,7 +1,7 @@
-package com.ingot.framework.security.provider.service.impl;
+package com.ingot.framework.security.service.impl;
 
 import com.ingot.framework.core.constants.RedisConstants;
-import com.ingot.framework.security.provider.service.JwtKeyService;
+import com.ingot.framework.security.service.JwtKeyService;
 import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.utils;
 
 import com.google.common.collect.Lists;
-import com.ingot.framework.security.provider.IngotPermitUrlProperties;
+import com.ingot.framework.security.properties.IngotPermitUrlProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;

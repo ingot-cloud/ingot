@@ -2,14 +2,10 @@ package com.ingot.framework.security.core.authorize.provider;
 
 import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
 import com.ingot.framework.security.utils.ResourcePermitUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -19,14 +15,10 @@ import java.util.List;
  * <p>Time         : 上午9:46.</p>
  */
 @Slf4j
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@AllArgsConstructor
 public class AuthorizePermitConfigProvider implements AuthorizeConfigProvider {
-
-    @Value("${spring.application.name}")
-    private String applicationName;
-    @Resource
-    private ResourcePermitUtils resourcePermitUtils;
+    private final String applicationName;
+    private final ResourcePermitUtils resourcePermitUtils;
 
     @Override public boolean config(HttpSecurity http) throws Exception{
         List<String> permit = resourcePermitUtils.allResourcePermitAntPatterns();

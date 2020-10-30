@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.stereotype.Component;
 
 /**
  * <p>Description  : AuthorizeActuatorConfigProvider.</p>
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
  * <p>Time         : 11:37 AM.</p>
  */
 @Slf4j
-@Component
 @AllArgsConstructor
 public class ActuatorAuthorizeConfigProvider implements AuthorizeConfigProvider {
     private final WebEndpointProperties webEndpointProperties;

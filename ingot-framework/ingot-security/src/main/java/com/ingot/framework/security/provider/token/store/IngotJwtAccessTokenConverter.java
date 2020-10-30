@@ -1,7 +1,7 @@
 package com.ingot.framework.security.provider.token.store;
 
-import com.ingot.framework.security.provider.IngotUserAuthenticationConverter;
-import com.ingot.framework.security.provider.service.JwtKeyService;
+import com.ingot.framework.security.provider.token.IngotUserAuthenticationConverter;
+import com.ingot.framework.security.service.JwtKeyService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.JwtAccessTokenConverterConfigurer;

@@ -1,10 +1,10 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.provider.error;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
-import com.ingot.framework.security.constants.AcResponseCode;
+import com.ingot.framework.security.status.SecurityStatusCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -32,7 +32,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse unAuthorizedException(AccessDeniedException e) {
+    public IngotResponse<?> unAuthorizedException(AccessDeniedException e) {
         log.error(">>> GlobalExceptionHandler AccessDeniedException - message={}, e={}", e.getMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }
@@ -40,10 +40,10 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(InsufficientAuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse insufficientAuthenticationExceptionHandler(InsufficientAuthenticationException ex) {
+    public IngotResponse<?> insufficientAuthenticationExceptionHandler(InsufficientAuthenticationException ex) {
         log.error(">>> AuthExceptionHandler InsufficientAuthenticationException message={}, e={}", ex.getMessage(), ex);
         if (StrUtil.startWithIgnoreCase(ex.getMessage(), "Access token expired")){
-            return ResponseWrapper.error(AcResponseCode.AC10010004);
+            return ResponseWrapper.error(SecurityStatusCode.TOKEN_INVALID);
         }
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }
@@ -51,7 +51,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse badCredentialsExceptionExceptionHandler(BadCredentialsException ex) {
+    public IngotResponse<?> badCredentialsExceptionExceptionHandler(BadCredentialsException ex) {
         log.error(">>> AuthExceptionHandler BadCredentialsException message={}, e={}", ex.getMessage(), ex);
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED.code(), ex.getMessage());
     }
@@ -59,7 +59,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse authenticationExceptionHandler(AuthenticationException ex) {
+    public IngotResponse<?> authenticationExceptionHandler(AuthenticationException ex) {
         log.error(">>> AuthExceptionHandler AuthenticationException message={}, e={}", ex.getMessage(), ex);
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }

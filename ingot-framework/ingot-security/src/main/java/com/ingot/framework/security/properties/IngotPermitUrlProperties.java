@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.properties;
 
 import cn.hutool.core.util.ReUtil;
 import com.ingot.framework.security.annotation.Permit;

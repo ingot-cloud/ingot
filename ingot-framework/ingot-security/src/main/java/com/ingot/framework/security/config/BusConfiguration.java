@@ -2,8 +2,12 @@ package com.ingot.framework.security.config;
 
 import com.ingot.framework.security.core.bus.RefreshJwtKeySender;
 import com.ingot.framework.security.core.bus.event.RefreshJwtKeyApplicationEvent;
+import com.ingot.framework.security.core.bus.listener.RefreshJwtKeyEventListener;
+import com.ingot.framework.security.service.JwtKeyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.bus.BusAutoConfiguration;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.cloud.bus.ConditionalOnBusEnabled;
@@ -11,6 +15,7 @@ import org.springframework.cloud.bus.jackson.RemoteApplicationEventScan;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 /**
  * <p>Description  : BusConfiguration.</p>
@@ -31,4 +36,12 @@ public class BusConfiguration {
         return new RefreshJwtKeySender(properties.getId(), publisher);
     }
 
+
+    @Bean
+    @ConditionalOnBean(JwtAccessTokenConverter.class)
+    @ConditionalOnProperty(name = "security.oauth2.resource.jwt.key-uri")
+    public RefreshJwtKeyEventListener refreshJwtKeyEventListener(JwtAccessTokenConverter jwtTokenEnhancer,
+                                                                 JwtKeyService jwtKeyService){
+        return new RefreshJwtKeyEventListener(jwtTokenEnhancer, jwtKeyService);
+    }
 }

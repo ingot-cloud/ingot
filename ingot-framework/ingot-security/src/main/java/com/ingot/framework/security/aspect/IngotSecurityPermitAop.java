@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.aspect;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;

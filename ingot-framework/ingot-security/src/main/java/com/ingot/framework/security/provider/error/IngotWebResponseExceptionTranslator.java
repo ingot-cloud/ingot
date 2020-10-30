@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.provider.error;
 
 import com.ingot.framework.security.core.exception.*;
 import lombok.extern.slf4j.Slf4j;

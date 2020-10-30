@@ -1,6 +1,6 @@
 package com.ingot.framework.security.annotation;
 
-import com.ingot.framework.security.config.AuthorizeConfig;
+import com.ingot.framework.security.provider.AuthorizeConfig;
 import com.ingot.framework.security.provider.IngotSecurityBeanDefinitionRegistrar;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;

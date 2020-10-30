@@ -21,7 +21,9 @@ public class IngotOAuth2ExceptionSerializer extends StdSerializer<IngotOAuth2Exc
     }
 
     @SneakyThrows
-    @Override public void serialize(IngotOAuth2Exception value, JsonGenerator gen, SerializerProvider provider) {
+    @Override public void serialize(IngotOAuth2Exception value,
+                                    JsonGenerator gen,
+                                    SerializerProvider provider) {
         gen.writeStartObject();
         gen.writeStringField(IngotResponse.CODE, value.getCode());
         gen.writeStringField(IngotResponse.MESSAGE, value.getMessage());

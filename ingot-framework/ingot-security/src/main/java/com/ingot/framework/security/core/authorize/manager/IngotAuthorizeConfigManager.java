@@ -2,10 +2,10 @@ package com.ingot.framework.security.core.authorize.manager;
 
 import com.ingot.framework.security.core.authorize.AuthorizeConfigManager;
 import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -15,9 +15,9 @@ import java.util.List;
  * <p>Time         : 下午12:14.</p>
  */
 @Slf4j
+@AllArgsConstructor
 public class IngotAuthorizeConfigManager implements AuthorizeConfigManager {
-    @Resource
-    private List<AuthorizeConfigProvider> authorizeConfigProviders;
+    private final List<AuthorizeConfigProvider> authorizeConfigProviders;
 
     @Override public void config(HttpSecurity http) throws Exception{
         log.info(">>> AuthorizeConfigProvider={}", authorizeConfigProviders);

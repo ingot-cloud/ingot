@@ -17,7 +17,8 @@ import org.springframework.lang.NonNull;
 @Slf4j
 public class IngotJwtTokenServicesBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
-    @Override public void registerBeanDefinitions(@NonNull AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    @Override public void registerBeanDefinitions(@NonNull AnnotationMetadata importingClassMetadata,
+                                                  BeanDefinitionRegistry registry) {
         // 使用 ingotJwtTokenEnhancer 替换
         // org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerTokenServicesConfiguration$JwtTokenServicesConfiguration
         // 类中的 jwtTokenEnhancer

@@ -2,11 +2,9 @@ package com.ingot.framework.security.core.authorize.provider;
 
 import com.ingot.framework.security.config.IngotSecurityFilterConfig;
 import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * <p>Description  : IgnoreBearerTokenConfigProvider.</p>
@@ -15,11 +13,9 @@ import javax.annotation.Resource;
  * <p>Time         : 10:53 AM.</p>
  */
 @Slf4j
-@Component
+@AllArgsConstructor
 public class IngotFilterConfigProvider implements AuthorizeConfigProvider {
-
-    @Resource
-    private IngotSecurityFilterConfig ingotSecurityFilterConfig;
+    private final IngotSecurityFilterConfig ingotSecurityFilterConfig;
 
     @Override public boolean config(HttpSecurity http) throws Exception {
         http.apply(ingotSecurityFilterConfig);

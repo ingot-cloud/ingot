@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider.service.impl;
+package com.ingot.framework.security.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.dto.role.RoleAuthorityDto;
@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.dto.role.RoleListDto;
 import com.ingot.cloud.pms.api.rpc.client.PmsRoleFeignApi;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.provider.service.AuthenticationService;
+import com.ingot.framework.security.service.AuthenticationService;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

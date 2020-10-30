@@ -1,4 +1,4 @@
-package com.ingot.framework.security.provider.service;
+package com.ingot.framework.security.service;
 
 import org.springframework.security.core.Authentication;
 

@@ -1,9 +1,9 @@
-package com.ingot.framework.security.provider.service.impl;
+package com.ingot.framework.security.service.impl;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
-import com.ingot.framework.security.provider.service.PreAuthorizeService;
+import com.ingot.framework.security.service.PreAuthorizeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.provider;
 
 import com.ingot.framework.security.core.authorize.AuthorizeConfigManager;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
@@ -11,8 +12,6 @@ import org.springframework.security.oauth2.provider.expression.OAuth2WebSecurity
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-import javax.annotation.Resource;
-
 /**
  * <p>Description  : ResourceConfig.</p>
  * <p>Author       : wangchao.</p>
@@ -20,17 +19,13 @@ import javax.annotation.Resource;
  * <p>Time         : 下午9:55.</p>
  */
 @Slf4j
+@AllArgsConstructor
 public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
-    @Resource
-    private AccessDeniedHandler ingotAccessDeniedHandler;
-    @Resource
-    private OAuth2WebSecurityExpressionHandler ingotSecurityExpressionHandler;
-    @Resource
-    private AuthenticationEntryPoint ingotAuthenticationEntryPoint;
-    @Resource
-    private AuthorizeConfigManager authorizeConfigManager;
-    @Resource
-    private ResourceServerProperties resource;
+    private final AccessDeniedHandler ingotAccessDeniedHandler;
+    private final OAuth2WebSecurityExpressionHandler ingotSecurityExpressionHandler;
+    private final AuthenticationEntryPoint ingotAuthenticationEntryPoint;
+    private final AuthorizeConfigManager authorizeConfigManager;
+    private final ResourceServerProperties resource;
 
     @SneakyThrows
     @Override public void configure(HttpSecurity http) {

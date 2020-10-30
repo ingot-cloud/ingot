@@ -1,14 +1,11 @@
 package com.ingot.framework.security.core.bus.listener;
 
 import com.ingot.framework.security.core.bus.event.RefreshJwtKeyApplicationEvent;
-import com.ingot.framework.security.provider.service.JwtKeyService;
+import com.ingot.framework.security.service.JwtKeyService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
@@ -19,9 +16,6 @@ import org.springframework.util.StringUtils;
  */
 @Slf4j
 @AllArgsConstructor
-@Component
-@ConditionalOnBean(JwtAccessTokenConverter.class)
-@ConditionalOnProperty(name = "security.oauth2.resource.jwt.key-uri")
 public class RefreshJwtKeyEventListener implements ApplicationListener<RefreshJwtKeyApplicationEvent> {
     private final JwtAccessTokenConverter jwtTokenEnhancer;
     private final JwtKeyService jwtKeyService;

@@ -1,12 +1,12 @@
 package com.ingot.framework.security.provider;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,12 +22,13 @@ import static com.ingot.framework.core.constants.BeanIds.AUTHENTICATION_ENTRY_PO
  */
 @Slf4j
 @Component(AUTHENTICATION_ENTRY_POINT)
+@AllArgsConstructor
 public class IngotAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    @Resource
-    private HandlerExceptionResolver handlerExceptionResolver;
-
-    @Override public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException e) throws IOException, ServletException {
+    @Override public void commence(HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   AuthenticationException e) throws IOException, ServletException {
         log.info(">>> IngotAuthenticationEntryPoint - 认证入口点。exception={}", e.getMessage());
 //        BaseResponse body = new BaseResponse(GL99990401.code(), e.getMessage());
 //        response.setStatus(HttpStatus.UNAUTHORIZED.value());

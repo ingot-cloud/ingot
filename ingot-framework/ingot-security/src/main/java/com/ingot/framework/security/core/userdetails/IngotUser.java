@@ -13,13 +13,12 @@ import java.util.Collection;
  * <p>Time         : 12:54 PM.</p>
  */
 public class IngotUser extends User {
-
     @Getter
-    private Long id;
+    private final Long id;
     @Getter
-    private Long tenantId;
+    private final Long tenantId;
     @Getter
-    private String authType;
+    private final String authType;
 
     public IngotUser(Long id,
                      Long tenantId,

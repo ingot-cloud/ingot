@@ -1,10 +1,10 @@
-package com.ingot.framework.security.provider.service.impl;
+package com.ingot.framework.security.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.model.dto.UserTokenDto;
-import com.ingot.framework.security.provider.service.UserAccessTokenRedisService;
+import com.ingot.framework.security.service.UserAccessTokenRedisService;
 import com.ingot.framework.security.utils.ObjectUtils;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.utils.TokenServiceUtils;

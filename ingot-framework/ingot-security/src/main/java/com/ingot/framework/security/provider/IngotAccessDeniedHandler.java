@@ -28,7 +28,9 @@ import static com.ingot.framework.core.constants.BeanIds.ACCESS_DENIED_HANDLER;
 public class IngotAccessDeniedHandler implements AccessDeniedHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Override public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException e) throws IOException, ServletException {
+    @Override public void handle(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 AccessDeniedException e) throws IOException, ServletException {
         log.info(">>> IngotAccessDeniedHandler - 访问权限异常。exception={}", e, e);
         IngotResponse<?> body = new IngotResponse<>(BaseStatusCode.UNAUTHORIZED);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());

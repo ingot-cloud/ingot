@@ -6,6 +6,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.lang.NonNull;
 
 /**
  * <p>Description  : IngotSecurityBeanDefinitionRegistrar.</p>
@@ -16,9 +17,11 @@ import org.springframework.core.type.AnnotationMetadata;
 @Slf4j
 public class IngotSecurityBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
-    @Override public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    @Override public void registerBeanDefinitions(@NonNull AnnotationMetadata importingClassMetadata,
+                                                  BeanDefinitionRegistry registry) {
         if (registry.isBeanNameInUse(SecurityConstants.RESOURCE_SERVER_CONFIGURER)) {
-            log.warn(">>> 本地存在资源服务器配置={}, 不注入默认资源配置 IngotResourceServerConfig", SecurityConstants.RESOURCE_SERVER_CONFIGURER);
+            log.warn(">>> 本地存在资源服务器配置={}, 不注入默认资源配置 IngotResourceServerConfig",
+                    SecurityConstants.RESOURCE_SERVER_CONFIGURER);
             return;
         }
 
