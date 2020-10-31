@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.model.dto.UserTokenDto;
 import com.ingot.framework.security.utils.ObjectUtils;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,7 +13,6 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +25,9 @@ import java.util.Map;
  */
 @Service
 @ConditionalOnBean(TokenStore.class)
+@AllArgsConstructor
 public class TokenService {
-
-    @Resource
-    private TokenStore tokenStore;
+    private final TokenStore tokenStore;
 
     /**
      * 设置当前 SecurityContext Authentication

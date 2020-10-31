@@ -8,6 +8,7 @@ import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.service.AuthenticationService;
 import io.micrometer.core.instrument.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -16,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.List;
@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service("ingotAuth")
+@RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
-    private AntPathMatcher antPathMatcher = new AntPathMatcher();
-    @Resource
-    private PmsRoleFeignApi ucRoleFeignApi;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+    private final PmsRoleFeignApi ucRoleFeignApi;
     @Value("${spring.application.name}")
     private String serviceName;
 

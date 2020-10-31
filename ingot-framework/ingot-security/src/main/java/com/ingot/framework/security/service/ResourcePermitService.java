@@ -2,11 +2,11 @@ package com.ingot.framework.security.service;
 
 import com.google.common.collect.Lists;
 import com.ingot.framework.security.properties.IngotPermitUrlProperties;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,10 +18,10 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ResourcePermitService {
-    @Resource
-    private IngotPermitUrlProperties ingotPermitUrlProperties;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+    private final IngotPermitUrlProperties ingotPermitUrlProperties;
 
     /**
      * Resource permit ant patterns
