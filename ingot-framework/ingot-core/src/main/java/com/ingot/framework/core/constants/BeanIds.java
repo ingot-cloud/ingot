@@ -15,8 +15,8 @@ public interface BeanIds {
     String JWT_ACCESS_TOKEN_CONVERTER = "jwtAccessTokenConverter";
     String TOKEN_ENHANCER = "jwtTokenEnhancer";
 
-    String USER_AUTHENTICATION_SUCCESS_HANDLER = "ingotUserAuthenticationSuccessHandler";
-    String USER_AUTHENTICATION_FAILURE_HANDLER = "ingotUserAuthenticationFailureHandler";
+    String AUTHENTICATION_SUCCESS_HANDLER = "ingotAuthenticationSuccessHandler";
+    String AUTHENTICATION_FAILURE_HANDLER = "ingotAuthenticationFailureHandler";
 
     String CLIENT_DETAIL_SERVICE = "ingotClientDetailService";
     String USER_DETAIL_SERVICE = "userDetailsService";

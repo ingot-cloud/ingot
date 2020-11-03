@@ -45,7 +45,6 @@ public interface SecurityConstants {
     String TOKEN_ENHANCER_KEY_USER_NAME = "username";
     String TOKEN_ENHANCER_KEY_USER_ID = "sub";
     String TOKEN_ENHANCER_KEY_TENANT_ID = "tenant_id";
-    String TOKEN_ENHANCER_KEY_DEPT_ID = "dept_id";
     String TOKEN_ENHANCER_KEY_TIMESTAMP = "timestamp";
     String TOKEN_ENHANCER_KEY_AUTH_TYPE = "auth_type";
 
