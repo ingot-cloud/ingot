@@ -9,8 +9,8 @@ dependencies {
     implementation(deps.spring.spring_boot.freemarker_starter)
 
     implementation project(ingot.pms_api)
-    implementation project(ingot.common_data)
-    implementation project(ingot.common_security)
+    implementation project(ingot.framework_store)
+    implementation project(ingot.framework_security)
 }
 
 apply from: "${project.getRootDir().path}/config/database.gradle"
