@@ -5,6 +5,7 @@ ingot.framework_base = ":ingot-framework:ingot-base"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_store = ":ingot-framework:ingot-store"
 ingot.framework_feign = ":ingot-framework:ingot-feign"
+ingot.framework_security = ":ingot-framework:ingot-security"
 
 // component
 ingot.cmp_id = ":ingot-component:ingot-id"
