@@ -13,7 +13,7 @@ public interface BeanIds {
     String CAPTCHA = "captchaProducer";
 
     String JWT_ACCESS_TOKEN_CONVERTER = "jwtAccessTokenConverter";
-    String TOKEN_ENHANCER = "jwtTokenEnhancer";
+    String TOKEN_ENHANCER = "tokenEnhancer";
 
     String AUTHENTICATION_SUCCESS_HANDLER = "ingotAuthenticationSuccessHandler";
     String AUTHENTICATION_FAILURE_HANDLER = "ingotAuthenticationFailureHandler";

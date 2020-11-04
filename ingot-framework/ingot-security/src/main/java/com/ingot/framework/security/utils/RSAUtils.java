@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>Description  : RsaKeyHelper.</p>
+ * <p>Description  : RSAUtils.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/5/9.</p>
  * <p>Time         : 下午3:00.</p>
