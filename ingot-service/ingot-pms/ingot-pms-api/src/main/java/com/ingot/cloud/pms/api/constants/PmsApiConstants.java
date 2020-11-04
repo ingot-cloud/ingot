@@ -9,11 +9,6 @@ package com.ingot.cloud.pms.api.constants;
 public interface PmsApiConstants {
 
     /**
-     * 授权认证，获取Admin用户信息
-     */
-    String PATH_AUTH_GET_USER_INFO = "/auth/getUserAuthDetail";
-
-    /**
      * 授权认证，处理Admin登录数据，唯一登录模式
      */
     String PATH_AUTH_HANDLE_ADMIN_UNIQUE_LOGIN_DATA = "/auth/user/unique/handleUserUniqueLoginData";

@@ -3,7 +3,7 @@ package com.ingot.framework.security.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.dto.role.RoleAuthorityDto;
 import com.ingot.cloud.pms.api.model.dto.role.RoleListDto;
-import com.ingot.cloud.pms.api.rpc.client.PmsRoleFeignApi;
+import com.ingot.cloud.pms.api.rpc.PmsRoleFeignApi;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.service.AuthenticationService;

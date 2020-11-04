@@ -1,2 +1,14 @@
 dependencies {
+    implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.actuator_starter)
+    implementation(deps.spring.spring_boot.configuration_processor)
+
+    implementation project(ingot.pms_api)
+    implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_store)
+    implementation project(ingot.framework_security)
 }
+
+apply from: 'ingot-mybatis.gradle'
+apply from: "${project.getRootDir().path}/config/database.gradle"
+apply from: "${project.getRootDir().path}/config/service-base.gradle"
