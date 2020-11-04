@@ -55,7 +55,7 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     @Override public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         TokenEnhancerChain enhancerChain = new TokenEnhancerChain();
         List<TokenEnhancer> enhancers = new ArrayList<>();
-        // jwtTokenEnhancer 必须在前面 jwtAccessTokenConverter，否则增加的字段不生效
+        // tokenEnhancer 必须在前面 jwtAccessTokenConverter，否则增加的字段不生效
         enhancers.add(tokenEnhancer);
         enhancers.add(jwtAccessTokenConverter);
         enhancerChain.setTokenEnhancers(enhancers);
