@@ -17,7 +17,6 @@ import java.io.IOException;
  * <p>Time         : 11:42 上午.</p>
  */
 @Slf4j
-@Component
 public class IngotAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
     @Override public void onAuthenticationFailure(HttpServletRequest request,

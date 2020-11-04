@@ -1,0 +1,26 @@
+server:
+  port: 8010
+
+spring:
+  application:
+    name: ingot-acs
+  datasource:
+    username: root
+    password: Wc.1331588182
+  rabbitmq:
+    username: admin
+    password: admin
+  redis:
+    password: ingotredis
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS-HOST:ingot-nacos}:${NACOS-PORT:8848}
+        namespace: 6ee4c5e7-ae3e-447f-a2fa-3bfb5e5156e5
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
+        shared-dataids: application-common.${spring.cloud.nacos.config.file-extension},application-mysql.${spring.cloud.nacos.config.file-extension}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+#  profiles:
+#    active: common,mysql
