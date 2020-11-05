@@ -1,14 +1,12 @@
 package com.ingot.cloud.acs.service;
 
-import cn.hutool.core.lang.Pair;
-import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.pms.api.model.dto.user.UserAuthDetailDto;
-import com.ingot.cloud.pms.api.model.vo.user.UserVo;
-import com.ingot.cloud.pms.api.rpc.PmsSocialFeignApi;
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.base.constants.GlobalConstants;
 import com.ingot.framework.base.exception.BaseException;
 import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.core.model.dto.user.UserAuthDetails;
+import com.ingot.framework.core.model.dto.user.UserDetailsDto;
+import com.ingot.framework.core.model.enums.UserDetailsTypeEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
@@ -37,7 +35,6 @@ import static com.ingot.framework.core.constants.BeanIds.USER_DETAIL_SERVICE;
 @AllArgsConstructor
 public class IngotUserDetailService implements IngotUserDetailsService {
     private final PmsUserAuthFeignApi userCenterFeignApi;
-    private final PmsSocialFeignApi socialFeignApi;
 
     /**
      * 根据用户名称登录
@@ -53,34 +50,44 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
                         "clientId={}, tenantCode={}",
                 username, clientId, tenantCode);
-        IngotResponse<UserAuthDetailDto> response = userCenterFeignApi.getUserAuthDetail(
-                username, clientId, tenantCode);
+
+        UserDetailsDto params = UserDetailsDto.builder()
+                .type(UserDetailsTypeEnum.PASSWORD.getValue())
+                .uniqueCode(username)
+                .clientId(clientId)
+                .tenantCode(tenantCode).build();
+        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
     /**
-     * 根据社交登录 code 获取 UserDetails
+     * 根据社交登录 openId 获取 UserDetails
      *
-     * @param code 社交类型@社交code
+     * @param socialType 社交类型
+     * @param openId     社交登录唯一Id
      * @return {@link UserDetails}
      * @throws UsernameNotFoundException if the user could not be found or the user has no
      *                                   GrantedAuthority
      */
-    @Override
-    public UserDetails loadUserBySocial(String code) throws UsernameNotFoundException {
-        log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: code={}",
-                code);
+    @Override public UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException {
+        log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
+                openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
         String tenantCode = SecurityUtils.getTenantCodeFromRequest();
-        Pair<String, String> extract = extractCode(code);
-        IngotResponse<UserAuthDetailDto> response = socialFeignApi.getUserAuthDetail(extract.getKey(),
-                extract.getValue(), clientId, tenantCode);
+
+        String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
+        UserDetailsDto params = UserDetailsDto.builder()
+                .type(UserDetailsTypeEnum.SOCIAL.getValue())
+                .uniqueCode(uniqueCode)
+                .clientId(clientId)
+                .tenantCode(tenantCode).build();
+        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
-    private IngotUser loadDetail(IngotResponse<UserAuthDetailDto> response) {
+    private IngotUser loadDetail(IngotResponse<UserAuthDetails> response) {
         if (response == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }
@@ -89,28 +96,15 @@ public class IngotUserDetailService implements IngotUserDetailsService {
             throw new BaseException(response.getCode(), response.getMessage());
         }
 
-        UserAuthDetailDto data = response.getData();
+        UserAuthDetails data = response.getData();
         if (data == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }
 
-        UserVo user = data.getUser();
-
-        List<String> userAuthorities = data.getRoleList();
+        List<String> userAuthorities = data.getRoles();
         List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
-        log.info(">>> UserDetail, {} role={}", user.getUsername(), authorities);
-        return new IngotUser(user.getId(), user.getTenant_id(), data.getAuthType(),
-                user.getUsername(), user.getPassword(), authorities);
-    }
-
-    private Pair<String, String> extractCode(String code) {
-        if (StrUtil.isEmpty(code)) {
-            return new Pair<>("", code);
-        }
-
-        String[] result = code.split(GlobalConstants.AT);
-        String type = result.length > 1 ? result[0] : "";
-        String finalCode = result.length > 1 ? result[1] : code;
-        return new Pair<>(type, finalCode);
+        log.info(">>> UserDetail, {} role={}", data.getUsername(), authorities);
+        return new IngotUser(data.getId(), data.getTenantId(), data.getAuthType(),
+                data.getUsername(), data.getPassword(), authorities);
     }
 }

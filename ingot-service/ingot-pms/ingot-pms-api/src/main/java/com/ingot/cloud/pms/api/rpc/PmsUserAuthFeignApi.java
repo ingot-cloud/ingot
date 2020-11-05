@@ -1,13 +1,12 @@
 package com.ingot.cloud.pms.api.rpc;
 
-import com.ingot.cloud.pms.api.model.dto.user.UserAuthDetailDto;
 import com.ingot.framework.core.constants.ServiceNameConstants;
-import com.ingot.framework.core.constants.TenantConstants;
+import com.ingot.framework.core.model.dto.user.UserAuthDetails;
+import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 /**
@@ -20,7 +19,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface PmsUserAuthFeignApi {
 
     @PostMapping(value = "/user/detail")
-    IngotResponse<UserAuthDetailDto> getUserAuthDetail(@RequestParam("username") String username,
-                                                       @RequestParam("client_id") String clientId,
-                                                       @RequestHeader(TenantConstants.TENANT_HEADER_KEY) String tenantCode);
+    IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params);
 }

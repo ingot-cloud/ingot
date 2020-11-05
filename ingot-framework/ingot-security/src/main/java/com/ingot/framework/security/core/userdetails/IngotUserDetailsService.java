@@ -13,11 +13,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 public interface IngotUserDetailsService extends UserDetailsService {
 
     /**
-     * 根据社交登录 code 获取 UserDetails
-     * @param code 社交类型@社交code
+     * 根据社交登录 openId 获取 UserDetails
+     *
+     * @param socialType 社交类型
+     * @param openId     社交登录唯一Id
      * @return {@link UserDetails}
      * @throws UsernameNotFoundException if the user could not be found or the user has no
-     * GrantedAuthority
+     *                                   GrantedAuthority
      */
-    UserDetails loadUserBySocial(String code) throws UsernameNotFoundException;
+    UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException;
 }
