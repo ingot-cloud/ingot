@@ -9,7 +9,7 @@ ingotMybatis {
     /**
      * 连接池连接地址
      */
-    jdbcUrl = "jdbc:mysql://localhost:3306/ingot_pms_db?useUnicode=true&characterEncoding=UTF-8"
+    jdbcUrl = "jdbc:mysql://localhost:3306/ingot_core?useUnicode=true&characterEncoding=UTF-8"
 
     /**
      * 连接池连接账号
