@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.rest;
 
+import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.wrapper.BaseController;
@@ -25,6 +26,14 @@ public class UserDetailApi extends BaseController {
     @PostMapping(value = "/detail")
     IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params){
         // todo 请求参数封装
-        return ok();
+        // test data
+        UserAuthDetails result = new UserAuthDetails();
+        result.setId(1L);
+        result.setTenantId(1L);
+        result.setAuthType("unique");
+        result.setUsername("admin");
+        result.setPassword("admin");
+        result.setRoles(ListUtil.toList("role_admin"));
+        return ok(result);
     }
 }
