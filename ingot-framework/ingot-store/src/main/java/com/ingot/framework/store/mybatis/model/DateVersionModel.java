@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class OperationVersionModel<T extends Model<?>> extends OperationModel<T> {
+public class DateVersionModel<T extends Model<?>> extends DateModel<T> {
     /**
      * 版本号
      */
