@@ -35,12 +35,12 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = []
+        tables = ["sys_user"]
 
         /**
          * 包名
          */
-        basePackage = "com.ingot.pms"
+        basePackage = "com.ingot.cloud.pms"
     }
 
 }
