@@ -13,7 +13,7 @@ import java.util.function.Function;
  * <p>Date         : 2019-07-18.</p>
  * <p>Time         : 08:48.</p>
  */
-public class PreconditionsImpl<T> implements IService<T> {
+public class PreconditionsImpl<T> implements BaseService<T> {
     @Override
     public boolean saveBatch(Collection<T> entityList, int batchSize) {
         return false;
