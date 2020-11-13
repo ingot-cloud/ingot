@@ -1,0 +1,38 @@
+plugins {
+    id 'groovy'
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    implementation localGroovy()
+    implementation gradleApi()
+    implementation(deps.mybatis.plus_generator)
+    implementation(deps.mybatis.plus_extension)
+    implementation(deps.freemarker)
+    implementation(deps.mysql.connector)
+}
+
+// mavenLocal
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: mavenLocal().url)
+//        }
+//    }
+//}
+// nexus.secingot.com
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: INGOT_NEXUS_URL){
+            authentication(userName: INGOT_NEXUS_USERNAME, password: INGOT_NEXUS_PASSWORD)
+        }
+    }
+}
+
+//assemble.doLast {
+//    copy {
+//        from 'build/libs'
+//        into "${project.getRootDir()}/plugin"
+//    }
+//}

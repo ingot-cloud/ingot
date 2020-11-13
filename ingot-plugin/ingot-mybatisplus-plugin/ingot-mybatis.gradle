@@ -1,0 +1,46 @@
+apply plugin: 'com.ingot.plugin.mybatis'
+
+ingotMybatis {
+    /**
+     * 指定连接数据库的驱动
+     */
+    jdbcDriverClass = "com.mysql.cj.jdbc.Driver"
+
+    /**
+     * 连接池连接地址
+     */
+    jdbcUrl = "jdbc:mysql://localhost:3306/ingot_dmc_db?useUnicode=true&characterEncoding=UTF-8"
+
+    /**
+     * 连接池连接账号
+     */
+    jdbcUser = "root"
+
+    /**
+     * 连接池连接密码
+     */
+    jdbcPassword = "Wc.1331588182"
+
+    mybatisPlus {
+        /**
+         * 项目路径
+         */
+        projectPath = "${project.getProjectDir()}"
+
+        /**
+         * 注释作者
+         */
+        author = "magician"
+
+        /**
+         * 需要生成的表
+         */
+        tables = []
+
+        /**
+         * 包名
+         */
+        basePackage = "com.ingot.auth"
+    }
+
+}

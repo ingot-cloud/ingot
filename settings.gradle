@@ -14,4 +14,5 @@ include 'ingot-component:ingot-id'
 include 'ingot-service:ingot-acs'
 include 'ingot-service:ingot-pms:ingot-pms-api'
 include 'ingot-service:ingot-pms:ingot-pms-provider'
+include 'ingot-plugin:ingot-mybatisplus-plugin'
 
