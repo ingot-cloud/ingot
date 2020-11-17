@@ -1,5 +1,6 @@
 package com.ingot.framework.base.jackson;
 
+import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -23,7 +24,7 @@ public class NonTimeZoneDateSerialize extends StdSerializer<Date> {
     }
 
     @Override public void serialize(Date value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
         gen.writeString(format.format(value));
     }
 }

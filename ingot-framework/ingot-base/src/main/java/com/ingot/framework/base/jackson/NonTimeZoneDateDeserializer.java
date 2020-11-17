@@ -1,5 +1,6 @@
 package com.ingot.framework.base.jackson;
 
+import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -26,6 +27,6 @@ public class NonTimeZoneDateDeserializer extends StdDeserializer<Date> {
 
     @Override public Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         String date = p.readValueAs(String.class);
-        return DateTime.parse(date, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")).toDate();
+        return DateTime.parse(date, DateTimeFormat.forPattern(DatePattern.NORM_DATETIME_PATTERN)).toDate();
     }
 }
