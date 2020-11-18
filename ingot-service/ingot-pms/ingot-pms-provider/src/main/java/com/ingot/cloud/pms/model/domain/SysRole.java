@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,12 +28,13 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId
     private Long id;
 
     /**
      * 版本号
      */
+    @Version
     private Long version;
 
     /**

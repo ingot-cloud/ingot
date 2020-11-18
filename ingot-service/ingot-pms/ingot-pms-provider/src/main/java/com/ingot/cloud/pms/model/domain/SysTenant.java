@@ -1,15 +1,14 @@
 package com.ingot.cloud.pms.model.domain;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * <p>
@@ -29,11 +28,13 @@ public class SysTenant extends BaseModel<SysTenant> {
     /**
      * ID
      */
+    @TableId
     private Long id;
 
     /**
      * 版本号
      */
+    @Version
     private Long version;
 
     /**
