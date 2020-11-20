@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service;
 
-import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.model.domain.SysOauthClientDetails;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -11,6 +11,6 @@ import com.ingot.framework.store.mybatis.service.BaseService;
  * @author magician
  * @since 2020-11-20
  */
-public interface SysUserService extends BaseService<SysUser> {
+public interface SysOauthClientDetailsService extends BaseService<SysOauthClientDetails> {
 
 }

@@ -9,7 +9,7 @@ import com.ingot.framework.store.mybatis.mapper.BaseMapper;
  * </p>
  *
  * @author magician
- * @since 2020-11-15
+ * @since 2020-11-20
  */
 public interface SysRoleMapper extends BaseMapper<SysRole> {
 

@@ -9,7 +9,7 @@ import com.ingot.framework.store.mybatis.service.BaseService;
  * </p>
  *
  * @author magician
- * @since 2020-11-14
+ * @since 2020-11-20
  */
 public interface SysTenantService extends BaseService<SysTenant> {
 

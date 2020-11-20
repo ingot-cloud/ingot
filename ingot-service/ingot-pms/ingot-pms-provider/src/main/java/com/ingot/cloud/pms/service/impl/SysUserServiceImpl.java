@@ -5,7 +5,6 @@ import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -13,10 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
  * </p>
  *
  * @author magician
- * @since 2020-11-13
+ * @since 2020-11-20
  */
 @Service
-@Transactional
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
 }

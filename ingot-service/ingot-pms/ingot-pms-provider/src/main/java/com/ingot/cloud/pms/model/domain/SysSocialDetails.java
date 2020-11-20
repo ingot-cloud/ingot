@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_tenant")
-public class SysTenant extends BaseModel<SysTenant> {
+@TableName("sys_social_details")
+public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,24 +38,34 @@ public class SysTenant extends BaseModel<SysTenant> {
     private Long version;
 
     /**
-     * 租户名称
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
+     * App ID
+     */
+    private String appId;
+
+    /**
+     * App Secret
+     */
+    private String appSecret;
+
+    /**
+     * 重定向地址
+     */
+    private String redirectUrl;
+
+    /**
+     * 社交名称
      */
     private String name;
 
     /**
-     * 租户编号
+     * 类型
      */
-    private String code;
-
-    /**
-     * 开始日期
-     */
-    private LocalDateTime startAt;
-
-    /**
-     * 结束日期
-     */
-    private LocalDateTime endAt;
+    private String type;
 
     /**
      * 状态, 0:正常，9:禁用

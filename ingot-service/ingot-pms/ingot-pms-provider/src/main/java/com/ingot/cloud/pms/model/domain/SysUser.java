@@ -4,11 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +16,7 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author magician
- * @since 2020-11-13
+ * @since 2020-11-20
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -70,7 +68,7 @@ public class SysUser extends BaseModel<SysUser> {
     private String email;
 
     /**
-     * 状态
+     * 状态, 0:正常，9:禁用
      */
     private String status;
 

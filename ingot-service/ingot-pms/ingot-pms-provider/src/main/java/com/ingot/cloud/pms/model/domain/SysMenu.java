@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_tenant")
-public class SysTenant extends BaseModel<SysTenant> {
+@TableName("sys_menu")
+public class SysMenu extends BaseModel<SysMenu> {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,29 +38,64 @@ public class SysTenant extends BaseModel<SysTenant> {
     private Long version;
 
     /**
-     * 租户名称
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
+     * 父ID
+     */
+    private Long pid;
+
+    /**
+     * 菜单名称
      */
     private String name;
 
     /**
-     * 租户编号
+     * 菜单url
      */
-    private String code;
+    private String path;
 
     /**
-     * 开始日期
+     * 视图路径
      */
-    private LocalDateTime startAt;
+    private String viewPath;
 
     /**
-     * 结束日期
+     * 图标
      */
-    private LocalDateTime endAt;
+    private String icon;
+
+    /**
+     * 排序
+     */
+    private Integer sort;
+
+    /**
+     * 是否缓存
+     */
+    private Boolean cache;
+
+    /**
+     * 是否隐藏
+     */
+    private Boolean hidden;
+
+    /**
+     * 参数
+     */
+    private String params;
 
     /**
      * 状态, 0:正常，9:禁用
      */
     private String status;
+
+    /**
+     * 备注
+     */
+    private String remark;
 
     /**
      * 创建日期

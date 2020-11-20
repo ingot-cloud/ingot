@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author magician
- * @since 2020-11-15
+ * @since 2020-11-20
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -43,24 +43,24 @@ public class SysRole extends BaseModel<SysRole> {
     private Long tenantId;
 
     /**
-     * 角色编码
-     */
-    private String roleCode;
-
-    /**
      * 角色名称
      */
-    private String roleName;
+    private String name;
 
     /**
-     * 状态
+     * 角色编码
      */
-    private String status;
+    private String code;
 
     /**
      * 角色类型
      */
     private String type;
+
+    /**
+     * 状态, 0:正常，9:禁用
+     */
+    private String status;
 
     /**
      * 备注

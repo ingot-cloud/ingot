@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.mapper;
 
-import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.model.domain.SysRoleUser;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.ingot.framework.store.mybatis.mapper.BaseMapper;
  * @author magician
  * @since 2020-11-20
  */
-public interface SysUserMapper extends BaseMapper<SysUser> {
+public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
 
 }

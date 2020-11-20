@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author magician
- * @since 2020-11-18
+ * @since 2020-11-20
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -43,6 +43,11 @@ public class SysDept extends BaseModel<SysDept> {
     private Long tenantId;
 
     /**
+     * 父ID
+     */
+    private Long pid;
+
+    /**
      * 部门名称
      */
     private String name;
@@ -53,7 +58,7 @@ public class SysDept extends BaseModel<SysDept> {
     private Integer sort;
 
     /**
-     * 状态
+     * 状态, 0:正常，9:禁用
      */
     private String status;
 
