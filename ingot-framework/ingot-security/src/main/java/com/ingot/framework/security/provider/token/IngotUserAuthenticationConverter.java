@@ -37,9 +37,10 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
 
             String username = (String) map.get(USERNAME);
             Long id = (Long) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID);
+            Long deptId = (Long) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_DEPT_ID);
             Long tenantId = (Long) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_TENANT_ID);
             String authType = (String) map.get(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE);
-            IngotUser user = new IngotUser(id, tenantId, authType, username, N_A, true,
+            IngotUser user = new IngotUser(id, deptId, tenantId, authType, username, N_A, true,
                     true, true, true, authorities);
             return new UsernamePasswordAuthenticationToken(user, N_A, authorities);
         }

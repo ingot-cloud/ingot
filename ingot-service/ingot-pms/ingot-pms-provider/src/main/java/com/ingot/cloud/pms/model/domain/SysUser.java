@@ -43,6 +43,11 @@ public class SysUser extends BaseModel<SysUser> {
     private Long tenantId;
 
     /**
+     * 部门ID
+     */
+    private Long deptId;
+
+    /**
      * 用户名
      */
     private String username;

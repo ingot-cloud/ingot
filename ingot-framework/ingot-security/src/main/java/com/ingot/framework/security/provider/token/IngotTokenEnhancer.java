@@ -45,6 +45,7 @@ public class IngotTokenEnhancer implements TokenEnhancer {
                 IngotUser user = (IngotUser) userAuthentication.getPrincipal();
                 additionalInformation.put(SecurityConstants.TOKEN_ENHANCER_KEY_USER_NAME, user.getUsername());
                 additionalInformation.put(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID, user.getId());
+                additionalInformation.put(SecurityConstants.TOKEN_ENHANCER_KEY_DEPT_ID, user.getDeptId());
                 additionalInformation.put(SecurityConstants.TOKEN_ENHANCER_KEY_TENANT_ID, user.getTenantId());
                 additionalInformation.put(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE, user.getAuthType());
             }

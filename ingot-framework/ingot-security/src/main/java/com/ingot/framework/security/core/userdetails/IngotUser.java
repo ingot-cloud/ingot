@@ -16,22 +16,27 @@ public class IngotUser extends User {
     @Getter
     private final Long id;
     @Getter
+    private final Long deptId;
+    @Getter
     private final Long tenantId;
     @Getter
     private final String authType;
 
     public IngotUser(Long id,
+                     Long deptId,
                      Long tenantId,
                      String authType,
                      String username,
                      String password, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
         this.id = id;
+        this.deptId = deptId;
         this.tenantId = tenantId;
         this.authType = authType;
     }
 
     public IngotUser(Long id,
+                     Long deptId,
                      Long tenantId,
                      String authType,
                      String username,
@@ -42,6 +47,7 @@ public class IngotUser extends User {
                      boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
+        this.deptId = deptId;
         this.tenantId = tenantId;
         this.authType = authType;
     }

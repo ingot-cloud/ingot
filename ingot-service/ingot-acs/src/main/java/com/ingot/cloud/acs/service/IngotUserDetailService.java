@@ -104,7 +104,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         List<String> userAuthorities = data.getRoles();
         List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
         log.info(">>> UserDetail, {} role={}", data.getUsername(), authorities);
-        return new IngotUser(data.getId(), data.getTenantId(), data.getAuthType(),
+        return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(), data.getAuthType(),
                 data.getUsername(), data.getPassword(), authorities);
     }
 }

@@ -18,6 +18,10 @@ public class UserAuthDetails implements Serializable {
      */
     private Long id;
     /**
+     * 部门ID
+     */
+    private Long deptId;
+    /**
      * 租户ID
      */
     private Long tenantId;

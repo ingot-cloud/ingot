@@ -30,6 +30,7 @@ public class UserDetailApi extends BaseController {
         UserAuthDetails result = new UserAuthDetails();
         result.setId(1L);
         result.setTenantId(1L);
+        result.setDeptId(1L);
         result.setAuthType("unique");
         result.setUsername("admin");
         result.setPassword("admin");
