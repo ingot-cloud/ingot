@@ -12,18 +12,6 @@ spring:
     password: admin
   redis:
     password: ingotredis
-  #  cache:
-  #    type: redis
-  #    redis:
-  #      key-prefix: ingot-cache-ac-
-  #      time-to-live: 60s
-  #  sleuth:
-  #    sampler:
-  #        #默认为0.1；表示调用10次才会上传一次
-  #      probability: 0.1
-  #  zipkin:
-  #    rabbitmq:
-  #      queue: zipkin
   cloud:
     nacos:
       discovery:
@@ -31,8 +19,8 @@ spring:
         namespace: ingot
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        file-extension: yml
-        shared-dataids: application-common.${spring.cloud.nacos.config.file-extension},application-mysql.${spring.cloud.nacos.config.file-extension}
         namespace: ${spring.cloud.nacos.discovery.namespace}
-#  profiles:
-#    active: common,mysql
+        file-extension: yml
+        shared-configs:
+          - application-common.${spring.cloud.nacos.config.file-extension}
+          - application-mysql.${spring.cloud.nacos.config.file-extension}
