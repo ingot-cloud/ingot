@@ -28,7 +28,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS-HOST:ingot-nacos}:${NACOS-PORT:8848}
-        namespace: 6ee4c5e7-ae3e-447f-a2fa-3bfb5e5156e5
+        namespace: ingot
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml
