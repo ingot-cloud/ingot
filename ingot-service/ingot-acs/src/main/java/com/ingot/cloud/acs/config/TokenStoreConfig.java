@@ -2,13 +2,13 @@ package com.ingot.cloud.acs.config;
 
 import com.ingot.cloud.acs.token.JwtKeyGenerator;
 import com.ingot.framework.security.provider.token.IngotTokenEnhancer;
+import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 import static com.ingot.framework.core.constants.BeanIds.JWT_ACCESS_TOKEN_CONVERTER;
 import static com.ingot.framework.core.constants.BeanIds.TOKEN_ENHANCER;
@@ -34,7 +34,6 @@ public class TokenStoreConfig {
         return converter;
     }
 
-
     /**
      * Jwt token enhancer token enhancer.
      *
@@ -53,7 +52,7 @@ public class TokenStoreConfig {
      */
     @Bean
     public TokenStore jwtTokenStore(JwtAccessTokenConverter jwtAccessTokenConverter) {
-        return new JwtTokenStore(jwtAccessTokenConverter);
+        return new IngotJwtTokenStore(jwtAccessTokenConverter);
     }
 
 }
