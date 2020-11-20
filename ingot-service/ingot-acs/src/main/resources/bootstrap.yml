@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-acs
+    name: ingot-service-acs
   datasource:
     username: root
     password: Wc.1331588182
@@ -22,5 +22,3 @@ spring:
         file-extension: yml
         shared-dataids: application-common.${spring.cloud.nacos.config.file-extension},application-mysql.${spring.cloud.nacos.config.file-extension}
         namespace: ${spring.cloud.nacos.discovery.namespace}
-#  profiles:
-#    active: common,mysql

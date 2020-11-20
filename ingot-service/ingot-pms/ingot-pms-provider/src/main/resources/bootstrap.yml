@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-pms
+    name: ingot-service-pms
   datasource:
     username: root
     password: Wc.1331588182
