@@ -2,7 +2,7 @@ def deps = [:]
 def versions = [:]
 versions.spring_boot = "2.3.3.RELEASE"
 versions.spring_cloud = "Hoxton.SR8"
-versions.spring_cloud_alibaba = "2.2.2.RELEASE"
+versions.spring_cloud_alibaba = "2.2.3.RELEASE"
 versions.spring_framework = "5.2.8.RELEASE"
 
 versions.alibaba_druid = "1.1.21"
