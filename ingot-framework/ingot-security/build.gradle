@@ -6,6 +6,7 @@ dependencies {
     api(deps.spring.spring_cloud.bus_start)
     api project(ingot.framework_core)
 
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_feign)
     implementation project(ingot.pms_api)
 

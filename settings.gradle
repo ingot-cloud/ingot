@@ -2,17 +2,29 @@ rootProject.name = 'ingot-cloud-pro'
 
 // Framework
 include 'ingot-framework:ingot-base'
+findProject(':ingot-framework:ingot-base')?.name = 'ingot-base'
 include 'ingot-framework:ingot-core'
+findProject(':ingot-framework:ingot-core')?.name = 'ingot-core'
 include 'ingot-framework:ingot-store'
+findProject(':ingot-framework:ingot-store')?.name = 'ingot-store'
 include 'ingot-framework:ingot-feign'
+findProject(':ingot-framework:ingot-feign')?.name = 'ingot-feign'
 include 'ingot-framework:ingot-security'
+findProject(':ingot-framework:ingot-security')?.name = 'ingot-security'
 
 // Component
 include 'ingot-component:ingot-id'
+findProject(':ingot-component:ingot-id')?.name = 'ingot-id'
 
 // Cloud service
 include 'ingot-service:ingot-acs'
+findProject(':ingot-service:ingot-acs')?.name = 'ingot-acs'
 include 'ingot-service:ingot-pms:ingot-pms-api'
+findProject(':ingot-service:ingot-pms:ingot-pms-api')?.name = 'ingot-pms-api'
 include 'ingot-service:ingot-pms:ingot-pms-provider'
+findProject(':ingot-service:ingot-pms:ingot-pms-provider')?.name = 'ingot-pms-provider'
+
+// Plugin
 include 'ingot-plugin:ingot-mybatisplus-plugin'
+findProject(':ingot-plugin:ingot-mybatisplus-plugin')?.name = 'ingot-mybatisplus-plugin'
 

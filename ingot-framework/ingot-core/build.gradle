@@ -1,5 +1,7 @@
 
 dependencies {
+
+    api(deps.rx_java)
     api(deps.aspectj.aspectjweaver)
     api project(ingot.framework_base)
 
