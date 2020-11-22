@@ -2,6 +2,7 @@ package com.ingot.cloud.acs;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.SpringCloudApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 
 /**
  * <p>Description  : IngotAcsApplication.</p>
@@ -9,6 +10,7 @@ import org.springframework.cloud.client.SpringCloudApplication;
  * <p>Date         : 2020/10/27.</p>
  * <p>Time         : 11:37 上午.</p>
  */
+@EnableHystrix
 @SpringCloudApplication
 public class IngotAcsApplication {
 

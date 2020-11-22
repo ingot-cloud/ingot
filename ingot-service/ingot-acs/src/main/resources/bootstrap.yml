@@ -19,6 +19,8 @@ spring:
         namespace: ingot
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        file-extension: yml
-        shared-dataids: application-common.${spring.cloud.nacos.config.file-extension},application-mysql.${spring.cloud.nacos.config.file-extension}
         namespace: ${spring.cloud.nacos.discovery.namespace}
+        file-extension: yml
+        shared-configs:
+          - application-common.${spring.cloud.nacos.config.file-extension}
+          - application-mysql.${spring.cloud.nacos.config.file-extension}
