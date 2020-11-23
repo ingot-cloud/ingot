@@ -1,9 +1,12 @@
 package com.ingot.cloud.acs.service;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.base.constants.GlobalConstants;
 import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.model.enums.CommonStatusEnum;
 import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.core.context.ContextHolder;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsTypeEnum;
@@ -46,16 +49,16 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      */
     @Override public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
-        String tenantCode = SecurityUtils.getTenantCodeFromRequest();
+        String tenantID = ContextHolder.tenantID();
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
-                        "clientId={}, tenantCode={}",
-                username, clientId, tenantCode);
+                        "clientId={}, tenantID={}",
+                username, clientId, tenantID);
 
         UserDetailsDto params = UserDetailsDto.builder()
                 .type(UserDetailsTypeEnum.PASSWORD.getValue())
                 .uniqueCode(username)
                 .clientId(clientId)
-                .tenantCode(tenantCode).build();
+                .tenantID(tenantID).build();
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
@@ -74,14 +77,14 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
-        String tenantCode = SecurityUtils.getTenantCodeFromRequest();
+        String tenantID = ContextHolder.tenantID();
 
         String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
         UserDetailsDto params = UserDetailsDto.builder()
                 .type(UserDetailsTypeEnum.SOCIAL.getValue())
                 .uniqueCode(uniqueCode)
                 .clientId(clientId)
-                .tenantCode(tenantCode).build();
+                .tenantID(tenantID).build();
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
@@ -104,7 +107,10 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         List<String> userAuthorities = data.getRoles();
         List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
         log.info(">>> UserDetail, {} role={}", data.getUsername(), authorities);
+        boolean enabled = StrUtil.equals(data.getStatus(), CommonStatusEnum.ENABLE.getValue());
+        boolean nonLocked = !StrUtil.equals(data.getStatus(), CommonStatusEnum.LOCK.getValue());
         return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(), data.getAuthType(),
-                data.getUsername(), data.getPassword(), authorities);
+                data.getUsername(), data.getPassword(), enabled, true,
+                true, nonLocked, authorities);
     }
 }

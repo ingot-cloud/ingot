@@ -11,28 +11,55 @@ public interface OAuthClientDetailSqlConstants {
     /**
      * 数据表名称
      */
-    String TABLE_NAME = "sys_oauth_client";
+    String TABLE_NAME = "sys_oauth_client_details";
 
+    /**
+     * 可更新的字段，不包括 client_id、client_secret
+     */
     String CLIENT_FIELDS_FOR_UPDATE = "resource_ids, scope, "
             + "authorized_grant_types, web_server_redirect_uri, authorities, access_token_validity, "
             + "refresh_token_validity, additional_information, autoapprove";
 
-    String CLIENT_FIELDS = "client_secret, " + CLIENT_FIELDS_FOR_UPDATE;
+    /**
+     * 查询字段，包含 client_id 和 client_secret
+     */
+    String BASE_FIND_STATEMENT = "select client_id, CONCAT('{noop}',client_secret) as client_secret, "
+            + CLIENT_FIELDS_FOR_UPDATE + " from " + TABLE_NAME;
 
-    String BASE_FIND_STATEMENT = "select client_id, " + CLIENT_FIELDS
-            + " from " + TABLE_NAME;
+    /**
+     * 查找语句
+     */
+    String DEFAULT_FIND_STATEMENT = BASE_FIND_STATEMENT + " order by client_id " +
+            "where deleted_at is not null and tenant_id = %s";
 
-    String DEFAULT_FIND_STATEMENT = BASE_FIND_STATEMENT + " order by client_id";
+    /**
+     * Select
+     */
+    String DEFAULT_SELECT_STATEMENT = BASE_FIND_STATEMENT + " where client_id = ? " +
+            "and deleted_at is not null and tenant_id = %s";
 
-    String DEFAULT_SELECT_STATEMENT = BASE_FIND_STATEMENT + " where client_id = ?";
+    /**
+     * Insert
+     */
+    String DEFAULT_INSERT_STATEMENT = "insert into " + TABLE_NAME + " (" + CLIENT_FIELDS_FOR_UPDATE
+            + ", client_id, client_secret, tenant_id) values (?,?,?,?,?,?,?,?,?,?,?,%s)";
 
-    String DEFAULT_INSERT_STATEMENT = "insert into " + TABLE_NAME + " (" + CLIENT_FIELDS
-            + ", client_id) values (?,?,?,?,?,?,?,?,?,?,?)";
-
+    /**
+     * Update
+     */
     String DEFAULT_UPDATE_STATEMENT = "update " + TABLE_NAME + " set "
-            + CLIENT_FIELDS_FOR_UPDATE.replaceAll(", ", "=?, ") + "=? where client_id = ?";
+            + CLIENT_FIELDS_FOR_UPDATE.replaceAll(", ", "=?, ") + "=? " +
+            "where client_id = ? and tenant_id = %s";
 
-    String DEFAULT_UPDATE_SECRET_STATEMENT = "update " + TABLE_NAME + " set client_secret = ? where client_id = ?";
+    /**
+     * Update client_secret
+     */
+    String DEFAULT_UPDATE_SECRET_STATEMENT = "update " + TABLE_NAME + " set client_secret = ? " +
+            "where client_id = ? and tenant_id = %s";
 
-    String DEFAULT_DELETE_STATEMENT = "delete from " + TABLE_NAME + " where client_id = ?";
+    /**
+     * Delete
+     */
+    String DEFAULT_DELETE_STATEMENT = "delete from " + TABLE_NAME +
+            " where client_id = ? and tenant_id = %s";
 }

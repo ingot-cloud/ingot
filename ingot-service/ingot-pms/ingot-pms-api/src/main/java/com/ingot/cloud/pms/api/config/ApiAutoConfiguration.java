@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
  * <p>Date         : 2018/9/14.</p>
  * <p>Time         : 上午10:01.</p>
  */
-@Configuration("pmsApiAutoConfiguration")
+@Configuration
 @ComponentScan(value = {"com.ingot.cloud.pms.api"})
-@EnableFeignClients(value = {"com.ingot.cloud.pms.api.rpc.client"})
+@EnableFeignClients(value = {"com.ingot.cloud.pms.api.rpc"})
 public class ApiAutoConfiguration {
 }

@@ -27,6 +27,14 @@ public class ContextHolder {
         ThreadLocalMap.put(ContextConstants.KEY_TOKEN, token);
     }
 
+    public static void removeUserAuth(){
+        ThreadLocalMap.remove(ContextConstants.KEY_TOKEN);
+    }
+
+    public static void removeTenant(){
+        ThreadLocalMap.remove(ContextConstants.KEY_TENANT);
+    }
+
     public static void clear() {
         ThreadLocalMap.clear();
     }

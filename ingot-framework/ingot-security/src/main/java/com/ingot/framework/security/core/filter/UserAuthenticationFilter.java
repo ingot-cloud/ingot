@@ -87,6 +87,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
 
-        ContextHolder.clear();
+        ContextHolder.removeUserAuth();
     }
 }

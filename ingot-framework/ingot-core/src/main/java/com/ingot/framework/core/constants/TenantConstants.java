@@ -11,10 +11,15 @@ public interface TenantConstants {
     /**
      * header 中保存租户编码的key
      */
-    String TENANT_HEADER_KEY = "tenant";
+    String TENANT_HEADER_KEY = "Tenant";
 
     /**
      * 默认租户编码
      */
     String DEFAULT_TENANT_CODE = "INGOT";
+
+    /**
+     * 默认租户ID
+     */
+    String DEFAULT_TENANT_ID = "1";
 }

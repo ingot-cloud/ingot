@@ -4,7 +4,7 @@ import com.ingot.cloud.acs.properties.OAuth2Properties;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.core.bus.RefreshJwtKeySender;
 import com.ingot.framework.security.utils.RSAUtils;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtKeyGenerator implements CommandLineRunner {
     private final StringRedisTemplate stringRedisTemplate;
     private final RefreshJwtKeySender refreshJwtKeySender;

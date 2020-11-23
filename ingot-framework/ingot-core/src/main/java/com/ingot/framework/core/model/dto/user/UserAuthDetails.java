@@ -38,6 +38,10 @@ public class UserAuthDetails implements Serializable {
      */
     private String authType;
     /**
+     * 状态, 0:正常，9:禁用
+     */
+    private String status;
+    /**
      * 拥有的角色
      */
     private List<String> roles;

@@ -19,9 +19,9 @@ public class UserDetailsDto implements Serializable {
      */
     private final String clientId;
     /**
-     * 租户编码
+     * 租户ID
      */
-    private final String tenantCode;
+    private final String tenantID;
     /**
      * 授权类型
      */

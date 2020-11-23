@@ -13,4 +13,8 @@ public interface CacheConstants {
      */
     String NAME_PREFIX = "INGOT:CACHE:";
 
+    /**
+     * OAuth 客户端缓存 key
+     */
+    String CLIENT_DETAILS_KEY = NAME_PREFIX + "CLIENT_DETAILS";
 }
