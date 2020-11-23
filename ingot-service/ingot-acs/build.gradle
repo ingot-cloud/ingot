@@ -1,4 +1,3 @@
-
 dependencies {
     implementation(deps.spring.spring_boot.web_starter)
     implementation(deps.spring.spring_boot.actuator_starter)
