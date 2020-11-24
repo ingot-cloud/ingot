@@ -18,9 +18,6 @@ public interface BeanIds {
     String AUTHENTICATION_SUCCESS_HANDLER = "ingotAuthenticationSuccessHandler";
     String AUTHENTICATION_FAILURE_HANDLER = "ingotAuthenticationFailureHandler";
 
-    String CLIENT_DETAIL_SERVICE = "ingotClientDetailService";
-    String USER_DETAIL_SERVICE = "userDetailsService";
-
     String OAUTH2_REST_TEMPLATE = "ingotOAuth2RestTemplate";
 
     String CLIENT_DETAIL_PASSWORD_ENCODER = "clientDetailPasswordEncoder";

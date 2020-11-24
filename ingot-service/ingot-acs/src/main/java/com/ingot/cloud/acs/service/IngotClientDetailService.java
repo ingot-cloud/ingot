@@ -4,16 +4,12 @@ import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.ContextHolder;
 import com.ingot.framework.security.constants.OAuthClientDetailSqlConstants;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.sql.DataSource;
-
-import static com.ingot.framework.core.constants.BeanIds.CLIENT_DETAIL_SERVICE;
 
 /**
  * <p>Description  : IngotClientDetailService.</p>
@@ -21,11 +17,8 @@ import static com.ingot.framework.core.constants.BeanIds.CLIENT_DETAIL_SERVICE;
  * <p>Date         : 2020/11/3.</p>
  * <p>Time         : 3:59 下午.</p>
  */
-@Service(CLIENT_DETAIL_SERVICE)
+@Service
 public class IngotClientDetailService extends JdbcClientDetailsService {
-    @Resource
-    private PasswordEncoder clientDetailPasswordEncoder;
-
     public IngotClientDetailService(DataSource dataSource) {
         super(dataSource);
     }
@@ -56,7 +49,5 @@ public class IngotClientDetailService extends JdbcClientDetailsService {
                 OAuthClientDetailSqlConstants.DEFAULT_INSERT_STATEMENT, ContextHolder.tenantID()));
         setFindClientDetailsSql(String.format(
                 OAuthClientDetailSqlConstants.DEFAULT_FIND_STATEMENT, ContextHolder.tenantID()));
-
-        setPasswordEncoder(clientDetailPasswordEncoder);
     }
 }

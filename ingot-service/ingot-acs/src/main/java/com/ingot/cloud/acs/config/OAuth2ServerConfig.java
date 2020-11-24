@@ -1,13 +1,13 @@
 package com.ingot.cloud.acs.config;
 
 import com.ingot.cloud.acs.service.IngotClientDetailService;
+import com.ingot.cloud.acs.service.IngotUserDetailService;
 import com.ingot.framework.security.provider.error.IngotWebResponseExceptionTranslator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -35,7 +35,7 @@ import java.util.List;
 public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     private final AuthenticationManager authenticationManager;
     private final TokenStore tokenStore;
-    private final UserDetailsService userDetailsService;
+    private final IngotUserDetailService userDetailsService;
     private final IngotClientDetailService ingotClientDetailService;
     private final JwtAccessTokenConverter jwtAccessTokenConverter;
     private final TokenEnhancer tokenEnhancer;
@@ -61,11 +61,11 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
         enhancerChain.setTokenEnhancers(enhancers);
 
         endpoints.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
-                .authenticationManager(authenticationManager)
-                .userDetailsService(userDetailsService)
                 .tokenStore(tokenStore)
                 .tokenEnhancer(enhancerChain)
                 .accessTokenConverter(jwtAccessTokenConverter)
+                .authenticationManager(authenticationManager)
+                .userDetailsService(userDetailsService)
                 .reuseRefreshTokens(false)
                 .exceptionTranslator(new IngotWebResponseExceptionTranslator())
                 .pathMapping("/oauth/confirm_access", "/token/confirm_access");

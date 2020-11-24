@@ -21,11 +21,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static com.ingot.framework.core.constants.BeanIds.USER_DETAIL_SERVICE;
 
 /**
  * <p>Description  : IngotUserDetailService.</p>
@@ -34,7 +32,7 @@ import static com.ingot.framework.core.constants.BeanIds.USER_DETAIL_SERVICE;
  * <p>Time         : 4:37 下午.</p>
  */
 @Slf4j
-@Component(USER_DETAIL_SERVICE)
+@Service
 @AllArgsConstructor
 public class IngotUserDetailService implements IngotUserDetailsService {
     private final PmsUserAuthFeignApi userCenterFeignApi;
