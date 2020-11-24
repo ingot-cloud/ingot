@@ -54,11 +54,11 @@ public class IngotUserDetailService implements IngotUserDetailsService {
                         "clientId={}, tenantID={}",
                 username, clientId, tenantID);
 
-        UserDetailsDto params = UserDetailsDto.builder()
-                .type(UserDetailsTypeEnum.PASSWORD.getValue())
-                .uniqueCode(username)
-                .clientId(clientId)
-                .tenantID(tenantID).build();
+        UserDetailsDto params = new UserDetailsDto();
+        params.setType(UserDetailsTypeEnum.PASSWORD.getValue());
+        params.setUniqueCode(username);
+        params.setClientId(clientId);
+        params.setTenantID(tenantID);
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
@@ -80,11 +80,11 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         String tenantID = ContextHolder.tenantID();
 
         String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
-        UserDetailsDto params = UserDetailsDto.builder()
-                .type(UserDetailsTypeEnum.SOCIAL.getValue())
-                .uniqueCode(uniqueCode)
-                .clientId(clientId)
-                .tenantID(tenantID).build();
+        UserDetailsDto params = new UserDetailsDto();
+        params.setType(UserDetailsTypeEnum.SOCIAL.getValue());
+        params.setUniqueCode(uniqueCode);
+        params.setClientId(clientId);
+        params.setTenantID(tenantID);
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);

@@ -1,7 +1,6 @@
 package com.ingot.framework.core.model.dto.user;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 import java.io.Serializable;
 
@@ -11,23 +10,22 @@ import java.io.Serializable;
  * <p>Date         : 2020/11/5.</p>
  * <p>Time         : 3:47 下午.</p>
  */
-@Getter
-@Builder
+@Data
 public class UserDetailsDto implements Serializable {
     /**
      * 客户端ID
      */
-    private final String clientId;
+    private String clientId;
     /**
      * 租户ID
      */
-    private final String tenantID;
+    private String tenantID;
     /**
      * 授权类型
      */
-    private final String type;
+    private String type;
     /**
      * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId
      */
-    private final String uniqueCode;
+    private String uniqueCode;
 }
