@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.ingot.framework.core.constants.SecurityConstants.PATH_LOGIN_PASSWORD;
+import static com.ingot.framework.core.constants.SecurityConstants.Path.TOKEN_PASSWORD;
 import static org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY;
 import static org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY;
 
@@ -31,7 +31,7 @@ public class PasswordAuthenticationFilter extends AbstractAuthenticationProcessi
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
 
     public PasswordAuthenticationFilter(){
-        super(new AntPathRequestMatcher(PATH_LOGIN_PASSWORD, "POST"));
+        super(new AntPathRequestMatcher(TOKEN_PASSWORD, "POST"));
     }
 
     public PasswordAuthenticationFilter(RequestMatcher requiresAuthenticationRequestMatcher){

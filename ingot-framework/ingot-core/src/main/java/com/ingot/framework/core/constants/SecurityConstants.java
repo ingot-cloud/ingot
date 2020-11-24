@@ -57,36 +57,36 @@ public interface SecurityConstants {
      * 登录类型，默认标准类型，单点登录不互踢
      */
     String AUTH_TYPE_STANDARD = "standard";
-    /*
-     * Security path start.
-     */
+
     /**
-     * 密码登录
+     * Security path
      */
-    String PATH_LOGIN_PASSWORD = "/auth/login";
-    /**
-     * 用户刷新token
-     */
-    String PATH_REFRESH_TOKEN_USER = "/auth/user/refreshToken";
-    /**
-     * 退出登录
-     */
-    String PATH_LOGOUT_AUTH = "/auth/logout";
-    /**
-     * 手机验证码登录请求处理url
-     */
-    String PATH_LOGIN_MOBILE = "/auth/mobile";
-    /**
-     * 用户手机号修改密码
-     */
-    String PATH_USER_MODIFY_PASSWORD_BY_MOBILE = "/auth/modifyPasswordByMobile";
-    /**
-     * 处理验证码的url前缀
-     */
-    String PATH_VALIDATE_CODE_URL_PREFIX = "/code";
-    /*
-     * Security path end.
-     */
+    interface Path {
+        /**
+         * 密码登录
+         */
+        String TOKEN_PASSWORD = "/auth/token";
+        /**
+         * 用户刷新token
+         */
+        String PATH_REFRESH_TOKEN_USER = "/auth/user/refreshToken";
+        /**
+         * 退出登录
+         */
+        String PATH_LOGOUT_AUTH = "/auth/logout";
+        /**
+         * 手机验证码登录请求处理url
+         */
+        String PATH_LOGIN_MOBILE = "/auth/mobile";
+        /**
+         * 用户手机号修改密码
+         */
+        String PATH_USER_MODIFY_PASSWORD_BY_MOBILE = "/auth/modifyPasswordByMobile";
+        /**
+         * 处理验证码的url前缀
+         */
+        String PATH_VALIDATE_CODE_URL_PREFIX = "/code";
+    }
 
     /**
      * 验证图片验证码时，http请求中默认的携带图片验证码信息的参数的名称
