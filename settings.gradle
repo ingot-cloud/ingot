@@ -11,6 +11,10 @@ include 'ingot-framework:ingot-feign'
 findProject(':ingot-framework:ingot-feign')?.name = 'ingot-feign'
 include 'ingot-framework:ingot-security'
 findProject(':ingot-framework:ingot-security')?.name = 'ingot-security'
+include 'ingot-framework:ingot-tenant'
+findProject(':ingot-framework:ingot-tenant')?.name = 'ingot-tenant'
+include 'ingot-framework:ingot-security-config'
+findProject(':ingot-framework:ingot-security-config')?.name = 'ingot-security-config'
 
 // Component
 include 'ingot-component:ingot-id'

@@ -1,7 +1,5 @@
-package com.ingot.framework.security.core.authorize.manager;
+package com.ingot.framework.security.config;
 
-import com.ingot.framework.security.core.authorize.AuthorizeConfigManager;
-import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,7 +14,7 @@ import java.util.List;
  */
 @Slf4j
 @AllArgsConstructor
-public class IngotAuthorizeConfigManager implements AuthorizeConfigManager {
+public class DefaultAuthorizeConfigManager implements AuthorizeConfigManager {
     private final List<AuthorizeConfigProvider> authorizeConfigProviders;
 
     @Override public void config(HttpSecurity http) throws Exception{

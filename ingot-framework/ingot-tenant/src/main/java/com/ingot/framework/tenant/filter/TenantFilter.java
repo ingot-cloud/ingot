@@ -31,10 +31,10 @@ public class TenantFilter extends GenericFilterBean {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         final String url = request.getRequestURI();
-        log.debug("{} at filter chain; firing Filter: 'TenantFilter'", url);
+        log.info("do filter url = {}", url);
 
         String tenantId = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
-        log.debug(">>> 获取 header 中的租户 ID={}", tenantId);
+        log.info(">>> 获取 header 中的租户 ID={}", tenantId);
 
         if (StrUtil.isNotBlank(tenantId)) {
             TenantContextHolder.set(Long.valueOf(tenantId));

@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.authorize;
+package com.ingot.framework.security.config;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 

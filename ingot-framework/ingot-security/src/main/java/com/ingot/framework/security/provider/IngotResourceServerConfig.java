@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider;
 
-import com.ingot.framework.security.core.authorize.AuthorizeConfigManager;
+import com.ingot.framework.security.config.AuthorizeConfigManager;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

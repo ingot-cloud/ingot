@@ -1,40 +1,37 @@
-package com.ingot.framework.security.provider;
+package com.ingot.framework.security.provider.authorize;
 
+import com.ingot.framework.security.config.AuthorizeConfigProvider;
 import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.header.HeaderWriterFilter;
 
 /**
- * <p>Description  : IngotSecurityConfig.</p>
+ * <p>Description  : SecurityFilterConfigProvider.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2019/6/4.</p>
- * <p>Time         : 5:39 PM.</p>
+ * <p>Date         : 2019/6/5.</p>
+ * <p>Time         : 10:53 AM.</p>
  */
 @Slf4j
 @AllArgsConstructor
-public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
+public class SecurityFilterConfigProvider implements AuthorizeConfigProvider {
     private final ResourcePermitService resourcePermitService;
     private final UserAuthenticationFilter userAuthenticationFilter;
 
-    @SneakyThrows
-    @Override public void configure(HttpSecurity builder) {
-        log.info(">>> IngotSecurityFilterConfig - configure.");
+    @Override public boolean config(HttpSecurity http) throws Exception {
+        log.info(">>> SecurityFilterConfigProvider - configure.");
         IgnoreBearerTokenFilter ignoreBearerTokenFilter = new IgnoreBearerTokenFilter(resourcePermitService);
-        builder.addFilterAfter(ignoreBearerTokenFilter, HeaderWriterFilter.class);
+        http.addFilterAfter(ignoreBearerTokenFilter, HeaderWriterFilter.class);
 
         boolean addUserAuthenticationFilter = userAuthenticationFilter != null;
         log.info(">>> addUserAuthenticationFilter = {}, {}", addUserAuthenticationFilter, userAuthenticationFilter);
         if (addUserAuthenticationFilter){
-            builder.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);
+            http.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);
         }
+        return false;
     }
-
 }

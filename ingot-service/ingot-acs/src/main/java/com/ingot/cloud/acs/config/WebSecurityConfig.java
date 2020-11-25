@@ -1,5 +1,6 @@
 package com.ingot.cloud.acs.config;
 
+import com.ingot.framework.security.config.AuthorizeConfigManager;
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -27,6 +28,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final ResourcePermitService resourcePermitService;
     private final PasswordAuthConfig passwordAuthConfig;
 //    private final MobileSecurityConfig mobileSecurityConfig;
+    private final AuthorizeConfigManager authorizeConfigManager;
 
     /**
      * 注入默认 AuthenticationManager
@@ -53,9 +55,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .apply(mobileSecurityConfig)
 //                    .and()
                 .authorizeRequests().antMatchers(permit.toArray(new String[0])).permitAll()
-                .anyRequest().authenticated()
                     .and()
                 .csrf().disable();
+
+        authorizeConfigManager.config(http);
     }
 
     /**

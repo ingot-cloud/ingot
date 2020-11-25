@@ -1,12 +1,9 @@
 package com.ingot.framework.security.provider;
 
 import com.ingot.framework.security.annotation.IgnoreUserAuthentication;
-import com.ingot.framework.security.core.authorize.AuthorizeConfigManager;
-import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
-import com.ingot.framework.security.core.authorize.manager.IngotAuthorizeConfigManager;
-import com.ingot.framework.security.core.authorize.provider.ActuatorAuthorizeConfigProvider;
-import com.ingot.framework.security.core.authorize.provider.AuthorizePermitConfigProvider;
-import com.ingot.framework.security.core.authorize.provider.SecurityFilterConfigProvider;
+import com.ingot.framework.security.provider.authorize.ActuatorAuthorizeConfigProvider;
+import com.ingot.framework.security.provider.authorize.AuthorizePermitConfigProvider;
+import com.ingot.framework.security.provider.authorize.SecurityFilterConfigProvider;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.ResourcePermitService;
@@ -20,8 +17,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
-import java.util.List;
-
 /**
  * <p>Description  : IngotResourceServerAuthorizeConfig.</p>
  * <p>Author       : wangchao.</p>
@@ -29,12 +24,6 @@ import java.util.List;
  * <p>Time         : 下午12:16.</p>
  */
 public class IngotResourceServerAuthorizeConfig {
-
-    @Bean
-    @ConditionalOnMissingBean(AuthorizeConfigManager.class)
-    public AuthorizeConfigManager authorizeConfigManager(List<AuthorizeConfigProvider> providers) {
-        return new IngotAuthorizeConfigManager(providers);
-    }
 
     @Bean
     public ActuatorAuthorizeConfigProvider actuatorProvider(WebEndpointProperties properties){

@@ -1,6 +1,6 @@
-package com.ingot.framework.security.core.authorize.provider;
+package com.ingot.framework.security.provider.authorize;
 
-import com.ingot.framework.security.core.authorize.AuthorizeConfigProvider;
+import com.ingot.framework.security.config.AuthorizeConfigProvider;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;

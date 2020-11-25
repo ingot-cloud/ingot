@@ -7,4 +7,5 @@ dependencies {
     compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly(deps.spring.spring_cloud.oauth2_starter)
     compileOnly project(ingot.framework_core)
+    compileOnly project(ingot.framework_security_config)
 }
