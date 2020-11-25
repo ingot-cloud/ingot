@@ -34,11 +34,12 @@ public class TenantFilter extends GenericFilterBean {
         log.info("do filter url = {}", url);
 
         String tenantId = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
-        log.info(">>> 获取 header 中的租户 ID={}", tenantId);
+        log.info(">>> 获取 header 中的 tenantID={}", tenantId);
 
         if (StrUtil.isNotBlank(tenantId)) {
             TenantContextHolder.set(Long.valueOf(tenantId));
         } else {
+            log.info(">>> 设置默认 tenantID");
             TenantContextHolder.set(TenantConstants.DEFAULT_TENANT_ID);
         }
 
