@@ -1,8 +1,7 @@
-package com.ingot.framework.store.tenant;
+package com.ingot.framework.tenant.interceptor;
 
-import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.TenantConstants;
-import com.ingot.framework.core.context.ContextHolder;
+import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -26,8 +25,9 @@ public class TenantRequestInterceptor implements ClientHttpRequestInterceptor {
                                         @NonNull ClientHttpRequestExecution execution)
             throws IOException {
 
-        if (StrUtil.isNotEmpty(ContextHolder.tenantID())) {
-            request.getHeaders().set(TenantConstants.TENANT_HEADER_KEY, ContextHolder.tenantID());
+        if (TenantContextHolder.get() != null) {
+            request.getHeaders().set(TenantConstants.TENANT_HEADER_KEY,
+                    String.valueOf(TenantContextHolder.get()));
         }
 
         return execution.execute(request, body);

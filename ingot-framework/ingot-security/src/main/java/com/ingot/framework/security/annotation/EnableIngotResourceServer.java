@@ -1,6 +1,6 @@
 package com.ingot.framework.security.annotation;
 
-import com.ingot.framework.security.provider.AuthorizeConfig;
+import com.ingot.framework.security.provider.IngotResourceServerAuthorizeConfig;
 import com.ingot.framework.security.provider.IngotSecurityBeanDefinitionRegistrar;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -19,6 +19,6 @@ import java.lang.annotation.*;
 @Inherited
 @EnableResourceServer
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@Import({IngotSecurityBeanDefinitionRegistrar.class, AuthorizeConfig.class})
+@Import({IngotSecurityBeanDefinitionRegistrar.class, IngotResourceServerAuthorizeConfig.class})
 public @interface EnableIngotResourceServer {
 }

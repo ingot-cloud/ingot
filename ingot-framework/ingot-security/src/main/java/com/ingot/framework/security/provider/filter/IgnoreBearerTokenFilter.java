@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.filter;
+package com.ingot.framework.security.provider.filter;
 
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.service.ResourcePermitService;

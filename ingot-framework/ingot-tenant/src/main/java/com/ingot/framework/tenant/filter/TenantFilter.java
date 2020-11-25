@@ -1,8 +1,8 @@
-package com.ingot.framework.store.tenant.web;
+package com.ingot.framework.tenant.filter;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.TenantConstants;
-import com.ingot.framework.core.context.ContextHolder;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.GenericFilterBean;
@@ -24,20 +24,25 @@ public class TenantFilter extends GenericFilterBean {
 
     @Override
     @SneakyThrows
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) {
+    public void doFilter(ServletRequest servletRequest,
+                         ServletResponse servletResponse,
+                         FilterChain filterChain) {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        final String url = request.getRequestURI();
+        log.debug("{} at filter chain; firing Filter: 'TenantFilter'", url);
 
         String tenantId = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
         log.debug(">>> 获取 header 中的租户 ID={}", tenantId);
 
         if (StrUtil.isNotBlank(tenantId)) {
-            ContextHolder.setTenantID(tenantId);
+            TenantContextHolder.set(Long.valueOf(tenantId));
         } else {
-            ContextHolder.setTenantID(TenantConstants.DEFAULT_TENANT_ID);
+            TenantContextHolder.set(TenantConstants.DEFAULT_TENANT_ID);
         }
 
         filterChain.doFilter(request, response);
-        ContextHolder.removeTenant();
+        TenantContextHolder.clear();
     }
 }

@@ -3,12 +3,12 @@ dependencies {
 
     api(deps.rx_java)
     api(deps.aspectj.aspectjweaver)
+    api(deps.alibaba.transmittable_thread_local)
     api project(ingot.framework_base)
 
     implementation(deps.apache.common_codec)
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
-    implementation(deps.alibaba.transmittable_thread_local)
 
     compileOnly(deps.javax_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)

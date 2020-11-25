@@ -11,14 +11,6 @@ import com.ingot.framework.core.wrapper.ThreadLocalMap;
  */
 public class ContextHolder {
 
-    public static String tenantID(){
-        return ThreadLocalMap.get(ContextConstants.KEY_TENANT);
-    }
-
-    public static void setTenantID(String id){
-        ThreadLocalMap.put(ContextConstants.KEY_TENANT, id);
-    }
-
     public static String token() {
         return ThreadLocalMap.get(ContextConstants.KEY_TOKEN);
     }
@@ -29,10 +21,6 @@ public class ContextHolder {
 
     public static void removeUserAuth(){
         ThreadLocalMap.remove(ContextConstants.KEY_TOKEN);
-    }
-
-    public static void removeTenant(){
-        ThreadLocalMap.remove(ContextConstants.KEY_TENANT);
     }
 
     public static void clear() {

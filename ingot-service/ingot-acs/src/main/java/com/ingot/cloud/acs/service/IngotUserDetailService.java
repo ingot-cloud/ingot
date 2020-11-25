@@ -6,7 +6,6 @@ import com.ingot.framework.base.constants.GlobalConstants;
 import com.ingot.framework.base.exception.BaseException;
 import com.ingot.framework.base.model.enums.CommonStatusEnum;
 import com.ingot.framework.base.status.BaseStatusCode;
-import com.ingot.framework.core.context.ContextHolder;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsTypeEnum;
@@ -14,6 +13,7 @@ import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
 import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -47,7 +47,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      */
     @Override public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
-        String tenantID = ContextHolder.tenantID();
+        Long tenantID = TenantContextHolder.get();
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
                         "clientId={}, tenantID={}",
                 username, clientId, tenantID);
@@ -56,7 +56,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         params.setType(UserDetailsTypeEnum.PASSWORD.getValue());
         params.setUniqueCode(username);
         params.setClientId(clientId);
-        params.setTenantID(tenantID);
+        params.setTenantID(String.valueOf(tenantID));
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
@@ -75,14 +75,14 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
-        String tenantID = ContextHolder.tenantID();
+        Long tenantID = TenantContextHolder.get();
 
         String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
         UserDetailsDto params = new UserDetailsDto();
         params.setType(UserDetailsTypeEnum.SOCIAL.getValue());
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
-        params.setTenantID(tenantID);
+        params.setTenantID(String.valueOf(tenantID));
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);

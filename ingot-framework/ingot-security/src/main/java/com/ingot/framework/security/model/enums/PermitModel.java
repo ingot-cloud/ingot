@@ -2,6 +2,7 @@ package com.ingot.framework.security.model.enums;
 
 
 import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 
 /**
  * <p>Description  : PermitModel.</p>
@@ -21,7 +22,7 @@ public enum PermitModel {
      */
     INNER,
     /**
-     * 该模式不触发 {@link com.ingot.framework.security.core.filter.UserAuthenticationFilter}
+     * 该模式不触发 {@link UserAuthenticationFilter}
      */
     USER
 }

@@ -3,6 +3,7 @@ package com.ingot.framework.security.properties;
 import cn.hutool.core.util.ReUtil;
 import com.ingot.framework.security.annotation.Permit;
 import com.ingot.framework.security.model.enums.PermitModel;
+import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +46,7 @@ public class IngotPermitUrlProperties implements InitializingBean {
     private List<String> ignoreUrls = new ArrayList<>();
 
     /**
-     * 忽略 {@link com.ingot.framework.security.core.filter.UserAuthenticationFilter} 的 url
+     * 忽略 {@link UserAuthenticationFilter} 的 url
      */
     @Getter
     @Setter

@@ -1,8 +1,9 @@
 package com.ingot.cloud.acs.service;
 
 import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.core.context.ContextHolder;
 import com.ingot.framework.security.constants.OAuthClientDetailSqlConstants;
+import com.ingot.framework.tenant.TenantContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
@@ -17,6 +18,7 @@ import javax.sql.DataSource;
  * <p>Date         : 2020/11/3.</p>
  * <p>Time         : 3:59 下午.</p>
  */
+@Slf4j
 @Service
 public class IngotClientDetailService extends JdbcClientDetailsService {
     public IngotClientDetailService(DataSource dataSource) {
@@ -32,22 +34,21 @@ public class IngotClientDetailService extends JdbcClientDetailsService {
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId", unless = "#result == null")
     public ClientDetails loadClientByClientId(String clientId) {
-        return super.loadClientByClientId(clientId);
+        log.info("load client, clientID = {}, tenantID = {}", clientId, TenantContextHolder.get());
+        setSelectClientDetailsSql(String.format(
+                OAuthClientDetailSqlConstants.DEFAULT_SELECT_STATEMENT, TenantContextHolder.get()));
+        ClientDetails details = super.loadClientByClientId(clientId);
+        log.info("load client = {}", details);
+        return details;
     }
 
     @PostConstruct
     public void init() {
-        setSelectClientDetailsSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_SELECT_STATEMENT, ContextHolder.tenantID()));
-        setDeleteClientDetailsSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_DELETE_STATEMENT, ContextHolder.tenantID()));
-        setUpdateClientDetailsSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_UPDATE_STATEMENT, ContextHolder.tenantID()));
-        setUpdateClientSecretSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_UPDATE_SECRET_STATEMENT, ContextHolder.tenantID()));
-        setInsertClientDetailsSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_INSERT_STATEMENT, ContextHolder.tenantID()));
-        setFindClientDetailsSql(String.format(
-                OAuthClientDetailSqlConstants.DEFAULT_FIND_STATEMENT, ContextHolder.tenantID()));
+        setSelectClientDetailsSql(OAuthClientDetailSqlConstants.DEFAULT_SELECT_STATEMENT);
+        setDeleteClientDetailsSql(OAuthClientDetailSqlConstants.DEFAULT_DELETE_STATEMENT);
+        setUpdateClientDetailsSql(OAuthClientDetailSqlConstants.DEFAULT_UPDATE_STATEMENT);
+        setUpdateClientSecretSql(OAuthClientDetailSqlConstants.DEFAULT_UPDATE_SECRET_STATEMENT);
+        setInsertClientDetailsSql(OAuthClientDetailSqlConstants.DEFAULT_INSERT_STATEMENT);
+        setFindClientDetailsSql(OAuthClientDetailSqlConstants.DEFAULT_FIND_STATEMENT);
     }
 }

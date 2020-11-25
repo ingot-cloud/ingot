@@ -5,10 +5,7 @@ dependencies {
     api(deps.mybatis.plus_extension)
     api(deps.spring.spring_boot.data_redis_starter)
 
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_core)
-
-    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
-    compileOnly(deps.spring.framework_spring_web)
-    compileOnly(deps.javax_servlet_api)
-    compileOnly(deps.spring.spring_cloud.openfeign_starter)
+    implementation project(ingot.framework_tenant)
 }

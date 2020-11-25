@@ -1,19 +1,19 @@
-package com.ingot.framework.security.core.filter;
+package com.ingot.framework.security.provider.filter;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.ContextHolder;
-import com.ingot.framework.security.core.exception.UserForbiddenException;
-import com.ingot.framework.security.core.exception.UserTokenEmptyException;
-import com.ingot.framework.security.core.exception.UserTokenInvalidException;
-import com.ingot.framework.security.core.exception.UserTokenSignBackException;
+import com.ingot.framework.security.exception.UserForbiddenException;
+import com.ingot.framework.security.exception.UserTokenEmptyException;
+import com.ingot.framework.security.exception.UserTokenInvalidException;
+import com.ingot.framework.security.exception.UserTokenSignBackException;
 import com.ingot.framework.security.model.dto.UserTokenDto;
 import com.ingot.framework.security.service.AuthenticationService;
-import com.ingot.framework.security.service.UserAccessTokenRedisService;
 import com.ingot.framework.security.service.ResourcePermitService;
+import com.ingot.framework.security.service.UserAccessTokenRedisService;
 import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -53,7 +53,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         log.info("{} at filter chain; firing Filter: 'UserAuthenticationFilter'", url);
 
         log.info(">>> UserAuthenticationFilter ====>  用户鉴权拦截器. token={}", token);
-        if (StringUtils.isEmpty(token)){
+        if (StrUtil.isEmpty(token)){
             log.error(">>> UserAuthenticationFilter ====> Token不能为空");
             throw new UserTokenEmptyException();
         }
@@ -65,8 +65,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         String authType = user.getAuthType();
         // 如果当前鉴权类型为唯一，那么需要判断使用token是否和当前登录用户token相同，不同则签退
-        if (StringUtils.endsWithIgnoreCase(authType, AUTH_TYPE_UNIQUE)){
-            if (!org.apache.commons.codec.binary.StringUtils.equals(token, user.getAccessToken())){
+        if (StrUtil.endWithIgnoreCase(authType, AUTH_TYPE_UNIQUE)){
+            if (!StrUtil.equals(token, user.getAccessToken())){
                 log.error(">>> UserAuthenticationFilter ====> 用户已被签退");
                 throw new UserTokenSignBackException();
             }

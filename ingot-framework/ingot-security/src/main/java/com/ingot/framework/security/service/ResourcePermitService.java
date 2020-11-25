@@ -2,6 +2,7 @@ package com.ingot.framework.security.service;
 
 import com.google.common.collect.Lists;
 import com.ingot.framework.security.properties.IngotPermitUrlProperties;
+import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class ResourcePermitService {
     }
 
     /**
-     * 是否过滤 {@link com.ingot.framework.security.core.filter.UserAuthenticationFilter}
+     * 是否过滤 {@link UserAuthenticationFilter}
      * @param requestURI check url
      */
     public boolean userPermit(String requestURI){

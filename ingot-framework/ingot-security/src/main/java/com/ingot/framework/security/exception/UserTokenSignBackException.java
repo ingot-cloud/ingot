@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.exception;
+package com.ingot.framework.security.exception;
 
 import com.ingot.framework.base.exception.BaseException;
 import com.ingot.framework.security.status.SecurityStatusCode;

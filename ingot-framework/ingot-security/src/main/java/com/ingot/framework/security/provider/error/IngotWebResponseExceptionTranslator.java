@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.error;
 
-import com.ingot.framework.security.core.exception.*;
+import com.ingot.framework.security.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

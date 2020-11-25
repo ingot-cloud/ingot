@@ -9,6 +9,7 @@ dependencies {
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_store)
     implementation project(ingot.framework_security)
+    implementation project(ingot.framework_tenant)
 }
 
 apply from: "${project.getRootDir().path}/config/database.gradle"

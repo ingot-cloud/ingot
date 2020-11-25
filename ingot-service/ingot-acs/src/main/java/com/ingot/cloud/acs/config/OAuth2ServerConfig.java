@@ -35,7 +35,7 @@ import java.util.List;
 public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     private final AuthenticationManager authenticationManager;
     private final TokenStore tokenStore;
-    private final IngotUserDetailService userDetailsService;
+    private final IngotUserDetailService ingotUserDetailService;
     private final IngotClientDetailService ingotClientDetailService;
     private final JwtAccessTokenConverter jwtAccessTokenConverter;
     private final TokenEnhancer tokenEnhancer;
@@ -65,7 +65,7 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
                 .tokenEnhancer(enhancerChain)
                 .accessTokenConverter(jwtAccessTokenConverter)
                 .authenticationManager(authenticationManager)
-                .userDetailsService(userDetailsService)
+                .userDetailsService(ingotUserDetailService)
                 .reuseRefreshTokens(false)
                 .exceptionTranslator(new IngotWebResponseExceptionTranslator())
                 .pathMapping("/oauth/confirm_access", "/token/confirm_access");

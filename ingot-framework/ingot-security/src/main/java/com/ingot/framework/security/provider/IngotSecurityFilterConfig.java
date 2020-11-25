@@ -1,25 +1,16 @@
-package com.ingot.framework.security.config;
+package com.ingot.framework.security.provider;
 
-import com.ingot.framework.security.annotation.IgnoreUserAuthentication;
-import com.ingot.framework.security.core.filter.IgnoreBearerTokenFilter;
-import com.ingot.framework.security.core.filter.UserAuthenticationFilter;
-import com.ingot.framework.security.service.AuthenticationService;
-import com.ingot.framework.security.service.UserAccessTokenRedisService;
+import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
+import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.ResourcePermitService;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.header.HeaderWriterFilter;
-import org.springframework.stereotype.Component;
 
 /**
  * <p>Description  : IngotSecurityConfig.</p>
@@ -28,13 +19,10 @@ import org.springframework.stereotype.Component;
  * <p>Time         : 5:39 PM.</p>
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
     private final ResourcePermitService resourcePermitService;
-    @Lazy
-    @Autowired(required = false)
-    private UserAuthenticationFilter userAuthenticationFilter;
+    private final UserAuthenticationFilter userAuthenticationFilter;
 
     @SneakyThrows
     @Override public void configure(HttpSecurity builder) {
@@ -49,11 +37,4 @@ public class IngotSecurityFilterConfig extends SecurityConfigurerAdapter<Default
         }
     }
 
-    @Bean
-    @ConditionalOnBean(UserAccessTokenRedisService.class)
-    @ConditionalOnMissingBean(annotation = IgnoreUserAuthentication.class)
-    public UserAuthenticationFilter userAuthenticationFilter(@Lazy UserAccessTokenRedisService userAccessTokenRedisService,
-                                                             AuthenticationService authenticationService){
-        return new UserAuthenticationFilter(userAccessTokenRedisService, resourcePermitService, authenticationService);
-    }
 }

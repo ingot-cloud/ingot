@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.exception;
+package com.ingot.framework.security.exception;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;

@@ -36,7 +36,7 @@ public interface OAuthClientDetailSqlConstants {
      * Select
      */
     String DEFAULT_SELECT_STATEMENT = BASE_FIND_STATEMENT + " where client_id = ? " +
-            "and deleted_at is not null and tenant_id = %s";
+            "and tenant_id = %s";
 
     /**
      * Insert

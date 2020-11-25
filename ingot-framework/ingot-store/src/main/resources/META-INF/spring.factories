@@ -3,5 +3,4 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.ingot.framework.store.mybatis.config.MybatisPlusConfig,\
   com.ingot.framework.store.redis.config.RedisTemplateConfig,\
   com.ingot.framework.store.redis.config.RedisCacheConfig,\
-  com.ingot.framework.store.redis.config.RedisCacheManagerConfig,\
-  com.ingot.framework.store.tenant.TenantConfig
+  com.ingot.framework.store.redis.config.RedisCacheManagerConfig
