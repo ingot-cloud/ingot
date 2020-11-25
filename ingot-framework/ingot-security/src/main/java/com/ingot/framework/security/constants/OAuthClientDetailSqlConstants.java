@@ -23,20 +23,20 @@ public interface OAuthClientDetailSqlConstants {
     /**
      * 查询字段，包含 client_id 和 client_secret
      */
-    String BASE_FIND_STATEMENT = "select client_id, CONCAT('{noop}',client_secret) as client_secret, "
+    String BASE_FIND_STATEMENT = "select client_id, client_secret, "
             + CLIENT_FIELDS_FOR_UPDATE + " from " + TABLE_NAME;
 
     /**
      * 查找语句
      */
     String DEFAULT_FIND_STATEMENT = BASE_FIND_STATEMENT + " order by client_id " +
-            "where deleted_at is not null and tenant_id = %s";
+            "where deleted_at is null and tenant_id = %s";
 
     /**
      * Select
      */
     String DEFAULT_SELECT_STATEMENT = BASE_FIND_STATEMENT + " where client_id = ? " +
-            "and tenant_id = %s";
+            "and deleted_at is null and tenant_id = %s";
 
     /**
      * Insert

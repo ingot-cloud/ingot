@@ -34,12 +34,9 @@ public class IngotClientDetailService extends JdbcClientDetailsService {
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId", unless = "#result == null")
     public ClientDetails loadClientByClientId(String clientId) {
-        log.info("load client, clientID = {}, tenantID = {}", clientId, TenantContextHolder.get());
         setSelectClientDetailsSql(String.format(
                 OAuthClientDetailSqlConstants.DEFAULT_SELECT_STATEMENT, TenantContextHolder.get()));
-        ClientDetails details = super.loadClientByClientId(clientId);
-        log.info("load client = {}", details);
-        return details;
+        return super.loadClientByClientId(clientId);
     }
 
     @PostConstruct

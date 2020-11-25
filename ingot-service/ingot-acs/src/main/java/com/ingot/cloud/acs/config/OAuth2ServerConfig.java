@@ -3,6 +3,7 @@ package com.ingot.cloud.acs.config;
 import com.ingot.cloud.acs.service.IngotClientDetailService;
 import com.ingot.cloud.acs.service.IngotUserDetailService;
 import com.ingot.framework.security.provider.error.IngotWebResponseExceptionTranslator;
+import com.ingot.framework.tenant.filter.TenantFilter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -40,12 +41,14 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     private final JwtAccessTokenConverter jwtAccessTokenConverter;
     private final TokenEnhancer tokenEnhancer;
     private final PasswordEncoder clientDetailPasswordEncoder;
+    private final TenantFilter filter = new TenantFilter();
 
     @Override public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
         security.tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()")
                 .allowFormAuthenticationForClients()
-                .passwordEncoder(clientDetailPasswordEncoder);
+                .passwordEncoder(clientDetailPasswordEncoder)
+                .addTokenEndpointAuthenticationFilter(filter);
     }
 
     @Override public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
