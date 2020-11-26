@@ -1,6 +1,5 @@
 package com.ingot.framework.security.provider.filter;
 
-import com.ingot.framework.core.context.ContextHolder;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.ResourcePermitService;
 import com.ingot.framework.security.service.UserAccessTokenRedisService;
@@ -79,6 +78,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
 
-        ContextHolder.removeUserAuth();
+//        ContextHolder.removeUserAuth();
     }
 }

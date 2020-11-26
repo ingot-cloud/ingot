@@ -1,13 +1,12 @@
-package com.ingot.framework.security.service.impl;
+package com.ingot.framework.security.provider.expression;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
-import com.ingot.framework.security.service.PreAuthorizeService;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
@@ -23,18 +22,19 @@ import java.util.List;
  */
 @Slf4j
 @Service("pms")
-public class PreAuthorizeServiceImpl implements PreAuthorizeService {
+public class SecurityAuthMethods {
 
     /**
-     * 判断接口是否还有角色
+     * 判断是否包含角色
+     *
      * @param role 角色
      * @return Boolean
      */
-    @Override public final boolean hasRole(String role) {
+    public final boolean hasRole(String role) {
         if (StrUtil.isBlank(role)) {
             return false;
         }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityAuthContext.getAuthentication();
         if (authentication == null) {
             return false;
         }
@@ -46,15 +46,16 @@ public class PreAuthorizeServiceImpl implements PreAuthorizeService {
     }
 
     /**
-     * 判断接口是否有任一角色
+     * 判断是否包含任一角色
+     *
      * @param roles 角色
      * @return Boolean
      */
-    @Override public final boolean hasAnyRole(String... roles) {
-        if (ArrayUtil.isEmpty(roles)){
+    public final boolean hasAnyRole(String... roles) {
+        if (ArrayUtil.isEmpty(roles)) {
             return false;
         }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityAuthContext.getAuthentication();
         if (authentication == null) {
             return false;
         }
