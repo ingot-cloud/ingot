@@ -13,7 +13,7 @@ import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 public class InvalidException extends IngotOAuth2Exception {
 
     public InvalidException(String msg, Throwable t) {
-        super(msg);
+        super(msg, t);
     }
 
     @Override

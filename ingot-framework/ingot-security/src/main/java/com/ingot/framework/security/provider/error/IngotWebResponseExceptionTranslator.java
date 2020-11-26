@@ -26,15 +26,15 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 @Slf4j
 public class IngotWebResponseExceptionTranslator implements WebResponseExceptionTranslator<OAuth2Exception> {
 
-    private ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
+    private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
     @Override public ResponseEntity<OAuth2Exception> translate(Exception e) throws Exception {
 
         // Try to extract a SpringSecurityException from the stacktrace
         Throwable[] causeChain = throwableAnalyzer.determineCauseChain(e);
 
-        Exception ase = (AuthenticationException) throwableAnalyzer.getFirstThrowableOfType(AuthenticationException.class,
-                causeChain);
+        Exception ase = (AuthenticationException) throwableAnalyzer
+                .getFirstThrowableOfType(AuthenticationException.class, causeChain);
         if (ase != null) {
             return handleOAuth2Exception(new UnauthorizedException(e.getMessage(), e));
         }
@@ -57,8 +57,8 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
             return handleOAuth2Exception(new MethodNotAllowedException(ase.getMessage(), ase));
         }
 
-        ase = (OAuth2Exception) throwableAnalyzer.getFirstThrowableOfType(
-                OAuth2Exception.class, causeChain);
+        ase = (OAuth2Exception) throwableAnalyzer
+                .getFirstThrowableOfType(OAuth2Exception.class, causeChain);
 
         if (ase != null) {
             return handleOAuth2Exception((OAuth2Exception) ase);
@@ -83,7 +83,7 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
             return new ResponseEntity<>(e, headers,
                     HttpStatus.valueOf(status));
         }
-        return new ResponseEntity<>(new IngotOAuth2Exception(e.getMessage(), e.getOAuth2ErrorCode()), headers,
+        return new ResponseEntity<>(new IngotOAuth2Exception(e), headers,
                 HttpStatus.valueOf(status));
 
     }

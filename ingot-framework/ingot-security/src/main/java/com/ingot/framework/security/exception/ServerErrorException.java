@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 public class ServerErrorException extends IngotOAuth2Exception {
 
     public ServerErrorException(String msg, Throwable t) {
-        super(msg);
+        super(msg, t);
     }
 
     @Override

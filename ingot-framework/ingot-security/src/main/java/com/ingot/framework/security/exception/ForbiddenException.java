@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 public class ForbiddenException extends IngotOAuth2Exception {
 
     public ForbiddenException(String msg, Throwable t) {
-        super(msg);
+        super(msg, t);
     }
 
     @Override

@@ -23,8 +23,18 @@ public class IngotOAuth2Exception extends OAuth2Exception {
         super(msg);
     }
 
-    public IngotOAuth2Exception(String msg, String errorCode) {
-        super(msg);
-        this.errorCode = errorCode;
+    public IngotOAuth2Exception(String msg, Throwable t) {
+        super(msg, t);
     }
+
+    public IngotOAuth2Exception(OAuth2Exception e) {
+        super(e.getMessage(), e);
+        String oauth2ErrorCode = e.getOAuth2ErrorCode();
+        Throwable cause = e.getCause();
+        this.errorCode = cause != null ?
+                String.format("errorCode: %s, raw: %s", oauth2ErrorCode, cause.getMessage()) :
+                oauth2ErrorCode;
+    }
+
+
 }

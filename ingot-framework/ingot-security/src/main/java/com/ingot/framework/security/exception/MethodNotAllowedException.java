@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 public class MethodNotAllowedException extends IngotOAuth2Exception {
 
     public MethodNotAllowedException(String msg, Throwable t) {
-        super(msg);
+        super(msg, t);
     }
 
     @Override

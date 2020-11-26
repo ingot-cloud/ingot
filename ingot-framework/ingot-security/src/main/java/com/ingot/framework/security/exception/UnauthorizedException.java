@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 public class UnauthorizedException extends IngotOAuth2Exception{
 
     public UnauthorizedException(String msg, Throwable t) {
-        super(msg);
+        super(msg, t);
     }
 
     @Override
