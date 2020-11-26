@@ -15,7 +15,7 @@ import java.security.Principal;
 import java.util.Map;
 
 /**
- * <p>Description  : TokenEndpoint.</p>
+ * <p>Description  : AuthEndpoint.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/11/26.</p>
  * <p>Time         : 5:02 下午.</p>
