@@ -2,7 +2,7 @@ package com.ingot.framework.feign;
 
 import com.google.common.collect.Lists;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.core.utils.RequestUtils;
+import com.ingot.framework.core.context.RequestContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class OAuth2FeignRequestInterceptor implements RequestInterceptor {
      * 转发 header 到 RequestTemplate
      */
     private void relayHeader(RequestTemplate template){
-        HttpServletRequest request = RequestUtils.getRequest();
+        HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
         if (request == null){
             return;
         }

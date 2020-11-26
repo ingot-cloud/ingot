@@ -80,10 +80,10 @@ public class TokenService {
         }
         Map<String, Object> info = getAdditionalInformation(authorization);
         if (info != null){
-            token.setUserId(ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID)));
-            token.setUsername(ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_NAME)));
-            token.setAuthType(ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE)));
-            token.setTenantId(ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_TENANT_ID)));
+            token.setUserId(ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_USER_ID)));
+            token.setUsername(ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_USERNAME)));
+            token.setAuthType(ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE)));
+            token.setTenantId(ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID)));
         }
         token.setAccessToken(authorization);
 

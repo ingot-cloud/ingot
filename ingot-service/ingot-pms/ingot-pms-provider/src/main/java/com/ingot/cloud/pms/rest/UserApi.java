@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.rest;
 
 import com.ingot.framework.core.wrapper.BaseController;
+import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.security.utils.SecurityUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,4 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/user")
 public class UserApi extends BaseController {
+
+    @GetMapping
+    public IngotResponse<?> user(){
+        return ok(SecurityUtils.getUser());
+    }
 }

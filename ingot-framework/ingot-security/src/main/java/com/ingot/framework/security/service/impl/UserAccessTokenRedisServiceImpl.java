@@ -100,9 +100,9 @@ public class UserAccessTokenRedisServiceImpl implements UserAccessTokenRedisServ
 
     private String getKey(OAuth2AccessToken accessToken){
         Map<String, Object> info = accessToken.getAdditionalInformation();
-        String userId = ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_ID));
-        String userName = ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_USER_NAME));
-        String authType = ObjectUtils.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE));
+        String userId = ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_USER_ID));
+        String userName = ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_USERNAME));
+        String authType = ObjectUtils.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE));
         if (StrUtil.isEmpty(authType) || StrUtil.endWithIgnoreCase(authType, AUTH_TYPE_STANDARD)){
             return RedisConstants.userStandardAccessTokenKey(accessToken.getValue(), userId, userName);
         } else if (StrUtil.endWithIgnoreCase(authType, AUTH_TYPE_UNIQUE)){

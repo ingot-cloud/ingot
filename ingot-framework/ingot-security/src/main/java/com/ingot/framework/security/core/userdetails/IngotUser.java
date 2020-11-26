@@ -1,5 +1,8 @@
 package com.ingot.framework.security.core.userdetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -14,10 +17,13 @@ import java.util.Collection;
  */
 public class IngotUser extends User {
     @Getter
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
     @Getter
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long deptId;
     @Getter
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long tenantId;
     @Getter
     private final String authType;
@@ -38,5 +44,41 @@ public class IngotUser extends User {
         this.deptId = deptId;
         this.tenantId = tenantId;
         this.authType = authType;
+    }
+
+    @JsonIgnore
+    @Override
+    public String getPassword() {
+        return super.getPassword();
+    }
+
+    @JsonIgnore
+    @Override
+    public Collection<GrantedAuthority> getAuthorities() {
+        return super.getAuthorities();
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isAccountNonExpired() {
+        return super.isAccountNonExpired();
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isAccountNonLocked() {
+        return super.isAccountNonLocked();
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return super.isCredentialsNonExpired();
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isEnabled() {
+        return super.isEnabled();
     }
 }

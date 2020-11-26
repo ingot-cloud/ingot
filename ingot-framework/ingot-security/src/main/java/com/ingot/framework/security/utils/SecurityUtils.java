@@ -11,7 +11,7 @@ import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.constants.CookieConstants;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.constants.TenantConstants;
-import com.ingot.framework.core.utils.RequestUtils;
+import com.ingot.framework.core.context.RequestContextHolder;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -177,7 +177,7 @@ public final class SecurityUtils {
      */
     public static String getAuthType(OAuth2AccessToken accessToken) {
         Map<String, Object> info = accessToken.getAdditionalInformation();
-        return ObjectUtil.toString(info.get(SecurityConstants.TOKEN_ENHANCER_KEY_AUTH_TYPE));
+        return ObjectUtil.toString(info.get(SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE));
     }
 
     /**
@@ -267,7 +267,7 @@ public final class SecurityUtils {
      */
     public static String getClientIdFromRequest() {
         try {
-            HttpServletRequest request = RequestUtils.getRequest();
+            HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
             if (request == null) {
                 return "";
             }
@@ -301,7 +301,7 @@ public final class SecurityUtils {
      * @return {@link String}, 如果没有租户编码，默认使用 {@link TenantConstants#DEFAULT_TENANT_CODE}
      */
     public static String getTenantCodeFromRequest() {
-        HttpServletRequest request = RequestUtils.getRequest();
+        HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
         if (request == null) {
             return TenantConstants.DEFAULT_TENANT_CODE;
         }

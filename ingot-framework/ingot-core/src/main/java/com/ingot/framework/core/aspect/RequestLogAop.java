@@ -1,7 +1,7 @@
 package com.ingot.framework.core.aspect;
 
 import com.google.common.collect.Maps;
-import com.ingot.framework.core.utils.RequestUtils;
+import com.ingot.framework.core.context.RequestContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -45,7 +45,7 @@ public class RequestLogAop {
     public Object methodWrapperHandler(ProceedingJoinPoint pjp) throws Throwable {
         long startTime = System.currentTimeMillis();
 
-        HttpServletRequest request = RequestUtils.getRequest();
+        HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
 
         if (request == null){
             return pjp.proceed();

@@ -40,14 +40,16 @@ public interface SecurityConstants {
     String HEADER_VALIDATE_IMAGE_DISPLAY_TIME = "ingot-image-code";
 
     /**
-     * Jwt token claim key
+     * Jwt token enhancer claim key
      */
-    String TOKEN_ENHANCER_KEY_USER_NAME = "username";
-    String TOKEN_ENHANCER_KEY_USER_ID = "sub";
-    String TOKEN_ENHANCER_KEY_DEPT_ID = "dept_id";
-    String TOKEN_ENHANCER_KEY_TENANT_ID = "tenant_id";
-    String TOKEN_ENHANCER_KEY_TIMESTAMP = "timestamp";
-    String TOKEN_ENHANCER_KEY_AUTH_TYPE = "auth_type";
+    interface TokenEnhancer {
+        String KEY_USER_OBJECT = "user";
+        String KEY_FIELD_USERNAME = "username";
+        String KEY_FIELD_USER_ID = "id";
+        String KEY_FIELD_DEPT_ID = "deptId";
+        String KEY_FIELD_TENANT_ID = "tenantId";
+        String KEY_FIELD_AUTH_TYPE = "authType";
+    }
 
     /**
      * 登录类型，唯一类型，当前账号只能在一个地方登录
