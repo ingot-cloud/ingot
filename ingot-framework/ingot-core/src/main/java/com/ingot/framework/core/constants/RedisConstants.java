@@ -20,14 +20,13 @@ public interface RedisConstants {
     /**
      * Redis JWT key
      */
-    String REDIS_JWT_PRI_KEY = BASE_PREFIX + "SECURITY:JWT:PRI";
-    String REDIS_JWT_PUB_KEY = BASE_PREFIX + "SECURITY:JWT:PUB";
+    String REDIS_JWT_PRI_KEY = BASE_PREFIX + "security:jwt:pri";
+    String REDIS_JWT_PUB_KEY = BASE_PREFIX + "security:jwt:pub";
 
-    String REDIS_USER_ACCESS_TOKEN_KEY_PREFIX = BASE_PREFIX + "SECURITY:USER:ACCESS_TOKEN:";
-    String REDIS_CLIENT_TOKEN_KEY_PREFIX = BASE_PREFIX + "SECURITY:CLIENT:TOKEN:";
+    String REDIS_USER_ACCESS_TOKEN_KEY_PREFIX = BASE_PREFIX + "security:user:ACCESS_TOKEN:";
 
-    String REDIS_VALIDATE_CODE_PRE = BASE_PREFIX + "VALIDATE_CODE:";
-    String REDIS_SEND_SMS_COUNT = REDIS_VALIDATE_CODE_PRE + "SMS:COUNT";
+    String REDIS_VALIDATE_CODE_PRE = BASE_PREFIX + "validate_code:";
+    String REDIS_SEND_SMS_COUNT = REDIS_VALIDATE_CODE_PRE + "sms:count";
 
     /**
      * Redis 用户 token 前缀

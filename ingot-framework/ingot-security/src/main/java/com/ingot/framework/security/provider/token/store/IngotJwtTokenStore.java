@@ -23,10 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class IngotJwtTokenStore extends JwtTokenStore {
 
     private static final String ACCESS = "token:access:";
-    private static final String REFRESH = "token:refresh:";
 
     private static final long DEFAULT_ACCESS_TOKEN_EXPIRES_IN = 7200;
-    private static final long DEFAULT_REFRESH_TOKEN_EXPIRES_IN = 2592000;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final IngotAuthenticationKeyGenerator keyGenerator = new IngotAuthenticationKeyGenerator();
