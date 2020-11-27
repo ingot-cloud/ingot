@@ -37,7 +37,7 @@ public class TenantFilter extends GenericFilterBean {
         log.info(">>> 获取 header 中的 tenantID={}", tenantId);
 
         if (StrUtil.isNotBlank(tenantId)) {
-            TenantContextHolder.set(Long.valueOf(tenantId));
+            TenantContextHolder.set(Integer.valueOf(tenantId));
         } else {
             log.info(">>> 设置默认 tenantID");
             TenantContextHolder.set(TenantConstants.DEFAULT_TENANT_ID);

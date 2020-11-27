@@ -40,7 +40,7 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * App ID

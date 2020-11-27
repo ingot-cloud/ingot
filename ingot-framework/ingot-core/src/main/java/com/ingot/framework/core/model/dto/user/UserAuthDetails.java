@@ -24,7 +24,7 @@ public class UserAuthDetails implements Serializable {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
     /**
      * 用户名
      */

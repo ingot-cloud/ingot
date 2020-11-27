@@ -40,7 +40,7 @@ public class SysDept extends BaseModel<SysDept> {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 父ID

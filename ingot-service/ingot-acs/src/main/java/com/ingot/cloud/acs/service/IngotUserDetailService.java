@@ -47,7 +47,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      */
     @Override public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
-        Long tenantID = TenantContextHolder.get();
+        int tenantID = TenantContextHolder.get();
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
                         "clientId={}, tenantID={}",
                 username, clientId, tenantID);
@@ -75,7 +75,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
-        Long tenantID = TenantContextHolder.get();
+        int tenantID = TenantContextHolder.get();
 
         String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
         UserDetailsDto params = new UserDetailsDto();

@@ -40,7 +40,7 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 所属租户
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 部门ID

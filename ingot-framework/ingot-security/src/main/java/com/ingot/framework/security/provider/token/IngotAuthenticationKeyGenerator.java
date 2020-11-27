@@ -60,7 +60,7 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
         Map<String, ?> userMap = MapUtil.get(token.getAdditionalInformation(),
                 SecurityConstants.TokenEnhancer.KEY_USER_OBJECT, Map.class);
         Long id = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_USER_ID, Long.class);
-        Long tenantId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID, Long.class);
+        Integer tenantId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID, Integer.class);
         String authType = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE, String.class);
 
         return generateKey(id, tenantId, authType, jti);
@@ -76,7 +76,7 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
      * @return 生成key格式: tenantID:authType:sha256(userID), eg. std:aa221
      */
     protected String generateKey(long userId,
-                                 long tenantId,
+                                 int tenantId,
                                  String authType,
                                  String jti) {
         String raw = tenantId + "-" + userId;

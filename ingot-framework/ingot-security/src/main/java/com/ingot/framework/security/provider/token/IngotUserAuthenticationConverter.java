@@ -59,7 +59,7 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
             String username = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_USERNAME, String.class);
             Long id = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_USER_ID, Long.class);
             Long deptId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_DEPT_ID, Long.class);
-            Long tenantId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID, Long.class);
+            Integer tenantId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID, Integer.class);
             String authType = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE, String.class);
 
             validateTenant(tenantId);
@@ -83,7 +83,7 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
         throw new IllegalArgumentException("Authorities must be either a String or a Collection");
     }
 
-    private void validateTenant(Long tenantId) {
+    private void validateTenant(Integer tenantId) {
         String headerValue = RequestContextHolder.getRequest()
                 .map(request -> request.getHeader(TenantConstants.TENANT_HEADER_KEY))
                 .orElse("");

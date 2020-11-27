@@ -34,7 +34,7 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 客户端ID

@@ -40,7 +40,7 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 父ID

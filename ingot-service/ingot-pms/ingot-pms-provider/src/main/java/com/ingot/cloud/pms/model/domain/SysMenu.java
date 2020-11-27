@@ -40,7 +40,7 @@ public class SysMenu extends BaseModel<SysMenu> {
     /**
      * 租户ID
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 父ID

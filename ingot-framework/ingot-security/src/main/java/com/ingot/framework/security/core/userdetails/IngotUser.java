@@ -24,13 +24,13 @@ public class IngotUser extends User {
     private final Long deptId;
     @Getter
     @JsonSerialize(using = ToStringSerializer.class)
-    private final Long tenantId;
+    private final Integer tenantId;
     @Getter
     private final String authType;
 
     public IngotUser(Long id,
                      Long deptId,
-                     Long tenantId,
+                     Integer tenantId,
                      String authType,
                      String username,
                      String password,

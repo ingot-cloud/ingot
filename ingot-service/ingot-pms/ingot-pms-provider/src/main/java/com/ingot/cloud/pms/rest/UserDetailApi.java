@@ -34,7 +34,7 @@ public class UserDetailApi extends BaseController {
         log.info("load user detail, tenant id = {}", TenantContextHolder.get());
         UserAuthDetails result = new UserAuthDetails();
         result.setId(1L);
-        result.setTenantId(1L);
+        result.setTenantId(1);
         result.setDeptId(1L);
         result.setAuthType("unique");
         result.setUsername("admin");

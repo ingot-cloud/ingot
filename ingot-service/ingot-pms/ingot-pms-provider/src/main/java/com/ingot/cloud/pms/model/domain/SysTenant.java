@@ -29,7 +29,7 @@ public class SysTenant extends BaseModel<SysTenant> {
      * ID
      */
     @TableId
-    private Long id;
+    private Integer id;
 
     /**
      * 版本号

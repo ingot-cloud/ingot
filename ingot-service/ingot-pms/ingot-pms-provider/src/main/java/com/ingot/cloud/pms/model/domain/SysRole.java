@@ -40,7 +40,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 租户
      */
-    private Long tenantId;
+    private Integer tenantId;
 
     /**
      * 角色名称
