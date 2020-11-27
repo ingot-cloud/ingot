@@ -6,8 +6,8 @@ import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import static com.ingot.framework.core.constants.BeanIds.JWT_ACCESS_TOKEN_CONVERTER;
@@ -51,8 +51,9 @@ public class TokenStoreConfig {
      * @return the token store
      */
     @Bean
-    public TokenStore jwtTokenStore(JwtAccessTokenConverter jwtAccessTokenConverter) {
-        return new IngotJwtTokenStore(jwtAccessTokenConverter);
+    public IngotJwtTokenStore jwtTokenStore(JwtAccessTokenConverter jwtAccessTokenConverter,
+                                            RedisTemplate<String, Object> redisTemplate) {
+        return new IngotJwtTokenStore(jwtAccessTokenConverter, redisTemplate);
     }
 
 }

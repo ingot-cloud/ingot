@@ -13,15 +13,20 @@ import com.ingot.framework.core.utils.DigestUtils;
 public interface RedisConstants {
 
     /**
+     * Redis 前缀
+     */
+    String BASE_PREFIX = "ingot:";
+
+    /**
      * Redis JWT key
      */
-    String REDIS_JWT_PRI_KEY = "INGOT:SECURITY:JWT:PRI";
-    String REDIS_JWT_PUB_KEY = "INGOT:SECURITY:JWT:PUB";
+    String REDIS_JWT_PRI_KEY = BASE_PREFIX + "SECURITY:JWT:PRI";
+    String REDIS_JWT_PUB_KEY = BASE_PREFIX + "SECURITY:JWT:PUB";
 
-    String REDIS_USER_ACCESS_TOKEN_KEY_PREFIX = "INGOT:SECURITY:USER:ACCESS_TOKEN:";
-    String REDIS_CLIENT_TOKEN_KEY_PREFIX = "INGOT:SECURITY:CLIENT:TOKEN:";
+    String REDIS_USER_ACCESS_TOKEN_KEY_PREFIX = BASE_PREFIX + "SECURITY:USER:ACCESS_TOKEN:";
+    String REDIS_CLIENT_TOKEN_KEY_PREFIX = BASE_PREFIX + "SECURITY:CLIENT:TOKEN:";
 
-    String REDIS_VALIDATE_CODE_PRE = "INGOT:VALIDATE_CODE:";
+    String REDIS_VALIDATE_CODE_PRE = BASE_PREFIX + "VALIDATE_CODE:";
     String REDIS_SEND_SMS_COUNT = REDIS_VALIDATE_CODE_PRE + "SMS:COUNT";
 
     /**
@@ -48,14 +53,6 @@ public interface RedisConstants {
         Preconditions.checkArgument(StrUtil.isNotEmpty(token), "非法请求token参数不存在");
         return userTokenPreKey(userId, userName) + DigestUtils.sha256(token) + SecurityConstants.AUTH_TYPE_STANDARD;
     }
-
-    /**
-     * Redis client token key
-     */
-    static String clientTokenKey(String applicationName){
-        return REDIS_CLIENT_TOKEN_KEY_PREFIX + DigestUtils.sha256(applicationName);
-    }
-
 
     /**
      * Gets send sms count key.

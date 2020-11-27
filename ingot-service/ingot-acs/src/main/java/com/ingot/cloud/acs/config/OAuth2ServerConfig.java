@@ -2,7 +2,9 @@ package com.ingot.cloud.acs.config;
 
 import com.ingot.cloud.acs.service.IngotClientDetailService;
 import com.ingot.cloud.acs.service.IngotUserDetailService;
+import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.provider.error.IngotWebResponseExceptionTranslator;
+import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.tenant.filter.TenantFilter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +19,6 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.List;
 @EnableAuthorizationServer
 public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     private final AuthenticationManager authenticationManager;
-    private final TokenStore tokenStore;
+    private final IngotJwtTokenStore tokenStore;
     private final IngotUserDetailService ingotUserDetailService;
     private final IngotClientDetailService ingotClientDetailService;
     private final JwtAccessTokenConverter jwtAccessTokenConverter;
@@ -63,6 +64,7 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
         enhancers.add(jwtAccessTokenConverter);
         enhancerChain.setTokenEnhancers(enhancers);
 
+        tokenStore.setPrefix(RedisConstants.BASE_PREFIX);
         endpoints.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
                 .tokenStore(tokenStore)
                 .tokenEnhancer(enhancerChain)

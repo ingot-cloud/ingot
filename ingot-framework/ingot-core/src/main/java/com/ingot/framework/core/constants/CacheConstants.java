@@ -1,5 +1,7 @@
 package com.ingot.framework.core.constants;
 
+import static com.ingot.framework.core.constants.RedisConstants.BASE_PREFIX;
+
 /**
  * <p>Description  : CacheConstants.</p>
  * <p>Author       : wangchao.</p>
@@ -11,7 +13,7 @@ public interface CacheConstants {
     /**
      * cache name 前缀
      */
-    String NAME_PREFIX = "INGOT:CACHE:";
+    String NAME_PREFIX = BASE_PREFIX + "CACHE:";
 
     /**
      * OAuth 客户端缓存 key

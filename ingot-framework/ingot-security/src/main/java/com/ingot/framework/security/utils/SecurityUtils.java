@@ -6,11 +6,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.base.exception.BaseException;
-import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.constants.CookieConstants;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -111,12 +108,58 @@ public final class SecurityUtils {
     }
 
     /**
+     * 获取 JWT ID
+     *
+     * @param accessToken OAuth2AccessToken
+     * @return JTI
+     */
+    public static String getJTI(OAuth2AccessToken accessToken) {
+        return getTokenAdditionalInfoByKey(accessToken,
+                SecurityConstants.TokenEnhancer.KEY_JTI);
+    }
+
+    /**
      * 获取 token additional 信息
      */
     @SuppressWarnings("unchecked")
     public static <T> T getTokenAdditionalInfoByKey(OAuth2AccessToken accessToken, String key) {
         Map<String, Object> info = accessToken.getAdditionalInformation();
         return (T) info.get(key);
+    }
+
+    /**
+     * 生成 Basic Token，不带 Basic 前缀
+     *
+     * @param clientId     clientId
+     * @param clientSecret clientSecret
+     * @return Basic Token
+     */
+    public static String makeBasicToken(@NonNull String clientId, @NonNull String clientSecret) {
+        byte[] token = Base64.getEncoder()
+                .encode((clientId + ":" + clientSecret).getBytes());
+        return StrUtil.str(token, "");
+    }
+
+    /**
+     * 解析 Basic Token 中的 client id 和 client secret
+     */
+    public static String[] extractAndDecodeBasicToken(String basic) throws IOException {
+        byte[] base64Token = basic.substring(6).getBytes("UTF-8");
+        byte[] decoded;
+        try {
+            decoded = Base64.getDecoder().decode(base64Token);
+        } catch (IllegalArgumentException e) {
+            throw new BadCredentialsException("Failed to decode basic authentication token");
+        }
+
+        String token = new String(decoded, "UTF-8");
+
+        int delim = token.indexOf(":");
+
+        if (delim == -1) {
+            throw new BadCredentialsException("Invalid basic authentication token");
+        }
+        return new String[]{token.substring(0, delim), token.substring(delim + 1)};
     }
 
     /**
@@ -156,41 +199,6 @@ public final class SecurityUtils {
     }
 
     /**
-     * 生成 Basic Token，不带 Basic 前缀
-     *
-     * @param clientId     clientId
-     * @param clientSecret clientSecret
-     * @return Basic Token
-     */
-    public static String makeBasicToken(@NonNull String clientId, @NonNull String clientSecret) {
-        byte[] token = Base64.getEncoder()
-                .encode((clientId + ":" + clientSecret).getBytes());
-        return StrUtil.str(token, "");
-    }
-
-    /**
-     * 解析 Basic Token 中的 client id 和 client secret
-     */
-    public static String[] extractAndDecodeBasicToken(String basic) throws IOException {
-        byte[] base64Token = basic.substring(6).getBytes("UTF-8");
-        byte[] decoded;
-        try {
-            decoded = Base64.getDecoder().decode(base64Token);
-        } catch (IllegalArgumentException e) {
-            throw new BadCredentialsException("Failed to decode basic authentication token");
-        }
-
-        String token = new String(decoded, "UTF-8");
-
-        int delim = token.indexOf(":");
-
-        if (delim == -1) {
-            throw new BadCredentialsException("Invalid basic authentication token");
-        }
-        return new String[]{token.substring(0, delim), token.substring(delim + 1)};
-    }
-
-    /**
      * 从当前 servlet request 中获取 Client id
      *
      * @return {@link String}
@@ -223,36 +231,5 @@ public final class SecurityUtils {
             log.info(">>> SecurityUtils getClientIdFromRequest 获取 client id 失败", e);
             return "";
         }
-    }
-
-    /**
-     * 从当前 servlet request 中获取租户编码
-     *
-     * @return {@link String}, 如果没有租户编码，默认使用 {@link TenantConstants#DEFAULT_TENANT_CODE}
-     */
-    public static String getTenantCodeFromRequest() {
-        HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
-        if (request == null) {
-            return TenantConstants.DEFAULT_TENANT_CODE;
-        }
-
-        String tenant = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
-
-        return StrUtil.isEmpty(tenant) ? TenantConstants.DEFAULT_TENANT_CODE : tenant;
-    }
-
-    /**
-     * Gets auth header.
-     *
-     * @param request the request
-     * @return the auth header
-     */
-    public static String getAuthHeader(HttpServletRequest request) {
-
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StrUtil.isEmpty(authHeader)) {
-            throw new BaseException(BaseStatusCode.FORBIDDEN);
-        }
-        return authHeader;
     }
 }

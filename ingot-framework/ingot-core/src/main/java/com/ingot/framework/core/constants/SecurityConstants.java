@@ -49,6 +49,24 @@ public interface SecurityConstants {
         String KEY_FIELD_DEPT_ID = "deptId";
         String KEY_FIELD_TENANT_ID = "tenantId";
         String KEY_FIELD_AUTH_TYPE = "authType";
+
+        String KEY_JTI = "jti";
+    }
+
+    /**
+     * Token 登录类型
+     */
+    interface TokenAuthType {
+        /**
+         * 登录类型，唯一类型，当前账号只能在一个地方登录
+         */
+        String UNIQUE = "unique";
+        String UNIQUE_SHORT = "unq";
+        /**
+         * 登录类型，默认标准类型，单点登录不互踢
+         */
+        String STANDARD = "standard";
+        String STANDARD_SHORT = "std";
     }
 
     /**
