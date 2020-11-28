@@ -13,10 +13,10 @@ public interface CacheConstants {
     /**
      * cache name 前缀
      */
-    String NAME_PREFIX = BASE_PREFIX + "CACHE:";
+    String NAME_PREFIX = BASE_PREFIX + "cache:";
 
     /**
      * OAuth 客户端缓存 key
      */
-    String CLIENT_DETAILS_KEY = NAME_PREFIX + "CLIENT_DETAILS";
+    String CLIENT_DETAILS_KEY = NAME_PREFIX + "client_details";
 }
