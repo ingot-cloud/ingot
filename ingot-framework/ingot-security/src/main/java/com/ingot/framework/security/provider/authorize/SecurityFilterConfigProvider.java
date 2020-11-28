@@ -3,6 +3,7 @@ package com.ingot.framework.security.provider.authorize;
 import com.ingot.framework.security.config.AuthorizeConfigProvider;
 import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
+import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +21,16 @@ import org.springframework.security.web.header.HeaderWriterFilter;
 @AllArgsConstructor
 public class SecurityFilterConfigProvider implements AuthorizeConfigProvider {
     private final ResourcePermitService resourcePermitService;
-    private final UserAuthenticationFilter userAuthenticationFilter;
+    private final AuthenticationService authenticationService;
 
     @Override public boolean config(HttpSecurity http) throws Exception {
         log.info(">>> SecurityFilterConfigProvider - configure.");
         IgnoreBearerTokenFilter ignoreBearerTokenFilter = new IgnoreBearerTokenFilter(resourcePermitService);
         http.addFilterAfter(ignoreBearerTokenFilter, HeaderWriterFilter.class);
 
-        boolean addUserAuthenticationFilter = userAuthenticationFilter != null;
-        log.info(">>> addUserAuthenticationFilter = {}, {}", addUserAuthenticationFilter, userAuthenticationFilter);
-        if (addUserAuthenticationFilter){
-            http.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);
-        }
+        UserAuthenticationFilter userAuthenticationFilter = new UserAuthenticationFilter(
+                resourcePermitService, authenticationService);
+        http.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);
         return false;
     }
 }

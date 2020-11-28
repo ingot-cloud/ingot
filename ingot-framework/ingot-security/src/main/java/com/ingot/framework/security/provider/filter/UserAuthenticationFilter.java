@@ -2,7 +2,6 @@ package com.ingot.framework.security.provider.filter;
 
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.ResourcePermitService;
-import com.ingot.framework.security.service.UserAccessTokenRedisService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -24,7 +23,6 @@ import java.io.IOException;
 @Slf4j
 @AllArgsConstructor
 public class UserAuthenticationFilter extends OncePerRequestFilter {
-    private final UserAccessTokenRedisService userAccessTokenRedisService;
     private final ResourcePermitService resourcePermitService;
     private final AuthenticationService authenticationService;
 

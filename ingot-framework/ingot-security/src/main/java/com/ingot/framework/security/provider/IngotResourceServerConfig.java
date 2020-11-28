@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.expression.OAuth2WebSecurityExpressionHandler;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
@@ -26,6 +27,7 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
     private final AuthenticationEntryPoint ingotAuthenticationEntryPoint;
     private final AuthorizeConfigManager authorizeConfigManager;
     private final ResourceServerProperties resource;
+    private final TokenStore tokenStore;
 
     @SneakyThrows
     @Override public void configure(HttpSecurity http) {
@@ -43,7 +45,9 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
     @Override public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
         final String resourceId = resource.getId();
         log.info(">> IngotResourceServerConfig [configure] ========>>> Resource Id: {}", resourceId);
+
         resources.resourceId(resourceId)
+                .tokenStore(tokenStore)
                 .expressionHandler(ingotSecurityExpressionHandler)
                 .accessDeniedHandler(ingotAccessDeniedHandler)
                 .authenticationEntryPoint(ingotAuthenticationEntryPoint);
