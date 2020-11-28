@@ -68,6 +68,7 @@ public class TokenServiceImpl implements TokenService {
             }
         }
 
+        // TODO 权限校验
 //        // 校验用户权限
 //        log.info(">>> UserAuthenticationFilter 开始验证用户权限, user={}", user.getUsername());
 //        boolean authResult = authenticationService.authenticate(SecurityUtils.getAuthentication(), request);
