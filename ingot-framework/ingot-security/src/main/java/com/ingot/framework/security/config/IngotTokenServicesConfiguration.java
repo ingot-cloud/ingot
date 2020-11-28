@@ -15,10 +15,9 @@ import org.springframework.context.annotation.Import;
  */
 @Slf4j
 @Configuration
-@Import({ IngotJwtTokenServicesBeanDefinitionRegistrar.class })
+@Import({IngotJwtTokenServicesBeanDefinitionRegistrar.class})
 @ConditionalOnProperty(name = {
         "security.oauth2.resource.jwt.key-uri"
-//        "security.oauth2.resource.jwt.key-value"
 })
 @AllArgsConstructor
 public class IngotTokenServicesConfiguration {

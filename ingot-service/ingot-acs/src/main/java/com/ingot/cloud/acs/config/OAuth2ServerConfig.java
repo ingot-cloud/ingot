@@ -45,7 +45,7 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     private final TenantFilter filter = new TenantFilter();
 
     @Override public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security.tokenKeyAccess("permitAll()")
+        security.tokenKeyAccess("isAuthenticated()")
                 .checkTokenAccess("isAuthenticated()")
                 .allowFormAuthenticationForClients()
                 .passwordEncoder(clientDetailPasswordEncoder)
