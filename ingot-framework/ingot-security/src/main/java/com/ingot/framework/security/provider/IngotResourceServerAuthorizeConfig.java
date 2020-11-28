@@ -4,8 +4,8 @@ import com.ingot.framework.security.annotation.IgnoreUserAuthentication;
 import com.ingot.framework.security.provider.authorize.ActuatorAuthorizeConfigProvider;
 import com.ingot.framework.security.provider.authorize.AuthorizePermitConfigProvider;
 import com.ingot.framework.security.provider.authorize.SecurityFilterConfigProvider;
-import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.ResourcePermitService;
+import com.ingot.framework.security.service.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -24,7 +24,7 @@ import org.springframework.core.annotation.Order;
 public class IngotResourceServerAuthorizeConfig {
 
     @Bean
-    public ActuatorAuthorizeConfigProvider actuatorProvider(WebEndpointProperties properties){
+    public ActuatorAuthorizeConfigProvider actuatorProvider(WebEndpointProperties properties) {
         return new ActuatorAuthorizeConfigProvider(properties);
     }
 
@@ -38,8 +38,8 @@ public class IngotResourceServerAuthorizeConfig {
     @Bean
     @ConditionalOnMissingBean(annotation = IgnoreUserAuthentication.class)
     public SecurityFilterConfigProvider filterProvider(ResourcePermitService resourcePermitService,
-                                                       AuthenticationService authenticationService){
-        return new SecurityFilterConfigProvider(resourcePermitService, authenticationService);
+                                                       TokenService tokenService) {
+        return new SecurityFilterConfigProvider(resourcePermitService, tokenService);
     }
 
 }

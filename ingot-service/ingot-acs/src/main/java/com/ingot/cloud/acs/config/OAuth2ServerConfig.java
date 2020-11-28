@@ -2,7 +2,6 @@ package com.ingot.cloud.acs.config;
 
 import com.ingot.cloud.acs.service.IngotClientDetailService;
 import com.ingot.cloud.acs.service.IngotUserDetailService;
-import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.provider.error.IngotWebResponseExceptionTranslator;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.tenant.filter.TenantFilter;
@@ -64,7 +63,6 @@ public class OAuth2ServerConfig extends AuthorizationServerConfigurerAdapter {
         enhancers.add(jwtAccessTokenConverter);
         enhancerChain.setTokenEnhancers(enhancers);
 
-        tokenStore.setPrefix(RedisConstants.BASE_PREFIX);
         endpoints.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
                 .tokenStore(tokenStore)
                 .tokenEnhancer(enhancerChain)

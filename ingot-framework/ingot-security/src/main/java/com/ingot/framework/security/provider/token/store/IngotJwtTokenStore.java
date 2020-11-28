@@ -1,11 +1,16 @@
 package com.ingot.framework.security.provider.token.store;
 
+import com.ingot.framework.core.constants.RedisConstants;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.model.UserStoreToken;
 import com.ingot.framework.security.provider.token.IngotAuthenticationKeyGenerator;
 import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
@@ -22,14 +27,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class IngotJwtTokenStore extends JwtTokenStore {
 
-    private static final String ACCESS = "token:access:";
+    private static final String ACCESS = RedisConstants.BASE_PREFIX + "token:access:";
 
     private static final long DEFAULT_ACCESS_TOKEN_EXPIRES_IN = 7200;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final IngotAuthenticationKeyGenerator keyGenerator = new IngotAuthenticationKeyGenerator();
-
-    private String prefix;
 
     /**
      * Create a JwtTokenStore with this token enhancer (should be shared with the DefaultTokenServices if used).
@@ -42,8 +45,16 @@ public class IngotJwtTokenStore extends JwtTokenStore {
         this.redisTemplate = redisTemplate;
     }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
+    /**
+     * 根据 Token 获取当前保存的授权信息
+     * @param token OAuth2AccessToken
+     * @return UserStoreToken
+     */
+    public UserStoreToken getUserStoreToken(OAuth2AccessToken token){
+        String key = keyGenerator.extractKey(token);
+        String finalKey = getKey(key);
+
+        return (UserStoreToken) redisTemplate.opsForValue().get(finalKey);
     }
 
     @Override
@@ -51,7 +62,7 @@ public class IngotJwtTokenStore extends JwtTokenStore {
         super.storeAccessToken(token, authentication);
         String jti = SecurityUtils.getJTI(token);
         String key = keyGenerator.extractKey(jti, authentication);
-        String finalKey = getKey(ACCESS + key);
+        String finalKey = getKey(key);
 
         Date expiration = token.getExpiration();
         long expiresIn = DEFAULT_ACCESS_TOKEN_EXPIRES_IN;
@@ -59,14 +70,16 @@ public class IngotJwtTokenStore extends JwtTokenStore {
             long now = System.currentTimeMillis();
             expiresIn = (expiration.getTime() - now) / 1000;
         }
-        redisTemplate.opsForValue().set(finalKey, authentication, expiresIn, TimeUnit.SECONDS);
+
+        UserStoreToken userStoreToken = getUserStoreToken(jti, authentication);
+        redisTemplate.opsForValue().set(finalKey, userStoreToken, expiresIn, TimeUnit.SECONDS);
     }
 
     @Override
     public void removeAccessToken(OAuth2AccessToken token) {
         super.removeAccessToken(token);
         String key = keyGenerator.extractKey(token);
-        String finalKey = getKey(ACCESS + key);
+        String finalKey = getKey(key);
 
         redisTemplate.opsForValue().getOperations().delete(finalKey);
     }
@@ -86,7 +99,21 @@ public class IngotJwtTokenStore extends JwtTokenStore {
         super.removeAccessTokenUsingRefreshToken(refreshToken);
     }
 
+    private UserStoreToken getUserStoreToken(String jti, OAuth2Authentication authentication){
+        IngotUser user = SecurityAuthContext.getUser(authentication);
+        if (user == null){
+            throw new InvalidTokenException("Invalid token");
+        }
+        UserStoreToken userStoreToken = new UserStoreToken();
+        userStoreToken.setJti(jti);
+        userStoreToken.setUserId(String.valueOf(user.getId()));
+        userStoreToken.setUsername(user.getUsername());
+        userStoreToken.setAuthType(user.getAuthType());
+        userStoreToken.setTenantId(String.valueOf(user.getTenantId()));
+        return userStoreToken;
+    }
+
     private String getKey(String value) {
-        return prefix + value;
+        return ACCESS + value;
     }
 }
