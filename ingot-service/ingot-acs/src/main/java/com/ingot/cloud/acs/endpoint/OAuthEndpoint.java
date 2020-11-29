@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @RestController
 @AllArgsConstructor
-public class AuthEndpoint extends BaseController {
+public class OAuthEndpoint extends BaseController {
     private final TokenEndpoint tokenEndpoint;
 
     @PostMapping(value = "/oauth/token")
