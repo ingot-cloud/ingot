@@ -1,9 +1,9 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "2.3.3.RELEASE"
-versions.spring_cloud = "Hoxton.SR8"
+versions.spring_boot = "2.3.6.RELEASE"
+versions.spring_cloud = "Hoxton.SR9"
 versions.spring_cloud_alibaba = "2.2.3.RELEASE"
-versions.spring_framework = "5.2.8.RELEASE"
+versions.spring_framework = "5.2.11.RELEASE"
 
 versions.alibaba_druid = "1.2.3"
 versions.alibaba_transmittable_thread_local = "2.11.5"
@@ -12,8 +12,9 @@ versions.commons_lang = "3.3.2"
 versions.commons_io = "2.4"
 versions.mapstruct = "1.4.1.Final"
 versions.jackson = "2.11.2"
-versions.mybatis_plus = "3.4.0"
+versions.mybatis_plus = "3.4.1"
 versions.mysql_connector = "8.0.16"
+versions.hutool = "5.5.1"
 
 def spring = [:]
 def spring_boot = [:]
@@ -143,7 +144,7 @@ jsonwebtoken.jjwt_jackson = "io.jsonwebtoken:jjwt-jackson:0.10.5"
 deps.jsonwebtoken = jsonwebtoken
 
 deps.minio = "io.minio:minio:6.0.10"
-deps.hutool = "cn.hutool:hutool-all:5.4.2"
+deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
 deps.xxl_rpc_core = "com.xuxueli:xxl-rpc-core:1.4.1"
 deps.kaptcha = "com.github.penggle:kaptcha:2.3.2"
