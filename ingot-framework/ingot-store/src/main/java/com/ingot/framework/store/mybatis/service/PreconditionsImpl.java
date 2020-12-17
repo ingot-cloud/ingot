@@ -53,4 +53,9 @@ public class PreconditionsImpl<T> implements BaseService<T> {
     public BaseMapper<T> getBaseMapper() {
         return null;
     }
+
+    @Override
+    public Class<T> getEntityClass() {
+        return null;
+    }
 }

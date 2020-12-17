@@ -90,4 +90,5 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
 
         throw new InvalidTokenException("Invalid token");
     }
+    // todo 考虑key生成规则，可以直接把指定用户的所有保存信息revoke
 }
