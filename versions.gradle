@@ -132,17 +132,6 @@ def aspectj = [:]
 aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
 deps.aspectj = aspectj
 
-def itext = [:]
-itext.html2pdf = "com.itextpdf:html2pdf:1.0.2"
-itext.itext7_core = "com.itextpdf:itext7-core:7.0.5"
-deps.itext = itext
-
-def jsonwebtoken = [:]
-jsonwebtoken.jjwt_api = "io.jsonwebtoken:jjwt-api:0.10.5"
-jsonwebtoken.jjwt_impl = "io.jsonwebtoken:jjwt-impl:0.10.5"
-jsonwebtoken.jjwt_jackson = "io.jsonwebtoken:jjwt-jackson:0.10.5"
-deps.jsonwebtoken = jsonwebtoken
-
 deps.minio = "io.minio:minio:6.0.10"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
