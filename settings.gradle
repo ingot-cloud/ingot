@@ -1,4 +1,4 @@
-rootProject.name = 'ingot-cloud-pro'
+rootProject.name = 'ingot'
 
 // Framework
 include 'ingot-framework:ingot-base'
