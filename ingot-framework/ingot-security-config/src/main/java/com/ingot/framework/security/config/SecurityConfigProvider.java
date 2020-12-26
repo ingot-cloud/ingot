@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
  * <p>Date         : 2018/9/30.</p>
  * <p>Time         : 下午12:02.</p>
  */
-public interface AuthorizeConfigProvider {
+public interface SecurityConfigProvider {
 
     /**
      * Http security authorize config provider

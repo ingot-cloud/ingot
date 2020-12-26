@@ -1,8 +1,8 @@
 package com.ingot.framework.security.provider;
 
 import com.ingot.framework.security.annotation.IgnoreUserAuthentication;
-import com.ingot.framework.security.provider.authorize.ActuatorAuthorizeConfigProvider;
-import com.ingot.framework.security.provider.authorize.AuthorizePermitConfigProvider;
+import com.ingot.framework.security.provider.authorize.ActuatorSecurityConfigProvider;
+import com.ingot.framework.security.provider.authorize.SecurityPermitConfigProvider;
 import com.ingot.framework.security.provider.authorize.SecurityFilterConfigProvider;
 import com.ingot.framework.security.service.ResourcePermitService;
 import com.ingot.framework.security.service.TokenService;
@@ -24,15 +24,15 @@ import org.springframework.core.annotation.Order;
 public class IngotResourceServerAuthorizeConfig {
 
     @Bean
-    public ActuatorAuthorizeConfigProvider actuatorProvider(WebEndpointProperties properties) {
-        return new ActuatorAuthorizeConfigProvider(properties);
+    public ActuatorSecurityConfigProvider actuatorProvider(WebEndpointProperties properties) {
+        return new ActuatorSecurityConfigProvider(properties);
     }
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public AuthorizePermitConfigProvider permitProvider(@Value("${spring.application.name}") String applicationName,
-                                                        ResourcePermitService resourcePermitService) {
-        return new AuthorizePermitConfigProvider(applicationName, resourcePermitService);
+    public SecurityPermitConfigProvider permitProvider(@Value("${spring.application.name}") String applicationName,
+                                                       ResourcePermitService resourcePermitService) {
+        return new SecurityPermitConfigProvider(applicationName, resourcePermitService);
     }
 
     @Bean

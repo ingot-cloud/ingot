@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.authorize;
 
-import com.ingot.framework.security.config.AuthorizeConfigProvider;
+import com.ingot.framework.security.config.SecurityConfigProvider;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -14,7 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
  */
 @Slf4j
 @AllArgsConstructor
-public class ActuatorAuthorizeConfigProvider implements AuthorizeConfigProvider {
+public class ActuatorSecurityConfigProvider implements SecurityConfigProvider {
     private final WebEndpointProperties webEndpointProperties;
 
     @Override public boolean config(HttpSecurity http) throws Exception {

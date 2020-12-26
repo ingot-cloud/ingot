@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider;
 
-import com.ingot.framework.security.config.AuthorizeConfigManager;
+import com.ingot.framework.security.config.SecurityConfigManager;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
     private final AccessDeniedHandler ingotAccessDeniedHandler;
     private final OAuth2WebSecurityExpressionHandler ingotSecurityExpressionHandler;
     private final AuthenticationEntryPoint ingotAuthenticationEntryPoint;
-    private final AuthorizeConfigManager authorizeConfigManager;
+    private final SecurityConfigManager securityConfigManager;
     private final ResourceServerProperties resource;
     private final TokenStore tokenStore;
 
@@ -39,7 +39,7 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .csrf()
                     .disable();
 
-        authorizeConfigManager.config(http);
+        securityConfigManager.config(http);
     }
 
     @Override public void configure(ResourceServerSecurityConfigurer resources) throws Exception {

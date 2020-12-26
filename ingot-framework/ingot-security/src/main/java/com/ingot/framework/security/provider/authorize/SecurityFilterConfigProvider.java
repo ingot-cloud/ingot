@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.authorize;
 
-import com.ingot.framework.security.config.AuthorizeConfigProvider;
+import com.ingot.framework.security.config.SecurityConfigProvider;
 import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.ResourcePermitService;
@@ -19,7 +19,7 @@ import org.springframework.security.web.header.HeaderWriterFilter;
  */
 @Slf4j
 @AllArgsConstructor
-public class SecurityFilterConfigProvider implements AuthorizeConfigProvider {
+public class SecurityFilterConfigProvider implements SecurityConfigProvider {
     private final ResourcePermitService resourcePermitService;
     private final TokenService tokenService;
 

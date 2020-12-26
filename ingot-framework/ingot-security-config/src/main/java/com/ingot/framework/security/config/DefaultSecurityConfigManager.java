@@ -7,28 +7,28 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import java.util.List;
 
 /**
- * <p>Description  : IngotAuthorizeConfigManager.</p>
+ * <p>Description  : DefaultSecurityConfigManager.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/9/30.</p>
  * <p>Time         : 下午12:14.</p>
  */
 @Slf4j
 @AllArgsConstructor
-public class DefaultAuthorizeConfigManager implements AuthorizeConfigManager {
-    private final List<AuthorizeConfigProvider> authorizeConfigProviders;
+public class DefaultSecurityConfigManager implements SecurityConfigManager {
+    private final List<SecurityConfigProvider> securityConfigProviders;
 
     @Override public void config(HttpSecurity http) throws Exception{
-        log.info(">>> AuthorizeConfigProvider={}", authorizeConfigProviders);
+        log.info(">>> AuthorizeConfigProvider={}", securityConfigProviders);
         boolean existAnyRequestConfig = false;
         String existAnyRequestConfigName = null;
 
-        for (AuthorizeConfigProvider authorizeConfigProvider : authorizeConfigProviders) {
-            boolean currentIsAnyRequestConfig = authorizeConfigProvider.config(http);
+        for (SecurityConfigProvider securityConfigProvider : securityConfigProviders) {
+            boolean currentIsAnyRequestConfig = securityConfigProvider.config(http);
             if (existAnyRequestConfig && currentIsAnyRequestConfig) {
-                throw new RuntimeException(">>> IngotAuthorizeConfigManager: " + existAnyRequestConfigName + ", " + authorizeConfigProvider.getClass().getSimpleName());
+                throw new RuntimeException(">>> IngotAuthorizeConfigManager: " + existAnyRequestConfigName + ", " + securityConfigProvider.getClass().getSimpleName());
             } else if (currentIsAnyRequestConfig) {
                 existAnyRequestConfig = true;
-                existAnyRequestConfigName = authorizeConfigProvider.getClass().getSimpleName();
+                existAnyRequestConfigName = securityConfigProvider.getClass().getSimpleName();
             }
         }
 

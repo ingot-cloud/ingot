@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.authorize;
 
-import com.ingot.framework.security.config.AuthorizeConfigProvider;
+import com.ingot.framework.security.config.SecurityConfigProvider;
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Slf4j
 @AllArgsConstructor
-public class AuthorizePermitConfigProvider implements AuthorizeConfigProvider {
+public class SecurityPermitConfigProvider implements SecurityConfigProvider {
     private final String applicationName;
     private final ResourcePermitService resourcePermitService;
 
