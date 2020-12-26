@@ -3,7 +3,7 @@ package com.ingot.framework.security.config;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 /**
- * <p>Description  : AuthorizeConfigProvider.</p>
+ * <p>Description  : SecurityConfigProvider.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/9/30.</p>
  * <p>Time         : 下午12:02.</p>
