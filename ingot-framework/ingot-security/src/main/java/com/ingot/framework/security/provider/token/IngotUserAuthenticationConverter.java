@@ -6,7 +6,7 @@ import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.exception.BadTenantException;
+import com.ingot.framework.security.exception.oauth2.BadTenantException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

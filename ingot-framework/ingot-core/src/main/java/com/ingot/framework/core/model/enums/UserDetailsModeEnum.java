@@ -1,39 +1,37 @@
 package com.ingot.framework.core.model.enums;
 
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * <p>Description  : UserDetailsTypeEnum.</p>
+ * <p>Description  : UserDetailsModeEnum.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/11/5.</p>
  * <p>Time         : 4:01 下午.</p>
  */
-public enum UserDetailsTypeEnum {
+@Getter
+@AllArgsConstructor
+public enum UserDetailsModeEnum {
     PASSWORD("password", "密码登录"),
     SOCIAL("social", "社交登录");
 
-    @Getter
+    @JsonValue
     private final String value;
-    @Getter
     private final String desc;
 
-    UserDetailsTypeEnum(String value, String desc) {
-        this.value = value;
-        this.desc = desc;
-    }
-
     public static String getDesc(String value){
-        UserDetailsTypeEnum en = getEnum(value);
+        UserDetailsModeEnum en = getEnum(value);
         return en != null ? en.desc : null;
     }
 
-    public static UserDetailsTypeEnum getEnum(String value){
+    public static UserDetailsModeEnum getEnum(String value){
         if (StrUtil.isEmpty(value)){
             return null;
         }
-        UserDetailsTypeEnum[] arr = UserDetailsTypeEnum.values();
-        for (UserDetailsTypeEnum item: arr){
+        UserDetailsModeEnum[] arr = UserDetailsModeEnum.values();
+        for (UserDetailsModeEnum item: arr){
             if (StrUtil.equals(item.value, value)){
                 return item;
             }

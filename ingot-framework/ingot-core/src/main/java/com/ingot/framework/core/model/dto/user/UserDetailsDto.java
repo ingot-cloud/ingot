@@ -1,5 +1,6 @@
 package com.ingot.framework.core.model.dto.user;
 
+import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -23,7 +24,7 @@ public class UserDetailsDto implements Serializable {
     /**
      * 授权类型
      */
-    private String type;
+    private UserDetailsModeEnum mode;
     /**
      * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId
      */

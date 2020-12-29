@@ -14,11 +14,6 @@ public interface TenantConstants {
     String TENANT_HEADER_KEY = "Tenant";
 
     /**
-     * 默认租户编码
-     */
-    String DEFAULT_TENANT_CODE = "INGOT";
-
-    /**
      * 默认租户ID
      */
     Integer DEFAULT_TENANT_ID = 1;

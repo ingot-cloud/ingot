@@ -8,7 +8,7 @@ import com.ingot.framework.base.model.enums.CommonStatusEnum;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
-import com.ingot.framework.core.model.enums.UserDetailsTypeEnum;
+import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
@@ -53,7 +53,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
                 username, clientId, tenantID);
 
         UserDetailsDto params = new UserDetailsDto();
-        params.setType(UserDetailsTypeEnum.PASSWORD.getValue());
+        params.setMode(UserDetailsModeEnum.PASSWORD);
         params.setUniqueCode(username);
         params.setClientId(clientId);
         params.setTenantID(String.valueOf(tenantID));
@@ -79,7 +79,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
 
         String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
         UserDetailsDto params = new UserDetailsDto();
-        params.setType(UserDetailsTypeEnum.SOCIAL.getValue());
+        params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
         params.setTenantID(String.valueOf(tenantID));

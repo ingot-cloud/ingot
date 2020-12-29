@@ -1,29 +1,31 @@
-package com.ingot.framework.security.exception;
+package com.ingot.framework.security.exception.oauth2;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 import org.springframework.http.HttpStatus;
 
 /**
- * <p>Description  : UnauthorizedException.</p>
+ * <p>Description  : ForbiddenException.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019-08-22.</p>
  * <p>Time         : 14:38.</p>
  */
 @JsonSerialize(using = IngotOAuth2ExceptionSerializer.class)
-public class UnauthorizedException extends IngotOAuth2Exception{
+public class ForbiddenException extends IngotOAuth2Exception {
 
-    public UnauthorizedException(String msg, Throwable t) {
+    public ForbiddenException(String msg, Throwable t) {
         super(msg, t);
     }
 
     @Override
     public String getOAuth2ErrorCode() {
-        return "unauthorized";
+        return "access_denied";
     }
 
     @Override
     public int getHttpErrorCode() {
-        return HttpStatus.UNAUTHORIZED.value();
+        return HttpStatus.FORBIDDEN.value();
     }
+
 }
+
