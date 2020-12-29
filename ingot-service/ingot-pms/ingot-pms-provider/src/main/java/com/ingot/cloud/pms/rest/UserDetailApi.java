@@ -23,11 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/user")
+@RequestMapping(value = "/user/detail")
 public class UserDetailApi extends BaseController {
 
     @Permit(model = PermitModel.INNER)
-    @PostMapping(value = "/detail")
+    @PostMapping
     IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params){
         // todo 请求参数封装
         // test data
