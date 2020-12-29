@@ -57,12 +57,4 @@ public class GlobalExceptionHandlerResolver {
                 .orElse("");
         return ResponseWrapper.error(ILLEGAL_OPERATION, message);
     }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ResponseBody
-    public IngotResponse<?> otherExceptionHandler(Exception e) {
-        log.error(">>> GlobalExceptionHandlerResolver, Exception - message={}, e={}", e.getMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.INTERNAL_SERVER_ERROR);
-    }
 }

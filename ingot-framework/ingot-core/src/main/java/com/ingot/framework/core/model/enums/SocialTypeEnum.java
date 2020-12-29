@@ -1,6 +1,7 @@
 package com.ingot.framework.core.model.enums;
 
 import cn.hutool.core.util.StrUtil;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,19 +10,14 @@ import lombok.Getter;
  * <p>Date         : 2020/11/5.</p>
  * <p>Time         : 4:20 下午.</p>
  */
+@Getter
+@AllArgsConstructor
 public enum SocialTypeEnum {
     SMS("sms", "短信登录"),
     WECHAT("wechat", "微信登录");
 
-    @Getter
     private final String value;
-    @Getter
     private final String desc;
-
-    SocialTypeEnum(String value, String desc) {
-        this.value = value;
-        this.desc = desc;
-    }
 
     public static String getDesc(String value){
         SocialTypeEnum en = getEnum(value);
