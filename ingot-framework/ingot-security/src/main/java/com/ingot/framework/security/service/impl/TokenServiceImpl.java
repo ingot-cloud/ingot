@@ -35,7 +35,8 @@ public class TokenServiceImpl implements TokenService {
     private final IngotJwtTokenStore tokenStore;
     private final AuthenticationService authenticationService;
 
-    @Override public OAuth2AccessToken getToken(HttpServletRequest request) {
+    @Override
+    public OAuth2AccessToken getToken(HttpServletRequest request) {
         String token = SecurityUtils.getBearerTokenValue(SecurityUtils.getBearerToken(request).orElse(""));
         if (StrUtil.isEmpty(token)) {
             log.error(">>> Token不能为空");
@@ -45,10 +46,11 @@ public class TokenServiceImpl implements TokenService {
         return tokenStore.readAccessToken(token);
     }
 
-        @SuppressWarnings("unchecked")
-    @Override public void checkAuthentication(OAuth2AccessToken token) {
+    @SuppressWarnings("unchecked")
+    @Override
+    public void checkAuthentication(OAuth2AccessToken token) {
         UserStoreToken userStoreToken = tokenStore.getUserStoreToken(token);
-        if (userStoreToken == null){
+        if (userStoreToken == null) {
             throw new UserTokenInvalidException();
         }
 

@@ -26,7 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final ResourcePermitService resourcePermitService;
-    private final PasswordAuthConfig passwordAuthConfig;
+//    private final PasswordAuthConfig passwordAuthConfig;
 //    private final MobileSecurityConfig mobileSecurityConfig;
     private final SecurityConfigManager securityConfigManager;
 
@@ -47,13 +47,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http
                 .formLogin()
-                .loginPage("/token/login")
-                .loginProcessingUrl("/token/form")
-                    .and()
-                .apply(passwordAuthConfig)
-                    .and()
-//                .apply(mobileSecurityConfig)
+//                .loginPage("/token/login")
+//                .loginProcessingUrl("/token/form")
 //                    .and()
+//                .apply(passwordAuthConfig)
+//                    .and()
+//                .apply(mobileSecurityConfig)
+                    .and()
                 .authorizeRequests().antMatchers(permit.toArray(new String[0])).permitAll()
                     .and()
                 .csrf().disable();
