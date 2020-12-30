@@ -3,7 +3,6 @@ package com.ingot.cloud.acs.service;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.base.constants.GlobalConstants;
-import com.ingot.framework.base.exception.BaseException;
 import com.ingot.framework.base.model.enums.CommonStatusEnum;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
@@ -12,6 +11,7 @@ import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
+import com.ingot.framework.security.exception.oauth2.IngotOAuth2Exception;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.AllArgsConstructor;
@@ -45,7 +45,8 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      * @throws UsernameNotFoundException if the user could not be found or the user has no
      *                                   GrantedAuthority
      */
-    @Override public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
         int tenantID = TenantContextHolder.get();
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
@@ -71,7 +72,8 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      * @throws UsernameNotFoundException if the user could not be found or the user has no
      *                                   GrantedAuthority
      */
-    @Override public UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException {
+    @Override
+    public UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
@@ -94,7 +96,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         }
 
         if (!response.isSuccess()) {
-            throw new BaseException(response.getCode(), response.getMessage());
+            throw new IngotOAuth2Exception(response.getCode(), response.getMessage());
         }
 
         UserAuthDetails data = response.getData();

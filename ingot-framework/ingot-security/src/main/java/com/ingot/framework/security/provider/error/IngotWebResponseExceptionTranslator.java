@@ -9,16 +9,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.ClientAuthenticationException;
 import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 /**
- * <p>Description  : IngotWebResponseExceptionTranslator. 异常处理,重写oauth 默认实现</p>
+ * <p>Description  : OAuth2 异常解释器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019-08-22.</p>
  * <p>Time         : 14:24.</p>
@@ -28,8 +26,8 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
 
     private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
-    @Override public ResponseEntity<OAuth2Exception> translate(Exception e) throws Exception {
-        log.info("翻译异常", e);
+    @Override
+    public ResponseEntity<OAuth2Exception> translate(Exception e) throws Exception {
         // Try to extract a SpringSecurityException from the stacktrace
         Throwable[] causeChain = throwableAnalyzer.determineCauseChain(e);
 
@@ -43,12 +41,6 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
                 .getFirstThrowableOfType(AccessDeniedException.class, causeChain);
         if (ase != null) {
             return handleOAuth2Exception(new ForbiddenException(ase.getMessage(), ase));
-        }
-
-        ase = (InvalidGrantException) throwableAnalyzer
-                .getFirstThrowableOfType(InvalidGrantException.class, causeChain);
-        if (ase != null) {
-            return handleOAuth2Exception(new InvalidException(ase.getMessage(), ase));
         }
 
         ase = (HttpRequestMethodNotSupportedException) throwableAnalyzer
@@ -78,13 +70,10 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
             headers.set(HttpHeaders.WWW_AUTHENTICATE, String.format("%s %s", OAuth2AccessToken.BEARER_TYPE, e.getSummary()));
         }
 
-        // 客户端异常直接返回客户端,不然无法解析
-        if (e instanceof ClientAuthenticationException) {
-            return new ResponseEntity<>(e, headers,
-                    HttpStatus.valueOf(status));
+        if (e instanceof IngotOAuth2Exception) {
+            return new ResponseEntity<>(e, headers, HttpStatus.valueOf(status));
         }
-        return new ResponseEntity<>(new IngotOAuth2Exception(e), headers,
-                HttpStatus.valueOf(status));
 
+        return new ResponseEntity<>(new IngotOAuth2Exception(e), headers, HttpStatus.valueOf(status));
     }
 }

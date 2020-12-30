@@ -25,10 +25,10 @@ public class IngotOAuth2ExceptionSerializer extends StdSerializer<IngotOAuth2Exc
                                     JsonGenerator gen,
                                     SerializerProvider provider) {
         gen.writeStartObject();
-        gen.writeStringField(IngotResponse.CODE, value.getCode());
+        gen.writeStringField(IngotResponse.CODE, value.getOAuth2ErrorCode());
         gen.writeStringField(IngotResponse.MESSAGE, value.getMessage());
-        if (StrUtil.isNotEmpty(value.getErrorCode())){
-            gen.writeObjectField(IngotResponse.DATA, value.getErrorCode());
+        if (StrUtil.isNotEmpty(value.getRaw())){
+            gen.writeObjectField(IngotResponse.DATA, value.getRaw());
         }
         gen.writeEndObject();
     }

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.exception.oauth2;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 import org.springframework.http.HttpStatus;
 
@@ -10,16 +11,14 @@ import org.springframework.http.HttpStatus;
  * <p>Date         : 2020/11/26.</p>
  * <p>Time         : 2:43 下午.</p>
  */
-@JsonSerialize(using = IngotOAuth2ExceptionSerializer.class)
 public class BadTenantException extends IngotOAuth2Exception {
 
-    public BadTenantException() {
-        super("Bad tenant");
+    public BadTenantException(String msg) {
+        super(BaseStatusCode.UNAUTHORIZED.code(), msg);
     }
 
-    @Override
-    public String getOAuth2ErrorCode() {
-        return "Unauthorized";
+    public BadTenantException() {
+        super(BaseStatusCode.UNAUTHORIZED.code(), "Bad tenant");
     }
 
     @Override

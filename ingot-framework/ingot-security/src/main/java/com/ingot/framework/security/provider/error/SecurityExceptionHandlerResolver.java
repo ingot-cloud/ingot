@@ -30,11 +30,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class SecurityExceptionHandlerResolver {
 
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
     public IngotResponse<?> accessDeniedException(AccessDeniedException e) {
         log.error("AccessDeniedException - message={}, e={}", e.getMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
+        return ResponseWrapper.error(BaseStatusCode.FORBIDDEN);
     }
 
     @ExceptionHandler(InsufficientAuthenticationException.class)
