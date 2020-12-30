@@ -1,8 +1,6 @@
-package com.ingot.cloud.pms.rest;
+package com.ingot.cloud.pms.rest.inner;
 
-import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.pms.service.UserDetailService;
-import com.ingot.framework.base.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.wrapper.BaseController;
@@ -35,17 +33,17 @@ public class UserDetailApi extends BaseController {
     public IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params) {
         // todo 请求参数封装
         // test data
-        log.info("load user detail, tenant id = {}", TenantContextHolder.get());
-        UserAuthDetails result = new UserAuthDetails();
-        result.setId(1L);
-        result.setTenantId(1);
-        result.setDeptId(1L);
-        result.setAuthType("unique");
-        result.setUsername("admin");
-        result.setPassword("{noop}admin");
-        result.setStatus(CommonStatusEnum.ENABLE.getValue());
-        result.setRoles(ListUtil.toList("role_admin"));
-//        return ok(userDetailService.getUserAuthDetails(TenantContextHolder.get(), params));
-        return ok(result);
+//        log.info("load user detail, tenant id = {}", TenantContextHolder.get());
+//        UserAuthDetails result = new UserAuthDetails();
+//        result.setId(1L);
+//        result.setTenantId(1);
+//        result.setDeptId(1L);
+//        result.setAuthType("unique");
+//        result.setUsername("admin");
+//        result.setPassword("{noop}admin");
+//        result.setStatus(CommonStatusEnum.ENABLE.getValue());
+//        result.setRoles(ListUtil.toList("role_admin"));
+        return ok(userDetailService.getUserAuthDetails(TenantContextHolder.get(), params));
+//        return ok(result);
     }
 }

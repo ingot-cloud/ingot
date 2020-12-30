@@ -22,7 +22,7 @@ public class UserDetailsDto implements Serializable {
      */
     private String tenantID;
     /**
-     * 授权类型
+     * 授权模式
      */
     private UserDetailsModeEnum mode;
     /**

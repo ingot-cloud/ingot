@@ -11,6 +11,10 @@ import org.springframework.http.HttpStatus;
  */
 public class BadRequestException extends IngotOAuth2Exception{
 
+    public BadRequestException(String msg) {
+        super(BaseStatusCode.BAD_REQUEST.code(), msg);
+    }
+
     public BadRequestException(String msg, Throwable t) {
         super(BaseStatusCode.BAD_REQUEST.code(), msg, t);
     }

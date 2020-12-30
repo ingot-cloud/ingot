@@ -1,10 +1,14 @@
 package com.ingot.cloud.pms.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.model.domain.SysUser;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.cloud.pms.service.UserDetailService;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
+import com.ingot.framework.security.exception.oauth2.BadRequestException;
+import com.ingot.framework.security.exception.oauth2.ForbiddenException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +34,19 @@ public class UserDetailServiceImpl implements UserDetailService {
                     return withSocialMode(tenantId, params);
             }
         }
-        // todo throw 401 异常
-        return null;
+        throw new ForbiddenException("授权模式不正确：" + model);
     }
 
     private UserAuthDetails withPasswordMode(long tenantId, UserDetailsDto params) {
+        String username = params.getUniqueCode();
+        SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
+                .eq(SysUser::getTenantId, tenantId)
+                .eq(SysUser::getUsername, username));
+        if (user == null) {
+            throw new BadRequestException("用户不存在");
+        }
+
+        // todo
         return null;
     }
 
