@@ -9,8 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.common.exceptions.*;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -35,6 +34,11 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
                 .getFirstThrowableOfType(AuthenticationException.class, causeChain);
         if (ase != null) {
             return handleOAuth2Exception(new UnauthorizedException(e.getMessage(), e));
+        }
+
+        ase = handleBadRequestException(causeChain);
+        if (ase != null) {
+            return handleOAuth2Exception(new BadRequestException(e.getMessage(), e));
         }
 
         ase = (AccessDeniedException) throwableAnalyzer
@@ -75,5 +79,18 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
         }
 
         return new ResponseEntity<>(new IngotOAuth2Exception(e), headers, HttpStatus.valueOf(status));
+    }
+
+    private Exception handleBadRequestException(Throwable[] causeChain) {
+
+        Exception ase = (InvalidScopeException) throwableAnalyzer
+                .getFirstThrowableOfType(InvalidScopeException.class, causeChain);
+        if (ase != null) {
+            return ase;
+        }
+
+        ase = (UnsupportedGrantTypeException) throwableAnalyzer
+                .getFirstThrowableOfType(UnsupportedGrantTypeException.class, causeChain);
+        return ase;
     }
 }

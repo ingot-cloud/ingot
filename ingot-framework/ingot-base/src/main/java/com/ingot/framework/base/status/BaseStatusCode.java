@@ -9,6 +9,7 @@ package com.ingot.framework.base.status;
  */
 public enum BaseStatusCode implements StatusCode {
     OK("0200", "Success"),
+    BAD_REQUEST("0400", "错误的请求"),
     UNAUTHORIZED("0401", "未授权访问"),
     FORBIDDEN("0403", "无权访问"),
     NOT_FOUND("0404", "找不到指定资源"),

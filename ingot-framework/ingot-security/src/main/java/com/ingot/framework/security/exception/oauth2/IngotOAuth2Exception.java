@@ -5,6 +5,7 @@ import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.base.status.StatusCode;
 import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 
 /**
@@ -18,6 +19,7 @@ public class IngotOAuth2Exception extends OAuth2Exception {
     @Getter
     private String raw;
     private String oauth2ErrorCode = BaseStatusCode.INTERNAL_SERVER_ERROR.code();
+    private int httpErrorCode = HttpStatus.BAD_REQUEST.value();
 
     public IngotOAuth2Exception(String code, String msg) {
         super(msg);
@@ -41,6 +43,7 @@ public class IngotOAuth2Exception extends OAuth2Exception {
         super(e.getMessage(), e);
         String oauth2ErrorCode = e.getOAuth2ErrorCode();
         Throwable cause = e.getCause();
+        this.httpErrorCode = e.getHttpErrorCode();
         this.raw = cause != null ?
                 String.format("errorCode: %s, raw: %s", oauth2ErrorCode, cause.getMessage()) :
                 oauth2ErrorCode;
@@ -49,5 +52,10 @@ public class IngotOAuth2Exception extends OAuth2Exception {
     @Override
     public String getOAuth2ErrorCode() {
         return oauth2ErrorCode;
+    }
+
+    @Override
+    public int getHttpErrorCode() {
+        return httpErrorCode;
     }
 }
