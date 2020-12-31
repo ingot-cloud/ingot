@@ -2,9 +2,6 @@
 dependencies {
     api(deps.java_validation_api)
 
-    // joda time
-    api(deps.joda_time)
-
     // swagger cloud
     api(deps.swagger.springfox_swagger2)
 
