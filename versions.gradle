@@ -42,7 +42,6 @@ spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
 spring_cloud.loadbalancer_starter = "org.springframework.cloud:spring-cloud-starter-loadbalancer"
 spring_cloud.gateway_starter = "org.springframework.cloud:spring-cloud-starter-gateway"
-spring_cloud.hystrix_starter = "org.springframework.cloud:spring-cloud-starter-netflix-hystrix"
 spring_cloud.oauth2_starter = "org.springframework.cloud:spring-cloud-starter-oauth2"
 spring_cloud.config_starter = "org.springframework.cloud:spring-cloud-starter-config"
 spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-server"
