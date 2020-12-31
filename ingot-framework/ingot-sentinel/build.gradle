@@ -1,11 +1,11 @@
 
 dependencies {
-    api(deps.spring.spring_cloud.openfeign_starter)
-    api(deps.spring.spring_cloud.loadbalancer_starter)
-    api(deps.feign_okhttp)
+    api(deps.alibaba.sentinel_starter)
 
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_spring_web)
 
     compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly project(ingot.framework_core)
 }

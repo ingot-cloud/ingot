@@ -20,7 +20,7 @@ public class IngotOptimisticLockerInterceptor extends OptimisticLockerInnerInter
         // 重新处理 Long，使用时间戳
         if (long.class.equals(clazz) || Long.class.equals(clazz)) {
             // UTC time millis
-            return DateUtils.utc().getTime();
+            return DateUtils.utcEpochMilli();
         }
         return super.getUpdatedVersionVal(clazz, originalVersionVal);
     }

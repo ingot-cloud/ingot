@@ -1,11 +1,13 @@
 package com.ingot.framework.base.utils;
 
 import cn.hutool.core.util.StrUtil;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -18,24 +20,31 @@ import java.util.TimeZone;
 public final class DateUtils {
 
     /**
+     * UTC 时间戳
+     */
+    public static long utcEpochMilli(){
+        return Instant.now().toEpochMilli();
+    }
+
+    /**
      * 当前UTC时间
      */
-    public static Date utc(){
-        return now(DateTimeZone.UTC);
+    public static LocalDateTime utc(){
+        return now(ZoneId.of(ZoneOffset.UTC.getId()));
     }
 
     /**
      * 当前默认时区时间
      */
-    public static Date now(){
-        return now(DateTimeZone.getDefault());
+    public static LocalDateTime now(){
+        return now(ZoneId.systemDefault());
     }
 
     /**
      * 获取当前指定时区时间
      */
-    public static Date now(DateTimeZone zone){
-        return DateTime.now(zone).toLocalDateTime().toDate();
+    public static LocalDateTime now(ZoneId zone){
+        return LocalDateTime.now(zone);
     }
 
     /**

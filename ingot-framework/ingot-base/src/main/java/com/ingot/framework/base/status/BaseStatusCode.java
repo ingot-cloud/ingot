@@ -16,7 +16,7 @@ public enum BaseStatusCode implements StatusCode {
     METHOD_NOT_ALLOWED("0405", "请求方法不允许"),
     INTERNAL_SERVER_ERROR("0500", "未知错误"),
 
-    MICROSERVICE_OFFLINE("0001", "微服务不在线, 或者网络超时"),
+    REQUEST_FALLBACK("0001", "服务不在线, 或者网络超时"),
     ILLEGAL_OPERATION("0002", "操作异常, %s"),
     FIELD_EMPTY("0003", "%s不能为空"),
     ILLEGAL_REQUEST_PARAMS("0004", "参数异常, %s"),

@@ -9,7 +9,6 @@ dependencies {
     implementation(deps.spring.spring_boot.configuration_processor)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.pms_api)
-    implementation project(ingot.framework_feign)
 
     compileOnly(deps.javax_servlet_api)
 }

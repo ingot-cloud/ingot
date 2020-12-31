@@ -3,7 +3,6 @@ package com.ingot.cloud.pms;
 import com.ingot.framework.security.annotation.EnableIngotResourceServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.SpringCloudApplication;
-import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <p>Date         : 2020/11/4.</p>
  * <p>Time         : 4:15 下午.</p>
  */
-@EnableHystrix
 @EnableIngotResourceServer
 @SpringCloudApplication
 @EnableTransactionManagement
