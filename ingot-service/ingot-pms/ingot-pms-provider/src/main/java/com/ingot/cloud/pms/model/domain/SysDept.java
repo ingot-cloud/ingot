@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -51,6 +52,11 @@ public class SysDept extends BaseModel<SysDept> {
      * 部门名称
      */
     private String name;
+
+    /**
+     * 部门角色范围, 0:当前部门，1:当前部门和直接子部门
+     */
+    private DeptRoleScopeEnum scope;
 
     /**
      * 排序
