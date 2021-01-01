@@ -3,9 +3,11 @@ package com.ingot.cloud.pms.service;
 import com.ingot.cloud.pms.model.domain.SysRole;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
+import java.util.List;
+
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author magician
@@ -13,11 +15,12 @@ import com.ingot.framework.store.mybatis.service.BaseService;
  */
 public interface SysRoleService extends BaseService<SysRole> {
 
-//    /**
-//     * 获取用户所有角色，包括
-//     * @param tenantId 租户ID
-//     * @param userId 用户ID
-//     * @return
-//     */
-//    List<SysRole> getAllRolesOfUser(long tenantId, long userId);
+    /**
+     * 获取用户所有可用角色，包括用户基本角色和部门角色
+     *
+     * @param userId   用户ID
+     * @param deptId   部门ID
+     * @return 角色列表
+     */
+    List<SysRole> getAllRolesOfUser(long userId, long deptId);
 }

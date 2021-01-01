@@ -35,13 +35,13 @@ public class UserAuthDetails implements Serializable {
      */
     private String password;
     /**
-     * 授权类型
-     */
-    private String authType;
-    /**
      * 状态, 0:正常，9:禁用
      */
     private UserStatusEnum status;
+    /**
+     * 授权类型
+     */
+    private String authType;
     /**
      * 拥有的角色编码
      */

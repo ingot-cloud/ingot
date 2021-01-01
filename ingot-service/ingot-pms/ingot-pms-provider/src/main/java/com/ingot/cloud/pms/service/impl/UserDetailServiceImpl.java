@@ -1,7 +1,9 @@
 package com.ingot.cloud.pms.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.model.domain.SysRole;
 import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.service.SysRoleService;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.cloud.pms.service.UserDetailService;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
@@ -14,6 +16,9 @@ import com.ingot.framework.security.exception.oauth2.UnauthorizedException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * <p>Description  : UserDetailServiceImpl.</p>
  * <p>Author       : wangchao.</p>
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserDetailServiceImpl implements UserDetailService {
     private final SysUserService sysUserService;
+    private final SysRoleService sysRoleService;
 
     @Override
     public UserAuthDetails getUserAuthDetails(long tenantId, UserDetailsDto params) {
@@ -47,16 +53,29 @@ public class UserDetailServiceImpl implements UserDetailService {
         // 校验用户
         checkUser(user);
 
-        // todo
-        return null;
+        UserAuthDetails userDetails = ofUser(user);
+
+        List<String> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId())
+                .stream().map(SysRole::getCode).collect(Collectors.toList());
+        userDetails.setRoles(roles);
+
+        // todo 查询授权类型
+        return userDetails;
     }
 
     private UserAuthDetails withSocialMode(long tenantId, UserDetailsDto params) {
         return null;
     }
 
-    private void getUserRole(SysUser user) {
-
+    private UserAuthDetails ofUser(SysUser user) {
+        UserAuthDetails userDetails = new UserAuthDetails();
+        userDetails.setId(user.getId());
+        userDetails.setDeptId(user.getDeptId());
+        userDetails.setTenantId(user.getTenantId());
+        userDetails.setUsername(user.getUsername());
+        userDetails.setPassword(user.getPassword());
+        userDetails.setStatus(user.getStatus());
+        return userDetails;
     }
 
     private void checkUser(SysUser user) {
