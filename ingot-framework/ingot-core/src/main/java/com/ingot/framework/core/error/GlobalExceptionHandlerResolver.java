@@ -1,6 +1,6 @@
 package com.ingot.framework.core.error;
 
-import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.exception.BizException;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
@@ -39,10 +39,10 @@ public class GlobalExceptionHandlerResolver {
                 String.format(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.message(), e.getLocalizedMessage()));
     }
 
-    @ExceptionHandler(BaseException.class)
+    @ExceptionHandler(BizException.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public IngotResponse<?> baseExceptionHandler(BaseException e) {
+    public IngotResponse<?> baseExceptionHandler(BizException e) {
         log.error("BaseException - message={}, e={}", e.getLocalizedMessage(), e);
         return ResponseWrapper.error(e.getCode(), e.getLocalizedMessage());
     }

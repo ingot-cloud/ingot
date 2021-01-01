@@ -1,13 +1,12 @@
 package com.ingot.cloud.acs.service;
 
-import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.base.constants.GlobalConstants;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
@@ -107,8 +106,8 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         List<String> userAuthorities = data.getRoles();
         List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
         log.info(">>> UserDetail, {} role={}", data.getUsername(), authorities);
-        boolean enabled = StrUtil.equals(data.getStatus(), UserStatusEnum.ENABLE.getValue());
-        boolean nonLocked = !StrUtil.equals(data.getStatus(), UserStatusEnum.LOCK.getValue());
+        boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
+        boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
         return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(), data.getAuthType(),
                 data.getUsername(), data.getPassword(), enabled, true,
                 true, nonLocked, authorities);

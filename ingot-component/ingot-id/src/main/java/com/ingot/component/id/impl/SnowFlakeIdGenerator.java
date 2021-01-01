@@ -1,7 +1,7 @@
 package com.ingot.component.id.impl;
 
 import com.google.common.base.Preconditions;
-import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.exception.BizException;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.component.id.worker.WorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -62,19 +62,19 @@ public class SnowFlakeIdGenerator implements IdGenerator {
             long offset = lastTimestamp - timestamp;
             // 如果大于允许时间回拨的毫秒量，那么抛出异常
             if (offset > 5) {
-                throw new BaseException(ID_CLOCK_BACK);
+                throw new BizException(ID_CLOCK_BACK);
             }
 
             try {
                 // 若在允许时间回拨的毫秒量范围内，则允许等待2倍的偏移量后重新获取
                 wait(offset << 1);
             } catch (InterruptedException e) {
-                throw new BaseException(ID_CLOCK_BACK);
+                throw new BizException(ID_CLOCK_BACK);
             }
 
             timestamp = timeGen();
             if (timestamp < lastTimestamp) {
-                throw new BaseException(ID_CLOCK_BACK);
+                throw new BizException(ID_CLOCK_BACK);
             }
 
         }

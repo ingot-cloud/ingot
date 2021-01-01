@@ -1,6 +1,6 @@
 package com.ingot.framework.core.utils;
 
-import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.exception.BizException;
 import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.core.wrapper.IngotResponse;
 
@@ -17,7 +17,7 @@ public final class AssertionUtils {
      */
     public static void checkIngotResponse(IngotResponse response){
         if (!response.isSuccess()) {
-            throw new BaseException(response.getCode(), response.getMessage());
+            throw new BizException(response.getCode(), response.getMessage());
         }
     }
 

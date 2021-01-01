@@ -1,5 +1,6 @@
 package com.ingot.framework.core.model.dto.user;
 
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -40,7 +41,7 @@ public class UserAuthDetails implements Serializable {
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private UserStatusEnum status;
     /**
      * 拥有的角色编码
      */

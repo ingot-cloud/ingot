@@ -1,6 +1,6 @@
 package com.ingot.framework.core.error;
 
-import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.exception.BizException;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +54,8 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
             error = ((ServletException) error).getCause();
         }
 
-        if (error instanceof BaseException) {
-            finalAttributes.put(IngotResponse.CODE, ((BaseException) error).getCode());
+        if (error instanceof BizException) {
+            finalAttributes.put(IngotResponse.CODE, ((BizException) error).getCode());
             finalAttributes.put(IngotResponse.MESSAGE, error.getMessage());
         } else {
             finalAttributes.put(IngotResponse.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.code());

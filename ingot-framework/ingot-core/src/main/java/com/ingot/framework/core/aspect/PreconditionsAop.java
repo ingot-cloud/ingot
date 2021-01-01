@@ -1,6 +1,6 @@
 package com.ingot.framework.core.aspect;
 
-import com.ingot.framework.base.exception.BaseException;
+import com.ingot.framework.base.exception.BizException;
 import com.ingot.framework.core.annotation.IngotPreconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -53,7 +53,7 @@ public class PreconditionsAop implements ApplicationContextAware {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
 
         if (method == null) {
-            throw new BaseException(PRECONDITION_NO_SUCH_METHOD);
+            throw new BizException(PRECONDITION_NO_SUCH_METHOD);
         }
 
         Class<?> preconditionsCls = annotation.value();
@@ -64,11 +64,11 @@ public class PreconditionsAop implements ApplicationContextAware {
             preconditionsMethod.invoke(preconditionsObj, joinPoint.getArgs());
         } catch (BeansException e) {
             log.error(">>> PreconditionsAop - 预校验类没有注入，请在预校验类中增加 @component 注解！！！", e);
-            throw new BaseException(PRECONDITION_BEANS);
+            throw new BizException(PRECONDITION_BEANS);
         } catch (NoSuchMethodException e) {
-            throw new BaseException(PRECONDITION_NO_SUCH_METHOD);
+            throw new BizException(PRECONDITION_NO_SUCH_METHOD);
         } catch (IllegalAccessException e) {
-            throw new BaseException(PRECONDITION_ILLEGAL_ACCESS);
+            throw new BizException(PRECONDITION_ILLEGAL_ACCESS);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         }

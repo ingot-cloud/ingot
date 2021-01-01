@@ -8,7 +8,7 @@ import static com.ingot.framework.base.status.BaseStatusCode.FIELD_EMPTY;
  * <p>Date         : 2020/10/10.</p>
  * <p>Time         : 4:14 下午.</p>
  */
-public class FieldEmptyException extends BaseException {
+public class FieldEmptyException extends BizException {
     public FieldEmptyException(String field) {
         super(FIELD_EMPTY, field);
     }
