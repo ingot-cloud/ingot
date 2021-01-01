@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.PackageVersion;
 
+import java.math.BigDecimal;
+
 /**
  * <p>Description  : IngotModule.</p>
  * <p>Author       : wangchao.</p>
@@ -16,7 +18,7 @@ public class IngotModule extends SimpleModule {
 
         this.addSerializer(long.class, new ToStringSerializer());
         this.addSerializer(Long.class, new ToStringSerializer());
-
+        this.addSerializer(BigDecimal.class, new ToStringSerializer());
     }
 
 }

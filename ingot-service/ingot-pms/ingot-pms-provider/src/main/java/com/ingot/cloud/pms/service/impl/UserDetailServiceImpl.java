@@ -7,8 +7,10 @@ import com.ingot.cloud.pms.service.UserDetailService;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.exception.oauth2.BadRequestException;
 import com.ingot.framework.security.exception.oauth2.ForbiddenException;
+import com.ingot.framework.security.exception.oauth2.UnauthorizedException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,9 +44,8 @@ public class UserDetailServiceImpl implements UserDetailService {
         SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getTenantId, tenantId)
                 .eq(SysUser::getUsername, username));
-        if (user == null) {
-            throw new BadRequestException("用户不存在");
-        }
+        // 校验用户
+        checkUser(user);
 
         // todo
         return null;
@@ -52,5 +53,18 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     private UserAuthDetails withSocialMode(long tenantId, UserDetailsDto params) {
         return null;
+    }
+
+    private void getUserRole(SysUser user) {
+
+    }
+
+    private void checkUser(SysUser user) {
+        if (user == null) {
+            throw new BadRequestException("用户不存在");
+        }
+        if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
+            throw new UnauthorizedException("用户" + user.getStatus().getDesc());
+        }
     }
 }

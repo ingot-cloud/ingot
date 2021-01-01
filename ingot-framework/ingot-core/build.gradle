@@ -12,4 +12,5 @@ dependencies {
 
     compileOnly(deps.javax_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)
+    compileOnly(deps.mybatis.plus_extension)
 }

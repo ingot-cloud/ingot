@@ -42,7 +42,7 @@ public class UserAuthDetails implements Serializable {
      */
     private String status;
     /**
-     * 拥有的角色
+     * 拥有的角色编码
      */
     private List<String> roles;
 }
