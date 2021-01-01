@@ -25,6 +25,9 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
 
     private static final long serialVersionUID = 1L;
 
+    @TableId
+    private Long id;
+
     /**
      * 版本号
      */
@@ -39,7 +42,6 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     /**
      * 客户端ID
      */
-    @TableId
     private String clientId;
 
     /**
