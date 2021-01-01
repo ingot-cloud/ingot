@@ -10,6 +10,7 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
+import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Feign;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.MethodMetadata;
@@ -115,6 +116,9 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                         // 增加判断返回类型，如果是IngotResponse，那么返回缺省降级结果
                         Class<?> returnType = method.getReturnType();
                         if (returnType == IngotResponse.class) {
+                            if (ex instanceof IngotFeignException) {
+                                return ResponseWrapper.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
+                            }
                             return ResponseWrapper.error(BaseStatusCode.REQUEST_FALLBACK.code(), ex.getLocalizedMessage());
                         } else {
                             // throw exception if fallbackFactory is null
