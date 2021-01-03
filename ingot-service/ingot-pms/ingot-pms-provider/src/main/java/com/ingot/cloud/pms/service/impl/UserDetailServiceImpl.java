@@ -96,7 +96,7 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     private void checkUser(SysUser user) {
         if (user == null) {
-            throw new BadRequestException("用户不存在");
+            throw new BadRequestException("用户名或密码不正确");
         }
         if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
             throw new UnauthorizedException("用户" + user.getStatus().getDesc());

@@ -94,5 +94,4 @@ public class SysUser extends BaseModel<SysUser> {
     @TableLogic
     private LocalDateTime deletedAt;
 
-
 }
