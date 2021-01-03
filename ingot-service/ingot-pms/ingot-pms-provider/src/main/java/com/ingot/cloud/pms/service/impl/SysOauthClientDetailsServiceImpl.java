@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.service.impl;
 
-import com.ingot.cloud.pms.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.mapper.SysOauthClientDetailsMapper;
+import com.ingot.cloud.pms.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.service.SysOauthClientDetailsService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,6 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
 
     @Override
     public List<SysOauthClientDetails> getClientsByRoles(List<Long> roleIds) {
-        return null;
+        return baseMapper.getClientsByRoles(roleIds);
     }
 }
