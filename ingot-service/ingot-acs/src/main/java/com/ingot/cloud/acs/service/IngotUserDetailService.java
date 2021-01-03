@@ -1,7 +1,6 @@
 package com.ingot.cloud.acs.service;
 
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
-import com.ingot.framework.base.constants.GlobalConstants;
 import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
@@ -12,6 +11,7 @@ import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
 import com.ingot.framework.security.exception.oauth2.IngotOAuth2Exception;
 import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.security.utils.SocialUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         String clientId = SecurityUtils.getClientIdFromRequest();
         int tenantID = TenantContextHolder.get();
 
-        String uniqueCode = socialType.concat(GlobalConstants.AT).concat(openId);
+        String uniqueCode = SocialUtils.uniqueCode(socialType, openId);
         UserDetailsDto params = new UserDetailsDto();
         params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
