@@ -9,17 +9,21 @@ import com.ingot.cloud.pms.service.SysOauthClientDetailsService;
 import com.ingot.cloud.pms.service.SysRoleService;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.cloud.pms.service.UserDetailService;
+import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.exception.oauth2.BadRequestException;
 import com.ingot.framework.security.exception.oauth2.ForbiddenException;
 import com.ingot.framework.security.exception.oauth2.UnauthorizedException;
+import com.ingot.framework.security.utils.SocialUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,26 +38,27 @@ public class UserDetailServiceImpl implements UserDetailService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysOauthClientDetailsService sysOauthClientDetailsService;
+    private final Map<String, SocialProcessor> socialProcessorMap;
 
     @Override
     public UserAuthDetails getUserAuthDetails(long tenantId, UserDetailsDto params) {
         UserDetailsModeEnum model = params.getMode();
-        if (model != null) {
-            switch (model) {
-                case PASSWORD:
-                    return withPasswordMode(tenantId, params);
-                case SOCIAL:
-                    return withSocialMode(tenantId, params);
-            }
+        if (model == null) {
+            throw new ForbiddenException("非法授权模式");
         }
-        throw new ForbiddenException("授权模式不正确：" + model);
-    }
 
-    private UserAuthDetails withPasswordMode(long tenantId, UserDetailsDto params) {
-        String username = params.getUniqueCode();
-        SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
-                .eq(SysUser::getTenantId, tenantId)
-                .eq(SysUser::getUsername, username));
+        SysUser user;
+        switch (model) {
+            case PASSWORD:
+                user = withPasswordMode(tenantId, params);
+                break;
+            case SOCIAL:
+                user = withSocialMode(tenantId, params);
+                break;
+            default:
+                throw new ForbiddenException("授权模式不正确：" + model);
+        }
+
         // 校验用户
         checkUser(user);
 
@@ -75,12 +80,30 @@ public class UserDetailServiceImpl implements UserDetailService {
             throw new UnauthorizedException("未授权该应用");
         }
         userDetails.setAuthType(client.getAuthType());
-
         return userDetails;
     }
 
-    private UserAuthDetails withSocialMode(long tenantId, UserDetailsDto params) {
-        return null;
+    private SysUser withPasswordMode(long tenantId, UserDetailsDto params) {
+        String username = params.getUniqueCode();
+        return sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
+                .eq(SysUser::getTenantId, tenantId)
+                .eq(SysUser::getUsername, username));
+    }
+
+    private SysUser withSocialMode(long tenantId, UserDetailsDto params) {
+        String[] extract = SocialUtils.extract(params.getUniqueCode());
+        SocialTypeEnum socialType = SocialTypeEnum.getEnum(extract[0]);
+        if (socialType == null) {
+            throw new BadRequestException("非法社交类型");
+        }
+
+        SocialProcessor processor = socialProcessorMap.get(socialType.getBeanName());
+        if (processor == null) {
+            throw new BadRequestException("非法社交类型");
+        }
+
+        params.setUniqueCode(extract[1]);
+        return processor.exec(tenantId, params);
     }
 
     private UserAuthDetails ofUser(SysUser user) {
