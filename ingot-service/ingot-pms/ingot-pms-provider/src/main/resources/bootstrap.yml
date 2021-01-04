@@ -6,7 +6,7 @@ spring:
     name: ingot-service-pms
   datasource:
     username: root
-    password: Wc.1331588182
+    password: 123456
   rabbitmq:
     username: admin
     password: admin
