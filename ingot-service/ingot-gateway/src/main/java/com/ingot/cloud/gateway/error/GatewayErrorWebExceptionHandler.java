@@ -2,12 +2,15 @@ package com.ingot.cloud.gateway.error;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.NonNull;
@@ -39,15 +42,21 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         }
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        IngotResponse<?> ingotResponse = ResponseWrapper.error(ex.getMessage());
         if (ex instanceof ResponseStatusException) {
-            response.setStatusCode(((ResponseStatusException) ex).getStatus());
+            HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
+            response.setStatusCode(httpStatus);
+            if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
+                ingotResponse = ResponseWrapper.error(
+                        BaseStatusCode.REQUEST_FALLBACK.code(), ex.getMessage());
+            }
         }
 
+        IngotResponse<?> finalResponse = ingotResponse;
         return response.writeWith(Mono.fromSupplier(() -> {
             DataBufferFactory bufferFactory = response.bufferFactory();
             try {
-                return bufferFactory.wrap(objectMapper.writeValueAsBytes(
-                        ResponseWrapper.error(ex.getMessage())));
+                return bufferFactory.wrap(objectMapper.writeValueAsBytes(finalResponse));
             } catch (JsonProcessingException e) {
                 log.error("Error writing response", ex);
                 return bufferFactory.wrap(new byte[0]);
