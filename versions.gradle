@@ -64,6 +64,7 @@ alibaba.cloud_dependencies = "com.alibaba.cloud:spring-cloud-alibaba-dependencie
 alibaba.nacos_config_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config"
 alibaba.nacos_discovery_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery"
 alibaba.sentinel_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel"
+alibaba.sentinel_gateway = "com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway"
 alibaba.druid_spring_boot_starter = "com.alibaba:druid-spring-boot-starter:${versions.alibaba_druid}"
 alibaba.transmittable_thread_local = "com.alibaba:transmittable-thread-local:${versions.alibaba_transmittable_thread_local}"
 deps.alibaba = alibaba

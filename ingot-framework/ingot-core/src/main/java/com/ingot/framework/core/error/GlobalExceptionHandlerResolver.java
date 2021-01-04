@@ -5,6 +5,7 @@ import com.ingot.framework.base.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.ObjectError;
@@ -28,6 +29,7 @@ import static com.ingot.framework.base.status.BaseStatusCode.ILLEGAL_OPERATION;
 @Slf4j
 @Order
 @RestControllerAdvice
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class GlobalExceptionHandlerResolver {
 
     @ExceptionHandler(Exception.class)
