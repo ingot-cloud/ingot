@@ -23,6 +23,8 @@ include 'ingot-component:ingot-id'
 findProject(':ingot-component:ingot-id')?.name = 'ingot-id'
 
 // Cloud service
+include 'ingot-service:ingot-gateway'
+findProject(':ingot-service:ingot-gateway')?.name = 'ingot-gateway'
 include 'ingot-service:ingot-acs'
 findProject(':ingot-service:ingot-acs')?.name = 'ingot-acs'
 include 'ingot-service:ingot-pms:ingot-pms-api'
