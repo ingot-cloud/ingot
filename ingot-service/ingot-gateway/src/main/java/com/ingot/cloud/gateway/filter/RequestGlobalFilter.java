@@ -21,7 +21,8 @@ import reactor.core.publisher.Mono;
 @Component
 public class RequestGlobalFilter implements GlobalFilter, Ordered {
 
-    @Override public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         log.info("RequestGlobalFilter - url={}", exchange.getRequest().getPath());
 
         // 清洗 SecurityConstants.HEADER_FROM
@@ -31,7 +32,8 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
         return chain.filter(exchange.mutate().request(request).build());
     }
 
-    @Override public int getOrder() {
+    @Override
+    public int getOrder() {
         return HIGHEST_PRECEDENCE;
     }
 }
