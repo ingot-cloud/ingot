@@ -1,5 +1,6 @@
 package com.ingot.cloud.acs.token;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.acs.properties.OAuth2Properties;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.core.bus.RefreshJwtKeySender;
@@ -7,7 +8,6 @@ import com.ingot.framework.security.utils.RSAUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -52,7 +52,7 @@ public class JwtKeyGenerator implements CommandLineRunner {
             this.needNotify = false;
         } catch (Exception e) {
             final String secret = oAuth2Properties.getRsaSecret();
-            if (StringUtils.isEmpty(secret)) {
+            if (StrUtil.isEmpty(secret)) {
                 log.warn(">>> JwtKeyGenerator - 请配置 ingot.oauth.rsaSecret !!!");
                 throw new IllegalArgumentException("请配置 ingot.oauth.rsaSecret !!!");
             }

@@ -18,7 +18,7 @@ public class RefreshJwtKeyApplicationEvent extends RemoteApplicationEvent {
     }
 
     public RefreshJwtKeyApplicationEvent(Object source, String originService, String message) {
-        super(source, originService, null);
+        super(source, originService, DEFAULT_DESTINATION_FACTORY.getDestination(null));
         this.message = message;
     }
 }

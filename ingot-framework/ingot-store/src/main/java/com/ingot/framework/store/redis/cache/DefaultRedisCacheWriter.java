@@ -1,12 +1,13 @@
 package com.ingot.framework.store.redis.cache;
 
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.data.redis.cache.CacheStatistics;
+import org.springframework.data.redis.cache.CacheStatisticsCollector;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.types.Expiration;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -38,6 +39,7 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
 
     private final RedisConnectionFactory connectionFactory;
     private final Duration sleepTime;
+    private final CacheStatisticsCollector statistics;
 
     /**
      * @param connectionFactory must not be {@literal null}.
@@ -51,17 +53,34 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
      * @param sleepTime         sleep time between lock request attempts. Must not be {@literal null}. Use {@link Duration#ZERO}
      *                          to disable locking.
      */
-    private DefaultRedisCacheWriter(RedisConnectionFactory connectionFactory, Duration sleepTime) {
+    DefaultRedisCacheWriter(RedisConnectionFactory connectionFactory, Duration sleepTime) {
+        this(connectionFactory, sleepTime, CacheStatisticsCollector.none());
+    }
+
+    /**
+     * @param connectionFactory        must not be {@literal null}.
+     * @param sleepTime                sleep time between lock request attempts. Must not be {@literal null}. Use {@link Duration#ZERO}
+     *                                 to disable locking.
+     * @param cacheStatisticsCollector must not be {@literal null}.
+     */
+    DefaultRedisCacheWriter(RedisConnectionFactory connectionFactory, Duration sleepTime,
+                            CacheStatisticsCollector cacheStatisticsCollector) {
 
         Assert.notNull(connectionFactory, "ConnectionFactory must not be null!");
         Assert.notNull(sleepTime, "SleepTime must not be null!");
+        Assert.notNull(cacheStatisticsCollector, "CacheStatisticsCollector must not be null!");
 
         this.connectionFactory = connectionFactory;
         this.sleepTime = sleepTime;
+        this.statistics = cacheStatisticsCollector;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#put(java.lang.String, byte[], byte[], java.time.Duration)
+     */
     @Override
-    public void put(@NonNull String name, @NonNull byte[] key, @NonNull byte[] value, @Nullable Duration ttl) {
+    public void put(String name, byte[] key, byte[] value, @Nullable Duration ttl) {
 
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(key, "Key must not be null!");
@@ -70,29 +89,46 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
         execute(name, connection -> {
 
             if (shouldExpireWithin(ttl)) {
-                connection.set(key, value, Expiration.from(ttl.toMillis(), TimeUnit.MILLISECONDS),
-                        RedisStringCommands.SetOption.upsert());
+                connection.set(key, value, Expiration.from(ttl.toMillis(), TimeUnit.MILLISECONDS), RedisStringCommands.SetOption.upsert());
             } else {
                 connection.set(key, value);
             }
 
             return "OK";
         });
+
+        statistics.incPuts(name);
     }
 
-
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#get(java.lang.String, byte[])
+     */
     @Override
-    public byte[] get(@NonNull String name, @NonNull byte[] key) {
+    public byte[] get(String name, byte[] key) {
 
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(key, "Key must not be null!");
 
-        return execute(name, connection -> connection.get(key));
+        byte[] result = execute(name, connection -> connection.get(key));
+
+        statistics.incGets(name);
+
+        if (result != null) {
+            statistics.incHits(name);
+        } else {
+            statistics.incMisses(name);
+        }
+
+        return result;
     }
 
-
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#putIfAbsent(java.lang.String, byte[], byte[], java.time.Duration)
+     */
     @Override
-    public byte[] putIfAbsent(@NonNull String name, @NonNull byte[] key, @NonNull byte[] value, @Nullable Duration ttl) {
+    public byte[] putIfAbsent(String name, byte[] key, byte[] value, @Nullable Duration ttl) {
 
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(key, "Key must not be null!");
@@ -105,11 +141,17 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
             }
 
             try {
-                if (connection.setNX(key, value)) {
 
-                    if (shouldExpireWithin(ttl)) {
-                        connection.pExpire(key, ttl.toMillis());
-                    }
+                boolean put;
+
+                if (shouldExpireWithin(ttl)) {
+                    put = connection.set(key, value, Expiration.from(ttl), RedisStringCommands.SetOption.ifAbsent());
+                } else {
+                    put = connection.setNX(key, value);
+                }
+
+                if (put) {
+                    statistics.incPuts(name);
                     return null;
                 }
 
@@ -123,19 +165,26 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
         });
     }
 
-
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#remove(java.lang.String, byte[])
+     */
     @Override
-    public void remove(@NonNull String name, @NonNull byte[] key) {
+    public void remove(String name, byte[] key) {
 
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(key, "Key must not be null!");
 
         execute(name, connection -> connection.del(key));
+        statistics.incDeletes(name);
     }
 
-
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#clean(java.lang.String, byte[])
+     */
     @Override
-    public void clean(@NonNull String name, @NonNull byte[] pattern) {
+    public void clean(String name, byte[] pattern) {
 
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(pattern, "Pattern must not be null!");
@@ -155,6 +204,7 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
                         .toArray(new byte[0][]);
 
                 if (keys.length > 0) {
+                    statistics.incDeletesBy(name, keys.length);
                     connection.del(keys);
                 }
             } finally {
@@ -166,6 +216,33 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
 
             return "OK";
         });
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.CacheStatisticsProvider#getCacheStatistics(java.lang.String)
+     */
+    @Override
+    public CacheStatistics getCacheStatistics(String cacheName) {
+        return statistics.getCacheStatistics(cacheName);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#clearStatistics(java.lang.String)
+     */
+    @Override
+    public void clearStatistics(String name) {
+        statistics.reset(name);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.redis.cache.RedisCacheWriter#with(CacheStatisticsCollector)
+     */
+    @Override
+    public RedisCacheWriter withStatisticsCollector(CacheStatisticsCollector cacheStatisticsCollector) {
+        return new DefaultRedisCacheWriter(connectionFactory, sleepTime, cacheStatisticsCollector);
     }
 
     /**
@@ -234,6 +311,7 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
             return;
         }
 
+        long lockWaitTimeNs = System.nanoTime();
         try {
 
             while (doCheckLock(name, connection)) {
@@ -246,6 +324,8 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
 
             throw new PessimisticLockingFailureException(String.format("Interrupted while waiting to unlock cache %s", name),
                     ex);
+        } finally {
+            statistics.incLockTime(name, System.nanoTime() - lockWaitTimeNs);
         }
     }
 

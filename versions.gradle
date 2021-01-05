@@ -1,9 +1,9 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "2.3.6.RELEASE"
-versions.spring_cloud = "Hoxton.SR9"
+versions.spring_boot = "2.4.1"
+versions.spring_cloud = "2020.0.0"
 versions.spring_cloud_alibaba = "2.2.3.RELEASE"
-versions.spring_framework = "5.2.11.RELEASE"
+versions.spring_framework = "5.3.2"
 
 versions.alibaba_druid = "1.2.3"
 versions.alibaba_transmittable_thread_local = "2.11.5"
@@ -14,7 +14,7 @@ versions.mapstruct = "1.4.1.Final"
 versions.jackson = "2.11.2"
 versions.mybatis_plus = "3.4.1"
 versions.mysql_connector = "8.0.16"
-versions.hutool = "5.5.1"
+versions.hutool = "5.5.3"
 
 def spring = [:]
 def spring_boot = [:]
@@ -42,12 +42,16 @@ spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
 spring_cloud.loadbalancer_starter = "org.springframework.cloud:spring-cloud-starter-loadbalancer"
 spring_cloud.gateway_starter = "org.springframework.cloud:spring-cloud-starter-gateway"
-spring_cloud.oauth2_starter = "org.springframework.cloud:spring-cloud-starter-oauth2"
 spring_cloud.config_starter = "org.springframework.cloud:spring-cloud-starter-config"
 spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-server"
 spring_cloud.bus_start = "org.springframework.cloud:spring-cloud-starter-bus-amqp"
-spring_cloud.security_starter = "org.springframework.cloud:spring-cloud-starter-security"
 spring_cloud.zipkin_starter = "org.springframework.cloud:spring-cloud-starter-zipkin"
+spring_cloud.bootstrap_starter = "org.springframework.cloud:spring-cloud-starter-bootstrap"
+
+// security
+spring_cloud.oauth2_starter = "org.springframework.cloud:spring-cloud-starter-oauth2:2.2.4.RELEASE"
+spring_cloud.security_starter = "org.springframework.cloud:spring-cloud-starter-security:2.2.4.RELEASE"
+spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.2.RELEASE"
 
 spring.framework_spring_web = "org.springframework:spring-web:${versions.spring_framework}"
 spring.framework_spring_webflux = "org.springframework:spring-webflux:${versions.spring_framework}"
@@ -132,7 +136,7 @@ deps.aspectj = aspectj
 deps.minio = "io.minio:minio:6.0.10"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
-deps.lombok = "org.projectlombok:lombok:1.18.12"
+deps.lombok = "org.projectlombok:lombok:1.18.16"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
 deps.xxl_rpc_core = "com.xuxueli:xxl-rpc-core:1.4.1"
 deps.kaptcha = "com.github.penggle:kaptcha:2.3.2"
@@ -148,7 +152,7 @@ deps.ltgt_apt_plugin = "net.ltgt.gradle:gradle-apt-plugin:0.21"
 deps.transmode_gradle_docker = "se.transmode.gradle:gradle-docker:1.2"
 deps.groovy = "org.codehaus.groovy:groovy:2.5.7"
 deps.google_findbugs_jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
-deps.netty = "io.netty:netty-all:4.1.42.Final"
+deps.netty = "io.netty:netty-all:4.1.55.Final"
 
 def plugins = [:]
 plugins.ingot_mybatis="com.ingot:ingot-mybatisplus-plugin:0.1.0"

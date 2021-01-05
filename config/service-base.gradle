@@ -10,7 +10,9 @@ dependencies {
     
     // nacos
     implementation(deps.alibaba.nacos_config_starter)
-    implementation(deps.alibaba.nacos_discovery_starter)
+    implementation(deps.alibaba.nacos_discovery_starter) {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-netflix-ribbon'
+    }
 
     //mapstruct
     implementation(deps.mapstruct.library)
@@ -18,6 +20,9 @@ dependencies {
 
     // log
     implementation(deps.log.logstash_logback_encoder)
+
+    // todo 适配 spring cloud alibaba 2.2.3，所以需要增加依赖 spring-cloud-starter-bootstrap
+    implementation(deps.spring.spring_cloud.bootstrap_starter)
 }
 
 test {
