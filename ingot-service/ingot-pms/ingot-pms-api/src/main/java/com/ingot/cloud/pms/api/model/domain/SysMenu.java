@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_social_details")
-public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
+@TableName("sys_menu")
+public class SysMenu extends BaseModel<SysMenu> {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,34 +43,59 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     private Integer tenantId;
 
     /**
-     * App ID
+     * 父ID
      */
-    private String appId;
+    private Long pid;
 
     /**
-     * App Secret
-     */
-    private String appSecret;
-
-    /**
-     * 重定向地址
-     */
-    private String redirectUrl;
-
-    /**
-     * 社交名称
+     * 菜单名称
      */
     private String name;
 
     /**
-     * 类型
+     * 菜单url
      */
-    private String type;
+    private String path;
+
+    /**
+     * 视图路径
+     */
+    private String viewPath;
+
+    /**
+     * 图标
+     */
+    private String icon;
+
+    /**
+     * 排序
+     */
+    private Integer sort;
+
+    /**
+     * 是否缓存
+     */
+    private Boolean cache;
+
+    /**
+     * 是否隐藏
+     */
+    private Boolean hidden;
+
+    /**
+     * 参数
+     */
+    private String params;
 
     /**
      * 状态, 0:正常，9:禁用
      */
     private String status;
+
+    /**
+     * 备注
+     */
+    private String remark;
 
     /**
      * 创建日期

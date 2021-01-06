@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_authority")
-public class SysAuthority extends BaseModel<SysAuthority> {
+@TableName("sys_social_details")
+public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,34 +43,34 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     private Integer tenantId;
 
     /**
-     * 父ID
+     * App ID
      */
-    private Long pid;
+    private String appId;
 
     /**
-     * 权限名称
+     * App Secret
+     */
+    private String appSecret;
+
+    /**
+     * 重定向地址
+     */
+    private String redirectUrl;
+
+    /**
+     * 社交名称
      */
     private String name;
 
     /**
-     * 权限编码
+     * 类型
      */
-    private String code;
-
-    /**
-     * URL
-     */
-    private String path;
+    private String type;
 
     /**
      * 状态, 0:正常，9:禁用
      */
     private String status;
-
-    /**
-     * 备注
-     */
-    private String remark;
 
     /**
      * 创建日期

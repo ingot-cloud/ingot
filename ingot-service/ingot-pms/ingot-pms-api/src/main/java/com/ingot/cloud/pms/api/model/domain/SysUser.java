@@ -1,9 +1,11 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -20,8 +22,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_menu")
-public class SysMenu extends BaseModel<SysMenu> {
+@TableName("sys_user")
+public class SysUser extends BaseModel<SysUser> {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,68 +36,50 @@ public class SysMenu extends BaseModel<SysMenu> {
     /**
      * 版本号
      */
+    @JsonIgnore
     @Version
     private Long version;
 
     /**
-     * 租户ID
+     * 所属租户
      */
     private Integer tenantId;
 
     /**
-     * 父ID
+     * 部门ID
      */
-    private Long pid;
+    private Long deptId;
 
     /**
-     * 菜单名称
+     * 用户名
      */
-    private String name;
+    private String username;
 
     /**
-     * 菜单url
+     * 密码
      */
-    private String path;
+    @JsonIgnore
+    private String password;
 
     /**
-     * 视图路径
+     * 姓名
      */
-    private String viewPath;
+    private String realName;
 
     /**
-     * 图标
+     * 手机号
      */
-    private String icon;
+    private String phone;
 
     /**
-     * 排序
+     * 邮件地址
      */
-    private Integer sort;
-
-    /**
-     * 是否缓存
-     */
-    private Boolean cache;
-
-    /**
-     * 是否隐藏
-     */
-    private Boolean hidden;
-
-    /**
-     * 参数
-     */
-    private String params;
+    private String email;
 
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
-
-    /**
-     * 备注
-     */
-    private String remark;
+    private UserStatusEnum status;
 
     /**
      * 创建日期
@@ -112,6 +96,5 @@ public class SysMenu extends BaseModel<SysMenu> {
      */
     @TableLogic
     private LocalDateTime deletedAt;
-
 
 }

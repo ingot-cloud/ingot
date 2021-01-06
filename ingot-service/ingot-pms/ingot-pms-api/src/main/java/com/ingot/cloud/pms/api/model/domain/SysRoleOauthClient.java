@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -15,8 +15,8 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_role_authority")
-public class SysRoleAuthority extends BaseModel<SysRoleAuthority> {
+@TableName("sys_role_oauth_client")
+public class SysRoleOauthClient extends BaseModel<SysRoleAuthority> {
 
     private static final long serialVersionUID = 1L;
 
@@ -26,9 +26,9 @@ public class SysRoleAuthority extends BaseModel<SysRoleAuthority> {
     private Long roleId;
 
     /**
-     * 权限ID
+     * 客户端ID
      */
-    private Long authority;
+    private String clientId;
 
 
 }

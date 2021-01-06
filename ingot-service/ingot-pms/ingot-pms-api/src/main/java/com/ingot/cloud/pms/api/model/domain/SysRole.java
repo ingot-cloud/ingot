@@ -1,10 +1,10 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_dept")
-public class SysDept extends BaseModel<SysDept> {
+@TableName("sys_role")
+public class SysRole extends BaseModel<SysRole> {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,34 +39,34 @@ public class SysDept extends BaseModel<SysDept> {
     private Long version;
 
     /**
-     * 租户ID
+     * 租户
      */
     private Integer tenantId;
 
     /**
-     * 父ID
-     */
-    private Long pid;
-
-    /**
-     * 部门名称
+     * 角色名称
      */
     private String name;
 
     /**
-     * 部门角色范围, 0:当前部门，1:当前部门和直接子部门
+     * 角色编码
      */
-    private DeptRoleScopeEnum scope;
+    private String code;
 
     /**
-     * 排序
+     * 角色类型
      */
-    private Integer sort;
+    private String type;
 
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
+
+    /**
+     * 备注
+     */
+    private String remark;
 
     /**
      * 创建日期

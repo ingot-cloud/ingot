@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.social.impl;
 
-import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import org.springframework.stereotype.Component;

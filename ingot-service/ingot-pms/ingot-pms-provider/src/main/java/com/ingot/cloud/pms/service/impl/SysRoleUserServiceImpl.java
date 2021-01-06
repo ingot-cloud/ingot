@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service.impl;
 
-import com.ingot.cloud.pms.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

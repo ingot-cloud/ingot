@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.mapper;
 
-import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 
 /**

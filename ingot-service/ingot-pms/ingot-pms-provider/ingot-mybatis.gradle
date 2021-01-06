@@ -30,7 +30,7 @@ ingotMybatis {
         /**
          * 注释作者
          */
-        author = "magician"
+        author = "jymot"
 
         /**
          * 需要生成的表

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service.impl;
 
-import com.ingot.cloud.pms.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.SysDeptService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

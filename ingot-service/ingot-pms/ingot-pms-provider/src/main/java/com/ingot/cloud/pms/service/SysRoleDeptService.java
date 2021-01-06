@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service;
 
-import com.ingot.cloud.pms.model.domain.SysRoleDept;
+import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**

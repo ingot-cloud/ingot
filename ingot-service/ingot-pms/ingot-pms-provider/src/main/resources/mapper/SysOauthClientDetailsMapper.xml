@@ -4,7 +4,7 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.SysOauthClientDetailsMapper">
 
     <select id="getClientsByRoles"
-            resultType="com.ingot.cloud.pms.model.domain.SysOauthClientDetails">
+            resultType="com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails">
         SELECT client.*
         FROM sys_oauth_client_details AS client
                  INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id

@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.model.domain.SysOauthClientDetails;
-import com.ingot.cloud.pms.model.domain.SysRole;
-import com.ingot.cloud.pms.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.SysOauthClientDetailsService;
 import com.ingot.cloud.pms.service.SysRoleService;
 import com.ingot.cloud.pms.service.SysUserService;

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service.impl;
 
-import com.ingot.cloud.pms.model.domain.SysMenu;
+import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.SysMenuService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

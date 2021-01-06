@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service;
 
-import com.ingot.cloud.pms.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**

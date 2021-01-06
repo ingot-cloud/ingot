@@ -1,11 +1,10 @@
-package com.ingot.cloud.pms.model.domain;
+package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,8 +21,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_user")
-public class SysUser extends BaseModel<SysUser> {
+@TableName("sys_dept")
+public class SysDept extends BaseModel<SysDept> {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,50 +35,38 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 版本号
      */
-    @JsonIgnore
     @Version
     private Long version;
 
     /**
-     * 所属租户
+     * 租户ID
      */
     private Integer tenantId;
 
     /**
-     * 部门ID
+     * 父ID
      */
-    private Long deptId;
+    private Long pid;
 
     /**
-     * 用户名
+     * 部门名称
      */
-    private String username;
+    private String name;
 
     /**
-     * 密码
+     * 部门角色范围, 0:当前部门，1:当前部门和直接子部门
      */
-    @JsonIgnore
-    private String password;
+    private DeptRoleScopeEnum scope;
 
     /**
-     * 姓名
+     * 排序
      */
-    private String realName;
-
-    /**
-     * 手机号
-     */
-    private String phone;
-
-    /**
-     * 邮件地址
-     */
-    private String email;
+    private Integer sort;
 
     /**
      * 状态, 0:正常，9:禁用
      */
-    private UserStatusEnum status;
+    private String status;
 
     /**
      * 创建日期
@@ -96,5 +83,6 @@ public class SysUser extends BaseModel<SysUser> {
      */
     @TableLogic
     private LocalDateTime deletedAt;
+
 
 }
