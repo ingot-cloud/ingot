@@ -43,6 +43,7 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 所属租户
      */
+    @JsonIgnore
     private Integer tenantId;
 
     /**

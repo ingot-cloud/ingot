@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,12 +35,14 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     /**
      * 版本号
      */
+    @JsonIgnore
     @Version
     private Long version;
 
     /**
      * 租户ID
      */
+    @JsonIgnore
     private Integer tenantId;
 
     /**
