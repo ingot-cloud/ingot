@@ -16,8 +16,8 @@ import java.util.Optional;
  */
 @Slf4j
 public class RedisWorkerIdFactory extends AbsWorkerIdFactory {
-    private static final String KEY_PREFIX = "INGOT:ID:";
-    private static final String KEY_INDEX = "INGOT:ID:INDEX";
+    private static final String KEY_PREFIX = "ingot:workID:";
+    private static final String KEY_INDEX = "ingot:workID:index";
     private final RedisTemplate<String, Object> redisTemplate;
     private final String serviceName;
     private final String serviceAddress;

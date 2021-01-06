@@ -42,7 +42,7 @@ public class IdAutoConfig {
 
     @Bean("idGenerator")
     @ConditionalOnMissingBean(IdGenerator.class)
-    @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "redis", matchIfMissing = true)
+    @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "machine", matchIfMissing = true)
     public IdGenerator machineIdGenerator(IdProperties properties){
         WorkerIdFactory factory = new MachineWorkerIdFactory(properties.getLocalPathPrefix(),
                 serverName, String.valueOf(port));
