@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,7 +40,7 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     /**
      * 租户ID
      */
-    @JsonIgnore
+    @JsonIgnoreProperties(allowSetters = true)
     private Integer tenantId;
 
     /**

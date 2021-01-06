@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.rest.v1;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
@@ -26,5 +28,10 @@ public class UserApi extends BaseController {
     @GetMapping
     public IngotResponse<?> user() {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
+    }
+
+    @GetMapping("/page")
+    public IngotResponse<?> page(Page<?> page, SysUser user) {
+        return ok();
     }
 }

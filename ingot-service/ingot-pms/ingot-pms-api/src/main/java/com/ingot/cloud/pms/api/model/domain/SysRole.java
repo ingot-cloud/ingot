@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
@@ -43,7 +44,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 租户
      */
-    @JsonIgnore
+    @JsonIgnoreProperties(allowSetters = true)
     private Integer tenantId;
 
     /**
