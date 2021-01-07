@@ -2,16 +2,10 @@ package com.ingot.cloud.pms.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
-import com.ingot.cloud.pms.service.SysDeptService;
-import com.ingot.cloud.pms.service.SysRoleDeptService;
-import com.ingot.cloud.pms.service.SysRoleService;
-import com.ingot.cloud.pms.service.SysRoleUserService;
+import com.ingot.cloud.pms.service.*;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
@@ -36,6 +30,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysDeptService sysDeptService;
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleDeptService sysRoleDeptService;
+    private final SysRoleOauthClientService sysRoleOauthClientService;
 
     @Override
     public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
@@ -55,6 +50,16 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(SysRole::getId, baseRoleIds));
+    }
+
+    @Override
+    public List<SysRole> getAllRolesOfClients(List<Long> clientIds) {
+        Set<Long> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
+                .in(SysRoleOauthClient::getClientId, clientIds))
+                .stream()
+                .map(SysRoleOauthClient::getRoleId)
+                .collect(Collectors.toSet());
+        return list(Wrappers.<SysRole>lambdaQuery().in(SysRole::getId, roleIdSet));
     }
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {

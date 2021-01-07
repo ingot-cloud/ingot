@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ingot.cloud.pms.mapper.SysUserMapper">
 
+    <resultMap id="UserPageItemVo" type="com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo">
+        <result column="tenant_name" property="tenantName"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="real_name" property="realName"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <select id="conditionPage" resultMap="UserPageItemVo">
+        SELECT u.id AS user_id,
+               u.username,
+               u.real_name,
+               u.phone,
+               u.email,
+               u.status,
+               u.created_at,
+               u.deleted_at,
+               t.name AS tenant_name,
+               d.name AS dept_name
+        FROM sys_user AS u
+                 LEFT JOIN sys_tenant AS t ON t.id = u.tenant_id
+                 LEFT JOIN sys_dept AS d ON d.id = u.dept_id
+                 <if test="condition.roleIds != null and condition.roleIds.size > 0">
+                     LEFT JOIN sys_role_user AS ru ON ru.user_id = u.id
+                 </if>
+        <where>
+            <if test="condition.username != null and condition.username != ''">
+                u.username LIKE CONCAT('%', #{condition}, '%')
+            </if>
+            <if test="condition.realName != null and condition.realName != ''">
+                AND u.real_name LIKE CONCAT('%', #{condition.realName}, '%')
+            </if>
+            <if test="condition.phone != null and condition.phone != ''">
+                AND u.phone LIKE CONCAT('%', #{condition.phone}, '%')
+            </if>
+            <if test="condition.status != null and condition.status != ''">
+                AND u.status = #{condition.status}
+            </if>
+            <if test="condition.tenantId != null and condition.tenantId != 0">
+                AND u.tenant_id = #{condition.tenantId}
+            </if>
+            <if test="condition.deptId != null and condition.deptId != 0">
+                AND u.dept_id = #{condition.deptId}
+            </if>
+            <if test="condition.roleIds != null and condition.roleIds.size > 0">
+                AND ru.role_id IN
+                <foreach open="(" separator="," close=")"
+                         collection="condition.roleIds" index="index" item="item">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
 </mapper>
