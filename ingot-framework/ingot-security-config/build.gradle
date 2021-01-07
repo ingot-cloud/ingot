@@ -1,5 +1,5 @@
 
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
-    implementation(deps.spring.spring_cloud.security_starter)
+    implementation(deps.spring.security_config)
 }

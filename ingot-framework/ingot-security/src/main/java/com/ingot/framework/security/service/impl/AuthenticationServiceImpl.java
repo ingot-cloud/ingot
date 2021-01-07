@@ -7,7 +7,6 @@ import com.ingot.cloud.pms.api.rpc.PmsRoleFeignApi;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.service.AuthenticationService;
-import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String principal = getLoginName(authentication.getPrincipal());
 
         List<String> authorizeList = authentication.getAuthorities().stream()
-                .filter(grant -> StringUtils.isNotEmpty(grant.getAuthority()))
+                .filter(grant -> StrUtil.isNotEmpty(grant.getAuthority()))
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 

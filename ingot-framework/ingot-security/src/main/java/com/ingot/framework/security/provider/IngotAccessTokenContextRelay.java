@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider;
 
-import org.springframework.cloud.security.oauth2.client.AccessTokenContextRelay;
+import org.springframework.cloud.commons.security.AccessTokenContextRelay;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 
 /**

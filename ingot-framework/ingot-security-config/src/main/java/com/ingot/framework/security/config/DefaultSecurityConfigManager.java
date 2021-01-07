@@ -1,7 +1,6 @@
 package com.ingot.framework.security.config;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 import java.util.List;
@@ -12,13 +11,12 @@ import java.util.List;
  * <p>Date         : 2018/9/30.</p>
  * <p>Time         : 下午12:14.</p>
  */
-@Slf4j
 @AllArgsConstructor
 public class DefaultSecurityConfigManager implements SecurityConfigManager {
     private final List<SecurityConfigProvider> securityConfigProviders;
 
-    @Override public void config(HttpSecurity http) throws Exception{
-        log.info(">>> AuthorizeConfigProvider={}", securityConfigProviders);
+    @Override
+    public void config(HttpSecurity http) throws Exception {
         boolean existAnyRequestConfig = false;
         String existAnyRequestConfigName = null;
 

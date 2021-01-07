@@ -27,7 +27,6 @@ spring_boot.data_redis_starter = "org.springframework.boot:spring-boot-starter-d
 spring_boot.data_redis_reactive_starter = "org.springframework.boot:spring-boot-starter-data-redis-reactive:${versions.spring_boot}"
 spring_boot.configuration_processor = "org.springframework.boot:spring-boot-configuration-processor:${versions.spring_boot}"
 spring_boot.web_starter = "org.springframework.boot:spring-boot-starter-web"
-spring_boot.actuator_starter = "org.springframework.boot:spring-boot-starter-actuator"
 spring_boot.webflux_starter = "org.springframework.boot:spring-boot-starter-webflux"
 spring_boot.security_starter = "org.springframework.boot:spring-boot-starter-security"
 spring_boot.jdbc_starter = "org.springframework.boot:spring-boot-starter-jdbc"
@@ -37,6 +36,8 @@ spring_boot.spring_boot = "org.springframework.boot:spring-boot:${versions.sprin
 spring_boot.spring_boot_autoconfigure = "org.springframework.boot:spring-boot-autoconfigure:${versions.spring_boot}"
 spring_boot.cache_starter = "org.springframework.boot:spring-boot-starter-cache"
 spring_boot.undertow_starter = "org.springframework.boot:spring-boot-starter-undertow"
+spring_boot.actuator_starter = "org.springframework.boot:spring-boot-starter-actuator"
+spring_boot.actuator_autoconfigure = "org.springframework.boot:spring-boot-actuator-autoconfigure"
 
 spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies:${versions.spring_cloud}"
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
@@ -47,11 +48,13 @@ spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-serv
 spring_cloud.bus_start = "org.springframework.cloud:spring-cloud-starter-bus-amqp"
 spring_cloud.zipkin_starter = "org.springframework.cloud:spring-cloud-starter-zipkin"
 spring_cloud.bootstrap_starter = "org.springframework.cloud:spring-cloud-starter-bootstrap"
+spring_cloud.commons = "org.springframework.cloud:spring-cloud-commons"
 
 // security
-spring_cloud.oauth2_starter = "org.springframework.cloud:spring-cloud-starter-oauth2:2.2.4.RELEASE"
-spring_cloud.security_starter = "org.springframework.cloud:spring-cloud-starter-security:2.2.4.RELEASE"
-spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.2.RELEASE"
+spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure"
+spring.security_config = "org.springframework.security:spring-security-config"
+spring.security_core = "org.springframework.security:spring-security-core"
+spring.security_web = "org.springframework.security:spring-security-web"
 
 spring.framework_spring_web = "org.springframework:spring-web:${versions.spring_framework}"
 spring.framework_spring_webflux = "org.springframework:spring-webflux:${versions.spring_framework}"
