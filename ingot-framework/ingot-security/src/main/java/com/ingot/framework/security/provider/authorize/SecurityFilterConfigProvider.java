@@ -1,7 +1,6 @@
 package com.ingot.framework.security.provider.authorize;
 
 import com.ingot.framework.security.config.SecurityConfigProvider;
-import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
 import com.ingot.framework.security.provider.filter.OAuth2ExceptionTranslationFilter;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.ResourcePermitService;
@@ -10,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
-import org.springframework.security.web.header.HeaderWriterFilter;
 
 /**
  * <p>Description  : SecurityFilterConfigProvider.</p>
@@ -26,9 +24,6 @@ public class SecurityFilterConfigProvider implements SecurityConfigProvider {
 
     @Override public boolean config(HttpSecurity http) throws Exception {
         log.info(">>> SecurityFilterConfigProvider - configure.");
-        IgnoreBearerTokenFilter ignoreBearerTokenFilter = new IgnoreBearerTokenFilter(resourcePermitService);
-        http.addFilterAfter(ignoreBearerTokenFilter, HeaderWriterFilter.class);
-
         UserAuthenticationFilter userAuthenticationFilter = new UserAuthenticationFilter(
                 resourcePermitService, tokenService);
         http.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);

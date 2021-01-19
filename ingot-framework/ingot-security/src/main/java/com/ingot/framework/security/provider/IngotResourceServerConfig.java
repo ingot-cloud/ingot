@@ -1,6 +1,8 @@
 package com.ingot.framework.security.provider;
 
 import com.ingot.framework.security.config.SecurityConfigManager;
+import com.ingot.framework.security.provider.token.IngotBearerTokenExtractor;
+import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
     private final SecurityConfigManager securityConfigManager;
     private final ResourceServerProperties resource;
     private final TokenStore tokenStore;
+    private final ResourcePermitService resourcePermitService;
 
     @SneakyThrows
     @Override public void configure(HttpSecurity http) {
@@ -47,6 +50,7 @@ public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
         log.info(">> IngotResourceServerConfig [configure] ========>>> Resource Id: {}", resourceId);
 
         resources.resourceId(resourceId)
+                .tokenExtractor(new IngotBearerTokenExtractor(resourcePermitService))
                 .tokenStore(tokenStore)
                 .expressionHandler(ingotSecurityExpressionHandler)
                 .accessDeniedHandler(ingotAccessDeniedHandler)

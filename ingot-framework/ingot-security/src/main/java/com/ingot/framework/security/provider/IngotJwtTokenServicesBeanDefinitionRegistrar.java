@@ -17,7 +17,6 @@ import org.springframework.lang.NonNull;
  */
 @Slf4j
 public class IngotJwtTokenServicesBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
-    private static final String BEAN_NAME_JWT_TOKEN_SERVICES = "jwtTokenServices";
     private static final String BEAN_NAME_JWT_TOKEN_STORE = "jwtTokenStore";
     private static final String BEAN_NAME_JWT_TOKEN_ENHANCER = "jwtTokenEnhancer";
 

@@ -35,7 +35,6 @@ public class OAuth2ClientConfiguration {
         return oAuth2RestTemplate;
     }
 
-
     @Bean(ACCESS_DENIED_HANDLER)
     public IngotAccessDeniedHandler ingotAccessDeniedHandler() {
         return new IngotAccessDeniedHandler();
