@@ -2,6 +2,7 @@ package com.ingot.framework.security.provider.authorize;
 
 import com.ingot.framework.security.config.SecurityConfigProvider;
 import com.ingot.framework.security.provider.filter.IgnoreBearerTokenFilter;
+import com.ingot.framework.security.provider.filter.OAuth2ExceptionTranslationFilter;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
 import com.ingot.framework.security.service.ResourcePermitService;
 import com.ingot.framework.security.service.TokenService;
@@ -31,6 +32,9 @@ public class SecurityFilterConfigProvider implements SecurityConfigProvider {
         UserAuthenticationFilter userAuthenticationFilter = new UserAuthenticationFilter(
                 resourcePermitService, tokenService);
         http.addFilterAfter(userAuthenticationFilter, ExceptionTranslationFilter.class);
+
+        OAuth2ExceptionTranslationFilter translationFilter = new OAuth2ExceptionTranslationFilter();
+        http.addFilterBefore(translationFilter, ExceptionTranslationFilter.class);
         return false;
     }
 }

@@ -32,5 +32,6 @@ public class IngotAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.flushBuffer();
     }
 }
