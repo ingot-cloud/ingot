@@ -35,4 +35,9 @@ public class UserApi extends BaseController {
     public IngotResponse<?> page(Page<SysUser> page, UserDto condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
+
+    @GetMapping("/test")
+    public String test(){
+        return "success";
+    }
 }

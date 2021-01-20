@@ -1,4 +1,4 @@
-package com.ingot.framework.security.exception.oauth2;
+package com.ingot.framework.security.exception;
 
 import com.ingot.framework.base.status.BaseStatusCode;
 import org.springframework.http.HttpStatus;

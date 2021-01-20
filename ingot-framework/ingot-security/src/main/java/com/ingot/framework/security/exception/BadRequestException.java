@@ -1,4 +1,4 @@
-package com.ingot.framework.security.exception.oauth2;
+package com.ingot.framework.security.exception;
 
 import com.ingot.framework.base.status.BaseStatusCode;
 import org.springframework.http.HttpStatus;
@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
  * <p>Date         : 2020/12/30.</p>
  * <p>Time         : 3:15 下午.</p>
  */
-public class BadRequestException extends IngotOAuth2Exception{
+public class BadRequestException extends IngotOAuth2Exception {
 
     public BadRequestException(String msg) {
         super(BaseStatusCode.BAD_REQUEST.code(), msg);

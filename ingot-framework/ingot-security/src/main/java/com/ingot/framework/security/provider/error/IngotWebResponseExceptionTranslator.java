@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.error;
 
-import com.ingot.framework.security.exception.oauth2.*;
+import com.ingot.framework.security.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,10 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
-import org.springframework.security.oauth2.common.exceptions.UnsupportedGrantTypeException;
+import org.springframework.security.oauth2.common.exceptions.*;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -77,6 +74,12 @@ public class IngotWebResponseExceptionTranslator implements WebResponseException
                 .getFirstThrowableOfType(InvalidScopeException.class, causeChain);
         if (ase != null) {
             return new BadRequestException(ase.getMessage(), ase);
+        }
+
+        ase = (InvalidTokenException) throwableAnalyzer
+                .getFirstThrowableOfType(InvalidTokenException.class, causeChain);
+        if (ase != null) {
+            return new TokenInvalidException((InvalidTokenException) ase);
         }
 
         ase = (UnsupportedGrantTypeException) throwableAnalyzer

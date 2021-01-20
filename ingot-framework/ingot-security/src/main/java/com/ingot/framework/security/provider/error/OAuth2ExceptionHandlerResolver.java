@@ -1,6 +1,6 @@
 package com.ingot.framework.security.provider.error;
 
-import com.ingot.framework.security.exception.oauth2.IngotOAuth2Exception;
+import com.ingot.framework.security.exception.IngotOAuth2Exception;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;

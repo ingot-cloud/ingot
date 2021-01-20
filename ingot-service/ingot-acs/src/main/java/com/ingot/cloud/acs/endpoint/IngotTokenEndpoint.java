@@ -31,4 +31,5 @@ public class IngotTokenEndpoint extends BaseController {
         return ok();
     }
 
+    // todo 签退需要把对应的 refresh token 也 revoke
 }

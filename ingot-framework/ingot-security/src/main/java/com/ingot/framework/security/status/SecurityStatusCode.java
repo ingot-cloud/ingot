@@ -11,7 +11,8 @@ import com.ingot.framework.base.status.StatusCode;
 public enum SecurityStatusCode implements StatusCode {
     TOKEN_INVALID("S0001", "Token 失效"),
     TOKEN_EMPTY("S0002", "Token 为空"),
-    TOKEN_SIGN_BACK("S0003", "Token 已被签退");
+    TOKEN_SIGN_BACK("S0003", "Token 已被签退"),
+    REFRESH_TOKEN_INVALID("S0004", "RefreshToken 失效");
 
     private final String code;
     private final String message;

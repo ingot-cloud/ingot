@@ -1,4 +1,4 @@
-package com.ingot.framework.security.exception.oauth2;
+package com.ingot.framework.security.exception;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ingot.framework.base.status.BaseStatusCode;
@@ -39,14 +39,21 @@ public class IngotOAuth2Exception extends OAuth2Exception {
         this(statusCode.code(), statusCode.message(), cause);
     }
 
+    public IngotOAuth2Exception(StatusCode statusCode, OAuth2Exception e) {
+        this(statusCode.code(), statusCode.message(), e);
+        String oauth2ErrorCode = e.getOAuth2ErrorCode();
+        Throwable cause = e.getCause();
+        String msg = cause != null ? cause.getLocalizedMessage() : e.getLocalizedMessage();
+        this.raw = String.format("errorCode: %s, message: %s", oauth2ErrorCode, msg);
+    }
+
     public IngotOAuth2Exception(OAuth2Exception e) {
         super(e.getMessage(), e);
         String oauth2ErrorCode = e.getOAuth2ErrorCode();
         Throwable cause = e.getCause();
         this.httpErrorCode = e.getHttpErrorCode();
-        this.raw = cause != null ?
-                String.format("errorCode: %s, raw: %s", oauth2ErrorCode, cause.getMessage()) :
-                oauth2ErrorCode;
+        String msg = cause != null ? cause.getLocalizedMessage() : e.getLocalizedMessage();
+        this.raw = String.format("errorCode: %s, message: %s", oauth2ErrorCode, msg);
     }
 
     @Override

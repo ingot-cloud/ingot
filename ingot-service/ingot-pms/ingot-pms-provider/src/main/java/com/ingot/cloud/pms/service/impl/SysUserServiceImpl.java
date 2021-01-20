@@ -12,7 +12,7 @@ import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.SysRoleService;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.exception.oauth2.UnauthorizedException;
+import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

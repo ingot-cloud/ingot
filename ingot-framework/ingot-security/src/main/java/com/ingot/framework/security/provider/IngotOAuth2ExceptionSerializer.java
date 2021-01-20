@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.exception.oauth2.IngotOAuth2Exception;
+import com.ingot.framework.security.exception.IngotOAuth2Exception;
 import lombok.SneakyThrows;
 
 /**

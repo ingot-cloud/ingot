@@ -3,9 +3,9 @@ package com.ingot.framework.security.service.impl;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.security.exception.UserTokenEmptyException;
-import com.ingot.framework.security.exception.UserTokenInvalidException;
-import com.ingot.framework.security.exception.UserTokenSignBackException;
+import com.ingot.framework.security.exception.TokenEmptyException;
+import com.ingot.framework.security.exception.TokenInvalidException;
+import com.ingot.framework.security.exception.TokenSignBackException;
 import com.ingot.framework.security.model.UserStoreToken;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.security.service.AuthenticationService;
@@ -40,7 +40,7 @@ public class TokenServiceImpl implements TokenService {
         String token = SecurityUtils.getBearerTokenValue(SecurityUtils.getBearerToken(request).orElse(""));
         if (StrUtil.isEmpty(token)) {
             log.error(">>> Token不能为空");
-            throw new UserTokenEmptyException();
+            throw new TokenEmptyException();
         }
 
         return tokenStore.readAccessToken(token);
@@ -51,7 +51,7 @@ public class TokenServiceImpl implements TokenService {
     public void checkAuthentication(OAuth2AccessToken token) {
         UserStoreToken userStoreToken = tokenStore.getUserStoreToken(token);
         if (userStoreToken == null) {
-            throw new UserTokenInvalidException();
+            throw new TokenInvalidException();
         }
 
 
@@ -66,7 +66,7 @@ public class TokenServiceImpl implements TokenService {
                     SecurityConstants.TokenEnhancer.KEY_JTI, String.class);
             if (!StrUtil.equals(jti, userStoreToken.getJti())) {
                 log.error(">>> 用户 {} 已被签退", username);
-                throw new UserTokenSignBackException();
+                throw new TokenSignBackException();
             }
         }
 

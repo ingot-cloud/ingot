@@ -9,7 +9,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
-import com.ingot.framework.security.exception.oauth2.IngotOAuth2Exception;
+import com.ingot.framework.security.exception.IngotOAuth2Exception;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.utils.SocialUtils;
 import com.ingot.framework.tenant.TenantContextHolder;

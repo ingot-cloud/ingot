@@ -1,8 +1,6 @@
-package com.ingot.framework.security.exception.oauth2;
+package com.ingot.framework.security.exception;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ingot.framework.base.status.BaseStatusCode;
-import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 import org.springframework.http.HttpStatus;
 
 /**
