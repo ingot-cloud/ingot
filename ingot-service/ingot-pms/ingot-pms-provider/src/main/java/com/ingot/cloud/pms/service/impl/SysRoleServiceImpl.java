@@ -65,7 +65,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
         DeptRoleScopeEnum scope = dept.getScope();
         switch (scope) {
-            // 获取当前部门和子部门的角色ID
+                // 获取当前部门和子部门的角色ID
             case CURRENT_CHILD:
                 List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
                         .eq(SysDept::getPid, dept.getId()));
