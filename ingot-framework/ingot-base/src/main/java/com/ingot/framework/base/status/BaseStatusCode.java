@@ -18,8 +18,7 @@ public enum BaseStatusCode implements StatusCode {
 
     REQUEST_FALLBACK("0001", "服务不在线, 或者网络超时"),
     ILLEGAL_OPERATION("0002", "操作异常, %s"),
-    FIELD_EMPTY("0003", "%s不能为空"),
-    ILLEGAL_REQUEST_PARAMS("0004", "参数异常, %s"),
+    ILLEGAL_REQUEST_PARAMS("0003", "参数异常, %s"),
     ID_CLOCK_BACK("1000", "时钟回拨，当前时间小于上一次操作时间");
 
     private final String code;

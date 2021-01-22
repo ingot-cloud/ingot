@@ -5,7 +5,7 @@ apply plugin: 'com.ingot.plugin.assemble'
 dependencies {
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
     testImplementation(deps.spring.spring_boot.test)
     
     // nacos
