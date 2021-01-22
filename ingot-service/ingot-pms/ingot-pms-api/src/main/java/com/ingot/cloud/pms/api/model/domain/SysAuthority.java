@@ -67,6 +67,11 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     private String path;
 
     /**
+     * 方法
+     */
+    private String method;
+
+    /**
      * 状态, 0:正常，9:禁用
      */
     private String status;
