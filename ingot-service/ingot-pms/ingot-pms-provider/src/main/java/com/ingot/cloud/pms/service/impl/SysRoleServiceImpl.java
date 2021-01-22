@@ -64,24 +64,24 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
         DeptRoleScopeEnum scope = dept.getScope();
-        // 获取当前部门角色ID
-        if (scope == DeptRoleScopeEnum.CURRENT) {
-            deptRoleIds.addAll(sysRoleDeptService.list(Wrappers.<SysRoleDept>lambdaQuery()
-                    .eq(SysRoleDept::getDeptId, dept))
-                    .stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet()));
-            return;
-        }
-        // 获取直接子部门的角色ID
-        if (scope == DeptRoleScopeEnum.CURRENT_CHILD) {
-            List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
-                    .eq(SysDept::getPid, dept.getId()));
-            if (CollUtil.isEmpty(children)) {
-                return;
-            }
+        switch (scope) {
+            // 获取当前部门和子部门的角色ID
+            case CURRENT_CHILD:
+                List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
+                        .eq(SysDept::getPid, dept.getId()));
+                if (CollUtil.isEmpty(children)) {
+                    return;
+                }
 
-            for (SysDept childDept : children) {
-                deptRoleIds(childDept, deptRoleIds);
-            }
+                for (SysDept childDept : children) {
+                    deptRoleIds(childDept, deptRoleIds);
+                }
+                // 获取当前部门角色ID
+            case CURRENT:
+                deptRoleIds.addAll(sysRoleDeptService.list(Wrappers.<SysRoleDept>lambdaQuery()
+                        .eq(SysRoleDept::getDeptId, dept))
+                        .stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet()));
+                break;
         }
     }
 }

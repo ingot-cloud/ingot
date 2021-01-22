@@ -19,7 +19,8 @@ public enum DeptRoleScopeEnum {
      */
     CURRENT("0", "当前部门"),
     /**
-     * 当前部门角色和其子部门角色（只包含直接子部门）
+     * 当前部门角色和其子部门角色；
+     * 子部门角色深度获取，直到部门scope为CURRENT或者不含任何子部门时停止
      */
     CURRENT_CHILD("1", "当前部门以及子部门");
 
