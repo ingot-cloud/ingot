@@ -90,6 +90,16 @@ public class IngotJwtTokenStore extends JwtTokenStore {
     }
 
     @Override
+    public OAuth2RefreshToken readRefreshToken(String tokenValue) {
+        OAuth2RefreshToken refreshToken = super.readRefreshToken(tokenValue);
+        OAuth2Authentication authentication = readAuthenticationForRefreshToken(refreshToken);
+        log.info("readRefreshToken authentication = {}", authentication);
+        log.info("getOAuth2Request={}", authentication.getOAuth2Request());
+        // todo 刷新token后，将原有token弃用
+        return refreshToken;
+    }
+
+    @Override
     public void removeRefreshToken(OAuth2RefreshToken token) {
         super.removeRefreshToken(token);
     }

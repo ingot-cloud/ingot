@@ -24,7 +24,6 @@ public class IngotTokenEndpoint extends BaseController {
     @Resource
     private TokenStore tokenStore;
 
-//    @Permit
     @GetMapping("/revoke")
     public IngotResponse<?> revoke(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader){
         tokenStore.removeAccessToken(tokenStore.readAccessToken(SecurityUtils.getBearerTokenValue(authHeader)));
