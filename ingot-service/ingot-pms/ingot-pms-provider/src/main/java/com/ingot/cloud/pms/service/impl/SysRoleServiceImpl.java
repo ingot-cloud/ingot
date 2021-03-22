@@ -1,9 +1,13 @@
 package com.ingot.cloud.pms.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.*;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -31,6 +35,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
+
+    private final RoleTrans roleTrans;
 
     @Override
     public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
@@ -62,10 +68,25 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         return list(Wrappers.<SysRole>lambdaQuery().in(SysRole::getId, roleIdSet));
     }
 
+    @Override
+    public IPage<RolePageItemVo> conditionPage(Page<SysRole> page, SysRole condition) {
+        IPage<SysRole> temp = page(page, Wrappers.lambdaQuery(condition));
+        IPage<RolePageItemVo> result = new Page<>();
+        result.setCurrent(temp.getCurrent());
+        result.setTotal(temp.getTotal());
+        result.setSize(temp.getSize());
+
+        List<RolePageItemVo> records = temp.getRecords()
+                .stream().map(roleTrans::to).collect(Collectors.toList());
+
+        result.setRecords(records);
+        return result;
+    }
+
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
         DeptRoleScopeEnum scope = dept.getScope();
         switch (scope) {
-                // 获取当前部门和子部门的角色ID
+            // 获取当前部门和子部门的角色ID
             case CURRENT_CHILD:
                 List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
                         .eq(SysDept::getPid, dept.getId()));
