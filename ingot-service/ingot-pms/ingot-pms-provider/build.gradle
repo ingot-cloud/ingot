@@ -9,6 +9,7 @@ dependencies {
     implementation project(ingot.framework_store)
     implementation project(ingot.framework_security)
     implementation project(ingot.framework_tenant)
+    implementation project(ingot.cmp_id)
 }
 
 apply from: 'ingot-mybatis.gradle'
