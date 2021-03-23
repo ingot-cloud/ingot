@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CommonStatusValidate {
 
-    String message() default "状态不正确";
+    String message() default "Validate.CommonStatusValidate";
 
     Class<?>[] groups() default { };
 

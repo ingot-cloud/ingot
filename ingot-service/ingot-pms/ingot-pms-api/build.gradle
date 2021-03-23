@@ -1,7 +1,13 @@
+apply plugin: 'net.ltgt.apt-idea'
+
 dependencies {
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_cloud.openfeign_starter)
     implementation project(ingot.framework_core)
 
     compileOnly project(ingot.framework_store)
+
+    //mapstruct
+    implementation(deps.mapstruct.library)
+    annotationProcessor(deps.mapstruct.processor)
 }
