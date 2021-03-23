@@ -10,7 +10,10 @@ import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.*;
+import com.ingot.component.id.IdGenerator;
+import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.validation.service.I18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
 
+    private final IdGenerator idGenerator;
+    private final I18nService i18nService;
     private final RoleTrans roleTrans;
 
     @Override
@@ -81,6 +86,34 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         result.setRecords(records);
         return result;
+    }
+
+    @Override
+    public void createRole(SysRole params) {
+        params.setId(idGenerator.nextId());
+        boolean result = save(params);
+        if (!result) {
+            throw new IllegalOperationException("角色创建失败");
+        }
+    }
+
+    @Override
+    public void removeRoleById(long id) {
+        boolean result = removeById(id);
+        if (!result) {
+            throw new IllegalOperationException("角色删除失败");
+        }
+    }
+
+    @Override
+    public void updateRoleById(SysRole params) {
+        SysRole lock = getById(params.getId());
+        if (lock == null){
+            throw new IllegalOperationException("角色不存在");
+        }
+
+        // todo
+
     }
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {

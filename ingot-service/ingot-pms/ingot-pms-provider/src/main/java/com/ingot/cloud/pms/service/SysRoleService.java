@@ -38,9 +38,30 @@ public interface SysRoleService extends BaseService<SysRole> {
     /**
      * 条件查询用户分页信息
      *
-     * @param page 分页条件
+     * @param page      分页条件
      * @param condition 筛选条件
      * @return {@link IPage}，数据项结构 {@link RolePageItemVo}
      */
     IPage<RolePageItemVo> conditionPage(Page<SysRole> page, SysRole condition);
+
+    /**
+     * 创建角色
+     *
+     * @param params 创建参数
+     */
+    void createRole(SysRole params);
+
+    /**
+     * 根据ID删除角色
+     *
+     * @param id 角色ID
+     */
+    void removeRoleById(long id);
+
+    /**
+     * 根据ID更新角色
+     *
+     * @param params 更新参数
+     */
+    void updateRoleById(SysRole params);
 }

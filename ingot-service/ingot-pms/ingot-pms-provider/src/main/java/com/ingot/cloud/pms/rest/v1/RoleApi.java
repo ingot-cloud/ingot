@@ -3,8 +3,6 @@ package com.ingot.cloud.pms.rest.v1;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.service.SysRoleService;
-import com.ingot.component.id.IdGenerator;
-import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class RoleApi extends BaseController {
     private final SysRoleService sysRoleService;
-    private final IdGenerator idGenerator;
 
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysRole> page, SysRole condition) {
@@ -34,11 +31,13 @@ public class RoleApi extends BaseController {
 
     @PostMapping
     public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
-        params.setId(idGenerator.nextId());
-        boolean result = sysRoleService.save(params);
-        if (!result) {
-            throw new IllegalOperationException("角色创建失败");
-        }
+        sysRoleService.createRole(params);
+        return ok();
+    }
+
+    @PutMapping
+    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
+        sysRoleService.updateRoleById(params);
         return ok();
     }
 }
