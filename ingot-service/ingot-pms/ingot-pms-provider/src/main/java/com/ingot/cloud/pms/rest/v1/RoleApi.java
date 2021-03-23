@@ -29,7 +29,7 @@ public class RoleApi extends BaseController {
     private final SysRoleService sysRoleService;
     private final IdGenerator idGenerator;
 
-    @GetMapping("page")
+    @GetMapping("/page")
     public IngotResponse<?> page(Page<SysRole> page, SysRole condition) {
         return ok(sysRoleService.conditionPage(page, condition));
     }
