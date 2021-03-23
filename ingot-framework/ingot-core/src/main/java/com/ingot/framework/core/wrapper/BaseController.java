@@ -12,35 +12,35 @@ public class BaseController {
     /**
      * 响应成功
      */
-    public <T> IngotResponse<T> ok(){
+    public <T> IngotResponse<T> ok() {
         return ResponseWrapper.ok();
     }
 
     /**
      * 响应成功附带 data
      */
-    public <T> IngotResponse<T> ok(T data){
+    public <T> IngotResponse<T> ok(T data) {
         return ResponseWrapper.ok(data);
     }
 
     /**
      * 500 error
      */
-    public <T> IngotResponse<T> error(){
+    public <T> IngotResponse<T> error() {
         return ResponseWrapper.error500();
     }
 
     /**
      * 500, custom message
      */
-    public <T> IngotResponse<T> error(String message){
+    public <T> IngotResponse<T> error(String message) {
         return ResponseWrapper.error500(message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
-    public <T> IngotResponse<T> error(StatusCode code){
+    public <T> IngotResponse<T> error(StatusCode code) {
         return ResponseWrapper.error500(code);
     }
 

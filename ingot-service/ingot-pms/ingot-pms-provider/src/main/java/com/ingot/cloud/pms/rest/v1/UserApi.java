@@ -37,7 +37,7 @@ public class UserApi extends BaseController {
     }
 
     @GetMapping("/test")
-    public String test(){
+    public String test() {
         return "success";
     }
 }
