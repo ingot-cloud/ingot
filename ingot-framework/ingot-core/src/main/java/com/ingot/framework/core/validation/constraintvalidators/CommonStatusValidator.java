@@ -16,6 +16,11 @@ import javax.validation.ConstraintValidatorContext;
 public class CommonStatusValidator implements ConstraintValidator<CommonStatusValidate, String> {
 
     @Override
+    public void initialize(CommonStatusValidate constraintAnnotation) {
+
+    }
+
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (StrUtil.isBlank(value)) {
             return false;
