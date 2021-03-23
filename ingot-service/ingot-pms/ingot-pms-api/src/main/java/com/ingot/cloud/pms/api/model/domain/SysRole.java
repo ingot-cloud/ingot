@@ -72,7 +72,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 状态, 0:正常，9:禁用
      */
-    @CommonStatusValidate(groups = {Group.Create.class, Group.Update.class})
+    @CommonStatusValidate(groups = Group.Create.class)
     private CommonStatusEnum status;
 
     /**
