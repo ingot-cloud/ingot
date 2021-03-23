@@ -30,56 +30,63 @@ public class ResponseWrapper {
     /**
      * 500 error
      */
-    public <T> IngotResponse<T> error() {
+    public <T> IngotResponse<T> error500() {
         return new IngotResponse<>(BaseStatusCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 500, custom message
      */
-    public <T> IngotResponse<T> error(String message) {
+    public <T> IngotResponse<T> error500(String message) {
         return new IngotResponse<>(BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public <T> IngotResponse<T> error(T data) {
+    public <T> IngotResponse<T> error500WithData(T data) {
         return new IngotResponse<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public <T> IngotResponse<T> error(T data, String message) {
+    public <T> IngotResponse<T> error500WithData(T data, String message) {
         return new IngotResponse<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
-    public <T> IngotResponse<T> error(StatusCode code) {
+    public <T> IngotResponse<T> error500(StatusCode code) {
         return new IngotResponse<>(code);
     }
 
     /**
      * 响应失败，附带自定义响应体
      */
-    public <T> IngotResponse<T> error(T data, StatusCode code) {
+    public <T> IngotResponse<T> errorWithData(T data, StatusCode code) {
         return new IngotResponse<>(data, code);
     }
 
     /**
      * 响应失败
      */
-    public <T> IngotResponse<T> error(String code, String message) {
+    public <T> IngotResponse<T> error500(String code, String message) {
         return new IngotResponse<>(code, message);
     }
 
     /**
      * 响应失败
      */
-    public <T> IngotResponse<T> error(T data, String code, String message) {
+    public <T> IngotResponse<T> error500(StatusCode code, Object ...messages) {
+        return new IngotResponse<>(code.code(), String.format(code.message(), messages));
+    }
+
+    /**
+     * 响应失败
+     */
+    public <T> IngotResponse<T> errorWithData(T data, String code, String message) {
         return new IngotResponse<>(data, code, message);
     }
 }

@@ -42,12 +42,12 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         }
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        IngotResponse<?> ingotResponse = ResponseWrapper.error(ex.getMessage());
+        IngotResponse<?> ingotResponse = ResponseWrapper.error500(ex.getMessage());
         if (ex instanceof ResponseStatusException) {
             HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
-                ingotResponse = ResponseWrapper.error(
+                ingotResponse = ResponseWrapper.error500(
                         BaseStatusCode.REQUEST_FALLBACK.code(), ex.getMessage());
             }
         }

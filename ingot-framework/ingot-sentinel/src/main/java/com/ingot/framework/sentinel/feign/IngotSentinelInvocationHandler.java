@@ -117,9 +117,9 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                         Class<?> returnType = method.getReturnType();
                         if (returnType == IngotResponse.class) {
                             if (ex instanceof IngotFeignException) {
-                                return ResponseWrapper.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
+                                return ResponseWrapper.error500(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }
-                            return ResponseWrapper.error(BaseStatusCode.REQUEST_FALLBACK.code(), ex.getLocalizedMessage());
+                            return ResponseWrapper.error500(BaseStatusCode.REQUEST_FALLBACK.code(), ex.getLocalizedMessage());
                         } else {
                             // throw exception if fallbackFactory is null
                             throw ex;

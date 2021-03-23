@@ -5,6 +5,7 @@ dependencies {
     api(deps.aspectj.aspectjweaver)
     api(deps.alibaba.transmittable_thread_local)
     api project(ingot.framework_base)
+    api(deps.spring.spring_boot.validation_starter)
 
     implementation(deps.apache.common_codec)
     implementation(deps.spring.framework_spring_web)

@@ -29,7 +29,7 @@ public class IngotBlockExceptionHandler implements BlockExceptionHandler {
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
 
         PrintWriter out = response.getWriter();
-        out.print(JSONUtil.toJsonStr(ResponseWrapper.error(e.getMessage())));
+        out.print(JSONUtil.toJsonStr(ResponseWrapper.error500(e.getMessage())));
         out.flush();
         out.close();
     }

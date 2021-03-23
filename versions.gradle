@@ -38,6 +38,7 @@ spring_boot.cache_starter = "org.springframework.boot:spring-boot-starter-cache"
 spring_boot.undertow_starter = "org.springframework.boot:spring-boot-starter-undertow"
 spring_boot.actuator_starter = "org.springframework.boot:spring-boot-starter-actuator"
 spring_boot.actuator_autoconfigure = "org.springframework.boot:spring-boot-actuator-autoconfigure"
+spring_boot.validation_starter = "org.springframework.boot:spring-boot-starter-validation"
 
 spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies:${versions.spring_cloud}"
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"

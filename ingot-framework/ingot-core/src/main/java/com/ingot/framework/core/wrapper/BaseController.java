@@ -27,27 +27,27 @@ public class BaseController {
      * 500 error
      */
     public <T> IngotResponse<T> error(){
-        return ResponseWrapper.error();
+        return ResponseWrapper.error500();
     }
 
     /**
      * 500, custom message
      */
     public <T> IngotResponse<T> error(String message){
-        return ResponseWrapper.error(message);
+        return ResponseWrapper.error500(message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
     public <T> IngotResponse<T> error(StatusCode code){
-        return ResponseWrapper.error(code);
+        return ResponseWrapper.error500(code);
     }
 
     /**
      * 响应失败
      */
     public <T> IngotResponse<T> error(String code, String message) {
-        return ResponseWrapper.error(code, message);
+        return ResponseWrapper.error500(code, message);
     }
 }
