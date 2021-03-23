@@ -36,7 +36,7 @@ public class SysRole extends BaseModel<SysRole> {
      * ID
      */
     @TableId
-    @NotNull(message = "角色ID不能为空", groups = {Group.Update.class, Group.Delete.class})
+    @NotNull(message = "{SysRole.ID}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**
@@ -55,13 +55,13 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 角色名称
      */
-    @NotBlank(message = "角色名称不能为空", groups = Group.Create.class)
+    @NotBlank(message = "{SysRole.Name}", groups = Group.Create.class)
     private String name;
 
     /**
      * 角色编码
      */
-    @NotBlank(message = "角色编码不能为空", groups = Group.Create.class)
+    @NotBlank(message = "{SysRole.Code}", groups = Group.Create.class)
     private String code;
 
     /**

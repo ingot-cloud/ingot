@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms;
 
+import com.ingot.framework.core.annotation.ImportMessageSource;
 import com.ingot.framework.security.annotation.EnableIngotResourceServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.SpringCloudApplication;
@@ -14,9 +15,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableIngotResourceServer
 @SpringCloudApplication
 @EnableTransactionManagement
+@ImportMessageSource
 public class IngotPmsApplication {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         SpringApplication.run(IngotPmsApplication.class, args);
     }
 }

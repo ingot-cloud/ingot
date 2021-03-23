@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.service.SysRoleService;
 import com.ingot.component.id.IdGenerator;
+import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
@@ -33,11 +34,11 @@ public class RoleApi extends BaseController {
 
     @PostMapping
     public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
-//        params.setId(idGenerator.nextId());
-//        boolean result = sysRoleService.save(params);
-//        if (!result) {
-//            throw new IllegalOperationException("角色创建失败");
-//        }
+        params.setId(idGenerator.nextId());
+        boolean result = sysRoleService.save(params);
+        if (!result) {
+            throw new IllegalOperationException("角色创建失败");
+        }
         return ok();
     }
 }
