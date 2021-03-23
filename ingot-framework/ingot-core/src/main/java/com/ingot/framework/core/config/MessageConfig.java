@@ -1,10 +1,11 @@
 package com.ingot.framework.core.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import com.ingot.framework.core.validation.service.I18nService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 /**
  * <p>Description  : MessageConfig.</p>
@@ -13,7 +14,6 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
  * <p>Time         : 10:26 上午.</p>
  */
 @Configuration
-@ConditionalOnBean(MessageSource.class)
 public class MessageConfig {
 
     @Bean
@@ -23,5 +23,17 @@ public class MessageConfig {
         messageSource.setUseCodeAsDefaultMessage(true);
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
+    }
+
+    @Bean
+    public LocalValidatorFactoryBean validatorFactoryBean() {
+        LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
+        bean.setValidationMessageSource(messageSource());
+        return bean;
+    }
+
+    @Bean
+    public I18nService i18nService() {
+        return new I18nService(messageSource());
     }
 }

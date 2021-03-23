@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
 
 import java.util.Locale;
 
@@ -14,7 +13,6 @@ import java.util.Locale;
  * <p>Date         : 2021/3/23.</p>
  * <p>Time         : 10:18 上午.</p>
  */
-@Service
 @AllArgsConstructor
 public class I18nService {
     private final MessageSource messageSource;
