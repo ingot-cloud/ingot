@@ -12,7 +12,9 @@ import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.*;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.base.exception.IllegalOperationException;
+import com.ingot.framework.base.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.core.validation.service.I18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
@@ -91,29 +93,28 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void createRole(SysRole params) {
         params.setId(idGenerator.nextId());
-        boolean result = save(params);
-        if (!result) {
-            throw new IllegalOperationException("角色创建失败");
-        }
+        AssertionUtils.checkOperation(save(params),
+                i18nService.getMessage("SysRoleServiceImpl.CreateFailed"));
     }
 
     @Override
     public void removeRoleById(long id) {
-        boolean result = removeById(id);
-        if (!result) {
-            throw new IllegalOperationException("角色删除失败");
-        }
+        AssertionUtils.checkOperation(removeById(id),
+                i18nService.getMessage("SysRoleServiceImpl.DeleteFailed"));
     }
 
     @Override
     public void updateRoleById(SysRole params) {
         SysRole lock = getById(params.getId());
-        if (lock == null){
-            throw new IllegalOperationException("角色不存在");
+        if (lock == null) {
+            throw new IllegalOperationException(
+                    i18nService.getMessage("SysRoleServiceImpl.NonExist"));
         }
 
-        // todo
-
+        params.setVersion(lock.getVersion());
+        params.setUpdatedAt(DateUtils.now());
+        AssertionUtils.checkOperation(updateById(params),
+                i18nService.getMessage("SysRoleServiceImpl.UpdateFailed"));
     }
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {

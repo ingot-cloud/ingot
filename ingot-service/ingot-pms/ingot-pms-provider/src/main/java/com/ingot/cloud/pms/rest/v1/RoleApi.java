@@ -40,4 +40,10 @@ public class RoleApi extends BaseController {
         sysRoleService.updateRoleById(params);
         return ok();
     }
+
+    @DeleteMapping("/{id}")
+    public IngotResponse<?> removeById(@PathVariable Long id) {
+        sysRoleService.removeRoleById(id);
+        return ok();
+    }
 }
