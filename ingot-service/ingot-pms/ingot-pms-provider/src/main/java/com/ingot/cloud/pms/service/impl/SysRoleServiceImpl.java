@@ -93,6 +93,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void createRole(SysRole params) {
         params.setId(idGenerator.nextId());
+        params.setCreatedAt(DateUtils.now());
         AssertionUtils.checkOperation(save(params),
                 i18nService.getMessage("SysRoleServiceImpl.CreateFailed"));
     }
