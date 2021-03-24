@@ -101,7 +101,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void removeRoleById(long id) {
         AssertionUtils.checkOperation(removeById(id),
-                i18nService.getMessage("SysRoleServiceImpl.DeleteFailed"));
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailed"));
     }
 
     @Override

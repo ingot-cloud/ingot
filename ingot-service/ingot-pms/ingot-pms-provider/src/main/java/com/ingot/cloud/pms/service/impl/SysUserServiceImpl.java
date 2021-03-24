@@ -4,18 +4,26 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
+import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.SysRoleService;
+import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.cloud.pms.service.SysUserService;
+import com.ingot.component.id.IdGenerator;
+import com.ingot.framework.base.utils.DateUtils;
+import com.ingot.framework.core.utils.AssertionUtils;
+import com.ingot.framework.core.validation.service.I18nService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -33,6 +41,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
     private final SysRoleService sysRoleService;
+    private final SysRoleUserService sysRoleUserService;
+
+    private final IdGenerator idGenerator;
+    private final I18nService i18nService;
+    private final UserTrans userTrans;
 
     @Override
     public UserInfoDto getUserInfo(IngotUser user) {
@@ -68,5 +81,38 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         }
 
         return baseMapper.conditionPage(page, condition);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void createUser(UserDto params) {
+        SysUser user = userTrans.to(params);
+        user.setId(idGenerator.nextId());
+        user.setCreatedAt(DateUtils.now());
+        AssertionUtils.checkOperation(save(user),
+                i18nService.getMessage("SysUserServiceImpl.CreateFailed"));
+
+        List<Long> roles = params.getRoleIds();
+        if (CollUtil.isNotEmpty(roles)) {
+            roles.forEach(roleId -> {
+                SysRoleUser entity = new SysRoleUser();
+                entity.setUserId(user.getId());
+                entity.setRoleId(roleId);
+                entity.insert();
+            });
+        }
+    }
+
+    @Override
+    public void removeUserById(long id) {
+        AssertionUtils.checkOperation(sysRoleUserService.removeByUserId(id),
+                "SysUserServiceImpl.RemoveFailed");
+        AssertionUtils.checkOperation(removeById(id),
+                "SysUserServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public void updateUser(UserDto params) {
+
     }
 }

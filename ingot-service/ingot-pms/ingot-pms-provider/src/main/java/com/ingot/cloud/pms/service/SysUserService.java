@@ -30,9 +30,30 @@ public interface SysUserService extends BaseService<SysUser> {
     /**
      * 条件查询用户分页信息
      *
-     * @param page 分页条件
+     * @param page      分页条件
      * @param condition 筛选条件
      * @return {@link IPage}，数据项结构 {@link UserPageItemVo}
      */
     IPage<UserPageItemVo> conditionPage(Page<SysUser> page, UserDto condition);
+
+    /**
+     * 创建用户
+     *
+     * @param params 参数
+     */
+    void createUser(UserDto params);
+
+    /**
+     * 根据ID删除用户
+     *
+     * @param id 用户ID
+     */
+    void removeUserById(long id);
+
+    /**
+     * 更新用户信息
+     *
+     * @param params 参数
+     */
+    void updateUser(UserDto params);
 }

@@ -20,7 +20,7 @@ public class UserDto extends SysUser {
      */
     private List<Long> roleIds;
     /**
-     * 可以登录的客户端ID
+     * 用于查询条件，可以登录的客户端ID
      */
     private List<Long> clientIds;
     /**
