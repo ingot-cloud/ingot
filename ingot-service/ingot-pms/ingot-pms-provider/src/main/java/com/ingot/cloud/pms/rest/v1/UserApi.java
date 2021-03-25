@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.service.SysUserService;
+import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -37,13 +38,13 @@ public class UserApi extends BaseController {
     }
 
     @PostMapping
-    public IngotResponse<?> create(@RequestBody UserDto params) {
+    public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody UserDto params) {
         sysUserService.createUser(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@RequestBody UserDto params) {
+    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody UserDto params) {
         sysUserService.updateUser(params);
         return ok();
     }

@@ -18,6 +18,7 @@ import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.base.utils.DateUtils;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.core.validation.service.I18nService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -93,6 +94,9 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         SysUser user = userTrans.to(params);
         user.setId(idGenerator.nextId());
         user.setCreatedAt(DateUtils.now());
+        if (user.getStatus() == null) {
+            user.setStatus(UserStatusEnum.ENABLE);
+        }
         AssertionUtils.checkOperation(save(user),
                 i18nService.getMessage("SysUserServiceImpl.CreateFailed"));
 
