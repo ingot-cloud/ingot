@@ -1,11 +1,13 @@
 package com.ingot.cloud.pms.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
@@ -22,6 +24,7 @@ import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysRoleService sysRoleService;
     private final SysRoleUserService sysRoleUserService;
 
+    private final PasswordEncoder passwordEncoder;
     private final IdGenerator idGenerator;
     private final I18nService i18nService;
     private final UserTrans userTrans;
@@ -94,12 +98,14 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         List<Long> roles = params.getRoleIds();
         if (CollUtil.isNotEmpty(roles)) {
-            roles.forEach(roleId -> {
+            boolean result = roles.stream().allMatch(roleId -> {
                 SysRoleUser entity = new SysRoleUser();
                 entity.setUserId(user.getId());
                 entity.setRoleId(roleId);
-                entity.insert();
+                return entity.insert();
             });
+            AssertionUtils.checkOperation(result,
+                    i18nService.getMessage("SysUserServiceImpl.CreateFailed"));
         }
     }
 
@@ -113,6 +119,40 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     public void updateUser(UserDto params) {
+        long userId = params.getId();
+        SysUser lock = getById(userId);
+        AssertionUtils.checkOperation(lock != null,
+                i18nService.getMessage("SysUserServiceImpl.NonExist"));
 
+        SysUser user = userTrans.to(params);
+        if (StrUtil.isNotEmpty(params.getNewPassword())) {
+            user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+        }
+        user.setVersion(lock.getVersion());
+        user.setUpdatedAt(DateUtils.now());
+        AssertionUtils.checkOperation(updateById(user),
+                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
+
+        // 更新角色
+        AssertionUtils.checkOperation(sysRoleUserService.updateUserRole(userId, null),
+                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
+    }
+
+    @Override
+    public void updateUserBaseInfo(UserBaseInfoDto params) {
+        SysUser lock = getById(params.getId());
+        AssertionUtils.checkOperation(lock != null,
+                i18nService.getMessage("SysUserServiceImpl.NonExist"));
+
+        SysUser user = userTrans.to(params);
+        if (StrUtil.isNotEmpty(user.getPassword())) {
+            AssertionUtils.checkOperation(passwordEncoder.matches(user.getPassword(), lock.getPassword()),
+                    i18nService.getMessage("SysUserServiceImpl.IncorrectPassword"));
+        }
+
+        user.setVersion(lock.getVersion());
+        user.setUpdatedAt(DateUtils.now());
+        AssertionUtils.checkOperation(updateById(user),
+                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
     }
 }

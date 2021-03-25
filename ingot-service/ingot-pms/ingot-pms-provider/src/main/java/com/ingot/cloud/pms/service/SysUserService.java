@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
@@ -56,4 +57,11 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param params 参数
      */
     void updateUser(UserDto params);
+
+    /**
+     * 更新用户基本信息
+     *
+     * @param params 基本信息参数
+     */
+    void updateUserBaseInfo(UserBaseInfoDto params);
 }

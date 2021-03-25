@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.framework.core.wrapper.BaseController;
@@ -9,9 +10,8 @@ import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : UserApi.</p>
@@ -36,8 +36,27 @@ public class UserApi extends BaseController {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "success";
+    @PostMapping
+    public IngotResponse<?> create(@RequestBody UserDto params) {
+        sysUserService.createUser(params);
+        return ok();
+    }
+
+    @PutMapping
+    public IngotResponse<?> update(@RequestBody UserDto params) {
+        sysUserService.updateUser(params);
+        return ok();
+    }
+
+    @PutMapping("/edit")
+    public IngotResponse<?> updateUserBaseInfo(@Validated @RequestBody UserBaseInfoDto params) {
+        sysUserService.updateUserBaseInfo(params);
+        return ok();
+    }
+
+    @DeleteMapping("/{id}")
+    public IngotResponse<?> removeById(@PathVariable Long id) {
+        sysUserService.removeUserById(id);
+        return ok();
     }
 }

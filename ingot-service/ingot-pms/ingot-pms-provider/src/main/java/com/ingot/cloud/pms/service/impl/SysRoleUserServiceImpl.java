@@ -7,6 +7,8 @@ import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * <p>
  * 服务实现类
@@ -22,5 +24,19 @@ public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, S
     public boolean removeByUserId(long userId) {
         return remove(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getUserId, userId));
+    }
+
+    @Override
+    public boolean updateUserRole(long userId, List<Long> roles) {
+        boolean result = removeByUserId(userId);
+        if (!result) {
+            return false;
+        }
+        return roles.stream().allMatch(roleId -> {
+            SysRoleUser entity = new SysRoleUser();
+            entity.setUserId(userId);
+            entity.setRoleId(roleId);
+            return entity.insert();
+        });
     }
 }

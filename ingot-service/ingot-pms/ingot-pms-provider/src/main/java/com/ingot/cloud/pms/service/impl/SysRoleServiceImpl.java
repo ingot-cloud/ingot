@@ -11,7 +11,6 @@ import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.*;
 import com.ingot.component.id.IdGenerator;
-import com.ingot.framework.base.exception.IllegalOperationException;
 import com.ingot.framework.base.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.AssertionUtils;
@@ -107,10 +106,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void updateRoleById(SysRole params) {
         SysRole lock = getById(params.getId());
-        if (lock == null) {
-            throw new IllegalOperationException(
-                    i18nService.getMessage("SysRoleServiceImpl.NonExist"));
-        }
+        AssertionUtils.checkOperation(lock != null,
+                i18nService.getMessage("SysRoleServiceImpl.NonExist"));
 
         params.setVersion(lock.getVersion());
         params.setUpdatedAt(DateUtils.now());
