@@ -7,10 +7,12 @@ import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -32,6 +34,7 @@ public class SysDept extends BaseModel<SysDept> {
      * ID
      */
     @TableId
+    @NotNull(message = "{SysRole.ID}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**

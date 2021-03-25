@@ -13,8 +13,6 @@ import java.io.Serializable;
  */
 @Data
 public class UserBaseInfoDto implements Serializable {
-    @NotNull(message = "{Common.IDNonNull}")
-    private Long id;
     private String password;
     private String phone;
     private String email;

@@ -51,7 +51,8 @@ public class UserApi extends BaseController {
 
     @PutMapping("/edit")
     public IngotResponse<?> updateUserBaseInfo(@Validated @RequestBody UserBaseInfoDto params) {
-        sysUserService.updateUserBaseInfo(params);
+        long userId = SecurityAuthContext.getUser().getId();
+        sysUserService.updateUserBaseInfo(userId, params);
         return ok();
     }
 

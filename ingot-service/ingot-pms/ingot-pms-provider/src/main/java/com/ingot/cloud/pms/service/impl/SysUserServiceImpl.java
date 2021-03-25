@@ -126,7 +126,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         long userId = params.getId();
         SysUser lock = getById(userId);
         AssertionUtils.checkOperation(lock != null,
-                i18nService.getMessage("SysUserServiceImpl.NonExist"));
+                i18nService.getMessage("SysUserServiceImpl.UserNonExist"));
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
@@ -143,10 +143,10 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void updateUserBaseInfo(UserBaseInfoDto params) {
-        SysUser lock = getById(params.getId());
+    public void updateUserBaseInfo(long id, UserBaseInfoDto params) {
+        SysUser lock = getById(id);
         AssertionUtils.checkOperation(lock != null,
-                i18nService.getMessage("SysUserServiceImpl.NonExist"));
+                i18nService.getMessage("SysUserServiceImpl.UserNonExist"));
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(user.getPassword())) {

@@ -35,7 +35,7 @@ public class SysUser extends BaseModel<SysUser> {
      * ID
      */
     @TableId
-    @NotNull(message = "{SysRole.ID}", groups = {Group.Update.class, Group.Delete.class})
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**
@@ -54,20 +54,20 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 部门ID
      */
-    @NotBlank(message = "{SysRole.DeptId}", groups = Group.Create.class)
+    @NotNull(message = "{SysUser.DeptId}", groups = Group.Create.class)
     private Long deptId;
 
     /**
      * 用户名
      */
-    @NotBlank(message = "{SysRole.DeptId}", groups = Group.Create.class)
+    @NotBlank(message = "{SysUser.Username}", groups = Group.Create.class)
     private String username;
 
     /**
      * 密码
      */
     @JsonIgnore
-    @NotBlank(message = "{SysRole.DeptId}", groups = Group.Create.class)
+    @NotBlank(message = "{SysUser.Password}", groups = Group.Create.class)
     private String password;
 
     /**

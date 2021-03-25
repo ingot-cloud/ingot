@@ -36,7 +36,7 @@ public class SysRole extends BaseModel<SysRole> {
      * ID
      */
     @TableId
-    @NotNull(message = "{SysRole.ID}", groups = {Group.Update.class, Group.Delete.class})
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**

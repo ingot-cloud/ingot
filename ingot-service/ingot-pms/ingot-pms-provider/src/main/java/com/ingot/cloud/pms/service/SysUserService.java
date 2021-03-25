@@ -63,5 +63,5 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param params 基本信息参数
      */
-    void updateUserBaseInfo(UserBaseInfoDto params);
+    void updateUserBaseInfo(long id, UserBaseInfoDto params);
 }
