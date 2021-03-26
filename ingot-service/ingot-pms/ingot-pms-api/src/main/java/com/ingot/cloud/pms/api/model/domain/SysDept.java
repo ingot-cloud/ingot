@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
@@ -73,7 +74,7 @@ public class SysDept extends BaseModel<SysDept> {
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 创建日期
