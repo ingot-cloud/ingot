@@ -6,8 +6,6 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
 /**
  * <p>Description  : DeptPageItemVo.</p>
  * <p>Author       : wangchao.</p>
@@ -37,14 +35,4 @@ public class DeptTreeNode extends TreeNode {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
-
-    /**
-     * 创建日期
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * 删除日期
-     */
-    private LocalDateTime deletedAt;
 }

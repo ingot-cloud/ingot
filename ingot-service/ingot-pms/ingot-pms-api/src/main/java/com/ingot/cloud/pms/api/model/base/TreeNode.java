@@ -27,9 +27,12 @@ public class TreeNode implements Serializable {
     /**
      * 子节点
      */
-    private List<TreeNode> children = new ArrayList<>();
+    private List<TreeNode> children;
 
     public void add(TreeNode node) {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
         children.add(node);
     }
 }
