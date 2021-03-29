@@ -1,10 +1,11 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
+import com.ingot.cloud.pms.api.model.base.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -13,17 +14,9 @@ import java.time.LocalDateTime;
  * <p>Date         : 2021/3/25.</p>
  * <p>Time         : 10:14 下午.</p>
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptTreeNode implements Serializable {
-    /**
-     * ID
-     */
-    private Long id;
-
-    /**
-     * 父ID
-     */
-    private Long pid;
+public class DeptTreeNode extends TreeNode {
 
     /**
      * 部门名称
