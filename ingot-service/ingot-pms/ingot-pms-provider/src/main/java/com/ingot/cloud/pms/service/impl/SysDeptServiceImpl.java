@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
@@ -58,11 +59,18 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
 
     @Override
     public void removeDeptById(long id) {
+        int existLeaf = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id));
+        AssertionUtils.checkOperation(existLeaf == 0,
+                i18nService.getMessage("SysDeptServiceImpl.ExistLeaf"));
 
+        AssertionUtils.checkOperation(removeById(id),
+                "SysDeptServiceImpl.RemoveFailed");
     }
 
     @Override
     public void updateDept(SysDept params) {
-
+        params.setUpdatedAt(DateUtils.now());
+        AssertionUtils.checkOperation(updateById(params),
+                "SysDeptServiceImpl.UpdateFailed");
     }
 }

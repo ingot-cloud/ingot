@@ -114,6 +114,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
         AssertionUtils.checkOperation(sysRoleUserService.removeByUserId(id),
                 "SysUserServiceImpl.RemoveFailed");
@@ -122,17 +123,13 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUser(UserDto params) {
         long userId = params.getId();
-        SysUser lock = getById(userId);
-        AssertionUtils.checkOperation(lock != null,
-                i18nService.getMessage("SysUserServiceImpl.UserNonExist"));
-
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         }
-        user.setVersion(lock.getVersion());
         user.setUpdatedAt(DateUtils.now());
         AssertionUtils.checkOperation(updateById(user),
                 i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
@@ -143,18 +140,18 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserBaseInfo(long id, UserBaseInfoDto params) {
-        SysUser lock = getById(id);
-        AssertionUtils.checkOperation(lock != null,
+        SysUser current = getById(id);
+        AssertionUtils.checkOperation(current != null,
                 i18nService.getMessage("SysUserServiceImpl.UserNonExist"));
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(user.getPassword())) {
-            AssertionUtils.checkOperation(passwordEncoder.matches(user.getPassword(), lock.getPassword()),
+            AssertionUtils.checkOperation(passwordEncoder.matches(user.getPassword(), current.getPassword()),
                     i18nService.getMessage("SysUserServiceImpl.IncorrectPassword"));
         }
 
-        user.setVersion(lock.getVersion());
         user.setUpdatedAt(DateUtils.now());
         AssertionUtils.checkOperation(updateById(user),
                 i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));

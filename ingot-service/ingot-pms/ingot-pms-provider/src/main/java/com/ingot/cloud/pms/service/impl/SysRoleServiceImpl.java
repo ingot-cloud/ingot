@@ -105,11 +105,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void updateRoleById(SysRole params) {
-        SysRole lock = getById(params.getId());
-        AssertionUtils.checkOperation(lock != null,
-                i18nService.getMessage("SysRoleServiceImpl.NonExist"));
-
-        params.setVersion(lock.getVersion());
         params.setUpdatedAt(DateUtils.now());
         AssertionUtils.checkOperation(updateById(params),
                 i18nService.getMessage("SysRoleServiceImpl.UpdateFailed"));
@@ -120,15 +115,17 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         switch (scope) {
             // 获取当前部门和子部门的角色ID
             case CURRENT_CHILD:
+                // 获取可用的 children
                 List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
-                        .eq(SysDept::getPid, dept.getId()));
-                if (CollUtil.isEmpty(children)) {
-                    return;
+                        .eq(SysDept::getPid, dept.getId())
+                        .eq(SysDept::getStatus, CommonStatusEnum.ENABLE));
+
+                if (!CollUtil.isEmpty(children)) {
+                    for (SysDept childDept : children) {
+                        deptRoleIds(childDept, deptRoleIds);
+                    }
                 }
 
-                for (SysDept childDept : children) {
-                    deptRoleIds(childDept, deptRoleIds);
-                }
                 // 获取当前部门角色ID
             case CURRENT:
                 deptRoleIds.addAll(sysRoleDeptService.list(Wrappers.<SysRoleDept>lambdaQuery()
