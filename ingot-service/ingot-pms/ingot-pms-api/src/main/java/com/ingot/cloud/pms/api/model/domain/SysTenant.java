@@ -30,13 +30,6 @@ public class SysTenant extends BaseModel<SysTenant> {
     private Integer id;
 
     /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
-
-    /**
      * 租户名称
      */
     private String name;

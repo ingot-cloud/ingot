@@ -40,13 +40,6 @@ public class SysRole extends BaseModel<SysRole> {
     private Long id;
 
     /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
-
-    /**
      * 租户
      */
     @JsonIgnoreProperties(allowSetters = true)

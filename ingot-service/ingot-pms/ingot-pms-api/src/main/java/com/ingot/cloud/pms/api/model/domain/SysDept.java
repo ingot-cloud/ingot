@@ -3,8 +3,6 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -35,15 +33,8 @@ public class SysDept extends BaseModel<SysDept> {
      * ID
      */
     @TableId
-    @NotNull(message = "{SysRole.ID}", groups = {Group.Update.class, Group.Delete.class})
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
-
-    /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
 
     /**
      * 租户ID

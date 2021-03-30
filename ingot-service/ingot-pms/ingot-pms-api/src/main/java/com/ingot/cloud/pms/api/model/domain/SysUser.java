@@ -39,13 +39,6 @@ public class SysUser extends BaseModel<SysUser> {
     private Long id;
 
     /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
-
-    /**
      * 所属租户
      */
     @JsonIgnoreProperties(allowSetters = true)

@@ -34,13 +34,6 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     private Long id;
 
     /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
-
-    /**
      * 租户ID
      */
     @JsonIgnoreProperties(allowSetters = true)

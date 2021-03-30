@@ -34,13 +34,6 @@ public class SysMenu extends BaseModel<SysMenu> {
     private Long id;
 
     /**
-     * 版本号
-     */
-    @JsonIgnore
-    @Version
-    private Long version;
-
-    /**
      * 租户ID
      */
     @JsonIgnoreProperties(allowSetters = true)
