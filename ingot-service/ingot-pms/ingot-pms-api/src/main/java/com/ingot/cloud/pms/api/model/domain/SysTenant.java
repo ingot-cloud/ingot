@@ -1,11 +1,15 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -27,16 +31,19 @@ public class SysTenant extends BaseModel<SysTenant> {
      * ID
      */
     @TableId(type = IdType.AUTO)
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Integer id;
 
     /**
      * 租户名称
      */
+    @NotNull(message = "{SysTenant.Name}", groups = Group.Create.class)
     private String name;
 
     /**
      * 租户编号
      */
+    @NotNull(message = "{SysTenant.Code}", groups = Group.Create.class)
     private String code;
 
     /**

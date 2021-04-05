@@ -6,8 +6,9 @@ import com.ingot.cloud.pms.service.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 /**
  * <p>Description  : TenantApi.</p>
@@ -23,5 +24,23 @@ public class TenantApi extends BaseController {
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysTenant> page, SysTenant params) {
         return ok(sysTenantService.conditionPage(page, params));
+    }
+
+    @PostMapping
+    public IngotResponse<?> create(@Valid @RequestBody SysTenant params) {
+        sysTenantService.createTenant(params);
+        return ok();
+    }
+
+    @PutMapping
+    public IngotResponse<?> update(@Valid @RequestBody SysTenant params) {
+        sysTenantService.updateTenantById(params);
+        return ok();
+    }
+
+    @DeleteMapping("/{id}")
+    public IngotResponse<?> removeById(@PathVariable Integer id) {
+        sysTenantService.removeTenantById(id);
+        return ok();
     }
 }

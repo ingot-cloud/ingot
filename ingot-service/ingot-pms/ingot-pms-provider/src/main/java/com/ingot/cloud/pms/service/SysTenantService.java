@@ -35,7 +35,7 @@ public interface SysTenantService extends BaseService<SysTenant> {
      *
      * @param id 租户ID
      */
-    void removeTenantById(long id);
+    void removeTenantById(int id);
 
     /**
      * 根据ID更新租户

@@ -39,7 +39,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     }
 
     @Override
-    public void removeTenantById(long id) {
+    public void removeTenantById(int id) {
         AssertionUtils.checkOperation(removeById(id),
                 i18nService.getMessage("SysTenantServiceImpl.CreateFailed"));
     }
