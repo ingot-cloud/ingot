@@ -1,7 +1,7 @@
 package com.ingot.cloud.acs.authentication.password;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -39,7 +39,7 @@ public class PasswordAuthenticationFilter extends AbstractAuthenticationProcessi
     }
 
     @Override public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
-        if (!StringUtils.equals("POST", request.getMethod())) {
+        if (!StrUtil.equals("POST", request.getMethod())) {
             throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
         }
 

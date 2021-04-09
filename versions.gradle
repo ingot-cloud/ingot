@@ -2,7 +2,7 @@ def deps = [:]
 def versions = [:]
 versions.spring_boot = "2.4.1"
 versions.spring_cloud = "2020.0.0"
-versions.spring_cloud_alibaba = "2.2.3.RELEASE"
+versions.spring_cloud_alibaba = "2021.1"
 versions.spring_framework = "5.3.2"
 
 versions.alibaba_druid = "1.2.3"
