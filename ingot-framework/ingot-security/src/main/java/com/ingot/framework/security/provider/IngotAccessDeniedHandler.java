@@ -1,7 +1,7 @@
 package com.ingot.framework.security.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

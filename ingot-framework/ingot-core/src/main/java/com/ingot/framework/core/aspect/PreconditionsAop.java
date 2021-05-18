@@ -1,6 +1,6 @@
 package com.ingot.framework.core.aspect;
 
-import com.ingot.framework.base.exception.BizException;
+import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.core.annotation.IngotPreconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;

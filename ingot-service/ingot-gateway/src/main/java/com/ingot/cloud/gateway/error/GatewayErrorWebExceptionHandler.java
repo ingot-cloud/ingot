@@ -2,7 +2,7 @@ package com.ingot.cloud.gateway.error;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.AllArgsConstructor;

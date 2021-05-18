@@ -1,7 +1,7 @@
 package com.ingot.cloud.acs.service;
 
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;

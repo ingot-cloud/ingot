@@ -2,7 +2,7 @@ package com.ingot.framework.core.utils.reactive;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.base.constants.GlobalConstants;
+import com.ingot.framework.common.constants.GlobalConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;

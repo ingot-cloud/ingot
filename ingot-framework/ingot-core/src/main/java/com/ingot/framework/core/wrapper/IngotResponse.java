@@ -2,8 +2,8 @@ package com.ingot.framework.core.wrapper;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.base.status.BaseStatusCode;
-import com.ingot.framework.base.status.StatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.common.status.StatusCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.ToString;

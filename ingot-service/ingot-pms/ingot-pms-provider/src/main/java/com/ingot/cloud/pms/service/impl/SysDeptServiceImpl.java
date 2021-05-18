@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.SysDeptService;
 import com.ingot.component.id.IdGenerator;
-import com.ingot.framework.base.utils.DateUtils;
+import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.core.validation.service.I18nService;

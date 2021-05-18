@@ -1,6 +1,6 @@
 package com.ingot.framework.security.utils;
 
-import com.ingot.framework.base.constants.GlobalConstants;
+import com.ingot.framework.common.constants.GlobalConstants;
 
 /**
  * <p>Description  : SocialUtils.</p>

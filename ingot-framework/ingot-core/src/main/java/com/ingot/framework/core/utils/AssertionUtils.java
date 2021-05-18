@@ -1,7 +1,7 @@
 package com.ingot.framework.core.utils;
 
-import com.ingot.framework.base.exception.BizException;
-import com.ingot.framework.base.exception.IllegalOperationException;
+import com.ingot.framework.common.exception.BizException;
+import com.ingot.framework.common.exception.IllegalOperationException;
 import com.ingot.framework.core.wrapper.IngotResponse;
 
 /**

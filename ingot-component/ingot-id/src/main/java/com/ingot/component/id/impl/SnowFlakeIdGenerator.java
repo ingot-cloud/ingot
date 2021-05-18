@@ -1,14 +1,14 @@
 package com.ingot.component.id.impl;
 
 import com.google.common.base.Preconditions;
-import com.ingot.framework.base.exception.BizException;
+import com.ingot.framework.common.exception.BizException;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.component.id.worker.WorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
 
-import static com.ingot.framework.base.status.BaseStatusCode.ID_CLOCK_BACK;
+import static com.ingot.framework.common.status.BaseStatusCode.ID_CLOCK_BACK;
 
 /**
  * <p>Description  : SnowFlakeIdGenerator.</p>

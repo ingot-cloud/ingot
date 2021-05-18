@@ -7,7 +7,7 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import com.ingot.framework.feign.exception.IngotFeignException;

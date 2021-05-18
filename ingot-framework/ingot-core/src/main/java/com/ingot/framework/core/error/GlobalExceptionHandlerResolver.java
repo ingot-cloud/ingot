@@ -1,7 +1,7 @@
 package com.ingot.framework.core.error;
 
-import com.ingot.framework.base.exception.BizException;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.exception.BizException;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.extern.slf4j.Slf4j;

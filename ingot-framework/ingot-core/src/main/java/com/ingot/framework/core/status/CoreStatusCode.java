@@ -1,6 +1,6 @@
 package com.ingot.framework.core.status;
 
-import com.ingot.framework.base.status.StatusCode;
+import com.ingot.framework.common.status.StatusCode;
 
 /**
  * <p>Description  : CoreStatusCode.</p>

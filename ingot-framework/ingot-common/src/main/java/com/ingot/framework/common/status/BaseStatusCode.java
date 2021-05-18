@@ -1,4 +1,4 @@
-package com.ingot.framework.base.status;
+package com.ingot.framework.common.status;
 
 /**
  * <p>Description  : BaseStatusCode.

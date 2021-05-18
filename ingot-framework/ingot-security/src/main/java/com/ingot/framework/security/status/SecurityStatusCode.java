@@ -1,6 +1,6 @@
 package com.ingot.framework.security.status;
 
-import com.ingot.framework.base.status.StatusCode;
+import com.ingot.framework.common.status.StatusCode;
 
 /**
  * <p>Description  : SecurityStatusCode.</p>

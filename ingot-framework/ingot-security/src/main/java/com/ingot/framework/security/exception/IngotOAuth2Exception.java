@@ -1,8 +1,8 @@
 package com.ingot.framework.security.exception;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.ingot.framework.base.status.BaseStatusCode;
-import com.ingot.framework.base.status.StatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.common.status.StatusCode;
 import com.ingot.framework.security.provider.IngotOAuth2ExceptionSerializer;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

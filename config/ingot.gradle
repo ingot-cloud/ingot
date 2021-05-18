@@ -1,7 +1,7 @@
 def ingot = [:]
 
 // framework
-ingot.framework_base = ":ingot-framework:ingot-base"
+ingot.framework_common = ":ingot-framework:ingot-common"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_store = ":ingot-framework:ingot-store"
 ingot.framework_feign = ":ingot-framework:ingot-feign"

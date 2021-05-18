@@ -1,7 +1,7 @@
 package com.ingot.framework.core.wrapper;
 
-import com.ingot.framework.base.status.BaseStatusCode;
-import com.ingot.framework.base.status.StatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.common.status.StatusCode;
 import lombok.experimental.UtilityClass;
 
 /**

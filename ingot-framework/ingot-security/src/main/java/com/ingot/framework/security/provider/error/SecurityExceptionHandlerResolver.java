@@ -1,7 +1,7 @@
 package com.ingot.framework.security.provider.error;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import com.ingot.framework.security.status.SecurityStatusCode;

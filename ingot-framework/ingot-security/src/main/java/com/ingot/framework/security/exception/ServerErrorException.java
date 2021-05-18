@@ -1,6 +1,6 @@
 package com.ingot.framework.security.exception;
 
-import com.ingot.framework.base.status.BaseStatusCode;
+import com.ingot.framework.common.status.BaseStatusCode;
 import org.springframework.http.HttpStatus;
 
 /**

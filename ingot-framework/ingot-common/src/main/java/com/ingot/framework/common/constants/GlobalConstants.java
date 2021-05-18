@@ -1,4 +1,4 @@
-package com.ingot.framework.base.constants;
+package com.ingot.framework.common.constants;
 
 /**
  * <p>Description  : GlobalConstants.</p>
