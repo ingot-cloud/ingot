@@ -34,12 +34,6 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     private Long id;
 
     /**
-     * 租户ID
-     */
-    @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
-
-    /**
      * App ID
      */
     private String appId;

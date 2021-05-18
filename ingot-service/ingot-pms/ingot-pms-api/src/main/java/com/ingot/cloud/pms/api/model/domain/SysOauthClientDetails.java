@@ -31,12 +31,6 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     private Long id;
 
     /**
-     * 租户ID
-     */
-    @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
-
-    /**
      * 客户端ID
      */
     private String clientId;

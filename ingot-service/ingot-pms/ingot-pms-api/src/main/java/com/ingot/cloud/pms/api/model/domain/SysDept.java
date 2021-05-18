@@ -37,12 +37,6 @@ public class SysDept extends BaseModel<SysDept> {
     private Long id;
 
     /**
-     * 租户ID
-     */
-    @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
-
-    /**
      * 父ID
      */
     private Long pid;

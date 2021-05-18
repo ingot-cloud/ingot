@@ -40,12 +40,6 @@ public class SysRole extends BaseModel<SysRole> {
     private Long id;
 
     /**
-     * 租户
-     */
-    @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
-
-    /**
      * 角色名称
      */
     @NotBlank(message = "{SysRole.Name}", groups = Group.Create.class)

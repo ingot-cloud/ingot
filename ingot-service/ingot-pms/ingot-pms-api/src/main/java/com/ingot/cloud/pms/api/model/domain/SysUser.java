@@ -39,12 +39,6 @@ public class SysUser extends BaseModel<SysUser> {
     private Long id;
 
     /**
-     * 所属租户
-     */
-    @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
-
-    /**
      * 部门ID
      */
     @NotNull(message = "{SysUser.DeptId}", groups = Group.Create.class)
