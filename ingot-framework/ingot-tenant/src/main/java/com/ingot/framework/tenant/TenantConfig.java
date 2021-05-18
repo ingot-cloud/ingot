@@ -2,7 +2,9 @@ package com.ingot.framework.tenant;
 
 import com.ingot.framework.tenant.interceptor.TenantFeignInterceptor;
 import com.ingot.framework.tenant.interceptor.TenantRequestInterceptor;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import feign.RequestInterceptor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -14,6 +16,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
  * <p>Time         : 6:05 下午.</p>
  */
 @Configuration
+@EnableConfigurationProperties(value = TenantProperties.class)
 public class TenantConfig {
 
     @Bean
