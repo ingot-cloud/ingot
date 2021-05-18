@@ -41,7 +41,7 @@ public class UserDetailServiceImpl implements UserDetailService {
     private final Map<String, SocialProcessor> socialProcessorMap;
 
     @Override
-    public UserAuthDetails getUserAuthDetails(long tenantId, UserDetailsDto params) {
+    public UserAuthDetails getUserAuthDetails(UserDetailsDto params) {
         UserDetailsModeEnum model = params.getMode();
         if (model == null) {
             throw new ForbiddenException("非法授权模式");
@@ -50,10 +50,10 @@ public class UserDetailServiceImpl implements UserDetailService {
         SysUser user;
         switch (model) {
             case PASSWORD:
-                user = withPasswordMode(tenantId, params);
+                user = withPasswordMode(params);
                 break;
             case SOCIAL:
-                user = withSocialMode(tenantId, params);
+                user = withSocialMode(params);
                 break;
             default:
                 throw new ForbiddenException("授权模式不正确：" + model);
@@ -83,14 +83,13 @@ public class UserDetailServiceImpl implements UserDetailService {
         return userDetails;
     }
 
-    private SysUser withPasswordMode(long tenantId, UserDetailsDto params) {
+    private SysUser withPasswordMode(UserDetailsDto params) {
         String username = params.getUniqueCode();
         return sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
-                .eq(SysUser::getTenantId, tenantId)
                 .eq(SysUser::getUsername, username));
     }
 
-    private SysUser withSocialMode(long tenantId, UserDetailsDto params) {
+    private SysUser withSocialMode(UserDetailsDto params) {
         String[] extract = SocialUtils.extract(params.getUniqueCode());
         SocialTypeEnum socialType = SocialTypeEnum.getEnum(extract[0]);
         if (socialType == null) {
@@ -103,7 +102,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         }
 
         params.setUniqueCode(extract[1]);
-        return processor.exec(tenantId, params);
+        return processor.exec(params);
     }
 
     private UserAuthDetails ofUser(SysUser user) {

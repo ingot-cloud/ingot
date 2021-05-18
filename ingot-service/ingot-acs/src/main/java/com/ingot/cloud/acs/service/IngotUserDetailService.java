@@ -47,16 +47,14 @@ public class IngotUserDetailService implements IngotUserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
-        int tenantID = TenantContextHolder.get();
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
-                        "clientId={}, tenantID={}",
-                username, clientId, tenantID);
+                        "clientId={}",
+                username, clientId);
 
         UserDetailsDto params = new UserDetailsDto();
         params.setMode(UserDetailsModeEnum.PASSWORD);
         params.setUniqueCode(username);
         params.setClientId(clientId);
-        params.setTenantID(String.valueOf(tenantID));
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
@@ -76,14 +74,12 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
-        int tenantID = TenantContextHolder.get();
 
         String uniqueCode = SocialUtils.uniqueCode(socialType, openId);
         UserDetailsDto params = new UserDetailsDto();
         params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
-        params.setTenantID(String.valueOf(tenantID));
         IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);

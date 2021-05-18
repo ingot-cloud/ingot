@@ -14,9 +14,8 @@ public interface UserDetailService {
     /**
      * 获取用户详情信息
      *
-     * @param tenantId 租户ID
      * @param params   参数
      * @return {@link UserAuthDetails}
      */
-    UserAuthDetails getUserAuthDetails(long tenantId, UserDetailsDto params);
+    UserAuthDetails getUserAuthDetails(UserDetailsDto params);
 }

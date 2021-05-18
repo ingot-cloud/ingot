@@ -18,10 +18,6 @@ public class UserDetailsDto implements Serializable {
      */
     private String clientId;
     /**
-     * 租户ID
-     */
-    private String tenantID;
-    /**
      * 授权模式
      */
     private UserDetailsModeEnum mode;

@@ -7,7 +7,6 @@ import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.annotation.Permit;
 import com.ingot.framework.security.model.enums.PermitModel;
-import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +30,6 @@ public class UserDetailApi extends BaseController {
     @Permit(model = PermitModel.INNER)
     @PostMapping
     public IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params) {
-        return ok(userDetailService.getUserAuthDetails(TenantContextHolder.get(), params));
+        return ok(userDetailService.getUserAuthDetails(params));
     }
 }

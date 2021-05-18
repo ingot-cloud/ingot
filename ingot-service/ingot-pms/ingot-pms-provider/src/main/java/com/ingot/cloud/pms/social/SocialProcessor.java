@@ -14,9 +14,8 @@ public interface SocialProcessor {
     /**
      * 执行社交流程，获取用户信息
      *
-     * @param tenantId 租户ID
      * @param params   获取用户信息详情数据
      * @return {@link SysUser}
      */
-    SysUser exec(long tenantId, UserDetailsDto params);
+    SysUser exec(UserDetailsDto params);
 }

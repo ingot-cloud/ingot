@@ -17,7 +17,7 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_PHONE;
 public class PhoneSocialProcessor implements SocialProcessor {
 
     @Override
-    public SysUser exec(long tenantId, UserDetailsDto params) {
+    public SysUser exec(UserDetailsDto params) {
         return null;
     }
 }
