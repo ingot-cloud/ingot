@@ -1,4 +1,4 @@
-package com.ingot.framework.base.jackson;
+package com.ingot.framework.core.jackson;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;

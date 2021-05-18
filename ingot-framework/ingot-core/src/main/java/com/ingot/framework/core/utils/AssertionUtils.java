@@ -15,7 +15,7 @@ public final class AssertionUtils {
     /**
      * 检测IngotResponse，如果返回失败则抛出异常
      */
-    public static void checkIngotResponse(IngotResponse response){
+    public static void checkIngotResponse(IngotResponse<?> response){
         if (!response.isSuccess()) {
             throw new BizException(response.getCode(), response.getMessage());
         }

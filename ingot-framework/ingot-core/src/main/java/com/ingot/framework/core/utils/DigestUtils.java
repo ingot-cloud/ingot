@@ -1,7 +1,7 @@
 package com.ingot.framework.core.utils;
 
+import cn.hutool.core.util.StrUtil;
 import org.apache.commons.codec.binary.Base64;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,7 +71,7 @@ public final class DigestUtils {
     }
 
     public static String sha256(String str) {
-        if (StringUtils.isEmpty(str)) {
+        if (StrUtil.isEmpty(str)) {
             return null;
         }
         try {

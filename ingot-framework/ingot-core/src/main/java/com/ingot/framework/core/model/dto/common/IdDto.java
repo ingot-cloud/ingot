@@ -1,4 +1,4 @@
-package com.ingot.framework.base.model.dto;
+package com.ingot.framework.core.model.dto.common;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

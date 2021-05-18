@@ -2,8 +2,8 @@ package com.ingot.framework.core.config;
 
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.base.jackson.IngotLocalTimeModule;
-import com.ingot.framework.base.jackson.IngotModule;
+import com.ingot.framework.core.jackson.IngotLocalTimeModule;
+import com.ingot.framework.core.jackson.IngotModule;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
