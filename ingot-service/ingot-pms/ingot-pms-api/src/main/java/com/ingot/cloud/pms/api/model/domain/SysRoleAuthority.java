@@ -28,7 +28,7 @@ public class SysRoleAuthority extends BaseModel<SysRoleAuthority> {
     /**
      * 权限ID
      */
-    private Long authority;
+    private Long authorityId;
 
 
 }

@@ -5,7 +5,7 @@ import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author magician
@@ -13,4 +13,24 @@ import com.ingot.framework.store.mybatis.service.BaseService;
  */
 public interface SysAuthorityService extends BaseService<SysAuthority> {
 
+    /**
+     * 创建权限
+     *
+     * @param params 参数
+     */
+    void createAuthority(SysAuthority params);
+
+    /**
+     * 更新权限
+     *
+     * @param params 更新参数
+     */
+    void updateAuthority(SysAuthority params);
+
+    /**
+     * 删除权限
+     *
+     * @param id 权限ID
+     */
+    void removeAuthorityById(long id);
 }
