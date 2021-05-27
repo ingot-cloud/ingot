@@ -36,9 +36,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
     private final SysDeptService sysDeptService;
-    private final SysRoleUserService sysRoleUserService;
+    private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
+    private final SysRoleMenuService sysRoleMenuService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
+    private final SysRoleUserService sysRoleUserService;
 
     private final IdGenerator idGenerator;
     private final I18nService i18nService;
@@ -99,6 +101,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void removeRoleById(long id) {
+
+
         AssertionUtils.checkOperation(removeById(id),
                 i18nService.getMessage("SysRoleServiceImpl.RemoveFailed"));
     }
