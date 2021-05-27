@@ -101,7 +101,31 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void removeRoleById(long id) {
-
+        // 是否关联权限
+        AssertionUtils.checkOperation(sysRoleAuthorityService.count(
+                Wrappers.<SysRoleAuthority>lambdaQuery()
+                        .eq(SysRoleAuthority::getRoleId, id)) == 0,
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+        // 是否关联部门
+        AssertionUtils.checkOperation(sysRoleDeptService.count(
+                Wrappers.<SysRoleDept>lambdaQuery()
+                        .eq(SysRoleDept::getRoleId, id)) == 0,
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+        // 是否关联菜单
+        AssertionUtils.checkOperation(sysRoleMenuService.count(
+                Wrappers.<SysRoleMenu>lambdaQuery()
+                        .eq(SysRoleMenu::getRoleId, id)) == 0,
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+        // 是否关联客户端
+        AssertionUtils.checkOperation(sysRoleOauthClientService.count(
+                Wrappers.<SysRoleOauthClient>lambdaQuery()
+                        .eq(SysRoleOauthClient::getRoleId, id)) == 0,
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+        // 是否关联用户
+        AssertionUtils.checkOperation(sysRoleUserService.count(
+                Wrappers.<SysRoleUser>lambdaQuery()
+                        .eq(SysRoleUser::getRoleId, id)) == 0,
+                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
 
         AssertionUtils.checkOperation(removeById(id),
                 i18nService.getMessage("SysRoleServiceImpl.RemoveFailed"));
