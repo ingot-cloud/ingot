@@ -140,7 +140,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updateUserBaseInfo(long id, UserBaseInfoDto params) {
         SysUser current = getById(id);
         AssertionUtils.checkOperation(current != null,
