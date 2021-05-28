@@ -6,8 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, S
     private static final int BIND_TYPE_ROLE = 1;
     private static final int BIND_TYPE_USER = 2;
 
-    private final I18nService i18nService;
+    private final AssertI18nService assertI18nService;
 
     @Override
     public boolean removeByUserId(long userId) {
@@ -87,8 +86,8 @@ public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, S
                                     .eq(SysRoleUser::getRoleId, roleId)));
                     break;
             }
-            AssertionUtils.checkOperation(removeRet,
-                    i18nService.getMessage("SysRoleUserServiceImpl.RemoveFailed"));
+            assertI18nService.checkOperation(removeRet,
+                    "SysRoleUserServiceImpl.RemoveFailed");
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {

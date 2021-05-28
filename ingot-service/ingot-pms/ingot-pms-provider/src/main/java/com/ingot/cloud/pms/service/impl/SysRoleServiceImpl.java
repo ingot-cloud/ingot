@@ -13,8 +13,7 @@ import com.ingot.cloud.pms.service.*;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,7 +42,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleUserService sysRoleUserService;
 
     private final IdGenerator idGenerator;
-    private final I18nService i18nService;
+    private final AssertI18nService assertI18nService;
     private final RoleTrans roleTrans;
 
     @Override
@@ -95,47 +94,47 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     public void createRole(SysRole params) {
         params.setId(idGenerator.nextId());
         params.setCreatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(save(params),
-                i18nService.getMessage("SysRoleServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(save(params),
+                "SysRoleServiceImpl.CreateFailed");
     }
 
     @Override
     public void removeRoleById(long id) {
         // 是否关联权限
-        AssertionUtils.checkOperation(sysRoleAuthorityService.count(
+        assertI18nService.checkOperation(sysRoleAuthorityService.count(
                 Wrappers.<SysRoleAuthority>lambdaQuery()
                         .eq(SysRoleAuthority::getRoleId, id)) == 0,
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联部门
-        AssertionUtils.checkOperation(sysRoleDeptService.count(
+        assertI18nService.checkOperation(sysRoleDeptService.count(
                 Wrappers.<SysRoleDept>lambdaQuery()
                         .eq(SysRoleDept::getRoleId, id)) == 0,
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联菜单
-        AssertionUtils.checkOperation(sysRoleMenuService.count(
+        assertI18nService.checkOperation(sysRoleMenuService.count(
                 Wrappers.<SysRoleMenu>lambdaQuery()
                         .eq(SysRoleMenu::getRoleId, id)) == 0,
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联客户端
-        AssertionUtils.checkOperation(sysRoleOauthClientService.count(
+        assertI18nService.checkOperation(sysRoleOauthClientService.count(
                 Wrappers.<SysRoleOauthClient>lambdaQuery()
                         .eq(SysRoleOauthClient::getRoleId, id)) == 0,
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联用户
-        AssertionUtils.checkOperation(sysRoleUserService.count(
+        assertI18nService.checkOperation(sysRoleUserService.count(
                 Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getRoleId, id)) == 0,
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailedExistRelationInfo"));
+                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
 
-        AssertionUtils.checkOperation(removeById(id),
-                i18nService.getMessage("SysRoleServiceImpl.RemoveFailed"));
+        assertI18nService.checkOperation(removeById(id),
+                "SysRoleServiceImpl.RemoveFailed");
     }
 
     @Override
     public void updateRoleById(SysRole params) {
         params.setUpdatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(updateById(params),
-                i18nService.getMessage("SysRoleServiceImpl.UpdateFailed"));
+        assertI18nService.checkOperation(updateById(params),
+                "SysRoleServiceImpl.UpdateFailed");
     }
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {

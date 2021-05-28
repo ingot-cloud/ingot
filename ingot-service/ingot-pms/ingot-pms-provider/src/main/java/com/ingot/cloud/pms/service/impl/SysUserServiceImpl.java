@@ -19,8 +19,7 @@ import com.ingot.cloud.pms.service.SysUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -49,7 +48,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     private final PasswordEncoder passwordEncoder;
     private final IdGenerator idGenerator;
-    private final I18nService i18nService;
+    private final AssertI18nService assertI18nService;
     private final UserTrans userTrans;
 
     @Override
@@ -97,8 +96,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.ENABLE);
         }
-        AssertionUtils.checkOperation(save(user),
-                i18nService.getMessage("SysUserServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(save(user),
+                "SysUserServiceImpl.CreateFailed");
 
         List<Long> roles = params.getRoleIds();
         if (CollUtil.isNotEmpty(roles)) {
@@ -108,17 +107,17 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 entity.setRoleId(roleId);
                 return entity.insert();
             });
-            AssertionUtils.checkOperation(result,
-                    i18nService.getMessage("SysUserServiceImpl.CreateFailed"));
+            assertI18nService.checkOperation(result,
+                    "SysUserServiceImpl.CreateFailed");
         }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
-        AssertionUtils.checkOperation(sysRoleUserService.removeByUserId(id),
+        assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
                 "SysUserServiceImpl.RemoveFailed");
-        AssertionUtils.checkOperation(removeById(id),
+        assertI18nService.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
     }
 
@@ -131,28 +130,28 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         }
         user.setUpdatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(updateById(user),
-                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
+        assertI18nService.checkOperation(updateById(user),
+                "SysUserServiceImpl.UpdateFailed");
 
         // 更新角色
-        AssertionUtils.checkOperation(sysRoleUserService.updateUserRole(userId, null),
-                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
+        assertI18nService.checkOperation(sysRoleUserService.updateUserRole(userId, null),
+                "SysUserServiceImpl.UpdateFailed");
     }
 
     @Override
     public void updateUserBaseInfo(long id, UserBaseInfoDto params) {
         SysUser current = getById(id);
-        AssertionUtils.checkOperation(current != null,
-                i18nService.getMessage("SysUserServiceImpl.UserNonExist"));
+        assertI18nService.checkOperation(current != null,
+                "SysUserServiceImpl.UserNonExist");
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(user.getPassword())) {
-            AssertionUtils.checkOperation(passwordEncoder.matches(user.getPassword(), current.getPassword()),
-                    i18nService.getMessage("SysUserServiceImpl.IncorrectPassword"));
+            assertI18nService.checkOperation(passwordEncoder.matches(user.getPassword(), current.getPassword()),
+                    "SysUserServiceImpl.IncorrectPassword");
         }
 
         user.setUpdatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(updateById(user),
-                i18nService.getMessage("SysUserServiceImpl.UpdateFailed"));
+        assertI18nService.checkOperation(updateById(user),
+                "SysUserServiceImpl.UpdateFailed");
     }
 }

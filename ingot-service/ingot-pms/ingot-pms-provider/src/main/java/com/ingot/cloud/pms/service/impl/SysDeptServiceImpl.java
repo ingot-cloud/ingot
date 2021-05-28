@@ -10,8 +10,7 @@ import com.ingot.cloud.pms.service.SysDeptService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author magician
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
     private final DeptTrans deptTrans;
     private final IdGenerator idGenerator;
-    private final I18nService i18nService;
+    private final AssertI18nService assertI18nService;
 
     @Override
     public List<DeptTreeNode> tree() {
@@ -50,27 +49,27 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     public void createDept(SysDept params) {
         params.setCreatedAt(DateUtils.now());
         params.setId(idGenerator.nextId());
-        if (params.getStatus() == null){
+        if (params.getStatus() == null) {
             params.setStatus(CommonStatusEnum.ENABLE);
         }
-        AssertionUtils.checkOperation(save(params),
-                i18nService.getMessage("SysDeptServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(save(params),
+                "SysDeptServiceImpl.CreateFailed");
     }
 
     @Override
     public void removeDeptById(long id) {
         int existLeaf = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id));
-        AssertionUtils.checkOperation(existLeaf == 0,
-                i18nService.getMessage("SysDeptServiceImpl.ExistLeaf"));
+        assertI18nService.checkOperation(existLeaf == 0,
+                "SysDeptServiceImpl.ExistLeaf");
 
-        AssertionUtils.checkOperation(removeById(id),
+        assertI18nService.checkOperation(removeById(id),
                 "SysDeptServiceImpl.RemoveFailed");
     }
 
     @Override
     public void updateDept(SysDept params) {
         params.setUpdatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(updateById(params),
+        assertI18nService.checkOperation(updateById(params),
                 "SysDeptServiceImpl.UpdateFailed");
     }
 }

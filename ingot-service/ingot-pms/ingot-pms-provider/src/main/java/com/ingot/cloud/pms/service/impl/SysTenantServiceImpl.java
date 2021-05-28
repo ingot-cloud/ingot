@@ -7,8 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.SysTenantService;
 import com.ingot.framework.common.utils.DateUtils;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
-    private final I18nService i18nService;
+    private final AssertI18nService assertI18nService;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -34,20 +33,20 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     @Override
     public void createTenant(SysTenant params) {
         params.setCreatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(save(params),
-                i18nService.getMessage("SysTenantServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(save(params),
+                "SysTenantServiceImpl.CreateFailed");
     }
 
     @Override
     public void removeTenantById(int id) {
-        AssertionUtils.checkOperation(removeById(id),
-                i18nService.getMessage("SysTenantServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(removeById(id),
+                "SysTenantServiceImpl.CreateFailed");
     }
 
     @Override
     public void updateTenantById(SysTenant params) {
         params.setUpdatedAt(DateUtils.now());
-        AssertionUtils.checkOperation(updateById(params),
-                i18nService.getMessage("SysTenantServiceImpl.CreateFailed"));
+        assertI18nService.checkOperation(updateById(params),
+                "SysTenantServiceImpl.CreateFailed");
     }
 }
