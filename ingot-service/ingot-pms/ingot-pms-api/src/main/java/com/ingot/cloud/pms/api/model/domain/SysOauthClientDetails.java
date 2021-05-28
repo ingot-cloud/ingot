@@ -3,9 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +12,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -103,7 +101,7 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 备注

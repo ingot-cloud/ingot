@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -22,4 +24,32 @@ public interface SysOauthClientDetailsService extends BaseService<SysOauthClient
      * @return client 列表
      */
     List<SysOauthClientDetails> getClientsByRoles(List<Long> roleIds);
+
+    /**
+     * 条件查询
+     *
+     * @param page      分页参数
+     * @param condition 条件参数
+     * @return {@link IPage}，数据项结构 {@link SysOauthClientDetails}
+     */
+    IPage<SysOauthClientDetails> conditionPage(Page<SysOauthClientDetails> page,
+                                               SysOauthClientDetails condition);
+
+    /**
+     * 创建客户端
+     * @param params 参数
+     */
+    void createClient(SysOauthClientDetails params);
+
+    /**
+     * 更新客户端
+     * @param params 更新参数
+     */
+    void updateClient(SysOauthClientDetails params);
+
+    /**
+     * 根据ID删除客户端
+     * @param id ID
+     */
+    void removeClientById(long id);
 }
