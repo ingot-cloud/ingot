@@ -1,6 +1,9 @@
 package com.ingot.framework.core.config;
 
+import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.core.validation.service.I18nService;
+import com.ingot.framework.core.validation.service.impl.AssertI18nServiceImpl;
+import com.ingot.framework.core.validation.service.impl.I18ServiceImpl;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
@@ -32,6 +35,11 @@ public class MessageConfig {
 
     @Bean
     public I18nService i18nService(MessageSource messageSource) {
-        return new I18nService(messageSource);
+        return new I18ServiceImpl(messageSource);
+    }
+
+    @Bean
+    public AssertI18nService assertI18nService(I18nService i18nService) {
+        return new AssertI18nServiceImpl(i18nService);
     }
 }
