@@ -4,7 +4,9 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
+import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.SysMenuService;
 import com.ingot.cloud.pms.service.SysRoleMenuService;
@@ -16,7 +18,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -33,10 +37,17 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     private final IdGenerator idGenerator;
     private final AssertI18nService assertI18nService;
+    private final MenuTrans menuTrans;
 
     @Override
     public List<MenuTreeNode> tree() {
-        return null;
+        List<SysMenu> all = list();
+
+        List<MenuTreeNode> allNode = all.stream()
+                .sorted(Comparator.comparingInt(SysMenu::getSort))
+                .map(menuTrans::to).collect(Collectors.toList());
+
+        return TreeUtils.build(allNode, 0);
     }
 
     @Override
