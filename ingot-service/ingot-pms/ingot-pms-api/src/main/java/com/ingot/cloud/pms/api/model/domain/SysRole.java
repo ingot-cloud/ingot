@@ -42,13 +42,13 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 角色名称
      */
-    @NotBlank(message = "{SysRole.Name}", groups = Group.Create.class)
+    @NotBlank(message = "{SysRole.name}", groups = Group.Create.class)
     private String name;
 
     /**
      * 角色编码
      */
-    @NotBlank(message = "{SysRole.Code}", groups = Group.Create.class)
+    @NotBlank(message = "{SysRole.code}", groups = Group.Create.class)
     private String code;
 
     /**

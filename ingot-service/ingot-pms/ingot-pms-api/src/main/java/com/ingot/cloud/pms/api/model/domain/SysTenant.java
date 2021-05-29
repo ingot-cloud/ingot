@@ -37,13 +37,13 @@ public class SysTenant extends BaseModel<SysTenant> {
     /**
      * 租户名称
      */
-    @NotNull(message = "{SysTenant.Name}", groups = Group.Create.class)
+    @NotNull(message = "{SysTenant.name}", groups = Group.Create.class)
     private String name;
 
     /**
      * 租户编号
      */
-    @NotNull(message = "{SysTenant.Code}", groups = Group.Create.class)
+    @NotNull(message = "{SysTenant.code}", groups = Group.Create.class)
     private String code;
 
     /**

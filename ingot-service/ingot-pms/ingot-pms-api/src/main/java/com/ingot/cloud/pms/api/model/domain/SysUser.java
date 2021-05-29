@@ -46,20 +46,20 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 部门ID
      */
-    @NotNull(message = "{SysUser.DeptId}", groups = Group.Create.class)
+    @NotNull(message = "{SysUser.deptId}", groups = Group.Create.class)
     private Long deptId;
 
     /**
      * 用户名
      */
-    @NotBlank(message = "{SysUser.Username}", groups = Group.Create.class)
+    @NotBlank(message = "{SysUser.username}", groups = Group.Create.class)
     private String username;
 
     /**
      * 密码
      */
     @JsonIgnore
-    @NotBlank(message = "{SysUser.Password}", groups = Group.Create.class)
+    @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)
     private String password;
 
     /**

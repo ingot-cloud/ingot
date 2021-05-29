@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -26,21 +29,25 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     private static final long serialVersionUID = 1L;
 
     @TableId
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**
      * 客户端ID
      */
+    @NotBlank(message = "{SysOauthClientDetails.clientId}", groups = Group.Create.class)
     private String clientId;
 
     /**
      * 客户端秘钥
      */
+    @NotBlank(message = "{SysOauthClientDetails.clientSecret}", groups = Group.Create.class)
     private String clientSecret;
 
     /**
      * 资源ID
      */
+    @NotBlank(message = "{SysOauthClientDetails.resourceId}", groups = Group.Create.class)
     private String resourceId;
 
     /**
