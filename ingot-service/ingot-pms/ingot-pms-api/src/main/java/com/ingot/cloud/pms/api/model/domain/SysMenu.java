@@ -3,13 +3,13 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -31,6 +31,7 @@ public class SysMenu extends BaseModel<SysMenu> {
      * ID
      */
     @TableId
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**
@@ -46,6 +47,7 @@ public class SysMenu extends BaseModel<SysMenu> {
     /**
      * 菜单url
      */
+    @NotBlank(message = "{SysMenu.path}", groups = Group.Create.class)
     private String path;
 
     /**
