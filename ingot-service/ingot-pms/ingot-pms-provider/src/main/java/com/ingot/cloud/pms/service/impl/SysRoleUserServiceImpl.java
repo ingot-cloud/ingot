@@ -3,13 +3,10 @@ package com.ingot.cloud.pms.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
-import com.ingot.cloud.pms.common.CommonRoleRelation;
+import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
-import com.ingot.framework.core.validation.service.AssertI18nService;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +21,7 @@ import java.util.List;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
-public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, SysRoleUser> implements SysRoleUserService {
-    private static final int BIND_TYPE_ROLE = 1;
-    private static final int BIND_TYPE_USER = 2;
-
-    private final AssertI18nService assertI18nService;
+public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUserMapper, SysRoleUser> implements SysRoleUserService {
 
     @Override
     public boolean removeByUserId(long userId) {
@@ -57,28 +49,26 @@ public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, S
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void userBindRoles(RelationDto<Long, Long> params) {
-        CommonRoleRelation.bind(CommonRoleRelation.TYPE_TARGET, params,
+        bindRoles(params,
                 (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getRoleId, roleId)
                         .eq(SysRoleUser::getUserId, targetId)),
                 (roleId, targetId) -> {
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
-                },
-                assertI18nService, "SysRoleUserServiceImpl.RemoveFailed");
+                }, "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindUsers(RelationDto<Long, Long> params) {
-        CommonRoleRelation.bind(CommonRoleRelation.TYPE_ROLE, params,
+        bindTargets(params,
                 (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getRoleId, roleId)
                         .eq(SysRoleUser::getUserId, targetId)),
                 (roleId, targetId) -> {
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
-                },
-                assertI18nService, "SysRoleUserServiceImpl.RemoveFailed");
+                }, "SysRoleUserServiceImpl.RemoveFailed");
     }
 }
