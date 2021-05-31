@@ -19,9 +19,7 @@ import org.springframework.stereotype.Service;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
 public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<SysRoleOauthClientMapper, SysRoleOauthClient> implements SysRoleOauthClientService {
-    private final AssertI18nService assertI18nService;
 
     @Override
     public void clientBindRoles(RelationDto<Long, Long> params) {
