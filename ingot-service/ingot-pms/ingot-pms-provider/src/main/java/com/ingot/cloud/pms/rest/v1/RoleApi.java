@@ -2,7 +2,8 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.service.SysRoleService;
+import com.ingot.cloud.pms.service.*;
+import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
@@ -23,6 +24,11 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class RoleApi extends BaseController {
     private final SysRoleService sysRoleService;
+    private final SysRoleAuthorityService sysRoleAuthorityService;
+    private final SysRoleDeptService sysRoleDeptService;
+    private final SysRoleMenuService sysRoleMenuService;
+    private final SysRoleOauthClientService sysRoleOauthClientService;
+    private final SysRoleUserService sysRoleUserService;
 
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysRole> page, SysRole condition) {
@@ -44,6 +50,36 @@ public class RoleApi extends BaseController {
     @DeleteMapping("/{id}")
     public IngotResponse<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id);
+        return ok();
+    }
+
+    @PutMapping("/bindAuthority")
+    public IngotResponse<?> bindAuthority(@RequestBody @Validated RelationDto<Long, Long> params) {
+        sysRoleAuthorityService.roleBindAuthorities(params);
+        return ok();
+    }
+
+    @PutMapping("/bindDept")
+    public IngotResponse<?> bindDept(@RequestBody @Validated RelationDto<Long, Long> params) {
+        sysRoleDeptService.roleBindDepts(params);
+        return ok();
+    }
+
+    @PutMapping("/bindMenu")
+    public IngotResponse<?> bindMenu(@RequestBody @Validated RelationDto<Long, Long> params) {
+        sysRoleMenuService.roleBindMenus(params);
+        return ok();
+    }
+
+    @PutMapping("/bindClient")
+    public IngotResponse<?> bindClient(@RequestBody @Validated RelationDto<Long, Long> params) {
+        sysRoleOauthClientService.roleBindClients(params);
+        return ok();
+    }
+
+    @PutMapping("/bindUser")
+    public IngotResponse<?> bindUser(@RequestBody @Validated RelationDto<Long, Long> params) {
+        sysRoleUserService.roleBindUsers(params);
         return ok();
     }
 }
