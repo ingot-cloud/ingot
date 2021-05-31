@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.common.CommonRoleRelation;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
@@ -56,50 +57,28 @@ public class SysRoleUserServiceImpl extends BaseServiceImpl<SysRoleUserMapper, S
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void userBindRoles(RelationDto<Long, Long> params) {
-        commonRemove(BIND_TYPE_USER, params);
+        CommonRoleRelation.bind(CommonRoleRelation.TYPE_TARGET, params,
+                (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
+                        .eq(SysRoleUser::getRoleId, roleId)
+                        .eq(SysRoleUser::getUserId, targetId)),
+                (roleId, targetId) -> {
+                    getBaseMapper().insertIgnore(roleId, targetId);
+                    return true;
+                },
+                assertI18nService, "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindUsers(RelationDto<Long, Long> params) {
-        commonRemove(BIND_TYPE_ROLE, params);
-    }
-
-    private void commonRemove(int type, RelationDto<Long, Long> params) {
-        Long id = params.getId();
-        List<Long> removeIds = params.getRemoveIds();
-        List<Long> bindIds = params.getBindIds();
-
-        if (CollUtil.isNotEmpty(removeIds)) {
-            boolean removeRet = true;
-            switch (type) {
-                case BIND_TYPE_ROLE:
-                    removeRet = removeIds.stream().allMatch(userId ->
-                            remove(Wrappers.<SysRoleUser>lambdaQuery()
-                                    .eq(SysRoleUser::getRoleId, id)
-                                    .eq(SysRoleUser::getUserId, userId)));
-                    break;
-                case BIND_TYPE_USER:
-                    removeRet = removeIds.stream().allMatch(roleId ->
-                            remove(Wrappers.<SysRoleUser>lambdaQuery()
-                                    .eq(SysRoleUser::getUserId, id)
-                                    .eq(SysRoleUser::getRoleId, roleId)));
-                    break;
-            }
-            assertI18nService.checkOperation(removeRet,
-                    "SysRoleUserServiceImpl.RemoveFailed");
-        }
-
-        if (CollUtil.isNotEmpty(bindIds)) {
-            switch (type) {
-                case BIND_TYPE_ROLE:
-                    bindIds.forEach(userId -> getBaseMapper().insertIgnore(id, userId));
-                    break;
-                case BIND_TYPE_USER:
-                    bindIds.forEach(roleId -> getBaseMapper().insertIgnore(roleId, id));
-                    break;
-            }
-        }
-
+        CommonRoleRelation.bind(CommonRoleRelation.TYPE_ROLE, params,
+                (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
+                        .eq(SysRoleUser::getRoleId, roleId)
+                        .eq(SysRoleUser::getUserId, targetId)),
+                (roleId, targetId) -> {
+                    getBaseMapper().insertIgnore(roleId, targetId);
+                    return true;
+                },
+                assertI18nService, "SysRoleUserServiceImpl.RemoveFailed");
     }
 }
