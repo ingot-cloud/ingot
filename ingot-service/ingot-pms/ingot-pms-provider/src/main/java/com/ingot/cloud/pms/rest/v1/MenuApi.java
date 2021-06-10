@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.rest.v1;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.service.SysMenuService;
+import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;

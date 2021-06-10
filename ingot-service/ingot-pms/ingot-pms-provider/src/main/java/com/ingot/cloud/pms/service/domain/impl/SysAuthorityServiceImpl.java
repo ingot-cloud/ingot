@@ -1,12 +1,12 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
-import com.ingot.cloud.pms.service.SysAuthorityService;
-import com.ingot.cloud.pms.service.SysRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;

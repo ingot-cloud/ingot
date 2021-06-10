@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service;
+package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;

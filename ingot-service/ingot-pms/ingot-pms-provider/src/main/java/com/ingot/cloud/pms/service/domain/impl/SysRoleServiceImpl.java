@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
-import com.ingot.cloud.pms.service.*;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;

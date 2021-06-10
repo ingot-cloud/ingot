@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service;
+package com.ingot.cloud.pms.service.biz;
 
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;

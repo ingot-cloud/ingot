@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.mapper.SysOauthClientDetailsMapper;
-import com.ingot.cloud.pms.service.SysOauthClientDetailsService;
-import com.ingot.cloud.pms.service.SysRoleOauthClientService;
+import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
+import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;

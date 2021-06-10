@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service;
+package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;

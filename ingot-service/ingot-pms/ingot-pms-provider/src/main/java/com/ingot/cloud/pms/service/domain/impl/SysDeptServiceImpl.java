@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
-import com.ingot.cloud.pms.service.SysDeptService;
+import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;

@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.service.*;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;

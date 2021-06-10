@@ -1,11 +1,11 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
-import com.ingot.cloud.pms.service.SysTenantService;
+import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

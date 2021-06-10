@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -8,8 +8,8 @@ import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
-import com.ingot.cloud.pms.service.SysMenuService;
-import com.ingot.cloud.pms.service.SysRoleMenuService;
+import com.ingot.cloud.pms.service.domain.SysMenuService;
+import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;

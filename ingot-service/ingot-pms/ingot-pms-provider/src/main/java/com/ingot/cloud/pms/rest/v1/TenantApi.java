@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.service.SysTenantService;
+import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
 import lombok.AllArgsConstructor;

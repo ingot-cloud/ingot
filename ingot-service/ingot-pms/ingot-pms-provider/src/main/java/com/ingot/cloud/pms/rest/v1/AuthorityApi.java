@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.rest.v1;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.service.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;

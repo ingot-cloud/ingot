@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
@@ -13,9 +13,9 @@ import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
-import com.ingot.cloud.pms.service.SysRoleService;
-import com.ingot.cloud.pms.service.SysRoleUserService;
-import com.ingot.cloud.pms.service.SysUserService;
+import com.ingot.cloud.pms.service.domain.SysRoleService;
+import com.ingot.cloud.pms.service.domain.SysRoleUserService;
+import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;

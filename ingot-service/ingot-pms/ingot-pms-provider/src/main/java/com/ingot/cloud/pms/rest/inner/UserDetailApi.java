@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.rest.inner;
 
-import com.ingot.cloud.pms.service.UserDetailService;
+import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.wrapper.BaseController;

@@ -1,8 +1,8 @@
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.pms.service.domain.impl;
 
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.mapper.SysSocialDetailsMapper;
-import com.ingot.cloud.pms.service.SysSocialDetailsService;
+import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 

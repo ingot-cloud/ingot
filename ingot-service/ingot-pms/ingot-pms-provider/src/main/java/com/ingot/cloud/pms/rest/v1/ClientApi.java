@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
-import com.ingot.cloud.pms.service.SysOauthClientDetailsService;
+import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;

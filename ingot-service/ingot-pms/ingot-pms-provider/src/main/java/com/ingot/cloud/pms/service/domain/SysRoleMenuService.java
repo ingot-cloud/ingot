@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service;
+package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.framework.core.model.dto.common.RelationDto;
