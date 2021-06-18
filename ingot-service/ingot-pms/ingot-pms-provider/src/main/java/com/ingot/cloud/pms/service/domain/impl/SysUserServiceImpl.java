@@ -91,6 +91,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Transactional(rollbackFor = Exception.class)
     public void createUser(UserDto params) {
         SysUser user = userTrans.to(params);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setId(idGenerator.nextId());
         user.setCreatedAt(DateUtils.now());
         if (user.getStatus() == null) {
