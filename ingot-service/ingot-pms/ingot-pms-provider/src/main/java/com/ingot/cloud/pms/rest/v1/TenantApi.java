@@ -16,7 +16,8 @@ import javax.validation.Valid;
  * <p>Date         : 2021/3/30.</p>
  * <p>Time         : 10:13 下午.</p>
  */
-@RestController(value = "/v1/tenant")
+@RestController
+@RequestMapping(value = "/v1/tenant")
 @AllArgsConstructor
 public class TenantApi extends BaseController {
     private final SysTenantService sysTenantService;
