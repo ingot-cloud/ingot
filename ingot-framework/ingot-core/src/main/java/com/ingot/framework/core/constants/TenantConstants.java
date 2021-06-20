@@ -9,7 +9,7 @@ package com.ingot.framework.core.constants;
 public interface TenantConstants {
 
     /**
-     * header 中保存租户编码的key
+     * header 中保存租户的key
      */
     String TENANT_HEADER_KEY = "Tenant";
 

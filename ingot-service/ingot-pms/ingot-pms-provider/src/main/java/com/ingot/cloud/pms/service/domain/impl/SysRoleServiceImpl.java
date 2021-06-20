@@ -87,7 +87,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         List<RolePageItemVo> records = temp.getRecords()
                 .stream().map(item -> {
                     RolePageItemVo v = roleTrans.to(item);
-                    v.setCanDeleted(v.getId() != RoleConstants.ROLE_ADMIN_ID);
+                    v.setCanAction(v.getId() != RoleConstants.ROLE_ADMIN_ID);
                     return v;
                 }).collect(Collectors.toList());
 
@@ -98,6 +98,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void createRole(SysRole params) {
         params.setId(idGenerator.nextId());
+        params.setStatus(CommonStatusEnum.ENABLE);
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
                 "SysRoleServiceImpl.CreateFailed");

@@ -47,7 +47,7 @@ public class RolePageItemVo implements Serializable {
      */
     private LocalDateTime deletedAt;
     /**
-     * 是否可以操作删除
+     * 是否可以操作
      */
-    private boolean canDeleted = true;
+    private boolean canAction = true;
 }
