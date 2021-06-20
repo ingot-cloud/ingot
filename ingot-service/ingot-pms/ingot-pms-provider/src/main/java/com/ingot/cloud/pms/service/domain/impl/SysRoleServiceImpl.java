@@ -14,6 +14,7 @@ import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.security.constants.RoleConstants;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         result.setSize(temp.getSize());
 
         List<RolePageItemVo> records = temp.getRecords()
-                .stream().map(roleTrans::to).collect(Collectors.toList());
+                .stream().map(item -> {
+                    RolePageItemVo v = roleTrans.to(item);
+                    v.setCanDeleted(v.getId() != RoleConstants.ROLE_ADMIN_ID);
+                    return v;
+                }).collect(Collectors.toList());
 
         result.setRecords(records);
         return result;
@@ -100,6 +105,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void removeRoleById(long id) {
+        assertI18nService.checkOperation(id == RoleConstants.ROLE_ADMIN_ID,
+                "SysRoleServiceImpl.SuperAdminRemoveFailed");
+
         // 是否关联权限
         assertI18nService.checkOperation(sysRoleAuthorityService.count(
                 Wrappers.<SysRoleAuthority>lambdaQuery()
