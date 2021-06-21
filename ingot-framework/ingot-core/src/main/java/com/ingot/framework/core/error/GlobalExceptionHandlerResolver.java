@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Set;
 
@@ -37,7 +38,7 @@ public class GlobalExceptionHandlerResolver {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public IngotResponse<?> Exception(Exception e) {
+    public IngotResponse<?> exception(Exception e) {
         log.error("Exception - message={}, e={}", e.getLocalizedMessage(), e);
         return ResponseWrapper.error500(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.code(),
                 e.getLocalizedMessage());

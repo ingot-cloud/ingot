@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -34,6 +35,12 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void createTenant(SysTenant params) {
+        if (StrUtil.isNotEmpty(params.getCode())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysTenant>lambdaQuery()
+                            .eq(SysTenant::getCode, params.getCode())) == 0,
+                    "SysTenantServiceImpl.CodeExisted");
+        }
+
         params.setCreatedAt(DateUtils.now());
         params.setStatus(CommonStatusEnum.ENABLE);
         assertI18nService.checkOperation(save(params),
@@ -42,7 +49,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void removeTenantById(int id) {
-        assertI18nService.checkOperation(id == TenantConstants.DEFAULT_TENANT_ID,
+        assertI18nService.checkOperation(id != TenantConstants.DEFAULT_TENANT_ID,
                 "SysTenantServiceImpl.DefaultTenantRemoveFailed");
 
         assertI18nService.checkOperation(removeById(id),
@@ -51,6 +58,12 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void updateTenantById(SysTenant params) {
+        if (StrUtil.isNotEmpty(params.getCode())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysTenant>lambdaQuery()
+                            .eq(SysTenant::getCode, params.getCode())) == 0,
+                    "SysTenantServiceImpl.CodeExisted");
+        }
+
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysTenantServiceImpl.CreateFailed");
