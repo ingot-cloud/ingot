@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
+import com.ingot.framework.security.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.exception.BadTenantException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,7 +34,8 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
      * @param userAuthentication an authentication representing a user
      * @return a map of key values representing the unique information about the user
      */
-    @Override public Map<String, ?> convertUserAuthentication(Authentication userAuthentication) {
+    @Override
+    public Map<String, ?> convertUserAuthentication(Authentication userAuthentication) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put(USERNAME, userAuthentication.getName());
         if (userAuthentication.getAuthorities() != null && !userAuthentication.getAuthorities().isEmpty()) {
@@ -49,7 +51,8 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
      * @return an Authentication representing the user or null if there is none
      */
     @SuppressWarnings("unchecked")
-    @Override public Authentication extractAuthentication(Map<String, ?> map) {
+    @Override
+    public Authentication extractAuthentication(Map<String, ?> map) {
         if (map.containsKey(USERNAME)) {
             Collection<? extends GrantedAuthority> authorities = getAuthorities(map);
 
@@ -62,7 +65,15 @@ public class IngotUserAuthenticationConverter implements UserAuthenticationConve
             Integer tenantId = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_TENANT_ID, Integer.class);
             String authType = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE, String.class);
 
-            validateTenant(tenantId);
+            // 超管，默认租户，租户编码Role admin
+            boolean isSuperAdmin = TenantConstants.DEFAULT_TENANT_ID.equals(tenantId)
+                    && authorities.stream()
+                    .anyMatch(auth -> StrUtil.equals(RoleConstants.ROLE_ADMIN_CODE, auth.getAuthority()));
+
+            // 非超管，验证token中的租户信息和请求头租户信息是否匹配
+            if (!isSuperAdmin) {
+                validateTenant(tenantId);
+            }
 
             IngotUser user = new IngotUser(id, deptId, tenantId, authType, username, N_A, true,
                     true, true, true, authorities);
