@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : TenantApi.</p>
@@ -34,7 +35,7 @@ public class TenantApi extends BaseController {
             list = CollUtil.newArrayList();
         }
 
-        return ok(list.stream().map(SimpleTenantVo::new));
+        return ok(list.stream().map(SimpleTenantVo::new).collect(Collectors.toList()));
     }
 
     @GetMapping("/page")
