@@ -1,14 +1,18 @@
 package com.ingot.cloud.pms.rest.v1;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVo;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.security.annotation.Permit;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * <p>Description  : TenantApi.</p>
@@ -21,6 +25,17 @@ import javax.validation.Valid;
 @AllArgsConstructor
 public class TenantApi extends BaseController {
     private final SysTenantService sysTenantService;
+
+    @Permit
+    @GetMapping("/list")
+    public IngotResponse<?> list(){
+        List<SysTenant> list = sysTenantService.list();
+        if (CollUtil.isEmpty(list)) {
+            list = CollUtil.newArrayList();
+        }
+
+        return ok(list.stream().map(SimpleTenantVo::new));
+    }
 
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysTenant> page, SysTenant params) {
