@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -50,12 +51,12 @@ public class SysTenant extends BaseModel<SysTenant> {
     /**
      * 开始日期
      */
-    private LocalDateTime startAt;
+    private LocalDate startAt;
 
     /**
      * 结束日期
      */
-    private LocalDateTime endAt;
+    private LocalDate endAt;
 
     /**
      * 状态, 0:正常，9:禁用
