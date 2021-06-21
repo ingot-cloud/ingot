@@ -7,6 +7,8 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.TenantConstants;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
@@ -33,12 +35,16 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     @Override
     public void createTenant(SysTenant params) {
         params.setCreatedAt(DateUtils.now());
+        params.setStatus(CommonStatusEnum.ENABLE);
         assertI18nService.checkOperation(save(params),
                 "SysTenantServiceImpl.CreateFailed");
     }
 
     @Override
     public void removeTenantById(int id) {
+        assertI18nService.checkOperation(id == TenantConstants.DEFAULT_TENANT_ID,
+                "SysTenantServiceImpl.DefaultTenantRemoveFailed");
+
         assertI18nService.checkOperation(removeById(id),
                 "SysTenantServiceImpl.CreateFailed");
     }
