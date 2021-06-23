@@ -106,7 +106,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void removeRoleById(long id) {
-        assertI18nService.checkOperation(id == RoleConstants.ROLE_ADMIN_ID,
+        assertI18nService.checkOperation(id != RoleConstants.ROLE_ADMIN_ID,
                 "SysRoleServiceImpl.SuperAdminRemoveFailed");
 
         // 是否关联权限

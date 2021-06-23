@@ -23,6 +23,7 @@ import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -53,19 +54,22 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     public UserInfoDto getUserInfo(IngotUser user) {
-        SysUser userInfo = getById(user.getId());
-        if (userInfo == null) {
-            throw new UnauthorizedException("用户异常");
-        }
+        // 使用当前用户 tenant 进行操作
+        return TenantEnv.applyAs(user.getTenantId(), () -> {
+            SysUser userInfo = getById(user.getId());
+            if (userInfo == null) {
+                throw new UnauthorizedException("用户异常");
+            }
 
-        List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
-        List<String> roleCodes = roles.stream()
-                .map(SysRole::getCode).collect(Collectors.toList());
+            List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+            List<String> roleCodes = roles.stream()
+                    .map(SysRole::getCode).collect(Collectors.toList());
 
-        UserInfoDto result = new UserInfoDto();
-        result.setUser(userInfo);
-        result.setRoles(roleCodes);
-        return result;
+            UserInfoDto result = new UserInfoDto();
+            result.setUser(userInfo);
+            result.setRoles(roleCodes);
+            return result;
+        });
     }
 
     @Override
