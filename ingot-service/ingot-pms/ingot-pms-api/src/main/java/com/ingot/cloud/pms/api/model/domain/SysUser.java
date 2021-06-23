@@ -59,7 +59,6 @@ public class SysUser extends BaseModel<SysUser> {
      * 密码
      */
     @JsonIgnore
-    @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)
     private String password;
 
     /**

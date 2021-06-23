@@ -1,9 +1,11 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.framework.core.validation.Group;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 /**
@@ -24,7 +26,8 @@ public class UserDto extends SysUser {
      */
     private List<Long> clientIds;
     /**
-     * 新密码
+     * 密码
      */
+    @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)
     private String newPassword;
 }

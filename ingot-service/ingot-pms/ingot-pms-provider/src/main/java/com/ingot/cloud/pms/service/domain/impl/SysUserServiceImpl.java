@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
@@ -95,12 +96,25 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Transactional(rollbackFor = Exception.class)
     public void createUser(UserDto params) {
         SysUser user = userTrans.to(params);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setId(idGenerator.nextId());
         user.setCreatedAt(DateUtils.now());
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.ENABLE);
         }
+
+        if (StrUtil.isNotEmpty(user.getPhone())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getPhone, user.getPhone())) == 0,
+                    "SysUserServiceImpl.PhoneExist");
+        }
+
+        if (StrUtil.isNotEmpty(user.getEmail())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getEmail, user.getEmail())) == 0,
+                    "SysUserServiceImpl.EmailExist");
+        }
+
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
 
@@ -134,13 +148,30 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         }
+
+        if (StrUtil.isNotEmpty(user.getPhone())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getPhone, user.getPhone())
+                            .ne(SysUser::getId, userId)) == 0,
+                    "SysUserServiceImpl.PhoneExist");
+        }
+
+        if (StrUtil.isNotEmpty(user.getEmail())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getEmail, user.getEmail())
+                            .ne(SysUser::getId, userId)) == 0,
+                    "SysUserServiceImpl.EmailExist");
+        }
+
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
 
-        // 更新角色
-        assertI18nService.checkOperation(sysRoleUserService.updateUserRole(userId, null),
-                "SysUserServiceImpl.UpdateFailed");
+        if (CollUtil.isNotEmpty(params.getRoleIds())) {
+            // 更新角色
+            assertI18nService.checkOperation(sysRoleUserService.updateUserRole(userId, params.getRoleIds()),
+                    "SysUserServiceImpl.UpdateFailed");
+        }
     }
 
     @Override
@@ -150,6 +181,20 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 "SysUserServiceImpl.UserNonExist");
 
         SysUser user = userTrans.to(params);
+        if (StrUtil.isNotEmpty(user.getPhone())
+                && !StrUtil.equals(user.getPhone(), current.getPhone())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getPhone, user.getPhone())) == 0,
+                    "SysUserServiceImpl.PhoneExist");
+        }
+
+        if (StrUtil.isNotEmpty(user.getEmail())
+                && !StrUtil.equals(user.getEmail(), current.getEmail())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getEmail, user.getEmail())) == 0,
+                    "SysUserServiceImpl.EmailExist");
+        }
+
         if (StrUtil.isNotEmpty(user.getPassword())) {
             assertI18nService.checkOperation(passwordEncoder.matches(user.getPassword(), current.getPassword()),
                     "SysUserServiceImpl.IncorrectPassword");
