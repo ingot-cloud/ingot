@@ -58,17 +58,8 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void updateTenantById(SysTenant params) {
-        if (StrUtil.isNotEmpty(params.getCode())) {
-            SysTenant current = getById(params.getId());
-            // 如果和当前租户编码不相同
-            if (!StrUtil.equals(current.getCode(), params.getCode())) {
-                assertI18nService.checkOperation(count(Wrappers.<SysTenant>lambdaQuery()
-                                .eq(SysTenant::getId, params.getId())
-                                .eq(SysTenant::getCode, params.getCode())) == 0,
-                        "SysTenantServiceImpl.CodeExisted");
-            }
-        }
-
+        // 租户编码不可修改
+        params.setCode(null);
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysTenantServiceImpl.UpdateFailed");

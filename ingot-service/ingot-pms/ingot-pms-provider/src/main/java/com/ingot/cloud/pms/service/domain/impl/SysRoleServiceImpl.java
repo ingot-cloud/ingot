@@ -141,6 +141,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void updateRoleById(SysRole params) {
+        // 角色编码不可修改
+        params.setCode(null);
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
