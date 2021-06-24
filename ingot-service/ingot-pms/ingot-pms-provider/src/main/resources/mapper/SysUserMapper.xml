@@ -33,9 +33,10 @@
                  <if test="condition.roleIds != null and condition.roleIds.size > 0">
                      LEFT JOIN sys_role_user AS ru ON ru.user_id = u.id
                  </if>
-        <where>
+        WHERE
+            u.deleted_at IS NULL
             <if test="condition.username != null and condition.username != ''">
-                u.username LIKE CONCAT('%', #{condition}, '%')
+                AND u.username LIKE CONCAT('%', #{condition}, '%')
             </if>
             <if test="condition.realName != null and condition.realName != ''">
                 AND u.real_name LIKE CONCAT('%', #{condition.realName}, '%')
@@ -45,9 +46,6 @@
             </if>
             <if test="condition.status != null and condition.status != ''">
                 AND u.status = #{condition.status}
-            </if>
-            <if test="condition.tenantId != null and condition.tenantId != 0">
-                AND u.tenant_id = #{condition.tenantId}
             </if>
             <if test="condition.deptId != null and condition.deptId != 0">
                 AND u.dept_id = #{condition.deptId}
@@ -59,6 +57,5 @@
                     #{item}
                 </foreach>
             </if>
-        </where>
     </select>
 </mapper>
