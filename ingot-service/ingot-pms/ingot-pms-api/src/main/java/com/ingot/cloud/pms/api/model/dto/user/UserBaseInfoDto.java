@@ -2,7 +2,6 @@ package com.ingot.cloud.pms.api.model.dto.user;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -13,7 +12,6 @@ import java.io.Serializable;
  */
 @Data
 public class UserBaseInfoDto implements Serializable {
-    private String password;
     private String phone;
     private String email;
     private String realName;

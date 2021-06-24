@@ -11,6 +11,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDto;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
@@ -179,6 +180,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
+        assert current != null;
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(user.getPhone())
@@ -195,13 +197,24 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                     "SysUserServiceImpl.EmailExist");
         }
 
-        if (StrUtil.isNotEmpty(user.getPassword())) {
-            assertI18nService.checkOperation(passwordEncoder.matches(user.getPassword(), current.getPassword()),
-                    "SysUserServiceImpl.IncorrectPassword");
-        }
-
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
+    }
+
+    @Override
+    public void fixPassword(long id, UserPasswordDto params) {
+        SysUser current = getById(id);
+        assertI18nService.checkOperation(current != null,
+                "SysUserServiceImpl.UserNonExist");
+        assert current != null;
+
+        assertI18nService.checkOperation(passwordEncoder.matches(params.getPassword(), current.getPassword()),
+                "SysUserServiceImpl.IncorrectPassword");
+        SysUser user = new SysUser();
+        user.setId(id);
+        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+        assertI18nService.checkOperation(user.updateById(),
+                "SysUserServiceImpl.UpdatePasswordFailed");
     }
 }
