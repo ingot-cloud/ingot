@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDto;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
+import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -72,4 +73,11 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param params 参数
      */
     void fixPassword(long id, UserPasswordDto params);
+
+    /**
+     * 获取用户简介信息
+     * @param id 用户ID
+     * @return {@link UserProfileVo}
+     */
+    UserProfileVo getUserProfile(long id);
 }

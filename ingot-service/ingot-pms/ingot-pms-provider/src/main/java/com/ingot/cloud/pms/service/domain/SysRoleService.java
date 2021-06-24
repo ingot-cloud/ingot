@@ -36,6 +36,14 @@ public interface SysRoleService extends BaseService<SysRole> {
     List<SysRole> getAllRolesOfClients(List<Long> clientIds);
 
     /**
+     * 获取用户所有可用角色
+     *
+     * @param userId 用户ID
+     * @return 角色列表
+     */
+    List<SysRole> getRolesOfUser(long userId);
+
+    /**
      * 条件查询用户分页信息
      *
      * @param page      分页条件

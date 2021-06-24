@@ -32,6 +32,11 @@ public class UserApi extends BaseController {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
+    @GetMapping("/profile/{id}")
+    public IngotResponse<?> userProfile(@PathVariable Long id){
+        return ok(sysUserService.getUserProfile(id));
+    }
+
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysUser> page, UserDto condition) {
         return ok(sysUserService.conditionPage(page, condition));

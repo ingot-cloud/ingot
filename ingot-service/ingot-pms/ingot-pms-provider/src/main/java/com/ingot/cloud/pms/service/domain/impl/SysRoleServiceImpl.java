@@ -77,6 +77,17 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
+    public List<SysRole> getRolesOfUser(long userId) {
+        Set<Long> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+                .eq(SysRoleUser::getUserId, userId))
+                .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
+
+        return list(Wrappers.<SysRole>lambdaQuery()
+                .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
+                .in(SysRole::getId, baseRoleIds));
+    }
+
+    @Override
     public IPage<RolePageItemVo> conditionPage(Page<SysRole> page, SysRole condition) {
         IPage<SysRole> temp = page(page, Wrappers.lambdaQuery(condition));
         IPage<RolePageItemVo> result = new Page<>();

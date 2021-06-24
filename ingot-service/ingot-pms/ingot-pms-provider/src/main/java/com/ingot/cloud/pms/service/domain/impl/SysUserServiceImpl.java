@@ -14,6 +14,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDto;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
+import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -135,6 +136,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
+
+
         assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
                 "SysUserServiceImpl.RemoveFailed");
         assertI18nService.checkOperation(removeById(id),
@@ -216,5 +219,23 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         assertI18nService.checkOperation(user.updateById(),
                 "SysUserServiceImpl.UpdatePasswordFailed");
+    }
+
+    @Override
+    public UserProfileVo getUserProfile(long id) {
+        SysUser user = getById(id);
+        assertI18nService.checkOperation(user != null,
+                "SysUserServiceImpl.UserNonExist");
+        assert user != null;
+
+        UserProfileVo profile = userTrans.to(user);
+
+        List<SysRole> list = sysRoleService.getRolesOfUser(id);
+        if (CollUtil.isNotEmpty(list)) {
+            profile.setRoleIds(list.stream()
+                    .map(SysRole::getId).collect(Collectors.toList()));
+        }
+
+        return profile;
     }
 }
