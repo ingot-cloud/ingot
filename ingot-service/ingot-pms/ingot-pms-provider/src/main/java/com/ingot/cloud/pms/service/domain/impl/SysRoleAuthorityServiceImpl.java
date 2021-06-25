@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
@@ -41,5 +44,10 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
                 }, "SysRoleAuthorityServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public IPage<SysAuthority> getRoleBindAuthorities(long roleId, Page<?> page) {
+        return baseMapper.getRoleBindAuthorities(page, roleId);
     }
 }

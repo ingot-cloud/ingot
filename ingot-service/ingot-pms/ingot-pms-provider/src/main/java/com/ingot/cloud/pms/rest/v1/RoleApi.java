@@ -59,6 +59,11 @@ public class RoleApi extends BaseController {
         return ok();
     }
 
+    @GetMapping("/bindAuthority/{id}")
+    public IngotResponse<?> getBindAuthorities(@PathVariable Long id, Page<?> page) {
+        return ok(sysRoleAuthorityService.getRoleBindAuthorities(id, page));
+    }
+
     @PutMapping("/bindDept")
     public IngotResponse<?> bindDept(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleDeptService.roleBindDepts(params);
