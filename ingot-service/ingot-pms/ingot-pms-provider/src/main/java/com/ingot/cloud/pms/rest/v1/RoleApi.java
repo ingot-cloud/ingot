@@ -71,6 +71,11 @@ public class RoleApi extends BaseController {
         return ok();
     }
 
+    @GetMapping("/bindMenu/{id}")
+    public IngotResponse<?> getBindMenus(@PathVariable Long id, Page<?> page) {
+        return ok(sysRoleMenuService.getRoleBindMenus(id, page));
+    }
+
     @PutMapping("/bindClient")
     public IngotResponse<?> bindClient(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleOauthClientService.roleBindClients(params);

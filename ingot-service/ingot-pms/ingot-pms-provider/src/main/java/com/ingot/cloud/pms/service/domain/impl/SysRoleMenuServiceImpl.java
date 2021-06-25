@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleMenuMapper;
@@ -41,5 +44,10 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
                 }, "SysRoleMenuServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public IPage<SysMenu> getRoleBindMenus(long roleId, Page<?> page) {
+        return getBaseMapper().getRoleBindMenus(page, roleId);
     }
 }
