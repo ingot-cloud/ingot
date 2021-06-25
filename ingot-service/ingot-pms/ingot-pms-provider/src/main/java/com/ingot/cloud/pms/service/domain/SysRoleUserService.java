@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.domain;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -45,4 +48,13 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
      * @param params 关联参数
      */
     void roleBindUsers(RelationDto<Long, Long> params);
+
+    /**
+     * 获取角色绑定的用户
+     *
+     * @param roleId 角色id
+     * @param page   分页信息
+     * @return 分页用户
+     */
+    IPage<SysUser> getRoleBindUsers(long roleId, Page<?> page);
 }

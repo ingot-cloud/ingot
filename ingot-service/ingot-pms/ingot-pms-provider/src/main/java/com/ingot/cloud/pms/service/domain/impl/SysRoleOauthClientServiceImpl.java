@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleOauthClientMapper;
@@ -41,5 +44,10 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
                 }, "SysRoleOauthClientServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public IPage<SysOauthClientDetails> getRoleBindClients(long roleId, Page<?> page) {
+        return getBaseMapper().getRoleBindClients(page, roleId);
     }
 }

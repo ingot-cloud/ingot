@@ -1,8 +1,11 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -70,5 +73,10 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
                 }, "SysRoleUserServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public IPage<SysUser> getRoleBindUsers(long roleId, Page<?> page) {
+        return baseMapper.getRoleBindUsers(page, roleId);
     }
 }

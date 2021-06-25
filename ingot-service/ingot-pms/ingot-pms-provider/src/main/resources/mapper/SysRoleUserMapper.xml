@@ -8,4 +8,15 @@
         VALUES (#{roleId}, #{userId})
     </insert>
 
+    <select id="getRoleBindUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
+        SELECT
+            u.*
+        FROM
+            sys_user AS u
+            INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
+        WHERE
+            ru.role_id = #{roleId}
+        ORDER BY u.created_at ASC
+    </select>
+
 </mapper>
