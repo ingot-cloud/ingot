@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
@@ -41,5 +44,10 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
                     getBaseMapper().insertIgnore(roleId, targetId);
                     return true;
                 }, "SysRoleDeptServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public IPage<SysDept> getRoleBindDepts(long roleId, Page<?> page) {
+        return getBaseMapper().getRoleBindDepts(page, roleId);
     }
 }

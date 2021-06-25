@@ -7,4 +7,15 @@
         VALUES (#{roleId}, #{deptId})
     </insert>
 
+    <select id="getRoleBindDepts" resultType="com.ingot.cloud.pms.api.model.domain.SysDept">
+        SELECT
+            dept.*
+        FROM
+            sys_dept AS dept
+            INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
+        WHERE
+            rd.role_id = #{roleId}
+        ORDER BY dept.sort ASC
+    </select>
+
 </mapper>
