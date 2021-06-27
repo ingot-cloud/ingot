@@ -42,7 +42,6 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     @Override
     public List<MenuTreeNode> tree() {
-//        List<SysMenu> all = CollUtil.emptyIfNull(baseMapper.all());
         List<SysMenu> all = CollUtil.emptyIfNull(list());
 
         List<MenuTreeNode> allNode = all.stream()

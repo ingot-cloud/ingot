@@ -90,7 +90,7 @@ public class SysMenu extends BaseModel<SysMenu> {
      * 备注
      */
     private String remark;
-//
+
     /**
      * 创建日期
      */

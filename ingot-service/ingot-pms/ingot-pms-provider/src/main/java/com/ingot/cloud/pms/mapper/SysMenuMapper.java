@@ -14,6 +14,4 @@ import java.util.List;
  * @since 2020-11-20
  */
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
-
-    List<SysMenu> all();
 }
