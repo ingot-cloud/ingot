@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.mapper;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * <p>
  *  Mapper 接口
@@ -13,4 +15,5 @@ import com.ingot.framework.store.mybatis.mapper.BaseMapper;
  */
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
+    List<SysMenu> all();
 }

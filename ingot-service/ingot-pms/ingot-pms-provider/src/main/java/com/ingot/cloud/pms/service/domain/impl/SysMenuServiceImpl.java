@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
@@ -41,7 +42,8 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     @Override
     public List<MenuTreeNode> tree() {
-        List<SysMenu> all = list();
+//        List<SysMenu> all = CollUtil.emptyIfNull(baseMapper.all());
+        List<SysMenu> all = CollUtil.emptyIfNull(list());
 
         List<MenuTreeNode> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysMenu::getSort))
