@@ -73,7 +73,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         }
 
         params.setUpdatedAt(DateUtils.now());
-        assertI18nService.checkOperation(save(params),
+        assertI18nService.checkOperation(updateById(params),
                 "SysMenuServiceImpl.UpdateFailed");
     }
 
