@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.rest.v1;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.validation.Group;
@@ -20,6 +22,11 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class AuthorityApi extends BaseController {
     private final SysAuthorityService sysAuthorityService;
+
+    @GetMapping("/page")
+    public IngotResponse<?> page(Page<SysAuthority> page, SysAuthority params) {
+        return ok(sysAuthorityService.page(page, Wrappers.lambdaQuery(params)));
+    }
 
     @PostMapping
     public IngotResponse<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
