@@ -61,15 +61,15 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     @Transactional(rollbackFor = Exception.class)
     public void removeAuthorityById(long id) {
         // 叶子权限才可以删除
-        assertI18nService.checkOperation(count(
-                Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0,
-                "SysAuthorityServiceImpl.RemoveFailedMustLeaf");
+        boolean result = count(Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0;
+        assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailedMustLeaf");
 
         // 取消关联的角色
-        sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+        result = sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
                 .eq(SysRoleAuthority::getAuthorityId, id));
+        assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");
 
-        assertI18nService.checkOperation(removeById(id),
-                "SysAuthorityServiceImpl.RemoveFailed");
+        result = removeById(id);
+        assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");
     }
 }

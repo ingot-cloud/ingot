@@ -12,6 +12,8 @@ import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
+import java.util.List;
+
 /**
  * <p>
  * 服务类
@@ -69,15 +71,33 @@ public interface SysUserService extends BaseService<SysUser> {
 
     /**
      * 用户修改密码
-     * @param id 用户ID
+     *
+     * @param id     用户ID
      * @param params 参数
      */
     void fixPassword(long id, UserPasswordDto params);
 
     /**
      * 获取用户简介信息
+     *
      * @param id 用户ID
      * @return {@link UserProfileVo}
      */
     UserProfileVo getUserProfile(long id);
+
+    /**
+     * 是否有用户关联了指定部门
+     *
+     * @param deptId 部门ID
+     * @return Boolean 是否关联
+     */
+    boolean matchDept(long deptId);
+
+    /**
+     * 是否有用户关联了指定部门中的任意一个
+     *
+     * @param deptIds 部门ID列表
+     * @return 是否存在，只要有用户关联任一部门即返回ture
+     */
+    boolean anyMatchDept(List<Long> deptIds);
 }

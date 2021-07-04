@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -136,10 +137,10 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
-
-
+        // 取消关联角色
         assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
                 "SysUserServiceImpl.RemoveFailed");
+
         assertI18nService.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
     }
@@ -237,5 +238,18 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         }
 
         return profile;
+    }
+
+    @Override
+    public boolean matchDept(long deptId) {
+        int count = count(lambdaQuery().eq(SysUser::getDeptId, deptId));
+        return count > 0;
+    }
+
+    @Override
+    public boolean anyMatchDept(List<Long> deptIds) {
+        List<Long> ids = Optional.ofNullable(deptIds).orElse(CollUtil.newArrayList());
+        int count = count(lambdaQuery().in(SysUser::getDeptId, deptIds));
+        return count > 0;
     }
 }
