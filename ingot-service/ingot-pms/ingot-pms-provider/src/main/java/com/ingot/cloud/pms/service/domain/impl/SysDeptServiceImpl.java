@@ -9,7 +9,6 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
-    private final SysUserService sysUserService;
     private final SysRoleDeptService sysRoleDeptService;
 
     private final DeptTrans deptTrans;
@@ -66,20 +64,16 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeDeptById(long id) {
-        int existLeaf = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id));
-        assertI18nService.checkOperation(existLeaf == 0,
-                "SysDeptServiceImpl.ExistLeaf");
-
-        // 判断是关联了用户，关联用户则不可删除
-        boolean hasUser = sysUserService.matchDept(id);
-        assertI18nService.checkOperation(hasUser, "SysDeptServiceImpl.ExistUser");
+        boolean success = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id)) == 0;
+        assertI18nService.checkOperation(success, "SysDeptServiceImpl.ExistLeaf");
 
         // 取消关联角色
-        assertI18nService.checkOperation(sysRoleDeptService.remove(Wrappers.<SysRoleDept>lambdaQuery()
-                .eq(SysRoleDept::getDeptId, id)), "SysDeptServiceImpl.RemoveFailed");
+        success = sysRoleDeptService.remove(Wrappers.<SysRoleDept>lambdaQuery()
+                .eq(SysRoleDept::getDeptId, id));
+        assertI18nService.checkOperation(success, "SysDeptServiceImpl.RemoveFailed");
 
-        assertI18nService.checkOperation(removeById(id),
-                "SysDeptServiceImpl.RemoveFailed");
+        success = removeById(id);
+        assertI18nService.checkOperation(success, "SysDeptServiceImpl.RemoveFailed");
     }
 
     @Override
