@@ -61,7 +61,7 @@ public class TokenServiceImpl implements TokenService {
         String username = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_USERNAME, String.class);
         String authType = MapUtil.get(userMap, SecurityConstants.TokenEnhancer.KEY_FIELD_AUTH_TYPE, String.class);
         // 如果当前鉴权类型为唯一，那么需要判断使用token是否和当前登录用户token相同，不同则签退
-        if (StrUtil.endWithIgnoreCase(authType, SecurityConstants.TokenAuthType.UNIQUE)) {
+        if (StrUtil.endWithIgnoreCase(authType, SecurityConstants.TokenAuthType.UNIQUE.getType())) {
             String jti = MapUtil.get(token.getAdditionalInformation(),
                     SecurityConstants.TokenEnhancer.KEY_JTI, String.class);
             if (!StrUtil.equals(jti, userStoreToken.getJti())) {

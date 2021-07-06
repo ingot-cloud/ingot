@@ -13,7 +13,9 @@ import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +33,7 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final IdGenerator idGenerator;
     private final AssertI18nService assertI18nService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<SysOauthClientDetails> getClientsByRoles(List<Long> roleIds) {
@@ -52,6 +55,7 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
                         .eq(SysOauthClientDetails::getResourceId, params.getResourceId())) == 0,
                 "SysOauthClientDetailsServiceImpl.ExistResourceId");
 
+        params.setClientSecret(passwordEncoder.encode(params.getClientSecret()));
         params.setId(idGenerator.nextId());
         params.setCreatedAt(DateUtils.now());
 
@@ -61,15 +65,17 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
 
     @Override
     public void updateClient(SysOauthClientDetails params) {
-        // ClientId,ResourceId 不可修改
+        // ClientId,ClientSecret,ResourceId 不可修改
         params.setClientId(null);
         params.setResourceId(null);
+        params.setClientSecret(null);
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysOauthClientDetailsServiceImpl.UpdateFailed");
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeClientById(long id) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()

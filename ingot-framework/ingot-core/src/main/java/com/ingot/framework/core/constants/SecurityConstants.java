@@ -1,5 +1,8 @@
 package com.ingot.framework.core.constants;
 
+import cn.hutool.core.util.StrUtil;
+import lombok.Getter;
+
 /**
  * <p>Description  : SecurityConstants.</p>
  * <p>Author       : wangchao.</p>
@@ -56,27 +59,39 @@ public interface SecurityConstants {
     /**
      * Token 登录类型
      */
-    interface TokenAuthType {
+    @Getter
+    enum TokenAuthType {
         /**
          * 登录类型，唯一类型，当前账号只能在一个地方登录
          */
-        String UNIQUE = "unique";
-        String UNIQUE_SHORT = "unq";
+        UNIQUE("unique", "unq"),
         /**
          * 登录类型，默认标准类型，单点登录不互踢
          */
-        String STANDARD = "standard";
-        String STANDARD_SHORT = "std";
-    }
+        STANDARD("standard", "std");
 
-    /**
-     * 登录类型，唯一类型，当前账号只能在一个地方登录
-     */
-    String AUTH_TYPE_UNIQUE = "unique";
-    /**
-     * 登录类型，默认标准类型，单点登录不互踢
-     */
-    String AUTH_TYPE_STANDARD = "standard";
+        private final String type;
+        private final String shortType;
+
+        TokenAuthType(String type, String shortType) {
+            this.type = type;
+            this.shortType = shortType;
+        }
+
+        public static TokenAuthType get(String type) {
+            if (StrUtil.isEmpty(type)) {
+                return null;
+            }
+            TokenAuthType[] arr = TokenAuthType.values();
+            for (TokenAuthType item : arr) {
+                if (StrUtil.equals(item.type, type)) {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+    }
 
     /**
      * Security path
@@ -86,26 +101,6 @@ public interface SecurityConstants {
          * 密码登录
          */
         String TOKEN_PASSWORD = "/auth/token";
-        /**
-         * 用户刷新token
-         */
-        String PATH_REFRESH_TOKEN_USER = "/auth/user/refreshToken";
-        /**
-         * 退出登录
-         */
-        String PATH_LOGOUT_AUTH = "/auth/logout";
-        /**
-         * 手机验证码登录请求处理url
-         */
-        String PATH_LOGIN_MOBILE = "/auth/mobile";
-        /**
-         * 用户手机号修改密码
-         */
-        String PATH_USER_MODIFY_PASSWORD_BY_MOBILE = "/auth/modifyPasswordByMobile";
-        /**
-         * 处理验证码的url前缀
-         */
-        String PATH_VALIDATE_CODE_URL_PREFIX = "/code";
     }
 
     /**

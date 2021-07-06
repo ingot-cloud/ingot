@@ -80,12 +80,17 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
                                  String authType,
                                  String jti) {
         String raw = tenantId + "-" + userId;
-        if (StrUtil.equals(authType, SecurityConstants.TokenAuthType.STANDARD)) {
-            return SecurityConstants.TokenAuthType.STANDARD_SHORT
-                    + StrUtil.COLON + DigestUtils.sha256(jti + raw);
-        } else if (StrUtil.equals(authType, SecurityConstants.TokenAuthType.UNIQUE)) {
-            return SecurityConstants.TokenAuthType.UNIQUE_SHORT
-                    + StrUtil.COLON + DigestUtils.sha256(raw);
+        SecurityConstants.TokenAuthType type = SecurityConstants.TokenAuthType.get(authType);
+        if (type == null) {
+            throw new InvalidTokenException("Invalid token");
+        }
+        switch (type) {
+            case STANDARD:
+                return type.getShortType()
+                        + StrUtil.COLON + DigestUtils.sha256(jti + raw);
+            case UNIQUE:
+                return type.getShortType()
+                        + StrUtil.COLON + DigestUtils.sha256(raw);
         }
 
         throw new InvalidTokenException("Invalid token");

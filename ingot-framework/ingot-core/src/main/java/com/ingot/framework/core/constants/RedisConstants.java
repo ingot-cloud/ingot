@@ -39,21 +39,6 @@ public interface RedisConstants {
     }
 
     /**
-     * Redis 用户 unique access token key，格式：INGOT:SECURITY:USER:ACCESS_TOKEN:[用户id和名称的摘要][token auth类型]
-     */
-    static String userUniqueAccessTokenKey(String userId, String userName){
-        return userTokenPreKey(userId, userName) + SecurityConstants.AUTH_TYPE_UNIQUE;
-    }
-
-    /**
-     * Redis 用户 standard access token key，格式：INGOT:SECURITY:USER:ACCESS_TOKEN:[用户id和名称的摘要][token摘要][token auth类型]
-     */
-    static String userStandardAccessTokenKey(String token, String userId, String userName){
-        Preconditions.checkArgument(StrUtil.isNotEmpty(token), "非法请求token参数不存在");
-        return userTokenPreKey(userId, userName) + DigestUtils.sha256(token) + SecurityConstants.AUTH_TYPE_STANDARD;
-    }
-
-    /**
      * Gets send sms count key.
      *
      * @param ipAddr the ip addr
