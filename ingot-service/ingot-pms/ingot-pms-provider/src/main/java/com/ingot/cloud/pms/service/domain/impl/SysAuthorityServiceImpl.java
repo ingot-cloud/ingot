@@ -65,9 +65,8 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailedMustLeaf");
 
         // 取消关联的角色
-        result = sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+        sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
                 .eq(SysRoleAuthority::getAuthorityId, id));
-        assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");
 
         result = removeById(id);
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");
