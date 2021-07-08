@@ -45,11 +45,11 @@ public interface SysOauthClientDetailsService extends BaseService<SysOauthClient
      * 更新客户端
      * @param params 更新参数
      */
-    void updateClient(SysOauthClientDetails params);
+    void updateClientByClientId(SysOauthClientDetails params);
 
     /**
      * 根据ID删除客户端
-     * @param id ID
+     * @param clientId clientId
      */
-    void removeClientById(long id);
+    void removeClientByClientId(String clientId);
 }

@@ -10,9 +10,11 @@ import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,8 +66,12 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
     }
 
     @Override
-    public void updateClient(SysOauthClientDetails params) {
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#params.clientId")
+    public void updateClientByClientId(SysOauthClientDetails params) {
+        SysOauthClientDetails client = getClientByClientId(params.getClientId());
+
         // ClientId,ClientSecret,ResourceId 不可修改
+        params.setId(client.getId());
         params.setClientId(null);
         params.setResourceId(null);
         params.setClientSecret(null);
@@ -76,12 +82,24 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeClientById(long id) {
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId")
+    public void removeClientByClientId(String clientId) {
+        SysOauthClientDetails client = getClientByClientId(clientId);
+
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                .eq(SysRoleOauthClient::getClientId, id));
+                .eq(SysRoleOauthClient::getClientId, client.getId()));
 
-        assertI18nService.checkOperation(removeById(id),
+        assertI18nService.checkOperation(removeById(client.getId()),
                 "SysOauthClientDetailsServiceImpl.RemoveFailed");
+    }
+
+    private SysOauthClientDetails getClientByClientId(String clientId) {
+        SysOauthClientDetails client = getOne(lambdaQuery()
+                .eq(SysOauthClientDetails::getClientId, clientId));
+
+        assertI18nService.checkOperation(client != null,
+                "SysOauthClientDetailsServiceImpl.UpdateFailed");
+        return client;
     }
 }

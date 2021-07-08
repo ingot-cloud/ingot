@@ -40,13 +40,13 @@ public class ClientApi extends BaseController {
 
     @PutMapping
     public IngotResponse<?> update(@RequestBody @Validated(Group.Update.class) SysOauthClientDetails params) {
-        sysOauthClientDetailsService.updateClient(params);
+        sysOauthClientDetailsService.updateClientByClientId(params);
         return ok();
     }
 
-    @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
-        sysOauthClientDetailsService.removeClientById(id);
+    @DeleteMapping("/{clientId}")
+    public IngotResponse<?> removeById(@PathVariable String clientId) {
+        sysOauthClientDetailsService.removeClientByClientId(clientId);
         return ok();
     }
 }

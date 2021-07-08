@@ -29,13 +29,13 @@ public class SysOauthClientDetails extends BaseModel<SysOauthClientDetails> {
     private static final long serialVersionUID = 1L;
 
     @TableId
-    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Delete.class})
     private Long id;
 
     /**
      * 客户端ID
      */
-    @NotBlank(message = "{SysOauthClientDetails.clientId}", groups = Group.Create.class)
+    @NotBlank(message = "{SysOauthClientDetails.clientId}", groups = {Group.Update.class, Group.Create.class})
     private String clientId;
 
     /**
