@@ -27,6 +27,11 @@ public class ClientApi extends BaseController {
         return ok(sysOauthClientDetailsService.conditionPage(page, condition));
     }
 
+    @GetMapping("/{id}")
+    public IngotResponse<?> getOne(@PathVariable Long id) {
+        return ok(sysOauthClientDetailsService.getById(id));
+    }
+
     @PostMapping
     public IngotResponse<?> create(@RequestBody @Validated(Group.Create.class) SysOauthClientDetails params) {
         sysOauthClientDetailsService.createClient(params);
