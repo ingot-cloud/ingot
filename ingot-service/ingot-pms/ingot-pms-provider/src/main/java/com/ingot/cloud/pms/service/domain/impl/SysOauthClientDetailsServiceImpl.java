@@ -70,9 +70,8 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
     public void updateClientByClientId(SysOauthClientDetails params) {
         SysOauthClientDetails client = getClientByClientId(params.getClientId());
 
-        // ClientId,ClientSecret,ResourceId 不可修改
+        // ClientSecret,ResourceId 不可修改
         params.setId(client.getId());
-        params.setClientId(null);
         params.setResourceId(null);
         params.setClientSecret(null);
         params.setUpdatedAt(DateUtils.now());
@@ -95,7 +94,7 @@ public class SysOauthClientDetailsServiceImpl extends BaseServiceImpl<SysOauthCl
     }
 
     private SysOauthClientDetails getClientByClientId(String clientId) {
-        SysOauthClientDetails client = getOne(lambdaQuery()
+        SysOauthClientDetails client = getOne(Wrappers.<SysOauthClientDetails>lambdaQuery()
                 .eq(SysOauthClientDetails::getClientId, clientId));
 
         assertI18nService.checkOperation(client != null,
