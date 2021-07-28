@@ -79,4 +79,9 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     public IPage<SysUser> getRoleBindUsers(long roleId, Page<?> page) {
         return baseMapper.getRoleBindUsers(page, roleId);
     }
+
+    @Override
+    public IPage<SysUser> getRoleUnboundUsers(long roleId, Page<?> page) {
+        return baseMapper.getRoleUnboundUsers(page, roleId);
+    }
 }

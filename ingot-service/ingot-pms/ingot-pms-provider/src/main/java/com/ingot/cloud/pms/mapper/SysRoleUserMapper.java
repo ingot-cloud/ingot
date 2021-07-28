@@ -33,4 +33,13 @@ public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
      * @return 分页信息
      */
     IPage<SysUser> getRoleBindUsers(Page<?> page, @Param("roleId") long roleId);
+
+    /**
+     * 获取角色未绑定用户信息
+     *
+     * @param page   分页参数
+     * @param roleId 角色ID
+     * @return 分页信息
+     */
+    IPage<SysUser> getRoleUnboundUsers(Page<?> page, @Param("roleId") long roleId);
 }

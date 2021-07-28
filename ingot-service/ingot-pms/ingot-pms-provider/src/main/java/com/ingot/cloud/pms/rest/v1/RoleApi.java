@@ -107,4 +107,9 @@ public class RoleApi extends BaseController {
     public IngotResponse<?> getBindUsers(@PathVariable Long id, Page<?> page) {
         return ok(sysRoleUserService.getRoleBindUsers(id, page));
     }
+
+    @GetMapping("/unboundUser/{id}")
+    public IngotResponse<?> getUnboundUsers(@PathVariable Long id, Page<?> page) {
+        return ok(sysRoleUserService.getRoleUnboundUsers(id, page));
+    }
 }
