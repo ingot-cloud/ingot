@@ -47,7 +47,7 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
     }
 
     @Override
-    public IPage<SysMenu> getRoleBindMenus(long roleId, Page<?> page) {
-        return getBaseMapper().getRoleBindMenus(page, roleId);
+    public IPage<SysMenu> getRoleMenus(long roleId, Page<?> page, boolean isBind) {
+        return getBaseMapper().getRoleMenus(page, roleId, isBind);
     }
 }

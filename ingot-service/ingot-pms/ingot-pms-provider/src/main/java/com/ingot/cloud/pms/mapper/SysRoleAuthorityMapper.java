@@ -26,11 +26,14 @@ public interface SysRoleAuthorityMapper extends BaseMapper<SysRoleAuthority> {
     void insertIgnore(@Param("roleId") long roleId, @Param("authorityId") long authorityId);
 
     /**
-     * 获取角色绑定的权限信息
+     * 获取角色权限信息
      *
      * @param page   分页信息
      * @param roleId 角色ID
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysAuthority> getRoleBindAuthorities(Page<?> page, @Param("roleId") long roleId);
+    IPage<SysAuthority> getRoleAuthorities(Page<?> page,
+                                           @Param("roleId") long roleId,
+                                           @Param("isBind") boolean isBind);
 }

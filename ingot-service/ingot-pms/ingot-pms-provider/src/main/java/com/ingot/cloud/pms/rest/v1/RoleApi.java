@@ -60,8 +60,10 @@ public class RoleApi extends BaseController {
     }
 
     @GetMapping("/bindAuthority/{id}")
-    public IngotResponse<?> getBindAuthorities(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleAuthorityService.getRoleBindAuthorities(id, page));
+    public IngotResponse<?> getBindAuthorities(@PathVariable Long id,
+                                               Page<?> page,
+                                               @RequestParam("isBind") boolean isBind) {
+        return ok(sysRoleAuthorityService.getRoleAuthorities(id, page, isBind));
     }
 
     @PutMapping("/bindDept")
@@ -71,8 +73,10 @@ public class RoleApi extends BaseController {
     }
 
     @GetMapping("/bindDept/{id}")
-    public IngotResponse<?> getBindDepts(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleDeptService.getRoleBindDepts(id, page));
+    public IngotResponse<?> getBindDepts(@PathVariable Long id,
+                                         Page<?> page,
+                                         @RequestParam("isBind") boolean isBind) {
+        return ok(sysRoleDeptService.getRoleDepts(id, page, isBind));
     }
 
     @PutMapping("/bindMenu")
@@ -82,8 +86,10 @@ public class RoleApi extends BaseController {
     }
 
     @GetMapping("/bindMenu/{id}")
-    public IngotResponse<?> getBindMenus(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleMenuService.getRoleBindMenus(id, page));
+    public IngotResponse<?> getBindMenus(@PathVariable Long id,
+                                         Page<?> page,
+                                         @RequestParam("isBind") boolean isBind) {
+        return ok(sysRoleMenuService.getRoleMenus(id, page, isBind));
     }
 
     @PutMapping("/bindClient")

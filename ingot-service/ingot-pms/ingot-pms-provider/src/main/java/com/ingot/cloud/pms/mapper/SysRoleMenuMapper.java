@@ -26,11 +26,14 @@ public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenu> {
     void insertIgnore(@Param("roleId") long roleId, @Param("menuId") long menuId);
 
     /**
-     * 获取角色绑定的菜单
+     * 获取角色菜单
      *
      * @param page   分页信息
      * @param roleId 角色ID
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysMenu> getRoleBindMenus(Page<?> page, @Param("roleId") long roleId);
+    IPage<SysMenu> getRoleMenus(Page<?> page,
+                                @Param("roleId") long roleId,
+                                @Param("isBind") boolean isBind);
 }

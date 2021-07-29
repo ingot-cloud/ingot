@@ -25,11 +25,14 @@ public interface SysRoleDeptMapper extends BaseMapper<SysRoleDept> {
     void insertIgnore(@Param("roleId") long roleId, @Param("deptId") long deptId);
 
     /**
-     * 获取角色绑定的部门信息
+     * 获取角色部门信息
      *
      * @param page   分页信息
      * @param roleId 角色Id
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysDept> getRoleBindDepts(Page<?> page, @Param("roleId") long roleId);
+    IPage<SysDept> getRoleDepts(Page<?> page,
+                                @Param("roleId") long roleId,
+                                @Param("isBind") boolean isBind);
 }

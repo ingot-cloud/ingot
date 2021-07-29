@@ -31,11 +31,12 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
     void roleBindDepts(RelationDto<Long, Long> params);
 
     /**
-     * 获取角色绑定的部门信息
+     * 获取角色部门信息
      *
      * @param roleId 角色ID
      * @param page   分页信息
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysDept> getRoleBindDepts(long roleId, Page<?> page);
+    IPage<SysDept> getRoleDepts(long roleId, Page<?> page, boolean isBind);
 }

@@ -31,11 +31,12 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
     void roleBindMenus(RelationDto<Long, Long> params);
 
     /**
-     * 获取角色绑定的菜单
+     * 获取角色菜单
      *
      * @param roleId 角色ID
      * @param page   分页信息
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysMenu> getRoleBindMenus(long roleId, Page<?> page);
+    IPage<SysMenu> getRoleMenus(long roleId, Page<?> page, boolean isBind);
 }

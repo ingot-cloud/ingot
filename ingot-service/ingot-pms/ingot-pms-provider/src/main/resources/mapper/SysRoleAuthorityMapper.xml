@@ -7,14 +7,19 @@
         VALUES (#{roleId}, #{authorityId})
     </insert>
 
-    <select id="getRoleBindAuthorities" resultType="com.ingot.cloud.pms.api.model.domain.SysAuthority">
-        SELECT
-            auth.*
-        FROM
-            sys_authority AS auth
-            INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
+    <select id="getRoleAuthorities" resultType="com.ingot.cloud.pms.api.model.domain.SysAuthority">
+        SELECT auth.*
+        FROM sys_authority AS auth
+                 INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
         WHERE
-            ra.role_id = #{roleId}
+        <choose>
+            <when test="isBind">
+                ra.role_id = #{roleId}
+            </when>
+            <otherwise>
+                ra.role_id &lt;&gt; #{roleId}
+            </otherwise>
+        </choose>
         ORDER BY auth.created_at ASC
     </select>
 

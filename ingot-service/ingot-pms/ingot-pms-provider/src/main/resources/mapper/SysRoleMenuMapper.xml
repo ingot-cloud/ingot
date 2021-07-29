@@ -7,14 +7,19 @@
         VALUES (#{roleId}, #{menuId})
     </insert>
 
-    <select id="getRoleBindMenus" resultType="com.ingot.cloud.pms.api.model.domain.SysMenu">
-        SELECT
-            menu.*
-        FROM
-            sys_menu AS menu
-            INNER JOIN sys_role_menu AS rm ON rm.menu_id = menu.id
+    <select id="getRoleMenus" resultType="com.ingot.cloud.pms.api.model.domain.SysMenu">
+        SELECT menu.*
+        FROM sys_menu AS menu
+                 INNER JOIN sys_role_menu AS rm ON rm.menu_id = menu.id
         WHERE
-            rm.role_id = #{roleId}
+        <choose>
+            <when test="isBind">
+                rm.role_id = #{roleId}
+            </when>
+            <otherwise>
+                rm.role_id &lt;&gt; #{roleId}
+            </otherwise>
+        </choose>
         ORDER BY menu.sort ASC
     </select>
 
