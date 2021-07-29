@@ -33,7 +33,7 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
      * @param userId 用户ID
      * @param roles  待设置的角色
      */
-    boolean updateUserRole(long userId, List<Long> roles);
+    void updateUserRole(long userId, List<Long> roles);
 
     /**
      * 用户绑定角色

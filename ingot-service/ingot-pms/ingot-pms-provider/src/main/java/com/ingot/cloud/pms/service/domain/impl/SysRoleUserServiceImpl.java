@@ -33,20 +33,25 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     }
 
     @Override
-    public boolean updateUserRole(long userId, List<Long> roles) {
-        boolean result = removeByUserId(userId);
-        if (!result) {
-            return false;
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserRole(long userId, List<Long> roles) {
+        int userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
+        if (userCount != 0) {
+            assertI18nService.checkOperation(removeByUserId(userId),
+                    "SysRoleUserServiceImpl.UpdateRoleFailed");
         }
+
         if (CollUtil.isEmpty(roles)) {
-            return true;
+            return;
         }
-        return roles.stream().allMatch(roleId -> {
+        boolean result = roles.stream().allMatch(roleId -> {
             SysRoleUser entity = new SysRoleUser();
             entity.setUserId(userId);
             entity.setRoleId(roleId);
             return entity.insert();
         });
+        assertI18nService.checkOperation(result,
+                "SysRoleUserServiceImpl.UpdateRoleFailed");
     }
 
     @Override

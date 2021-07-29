@@ -174,8 +174,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         if (CollUtil.isNotEmpty(params.getRoleIds())) {
             // 更新角色
-            assertI18nService.checkOperation(sysRoleUserService.updateUserRole(userId, params.getRoleIds()),
-                    "SysUserServiceImpl.UpdateFailed");
+            sysRoleUserService.updateUserRole(userId, params.getRoleIds());
         }
     }
 

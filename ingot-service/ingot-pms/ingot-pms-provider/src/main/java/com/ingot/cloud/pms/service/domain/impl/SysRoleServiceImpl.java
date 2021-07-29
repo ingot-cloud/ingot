@@ -82,6 +82,10 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
+        if (CollUtil.isEmpty(baseRoleIds)) {
+            return CollUtil.newArrayList();
+        }
+
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(SysRole::getId, baseRoleIds));
