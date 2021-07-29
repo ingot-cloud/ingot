@@ -93,8 +93,10 @@ public class RoleApi extends BaseController {
     }
 
     @GetMapping("/bindClient/{id}")
-    public IngotResponse<?> getBindClients(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleOauthClientService.getRoleBindClients(id, page));
+    public IngotResponse<?> getBindClients(@PathVariable Long id,
+                                           Page<?> page,
+                                           @RequestParam("isBind") boolean isBind) {
+        return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind));
     }
 
     @PutMapping("/bindUser")
@@ -104,12 +106,9 @@ public class RoleApi extends BaseController {
     }
 
     @GetMapping("/bindUser/{id}")
-    public IngotResponse<?> getBindUsers(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleUserService.getRoleBindUsers(id, page));
-    }
-
-    @GetMapping("/unboundUser/{id}")
-    public IngotResponse<?> getUnboundUsers(@PathVariable Long id, Page<?> page) {
-        return ok(sysRoleUserService.getRoleUnboundUsers(id, page));
+    public IngotResponse<?> getBindUsers(@PathVariable Long id,
+                                         Page<?> page,
+                                         @RequestParam("isBind") boolean isBind) {
+        return ok(sysRoleUserService.getRoleUsers(id, page, isBind));
     }
 }

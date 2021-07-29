@@ -47,7 +47,9 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
     }
 
     @Override
-    public IPage<SysOauthClientDetails> getRoleBindClients(long roleId, Page<?> page) {
-        return getBaseMapper().getRoleBindClients(page, roleId);
+    public IPage<SysOauthClientDetails> getRoleClients(long roleId,
+                                                       Page<?> page,
+                                                       boolean isBind) {
+        return getBaseMapper().getRoleClients(page, roleId, isBind);
     }
 }

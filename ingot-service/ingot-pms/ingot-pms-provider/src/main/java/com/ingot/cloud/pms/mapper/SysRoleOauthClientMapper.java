@@ -26,10 +26,15 @@ public interface SysRoleOauthClientMapper extends BaseMapper<SysRoleOauthClient>
     void insertIgnore(@Param("roleId") long roleId, @Param("clientId") long clientId);
 
     /**
-     * 获取角色绑定的客户端信息
-     * @param page 分页参数
+     * 获取角色客户端信息
+     *
+     * @param page   分页参数
      * @param roleId 角色ID
+     * @param isBind 是否绑定
      * @return 分页用信息
      */
-    IPage<SysOauthClientDetails> getRoleBindClients(Page<?> page, @Param("roleId") long roleId);
+    IPage<SysOauthClientDetails> getRoleClients(Page<?> page,
+                                                @Param("roleId") long roleId,
+                                                @Param("isBind") boolean isBind);
+
 }

@@ -50,20 +50,13 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
     void roleBindUsers(RelationDto<Long, Long> params);
 
     /**
-     * 获取角色绑定的用户
+     * 获取角色用户
      *
      * @param roleId 角色id
      * @param page   分页信息
+     * @param isBind 是否绑定
      * @return 分页用户
      */
-    IPage<SysUser> getRoleBindUsers(long roleId, Page<?> page);
+    IPage<SysUser> getRoleUsers(long roleId, Page<?> page, boolean isBind);
 
-    /**
-     * 获取未绑定指定角色的用户
-     *
-     * @param roleId 角色id
-     * @param page   分页信息
-     * @return 分页用户
-     */
-    IPage<SysUser> getRoleUnboundUsers(long roleId, Page<?> page);
 }

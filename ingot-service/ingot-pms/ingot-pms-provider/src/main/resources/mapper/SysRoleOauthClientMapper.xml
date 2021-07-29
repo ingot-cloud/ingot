@@ -7,14 +7,21 @@
         VALUES (#{roleId}, #{clientId})
     </insert>
 
-    <select id="getRoleBindClients" resultType="com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails">
+    <select id="getRoleClients" resultType="com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails">
         SELECT
             client.*
         FROM
             sys_oauth_client_details AS client
-            INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
+                INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
         WHERE
-            rc.role_id = #{roleId}
+        <choose>
+            <when test="isBind">
+                rc.role_id = #{roleId}
+            </when>
+            <otherwise>
+                rc.role_id &lt;&gt; #{roleId}
+            </otherwise>
+        </choose>
         ORDER BY client.created_at ASC
     </select>
 

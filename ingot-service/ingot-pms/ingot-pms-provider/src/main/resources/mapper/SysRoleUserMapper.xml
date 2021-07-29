@@ -8,19 +8,20 @@
         VALUES (#{roleId}, #{userId})
     </insert>
 
-    <select id="getRoleBindUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
+    <select id="getRoleUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
         SELECT u.*
         FROM sys_user AS u
                  INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
-        WHERE ru.role_id = #{roleId}
+        WHERE
+        <choose>
+            <when test="isBind">
+                ru.role_id = #{roleId}
+            </when>
+            <otherwise>
+                ru.role_id &lt;&gt; #{roleId}
+            </otherwise>
+        </choose>
         ORDER BY u.created_at ASC
     </select>
 
-    <select id="getRoleUnboundUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
-        SELECT u.*
-        FROM sys_user AS u
-                 INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
-        WHERE ru.role_id &lt;&gt; #{roleId}
-        ORDER BY u.created_at ASC
-    </select>
 </mapper>

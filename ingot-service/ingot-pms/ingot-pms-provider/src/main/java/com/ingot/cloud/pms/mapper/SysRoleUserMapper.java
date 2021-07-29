@@ -26,20 +26,15 @@ public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
     void insertIgnore(@Param("roleId") long roleId, @Param("userId") long userId);
 
     /**
-     * 获取角色绑定的用户
+     * 获取角色用户
      *
      * @param page   分页参数
      * @param roleId 角色ID
+     * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysUser> getRoleBindUsers(Page<?> page, @Param("roleId") long roleId);
+    IPage<SysUser> getRoleUsers(Page<?> page,
+                                @Param("roleId") long roleId,
+                                @Param("isBind") boolean isBind);
 
-    /**
-     * 获取角色未绑定用户信息
-     *
-     * @param page   分页参数
-     * @param roleId 角色ID
-     * @return 分页信息
-     */
-    IPage<SysUser> getRoleUnboundUsers(Page<?> page, @Param("roleId") long roleId);
 }
