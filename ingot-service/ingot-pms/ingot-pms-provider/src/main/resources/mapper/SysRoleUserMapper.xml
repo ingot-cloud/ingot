@@ -21,6 +21,9 @@
                 ru.role_id &lt;&gt; #{roleId}
             </otherwise>
         </choose>
+        <if test="condition.username != null and condition.username != ''">
+            AND LOCATE(#{key}, u.username) > 0
+        </if>
         ORDER BY u.created_at ASC
     </select>
 

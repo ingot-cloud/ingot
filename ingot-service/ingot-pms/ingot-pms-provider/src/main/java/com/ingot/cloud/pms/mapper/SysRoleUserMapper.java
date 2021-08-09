@@ -35,6 +35,7 @@ public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
      */
     IPage<SysUser> getRoleUsers(Page<?> page,
                                 @Param("roleId") long roleId,
-                                @Param("isBind") boolean isBind);
+                                @Param("isBind") boolean isBind,
+                                @Param("condition") SysUser condition);
 
 }

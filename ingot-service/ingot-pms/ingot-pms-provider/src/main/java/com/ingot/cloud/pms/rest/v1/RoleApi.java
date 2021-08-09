@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.Group;
@@ -114,7 +115,8 @@ public class RoleApi extends BaseController {
     @GetMapping("/bindUser/{id}")
     public IngotResponse<?> getBindUsers(@PathVariable Long id,
                                          Page<?> page,
-                                         @RequestParam("isBind") boolean isBind) {
-        return ok(sysRoleUserService.getRoleUsers(id, page, isBind));
+                                         @RequestParam("isBind") boolean isBind,
+                                         SysUser condition) {
+        return ok(sysRoleUserService.getRoleUsers(id, page, isBind, condition));
     }
 }
