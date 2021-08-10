@@ -47,7 +47,10 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     }
 
     @Override
-    public IPage<SysAuthority> getRoleAuthorities(long roleId, Page<?> page, boolean isBind) {
-        return baseMapper.getRoleAuthorities(page, roleId, isBind);
+    public IPage<SysAuthority> getRoleAuthorities(long roleId,
+                                                  Page<?> page,
+                                                  boolean isBind,
+                                                  SysAuthority condition) {
+        return baseMapper.getRoleAuthorities(page, roleId, isBind, condition);
     }
 }

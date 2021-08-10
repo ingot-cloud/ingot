@@ -33,10 +33,14 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
     /**
      * 获取角色权限信息
      *
-     * @param roleId 角色ID
-     * @param page   分页参数
-     * @param isBind 是否绑定
+     * @param roleId    角色ID
+     * @param page      分页参数
+     * @param isBind    是否绑定
+     * @param condition 条件
      * @return 分页信息
      */
-    IPage<SysAuthority> getRoleAuthorities(long roleId, Page<?> page, boolean isBind);
+    IPage<SysAuthority> getRoleAuthorities(long roleId,
+                                           Page<?> page,
+                                           boolean isBind,
+                                           SysAuthority condition);
 }

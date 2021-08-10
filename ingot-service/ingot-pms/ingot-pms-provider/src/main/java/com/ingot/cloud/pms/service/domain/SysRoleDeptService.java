@@ -33,10 +33,14 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
     /**
      * 获取角色部门信息
      *
-     * @param roleId 角色ID
-     * @param page   分页信息
-     * @param isBind 是否绑定
+     * @param roleId    角色ID
+     * @param page      分页信息
+     * @param isBind    是否绑定
+     * @param condition 条件
      * @return 分页信息
      */
-    IPage<SysDept> getRoleDepts(long roleId, Page<?> page, boolean isBind);
+    IPage<SysDept> getRoleDepts(long roleId,
+                                Page<?> page,
+                                boolean isBind,
+                                SysDept condition);
 }

@@ -35,5 +35,6 @@ public interface SysRoleAuthorityMapper extends BaseMapper<SysRoleAuthority> {
      */
     IPage<SysAuthority> getRoleAuthorities(Page<?> page,
                                            @Param("roleId") long roleId,
-                                           @Param("isBind") boolean isBind);
+                                           @Param("isBind") boolean isBind,
+                                           @Param("condition") SysAuthority condition);
 }

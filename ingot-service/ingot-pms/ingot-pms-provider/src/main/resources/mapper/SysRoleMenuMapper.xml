@@ -20,6 +20,9 @@
                 rm.role_id &lt;&gt; #{roleId}
             </otherwise>
         </choose>
+        <if test="condition.name != null and condition.name != ''">
+            AND LOCATE(#{condition.name}, menu.name) > 0
+        </if>
         ORDER BY menu.sort ASC
     </select>
 

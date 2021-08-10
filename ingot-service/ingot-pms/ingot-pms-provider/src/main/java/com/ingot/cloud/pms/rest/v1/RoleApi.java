@@ -1,8 +1,7 @@
 package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.Group;
@@ -63,8 +62,9 @@ public class RoleApi extends BaseController {
     @GetMapping("/bindAuthority/{id}")
     public IngotResponse<?> getBindAuthorities(@PathVariable Long id,
                                                Page<?> page,
-                                               @RequestParam("isBind") boolean isBind) {
-        return ok(sysRoleAuthorityService.getRoleAuthorities(id, page, isBind));
+                                               @RequestParam("isBind") boolean isBind,
+                                               SysAuthority condition) {
+        return ok(sysRoleAuthorityService.getRoleAuthorities(id, page, isBind, condition));
     }
 
     @PutMapping("/bindDept")
@@ -76,8 +76,9 @@ public class RoleApi extends BaseController {
     @GetMapping("/bindDept/{id}")
     public IngotResponse<?> getBindDepts(@PathVariable Long id,
                                          Page<?> page,
-                                         @RequestParam("isBind") boolean isBind) {
-        return ok(sysRoleDeptService.getRoleDepts(id, page, isBind));
+                                         @RequestParam("isBind") boolean isBind,
+                                         SysDept condition) {
+        return ok(sysRoleDeptService.getRoleDepts(id, page, isBind, condition));
     }
 
     @PutMapping("/bindMenu")
@@ -89,8 +90,9 @@ public class RoleApi extends BaseController {
     @GetMapping("/bindMenu/{id}")
     public IngotResponse<?> getBindMenus(@PathVariable Long id,
                                          Page<?> page,
-                                         @RequestParam("isBind") boolean isBind) {
-        return ok(sysRoleMenuService.getRoleMenus(id, page, isBind));
+                                         @RequestParam("isBind") boolean isBind,
+                                         SysMenu condition) {
+        return ok(sysRoleMenuService.getRoleMenus(id, page, isBind, condition));
     }
 
     @PutMapping("/bindClient")
@@ -102,8 +104,9 @@ public class RoleApi extends BaseController {
     @GetMapping("/bindClient/{id}")
     public IngotResponse<?> getBindClients(@PathVariable Long id,
                                            Page<?> page,
-                                           @RequestParam("isBind") boolean isBind) {
-        return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind));
+                                           @RequestParam("isBind") boolean isBind,
+                                           SysOauthClientDetails condition) {
+        return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind, condition));
     }
 
     @PutMapping("/bindUser")

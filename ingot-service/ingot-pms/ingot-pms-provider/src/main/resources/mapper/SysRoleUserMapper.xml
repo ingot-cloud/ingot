@@ -22,7 +22,7 @@
             </otherwise>
         </choose>
         <if test="condition.username != null and condition.username != ''">
-            AND LOCATE(#{key}, u.username) > 0
+            AND LOCATE(#{condition.username}, u.username) > 0
         </if>
         ORDER BY u.created_at ASC
     </select>

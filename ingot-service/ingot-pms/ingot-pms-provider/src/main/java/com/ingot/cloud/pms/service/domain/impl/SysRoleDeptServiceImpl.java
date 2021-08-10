@@ -47,7 +47,10 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
     }
 
     @Override
-    public IPage<SysDept> getRoleDepts(long roleId, Page<?> page, boolean isBind) {
-        return getBaseMapper().getRoleDepts(page, roleId, isBind);
+    public IPage<SysDept> getRoleDepts(long roleId,
+                                       Page<?> page,
+                                       boolean isBind,
+                                       SysDept condition) {
+        return getBaseMapper().getRoleDepts(page, roleId, isBind, condition);
     }
 }

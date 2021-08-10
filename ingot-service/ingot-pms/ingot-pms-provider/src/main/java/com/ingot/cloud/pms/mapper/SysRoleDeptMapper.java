@@ -34,5 +34,6 @@ public interface SysRoleDeptMapper extends BaseMapper<SysRoleDept> {
      */
     IPage<SysDept> getRoleDepts(Page<?> page,
                                 @Param("roleId") long roleId,
-                                @Param("isBind") boolean isBind);
+                                @Param("isBind") boolean isBind,
+                                @Param("condition") SysDept condition);
 }

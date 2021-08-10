@@ -34,10 +34,14 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
     /**
      * 获取角色客户端
      *
-     * @param roleId 角色id
-     * @param page   分页信息
-     * @param isBind 是否绑定
+     * @param roleId    角色id
+     * @param page      分页信息
+     * @param isBind    是否绑定
+     * @param condition 条件参数
      * @return 分页用户
      */
-    IPage<SysOauthClientDetails> getRoleClients(long roleId, Page<?> page, boolean isBind);
+    IPage<SysOauthClientDetails> getRoleClients(long roleId,
+                                                Page<?> page,
+                                                boolean isBind,
+                                                SysOauthClientDetails condition);
 }

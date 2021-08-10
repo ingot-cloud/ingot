@@ -28,12 +28,14 @@ public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenu> {
     /**
      * 获取角色菜单
      *
-     * @param page   分页信息
-     * @param roleId 角色ID
-     * @param isBind 是否绑定
+     * @param page      分页信息
+     * @param roleId    角色ID
+     * @param isBind    是否绑定
+     * @param condition 条件
      * @return 分页信息
      */
     IPage<SysMenu> getRoleMenus(Page<?> page,
                                 @Param("roleId") long roleId,
-                                @Param("isBind") boolean isBind);
+                                @Param("isBind") boolean isBind,
+                                @Param("condition") SysMenu condition);
 }

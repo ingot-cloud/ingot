@@ -20,6 +20,9 @@
                 ra.role_id &lt;&gt; #{roleId}
             </otherwise>
         </choose>
+        <if test="condition.name != null and condition.name != ''">
+            AND LOCATE(#{condition.name}, auth.name) > 0
+        </if>
         ORDER BY auth.created_at ASC
     </select>
 
