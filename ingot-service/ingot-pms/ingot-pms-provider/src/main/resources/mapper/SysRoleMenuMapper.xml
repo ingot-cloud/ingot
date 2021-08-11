@@ -10,14 +10,23 @@
     <select id="getRoleMenus" resultType="com.ingot.cloud.pms.api.model.domain.SysMenu">
         SELECT menu.*
         FROM sys_menu AS menu
-                 INNER JOIN sys_role_menu AS rm ON rm.menu_id = menu.id
+            <if test="isBind">
+                INNER JOIN sys_role_menu AS rm ON rm.menu_id = menu.id
+            </if>
         WHERE
         <choose>
             <when test="isBind">
                 rm.role_id = #{roleId}
             </when>
             <otherwise>
-                rm.role_id &lt;&gt; #{roleId}
+                menu.id NOT IN (
+                SELECT
+                    rm.menu_id
+                FROM
+                    sys_role_menu AS rm
+                WHERE
+                    rm.role_id = #{roleId}
+                )
             </otherwise>
         </choose>
         <if test="condition.name != null and condition.name != ''">

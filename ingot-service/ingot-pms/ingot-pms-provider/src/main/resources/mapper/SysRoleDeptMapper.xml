@@ -10,14 +10,23 @@
     <select id="getRoleDepts" resultType="com.ingot.cloud.pms.api.model.domain.SysDept">
         SELECT dept.*
         FROM sys_dept AS dept
-                 INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
+            <if test="isBind">
+                INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
+            </if>
         WHERE
         <choose>
             <when test="isBind">
                 rd.role_id = #{roleId}
             </when>
             <otherwise>
-                rd.role_id &lt;&gt; #{roleId}
+                dept.id NOT IN (
+                SELECT
+                    rd.dept_id
+                FROM
+                    sys_role_dept AS rd
+                WHERE
+                    rd.role_id = #{roleId}
+                )
             </otherwise>
         </choose>
         <if test="condition.name != null and condition.name != ''">

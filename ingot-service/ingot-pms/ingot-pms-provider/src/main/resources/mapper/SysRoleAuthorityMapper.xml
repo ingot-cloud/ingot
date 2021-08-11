@@ -10,14 +10,23 @@
     <select id="getRoleAuthorities" resultType="com.ingot.cloud.pms.api.model.domain.SysAuthority">
         SELECT auth.*
         FROM sys_authority AS auth
-                 INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
+            <if test="isBind">
+                INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
+            </if>
         WHERE
         <choose>
             <when test="isBind">
                 ra.role_id = #{roleId}
             </when>
             <otherwise>
-                ra.role_id &lt;&gt; #{roleId}
+                auth.id NOT IN (
+                SELECT
+                    ra.authority_id
+                FROM
+                    sys_role_authority AS ra
+                WHERE
+                    ra.role_id = #{roleId}
+                )
             </otherwise>
         </choose>
         <if test="condition.name != null and condition.name != ''">

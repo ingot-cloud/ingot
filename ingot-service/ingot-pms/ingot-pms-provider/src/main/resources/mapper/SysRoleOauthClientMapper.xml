@@ -12,14 +12,23 @@
             client.*
         FROM
             sys_oauth_client_details AS client
-                INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
+                <if test="isBind">
+                    INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
+                </if>
         WHERE
         <choose>
             <when test="isBind">
                 rc.role_id = #{roleId}
             </when>
             <otherwise>
-                rc.role_id &lt;&gt; #{roleId}
+                client.id NOT IN (
+                SELECT
+                    rc.client_id
+                FROM
+                    sys_role_oauth_client AS rc
+                WHERE
+                    rc.role_id = #{roleId}
+                )
             </otherwise>
         </choose>
         <if test="condition.clientId != null and condition.clientId != ''">
