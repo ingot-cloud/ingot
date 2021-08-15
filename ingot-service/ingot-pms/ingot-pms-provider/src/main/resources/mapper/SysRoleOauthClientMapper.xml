@@ -32,7 +32,7 @@
             </otherwise>
         </choose>
         <if test="condition.clientId != null and condition.clientId != ''">
-            AND LOCATE(#{condition.clientId}, client.clientId) > 0
+            AND LOCATE(#{condition.clientId}, client.client_id) > 0
         </if>
         ORDER BY client.created_at ASC
     </select>
