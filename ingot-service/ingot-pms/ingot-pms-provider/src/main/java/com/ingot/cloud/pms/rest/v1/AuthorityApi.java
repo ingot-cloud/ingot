@@ -25,7 +25,8 @@ public class AuthorityApi extends BaseController {
 
     @GetMapping("/page")
     public IngotResponse<?> page(Page<SysAuthority> page, SysAuthority params) {
-        return ok(sysAuthorityService.page(page, Wrappers.lambdaQuery(params)));
+        return ok(sysAuthorityService.page(page, Wrappers.lambdaQuery(params)
+                .isNull(params.getPid() == null, SysAuthority::getPid)));
     }
 
     @PostMapping
