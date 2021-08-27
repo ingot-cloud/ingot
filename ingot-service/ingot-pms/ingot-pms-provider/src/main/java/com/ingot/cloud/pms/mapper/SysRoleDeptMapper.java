@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.mapper;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -27,13 +27,11 @@ public interface SysRoleDeptMapper extends BaseMapper<SysRoleDept> {
     /**
      * 获取角色部门信息
      *
-     * @param page   分页信息
      * @param roleId 角色Id
      * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<SysDept> getRoleDepts(Page<?> page,
-                                @Param("roleId") long roleId,
-                                @Param("isBind") boolean isBind,
-                                @Param("condition") SysDept condition);
+    List<SysDept> getRoleDepts(@Param("roleId") long roleId,
+                               @Param("isBind") boolean isBind,
+                               @Param("condition") SysDept condition);
 }

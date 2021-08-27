@@ -32,7 +32,6 @@
         <if test="condition.name != null and condition.name != ''">
             AND LOCATE(#{condition.name}, dept.name) > 0
         </if>
-        ORDER BY dept.sort ASC
     </select>
 
 </mapper>

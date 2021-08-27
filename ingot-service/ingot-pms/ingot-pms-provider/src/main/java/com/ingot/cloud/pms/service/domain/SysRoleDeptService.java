@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -34,13 +35,11 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
      * 获取角色部门信息
      *
      * @param roleId    角色ID
-     * @param page      分页信息
      * @param isBind    是否绑定
      * @param condition 条件
      * @return 分页信息
      */
-    IPage<SysDept> getRoleDepts(long roleId,
-                                Page<?> page,
-                                boolean isBind,
-                                SysDept condition);
+    List<DeptTreeNode> getRoleDepts(long roleId,
+                                    boolean isBind,
+                                    SysDept condition);
 }

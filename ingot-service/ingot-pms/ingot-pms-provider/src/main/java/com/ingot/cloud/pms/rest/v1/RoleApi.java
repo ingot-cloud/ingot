@@ -75,10 +75,9 @@ public class RoleApi extends BaseController {
 
     @GetMapping("/bindDept/{id}")
     public IngotResponse<?> getBindDepts(@PathVariable Long id,
-                                         Page<?> page,
                                          @RequestParam("isBind") boolean isBind,
                                          SysDept condition) {
-        return ok(sysRoleDeptService.getRoleDepts(id, page, isBind, condition));
+        return ok(sysRoleDeptService.getRoleDepts(id, isBind, condition));
     }
 
     @PutMapping("/bindMenu")

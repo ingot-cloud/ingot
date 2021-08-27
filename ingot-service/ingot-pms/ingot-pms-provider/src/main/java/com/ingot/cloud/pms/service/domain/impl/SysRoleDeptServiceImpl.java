@@ -1,15 +1,21 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
+import com.ingot.cloud.pms.api.model.transform.DeptTrans;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
+import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -20,7 +26,9 @@ import org.springframework.stereotype.Service;
  * @since 2020-11-20
  */
 @Service
+@AllArgsConstructor
 public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDeptMapper, SysRoleDept> implements SysRoleDeptService {
+    private final DeptTrans deptTrans;
 
     @Override
     public void deptBindRoles(RelationDto<Long, Long> params) {
@@ -47,10 +55,14 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
     }
 
     @Override
-    public IPage<SysDept> getRoleDepts(long roleId,
-                                       Page<?> page,
-                                       boolean isBind,
-                                       SysDept condition) {
-        return getBaseMapper().getRoleDepts(page, roleId, isBind, condition);
+    public List<DeptTreeNode> getRoleDepts(long roleId,
+                                           boolean isBind,
+                                           SysDept condition) {
+        List<SysDept> all = getBaseMapper().getRoleDepts(roleId, isBind, condition);
+        List<DeptTreeNode> allNode = all.stream()
+                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .map(deptTrans::to).collect(Collectors.toList());
+
+        return TreeUtils.build(allNode, 0);
     }
 }
