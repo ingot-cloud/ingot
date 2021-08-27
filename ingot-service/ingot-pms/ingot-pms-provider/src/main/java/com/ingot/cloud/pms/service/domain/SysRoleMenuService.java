@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -34,13 +35,11 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
      * 获取角色菜单
      *
      * @param roleId    角色ID
-     * @param page      分页信息
      * @param isBind    是否绑定
      * @param condition 条件
      * @return 分页信息
      */
-    IPage<SysMenu> getRoleMenus(long roleId,
-                                Page<?> page,
-                                boolean isBind,
-                                SysMenu condition);
+    List<MenuTreeNode> getRoleMenus(long roleId,
+                                    boolean isBind,
+                                    SysMenu condition);
 }

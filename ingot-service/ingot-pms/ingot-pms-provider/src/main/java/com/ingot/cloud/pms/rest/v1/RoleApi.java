@@ -88,10 +88,9 @@ public class RoleApi extends BaseController {
 
     @GetMapping("/bindMenu/{id}")
     public IngotResponse<?> getBindMenus(@PathVariable Long id,
-                                         Page<?> page,
                                          @RequestParam("isBind") boolean isBind,
                                          SysMenu condition) {
-        return ok(sysRoleMenuService.getRoleMenus(id, page, isBind, condition));
+        return ok(sysRoleMenuService.getRoleMenus(id, isBind, condition));
     }
 
     @PutMapping("/bindClient")

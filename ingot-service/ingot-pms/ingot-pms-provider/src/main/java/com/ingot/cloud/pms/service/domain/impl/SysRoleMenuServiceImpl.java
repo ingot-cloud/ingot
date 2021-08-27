@@ -1,15 +1,21 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
+import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -20,7 +26,9 @@ import org.springframework.stereotype.Service;
  * @since 2020-11-20
  */
 @Service
+@AllArgsConstructor
 public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMenuMapper, SysRoleMenu> implements SysRoleMenuService {
+    private final MenuTrans menuTrans;
 
     @Override
     public void menuBindRoles(RelationDto<Long, Long> params) {
@@ -47,10 +55,14 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
     }
 
     @Override
-    public IPage<SysMenu> getRoleMenus(long roleId,
-                                       Page<?> page,
-                                       boolean isBind,
-                                       SysMenu condition) {
-        return getBaseMapper().getRoleMenus(page, roleId, isBind, condition);
+    public List<MenuTreeNode> getRoleMenus(long roleId,
+                                           boolean isBind,
+                                           SysMenu condition) {
+        List<SysMenu> all = getBaseMapper().getRoleMenus(roleId, isBind, condition);
+        List<MenuTreeNode> allNode = all.stream()
+                .sorted(Comparator.comparingInt(SysMenu::getSort))
+                .map(menuTrans::to).collect(Collectors.toList());
+
+        return TreeUtils.build(allNode, 0);
     }
 }

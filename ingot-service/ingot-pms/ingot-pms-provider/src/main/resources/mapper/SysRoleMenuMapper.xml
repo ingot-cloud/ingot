@@ -32,7 +32,6 @@
         <if test="condition.name != null and condition.name != ''">
             AND LOCATE(#{condition.name}, menu.name) > 0
         </if>
-        ORDER BY menu.sort ASC
     </select>
 
 </mapper>
