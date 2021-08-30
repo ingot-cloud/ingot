@@ -1,9 +1,13 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
+import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -14,6 +18,9 @@ import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -29,6 +36,19 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final AssertI18nService assertI18nService;
     private final IdGenerator idGenerator;
+    private final AuthorityTrans authorityTrans;
+
+    @Override
+    public List<AuthorityTreeNode> tree() {
+        List<SysAuthority> all = CollUtil.emptyIfNull(list(
+                Wrappers.<SysAuthority>lambdaQuery()
+                        .orderByAsc(SysAuthority::getCreatedAt)));
+
+        List<AuthorityTreeNode> allNode = all.stream()
+                .map(authorityTrans::to).collect(Collectors.toList());
+
+        return TreeUtils.build(allNode, 0);
+    }
 
     @Override
     public void createAuthority(SysAuthority params) {
