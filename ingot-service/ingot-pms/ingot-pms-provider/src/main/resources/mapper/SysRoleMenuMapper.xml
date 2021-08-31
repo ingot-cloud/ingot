@@ -13,25 +13,14 @@
             <if test="isBind">
                 INNER JOIN sys_role_menu AS rm ON rm.menu_id = menu.id
             </if>
-        WHERE
-        <choose>
-            <when test="isBind">
-                rm.role_id = #{roleId}
-            </when>
-            <otherwise>
-                menu.id NOT IN (
-                SELECT
-                    rm.menu_id
-                FROM
-                    sys_role_menu AS rm
-                WHERE
-                    rm.role_id = #{roleId}
-                )
-            </otherwise>
-        </choose>
-        <if test="condition.name != null and condition.name != ''">
-            AND LOCATE(#{condition.name}, menu.name) > 0
-        </if>
+        <where>
+            <if test="isBind">
+                AND rm.role_id = #{roleId}
+            </if>
+            <if test="condition.name != null and condition.name != ''">
+                AND LOCATE(#{condition.name}, menu.name) > 0
+            </if>
+        </where>
     </select>
 
 </mapper>

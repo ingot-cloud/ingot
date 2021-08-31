@@ -14,24 +14,15 @@
                 INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
             </if>
         WHERE
-        <choose>
-            <when test="isBind">
-                rd.role_id = #{roleId}
-            </when>
-            <otherwise>
-                dept.id NOT IN (
-                SELECT
-                    rd.dept_id
-                FROM
-                    sys_role_dept AS rd
-                WHERE
-                    rd.role_id = #{roleId}
-                )
-            </otherwise>
-        </choose>
-        <if test="condition.name != null and condition.name != ''">
-            AND LOCATE(#{condition.name}, dept.name) > 0
-        </if>
+        <where>
+            <if test="isBind">
+                AND rd.role_id = #{roleId}
+            </if>
+            <if test="condition.name != null and condition.name != ''">
+                AND LOCATE(#{condition.name}, dept.name) > 0
+            </if>
+        </where>
+
     </select>
 
 </mapper>

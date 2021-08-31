@@ -14,24 +14,14 @@
                 INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
             </if>
         WHERE
-        <choose>
-            <when test="isBind">
-                ra.role_id = #{roleId}
-            </when>
-            <otherwise>
-                auth.id NOT IN (
-                SELECT
-                    ra.authority_id
-                FROM
-                    sys_role_authority AS ra
-                WHERE
-                    ra.role_id = #{roleId}
-                )
-            </otherwise>
-        </choose>
-        <if test="condition.name != null and condition.name != ''">
-            AND LOCATE(#{condition.name}, auth.name) > 0
-        </if>
+        <where>
+            <if test="isBind">
+                AND ra.role_id = #{roleId}
+            </if>
+            <if test="condition.name != null and condition.name != ''">
+                AND LOCATE(#{condition.name}, auth.name) > 0
+            </if>
+        </where>
         ORDER BY auth.created_at ASC
     </select>
 
