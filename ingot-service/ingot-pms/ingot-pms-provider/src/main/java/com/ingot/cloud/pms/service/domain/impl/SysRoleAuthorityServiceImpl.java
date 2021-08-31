@@ -12,6 +12,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,28 +30,26 @@ import java.util.stream.Collectors;
 public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority> implements SysRoleAuthorityService {
     private final AuthorityTrans authorityTrans;
 
+    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+            .eq(SysRoleAuthority::getRoleId, roleId)
+            .eq(SysRoleAuthority::getAuthorityId, targetId));
+    private final Do bind = (roleId, targetId) -> {
+        getBaseMapper().insertIgnore(roleId, targetId);
+        return true;
+    };
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void authorityBindRoles(RelationDto<Long, Long> params) {
-        bindRoles(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
-                        .eq(SysRoleAuthority::getRoleId, roleId)
-                        .eq(SysRoleAuthority::getAuthorityId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleAuthorityServiceImpl.RemoveFailed");
+        bindRoles(params, remove, bind,
+                "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void roleBindAuthorities(RelationDto<Long, Long> params) {
-        bindTargets(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
-                        .eq(SysRoleAuthority::getRoleId, roleId)
-                        .eq(SysRoleAuthority::getAuthorityId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleAuthorityServiceImpl.RemoveFailed");
+        bindTargets(params, remove, bind,
+                "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override

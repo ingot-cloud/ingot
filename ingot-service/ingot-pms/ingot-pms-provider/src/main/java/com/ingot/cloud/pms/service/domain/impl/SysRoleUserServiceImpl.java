@@ -26,6 +26,14 @@ import java.util.List;
 @Service
 public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUserMapper, SysRoleUser> implements SysRoleUserService {
 
+    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
+            .eq(SysRoleUser::getRoleId, roleId)
+            .eq(SysRoleUser::getUserId, targetId));
+    private final Do bind = (roleId, targetId) -> {
+        getBaseMapper().insertIgnore(roleId, targetId);
+        return true;
+    };
+
     @Override
     public boolean removeByUserId(long userId) {
         return remove(Wrappers.<SysRoleUser>lambdaQuery()
@@ -57,27 +65,15 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void userBindRoles(RelationDto<Long, Long> params) {
-        bindRoles(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
-                        .eq(SysRoleUser::getRoleId, roleId)
-                        .eq(SysRoleUser::getUserId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleUserServiceImpl.RemoveFailed");
+        bindRoles(params, remove, bind,
+                "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindUsers(RelationDto<Long, Long> params) {
-        bindTargets(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
-                        .eq(SysRoleUser::getRoleId, roleId)
-                        .eq(SysRoleUser::getUserId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleUserServiceImpl.RemoveFailed");
+        bindTargets(params, remove, bind,
+                "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override

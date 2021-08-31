@@ -12,6 +12,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
@@ -30,28 +31,26 @@ import java.util.stream.Collectors;
 public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDeptMapper, SysRoleDept> implements SysRoleDeptService {
     private final DeptTrans deptTrans;
 
+    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleDept>lambdaQuery()
+            .eq(SysRoleDept::getRoleId, roleId)
+            .eq(SysRoleDept::getDeptId, targetId));
+    private final Do bind = (roleId, targetId) -> {
+        getBaseMapper().insertIgnore(roleId, targetId);
+        return true;
+    };
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deptBindRoles(RelationDto<Long, Long> params) {
-        bindRoles(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleDept>lambdaQuery()
-                        .eq(SysRoleDept::getRoleId, roleId)
-                        .eq(SysRoleDept::getDeptId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleDeptServiceImpl.RemoveFailed");
+        bindRoles(params, remove, bind,
+                "SysRoleDeptServiceImpl.RemoveFailed");
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void roleBindDepts(RelationDto<Long, Long> params) {
-        bindTargets(params,
-                (roleId, targetId) -> remove(Wrappers.<SysRoleDept>lambdaQuery()
-                        .eq(SysRoleDept::getRoleId, roleId)
-                        .eq(SysRoleDept::getDeptId, targetId)),
-                (roleId, targetId) -> {
-                    getBaseMapper().insertIgnore(roleId, targetId);
-                    return true;
-                }, "SysRoleDeptServiceImpl.RemoveFailed");
+        bindTargets(params, remove, bind,
+                "SysRoleDeptServiceImpl.RemoveFailed");
     }
 
     @Override
