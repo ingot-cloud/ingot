@@ -62,6 +62,16 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, 0);
+        List<DeptTreeNode> tree = TreeUtils.build(allNode, 0);
+
+        if (isBind) {
+            allNode.forEach(item -> {
+                if (!TreeUtils.contains(tree, item)) {
+                    tree.add(item);
+                }
+            });
+        }
+
+        return tree;
     }
 }

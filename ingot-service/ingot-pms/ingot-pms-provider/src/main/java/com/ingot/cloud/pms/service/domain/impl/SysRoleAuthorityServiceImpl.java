@@ -60,6 +60,16 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
         List<AuthorityTreeNode> allNode = all.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, 0);
+        List<AuthorityTreeNode> tree = TreeUtils.build(allNode, 0);
+
+        if (isBind) {
+            allNode.forEach(item -> {
+                if (!TreeUtils.contains(tree, item)) {
+                    tree.add(item);
+                }
+            });
+        }
+
+        return tree;
     }
 }

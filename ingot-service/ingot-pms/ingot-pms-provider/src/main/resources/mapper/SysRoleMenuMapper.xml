@@ -21,6 +21,7 @@
                 AND LOCATE(#{condition.name}, menu.name) > 0
             </if>
         </where>
+        ORDER BY menu.created_at ASC
     </select>
 
 </mapper>
