@@ -3,7 +3,7 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper">
 
     <insert id="insertIgnore">
-        INSERT IGNORE INTO sys_role_user(role_id, authority_id)
+        INSERT IGNORE INTO sys_role_authority(role_id, authority_id)
         VALUES (#{roleId}, #{authorityId})
     </insert>
 
@@ -13,7 +13,6 @@
             <if test="isBind">
                 INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
             </if>
-        WHERE
         <where>
             <if test="isBind">
                 AND ra.role_id = #{roleId}
