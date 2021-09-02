@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
 
     implementation localGroovy()
     implementation gradleApi()
@@ -22,10 +22,21 @@ dependencies {
 //    }
 //}
 // nexus.secingot.com
-uploadArchives {
-    repositories.mavenDeployer {
-        repository(url: INGOT_NEXUS_URL){
-            authentication(userName: INGOT_NEXUS_USERNAME, password: INGOT_NEXUS_PASSWORD)
+//uploadArchives {
+//    repositories.mavenDeployer {
+//        repository(url: INGOT_NEXUS_URL){
+//            authentication(userName: INGOT_NEXUS_USERNAME, password: INGOT_NEXUS_PASSWORD)
+//        }
+//    }
+//}
+publishing {
+    repositories {
+        maven {
+            url = INGOT_NEXUS_URL
+            credentials {
+                username = INGOT_NEXUS_USERNAME
+                password = INGOT_NEXUS_PASSWORD
+            }
         }
     }
 }

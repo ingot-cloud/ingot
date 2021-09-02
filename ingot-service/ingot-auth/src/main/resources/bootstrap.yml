@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-acs
+    name: ingot-service-auth
   datasource:
     username: root
     password: 123456

@@ -1,9 +1,7 @@
 package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 

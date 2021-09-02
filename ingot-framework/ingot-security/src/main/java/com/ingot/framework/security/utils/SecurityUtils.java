@@ -215,7 +215,7 @@ public final class SecurityUtils {
             HttpSessionRequestCache cache = new HttpSessionRequestCache();
             SavedRequest savedRequest = cache.getRequest(request, null);
             if (savedRequest instanceof DefaultSavedRequest) {
-                Map<String, String> query = HttpUtil.decodeParamMap(((DefaultSavedRequest) savedRequest).getQueryString(), CharsetUtil.UTF_8);
+                Map<String, String> query = HttpUtil.decodeParamMap(((DefaultSavedRequest) savedRequest).getQueryString(), CharsetUtil.CHARSET_UTF_8);
                 clientId = query.get("client_id");
             }
 
