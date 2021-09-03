@@ -56,6 +56,7 @@ spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-sec
 spring.security_config = "org.springframework.security:spring-security-config"
 spring.security_core = "org.springframework.security:spring-security-core"
 spring.security_web = "org.springframework.security:spring-security-web"
+spring.security_oauth2_authorization_server = "org.springframework.security:spring-security-oauth2-authorization-server:0.2.0"
 
 spring.framework_spring_web = "org.springframework:spring-web:${versions.spring_framework}"
 spring.framework_spring_webflux = "org.springframework:spring-webflux:${versions.spring_framework}"
@@ -139,7 +140,7 @@ deps.aspectj = aspectj
 
 deps.minio = "io.minio:minio:6.0.10"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
-deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.12"
+deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
 deps.lombok = "org.projectlombok:lombok:1.18.16"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
 deps.xxl_rpc_core = "com.xuxueli:xxl-rpc-core:1.4.1"
