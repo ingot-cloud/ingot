@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.config;
+package com.ingot.cloud.authold.config;
 
 import com.ingot.framework.security.config.SecurityConfigManager;
 import com.ingot.framework.security.service.ResourcePermitService;

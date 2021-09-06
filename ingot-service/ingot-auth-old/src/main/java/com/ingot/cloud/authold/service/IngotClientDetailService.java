@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.service;
+package com.ingot.cloud.authold.service;
 
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.security.constants.OAuthClientDetailSqlConstants;

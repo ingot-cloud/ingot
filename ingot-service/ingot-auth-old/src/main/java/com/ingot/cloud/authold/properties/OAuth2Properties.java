@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.properties;
+package com.ingot.cloud.authold.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

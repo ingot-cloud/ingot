@@ -1,9 +1,9 @@
-package com.ingot.cloud.auth.config;
+package com.ingot.cloud.authold.config;
 
-import com.ingot.cloud.auth.authentication.IngotAuthenticationFailureHandler;
-import com.ingot.cloud.auth.authentication.IngotAuthenticationSuccessHandler;
-import com.ingot.cloud.auth.authentication.password.PasswordAuthenticationFilter;
-import com.ingot.cloud.auth.authentication.password.PasswordAuthenticationProvider;
+import com.ingot.cloud.authold.authentication.IngotAuthenticationFailureHandler;
+import com.ingot.cloud.authold.authentication.IngotAuthenticationSuccessHandler;
+import com.ingot.cloud.authold.authentication.password.PasswordAuthenticationFilter;
+import com.ingot.cloud.authold.authentication.password.PasswordAuthenticationProvider;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Configuration;

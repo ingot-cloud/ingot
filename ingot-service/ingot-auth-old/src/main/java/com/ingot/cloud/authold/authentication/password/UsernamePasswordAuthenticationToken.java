@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.authentication.password;
+package com.ingot.cloud.authold.authentication.password;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;

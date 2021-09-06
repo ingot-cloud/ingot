@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.service;
+package com.ingot.cloud.authold.service;
 
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.common.status.BaseStatusCode;

@@ -1,6 +1,6 @@
-package com.ingot.cloud.auth.config;
+package com.ingot.cloud.authold.config;
 
-import com.ingot.cloud.auth.token.JwtKeyGenerator;
+import com.ingot.cloud.authold.token.JwtKeyGenerator;
 import com.ingot.framework.security.provider.token.IngotTokenEnhancer;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

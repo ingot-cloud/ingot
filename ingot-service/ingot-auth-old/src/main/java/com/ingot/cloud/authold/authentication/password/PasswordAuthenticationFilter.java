@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.authentication.password;
+package com.ingot.cloud.authold.authentication.password;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;

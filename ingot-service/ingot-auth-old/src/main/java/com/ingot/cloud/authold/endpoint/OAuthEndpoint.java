@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.endpoint;
+package com.ingot.cloud.authold.endpoint;
 
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;

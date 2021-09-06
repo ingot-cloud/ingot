@@ -1,7 +1,7 @@
-package com.ingot.cloud.auth.token;
+package com.ingot.cloud.authold.token;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.auth.properties.OAuth2Properties;
+import com.ingot.cloud.authold.properties.OAuth2Properties;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.core.bus.RefreshJwtKeySender;
 import com.ingot.framework.security.utils.RSAUtils;

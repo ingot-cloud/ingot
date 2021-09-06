@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.authentication.password;
+package com.ingot.cloud.authold.authentication.password;
 
 import com.ingot.framework.security.core.userdetails.IngotPostAuthenticationChecks;
 import com.ingot.framework.security.core.userdetails.IngotPreAuthenticationChecks;

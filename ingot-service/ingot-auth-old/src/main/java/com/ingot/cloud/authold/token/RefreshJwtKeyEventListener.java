@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.token;
+package com.ingot.cloud.authold.token;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.bus.event.RefreshJwtKeyApplicationEvent;

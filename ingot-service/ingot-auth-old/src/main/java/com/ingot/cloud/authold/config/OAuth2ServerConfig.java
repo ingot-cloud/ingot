@@ -1,7 +1,7 @@
-package com.ingot.cloud.auth.config;
+package com.ingot.cloud.authold.config;
 
-import com.ingot.cloud.auth.service.IngotClientDetailService;
-import com.ingot.cloud.auth.service.IngotUserDetailService;
+import com.ingot.cloud.authold.service.IngotClientDetailService;
+import com.ingot.cloud.authold.service.IngotUserDetailService;
 import com.ingot.framework.security.provider.error.IngotWebResponseExceptionTranslator;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.tenant.filter.TenantFilter;
