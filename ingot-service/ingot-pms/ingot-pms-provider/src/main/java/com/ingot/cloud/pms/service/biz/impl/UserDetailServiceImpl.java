@@ -79,7 +79,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         if (client == null) {
             throw new UnauthorizedException("未授权该应用");
         }
-        userDetails.setAuthType(client.getAuthType());
+        userDetails.setTokenAuthenticationMethod(client.getAuthType());
         return userDetails;
     }
 

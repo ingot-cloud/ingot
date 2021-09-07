@@ -93,8 +93,7 @@ public class AuthorizationServerConfig {
                 new JWSVerificationKeySelector<>(jwsAlgs, jwkSource);
         jwtProcessor.setJWSKeySelector(jwsKeySelector);
         // Override the default Nimbus claims set verifier as NimbusJwtDecoder handles it instead
-        jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {
-        });
+        jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {});
         return new NimbusJwtDecoder(jwtProcessor);
     }
 }

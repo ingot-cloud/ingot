@@ -1,4 +1,4 @@
-package com.ingot.framework.core.model.dto.user;
+package com.ingot.framework.security.core.userdetails;
 
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
@@ -7,13 +7,13 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * <p>Description  : UserAuthDetails.</p>
+ * <p>Description  : UserDetailsResponse.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/11/5.</p>
  * <p>Time         : 3:25 下午.</p>
  */
 @Data
-public class UserAuthDetails implements Serializable {
+public class UserDetailsResponse implements Serializable {
     /**
      * 用户ID
      */

@@ -1,15 +1,9 @@
-package com.ingot.cloud.authold.service;
+package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.model.dto.user.UserAuthDetails;
-import com.ingot.framework.core.model.dto.user.UserDetailsDto;
-import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
-import com.ingot.framework.security.exception.IngotOAuth2Exception;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.utils.SocialUtils;
 import lombok.AllArgsConstructor;
@@ -19,21 +13,19 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
- * <p>Description  : IngotUserDetailService.</p>
+ * <p>Description  : RemoteIngotUserDetailsService.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/11/3.</p>
- * <p>Time         : 4:37 下午.</p>
+ * <p>Date         : 2021/9/7.</p>
+ * <p>Time         : 3:48 下午.</p>
  */
 @Slf4j
-@Service
 @AllArgsConstructor
-public class IngotUserDetailService implements IngotUserDetailsService {
-    private final PmsUserAuthFeignApi userCenterFeignApi;
+public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
+    private final RemoteUserDetailsService remoteUserDetailsService;
 
     /**
      * 根据用户名称登录
@@ -46,16 +38,16 @@ public class IngotUserDetailService implements IngotUserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String clientId = SecurityUtils.getClientIdFromRequest();
-        log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserByUsername: {}, " +
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, loadUserByUsername: {}, " +
                         "clientId={}",
                 username, clientId);
 
-        UserDetailsDto params = new UserDetailsDto();
+        UserDetailsRequest params = new UserDetailsRequest();
         params.setMode(UserDetailsModeEnum.PASSWORD);
         params.setUniqueCode(username);
         params.setClientId(clientId);
-        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
-        log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
+        IngotResponse<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
@@ -70,30 +62,28 @@ public class IngotUserDetailService implements IngotUserDetailsService {
      */
     @Override
     public UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException {
-        log.info(">>> IngotUserDetailServiceImpl - user detail service, loadUserBySocial: openId={}",
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, loadUserBySocial: openId={}",
                 openId);
         String clientId = SecurityUtils.getClientIdFromRequest();
 
         String uniqueCode = SocialUtils.uniqueCode(socialType, openId);
-        UserDetailsDto params = new UserDetailsDto();
+        UserDetailsRequest params = new UserDetailsRequest();
         params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
-        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
-        log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
+        IngotResponse<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
-    private IngotUser loadDetail(IngotResponse<UserAuthDetails> response) {
+    private IngotUser loadDetail(IngotResponse<UserDetailsResponse> response) {
         if (response == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }
 
-        if (!response.isSuccess()) {
-            throw new IngotOAuth2Exception(response.getCode(), response.getMessage());
-        }
+        OAuth2ErrorUtils.checkResponse(response);
 
-        UserAuthDetails data = response.getData();
+        UserDetailsResponse data = response.getData();
         if (data == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }
