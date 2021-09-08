@@ -33,10 +33,10 @@ public class DefaultSecurityConfig {
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+                .formLogin(withDefaults())
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
-                )
-                .formLogin(withDefaults());
+                ).oauth2ResourceServer().jwt();
         return http.build();
     }
 }

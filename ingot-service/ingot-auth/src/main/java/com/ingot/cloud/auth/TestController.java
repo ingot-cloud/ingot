@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,6 +15,6 @@ public class TestController {
 
     @GetMapping("/test")
     public String test() {
-        return "haha";
+        return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
