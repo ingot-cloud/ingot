@@ -6,7 +6,7 @@ import com.ingot.framework.core.wrapper.IngotResponse;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.utils.SocialUtils;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,7 +23,7 @@ import java.util.List;
  * <p>Time         : 3:48 下午.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
     private final RemoteUserDetailsService remoteUserDetailsService;
 
@@ -90,7 +90,7 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
 
         List<String> userAuthorities = data.getRoles();
         List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
-        log.info(">>> UserDetail, {} role={}", data.getUsername(), authorities);
+        log.info(">>> UserDetail - user={} role={}", data.getUsername(), authorities);
         boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
         boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
         return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(), data.getTokenAuthenticationMethod(),
