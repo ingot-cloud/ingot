@@ -1,4 +1,4 @@
-package com.ingot.framework.security.utils;
+package com.ingot.framework.security.common.utils;
 
 import com.ingot.framework.common.constants.GlobalConstants;
 

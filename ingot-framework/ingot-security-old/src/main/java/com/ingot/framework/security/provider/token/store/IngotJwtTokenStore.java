@@ -5,7 +5,7 @@ import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.model.UserStoreToken;
 import com.ingot.framework.security.provider.token.IngotAuthenticationKeyGenerator;
-import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;

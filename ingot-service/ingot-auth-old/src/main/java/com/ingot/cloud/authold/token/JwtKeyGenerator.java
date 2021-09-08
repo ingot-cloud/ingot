@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.authold.properties.OAuth2Properties;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.core.bus.RefreshJwtKeySender;
-import com.ingot.framework.security.utils.RSAUtils;
+import com.ingot.framework.security.common.utils.RSAUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.ingot.framework.security.utils;
+package com.ingot.framework.security.common.utils;
 
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;

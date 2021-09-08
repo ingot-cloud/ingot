@@ -1,4 +1,4 @@
-package com.ingot.framework.security.utils;
+package com.ingot.framework.security.common.utils;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.RequestContextHolder;

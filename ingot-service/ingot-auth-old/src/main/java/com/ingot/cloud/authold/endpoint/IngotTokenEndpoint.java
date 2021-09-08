@@ -2,7 +2,7 @@ package com.ingot.cloud.authold.endpoint;
 
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.web.bind.annotation.GetMapping;

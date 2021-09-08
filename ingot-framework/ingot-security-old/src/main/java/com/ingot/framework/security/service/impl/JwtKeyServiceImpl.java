@@ -2,7 +2,7 @@ package com.ingot.framework.security.service.impl;
 
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.service.JwtKeyService;
-import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.JwtAccessTokenConverterRestTemplateCustomizer;

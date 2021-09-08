@@ -10,7 +10,7 @@ import com.ingot.framework.security.model.UserStoreToken;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.TokenService;
-import com.ingot.framework.security.utils.SecurityUtils;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

@@ -18,7 +18,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.exception.BadRequestException;
 import com.ingot.framework.security.exception.ForbiddenException;
 import com.ingot.framework.security.exception.UnauthorizedException;
-import com.ingot.framework.security.utils.SocialUtils;
+import com.ingot.framework.security.common.utils.SocialUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
