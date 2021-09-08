@@ -26,10 +26,30 @@ public final class OAuth2ErrorUtils {
     /**
      * OAuth2 认证异常
      *
-     * @param code Error code
-     * @param desc Error description
+     * @param code error code
+     */
+    public static void throwAuthenticationException(String code) {
+        throwAuthenticationException(code, null, null);
+    }
+
+    /**
+     * OAuth2 认证异常
+     *
+     * @param code error code
+     * @param desc error description
      */
     public static void throwAuthenticationException(String code, String desc) {
-        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null));
+        throwAuthenticationException(code, desc, null);
+    }
+
+    /**
+     * OAuth2 认证异常
+     *
+     * @param code  error code
+     * @param desc  error description
+     * @param cause the root cause
+     */
+    public static void throwAuthenticationException(String code, String desc, Throwable cause) {
+        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null), cause);
     }
 }
