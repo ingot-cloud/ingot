@@ -17,4 +17,9 @@ public class TestController {
     public String test() {
         return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
     }
+
+    @GetMapping("/test2")
+    public String test2() {
+        return "permit url";
+    }
 }

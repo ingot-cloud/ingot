@@ -35,7 +35,8 @@ public class DefaultSecurityConfig {
         http
                 .formLogin(withDefaults())
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.anyRequest().authenticated()
+                        authorizeRequests.antMatchers("/test2").permitAll()
+                                .anyRequest().authenticated()
                 ).oauth2ResourceServer().jwt();
         return http.build();
     }
