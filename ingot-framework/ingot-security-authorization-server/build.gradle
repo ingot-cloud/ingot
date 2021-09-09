@@ -8,4 +8,5 @@ dependencies {
 
     implementation 'org.springframework:spring-jdbc'
 
+    compileOnly(deps.javax_servlet_api)
 }
