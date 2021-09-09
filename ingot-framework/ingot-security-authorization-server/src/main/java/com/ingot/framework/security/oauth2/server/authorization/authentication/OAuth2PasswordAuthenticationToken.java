@@ -13,27 +13,36 @@ import java.util.Map;
  * <p>Time         : 5:24 下午.</p>
  */
 public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
+    private final Object userPrincipal;
+    private final Object credentials;
 
     /**
      * Sub-class constructor.
      *
-     * @param authorizationGrantType the authorization grant type
-     * @param clientPrincipal        the authenticated client principal
-     * @param additionalParameters   the additional parameters
+     * @param userPrincipal        the authenticated user principal
+     * @param clientPrincipal      the authenticated client principal
+     * @param additionalParameters the additional parameters
      */
-    protected OAuth2PasswordAuthenticationToken(AuthorizationGrantType authorizationGrantType,
-                                                Authentication clientPrincipal,
-                                                Map<String, Object> additionalParameters) {
-        super(authorizationGrantType, clientPrincipal, additionalParameters);
+    public OAuth2PasswordAuthenticationToken(Object userPrincipal,
+                                             Object credentials,
+                                             Authentication clientPrincipal,
+                                             Map<String, Object> additionalParameters) {
+        super(AuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);
+        this.userPrincipal = userPrincipal;
+        this.credentials = credentials;
     }
 
     @Override
     public Object getCredentials() {
-        return null;
+        return this.credentials;
     }
 
     @Override
     public Object getPrincipal() {
-        return null;
+        return this.userPrincipal;
+    }
+
+    public Object getUserPrincipal() {
+        return super.getPrincipal();
     }
 }

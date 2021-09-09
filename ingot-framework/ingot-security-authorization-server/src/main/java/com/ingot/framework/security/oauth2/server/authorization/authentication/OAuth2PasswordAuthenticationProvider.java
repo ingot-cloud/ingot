@@ -3,6 +3,10 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+
+import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
 /**
  * <p>Description  : OAuth2PasswordAuthenticationProvider.</p>
@@ -15,6 +19,15 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        OAuth2PasswordAuthenticationToken passwordAuthenticationToken =
+                (OAuth2PasswordAuthenticationToken) authentication;
+
+        OAuth2ClientAuthenticationToken clientPrincipal =
+                getAuthenticatedClientElseThrowInvalidClient(passwordAuthenticationToken);
+        RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
+
+        // todo 认证返回 OAuth2AccessTokenAuthenticationToken
+
         return null;
     }
 

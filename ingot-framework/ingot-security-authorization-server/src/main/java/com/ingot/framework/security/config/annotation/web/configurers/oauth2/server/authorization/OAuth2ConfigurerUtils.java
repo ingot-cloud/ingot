@@ -18,13 +18,13 @@ import org.springframework.util.StringUtils;
 import java.util.Map;
 
 /**
- * <p>Description  : OAuth2ConfigurerUtils.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/9/9.</p>
- * <p>Time         : 10:26 上午.</p>
+ * Utility methods for the OAuth 2.0 Configurers.
+ * org.springframework.security.oauth2.server.authorization.web.authentication
+ *
+ * @author Joe Grandja
+ * @since 0.1.2
  */
 final class OAuth2ConfigurerUtils {
-// org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization
 
     private OAuth2ConfigurerUtils() {
     }
