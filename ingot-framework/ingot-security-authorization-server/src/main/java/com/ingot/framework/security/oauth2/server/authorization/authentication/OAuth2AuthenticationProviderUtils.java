@@ -21,6 +21,14 @@ final class OAuth2AuthenticationProviderUtils {
         if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(authentication.getPrincipal().getClass())) {
             clientPrincipal = (OAuth2ClientAuthenticationToken) authentication.getPrincipal();
         }
+        // 扩展增加 OAuth2UsernamePasswordAuthenticationToken 判断
+        if (authentication instanceof OAuth2UsernamePasswordAuthenticationToken) {
+            if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(
+                    ((OAuth2UsernamePasswordAuthenticationToken) authentication).getClientPrincipal().getClass())) {
+                clientPrincipal = (OAuth2ClientAuthenticationToken)
+                        ((OAuth2UsernamePasswordAuthenticationToken) authentication).getClientPrincipal();
+            }
+        }
         if (clientPrincipal != null && clientPrincipal.isAuthenticated()) {
             return clientPrincipal;
         }

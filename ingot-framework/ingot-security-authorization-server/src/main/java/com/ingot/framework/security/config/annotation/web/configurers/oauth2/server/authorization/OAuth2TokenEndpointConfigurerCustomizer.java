@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2TokenEndpointConfigurer;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationProvider;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationProvider;
@@ -29,8 +30,10 @@ public class OAuth2TokenEndpointConfigurerCustomizer implements Customizer<OAuth
 
     @Override
     public void customize(OAuth2TokenEndpointConfigurer oAuth2TokenEndpointConfigurer) {
+        OAuth2AuthorizationService authorizationService = http.getSharedObject(OAuth2AuthorizationService.class);
+        JwtEncoder jwtEncoder = http.getSharedObject(JwtEncoder.class);
         oAuth2TokenEndpointConfigurer.authenticationProvider(
-                new OAuth2PasswordAuthenticationProvider());
+                new OAuth2PasswordAuthenticationProvider(authorizationService, jwtEncoder));
 
         createDefaultAuthenticationProviders(http)
                 .forEach(oAuth2TokenEndpointConfigurer::authenticationProvider);

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2TokenEndpointConfigurerCustomizer;
+import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2UsernamePasswordAuthenticationConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -36,12 +37,17 @@ public class IngotOAuth2AuthorizationServerConfiguration {
         RequestMatcher endpointsMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
 
+        OAuth2UsernamePasswordAuthenticationConfigurer<HttpSecurity> usernamePasswordAuthenticationConfigurer =
+                new OAuth2UsernamePasswordAuthenticationConfigurer<>();
+
         http
                 .requestMatcher(endpointsMatcher)
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(authorizationServerConfigurer);
+                .apply(authorizationServerConfigurer)
+                .and()
+                .apply(usernamePasswordAuthenticationConfigurer);
     }
 }
