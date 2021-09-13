@@ -1,8 +1,9 @@
 dependencies {
 
     api project(ingot.framework_core)
+    api project(ingot.framework_security_config)
+    api(deps.spring.spring_boot.security_starter)
 
-    implementation(deps.spring.spring_boot.security_starter)
     implementation 'org.springframework.security:spring-security-oauth2-core'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springframework.security:spring-security-oauth2-resource-server'

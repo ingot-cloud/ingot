@@ -41,13 +41,13 @@ public class BaseController {
      * 响应失败，附带 ResponseCode
      */
     public <T> IngotResponse<T> error(StatusCode code) {
-        return ResponseWrapper.error500(code);
+        return ResponseWrapper.error(code);
     }
 
     /**
      * 响应失败
      */
     public <T> IngotResponse<T> error(String code, String message) {
-        return ResponseWrapper.error500(code, message);
+        return ResponseWrapper.error(code, message);
     }
 }

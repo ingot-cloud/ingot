@@ -36,7 +36,7 @@ public class SecurityExceptionHandlerResolver {
     @ResponseBody
     public IngotResponse<?> accessDeniedException(AccessDeniedException e) {
         log.error("AccessDeniedException - message={}, e={}", e.getMessage(), e);
-        return ResponseWrapper.error500(BaseStatusCode.FORBIDDEN);
+        return ResponseWrapper.error(BaseStatusCode.FORBIDDEN);
     }
 
     @ExceptionHandler(InsufficientAuthenticationException.class)
@@ -45,9 +45,9 @@ public class SecurityExceptionHandlerResolver {
     public IngotResponse<?> insufficientAuthenticationException(InsufficientAuthenticationException e) {
         log.error("InsufficientAuthenticationException message={}, e={}", e.getMessage(), e);
         if (StrUtil.startWithIgnoreCase(e.getMessage(), "Access token expired")) {
-            return ResponseWrapper.error500(SecurityStatusCode.TOKEN_INVALID);
+            return ResponseWrapper.error(SecurityStatusCode.TOKEN_INVALID);
         }
-        return ResponseWrapper.error500(BaseStatusCode.UNAUTHORIZED);
+        return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -55,7 +55,7 @@ public class SecurityExceptionHandlerResolver {
     @ResponseBody
     public IngotResponse<?> badCredentialsException(BadCredentialsException e) {
         log.error("BadCredentialsException message={}, e={}", e.getMessage(), e);
-        return ResponseWrapper.error500(BaseStatusCode.UNAUTHORIZED.code(), e.getMessage());
+        return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED.code(), e.getMessage());
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -63,6 +63,6 @@ public class SecurityExceptionHandlerResolver {
     @ResponseBody
     public IngotResponse<?> authenticationException(AuthenticationException e) {
         log.error("AuthenticationException message={}, e={}", e.getMessage(), e);
-        return ResponseWrapper.error500(BaseStatusCode.UNAUTHORIZED);
+        return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }
 }

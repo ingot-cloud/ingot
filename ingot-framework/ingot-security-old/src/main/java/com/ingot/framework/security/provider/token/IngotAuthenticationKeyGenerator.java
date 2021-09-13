@@ -30,7 +30,7 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
     @Override public String extractKey(OAuth2Authentication authentication) {
         IngotUser user = SecurityAuthContext.getUser(authentication);
         if (user != null) {
-            return generateKey(user.getId(), user.getTenantId(), user.getAuthType(), null);
+            return generateKey(user.getId(), user.getTenantId(), user.getTokenAuthenticationMethod(), null);
         }
 
         throw new InvalidTokenException("Invalid token");
@@ -46,7 +46,7 @@ public class IngotAuthenticationKeyGenerator implements AuthenticationKeyGenerat
     public String extractKey(String jti, OAuth2Authentication authentication) {
         IngotUser user = SecurityAuthContext.getUser(authentication);
         if (user != null) {
-            return generateKey(user.getId(), user.getTenantId(), user.getAuthType(), jti);
+            return generateKey(user.getId(), user.getTenantId(), user.getTokenAuthenticationMethod(), jti);
         }
 
         throw new InvalidTokenException("Invalid token");

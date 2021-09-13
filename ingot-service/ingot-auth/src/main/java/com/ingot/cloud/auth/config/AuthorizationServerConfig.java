@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth.config;
 
+import com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -10,17 +11,19 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -40,14 +43,20 @@ import java.util.UUID;
  * <p>Date         : 2021/9/6.</p>
  * <p>Time         : 11:07 上午.</p>
  */
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         return http.formLogin(Customizer.withDefaults()).build();
+    }
+
+    @Bean
+    public OAuth2AuthorizationService authorizationService() {
+        return new InMemoryOAuth2AuthorizationService();
     }
 
     @Bean
@@ -59,6 +68,7 @@ public class AuthorizationServerConfig {
                 .authorizationGrantTypes(authorizationGrantTypes -> {
                     authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE);
                     authorizationGrantTypes.add(AuthorizationGrantType.REFRESH_TOKEN);
+                    authorizationGrantTypes.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
                 })
                 .redirectUri("https://ingotcloud.com")
                 .build();

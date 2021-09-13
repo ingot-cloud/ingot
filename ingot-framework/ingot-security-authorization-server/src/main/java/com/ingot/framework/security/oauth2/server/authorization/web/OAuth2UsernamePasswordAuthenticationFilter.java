@@ -1,9 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
+import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorConverter;
+import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorParametersConverter;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -33,10 +36,11 @@ import java.io.IOException;
  * <p>Date         : 2021/9/10.</p>
  * <p>Time         : 9:28 上午.</p>
  */
+@Slf4j
 public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
-    private final HttpMessageConverter<OAuth2Error> errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
+    private final OAuth2ErrorHttpMessageConverter errorHttpResponseConverter;
     private AuthenticationConverter authenticationConverter;
     private AuthenticationSuccessHandler authenticationSuccessHandler = this::onAuthenticationSuccess;
     private AuthenticationFailureHandler authenticationFailureHandler = this::onAuthenticationFailure;
@@ -48,6 +52,10 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
         this.authenticationManager = authenticationManager;
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new OAuth2UsernamePasswordAuthenticationConverter();
+        this.errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
+
+        this.errorHttpResponseConverter.setErrorConverter(new IngotOAuth2ErrorConverter());
+        this.errorHttpResponseConverter.setErrorParametersConverter(new IngotOAuth2ErrorParametersConverter());
     }
 
     @Override
@@ -65,7 +73,7 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
             }
             filterChain.doFilter(request, response);
 
-        } catch (OAuth2AuthenticationException ex) {
+        } catch (AuthenticationException ex) {
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }
     }
@@ -116,15 +124,14 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
 
         SecurityContextHolder.clearContext();
 
-        // TODO
-        // The authorization server MAY return an HTTP 401 (Unauthorized) status code
-        // to indicate which HTTP authentication schemes are supported.
-        // If the client attempted to authenticate via the "Authorization" request header field,
-        // the authorization server MUST respond with an HTTP 401 (Unauthorized) status code and
-        // include the "WWW-Authenticate" response header field
-        // matching the authentication scheme used by the client.
+        OAuth2Error error;
+        if (exception instanceof OAuth2AuthenticationException) {
+            error = ((OAuth2AuthenticationException) exception).getError();
+        } else {
+            error = new OAuth2Error(BaseStatusCode.BAD_REQUEST.code(),
+                    exception.getLocalizedMessage(), "");
+        }
 
-        OAuth2Error error = ((OAuth2AuthenticationException) exception).getError();
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
         if (OAuth2ErrorCodes.INVALID_CLIENT.equals(error.getErrorCode())) {
             httpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);

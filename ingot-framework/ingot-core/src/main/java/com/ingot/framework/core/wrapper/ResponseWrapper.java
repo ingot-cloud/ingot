@@ -58,8 +58,22 @@ public class ResponseWrapper {
     /**
      * 响应失败，附带 ResponseCode
      */
-    public <T> IngotResponse<T> error500(StatusCode code) {
+    public <T> IngotResponse<T> error(StatusCode code) {
         return new IngotResponse<>(code);
+    }
+
+    /**
+     * 响应失败
+     */
+    public <T> IngotResponse<T> error(String code, String message) {
+        return new IngotResponse<>(code, message);
+    }
+
+    /**
+     * 响应失败
+     */
+    public <T> IngotResponse<T> errorF(StatusCode code, Object... messages) {
+        return new IngotResponse<>(code.code(), String.format(code.message(), messages));
     }
 
     /**
@@ -67,20 +81,6 @@ public class ResponseWrapper {
      */
     public <T> IngotResponse<T> errorWithData(T data, StatusCode code) {
         return new IngotResponse<>(data, code);
-    }
-
-    /**
-     * 响应失败
-     */
-    public <T> IngotResponse<T> error500(String code, String message) {
-        return new IngotResponse<>(code, message);
-    }
-
-    /**
-     * 响应失败
-     */
-    public <T> IngotResponse<T> error500(StatusCode code, Object ...messages) {
-        return new IngotResponse<>(code.code(), String.format(code.message(), messages));
     }
 
     /**

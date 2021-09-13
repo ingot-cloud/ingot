@@ -47,7 +47,7 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
             HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
-                ingotResponse = ResponseWrapper.error500(
+                ingotResponse = ResponseWrapper.error(
                         BaseStatusCode.REQUEST_FALLBACK.code(), ex.getMessage());
             }
         }
