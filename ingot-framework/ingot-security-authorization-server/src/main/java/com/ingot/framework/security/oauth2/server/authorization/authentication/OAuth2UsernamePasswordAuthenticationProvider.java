@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
-import com.ingot.framework.security.authentication.dao.IngotAbstractUserDetailsAuthenticationProvider;
+import com.ingot.framework.security.authentication.IngotAbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;

@@ -1,6 +1,5 @@
-package com.ingot.framework.security.authentication.dao;
+package com.ingot.framework.security.authentication;
 
-import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.core.userdetails.IngotPostAuthenticationChecks;
 import com.ingot.framework.security.core.userdetails.IngotPreAuthenticationChecks;
 import org.apache.commons.logging.Log;
