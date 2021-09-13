@@ -1,14 +1,12 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2TokenEndpointConfigurerCustomizer;
-import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2UsernamePasswordAuthenticationConfigurer;
+import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.IngotOAuth2AuthorizationServerConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -31,14 +29,10 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
         http.objectPostProcessor(new OAuth2ObjectPostProcessor());
 
-        OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-                new OAuth2AuthorizationServerConfigurer<>();
-        authorizationServerConfigurer.tokenEndpoint(new OAuth2TokenEndpointConfigurerCustomizer(http));
+        IngotOAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
+                new IngotOAuth2AuthorizationServerConfigurer<>();
         RequestMatcher endpointsMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
-
-        OAuth2UsernamePasswordAuthenticationConfigurer<HttpSecurity> usernamePasswordAuthenticationConfigurer =
-                new OAuth2UsernamePasswordAuthenticationConfigurer<>();
 
         http
                 .requestMatcher(endpointsMatcher)
@@ -46,8 +40,6 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                         authorizeRequests.anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(authorizationServerConfigurer)
-                .and()
-                .apply(usernamePasswordAuthenticationConfigurer);
+                .apply(authorizationServerConfigurer);
     }
 }
