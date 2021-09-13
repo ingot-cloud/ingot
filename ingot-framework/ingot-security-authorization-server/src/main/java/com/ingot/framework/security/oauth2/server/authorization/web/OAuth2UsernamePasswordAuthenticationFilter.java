@@ -1,22 +1,15 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
-import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorConverter;
-import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorParametersConverter;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
-import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMessageConverter;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -40,10 +33,9 @@ import java.io.IOException;
 public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
-    private final OAuth2ErrorHttpMessageConverter errorHttpResponseConverter;
     private AuthenticationConverter authenticationConverter;
-    private AuthenticationSuccessHandler authenticationSuccessHandler = this::onAuthenticationSuccess;
-    private AuthenticationFailureHandler authenticationFailureHandler = this::onAuthenticationFailure;
+    private AuthenticationSuccessHandler authenticationSuccessHandler = new IngotAuthenticationSuccessHandler();
+    private AuthenticationFailureHandler authenticationFailureHandler = new IngotAuthenticationFailureHandler();
 
     public OAuth2UsernamePasswordAuthenticationFilter(AuthenticationManager authenticationManager,
                                                       RequestMatcher requestMatcher) {
@@ -52,10 +44,6 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
         this.authenticationManager = authenticationManager;
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new OAuth2UsernamePasswordAuthenticationConverter();
-        this.errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
-
-        this.errorHttpResponseConverter.setErrorConverter(new IngotOAuth2ErrorConverter());
-        this.errorHttpResponseConverter.setErrorParametersConverter(new IngotOAuth2ErrorParametersConverter());
     }
 
     @Override
@@ -109,35 +97,5 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
     public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
         Assert.notNull(authenticationFailureHandler, "authenticationFailureHandler cannot be null");
         this.authenticationFailureHandler = authenticationFailureHandler;
-    }
-
-    private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                         Authentication authentication) {
-
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
-    }
-
-    private void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                         AuthenticationException exception) throws IOException {
-
-        SecurityContextHolder.clearContext();
-
-        OAuth2Error error;
-        if (exception instanceof OAuth2AuthenticationException) {
-            error = ((OAuth2AuthenticationException) exception).getError();
-        } else {
-            error = new OAuth2Error(BaseStatusCode.BAD_REQUEST.code(),
-                    exception.getLocalizedMessage(), "");
-        }
-
-        ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
-        if (OAuth2ErrorCodes.INVALID_CLIENT.equals(error.getErrorCode())) {
-            httpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
-        } else {
-            httpResponse.setStatusCode(HttpStatus.BAD_REQUEST);
-        }
-        this.errorHttpResponseConverter.write(error, null, httpResponse);
     }
 }

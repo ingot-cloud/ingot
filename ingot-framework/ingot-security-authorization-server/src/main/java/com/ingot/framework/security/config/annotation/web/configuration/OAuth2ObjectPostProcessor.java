@@ -1,7 +1,10 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PasswordAuthenticationConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2TokenEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.DelegatingAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeAuthenticationConverter;
@@ -16,6 +19,7 @@ import java.util.Arrays;
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:06 下午.</p>
  */
+@Slf4j
 public class OAuth2ObjectPostProcessor implements ObjectPostProcessor<Object> {
 
     @Override
@@ -31,6 +35,13 @@ public class OAuth2ObjectPostProcessor implements ObjectPostProcessor<Object> {
                                     new OAuth2PasswordAuthenticationConverter())
                     )
             );
+
+            ((OAuth2TokenEndpointFilter) object).setAuthenticationFailureHandler(
+                    new IngotAuthenticationFailureHandler());
+        }
+        else if (object instanceof OAuth2ClientAuthenticationFilter) {
+            ((OAuth2ClientAuthenticationFilter) object).setAuthenticationFailureHandler(
+                    new IngotAuthenticationFailureHandler());
         }
         return object;
     }
