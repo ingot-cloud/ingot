@@ -128,8 +128,10 @@ public class IngotOAuth2AuthorizationServerConfigurer<B extends HttpSecurityBuil
 
     @Override
     public void init(B builder) throws Exception {
-        proxy.init(builder);
+        proxy.addObjectPostProcessor(this::postProcess);
         passwordConfigurer.addObjectPostProcessor(this::postProcess);
+
+        proxy.init(builder);
         passwordConfigurer.init(builder);
     }
 

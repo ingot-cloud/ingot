@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorConverter;
 import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorParametersConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -25,6 +26,7 @@ import java.io.IOException;
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:46 上午.</p>
  */
+@Slf4j
 public class IngotAuthenticationFailureHandler implements AuthenticationFailureHandler {
     private final OAuth2ErrorHttpMessageConverter errorHttpResponseConverter;
 
@@ -39,6 +41,8 @@ public class IngotAuthenticationFailureHandler implements AuthenticationFailureH
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
         SecurityContextHolder.clearContext();
+
+        log.info("onAuthenticationFailure", exception);
 
         OAuth2Error error;
         if (exception instanceof OAuth2AuthenticationException) {

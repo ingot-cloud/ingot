@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:15 下午.</p>
  */
+@Slf4j
 public final class OAuth2PasswordAuthenticationConverter implements AuthenticationConverter {
 
     @Override

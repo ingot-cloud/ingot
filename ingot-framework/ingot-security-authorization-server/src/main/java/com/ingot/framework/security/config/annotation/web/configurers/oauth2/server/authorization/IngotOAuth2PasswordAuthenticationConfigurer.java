@@ -3,6 +3,7 @@ package com.ingot.framework.security.config.annotation.web.configurers.oauth2.se
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UsernamePasswordAuthenticationFilter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
@@ -20,6 +21,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  * <p>Date         : 2021/9/10.</p>
  * <p>Time         : 10:05 上午.</p>
  */
+@Slf4j
 public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityBuilder<B>>
         extends AbstractHttpConfigurer<IngotOAuth2PasswordAuthenticationConfigurer<B>, B> {
     private RequestMatcher requestMatcher;
