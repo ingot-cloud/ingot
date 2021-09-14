@@ -1,7 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 import java.lang.annotation.*;
 
@@ -14,7 +13,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@EnableWebSecurity
+@EnableIngotWebSecurity
 @Import({IngotOAuth2AuthorizationServerConfiguration.class})
 public @interface EnableIngotAuthorizationServer {
 }
