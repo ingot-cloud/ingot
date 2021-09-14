@@ -31,6 +31,10 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
 
     @Override
     public void init(B builder) throws Exception {
+        if (!canConfig(builder)) {
+            return;
+        }
+
         OAuth2AuthorizationService authorizationService =
                 OAuth2ConfigurerUtils.getAuthorizationService(builder);
         JwtEncoder jwtEncoder = OAuth2ConfigurerUtils.getJwtEncoder(builder);
@@ -66,10 +70,19 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
 
     @Override
     public void configure(B builder) throws Exception {
+        if (!canConfig(builder)) {
+            return;
+        }
+
         AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
         OAuth2UsernamePasswordAuthenticationFilter filter =
                 new OAuth2UsernamePasswordAuthenticationFilter(authenticationManager, this.requestMatcher);
 
         builder.addFilterAfter(postProcess(filter), OAuth2ClientAuthenticationFilter.class);
+    }
+
+    private boolean canConfig(B builder) {
+        return OAuth2ConfigurerUtils.getBeanOrNull(
+                builder, UserDetailsService.class) != null;
     }
 }
