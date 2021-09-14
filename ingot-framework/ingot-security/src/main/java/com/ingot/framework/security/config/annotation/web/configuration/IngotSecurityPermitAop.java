@@ -1,4 +1,4 @@
-package com.ingot.framework.security.config.annotation.web;
+package com.ingot.framework.security.config.annotation.web.configuration;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
