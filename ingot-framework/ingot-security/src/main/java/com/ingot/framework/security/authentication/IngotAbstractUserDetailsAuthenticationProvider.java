@@ -2,8 +2,7 @@ package com.ingot.framework.security.authentication;
 
 import com.ingot.framework.security.core.userdetails.IngotPostAuthenticationChecks;
 import com.ingot.framework.security.core.userdetails.IngotPreAuthenticationChecks;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
@@ -28,10 +27,9 @@ import org.springframework.util.Assert;
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 3:25 下午.</p>
  */
+@Slf4j
 public abstract class IngotAbstractUserDetailsAuthenticationProvider
         implements AuthenticationProvider, InitializingBean, MessageSourceAware {
-
-    protected final Log logger = LogFactory.getLog(getClass());
 
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
@@ -87,7 +85,7 @@ public abstract class IngotAbstractUserDetailsAuthenticationProvider
             try {
                 user = retrieveUser(username, (IngotUsernamePasswordAuthenticationToken) authentication);
             } catch (UsernameNotFoundException ex) {
-                this.logger.debug("Failed to find user '" + username + "'");
+                log.debug("Failed to find user '" + username + "'");
                 if (!this.hideUserNotFoundExceptions) {
                     throw ex;
                 }
@@ -150,7 +148,7 @@ public abstract class IngotAbstractUserDetailsAuthenticationProvider
         IngotUsernamePasswordAuthenticationToken result = new IngotUsernamePasswordAuthenticationToken(principal,
                 authentication.getCredentials(), this.authoritiesMapper.mapAuthorities(user.getAuthorities()));
         result.setDetails(authentication.getDetails());
-        this.logger.debug("Authenticated user");
+        log.debug("Authenticated user");
         return result;
     }
 

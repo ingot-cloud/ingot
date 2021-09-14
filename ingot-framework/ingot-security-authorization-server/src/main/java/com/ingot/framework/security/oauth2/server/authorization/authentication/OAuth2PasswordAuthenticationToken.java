@@ -13,6 +13,8 @@ import java.util.Map;
  * <p>Time         : 5:24 下午.</p>
  */
 public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
+    private final Authentication userPrincipal;
+
     /**
      * Sub-class constructor.
      *
@@ -24,6 +26,16 @@ public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantA
         super(AuthorizationGrantType.PASSWORD,
                 ((OAuth2UsernamePasswordAuthenticationToken) userPrincipal).getClientPrincipal(),
                 additionalParameters);
+        this.userPrincipal = userPrincipal;
         setDetails(userPrincipal.getDetails());
+    }
+
+    public Authentication getUserPrincipal() {
+        return this.userPrincipal;
+    }
+
+    @Override
+    public String getName() {
+        return userPrincipal.getName();
     }
 }

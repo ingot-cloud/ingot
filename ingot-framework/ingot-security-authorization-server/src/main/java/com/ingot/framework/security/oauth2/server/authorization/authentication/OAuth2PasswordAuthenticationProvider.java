@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,7 @@ import static com.ingot.framework.security.oauth2.server.authorization.authentic
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:23 下午.</p>
  */
+@Slf4j
 public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvider {
     private final OAuth2AuthorizationService authorizationService;
     private final JwtEncoder jwtEncoder;
@@ -72,30 +74,29 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2PasswordAuthenticationToken passwordAuthenticationToken =
+        OAuth2PasswordAuthenticationToken passwordPrincipal =
                 (OAuth2PasswordAuthenticationToken) authentication;
 
         OAuth2ClientAuthenticationToken clientPrincipal =
-                getAuthenticatedClientElseThrowInvalidClient(passwordAuthenticationToken);
+                getAuthenticatedClientElseThrowInvalidClient(passwordPrincipal);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
+        assert registeredClient != null;
 
-
-        Set<String> authorizedScopes = registeredClient.getScopes();		// Default to configured scopes
+        Set<String> authorizedScopes = registeredClient.getScopes();        // Default to configured scopes
         String issuer = this.providerSettings != null ? this.providerSettings.getIssuer() : null;
 
         JoseHeader.Builder headersBuilder = JwtUtils.headers();
         JwtClaimsSet.Builder claimsBuilder = JwtUtils.accessTokenClaims(
-                registeredClient, issuer, clientPrincipal.getName(), authorizedScopes);
+                registeredClient, issuer, passwordPrincipal.getName(), authorizedScopes);
 
         // @formatter:off
         JwtEncodingContext context = JwtEncodingContext.with(headersBuilder, claimsBuilder)
                 .registeredClient(registeredClient)
-                .principal(clientPrincipal)
+                .principal(passwordPrincipal.getUserPrincipal())
                 .authorizedScopes(authorizedScopes)
                 .tokenType(OAuth2TokenType.ACCESS_TOKEN)
-                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .authorizationGrant(passwordAuthenticationToken)
-                .put("user_principal", passwordAuthenticationToken.getDetails())
+                .authorizationGrantType(AuthorizationGrantType.PASSWORD)
+                .authorizationGrant(passwordPrincipal)
                 .build();
         // @formatter:on
 
@@ -112,7 +113,7 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
         // @formatter:off
         OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
                 .principalName(clientPrincipal.getName())
-                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .authorizationGrantType(AuthorizationGrantType.PASSWORD)
                 .token(accessToken,
                         (metadata) ->
                                 metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, jwtAccessToken.getClaims()))

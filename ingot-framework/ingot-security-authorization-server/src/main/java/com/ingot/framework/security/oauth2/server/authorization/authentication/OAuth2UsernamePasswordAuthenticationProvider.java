@@ -2,6 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.authentication.IngotAbstractUserDetailsAuthenticationProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import static com.ingot.framework.security.oauth2.server.authorization.authentic
  * <p>Date         : 2021/9/9.</p>
  * <p>Time         : 6:11 下午.</p>
  */
+@Slf4j
 public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractUserDetailsAuthenticationProvider {
 
     /**
@@ -82,13 +84,13 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
     protected void additionalAuthenticationChecks(UserDetails userDetails,
                                                   IngotUsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         if (authentication.getCredentials() == null) {
-            this.logger.debug("Failed to authenticate since no credentials provided");
+            log.debug("Failed to authenticate since no credentials provided");
             throw new BadCredentialsException(this.messages
                     .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
         }
         String presentedPassword = authentication.getCredentials().toString();
         if (!this.passwordEncoder.matches(presentedPassword, userDetails.getPassword())) {
-            this.logger.debug("Failed to authenticate since password does not match stored value");
+            log.debug("Failed to authenticate since password does not match stored value");
             throw new BadCredentialsException(this.messages
                     .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
         }
