@@ -8,6 +8,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
@@ -28,15 +31,34 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
 
     @Override
     public void init(B builder) throws Exception {
-        OAuth2AuthorizationService authorizationService = builder.getSharedObject(OAuth2AuthorizationService.class);
-        JwtEncoder jwtEncoder = builder.getSharedObject(JwtEncoder.class);
+        OAuth2AuthorizationService authorizationService =
+                OAuth2ConfigurerUtils.getAuthorizationService(builder);
+        JwtEncoder jwtEncoder = OAuth2ConfigurerUtils.getJwtEncoder(builder);
         ProviderSettings providerSettings = OAuth2ConfigurerUtils.getProviderSettings(builder);
+
         this.requestMatcher = new AntPathRequestMatcher(
                 providerSettings.getTokenEndpoint(),
                 HttpMethod.POST.name());
 
+        UserDetailsService userDetailsService = OAuth2ConfigurerUtils.getBean(
+                builder, UserDetailsService.class);
+        PasswordEncoder passwordEncoder = OAuth2ConfigurerUtils.getBeanOrNull(
+                builder, PasswordEncoder.class);
+        UserDetailsPasswordService passwordManager = OAuth2ConfigurerUtils.getBeanOrNull(
+                builder, UserDetailsPasswordService.class);
+
+        OAuth2UsernamePasswordAuthenticationProvider provider =
+                new OAuth2UsernamePasswordAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        if (passwordEncoder != null) {
+            provider.setPasswordEncoder(passwordEncoder);
+        }
+        if (passwordManager != null) {
+            provider.setUserDetailsPasswordService(passwordManager);
+        }
+
         builder.authenticationProvider(
-                postProcess(new OAuth2UsernamePasswordAuthenticationProvider()));
+                postProcess(provider));
 
         builder.authenticationProvider(
                 postProcess(new OAuth2PasswordAuthenticationProvider(authorizationService, jwtEncoder)));
