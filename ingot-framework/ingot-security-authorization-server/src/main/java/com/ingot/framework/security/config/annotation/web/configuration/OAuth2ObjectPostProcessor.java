@@ -43,7 +43,7 @@ public class OAuth2ObjectPostProcessor implements ObjectPostProcessor<Object> {
             ((OAuth2ClientAuthenticationFilter) object).setAuthenticationFailureHandler(
                     new IngotAuthenticationFailureHandler());
         }
-        log.info("--- object: {}", object);
+        log.debug("--- object: {}", object);
         return object;
     }
 }
