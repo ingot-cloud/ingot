@@ -112,7 +112,7 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
         // @formatter:off
         OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
-                .principalName(clientPrincipal.getName())
+                .principalName(passwordPrincipal.getName())
                 .authorizationGrantType(AuthorizationGrantType.PASSWORD)
                 .token(accessToken,
                         (metadata) ->
