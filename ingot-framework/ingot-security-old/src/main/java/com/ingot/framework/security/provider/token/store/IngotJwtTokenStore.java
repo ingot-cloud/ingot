@@ -118,7 +118,7 @@ public class IngotJwtTokenStore extends JwtTokenStore {
         userStoreToken.setJti(jti);
         userStoreToken.setUserId(String.valueOf(user.getId()));
         userStoreToken.setUsername(user.getUsername());
-        userStoreToken.setAuthType(user.getAuthType());
+        userStoreToken.setAuthType(user.getTokenAuthenticationMethod());
         userStoreToken.setTenantId(String.valueOf(user.getTenantId()));
         return userStoreToken;
     }
