@@ -2,4 +2,5 @@
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.security_config)
+    implementation 'org.springframework.security:spring-security-web'
 }

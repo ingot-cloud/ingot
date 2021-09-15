@@ -1,5 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 import java.lang.annotation.*;
@@ -14,5 +15,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Documented
 @EnableWebSecurity
+@Import({IngotOAuth2ResourceServerConfiguration.class})
 public @interface EnableIngotWebSecurity {
 }
