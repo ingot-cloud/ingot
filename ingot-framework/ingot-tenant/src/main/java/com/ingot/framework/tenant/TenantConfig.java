@@ -15,7 +15,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
  * <p>Date         : 2020/11/23.</p>
  * <p>Time         : 6:05 下午.</p>
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(value = TenantProperties.class)
 public class TenantConfig {
 
