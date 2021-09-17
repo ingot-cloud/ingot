@@ -1,6 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 
 /**
  * <p>Description  : RemoteUserDetailsService.</p>
@@ -16,5 +16,5 @@ public interface RemoteUserDetailsService {
      * @param params 请求参数
      * @return response
      */
-    IngotResponse<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params);
+    R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params);
 }

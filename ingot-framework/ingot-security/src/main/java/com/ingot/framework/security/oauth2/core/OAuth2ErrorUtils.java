@@ -1,8 +1,9 @@
 package com.ingot.framework.security.oauth2.core;
 
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 
 /**
  * <p>Description  : OAuth2ErrorUtils.</p>
@@ -15,9 +16,9 @@ public final class OAuth2ErrorUtils {
     /**
      * 检测 Response，如果失败则 throw 认证异常
      *
-     * @param response {@link IngotResponse}
+     * @param response {@link R}
      */
-    public static void checkResponse(IngotResponse<?> response) {
+    public static void checkResponse(R<?> response) {
         if (!response.isSuccess()) {
             throwAuthenticationException(response.getCode(), response.getMessage());
         }
@@ -30,6 +31,15 @@ public final class OAuth2ErrorUtils {
      */
     public static void throwAuthenticationException(String code) {
         throwAuthenticationException(code, null, null);
+    }
+
+    /**
+     * OAuth2 认证异常
+     *
+     * @param code error code
+     */
+    public static void throwAuthenticationException(OAuth2ErrorCodesExtend code) {
+        throwAuthenticationException(code.code(), code.message());
     }
 
     /**
@@ -51,5 +61,13 @@ public final class OAuth2ErrorUtils {
      */
     public static void throwAuthenticationException(String code, String desc, Throwable cause) {
         throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null), cause);
+    }
+
+    public static void throwInvalidRequest() {
+        throwAuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
+    }
+
+    public static void throwInvalidRequest(String desc) {
+        throwAuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST, desc);
     }
 }

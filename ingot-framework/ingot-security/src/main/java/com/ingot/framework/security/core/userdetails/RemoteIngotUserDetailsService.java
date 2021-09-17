@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.common.utils.SocialUtils;
@@ -46,7 +46,7 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
         params.setMode(UserDetailsModeEnum.PASSWORD);
         params.setUniqueCode(username);
         params.setClientId(clientId);
-        IngotResponse<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
+        R<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
         log.info(">>> RemoteIngotUserDetailsService - user detail service, response: {}", response);
         return loadDetail(response);
     }
@@ -71,12 +71,12 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
         params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
-        IngotResponse<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
+        R<UserDetailsResponse> response = remoteUserDetailsService.fetchUserDetails(params);
         log.info(">>> RemoteIngotUserDetailsService - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
-    private IngotUser loadDetail(IngotResponse<UserDetailsResponse> response) {
+    private IngotUser loadDetail(R<UserDetailsResponse> response) {
         if (response == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }

@@ -15,6 +15,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Documented
 @EnableWebSecurity
-@Import({IngotOAuth2ResourceServerConfiguration.class})
+@Import({IngotOAuth2ResourceServerConfiguration.class, PasswordEncoderConfiguration.class})
 public @interface EnableIngotWebSecurity {
 }

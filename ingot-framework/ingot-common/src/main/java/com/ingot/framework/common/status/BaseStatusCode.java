@@ -29,11 +29,13 @@ public enum BaseStatusCode implements StatusCode {
         this.message = message;
     }
 
-    @Override public String code() {
+    @Override
+    public String code() {
         return code;
     }
 
-    @Override public String message() {
+    @Override
+    public String message() {
         return message;
     }
 }
