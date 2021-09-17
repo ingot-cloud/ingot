@@ -2,7 +2,7 @@ package com.ingot.framework.security.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,7 +28,7 @@ public class IngotAccessDeniedHandler implements AccessDeniedHandler {
                                  HttpServletResponse response,
                                  AccessDeniedException e) throws IOException, ServletException {
         log.info(">>> IngotAccessDeniedHandler - 访问权限异常。exception={}", e, e);
-        IngotResponse<?> body = new IngotResponse<>(BaseStatusCode.UNAUTHORIZED);
+        R<?> body = new R<>(BaseStatusCode.UNAUTHORIZED);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));

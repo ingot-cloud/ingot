@@ -31,7 +31,7 @@ public class RequestLogAop {
     /**
      * Point cut wrapper.
      */
-    @Pointcut("execution(public com.ingot.framework.core.wrapper.IngotResponse *(..))")
+    @Pointcut("execution(public com.ingot.framework.core.wrapper.R *(..))")
     public void pointCutWrapper() {
     }
 

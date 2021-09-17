@@ -2,14 +2,10 @@ package com.ingot.cloud.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * <p>Description  : DefaultSecurityConfig.</p>
@@ -28,16 +24,5 @@ public class DefaultSecurityConfig {
                 .roles("ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(user);
-    }
-
-    @Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .formLogin(withDefaults())
-                .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.antMatchers("/test2").permitAll()
-                                .anyRequest().authenticated()
-                ).oauth2ResourceServer().jwt();
-        return http.build();
     }
 }

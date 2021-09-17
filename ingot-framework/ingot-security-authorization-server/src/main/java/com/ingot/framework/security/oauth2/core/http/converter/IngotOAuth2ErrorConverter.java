@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.core.http.converter;
 
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.OAuth2Error;
 
@@ -16,9 +16,9 @@ public class IngotOAuth2ErrorConverter implements Converter<Map<String, String>,
 
     @Override
     public OAuth2Error convert(Map<String, String> parameters) {
-        String errorCode = parameters.get(IngotResponse.CODE);
-        String errorDescription = parameters.get(IngotResponse.MESSAGE);
-        String errorUri = parameters.get(IngotResponse.DATA);
+        String errorCode = parameters.get(R.CODE);
+        String errorDescription = parameters.get(R.MESSAGE);
+        String errorUri = parameters.get(R.DATA);
         return new OAuth2Error(errorCode, errorDescription, errorUri);
     }
 }

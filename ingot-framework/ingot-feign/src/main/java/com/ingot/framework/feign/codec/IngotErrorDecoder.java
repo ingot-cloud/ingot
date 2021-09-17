@@ -1,7 +1,7 @@
 package com.ingot.framework.feign.codec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
@@ -27,8 +27,8 @@ public class IngotErrorDecoder implements ErrorDecoder {
         log.info("IngotErrorDecoder - start decode, methodKey={}", methodKey);
         try {
             HashMap map = mapper.readValue(response.body().asInputStream(), HashMap.class);
-            String code = (String) map.get(IngotResponse.CODE);
-            String message = (String) map.get(IngotResponse.MESSAGE);
+            String code = (String) map.get(R.CODE);
+            String message = (String) map.get(R.MESSAGE);
             log.info("IngotErrorDecoder - map={}", map);
             return new IngotFeignException(code, message);
         } catch (IOException e) {

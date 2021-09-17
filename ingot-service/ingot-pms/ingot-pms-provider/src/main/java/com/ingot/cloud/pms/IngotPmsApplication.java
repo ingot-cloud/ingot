@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms;
 
 import com.ingot.framework.core.annotation.ImportMessageSource;
-import com.ingot.framework.security.annotation.EnableIngotResourceServer;
+import com.ingot.framework.security.config.annotation.web.configuration.EnableIngotWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <p>Time         : 4:15 下午.</p>
  */
 @EnableFeignClients("com.ingot.cloud.pms.api.rpc")
-@EnableIngotResourceServer
+@EnableIngotWebSecurity
 @EnableTransactionManagement
 @ImportMessageSource
 @EnableDiscoveryClient

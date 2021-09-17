@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.rpc;
 import com.ingot.cloud.pms.api.model.dto.role.RoleAuthorityDto;
 import com.ingot.cloud.pms.api.model.dto.role.RoleListDto;
 import com.ingot.framework.core.constants.ServiceNameConstants;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,5 +18,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface PmsRoleFeignApi {
 
     @PostMapping(value = "/role/getAuthority")
-    IngotResponse<RoleAuthorityDto> getRoleAuthority(@RequestBody RoleListDto params);
+    R<RoleAuthorityDto> getRoleAuthority(@RequestBody RoleListDto params);
 }

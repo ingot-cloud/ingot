@@ -1,7 +1,7 @@
 package com.ingot.cloud.authold.endpoint;
 
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.provider.token.IngotOAuth2AccessToken;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class OAuthEndpoint extends BaseController {
     private final TokenEndpoint tokenEndpoint;
 
     @PostMapping(value = "/oauth/token")
-    public IngotResponse<IngotOAuth2AccessToken> ingotPostAccessToken(Principal principal, @RequestParam
+    public R<IngotOAuth2AccessToken> ingotPostAccessToken(Principal principal, @RequestParam
             Map<String, String> parameters) throws HttpRequestMethodNotSupportedException {
         OAuth2AccessToken accessToken = tokenEndpoint.postAccessToken(principal, parameters)
                 .getBody();

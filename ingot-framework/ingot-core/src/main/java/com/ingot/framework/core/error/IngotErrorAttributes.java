@@ -2,7 +2,7 @@ package com.ingot.framework.core.error;
 
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -47,7 +47,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
         addPath(errorAttributes, webRequest);
 
         Map<String, Object> finalAttributes = new LinkedHashMap<>();
-        finalAttributes.put(IngotResponse.DATA, errorAttributes);
+        finalAttributes.put(R.DATA, errorAttributes);
 
         // 获取真实 exception
         while (error instanceof ServletException && error.getCause() != null) {
@@ -55,11 +55,11 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
         }
 
         if (error instanceof BizException) {
-            finalAttributes.put(IngotResponse.CODE, ((BizException) error).getCode());
-            finalAttributes.put(IngotResponse.MESSAGE, error.getMessage());
+            finalAttributes.put(R.CODE, ((BizException) error).getCode());
+            finalAttributes.put(R.MESSAGE, error.getMessage());
         } else {
-            finalAttributes.put(IngotResponse.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.code());
-            finalAttributes.put(IngotResponse.MESSAGE, BaseStatusCode.INTERNAL_SERVER_ERROR.message());
+            finalAttributes.put(R.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.code());
+            finalAttributes.put(R.MESSAGE, BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }
 
 

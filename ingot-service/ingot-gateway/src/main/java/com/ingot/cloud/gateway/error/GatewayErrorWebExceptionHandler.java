@@ -3,7 +3,7 @@ package com.ingot.cloud.gateway.error;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,17 +42,17 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         }
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        IngotResponse<?> ingotResponse = ResponseWrapper.error500(ex.getMessage());
+        R<?> r = ResponseWrapper.error500(ex.getMessage());
         if (ex instanceof ResponseStatusException) {
             HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
-                ingotResponse = ResponseWrapper.error(
+                r = ResponseWrapper.error(
                         BaseStatusCode.REQUEST_FALLBACK.code(), ex.getMessage());
             }
         }
 
-        IngotResponse<?> finalResponse = ingotResponse;
+        R<?> finalResponse = r;
         return response.writeWith(Mono.fromSupplier(() -> {
             DataBufferFactory bufferFactory = response.bufferFactory();
             try {

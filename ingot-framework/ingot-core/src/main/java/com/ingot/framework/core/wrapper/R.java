@@ -11,14 +11,14 @@ import lombok.ToString;
 import java.io.Serializable;
 
 /**
- * <p>Description  : IngotResponse.</p>
+ * <p>Description  : R.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/9/20.</p>
  * <p>Time         : 下午2:01.</p>
  */
 @ToString
 @ApiModel(description = "响应信息主体")
-public class IngotResponse<T> implements Serializable {
+public class R<T> implements Serializable {
     /**
      * 响应码字段
      */
@@ -48,29 +48,29 @@ public class IngotResponse<T> implements Serializable {
     @ApiModelProperty(value = "数据")
     private T data;
 
-    public IngotResponse() {
+    public R() {
     }
 
-    public IngotResponse(String code, String message) {
+    public R(String code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public IngotResponse(T data, String code, String message) {
+    public R(T data, String code, String message) {
         this(code, message);
         this.data = data;
     }
 
-    public IngotResponse(StatusCode code) {
+    public R(StatusCode code) {
         this(code.code(), code.message());
     }
 
-    public IngotResponse(T data, StatusCode code) {
+    public R(T data, StatusCode code) {
         this(code);
         this.data = data;
     }
 
-    public IngotResponse<?> data(T data) {
+    public R<?> data(T data) {
         this.data = data;
         return this;
     }
@@ -83,7 +83,7 @@ public class IngotResponse<T> implements Serializable {
         return code;
     }
 
-    public IngotResponse<?> code(String code) {
+    public R<?> code(String code) {
         this.code = code;
         return this;
     }
@@ -92,7 +92,7 @@ public class IngotResponse<T> implements Serializable {
         return message;
     }
 
-    public IngotResponse<?> message(String message) {
+    public R<?> message(String message) {
         this.message = message;
         return this;
     }

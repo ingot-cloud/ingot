@@ -1,9 +1,8 @@
 package com.ingot.framework.security.oauth2.core.http.converter;
 
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -20,12 +19,12 @@ public class IngotOAuth2ErrorParametersConverter implements Converter<OAuth2Erro
     @Override
     public Map<String, String> convert(OAuth2Error oauth2Error) {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(IngotResponse.CODE, oauth2Error.getErrorCode());
+        parameters.put(R.CODE, oauth2Error.getErrorCode());
         if (StringUtils.hasText(oauth2Error.getDescription())) {
-            parameters.put(IngotResponse.MESSAGE, oauth2Error.getDescription());
+            parameters.put(R.MESSAGE, oauth2Error.getDescription());
         }
         if (StringUtils.hasText(oauth2Error.getUri())) {
-            parameters.put(IngotResponse.DATA, oauth2Error.getUri());
+            parameters.put(R.DATA, oauth2Error.getUri());
         }
         return parameters;
     }

@@ -2,7 +2,7 @@ package com.ingot.framework.security.provider.error;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import com.ingot.framework.security.status.SecurityStatusCode;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
-    public IngotResponse<?> accessDeniedException(AccessDeniedException e) {
+    public R<?> accessDeniedException(AccessDeniedException e) {
         log.error("AccessDeniedException - message={}, e={}", e.getMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.FORBIDDEN);
     }
@@ -42,7 +42,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(InsufficientAuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse<?> insufficientAuthenticationException(InsufficientAuthenticationException e) {
+    public R<?> insufficientAuthenticationException(InsufficientAuthenticationException e) {
         log.error("InsufficientAuthenticationException message={}, e={}", e.getMessage(), e);
         if (StrUtil.startWithIgnoreCase(e.getMessage(), "Access token expired")) {
             return ResponseWrapper.error(SecurityStatusCode.TOKEN_INVALID);
@@ -53,7 +53,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse<?> badCredentialsException(BadCredentialsException e) {
+    public R<?> badCredentialsException(BadCredentialsException e) {
         log.error("BadCredentialsException message={}, e={}", e.getMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED.code(), e.getMessage());
     }
@@ -61,7 +61,7 @@ public class SecurityExceptionHandlerResolver {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public IngotResponse<?> authenticationException(AuthenticationException e) {
+    public R<?> authenticationException(AuthenticationException e) {
         log.error("AuthenticationException message={}, e={}", e.getMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.UNAUTHORIZED);
     }

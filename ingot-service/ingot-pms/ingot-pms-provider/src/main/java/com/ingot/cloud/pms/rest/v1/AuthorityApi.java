@@ -4,7 +4,7 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,24 +22,24 @@ public class AuthorityApi extends BaseController {
     private final SysAuthorityService sysAuthorityService;
 
     @GetMapping("/tree")
-    public IngotResponse<?> tree() {
+    public R<?> tree() {
         return ok(sysAuthorityService.tree());
     }
 
     @PostMapping
-    public IngotResponse<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
+    public R<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
         sysAuthorityService.createAuthority(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@RequestBody @Validated(Group.Update.class) SysAuthority params) {
+    public R<?> update(@RequestBody @Validated(Group.Update.class) SysAuthority params) {
         sysAuthorityService.updateAuthority(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysAuthorityService.removeAuthorityById(id);
         return ok();
     }

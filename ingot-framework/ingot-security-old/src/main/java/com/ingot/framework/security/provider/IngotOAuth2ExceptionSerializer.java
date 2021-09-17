@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.exception.IngotOAuth2Exception;
 import lombok.SneakyThrows;
 
@@ -25,10 +25,10 @@ public class IngotOAuth2ExceptionSerializer extends StdSerializer<IngotOAuth2Exc
                                     JsonGenerator gen,
                                     SerializerProvider provider) {
         gen.writeStartObject();
-        gen.writeStringField(IngotResponse.CODE, value.getOAuth2ErrorCode());
-        gen.writeStringField(IngotResponse.MESSAGE, value.getMessage());
+        gen.writeStringField(R.CODE, value.getOAuth2ErrorCode());
+        gen.writeStringField(R.MESSAGE, value.getMessage());
         if (StrUtil.isNotEmpty(value.getRaw())){
-            gen.writeObjectField(IngotResponse.DATA, value.getRaw());
+            gen.writeObjectField(R.DATA, value.getRaw());
         }
         gen.writeEndObject();
     }

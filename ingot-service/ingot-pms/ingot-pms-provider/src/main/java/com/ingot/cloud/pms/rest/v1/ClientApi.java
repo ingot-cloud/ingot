@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,29 +23,29 @@ public class ClientApi extends BaseController {
     private final SysOauthClientDetailsService sysOauthClientDetailsService;
 
     @GetMapping("/page")
-    public IngotResponse<?> page(Page<SysOauthClientDetails> page, SysOauthClientDetails condition) {
+    public R<?> page(Page<SysOauthClientDetails> page, SysOauthClientDetails condition) {
         return ok(sysOauthClientDetailsService.conditionPage(page, condition));
     }
 
     @GetMapping("/{id}")
-    public IngotResponse<?> getOne(@PathVariable Long id) {
+    public R<?> getOne(@PathVariable Long id) {
         return ok(sysOauthClientDetailsService.getById(id));
     }
 
     @PostMapping
-    public IngotResponse<?> create(@RequestBody @Validated(Group.Create.class) SysOauthClientDetails params) {
+    public R<?> create(@RequestBody @Validated(Group.Create.class) SysOauthClientDetails params) {
         sysOauthClientDetailsService.createClient(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@RequestBody @Validated(Group.Update.class) SysOauthClientDetails params) {
+    public R<?> update(@RequestBody @Validated(Group.Update.class) SysOauthClientDetails params) {
         sysOauthClientDetailsService.updateClientByClientId(params);
         return ok();
     }
 
     @DeleteMapping("/{clientId}")
-    public IngotResponse<?> removeById(@PathVariable String clientId) {
+    public R<?> removeById(@PathVariable String clientId) {
         sysOauthClientDetailsService.removeClientByClientId(clientId);
         return ok();
     }

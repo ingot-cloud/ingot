@@ -2,7 +2,7 @@ package com.ingot.framework.core.utils;
 
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.common.exception.IllegalOperationException;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 
 /**
  * <p>Description  : ResponseUtils.</p>
@@ -15,7 +15,7 @@ public final class AssertionUtils {
     /**
      * 检测IngotResponse，如果返回失败则抛出异常
      */
-    public static void checkIngotResponse(IngotResponse<?> response){
+    public static void checkIngotResponse(R<?> response){
         if (!response.isSuccess()) {
             throw new BizException(response.getCode(), response.getMessage());
         }

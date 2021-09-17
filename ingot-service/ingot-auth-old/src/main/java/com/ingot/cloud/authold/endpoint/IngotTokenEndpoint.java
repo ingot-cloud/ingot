@@ -1,7 +1,7 @@
 package com.ingot.cloud.authold.endpoint;
 
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.provider.token.TokenStore;
@@ -25,7 +25,7 @@ public class IngotTokenEndpoint extends BaseController {
     private TokenStore tokenStore;
 
     @GetMapping("/revoke")
-    public IngotResponse<?> revoke(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader){
+    public R<?> revoke(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader){
         tokenStore.removeAccessToken(tokenStore.readAccessToken(SecurityUtils.getBearerTokenValue(authHeader)));
         return ok();
     }

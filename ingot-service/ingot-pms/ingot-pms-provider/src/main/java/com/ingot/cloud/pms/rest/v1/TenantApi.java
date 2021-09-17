@@ -6,8 +6,8 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVo;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.annotation.Permit;
+import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +29,7 @@ public class TenantApi extends BaseController {
 
     @Permit
     @GetMapping("/list")
-    public IngotResponse<?> list(){
+    public R<?> list(){
         List<SysTenant> list = sysTenantService.list();
         if (CollUtil.isEmpty(list)) {
             list = CollUtil.newArrayList();
@@ -39,24 +39,24 @@ public class TenantApi extends BaseController {
     }
 
     @GetMapping("/page")
-    public IngotResponse<?> page(Page<SysTenant> page, SysTenant params) {
+    public R<?> page(Page<SysTenant> page, SysTenant params) {
         return ok(sysTenantService.conditionPage(page, params));
     }
 
     @PostMapping
-    public IngotResponse<?> create(@Valid @RequestBody SysTenant params) {
+    public R<?> create(@Valid @RequestBody SysTenant params) {
         sysTenantService.createTenant(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@Valid @RequestBody SysTenant params) {
+    public R<?> update(@Valid @RequestBody SysTenant params) {
         sysTenantService.updateTenantById(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Integer id) {
         sysTenantService.removeTenantById(id);
         return ok();
     }

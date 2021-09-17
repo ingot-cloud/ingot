@@ -8,7 +8,7 @@ import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.core.wrapper.ResponseWrapper;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Feign;
@@ -115,7 +115,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                     } else {
                         // 增加判断返回类型，如果是IngotResponse，那么返回缺省降级结果
                         Class<?> returnType = method.getReturnType();
-                        if (returnType == IngotResponse.class) {
+                        if (returnType == R.class) {
                             if (ex instanceof IngotFeignException) {
                                 return ResponseWrapper.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }

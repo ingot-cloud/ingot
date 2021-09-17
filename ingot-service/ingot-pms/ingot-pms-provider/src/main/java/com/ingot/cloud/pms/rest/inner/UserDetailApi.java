@@ -4,9 +4,9 @@ import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
-import com.ingot.framework.security.annotation.Permit;
-import com.ingot.framework.security.model.enums.PermitModel;
+import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.security.config.annotation.web.configuration.Permit;
+import com.ingot.framework.security.config.annotation.web.configuration.PermitModel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +29,7 @@ public class UserDetailApi extends BaseController {
 
     @Permit(model = PermitModel.INNER)
     @PostMapping
-    public IngotResponse<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params) {
+    public R<UserAuthDetails> getUserAuthDetail(@RequestBody UserDetailsDto params) {
         return ok(userDetailService.getUserAuthDetails(params));
     }
 }

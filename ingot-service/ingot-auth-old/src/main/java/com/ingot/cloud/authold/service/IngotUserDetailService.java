@@ -6,7 +6,7 @@ import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.IngotUserDetailsService;
 import com.ingot.framework.security.exception.IngotOAuth2Exception;
@@ -54,7 +54,7 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         params.setMode(UserDetailsModeEnum.PASSWORD);
         params.setUniqueCode(username);
         params.setClientId(clientId);
-        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
+        R<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
     }
@@ -79,12 +79,12 @@ public class IngotUserDetailService implements IngotUserDetailsService {
         params.setMode(UserDetailsModeEnum.SOCIAL);
         params.setUniqueCode(uniqueCode);
         params.setClientId(clientId);
-        IngotResponse<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
+        R<UserAuthDetails> response = userCenterFeignApi.getUserAuthDetail(params);
         log.info(">>> IngotUserDetailServiceImpl - user detail service, response: {}", response);
         return loadDetail(response);
     }
 
-    private IngotUser loadDetail(IngotResponse<UserAuthDetails> response) {
+    private IngotUser loadDetail(R<UserAuthDetails> response) {
         if (response == null) {
             throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
         }

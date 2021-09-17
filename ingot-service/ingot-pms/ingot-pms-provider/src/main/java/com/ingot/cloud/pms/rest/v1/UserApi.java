@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,41 +28,41 @@ public class UserApi extends BaseController {
     private final SysUserService sysUserService;
 
     @GetMapping
-    public IngotResponse<?> user() {
+    public R<?> user() {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
     @GetMapping("/profile/{id}")
-    public IngotResponse<?> userProfile(@PathVariable Long id){
+    public R<?> userProfile(@PathVariable Long id){
         return ok(sysUserService.getUserProfile(id));
     }
 
     @GetMapping("/page")
-    public IngotResponse<?> page(Page<SysUser> page, UserDto condition) {
+    public R<?> page(Page<SysUser> page, UserDto condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
     @PostMapping
-    public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody UserDto params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody UserDto params) {
         sysUserService.createUser(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody UserDto params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody UserDto params) {
         sysUserService.updateUser(params);
         return ok();
     }
 
     @PutMapping("/edit")
-    public IngotResponse<?> updateUserBaseInfo(@RequestBody UserBaseInfoDto params) {
+    public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDto params) {
         long userId = SecurityAuthContext.getUser().getId();
         sysUserService.updateUserBaseInfo(userId, params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysUserService.removeUserById(id);
         return ok();
     }

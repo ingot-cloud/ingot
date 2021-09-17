@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -31,92 +31,92 @@ public class RoleApi extends BaseController {
     private final SysRoleUserService sysRoleUserService;
 
     @GetMapping("/page")
-    public IngotResponse<?> page(Page<SysRole> page, SysRole condition) {
+    public R<?> page(Page<SysRole> page, SysRole condition) {
         return ok(sysRoleService.conditionPage(page, condition));
     }
 
     @PostMapping
-    public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
         sysRoleService.createRole(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
         sysRoleService.updateRoleById(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id);
         return ok();
     }
 
     @PutMapping("/bindAuthority")
-    public IngotResponse<?> bindAuthority(@RequestBody @Validated RelationDto<Long, Long> params) {
+    public R<?> bindAuthority(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         return ok();
     }
 
     @GetMapping("/bindAuthority/{id}")
-    public IngotResponse<?> getBindAuthorities(@PathVariable Long id,
-                                               @RequestParam("isBind") boolean isBind,
-                                               SysAuthority condition) {
+    public R<?> getBindAuthorities(@PathVariable Long id,
+                                   @RequestParam("isBind") boolean isBind,
+                                   SysAuthority condition) {
         return ok(sysRoleAuthorityService.getRoleAuthorities(id, isBind, condition));
     }
 
     @PutMapping("/bindDept")
-    public IngotResponse<?> bindDept(@RequestBody @Validated RelationDto<Long, Long> params) {
+    public R<?> bindDept(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleDeptService.roleBindDepts(params);
         return ok();
     }
 
     @GetMapping("/bindDept/{id}")
-    public IngotResponse<?> getBindDepts(@PathVariable Long id,
-                                         @RequestParam("isBind") boolean isBind,
-                                         SysDept condition) {
+    public R<?> getBindDepts(@PathVariable Long id,
+                             @RequestParam("isBind") boolean isBind,
+                             SysDept condition) {
         return ok(sysRoleDeptService.getRoleDepts(id, isBind, condition));
     }
 
     @PutMapping("/bindMenu")
-    public IngotResponse<?> bindMenu(@RequestBody @Validated RelationDto<Long, Long> params) {
+    public R<?> bindMenu(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleMenuService.roleBindMenus(params);
         return ok();
     }
 
     @GetMapping("/bindMenu/{id}")
-    public IngotResponse<?> getBindMenus(@PathVariable Long id,
-                                         @RequestParam("isBind") boolean isBind,
-                                         SysMenu condition) {
+    public R<?> getBindMenus(@PathVariable Long id,
+                             @RequestParam("isBind") boolean isBind,
+                             SysMenu condition) {
         return ok(sysRoleMenuService.getRoleMenus(id, isBind, condition));
     }
 
     @PutMapping("/bindClient")
-    public IngotResponse<?> bindClient(@RequestBody @Validated RelationDto<Long, Long> params) {
+    public R<?> bindClient(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleOauthClientService.roleBindClients(params);
         return ok();
     }
 
     @GetMapping("/bindClient/{id}")
-    public IngotResponse<?> getBindClients(@PathVariable Long id,
-                                           Page<?> page,
-                                           @RequestParam("isBind") boolean isBind,
-                                           SysOauthClientDetails condition) {
+    public R<?> getBindClients(@PathVariable Long id,
+                               Page<?> page,
+                               @RequestParam("isBind") boolean isBind,
+                               SysOauthClientDetails condition) {
         return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind, condition));
     }
 
     @PutMapping("/bindUser")
-    public IngotResponse<?> bindUser(@RequestBody @Validated RelationDto<Long, Long> params) {
+    public R<?> bindUser(@RequestBody @Validated RelationDto<Long, Long> params) {
         sysRoleUserService.roleBindUsers(params);
         return ok();
     }
 
     @GetMapping("/bindUser/{id}")
-    public IngotResponse<?> getBindUsers(@PathVariable Long id,
-                                         Page<?> page,
-                                         @RequestParam("isBind") boolean isBind,
-                                         SysUser condition) {
+    public R<?> getBindUsers(@PathVariable Long id,
+                             Page<?> page,
+                             @RequestParam("isBind") boolean isBind,
+                             SysUser condition) {
         return ok(sysRoleUserService.getRoleUsers(id, page, isBind, condition));
     }
 }

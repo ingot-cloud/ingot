@@ -4,7 +4,7 @@ import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,24 +22,24 @@ public class MenuApi extends BaseController {
     private final SysMenuService sysMenuService;
 
     @GetMapping("/tree")
-    public IngotResponse<?> tree() {
+    public R<?> tree() {
         return ok(sysMenuService.tree());
     }
 
     @PostMapping
-    public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody SysMenu params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody SysMenu params) {
         sysMenuService.createMenu(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody SysMenu params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody SysMenu params) {
         sysMenuService.updateMenu(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysMenuService.removeMenuById(id);
         return ok();
     }

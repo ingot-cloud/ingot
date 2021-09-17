@@ -4,7 +4,7 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.IngotResponse;
+import com.ingot.framework.core.wrapper.R;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -24,24 +24,24 @@ public class DeptApi extends BaseController {
     private final SysDeptService sysDeptService;
 
     @GetMapping("/tree")
-    public IngotResponse<?> tree() {
+    public R<?> tree() {
         return ok(sysDeptService.tree());
     }
 
     @PostMapping
-    public IngotResponse<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
         sysDeptService.createDept(params);
         return ok();
     }
 
     @PutMapping
-    public IngotResponse<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
         sysDeptService.updateDept(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public IngotResponse<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysDeptService.removeDeptById(id);
         return ok();
     }

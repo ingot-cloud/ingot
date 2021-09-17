@@ -5,20 +5,19 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.framework.core.model.dto.user.UserAuthDetails;
 import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.security.exception.BadRequestException;
-import com.ingot.framework.security.exception.ForbiddenException;
-import com.ingot.framework.security.exception.UnauthorizedException;
 import com.ingot.framework.security.common.utils.SocialUtils;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtend;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,10 +43,10 @@ public class UserDetailServiceImpl implements UserDetailService {
     public UserAuthDetails getUserAuthDetails(UserDetailsDto params) {
         UserDetailsModeEnum model = params.getMode();
         if (model == null) {
-            throw new ForbiddenException("非法授权模式");
+            OAuth2ErrorUtils.throwInvalidRequest("非法授权模式");
         }
 
-        SysUser user;
+        SysUser user = null;
         switch (model) {
             case PASSWORD:
                 user = withPasswordMode(params);
@@ -56,7 +55,7 @@ public class UserDetailServiceImpl implements UserDetailService {
                 user = withSocialMode(params);
                 break;
             default:
-                throw new ForbiddenException("授权模式不正确：" + model);
+                OAuth2ErrorUtils.throwInvalidRequest("授权模式不正确：" + model);
         }
 
         // 校验用户
@@ -77,7 +76,7 @@ public class UserDetailServiceImpl implements UserDetailService {
                 .filter(item -> StrUtil.equals(item.getClientId(), params.getClientId()))
                 .findFirst().orElse(null);
         if (client == null) {
-            throw new UnauthorizedException("未授权该应用");
+            OAuth2ErrorUtils.throwInvalidRequest("未授权该应用");
         }
         userDetails.setTokenAuthenticationMethod(client.getAuthType());
         return userDetails;
@@ -93,12 +92,12 @@ public class UserDetailServiceImpl implements UserDetailService {
         String[] extract = SocialUtils.extract(params.getUniqueCode());
         SocialTypeEnum socialType = SocialTypeEnum.getEnum(extract[0]);
         if (socialType == null) {
-            throw new BadRequestException("非法社交类型");
+            OAuth2ErrorUtils.throwInvalidRequest("非法社交类型");
         }
 
         SocialProcessor processor = socialProcessorMap.get(socialType.getBeanName());
         if (processor == null) {
-            throw new BadRequestException("非法社交类型");
+            OAuth2ErrorUtils.throwInvalidRequest("非法社交类型");
         }
 
         params.setUniqueCode(extract[1]);
@@ -118,10 +117,11 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     private void checkUser(SysUser user) {
         if (user == null) {
-            throw new BadRequestException("用户名或密码不正确");
+            OAuth2ErrorUtils.throwInvalidRequest("用户名或密码不正确");
         }
         if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
-            throw new UnauthorizedException("用户" + user.getStatus().getDesc());
+            OAuth2ErrorUtils.throwAuthenticationException(
+                    OAuth2ErrorCodesExtend.USER_STATUS.code(), "用户" + user.getStatus().getDesc());
         }
     }
 }

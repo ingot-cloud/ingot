@@ -24,7 +24,7 @@ import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.exception.UnauthorizedException;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.AllArgsConstructor;
@@ -62,7 +62,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         return TenantEnv.applyAs(user.getTenantId(), () -> {
             SysUser userInfo = getById(user.getId());
             if (userInfo == null) {
-                throw new UnauthorizedException("用户异常");
+                OAuth2ErrorUtils.throwInvalidRequest("用户异常");
             }
 
             List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
