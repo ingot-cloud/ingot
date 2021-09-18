@@ -104,4 +104,81 @@ public class R<T> implements Serializable {
     public boolean isSuccess() {
         return StrUtil.equals(getCode(), BaseStatusCode.OK.code());
     }
+
+    /**
+     * 响应成功
+     */
+    public static <T> R<T> ok() {
+        return new R<>(BaseStatusCode.OK);
+    }
+
+    /**
+     * 响应成功附带 data
+     */
+    public static <T> R<T> ok(T data) {
+        return new R<>(data, BaseStatusCode.OK);
+    }
+
+    /**
+     * 500 error
+     */
+    public static <T> R<T> error500() {
+        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * 500, custom message
+     */
+    public static <T> R<T> error500(String message) {
+        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+    }
+
+    /**
+     * 响应失败 500，附带自定义响应体
+     */
+    public static <T> R<T> error500WithData(T data) {
+        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * 响应失败 500，附带自定义响应体
+     */
+    public static <T> R<T> error500WithData(T data, String message) {
+        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+    }
+
+    /**
+     * 响应失败，附带 ResponseCode
+     */
+    public static <T> R<T> error(StatusCode code) {
+        return new R<>(code);
+    }
+
+    /**
+     * 响应失败
+     */
+    public static <T> R<T> error(String code, String message) {
+        return new R<>(code, message);
+    }
+
+    /**
+     * 响应失败
+     */
+    public static <T> R<T> errorF(StatusCode code, Object... messages) {
+        return new R<>(code.code(), String.format(code.message(), messages));
+    }
+
+    /**
+     * 响应失败，附带自定义响应体
+     */
+    public static <T> R<T> errorWithData(T data, StatusCode code) {
+        return new R<>(data, code);
+    }
+
+    /**
+     * 响应失败
+     */
+    public static <T> R<T> errorWithData(T data, String code, String message) {
+        return new R<>(data, code, message);
+    }
 }
