@@ -3,6 +3,7 @@ package com.ingot.framework.security.config.annotation.web.configuration;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
+import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,8 @@ public class IngotOAuth2ResourceServerConfiguration {
                         authorizeRequests.anyRequest().authenticated())
                 .oauth2ResourceServer()
                 .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
-                .jwt();
+                .jwt()
+                .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
         return http.build();
     }
 
