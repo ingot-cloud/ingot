@@ -1,6 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.IngotOAuth2PasswordAuthenticationConfigurer;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +11,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -31,6 +34,12 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applyDefaultSecurity(http);
         return http.formLogin(Customizer.withDefaults()).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
+    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
+        return new JwtOAuth2TokenCustomizer();
     }
 
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {

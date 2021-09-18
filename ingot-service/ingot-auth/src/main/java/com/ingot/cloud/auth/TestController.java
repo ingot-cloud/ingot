@@ -1,6 +1,8 @@
 package com.ingot.cloud.auth;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,11 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Date         : 2021/9/7.</p>
  * <p>Time         : 5:26 下午.</p>
  */
+@Slf4j
 @RestController
 public class TestController {
 
     @GetMapping("/test")
     public String test() {
+        boolean isJwt = SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken;
+        log.info("----- is jwt={}", isJwt);
         return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
