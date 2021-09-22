@@ -12,4 +12,5 @@ public interface ExtensionClaimNames {
     String TENANT = "tenant";
     String DEPT = "dept";
     String AUTH_METHOD = "am";
+    String SCOPE = "scope";
 }

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
 import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -19,10 +20,16 @@ import java.util.Collection;
  */
 public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+    private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
     private final Converter<Jwt, IngotUser> jwtIngotUserConverter = new JwtIngotUserConverter();
 
     private String principalClaimName;
+
+    public IngotJwtAuthenticationConverter() {
+        jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
+                .setAuthoritiesClaimName(ExtensionClaimNames.SCOPE);
+    }
 
     @Override
     public final AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
