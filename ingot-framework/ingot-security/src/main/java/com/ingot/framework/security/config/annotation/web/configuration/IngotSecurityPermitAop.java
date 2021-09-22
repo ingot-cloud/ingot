@@ -30,7 +30,7 @@ public class IngotSecurityPermitAop {
     @Around("@annotation(permit)")
     public Object around(ProceedingJoinPoint point, Permit permit) {
         // 内部模式需要校验接口来源
-        if (permit.model() == PermitModel.INNER) {
+        if (permit.mode() == PermitMode.INNER) {
             final String header = request.getHeader(SecurityConstants.HEADER_FROM);
             if (!StrUtil.equals(SecurityConstants.HEADER_FROM_INSIDE_VALUE, header)) {
                 log.warn(">>> IngotSecurityPermitAop 访问接口 {} 没有权限", point.getSignature().getName());

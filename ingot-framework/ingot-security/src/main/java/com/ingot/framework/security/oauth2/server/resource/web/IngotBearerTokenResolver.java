@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -11,9 +12,11 @@ import javax.servlet.http.HttpServletRequest;
  * <p>Time         : 5:57 下午.</p>
  */
 public class IngotBearerTokenResolver implements BearerTokenResolver {
+    private final DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
 
     @Override
     public String resolve(HttpServletRequest request) {
-        return null;
+        // todo 关联 permit，如果是permit的url，那么返回空
+        return defaultResolver.resolve(request);
     }
 }

@@ -3,17 +3,21 @@ package com.ingot.framework.security.config.annotation.web.configuration;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
+import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
+import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * <p>Description  : IngotOAuth2ResourceServerConfiguration.</p>
@@ -28,15 +32,19 @@ public class IngotOAuth2ResourceServerConfiguration {
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
     private IngotHttpConfigurersAdapter httpConfigurersAdapter;
+    private PermitResolver permitResolver;
 
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         httpConfigurersAdapter.apply(http);
-        http.authorizeRequests(authorizeRequests ->
-                        authorizeRequests.anyRequest().authenticated())
+        http.authorizeRequests(authorizeRequests -> {
+                    permitResolver.permitAll(authorizeRequests);
+                    authorizeRequests.anyRequest().authenticated();
+                })
                 .oauth2ResourceServer()
                 .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
+                .bearerTokenResolver(new IngotBearerTokenResolver())
                 .jwt()
                 .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
         return http.build();
@@ -47,6 +55,17 @@ public class IngotOAuth2ResourceServerConfiguration {
     @ConditionalOnMissingBean(UserDetailsService.class)
     public UserDetailsService userDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
         return new RemoteIngotUserDetailsService(remoteUserDetailsService);
+    }
+
+    @Bean
+    @ConfigurationProperties(prefix = "ingot.oauth2.resource")
+    public PermitResolver permitResolver(WebApplicationContext context) {
+        return new PermitResolver(context);
+    }
+
+    @Autowired
+    public void setPermitResolver(PermitResolver permitResolver) {
+        this.permitResolver = permitResolver;
     }
 
     @Autowired

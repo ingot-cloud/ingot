@@ -14,8 +14,8 @@ import java.lang.annotation.*;
 public @interface Permit {
 
     /**
-     * 允许模式，默认为 {@link PermitModel#PUBLIC}
-     * @return {@link PermitModel}
+     * 允许模式，默认为 {@link PermitMode#PUBLIC}
+     * @return {@link PermitMode}
      */
-    PermitModel model() default PermitModel.PUBLIC;
+    PermitMode mode() default PermitMode.PUBLIC;
 }

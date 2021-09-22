@@ -9,7 +9,7 @@ import com.ingot.framework.core.constants.SecurityConstants;
  * <p>Date         : 2019/7/12.</p>
  * <p>Time         : 2:04 PM.</p>
  */
-public enum PermitModel {
+public enum PermitMode {
     /**
      * 公开接口，不校验任何逻辑
      */

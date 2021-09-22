@@ -7,5 +7,7 @@ dependencies {
     api 'org.springframework.security:spring-security-oauth2-jose'
     api 'org.springframework.security:spring-security-oauth2-resource-server'
 
+    implementation(deps.spring.framework_webmvc)
+
     compileOnly(deps.javax_servlet_api)
 }

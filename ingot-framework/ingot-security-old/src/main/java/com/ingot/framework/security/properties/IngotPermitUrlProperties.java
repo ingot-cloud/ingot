@@ -4,8 +4,8 @@ import cn.hutool.core.util.ReUtil;
 import com.ingot.framework.security.annotation.Permit;
 import com.ingot.framework.security.model.enums.PermitModel;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Configuration
-@AllArgsConstructor
+@RequiredArgsConstructor
 @ConfigurationProperties(prefix = "ingot.oauth2.resource")
 public class IngotPermitUrlProperties implements InitializingBean {
     private static final Pattern PATTERN = Pattern.compile("\\{(.*?)\\}");
