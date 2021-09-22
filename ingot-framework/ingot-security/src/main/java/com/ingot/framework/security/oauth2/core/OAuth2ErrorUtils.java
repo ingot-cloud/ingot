@@ -38,7 +38,7 @@ public final class OAuth2ErrorUtils {
      *
      * @param code error code
      */
-    public static void throwAuthenticationException(OAuth2ErrorCodesExtend code) {
+    public static void throwAuthenticationException(OAuth2ErrorCodesExtension code) {
         throwAuthenticationException(code.code(), code.message());
     }
 

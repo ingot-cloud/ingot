@@ -26,12 +26,12 @@ public class IngotUser extends User {
     @JsonSerialize(using = ToStringSerializer.class)
     private final Integer tenantId;
     @Getter
-    private final String authType;
+    private final String tokenAuthenticationMethod;
 
     public IngotUser(Long id,
                      Long deptId,
                      Integer tenantId,
-                     String authType,
+                     String tokenAuthenticationMethod,
                      String username,
                      String password,
                      boolean enabled,
@@ -43,7 +43,7 @@ public class IngotUser extends User {
         this.id = id;
         this.deptId = deptId;
         this.tenantId = tenantId;
-        this.authType = authType;
+        this.tokenAuthenticationMethod = tokenAuthenticationMethod;
     }
 
     @JsonIgnore

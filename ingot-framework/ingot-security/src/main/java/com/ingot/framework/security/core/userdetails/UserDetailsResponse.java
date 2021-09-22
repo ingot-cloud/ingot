@@ -1,6 +1,7 @@
 package com.ingot.framework.security.core.userdetails;
 
 import com.ingot.framework.core.model.enums.UserStatusEnum;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.util.List;
  * <p>Time         : 3:25 下午.</p>
  */
 @Data
+@Builder
 public class UserDetailsResponse implements Serializable {
     /**
      * 用户ID

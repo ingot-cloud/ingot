@@ -16,7 +16,7 @@ import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.utils.SocialUtils;
-import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtend;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtension;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -121,7 +121,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         }
         if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
             OAuth2ErrorUtils.throwAuthenticationException(
-                    OAuth2ErrorCodesExtend.USER_STATUS.code(), "用户" + user.getStatus().getDesc());
+                    OAuth2ErrorCodesExtension.USER_STATUS.code(), "用户" + user.getStatus().getDesc());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth;
 
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -19,7 +20,8 @@ public class TestController {
     @GetMapping("/test")
     public String test() {
         boolean isJwt = SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken;
-        log.info("----- is jwt={}", isJwt);
+        log.info("----- user={}", SecurityAuthContext.getUser());
+        log.info("----- roles={}", SecurityAuthContext.getRoles());
         return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
     }
 

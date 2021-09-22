@@ -1,6 +1,9 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
@@ -17,7 +20,18 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
     public void customize(JwtEncodingContext context) {
         Object principal = context.getPrincipal();
         if (principal instanceof OAuth2UsernamePasswordAuthenticationToken) {
-            // 密码登录增强
+            UserDetails user =
+                    (UserDetails) ((OAuth2UsernamePasswordAuthenticationToken) principal).getPrincipal();
+            if (user instanceof IngotUser) {
+                context.getClaims().claim(ExtensionClaimNames.ID,
+                        ((IngotUser) user).getId());
+                context.getClaims().claim(ExtensionClaimNames.TENANT,
+                        ((IngotUser) user).getTenantId());
+                context.getClaims().claim(ExtensionClaimNames.DEPT,
+                        ((IngotUser) user).getDeptId());
+                context.getClaims().claim(ExtensionClaimNames.AUTH_METHOD,
+                        ((IngotUser) user).getTokenAuthenticationMethod());
+            }
         }
     }
 }
