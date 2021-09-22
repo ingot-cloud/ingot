@@ -1,16 +1,14 @@
 package com.ingot.framework.core.error;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.R;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestAttributes;
@@ -31,8 +29,6 @@ import java.util.Map;
  * <p>Time         : 5:24 PM.</p>
  */
 @Slf4j
-@Component
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class IngotErrorAttributes implements ErrorAttributes, Ordered {
     private static final String ERROR_ATTRIBUTE = IngotErrorAttributes.class.getName() + ".ERROR";
 
@@ -51,7 +47,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
 
         // 获取真实 exception
         while (error instanceof ServletException && error.getCause() != null) {
-            error = ((ServletException) error).getCause();
+            error = error.getCause();
         }
 
         if (error instanceof BizException) {
@@ -102,7 +98,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
                                  WebRequest webRequest, boolean includeStackTrace) {
         if (error != null) {
             while (error instanceof ServletException && error.getCause() != null) {
-                error = ((ServletException) error).getCause();
+                error = error.getCause();
             }
             errorAttributes.put("exception", error.getClass().getName());
             addErrorMessage(errorAttributes, error);
@@ -111,10 +107,10 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
             }
         }
         Object message = getAttribute(webRequest, "javax.servlet.error.message");
-        if ((!StringUtils.isEmpty(message) || errorAttributes.get("message") == null)
+        if ((!ObjectUtil.isEmpty(message) || errorAttributes.get("message") == null)
                 && !(error instanceof BindingResult)) {
             errorAttributes.put("message",
-                    StringUtils.isEmpty(message) ? "No message available" : message);
+                    ObjectUtil.isEmpty(message) ? "No message available" : message);
         }
     }
 

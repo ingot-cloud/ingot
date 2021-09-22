@@ -5,4 +5,4 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.ingot.framework.core.aspect.RequestLogAop,\
   com.ingot.framework.core.model.transform.CommonTypeTransform,\
   com.ingot.framework.core.error.GlobalExceptionHandlerResolver,\
-  com.ingot.framework.core.error.IngotErrorAttributes
+  com.ingot.framework.core.config.ErrorConfig
