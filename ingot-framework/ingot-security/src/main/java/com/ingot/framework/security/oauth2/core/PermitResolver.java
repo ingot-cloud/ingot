@@ -69,24 +69,18 @@ public class PermitResolver implements InitializingBean {
      * 内部资源 RequestMatcher
      */
     public RequestMatcher innerRequestMatcher() {
-        List<String> urls = getInnerUrls();
-        List<AntPathRequestMatcher> matchers = urls.stream()
-                .filter(url -> {
-                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    return urlAndMethod.size() == 2;
-                })
-                .flatMap(url -> {
-                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    if (StrUtil.equals(urlAndMethod.get(1), "*")) {
-                        AntPathRequestMatcher[] antPathRequestMatchers =
-                                {new AntPathRequestMatcher(urlAndMethod.get(0))};
-                        return Arrays.stream(antPathRequestMatchers);
-                    }
-                    List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
-                    return Arrays.stream(methods.stream()
-                            .map(method -> new AntPathRequestMatcher(urlAndMethod.get(0), method))
-                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
-                }).collect(Collectors.toList());
+        List<AntPathRequestMatcher> matchers = getMatchers(getInnerUrls());
+        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
+    }
+
+    /**
+     * 获取所有 permitAll 的 RequestMatcher，包含 public url 和 inner url
+     */
+    public RequestMatcher permitAllRequestMatcher() {
+        List<String> all = new ArrayList<>();
+        all.addAll(getInnerUrls());
+        all.addAll(getPublicUrls());
+        List<AntPathRequestMatcher> matchers = getMatchers(all);
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -166,5 +160,25 @@ public class PermitResolver implements InitializingBean {
                 registry.antMatchers(HttpMethod.valueOf(method), urlAndMethod.get(0)).permitAll();
             }
         }
+    }
+
+    private List<AntPathRequestMatcher> getMatchers(List<String> urls) {
+        return urls.stream()
+                .filter(url -> {
+                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+                    return urlAndMethod.size() == 2;
+                })
+                .flatMap(url -> {
+                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+                    if (StrUtil.equals(urlAndMethod.get(1), "*")) {
+                        AntPathRequestMatcher[] antPathRequestMatchers =
+                                {new AntPathRequestMatcher(urlAndMethod.get(0))};
+                        return Arrays.stream(antPathRequestMatchers);
+                    }
+                    List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
+                    return Arrays.stream(methods.stream()
+                            .map(method -> new AntPathRequestMatcher(urlAndMethod.get(0), method))
+                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
+                }).collect(Collectors.toList());
     }
 }

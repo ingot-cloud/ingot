@@ -48,7 +48,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 })
                 .oauth2ResourceServer()
                 .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
-                .bearerTokenResolver(new IngotBearerTokenResolver())
+                .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
                 .jwt()
                 .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
         return http.build();

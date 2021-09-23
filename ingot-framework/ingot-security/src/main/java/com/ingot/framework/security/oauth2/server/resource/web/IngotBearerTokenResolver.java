@@ -1,7 +1,9 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
+import com.ingot.framework.security.oauth2.core.PermitResolver;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,10 +15,17 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class IngotBearerTokenResolver implements BearerTokenResolver {
     private final DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
+    private final RequestMatcher requestMatcher;
+
+    public IngotBearerTokenResolver(PermitResolver permitResolver) {
+        this.requestMatcher = permitResolver.permitAllRequestMatcher();
+    }
 
     @Override
     public String resolve(HttpServletRequest request) {
-        // todo 关联 permit，如果是permit的url，那么返回空
+        if (requestMatcher.matches(request)) {
+            return null;
+        }
         return defaultResolver.resolve(request);
     }
 }
