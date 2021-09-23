@@ -41,7 +41,7 @@ public class DefaultSecurityConfig {
             return R.ok(UserDetailsResponse.builder()
                     .username("admin")
                     .password("{noop}admin")
-                    .roles(ListUtil.of("ADMIN"))
+                    .roles(ListUtil.of("ADMIN", "MANAGER"))
                     .status(UserStatusEnum.ENABLE)
                     .tokenAuthenticationMethod(TokenAuthMethod.STANDARD.getValue())
                     .id(1L)

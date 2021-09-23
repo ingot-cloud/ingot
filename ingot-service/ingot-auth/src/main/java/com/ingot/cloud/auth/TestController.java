@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth;
 
+import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,7 @@ public class TestController {
         return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
+    @Permit
     @GetMapping("/test2")
     public String test2() {
         return "permit url";
