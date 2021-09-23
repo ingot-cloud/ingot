@@ -15,6 +15,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
@@ -22,10 +24,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -39,6 +38,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PermitResolver implements InitializingBean {
     private static final Pattern PATTERN = Pattern.compile("\\{(.*?)\\}");
+    private static final String VERTICAL_LINE = "|";
 
     private final WebApplicationContext applicationContext;
 
@@ -50,28 +50,44 @@ public class PermitResolver implements InitializingBean {
     private List<String> innerUrls = new ArrayList<>();
 
     /**
-     * permit all url
+     * permit all public url
      */
-    public void permitAll(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
-        for (String url : getPublicUrls()) {
-            List<String> urlAndMethod = StrUtil.split(url, "|");
+    public void permitAllPublic(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+        List<String> urls = getPublicUrls();
+        permitAll(urls, registry);
+    }
 
-            // method 为空，则permit所有方法
-            if (urlAndMethod.size() == 1) {
-                registry.antMatchers(urlAndMethod.get(0)).permitAll();
-                continue;
-            }
+    /**
+     * permit all inner url
+     */
+    public void permitAllInner(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+        List<String> urls = getInnerUrls();
+        permitAll(urls, registry);
+    }
 
-            // url对应方法permitAll
-            if (urlAndMethod.size() == 2) {
-                for (String method : StrUtil.split(urlAndMethod.get(1), StrUtil.COMMA)) {
-                    registry.antMatchers(HttpMethod.valueOf(method), urlAndMethod.get(0)).permitAll();
-                }
-                continue;
-            }
-
-            log.warn("--- {} 无法配置 permitAll", url);
-        }
+    /**
+     * 内部资源 RequestMatcher
+     */
+    public RequestMatcher innerRequestMatcher() {
+        List<String> urls = getInnerUrls();
+        List<AntPathRequestMatcher> matchers = urls.stream()
+                .filter(url -> {
+                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+                    return urlAndMethod.size() == 2;
+                })
+                .flatMap(url -> {
+                    List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+                    if (StrUtil.equals(urlAndMethod.get(1), "*")) {
+                        AntPathRequestMatcher[] antPathRequestMatchers =
+                                {new AntPathRequestMatcher(urlAndMethod.get(0))};
+                        return Arrays.stream(antPathRequestMatchers);
+                    }
+                    List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
+                    return Arrays.stream(methods.stream()
+                            .map(method -> new AntPathRequestMatcher(urlAndMethod.get(0), method))
+                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
+                }).collect(Collectors.toList());
+        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
     @Override
@@ -90,7 +106,8 @@ public class PermitResolver implements InitializingBean {
                 Method method = handlerMethod.getMethod();
                 if (ArrayUtil.contains(methods, method)) {
                     Optional.ofNullable(info.getPatternsCondition())
-                            .ifPresent(con -> con.getPatterns().forEach(url -> filterPath(url, info, controller.mode())));
+                            .ifPresent(con -> con.getPatterns()
+                                    .forEach(url -> this.filterPath(url, info, controller)));
                 }
                 continue;
             }
@@ -100,33 +117,54 @@ public class PermitResolver implements InitializingBean {
             Optional.ofNullable(method).flatMap(an -> Optional.ofNullable(info.getPatternsCondition()))
                     .ifPresent(con ->
                             con.getPatterns()
-                                    .forEach(url -> this.filterPath(url, info, method.mode())));
+                                    .forEach(url -> this.filterPath(url, info, method)));
+        }
+
+        log.info("[PermitResolver] public urls = {}", publicUrls);
+        log.info("[PermitResolver] inner urls = {}", innerUrls);
+    }
+
+    /**
+     * 存储结构: URL,Method
+     */
+    private void filterPath(String url, RequestMappingInfo info, Permit permit) {
+        List<String> methodList = info.getMethodsCondition().getMethods()
+                .stream().map(RequestMethod::name).collect(Collectors.toList());
+        String resultUrl = ReUtil.replaceAll(url, PATTERN, "*");
+        PermitMode mode = permit.mode();
+        String method = CollUtil.isEmpty(methodList) ?
+                "*" : CollUtil.join(methodList, VERTICAL_LINE);
+        switch (mode) {
+            case PUBLIC:
+                publicUrls.add(String.format("%s%s%s",
+                        resultUrl, StrUtil.COMMA, method));
+                break;
+            case INNER:
+                innerUrls.add(String.format("%s%s%s",
+                        resultUrl, StrUtil.COMMA, method));
+                break;
         }
     }
 
-    private void filterPath(String url, RequestMappingInfo info, PermitMode mode) {
-        List<String> methodList = info.getMethodsCondition().getMethods().stream().map(RequestMethod::name)
-                .collect(Collectors.toList());
-        String resultUrl = ReUtil.replaceAll(url, PATTERN, "*");
-        if (CollUtil.isEmpty(methodList)) {
-            switch (mode) {
-                case PUBLIC:
-                    publicUrls.add(resultUrl);
-                    break;
-                case INNER:
-                    innerUrls.add(resultUrl);
-                    break;
-            }
-        } else {
-            switch (mode) {
-                case PUBLIC:
-                    publicUrls.add(String.format("%s|%s", resultUrl, CollUtil.join(methodList, StrUtil.COMMA)));
-                    break;
-                case INNER:
-                    innerUrls.add(String.format("%s|%s", resultUrl, CollUtil.join(methodList, StrUtil.COMMA)));
-                    break;
+    private void permitAll(List<String> urls,
+                           ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+        for (String url : urls) {
+            List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+
+            if (urlAndMethod.size() != 2) {
+                log.warn("--- {} 无法配置 permitAll, 路径非法", url);
+                continue;
             }
 
+            if (StrUtil.equals(urlAndMethod.get(1), "*")) {
+                registry.antMatchers(urlAndMethod.get(0)).permitAll();
+                continue;
+            }
+
+            List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
+            for (String method : methods) {
+                registry.antMatchers(HttpMethod.valueOf(method), urlAndMethod.get(0)).permitAll();
+            }
         }
     }
 }

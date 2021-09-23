@@ -1,6 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
 import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
@@ -14,10 +15,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
 /**
  * <p>Description  : IngotOAuth2ResourceServerConfiguration.</p>
@@ -39,7 +43,7 @@ public class IngotOAuth2ResourceServerConfiguration {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         httpConfigurersAdapter.apply(http);
         http.authorizeRequests(authorizeRequests -> {
-                    permitResolver.permitAll(authorizeRequests);
+                    permitResolver.permitAllPublic(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })
                 .oauth2ResourceServer()
@@ -47,6 +51,20 @@ public class IngotOAuth2ResourceServerConfiguration {
                 .bearerTokenResolver(new IngotBearerTokenResolver())
                 .jwt()
                 .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
+        return http.build();
+    }
+
+    @Bean
+    @Order(HIGHEST_PRECEDENCE + 10)
+    public SecurityFilterChain innerResourceSecurityFilterChain(HttpSecurity http) throws Exception {
+        OAuth2InnerResourceConfigurer<HttpSecurity> innerResourceConfigurer =
+                new OAuth2InnerResourceConfigurer<>(permitResolver);
+        http.requestMatcher(innerResourceConfigurer.getRequestMatcher())
+                .authorizeRequests(authorizeRequests -> {
+                    permitResolver.permitAllInner(authorizeRequests);
+                    authorizeRequests.anyRequest().authenticated();
+                })
+                .apply(innerResourceConfigurer);
         return http.build();
     }
 
