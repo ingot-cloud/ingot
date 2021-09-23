@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -53,8 +54,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient client = RegisteredClient.withId("ingot")
+    public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
+        RegisteredClient client = RegisteredClient.withId("ingot1")
                 .clientId("ingot")
                 .clientSecret("{noop}ingot")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
@@ -67,6 +68,9 @@ public class AuthorizationServerConfig {
                 .redirectUri("https://ingotcloud.com")
                 .build();
         return new InMemoryRegisteredClientRepository(client);
+//        JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
+//        registeredClientRepository.save(client);
+//        return registeredClientRepository;
     }
 
     @Bean
