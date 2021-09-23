@@ -1,12 +1,10 @@
-
 dependencies {
     api(deps.spring.security_oauth2_authorization_server)
-    api project(":ingot-framework:ingot-security")
+    api project(ingot.framework_security)
 
     implementation(deps.spring.spring_boot.security_starter)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
-
-    implementation 'org.springframework:spring-jdbc'
+    implementation(deps.spring.framework_jdbc)
 
     compileOnly(deps.javax_servlet_api)
 }

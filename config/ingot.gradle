@@ -8,6 +8,7 @@ ingot.framework_feign = ":ingot-framework:ingot-feign"
 ingot.framework_sentinel = ":ingot-framework:ingot-sentinel"
 ingot.framework_security = ":ingot-framework:ingot-security"
 ingot.framework_security_config = ":ingot-framework:ingot-security-config"
+ingot.framework_security_auth_server = ":ingot-framework:ingot-security-authorization-server"
 ingot.framework_tenant = ":ingot-framework:ingot-tenant"
 
 // component

@@ -57,12 +57,16 @@ spring.security_config = "org.springframework.security:spring-security-config"
 spring.security_core = "org.springframework.security:spring-security-core"
 spring.security_web = "org.springframework.security:spring-security-web"
 spring.security_oauth2_authorization_server = "org.springframework.security:spring-security-oauth2-authorization-server:0.2.0"
+spring.security_oauth2_core = 'org.springframework.security:spring-security-oauth2-core'
+spring.security_oauth2_jose = 'org.springframework.security:spring-security-oauth2-jose'
+spring.security_oauth2_resource_server = 'org.springframework.security:spring-security-oauth2-resource-server'
 
-spring.framework_spring_web = "org.springframework:spring-web:${versions.spring_framework}"
-spring.framework_spring_webflux = "org.springframework:spring-webflux:${versions.spring_framework}"
-spring.framework_spring_beans = "org.springframework:spring-beans:${versions.spring_framework}"
-spring.framework_webmvc = "org.springframework:spring-webmvc:${versions.spring_framework}"
-spring.framework_context = "org.springframework:spring-context:${versions.spring_framework}"
+spring.framework_spring_web = "org.springframework:spring-web"
+spring.framework_spring_webflux = "org.springframework:spring-webflux"
+spring.framework_spring_beans = "org.springframework:spring-beans"
+spring.framework_webmvc = "org.springframework:spring-webmvc"
+spring.framework_context = "org.springframework:spring-context"
+spring.framework_jdbc = "org.springframework:spring-jdbc"
 
 spring.spring_boot = spring_boot
 spring.spring_cloud = spring_cloud
@@ -160,8 +164,8 @@ deps.google_findbugs_jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 deps.netty = "io.netty:netty-all:4.1.55.Final"
 
 def plugins = [:]
-plugins.ingot_mybatis="com.ingot:ingot-mybatisplus-plugin:0.1.0"
-plugins.ingot_assemble="com.ingot:ingot-assemble-plugin:0.1.1"
+plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:0.1.0"
+plugins.ingot_assemble = "com.ingot:ingot-assemble-plugin:0.1.1"
 deps.plugins = plugins
 
 ext.deps = deps

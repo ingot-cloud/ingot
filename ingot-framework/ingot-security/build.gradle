@@ -3,9 +3,9 @@ dependencies {
     api project(ingot.framework_core)
     api project(ingot.framework_security_config)
     api(deps.spring.spring_boot.security_starter)
-    api 'org.springframework.security:spring-security-oauth2-core'
-    api 'org.springframework.security:spring-security-oauth2-jose'
-    api 'org.springframework.security:spring-security-oauth2-resource-server'
+    api(deps.spring.security_oauth2_core)
+    api(deps.spring.security_oauth2_jose)
+    api(deps.spring.security_oauth2_resource_server)
 
     implementation(deps.spring.framework_webmvc)
 
