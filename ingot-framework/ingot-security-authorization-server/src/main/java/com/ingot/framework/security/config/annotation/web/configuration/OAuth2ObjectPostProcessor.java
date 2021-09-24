@@ -1,6 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PasswordAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
@@ -36,10 +37,11 @@ public class OAuth2ObjectPostProcessor implements ObjectPostProcessor<Object> {
                     )
             );
 
+            ((OAuth2TokenEndpointFilter) object).setAuthenticationSuccessHandler(
+                    new IngotAuthenticationSuccessHandler());
             ((OAuth2TokenEndpointFilter) object).setAuthenticationFailureHandler(
                     new IngotAuthenticationFailureHandler());
-        }
-        else if (object instanceof OAuth2ClientAuthenticationFilter) {
+        } else if (object instanceof OAuth2ClientAuthenticationFilter) {
             ((OAuth2ClientAuthenticationFilter) object).setAuthenticationFailureHandler(
                     new IngotAuthenticationFailureHandler());
         }
