@@ -45,6 +45,8 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
         Map<String, Object> finalAttributes = new LinkedHashMap<>();
         finalAttributes.put(R.DATA, errorAttributes);
 
+        log.error("-- IngotErrorAttributes, error={}, attributes={}", error, errorAttributes);
+
         // 获取真实 exception
         while (error instanceof ServletException && error.getCause() != null) {
             error = error.getCause();
