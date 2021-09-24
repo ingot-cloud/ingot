@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 
 import java.security.KeyPair;
@@ -65,6 +66,10 @@ public class AuthorizationServerConfig {
                     authorizationGrantTypes.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
                     authorizationGrantTypes.add(AuthorizationGrantType.PASSWORD);
                 })
+                .scope("message.read")
+                .scope("message.write")
+                // 测试 consent
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
                 .redirectUri("https://ingotcloud.com")
                 .build();
         return new InMemoryRegisteredClientRepository(client);
