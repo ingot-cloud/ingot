@@ -30,7 +30,7 @@ public final class OAuth2ErrorUtils {
      * @param code error code
      */
     public static void throwAuthenticationException(String code) {
-        throwAuthenticationException(code, null, null);
+        throwAuthenticationException(code, null);
     }
 
     /**
@@ -49,7 +49,7 @@ public final class OAuth2ErrorUtils {
      * @param desc error description
      */
     public static void throwAuthenticationException(String code, String desc) {
-        throwAuthenticationException(code, desc, null);
+        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null));
     }
 
     /**

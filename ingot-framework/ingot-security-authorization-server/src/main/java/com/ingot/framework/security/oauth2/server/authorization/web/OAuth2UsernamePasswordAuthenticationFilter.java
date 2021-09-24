@@ -2,7 +2,6 @@ package com.ingot.framework.security.oauth2.server.authorization.web;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -10,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -35,7 +35,7 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
     private AuthenticationConverter authenticationConverter;
-    private AuthenticationSuccessHandler authenticationSuccessHandler = new IngotAuthenticationSuccessHandler();
+    private AuthenticationSuccessHandler authenticationSuccessHandler = this::setSecurityContext;
     private AuthenticationFailureHandler authenticationFailureHandler = new IngotAuthenticationFailureHandler();
 
     public OAuth2UsernamePasswordAuthenticationFilter(AuthenticationManager authenticationManager,
@@ -100,5 +100,13 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
     public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
         Assert.notNull(authenticationFailureHandler, "authenticationFailureHandler cannot be null");
         this.authenticationFailureHandler = authenticationFailureHandler;
+    }
+
+    private void setSecurityContext(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    Authentication authentication) {
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
     }
 }

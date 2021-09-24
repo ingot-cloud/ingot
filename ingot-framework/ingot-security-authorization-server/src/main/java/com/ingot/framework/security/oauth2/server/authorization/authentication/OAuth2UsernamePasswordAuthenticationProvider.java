@@ -115,7 +115,7 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);
             throw ex;
-        } catch (InternalAuthenticationServiceException ex) {
+        } catch (InternalAuthenticationServiceException | OAuth2AuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new InternalAuthenticationServiceException(ex.getMessage(), ex);
