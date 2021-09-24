@@ -22,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * <p>Description  : IngotOAuth2ResourceServerConfiguration.</p>
@@ -51,7 +52,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
                 .jwt()
                 .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
-        return http.build();
+        return http.formLogin(withDefaults()).build();
     }
 
     @Bean
