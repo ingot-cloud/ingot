@@ -20,16 +20,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class DefaultSecurityConfig {
 
-//    @Bean
-//    UserDetailsService users() {
-//        UserDetails user = User.builder()
-//                .username("admin")
-//                .password("{noop}admin")
-//                .roles("ADMIN")
-//                .build();
-//        return new InMemoryUserDetailsManager(user);
-//    }
-
     @Bean
     public RemoteUserDetailsService remoteUserDetailsService() {
         return (UserDetailsRequest params) -> {

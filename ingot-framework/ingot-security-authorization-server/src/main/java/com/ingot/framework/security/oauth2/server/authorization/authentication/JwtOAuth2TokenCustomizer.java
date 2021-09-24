@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
@@ -26,19 +27,27 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
         if (principal instanceof OAuth2UsernamePasswordAuthenticationToken) {
             UserDetails user =
                     (UserDetails) ((OAuth2UsernamePasswordAuthenticationToken) principal).getPrincipal();
-            if (user instanceof IngotUser) {
-                context.getClaims().claim(ExtensionClaimNames.ID,
-                        ((IngotUser) user).getId());
-                context.getClaims().claim(ExtensionClaimNames.TENANT,
-                        ((IngotUser) user).getTenantId());
-                context.getClaims().claim(ExtensionClaimNames.DEPT,
-                        ((IngotUser) user).getDeptId());
-                context.getClaims().claim(ExtensionClaimNames.AUTH_METHOD,
-                        ((IngotUser) user).getTokenAuthenticationMethod());
-                List<String> authorities = user.getAuthorities()
-                        .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-                context.getClaims().claim(ExtensionClaimNames.SCOPE, authorities);
-            }
+            customizeWithUser(context, user);
+        } else if (principal instanceof UsernamePasswordAuthenticationToken) {
+            UserDetails user =
+                    (UserDetails) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+            customizeWithUser(context, user);
+        }
+    }
+
+    private void customizeWithUser(JwtEncodingContext context, UserDetails user) {
+        if (user instanceof IngotUser) {
+            context.getClaims().claim(ExtensionClaimNames.ID,
+                    ((IngotUser) user).getId());
+            context.getClaims().claim(ExtensionClaimNames.TENANT,
+                    ((IngotUser) user).getTenantId());
+            context.getClaims().claim(ExtensionClaimNames.DEPT,
+                    ((IngotUser) user).getDeptId());
+            context.getClaims().claim(ExtensionClaimNames.AUTH_METHOD,
+                    ((IngotUser) user).getTokenAuthenticationMethod());
+            List<String> authorities = user.getAuthorities()
+                    .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+            context.getClaims().claim(ExtensionClaimNames.SCOPE, authorities);
         }
     }
 }
