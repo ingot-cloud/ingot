@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <p>Description  : IngotUser.</p>
@@ -16,6 +17,8 @@ import java.util.Collection;
  * <p>Time         : 12:54 PM.</p>
  */
 public class IngotUser extends User {
+    private static final String N_A = "N/A";
+
     @Getter
     @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
@@ -27,6 +30,31 @@ public class IngotUser extends User {
     private final Integer tenantId;
     @Getter
     private final String tokenAuthenticationMethod;
+
+    public IngotUser(Long id,
+                     Long deptId,
+                     Integer tenantId,
+                     String tokenAuthenticationMethod,
+                     String username) {
+        this(id, deptId, tenantId, tokenAuthenticationMethod, username, N_A,
+                true, true, true, true,
+                Collections.emptyList());
+    }
+
+    public IngotUser(Long id,
+                     Long deptId,
+                     Integer tenantId,
+                     String tokenAuthenticationMethod,
+                     String username,
+                     boolean enabled,
+                     boolean accountNonExpired,
+                     boolean credentialsNonExpired,
+                     boolean accountNonLocked,
+                     Collection<? extends GrantedAuthority> authorities) {
+        this(id, deptId, tenantId, tokenAuthenticationMethod, username, N_A, enabled,
+                accountNonExpired, credentialsNonExpired, accountNonLocked,
+                authorities);
+    }
 
     public IngotUser(Long id,
                      Long deptId,
