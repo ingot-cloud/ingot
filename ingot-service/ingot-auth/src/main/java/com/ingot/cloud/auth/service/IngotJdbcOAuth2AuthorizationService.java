@@ -1,10 +1,16 @@
 package com.ingot.cloud.auth.service;
 
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+
+import java.util.List;
 
 /**
  * <p>Description  : IngotJdbcOAuth2AuthorizationService.</p>
@@ -16,6 +22,17 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
 
     public IngotJdbcOAuth2AuthorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
         super(jdbcOperations, registeredClientRepository);
+
+        OAuth2AuthorizationRowMapper rowMapper = (OAuth2AuthorizationRowMapper) getAuthorizationRowMapper();
+
+        // 自定义 ObjectMapper
+        ObjectMapper objectMapper = new ObjectMapper();
+        ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
+        List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
+        objectMapper.registerModules(securityModules);
+        objectMapper.registerModule(new IngotOAuth2AuthorizationServerJackson2Module());
+
+        rowMapper.setObjectMapper(objectMapper);
     }
 
     @Override
