@@ -1,6 +1,8 @@
 package com.ingot.cloud.auth.config;
 
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
+import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
+import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.framework.tenant.filter.TenantFilter;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -20,17 +22,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
-import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.HeaderWriterFilter;
@@ -67,34 +63,17 @@ public class AuthorizationServerConfig {
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate,
                                                            RegisteredClientRepository registeredClientRepository) {
-        return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+        return new IngotJdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
     }
 
     @Bean
     public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate,
                                                                          RegisteredClientRepository registeredClientRepository) {
-        return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
+        return new IngotJdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
     }
 
     @Bean
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
-        RegisteredClient client = RegisteredClient.withId("ingot11")
-                .clientId("ingot11")
-                .clientSecret("{noop}ingot11")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                .authorizationGrantTypes(authorizationGrantTypes -> {
-                    authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE);
-                    authorizationGrantTypes.add(AuthorizationGrantType.REFRESH_TOKEN);
-                    authorizationGrantTypes.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
-                    authorizationGrantTypes.add(AuthorizationGrantType.PASSWORD);
-                })
-                .scope("message.read")
-                .scope("message.write")
-                // 测试 consent
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-                .redirectUri("https://ingotcloud.com")
-                .build();
-//        return new InMemoryRegisteredClientRepository(client);
         return new IngotJdbcRegisteredClientRepository(jdbcTemplate);
     }
 
