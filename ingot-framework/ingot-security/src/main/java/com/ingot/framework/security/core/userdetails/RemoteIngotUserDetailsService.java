@@ -3,9 +3,9 @@ package com.ingot.framework.security.core.userdetails;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.R;
-import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.common.utils.SocialUtils;
+import com.ingot.framework.security.core.context.ClientContextHolder;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,9 +37,9 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String clientId = SecurityUtils.getClientIdFromRequest();
-        log.info(">>> RemoteIngotUserDetailsService - user detail service, loadUserByUsername: {}, " +
-                        "clientId={}",
+        String clientId = ClientContextHolder.get();
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, " +
+                        "loadUserByUsername: username={}, clientId={}",
                 username, clientId);
 
         UserDetailsRequest params = new UserDetailsRequest();
@@ -62,9 +62,10 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
      */
     @Override
     public UserDetails loadUserBySocial(String socialType, String openId) throws UsernameNotFoundException {
-        log.info(">>> RemoteIngotUserDetailsService - user detail service, loadUserBySocial: openId={}",
-                openId);
-        String clientId = SecurityUtils.getClientIdFromRequest();
+        String clientId = ClientContextHolder.get();
+        log.info(">>> RemoteIngotUserDetailsService - user detail service, " +
+                        "loadUserBySocial: openId={}, clientId={}",
+                openId, clientId);
 
         String uniqueCode = SocialUtils.uniqueCode(socialType, openId);
         UserDetailsRequest params = new UserDetailsRequest();

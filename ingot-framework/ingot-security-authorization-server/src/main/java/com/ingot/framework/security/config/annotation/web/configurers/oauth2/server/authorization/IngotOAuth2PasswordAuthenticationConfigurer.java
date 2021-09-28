@@ -3,6 +3,7 @@ package com.ingot.framework.security.config.annotation.web.configurers.oauth2.se
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UsernamePasswordAuthenticationFilter;
+import com.ingot.framework.security.web.authentication.ClientAuthContextFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -84,10 +85,15 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
         }
 
         AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
+
+        // ClientAuthContextFilter 在 OAuth2ClientAuthenticationFilter 后面
+        ClientAuthContextFilter clientAuthContextFilter = new ClientAuthContextFilter();
+        builder.addFilterAfter(postProcess(clientAuthContextFilter), OAuth2ClientAuthenticationFilter.class);
+
+        // OAuth2UsernamePasswordAuthenticationFilter 在 ClientAuthContextFilter 后面
         OAuth2UsernamePasswordAuthenticationFilter filter =
                 new OAuth2UsernamePasswordAuthenticationFilter(authenticationManager, this.requestMatcher);
-
-        builder.addFilterAfter(postProcess(filter), OAuth2ClientAuthenticationFilter.class);
+        builder.addFilterAfter(postProcess(filter), ClientAuthContextFilter.class);
     }
 
     private boolean canConfig(B builder) {

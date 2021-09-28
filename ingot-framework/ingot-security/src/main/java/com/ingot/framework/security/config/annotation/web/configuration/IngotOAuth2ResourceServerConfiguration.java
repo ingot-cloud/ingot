@@ -8,6 +8,7 @@ import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
+import com.ingot.framework.security.web.authentication.ClientAuthContextFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -19,6 +20,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
@@ -52,7 +54,10 @@ public class IngotOAuth2ResourceServerConfiguration {
                 .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
                 .jwt()
                 .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
-        return http.formLogin(withDefaults()).build();
+
+        return http.formLogin(withDefaults())
+                .addFilterBefore(new ClientAuthContextFilter(), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
