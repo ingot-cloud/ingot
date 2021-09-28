@@ -15,12 +15,12 @@ include 'ingot-framework:ingot-security-old'
 findProject(':ingot-framework:ingot-security-old')?.name = 'ingot-security-old'
 include 'ingot-framework:ingot-security'
 findProject(':ingot-framework:ingot-security')?.name = 'ingot-security'
-include 'ingot-framework:ingot-tenant'
-findProject(':ingot-framework:ingot-tenant')?.name = 'ingot-tenant'
 include 'ingot-framework:ingot-security-config'
 findProject(':ingot-framework:ingot-security-config')?.name = 'ingot-security-config'
 include 'ingot-framework:ingot-security-authorization-server'
 findProject(':ingot-framework:ingot-security-authorization-server')?.name = 'ingot-security-authorization-server'
+include 'ingot-framework:ingot-tenant'
+findProject(':ingot-framework:ingot-tenant')?.name = 'ingot-tenant'
 
 // Component
 include 'ingot-component:ingot-id'
@@ -29,8 +29,8 @@ findProject(':ingot-component:ingot-id')?.name = 'ingot-id'
 // Cloud service
 include 'ingot-service:ingot-gateway'
 findProject(':ingot-service:ingot-gateway')?.name = 'ingot-gateway'
-include 'ingot-service:ingot-auth-old'
-findProject(':ingot-service:ingot-auth-old')?.name = 'ingot-auth-old'
+include 'ingot-service:ingot-auth'
+findProject(':ingot-service:ingot-auth')?.name = 'ingot-auth'
 include 'ingot-service:ingot-pms:ingot-pms-api'
 findProject(':ingot-service:ingot-pms:ingot-pms-api')?.name = 'ingot-pms-api'
 include 'ingot-service:ingot-pms:ingot-pms-provider'
@@ -39,6 +39,4 @@ findProject(':ingot-service:ingot-pms:ingot-pms-provider')?.name = 'ingot-pms-pr
 // Plugin
 include 'ingot-plugin:ingot-mybatisplus-plugin'
 findProject(':ingot-plugin:ingot-mybatisplus-plugin')?.name = 'ingot-mybatisplus-plugin'
-include 'ingot-service:ingot-auth'
-findProject(':ingot-service:ingot-auth')?.name = 'ingot-auth'
 
