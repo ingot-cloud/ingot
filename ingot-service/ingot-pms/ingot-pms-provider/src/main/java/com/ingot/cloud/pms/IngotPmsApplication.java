@@ -5,7 +5,6 @@ import com.ingot.framework.security.config.annotation.web.configuration.EnableIn
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <p>Date         : 2020/11/4.</p>
  * <p>Time         : 4:15 下午.</p>
  */
-@EnableFeignClients("com.ingot.cloud.pms.api.rpc")
 @EnableIngotWebSecurity
 @EnableTransactionManagement
 @ImportMessageSource
