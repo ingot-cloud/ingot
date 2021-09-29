@@ -10,12 +10,12 @@ import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.core.model.dto.user.UserAuthDetails;
-import com.ingot.framework.core.model.dto.user.UserDetailsDto;
 import com.ingot.framework.core.model.enums.SocialTypeEnum;
-import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.utils.SocialUtils;
+import com.ingot.framework.security.core.userdetails.UserDetailsModeEnum;
+import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
+import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtension;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.AllArgsConstructor;
@@ -40,7 +40,7 @@ public class UserDetailServiceImpl implements UserDetailService {
     private final Map<String, SocialProcessor> socialProcessorMap;
 
     @Override
-    public UserAuthDetails getUserAuthDetails(UserDetailsDto params) {
+    public UserDetailsResponse getUserAuthDetails(UserDetailsRequest params) {
         UserDetailsModeEnum model = params.getMode();
         if (model == null) {
             OAuth2ErrorUtils.throwInvalidRequest("非法授权模式");
@@ -61,7 +61,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         // 校验用户
         checkUser(user);
 
-        UserAuthDetails userDetails = ofUser(user);
+        UserDetailsResponse userDetails = ofUser(user);
 
         // 查询拥有的角色
         List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
@@ -82,13 +82,13 @@ public class UserDetailServiceImpl implements UserDetailService {
         return userDetails;
     }
 
-    private SysUser withPasswordMode(UserDetailsDto params) {
+    private SysUser withPasswordMode(UserDetailsRequest params) {
         String username = params.getUniqueCode();
         return sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getUsername, username));
     }
 
-    private SysUser withSocialMode(UserDetailsDto params) {
+    private SysUser withSocialMode(UserDetailsRequest params) {
         String[] extract = SocialUtils.extract(params.getUniqueCode());
         SocialTypeEnum socialType = SocialTypeEnum.getEnum(extract[0]);
         if (socialType == null) {
@@ -104,15 +104,15 @@ public class UserDetailServiceImpl implements UserDetailService {
         return processor.exec(params);
     }
 
-    private UserAuthDetails ofUser(SysUser user) {
-        UserAuthDetails userDetails = new UserAuthDetails();
-        userDetails.setId(user.getId());
-        userDetails.setDeptId(user.getDeptId());
-        userDetails.setTenantId(user.getTenantId());
-        userDetails.setUsername(user.getUsername());
-        userDetails.setPassword(user.getPassword());
-        userDetails.setStatus(user.getStatus());
-        return userDetails;
+    private UserDetailsResponse ofUser(SysUser user) {
+        return UserDetailsResponse.builder()
+                .id(user.getId())
+                .deptId(user.getDeptId())
+                .tenantId(user.getTenantId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .status(user.getStatus())
+                .build();
     }
 
     private void checkUser(SysUser user) {

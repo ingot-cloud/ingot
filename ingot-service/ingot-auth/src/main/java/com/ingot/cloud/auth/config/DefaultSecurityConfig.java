@@ -1,13 +1,7 @@
 package com.ingot.cloud.auth.config;
 
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.wrapper.R;
-import com.ingot.framework.security.common.constants.TokenAuthMethod;
+import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
-import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,23 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class DefaultSecurityConfig {
 
     @Bean
-    public RemoteUserDetailsService remoteUserDetailsService() {
-        return (UserDetailsRequest params) -> {
-            String username = params.getUniqueCode();
-            if (!StrUtil.equals(username, "admin")) {
-                return R.error("N00", "a");
-            }
-
-            return R.ok(UserDetailsResponse.builder()
-                    .username("admin")
-                    .password("{noop}admin")
-                    .roles(ListUtil.of("ADMIN", "MANAGER"))
-                    .status(UserStatusEnum.ENABLE)
-                    .tokenAuthenticationMethod(TokenAuthMethod.STANDARD.getValue())
-                    .id(1L)
-                    .tenantId(1)
-                    .deptId(1L)
-                    .build());
-        };
+    public RemoteUserDetailsService remoteUserDetailsService(PmsUserAuthFeignApi pmsApi) {
+        return pmsApi::getUserAuthDetail;
     }
 }

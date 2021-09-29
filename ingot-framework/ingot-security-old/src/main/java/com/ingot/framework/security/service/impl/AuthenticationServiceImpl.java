@@ -1,15 +1,12 @@
 package com.ingot.framework.security.service.impl;
 
-import com.ingot.cloud.pms.api.rpc.PmsRoleFeignApi;
 import com.ingot.framework.security.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 
@@ -24,9 +21,9 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 //    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
-    @Resource
-    @Lazy
-    private  PmsRoleFeignApi ucRoleFeignApi;
+//    @Resource
+//    @Lazy
+//    private  PmsRoleFeignApi ucRoleFeignApi;
 //    @Value("${spring.application.name}")
 //    private String serviceName;
 

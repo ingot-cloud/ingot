@@ -5,6 +5,7 @@ dependencies {
     implementation project(ingot.framework_core)
 
     compileOnly project(ingot.framework_store)
+    compileOnly project(ingot.framework_security)
 
     //mapstruct
     implementation(deps.mapstruct.library)

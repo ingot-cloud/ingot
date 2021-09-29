@@ -1,4 +1,3 @@
 # Auto Configure
-com.ingot.framework.feign.FeignAutoConfiguration=\
-  com.ingot.cloud.pms.api.rpc.PmsRoleFeignApi,\
-  com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.ingot.cloud.pms.api.EnableApiAutoConfiguration
