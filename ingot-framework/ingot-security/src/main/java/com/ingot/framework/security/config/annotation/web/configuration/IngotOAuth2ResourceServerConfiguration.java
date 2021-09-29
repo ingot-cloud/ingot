@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
@@ -65,11 +66,15 @@ public class IngotOAuth2ResourceServerConfiguration {
     public SecurityFilterChain innerResourceSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2InnerResourceConfigurer<HttpSecurity> innerResourceConfigurer =
                 new OAuth2InnerResourceConfigurer<>(permitResolver);
-        http.requestMatcher(innerResourceConfigurer.getRequestMatcher())
+        RequestMatcher endpointsMatcher = innerResourceConfigurer
+                .getRequestMatcher();
+
+        http.requestMatcher(endpointsMatcher)
                 .authorizeRequests(authorizeRequests -> {
                     permitResolver.permitAllInner(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
                 .apply(innerResourceConfigurer);
         return http.build();
     }
