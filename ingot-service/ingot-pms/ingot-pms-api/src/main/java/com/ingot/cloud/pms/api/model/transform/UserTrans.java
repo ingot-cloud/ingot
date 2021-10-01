@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
 import com.ingot.cloud.pms.api.model.dto.user.UserDto;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
+import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import org.mapstruct.Mapper;
 
 /**
@@ -16,6 +17,10 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface UserTrans {
     SysUser to(UserDto in);
+
     SysUser to(UserBaseInfoDto in);
+
     UserProfileVo to(SysUser in);
+
+    UserDetailsResponse toUserDetails(SysUser in);
 }

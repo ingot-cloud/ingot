@@ -2,11 +2,12 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.service.biz.UserDetailService;
-import com.ingot.cloud.pms.service.domain.SysOauthClientDetailsService;
+import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
@@ -36,8 +37,9 @@ import java.util.stream.Collectors;
 public class UserDetailServiceImpl implements UserDetailService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
-    private final SysOauthClientDetailsService sysOauthClientDetailsService;
+    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
     private final Map<String, SocialProcessor> socialProcessorMap;
+    private final UserTrans userTrans;
 
     @Override
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest params) {
@@ -70,15 +72,15 @@ public class UserDetailServiceImpl implements UserDetailService {
         userDetails.setRoles(roleCodes);
 
         List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
-        List<SysOauthClientDetails> clients = sysOauthClientDetailsService.getClientsByRoles(roleIds);
+        List<Oauth2RegisteredClient> clients = oauth2RegisteredClientService.getClientsByRoles(roleIds);
 
-        SysOauthClientDetails client = clients.stream()
+        Oauth2RegisteredClient client = clients.stream()
                 .filter(item -> StrUtil.equals(item.getClientId(), params.getClientId()))
                 .findFirst().orElse(null);
         if (client == null) {
             OAuth2ErrorUtils.throwInvalidRequest("未授权该应用");
         }
-        userDetails.setTokenAuthenticationMethod(client.getAuthType());
+        userDetails.setTokenAuthenticationMethod(client.getTokenAuthenticationMethod());
         return userDetails;
     }
 
@@ -105,14 +107,7 @@ public class UserDetailServiceImpl implements UserDetailService {
     }
 
     private UserDetailsResponse ofUser(SysUser user) {
-        return UserDetailsResponse.builder()
-                .id(user.getId())
-                .deptId(user.getDeptId())
-                .tenantId(user.getTenantId())
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .status(user.getStatus())
-                .build();
+        return userTrans.toUserDetails(user);
     }
 
     private void checkUser(SysUser user) {
