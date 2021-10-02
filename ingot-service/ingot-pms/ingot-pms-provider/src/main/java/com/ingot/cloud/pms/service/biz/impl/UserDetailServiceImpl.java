@@ -43,13 +43,13 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     @Override
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest params) {
-        UserDetailsModeEnum model = params.getMode();
-        if (model == null) {
+        UserDetailsModeEnum mode = params.getMode();
+        if (mode == null) {
             OAuth2ErrorUtils.throwInvalidRequest("非法授权模式");
         }
 
         SysUser user = null;
-        switch (model) {
+        switch (mode) {
             case PASSWORD:
                 user = withPasswordMode(params);
                 break;
@@ -57,7 +57,7 @@ public class UserDetailServiceImpl implements UserDetailService {
                 user = withSocialMode(params);
                 break;
             default:
-                OAuth2ErrorUtils.throwInvalidRequest("授权模式不正确：" + model);
+                OAuth2ErrorUtils.throwInvalidRequest("授权模式不正确：" + mode);
         }
 
         // 校验用户
