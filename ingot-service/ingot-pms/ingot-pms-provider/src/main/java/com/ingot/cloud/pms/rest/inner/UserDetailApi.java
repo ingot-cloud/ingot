@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Time         : 4:41 下午.</p>
  */
 @Slf4j
+@Permit(mode = PermitMode.INNER)
 @RestController
 @RequestMapping(value = "/user/detail")
 @AllArgsConstructor
 public class UserDetailApi extends BaseController {
     private final UserDetailService userDetailService;
 
-    @Permit(mode = PermitMode.INNER)
     @PostMapping
     public R<UserDetailsResponse> getUserAuthDetail(@RequestBody UserDetailsRequest params) {
         return ok(userDetailService.getUserAuthDetails(params));
