@@ -58,15 +58,15 @@ public class RequestLogAop {
         param.put("CLASS_METHOD", pjp.getSignature().getDeclaringTypeName() + "." + pjp.getSignature().getName());
         param.put("ARGS", Arrays.toString(pjp.getArgs()));
 
-        log.info(">>> request log - request param={}", param);
+        log.info("[RequestLog] - request param={}", param);
 
         Object result;
 
         try {
             result = pjp.proceed();
-            log.debug(">>> request log - {} response = {}", pjp.getSignature(), request);
+            log.debug("[RequestLog] - {} response = {}", pjp.getSignature(), request);
         } finally {
-            log.info(">>> request log - " + pjp.getSignature() + " use time:" + (System.currentTimeMillis() - startTime));
+            log.info("[RequestLog] - " + pjp.getSignature() + " use time:" + (System.currentTimeMillis() - startTime));
         }
 
         return result;
