@@ -31,15 +31,15 @@ public class TenantFilter extends GenericFilterBean {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         final String url = request.getRequestURI();
-        log.info("do filter url = {}", url);
+        log.info("[TenantFilter] do filter url = {}", url);
 
         String tenantId = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
-        log.info(">>> 获取 header 中的 tenantID={}", tenantId);
+        log.info("[TenantFilter] 获取 header 中的 tenantID={}", tenantId);
 
         if (StrUtil.isNotBlank(tenantId)) {
             TenantContextHolder.set(Integer.valueOf(tenantId));
         } else {
-            log.info(">>> 设置默认 tenantID");
+            log.info("[TenantFilter] 设置默认 tenantID");
             TenantContextHolder.set(TenantConstants.DEFAULT_TENANT_ID);
         }
 

@@ -3,6 +3,8 @@ package com.ingot.cloud.auth.config;
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
+import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import com.ingot.framework.tenant.filter.TenantFilter;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -78,8 +80,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public ProviderSettings providerSettings() {
-        return ProviderSettings.builder().issuer("http://ingot-auth-server:5100").build();
+    public ProviderSettings providerSettings(IngotOAuth2AuthProperties properties) {
+        return ProviderSettings.builder().issuer(properties.getIssuer()).build();
     }
 
     @Bean
@@ -100,7 +102,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
+                                 ProviderSettings providerSettings) {
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
         jwsAlgs.addAll(JWSAlgorithm.Family.EC);
@@ -112,6 +115,11 @@ public class AuthorizationServerConfig {
         // Override the default Nimbus claims set verifier as NimbusJwtDecoder handles it instead
         jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {
         });
-        return new NimbusJwtDecoder(jwtProcessor);
+
+        NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
+        // 扩展 JwtValidator
+        jwtDecoder.setJwtValidator(
+                IngotJwtValidators.createDefaultWithIssuer(providerSettings.getIssuer()));
+        return jwtDecoder;
     }
 }

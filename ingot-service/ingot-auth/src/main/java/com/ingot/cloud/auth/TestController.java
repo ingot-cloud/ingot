@@ -4,7 +4,6 @@ import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +19,6 @@ public class TestController {
 
     @GetMapping("/test")
     public String test() {
-        boolean isJwt = SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken;
         log.info("----- user={}", SecurityAuthContext.getUser());
         log.info("----- roles={}", SecurityAuthContext.getRoles());
         return "haha:" + SecurityContextHolder.getContext().getAuthentication().getName();
