@@ -1,5 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
@@ -15,6 +17,9 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Documented
 @EnableWebSecurity
-@Import({IngotOAuth2ResourceServerConfiguration.class, PasswordEncoderConfiguration.class})
+@EnableConfigurationProperties(IngotOAuth2ResourceProperties.class)
+@Import({IngotOAuth2ResourceServerConfiguration.class,
+        IngotOAuth2ResourceServerJwtConfiguration.class,
+        PasswordEncoderConfiguration.class})
 public @interface EnableIngotWebSecurity {
 }

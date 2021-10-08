@@ -4,6 +4,7 @@ import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpC
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
 import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
+import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -87,9 +87,9 @@ public class IngotOAuth2ResourceServerConfiguration {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "ingot.oauth2.resource")
-    public PermitResolver permitResolver(WebApplicationContext context) {
-        return new PermitResolver(context);
+    public PermitResolver permitResolver(WebApplicationContext context,
+                                         IngotOAuth2ResourceProperties ingotOAuth2ResourceProperties) {
+        return new PermitResolver(context, ingotOAuth2ResourceProperties);
     }
 
     @Autowired

@@ -6,9 +6,7 @@ import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -41,19 +39,13 @@ public class PermitResolver implements InitializingBean {
     private static final String VERTICAL_LINE = "|";
 
     private final WebApplicationContext applicationContext;
-
-    @Getter
-    @Setter
-    private List<String> publicUrls = new ArrayList<>();
-    @Getter
-    @Setter
-    private List<String> innerUrls = new ArrayList<>();
+    private final IngotOAuth2ResourceProperties properties;
 
     /**
      * permit all public url
      */
     public void permitAllPublic(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
-        List<String> urls = getPublicUrls();
+        List<String> urls = properties.getPublicUrls();
         permitAll(urls, registry);
     }
 
@@ -61,7 +53,7 @@ public class PermitResolver implements InitializingBean {
      * permit all inner url
      */
     public void permitAllInner(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
-        List<String> urls = getInnerUrls();
+        List<String> urls = properties.getInnerUrls();
         permitAll(urls, registry);
     }
 
@@ -69,7 +61,7 @@ public class PermitResolver implements InitializingBean {
      * 内部资源 RequestMatcher
      */
     public RequestMatcher innerRequestMatcher() {
-        List<AntPathRequestMatcher> matchers = getMatchers(getInnerUrls());
+        List<AntPathRequestMatcher> matchers = getMatchers(properties.getInnerUrls());
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -78,8 +70,8 @@ public class PermitResolver implements InitializingBean {
      */
     public RequestMatcher permitAllRequestMatcher() {
         List<String> all = new ArrayList<>();
-        all.addAll(getInnerUrls());
-        all.addAll(getPublicUrls());
+        all.addAll(properties.getInnerUrls());
+        all.addAll(properties.getPublicUrls());
         List<AntPathRequestMatcher> matchers = getMatchers(all);
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
@@ -114,8 +106,8 @@ public class PermitResolver implements InitializingBean {
                                     .forEach(url -> this.filterPath(url, info, method)));
         }
 
-        log.info("[PermitResolver] public urls = {}", publicUrls);
-        log.info("[PermitResolver] inner urls = {}", innerUrls);
+        log.info("[PermitResolver] public urls = {}", properties.getPublicUrls());
+        log.info("[PermitResolver] inner urls = {}", properties.getInnerUrls());
     }
 
     /**
@@ -130,11 +122,11 @@ public class PermitResolver implements InitializingBean {
                 "*" : CollUtil.join(methodList, VERTICAL_LINE);
         switch (mode) {
             case PUBLIC:
-                publicUrls.add(String.format("%s%s%s",
+                properties.addPublic(String.format("%s%s%s",
                         resultUrl, StrUtil.COMMA, method));
                 break;
             case INNER:
-                innerUrls.add(String.format("%s%s%s",
+                properties.addInner(String.format("%s%s%s",
                         resultUrl, StrUtil.COMMA, method));
                 break;
         }
@@ -146,7 +138,7 @@ public class PermitResolver implements InitializingBean {
             List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
 
             if (urlAndMethod.size() != 2) {
-                log.warn("--- {} 无法配置 permitAll, 路径非法", url);
+                log.warn("[PermitResolver] {} 无法配置 permitAll, 路径非法", url);
                 continue;
             }
 
