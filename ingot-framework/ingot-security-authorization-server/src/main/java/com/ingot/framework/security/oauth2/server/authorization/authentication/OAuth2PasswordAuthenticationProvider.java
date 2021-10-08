@@ -1,7 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -85,8 +84,7 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
         this.refreshTokenGenerator = refreshTokenGenerator;
     }
 
-    @Autowired(required = false)
-    protected void setProviderSettings(ProviderSettings providerSettings) {
+    public void setProviderSettings(ProviderSettings providerSettings) {
         this.providerSettings = providerSettings;
     }
 
