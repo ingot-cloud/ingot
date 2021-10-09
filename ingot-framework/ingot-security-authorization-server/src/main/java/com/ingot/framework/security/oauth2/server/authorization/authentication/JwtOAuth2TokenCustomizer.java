@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
+import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,17 +37,17 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
 
     private void customizeWithUser(JwtEncodingContext context, UserDetails user) {
         if (user instanceof IngotUser) {
-            context.getClaims().claim(ExtensionClaimNames.ID,
+            context.getClaims().claim(JwtClaimNamesExtension.ID,
                     ((IngotUser) user).getId());
-            context.getClaims().claim(ExtensionClaimNames.TENANT,
+            context.getClaims().claim(JwtClaimNamesExtension.TENANT,
                     ((IngotUser) user).getTenantId());
-            context.getClaims().claim(ExtensionClaimNames.DEPT,
+            context.getClaims().claim(JwtClaimNamesExtension.DEPT,
                     ((IngotUser) user).getDeptId());
-            context.getClaims().claim(ExtensionClaimNames.AUTH_METHOD,
+            context.getClaims().claim(JwtClaimNamesExtension.AUTH_METHOD,
                     ((IngotUser) user).getTokenAuthenticationMethod());
             List<String> authorities = user.getAuthorities()
                     .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-            context.getClaims().claim(ExtensionClaimNames.SCOPE, authorities);
+            context.getClaims().claim(JwtClaimNamesExtension.SCOPE, authorities);
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
+import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -19,6 +19,7 @@ import java.util.Collection;
  * <p>Time         : 5:27 下午.</p>
  */
 public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+    public static final String AUTHORITY_PREFIX = "SCOPE_";
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
     private final Converter<Jwt, IngotUser> jwtIngotUserConverter = new JwtIngotUserConverter();
@@ -28,7 +29,9 @@ public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractA
     public IngotJwtAuthenticationConverter() {
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
-                .setAuthoritiesClaimName(ExtensionClaimNames.SCOPE);
+                .setAuthoritiesClaimName(JwtClaimNamesExtension.SCOPE);
+        ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
+                .setAuthorityPrefix(AUTHORITY_PREFIX);
     }
 
     @Override

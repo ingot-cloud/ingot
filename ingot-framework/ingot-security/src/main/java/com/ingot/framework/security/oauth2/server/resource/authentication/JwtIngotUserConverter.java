@@ -1,15 +1,12 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
-import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.oauth2.core.ExtensionClaimNames;
+import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * <p>Description  : JwtIngotUserConverter.</p>
@@ -23,13 +20,11 @@ public class JwtIngotUserConverter implements Converter<Jwt, IngotUser> {
 
     @Override
     public IngotUser convert(@NonNull Jwt source) {
-        Map<String, Object> claims = source.getClaims();
-
-        String username = MapUtil.get(claims, JwtClaimNames.SUB, String.class);
-        Long id = MapUtil.get(claims, ExtensionClaimNames.ID, Long.class);
-        Long deptId = MapUtil.get(claims, ExtensionClaimNames.DEPT, Long.class);
-        Integer tenantId = MapUtil.get(claims, ExtensionClaimNames.TENANT, Integer.class);
-        String authMethod = MapUtil.get(claims, ExtensionClaimNames.AUTH_METHOD, String.class);
+        String username = JwtClaimNamesExtension.getUsername(source);
+        Long id = JwtClaimNamesExtension.getId(source);
+        Long deptId = JwtClaimNamesExtension.getDept(source);
+        Integer tenantId = JwtClaimNamesExtension.getTenantId(source);
+        String authMethod = JwtClaimNamesExtension.getAuthMethod(source);
         return new IngotUser(id, deptId, tenantId, authMethod, username, N_A, true,
                 true, true, true,
                 Collections.emptyList());

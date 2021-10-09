@@ -49,7 +49,7 @@ public class ClientAuthContextFilter extends OncePerRequestFilter {
 
         if (StrUtil.isNotEmpty(clientId)) {
             ClientContextHolder.set(clientId);
-            log.info("--- ClientAuthContextFilter - ClientContextHolder Set Client Id = {}", clientId);
+            log.info("[ClientAuthContextFilter] - ClientContextHolder Set Client Id = {}", clientId);
         }
         filterChain.doFilter(request, response);
         ClientContextHolder.clear();
