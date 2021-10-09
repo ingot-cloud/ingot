@@ -84,6 +84,11 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
         this.refreshTokenGenerator = refreshTokenGenerator;
     }
 
+    /**
+     * Sets the {@code ProviderSettings} that customizes the issuer for the generated {@code Jwt}.
+     *
+     * @param providerSettings the {@code ProviderSettings} that customizes the issuer for the generated {@code Jwt}
+     */
     public void setProviderSettings(ProviderSettings providerSettings) {
         this.providerSettings = providerSettings;
     }
