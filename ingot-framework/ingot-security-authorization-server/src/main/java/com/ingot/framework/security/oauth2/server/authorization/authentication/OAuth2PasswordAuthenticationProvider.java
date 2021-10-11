@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.util.Assert;
 
+import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -106,14 +107,17 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
         Set<String> authorizedScopes = registeredClient.getScopes();        // Default to configured scopes
         String issuer = this.providerSettings != null ? this.providerSettings.getIssuer() : null;
 
+        // OAuth2UsernamePasswordAuthenticationToken
+        Authentication principal = passwordPrincipal.getUserPrincipal();
+
         JoseHeader.Builder headersBuilder = JwtUtils.headers();
         JwtClaimsSet.Builder claimsBuilder = JwtUtils.accessTokenClaims(
-                registeredClient, issuer, passwordPrincipal.getName(), authorizedScopes);
+                registeredClient, issuer, principal.getName(), authorizedScopes);
 
         // @formatter:off
         JwtEncodingContext context = JwtEncodingContext.with(headersBuilder, claimsBuilder)
                 .registeredClient(registeredClient)
-                .principal(passwordPrincipal.getUserPrincipal())
+                .principal(principal)
                 .authorizedScopes(authorizedScopes)
                 .tokenType(OAuth2TokenType.ACCESS_TOKEN)
                 .authorizationGrantType(AuthorizationGrantType.PASSWORD)
@@ -140,12 +144,13 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
         // @formatter:off
         OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(registeredClient)
-                .principalName(passwordPrincipal.getName())
+                .principalName(principal.getName())
                 .authorizationGrantType(AuthorizationGrantType.PASSWORD)
                 .token(accessToken,
                         (metadata) ->
                                 metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, jwtAccessToken.getClaims()))
-                .attribute(OAuth2Authorization.AUTHORIZED_SCOPE_ATTRIBUTE_NAME, authorizedScopes);
+                .attribute(OAuth2Authorization.AUTHORIZED_SCOPE_ATTRIBUTE_NAME, authorizedScopes)
+                .attribute(Principal.class.getName(), principal);
         if (refreshToken != null) {
             authorizationBuilder.refreshToken(refreshToken);
         }

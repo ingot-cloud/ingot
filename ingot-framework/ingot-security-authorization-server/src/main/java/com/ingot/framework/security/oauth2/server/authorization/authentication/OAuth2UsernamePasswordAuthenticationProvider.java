@@ -145,8 +145,14 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
         OAuth2UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 (OAuth2UsernamePasswordAuthenticationToken) authentication;
 
-        return new OAuth2UsernamePasswordAuthenticationToken(
-                superAuth, usernamePasswordAuthenticationToken.getClientPrincipal());
+        OAuth2UsernamePasswordAuthenticationToken result =
+                new OAuth2UsernamePasswordAuthenticationToken(
+                        superAuth.getPrincipal(),
+                        superAuth.getCredentials(),
+                        superAuth.getAuthorities(),
+                        usernamePasswordAuthenticationToken.getClientPrincipal());
+        result.setDetails(superAuth.getDetails());
+        return result;
     }
 
     private void prepareTimingAttackProtection() {

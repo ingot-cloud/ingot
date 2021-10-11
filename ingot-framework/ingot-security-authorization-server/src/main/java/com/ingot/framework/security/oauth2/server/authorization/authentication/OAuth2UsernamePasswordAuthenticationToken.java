@@ -2,6 +2,9 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
 
 /**
  * <p>Description  : OAuth2UsernamePasswordAuthenticationToken.</p>
@@ -19,10 +22,11 @@ public class OAuth2UsernamePasswordAuthenticationToken extends IngotUsernamePass
         this.clientPrincipal = clientPrincipal;
     }
 
-    public OAuth2UsernamePasswordAuthenticationToken(Authentication userPrincipal,
+    public OAuth2UsernamePasswordAuthenticationToken(Object principal,
+                                                     Object credentials,
+                                                     Collection<? extends GrantedAuthority> authorities,
                                                      Authentication clientPrincipal) {
-        super(userPrincipal.getPrincipal(), userPrincipal.getCredentials(), userPrincipal.getAuthorities());
-        setDetails(userPrincipal.getDetails());
+        super(principal, credentials, authorities);
         this.clientPrincipal = clientPrincipal;
     }
 

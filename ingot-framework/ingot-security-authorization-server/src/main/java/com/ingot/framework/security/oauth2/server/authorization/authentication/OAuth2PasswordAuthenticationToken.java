@@ -19,23 +19,18 @@ public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantA
      * Sub-class constructor.
      *
      * @param userPrincipal        the authenticated user principal {@link OAuth2UsernamePasswordAuthenticationToken}
+     * @param clientPrincipal      the authenticated client principal
      * @param additionalParameters the additional parameters
      */
     public OAuth2PasswordAuthenticationToken(Authentication userPrincipal,
+                                             Authentication clientPrincipal,
                                              Map<String, Object> additionalParameters) {
-        super(AuthorizationGrantType.PASSWORD,
-                ((OAuth2UsernamePasswordAuthenticationToken) userPrincipal).getClientPrincipal(),
-                additionalParameters);
+        super(AuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);
         this.userPrincipal = userPrincipal;
         setDetails(userPrincipal.getDetails());
     }
 
     public Authentication getUserPrincipal() {
         return this.userPrincipal;
-    }
-
-    @Override
-    public String getName() {
-        return userPrincipal.getName();
     }
 }

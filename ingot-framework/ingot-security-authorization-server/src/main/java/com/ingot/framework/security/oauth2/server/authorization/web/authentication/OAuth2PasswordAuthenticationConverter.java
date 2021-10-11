@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,7 +31,8 @@ public final class OAuth2PasswordAuthenticationConverter implements Authenticati
             return null;
         }
 
-        Authentication userPrincipal = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2UsernamePasswordAuthenticationToken userPrincipal =
+                (OAuth2UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
         Map<String, Object> additionalParameters = parameters
@@ -40,6 +42,7 @@ public final class OAuth2PasswordAuthenticationConverter implements Authenticati
                         && !entry.getKey().equals(OAuth2ParameterNames.SCOPE))
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
 
-        return new OAuth2PasswordAuthenticationToken(userPrincipal, additionalParameters);
+        return new OAuth2PasswordAuthenticationToken(
+                userPrincipal, userPrincipal.getClientPrincipal(), additionalParameters);
     }
 }
