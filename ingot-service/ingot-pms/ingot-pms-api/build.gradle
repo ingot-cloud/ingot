@@ -3,6 +3,7 @@ apply plugin: 'net.ltgt.apt-idea'
 dependencies {
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
+    implementation project(ingot.framework_security_auth_server)
 
     compileOnly project(ingot.framework_store)
     compileOnly project(ingot.framework_security)

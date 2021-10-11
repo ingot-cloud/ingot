@@ -1,16 +1,20 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -77,12 +81,14 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
     /**
      * 客户端设置
      */
-    private String clientSettings;
+    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
+    private ClientSettings clientSettings;
 
     /**
      * token设置
      */
-    private String tokenSettings;
+    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
+    private TokenSettings tokenSettings;
 
     /**
      * 租户ID
