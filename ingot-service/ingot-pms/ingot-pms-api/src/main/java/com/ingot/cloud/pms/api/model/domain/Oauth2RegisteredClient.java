@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("oauth2_registered_client")
+@TableName(value = "oauth2_registered_client", autoResultMap = true)
 public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
 
     private static final long serialVersionUID = 1L;
