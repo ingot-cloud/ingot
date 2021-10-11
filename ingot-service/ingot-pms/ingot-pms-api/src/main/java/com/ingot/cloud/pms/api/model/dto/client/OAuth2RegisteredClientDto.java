@@ -1,34 +1,21 @@
-package com.ingot.cloud.pms.api.model.domain;
+package com.ingot.cloud.pms.api.model.dto.client;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
 import com.ingot.framework.core.validation.Group;
-import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
-import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * <p>
- *
- * </p>
- *
- * @author jymot
- * @since 2021-09-29
+ * <p>Description  : OAuth2RegisteredClientDto.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2021/10/11.</p>
+ * <p>Time         : 2:16 下午.</p>
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName(value = "oauth2_registered_client", autoResultMap = true)
-public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
-
-    private static final long serialVersionUID = 1L;
-
+public class OAuth2RegisteredClientDto implements Serializable {
     /**
      * ID
      */
@@ -84,16 +71,34 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
     private String scopes;
 
     /**
-     * 客户端设置
+     * 如果客户端在执行授权码授权流程时需要提供验证密钥质询和验证器，则设置为true。
      */
-    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
-    private ClientSettings clientSettings;
+    private Boolean requireProofKey;
 
     /**
-     * token设置
+     * 客户端请求访问时需要授权同意，则设置为true。
      */
-    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
-    private TokenSettings tokenSettings;
+    private Boolean requireAuthorizationConsent;
+
+    /**
+     * Token存活时间
+     */
+    private String accessTokenTimeToLive;
+
+    /**
+     * 是否重复使用RefreshToken
+     */
+    private Boolean reuseRefreshTokens;
+
+    /**
+     * RefreshToken存活时间
+     */
+    private String refreshTokenTimeToLive;
+
+    /**
+     * 设置签名ID令牌的JWS算法
+     */
+    private String idTokenSignatureAlgorithm;
 
     /**
      * token认证方法
@@ -104,16 +109,4 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
      * 状态, 0:正常，9:禁用
      */
     private String status;
-
-    /**
-     * 更新日期
-     */
-    private LocalDateTime updatedAt;
-
-    /**
-     * 删除日期
-     */
-    private LocalDateTime deletedAt;
-
-
 }

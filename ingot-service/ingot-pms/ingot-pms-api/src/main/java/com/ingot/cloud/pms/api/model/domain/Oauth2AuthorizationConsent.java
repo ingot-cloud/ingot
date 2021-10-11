@@ -26,10 +26,4 @@ public class Oauth2AuthorizationConsent extends BaseModel<Oauth2AuthorizationCon
 
     private String authorities;
 
-    /**
-     * 租户ID
-     */
-    private Integer tenantId;
-
-
 }
