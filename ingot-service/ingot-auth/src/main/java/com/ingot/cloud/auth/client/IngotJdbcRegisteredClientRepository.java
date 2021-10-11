@@ -129,7 +129,7 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
     }
 
     private RegisteredClient findBy(String filter, Object... args) {
-        filter += " and tenant_id = ?";
+        filter += " and tenant_id = ? and deleted_at IS NULL";
         List<Object> argsList = Lists.newArrayList(args);
         // 增加 tenant_id
         argsList.add(TenantContextHolder.get());
