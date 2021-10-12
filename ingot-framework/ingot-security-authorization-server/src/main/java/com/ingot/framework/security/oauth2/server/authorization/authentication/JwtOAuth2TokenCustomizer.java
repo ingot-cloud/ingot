@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -45,8 +45,11 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
                     ((IngotUser) user).getDeptId());
             context.getClaims().claim(JwtClaimNamesExtension.AUTH_METHOD,
                     ((IngotUser) user).getTokenAuthenticationMethod());
-            List<String> authorities = user.getAuthorities()
-                    .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+
+            Set<String> authorities = user.getAuthorities()
+                    .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
+            authorities.addAll(context.getAuthorizedScopes());
+
             context.getClaims().claim(JwtClaimNamesExtension.SCOPE, authorities);
         }
     }
