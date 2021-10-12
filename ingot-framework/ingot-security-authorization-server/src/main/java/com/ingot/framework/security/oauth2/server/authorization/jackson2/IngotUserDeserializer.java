@@ -19,7 +19,7 @@ import java.io.IOException;
  * <p>Time         : 4:52 下午.</p>
  */
 @Slf4j
-public class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
+final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
     @Override
     public IngotUser deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();

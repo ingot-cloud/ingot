@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -30,6 +31,7 @@ public class OAuth2UsernamePasswordAuthenticationToken extends IngotUsernamePass
         this.clientPrincipal = clientPrincipal;
     }
 
+    @JsonIgnore
     public Authentication getClientPrincipal() {
         return this.clientPrincipal;
     }

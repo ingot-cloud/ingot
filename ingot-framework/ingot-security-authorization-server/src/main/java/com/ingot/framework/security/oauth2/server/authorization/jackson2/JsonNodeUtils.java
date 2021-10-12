@@ -18,7 +18,10 @@ package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.security.core.userdetails.IngotUser;
+import org.springframework.security.core.GrantedAuthority;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +42,13 @@ public class JsonNodeUtils {
 
     static final TypeReference<Map<String, Object>> STRING_OBJECT_MAP = new TypeReference<Map<String, Object>>() {
     };
+
+    static final TypeReference<IngotUser> INGOT_USER = new TypeReference<IngotUser>() {
+    };
+
+    static final TypeReference<Collection<? extends GrantedAuthority>> GRANTED_AUTH_COLL =
+            new TypeReference<Collection<? extends GrantedAuthority>>() {
+            };
 
     static String findStringValue(JsonNode jsonNode, String fieldName) {
         if (jsonNode == null) {
