@@ -39,10 +39,8 @@ final class OAuth2UsernamePasswordAuthenticationTokenDeserializer
             throws JsonParseException {
         IngotUser principal = JsonNodeUtils.findValue(root, "principal", INGOT_USER, mapper);
         Object credentials = JsonNodeUtils.findObjectNode(root, "credentials");
-        Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(root, "authorities", GRANTED_AUTH_COLL, mapper);
-        log.info("--- principal={}", principal);
-        log.info("--- credentials={}", credentials);
-        log.info("--- authorities={}", authorities);
+        Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
+                root, "authorities", GRANTED_AUTH_COLL, mapper);
         return new OAuth2UsernamePasswordAuthenticationToken(principal, credentials, authorities, null);
     }
 }

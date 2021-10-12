@@ -8,7 +8,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * <p>Description  : IngotUser.</p>
@@ -35,10 +34,11 @@ public class IngotUser extends User {
                      Long deptId,
                      Integer tenantId,
                      String tokenAuthenticationMethod,
-                     String username) {
+                     String username,
+                     Collection<? extends GrantedAuthority> authorities) {
         this(id, deptId, tenantId, tokenAuthenticationMethod, username, N_A,
                 true, true, true, true,
-                Collections.emptyList());
+                authorities);
     }
 
     public IngotUser(Long id,
@@ -78,12 +78,6 @@ public class IngotUser extends User {
     @Override
     public String getPassword() {
         return super.getPassword();
-    }
-
-    @JsonIgnore
-    @Override
-    public Collection<GrantedAuthority> getAuthorities() {
-        return super.getAuthorities();
     }
 
     @JsonIgnore

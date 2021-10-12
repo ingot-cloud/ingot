@@ -9,8 +9,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.io.IOException;
+import java.util.Collection;
+
+import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.GRANTED_AUTH_COLL;
 
 /**
  * <p>Description  : IngotUserDeserializer.</p>
@@ -34,6 +38,8 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
         Integer tenantId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "tenantId"));
         String tokenAuthMethod = JsonNodeUtils.findStringValue(root, "tokenAuthenticationMethod");
         String username = JsonNodeUtils.findStringValue(root, "username");
-        return new IngotUser(id, deptId, tenantId, tokenAuthMethod, username);
+        Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
+                root, "authorities", GRANTED_AUTH_COLL, mapper);
+        return new IngotUser(id, deptId, tenantId, tokenAuthMethod, username, authorities);
     }
 }
