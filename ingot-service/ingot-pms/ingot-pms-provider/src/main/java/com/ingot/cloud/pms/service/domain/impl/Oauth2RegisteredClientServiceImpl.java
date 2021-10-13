@@ -15,9 +15,11 @@ import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
@@ -81,7 +83,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#params.clientId")
     public void updateClientByClientId(OAuth2RegisteredClientDto params) {
         Oauth2RegisteredClient current = getById(params.getClientId());
         ClientSettings.Builder clientSettingsBuilder =
@@ -123,6 +125,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId")
     public void removeClientByClientId(String clientId) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()

@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleOauthClientMapper;
@@ -46,10 +46,10 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
     }
 
     @Override
-    public IPage<SysOauthClientDetails> getRoleClients(long roleId,
+    public IPage<Oauth2RegisteredClient> getRoleClients(long roleId,
                                                        Page<?> page,
                                                        boolean isBind,
-                                                       SysOauthClientDetails condition) {
+                                                       Oauth2RegisteredClient condition) {
         return getBaseMapper().getRoleClients(page, roleId, isBind, condition);
     }
 }

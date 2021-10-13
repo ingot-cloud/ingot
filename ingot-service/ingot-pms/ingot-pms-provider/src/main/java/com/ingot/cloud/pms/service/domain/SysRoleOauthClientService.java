@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.service.domain;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
@@ -40,8 +40,8 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
      * @param condition 条件参数
      * @return 分页用户
      */
-    IPage<SysOauthClientDetails> getRoleClients(long roleId,
-                                                Page<?> page,
-                                                boolean isBind,
-                                                SysOauthClientDetails condition);
+    IPage<Oauth2RegisteredClient> getRoleClients(long roleId,
+                                                 Page<?> page,
+                                                 boolean isBind,
+                                                 Oauth2RegisteredClient condition);
 }

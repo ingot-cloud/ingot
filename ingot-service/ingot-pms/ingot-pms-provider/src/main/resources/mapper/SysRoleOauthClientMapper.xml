@@ -7,11 +7,11 @@
         VALUES (#{roleId}, #{clientId})
     </insert>
 
-    <select id="getRoleClients" resultType="com.ingot.cloud.pms.api.model.domain.SysOauthClientDetails">
+    <select id="getRoleClients" resultType="com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient">
         SELECT
             client.*
         FROM
-            sys_oauth_client_details AS client
+            oauth2_registered_client AS client
                 <if test="isBind">
                     INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
                 </if>
@@ -34,7 +34,7 @@
         <if test="condition.clientId != null and condition.clientId != ''">
             AND LOCATE(#{condition.clientId}, client.client_id) > 0
         </if>
-        ORDER BY client.created_at ASC
+        ORDER BY client.client_id_issued_at ASC
     </select>
 
 </mapper>

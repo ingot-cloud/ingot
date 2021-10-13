@@ -102,7 +102,7 @@ public class RoleApi extends BaseController {
     public R<?> getBindClients(@PathVariable Long id,
                                Page<?> page,
                                @RequestParam("isBind") boolean isBind,
-                               SysOauthClientDetails condition) {
+                               Oauth2RegisteredClient condition) {
         return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind, condition));
     }
 
