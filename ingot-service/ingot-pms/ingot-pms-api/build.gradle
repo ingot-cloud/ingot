@@ -1,9 +1,11 @@
 apply plugin: 'net.ltgt.apt-idea'
 
 dependencies {
+    // 为了使用 OAuth2AuthorizationServerJackson2Module
+    implementation(deps.spring.security_oauth2_authorization_server)
+
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
-    implementation project(ingot.framework_security_auth_server)
 
     compileOnly project(ingot.framework_store)
     compileOnly project(ingot.framework_security)
@@ -11,4 +13,5 @@ dependencies {
     //mapstruct
     implementation(deps.mapstruct.library)
     annotationProcessor(deps.mapstruct.processor)
+
 }

@@ -1,12 +1,14 @@
 package com.ingot.cloud.pms.api.model.dto.client;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.ingot.framework.core.validation.Group;
-import lombok.Data;
-
-import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import javax.validation.constraints.NotBlank;
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.validation.Group;
+import lombok.Data;
 
 /**
  * <p>Description  : OAuth2RegisteredClientDto.</p>
@@ -27,11 +29,6 @@ public class OAuth2RegisteredClientDto implements Serializable {
      */
     @NotBlank(message = "{Oauth2RegisteredClient.clientId}", groups = Group.Create.class)
     private String clientId;
-
-    /**
-     * client id 发布时间
-     */
-    private LocalDateTime clientIdIssuedAt;
 
     /**
      * 客户端秘钥
@@ -108,5 +105,5 @@ public class OAuth2RegisteredClientDto implements Serializable {
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
 }

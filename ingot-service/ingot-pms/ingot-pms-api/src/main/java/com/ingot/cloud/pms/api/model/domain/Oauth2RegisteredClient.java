@@ -1,18 +1,20 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.time.LocalDateTime;
+
+import javax.validation.constraints.NotBlank;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
-
-import javax.validation.constraints.NotBlank;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -103,7 +105,7 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 更新日期

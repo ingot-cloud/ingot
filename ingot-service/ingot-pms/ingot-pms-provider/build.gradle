@@ -2,6 +2,8 @@ dependencies {
     implementation(deps.spring.spring_boot.web_starter)
     implementation(deps.spring.spring_boot.actuator_starter)
     implementation(deps.spring.spring_boot.configuration_processor)
+    // 为了引入 ClientSettings TokenSettings
+    implementation(deps.spring.security_oauth2_authorization_server)
 
     implementation project(ingot.pms_api)
     implementation project(ingot.framework_feign)
