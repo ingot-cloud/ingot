@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 
 import javax.validation.constraints.NotBlank;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.Group;
 import lombok.Data;
@@ -21,7 +20,6 @@ public class OAuth2RegisteredClientDto implements Serializable {
     /**
      * ID
      */
-    @TableId
     private String id;
 
     /**
