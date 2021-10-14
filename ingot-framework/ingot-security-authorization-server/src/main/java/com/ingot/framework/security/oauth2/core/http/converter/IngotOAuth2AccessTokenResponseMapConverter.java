@@ -7,9 +7,9 @@ import java.util.Map;
 
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -25,15 +25,15 @@ public class IngotOAuth2AccessTokenResponseMapConverter
     @Override
     public Map<String, Object> convert(OAuth2AccessTokenResponse tokenResponse) {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(OAuth2ParameterNames.ACCESS_TOKEN, tokenResponse.getAccessToken().getTokenValue());
-        parameters.put(OAuth2ParameterNames.TOKEN_TYPE, tokenResponse.getAccessToken().getTokenType().getValue());
-        parameters.put(OAuth2ParameterNames.EXPIRES_IN, String.valueOf(getExpiresIn(tokenResponse)));
+        parameters.put(IngotOAuth2ParameterNames.ACCESS_TOKEN, tokenResponse.getAccessToken().getTokenValue());
+        parameters.put(IngotOAuth2ParameterNames.TOKEN_TYPE, tokenResponse.getAccessToken().getTokenType().getValue());
+        parameters.put(IngotOAuth2ParameterNames.EXPIRES_IN, String.valueOf(getExpiresIn(tokenResponse)));
         if (!CollectionUtils.isEmpty(tokenResponse.getAccessToken().getScopes())) {
-            parameters.put(OAuth2ParameterNames.SCOPE,
+            parameters.put(IngotOAuth2ParameterNames.SCOPE,
                     StringUtils.collectionToDelimitedString(tokenResponse.getAccessToken().getScopes(), " "));
         }
         if (tokenResponse.getRefreshToken() != null) {
-            parameters.put(OAuth2ParameterNames.REFRESH_TOKEN, tokenResponse.getRefreshToken().getTokenValue());
+            parameters.put(IngotOAuth2ParameterNames.REFRESH_TOKEN, tokenResponse.getRefreshToken().getTokenValue());
         }
         if (!CollectionUtils.isEmpty(tokenResponse.getAdditionalParameters())) {
             for (Map.Entry<String, Object> entry : tokenResponse.getAdditionalParameters().entrySet()) {
