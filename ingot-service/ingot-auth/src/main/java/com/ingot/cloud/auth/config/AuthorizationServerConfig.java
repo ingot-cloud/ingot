@@ -1,5 +1,13 @@
 package com.ingot.cloud.auth.config;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
@@ -32,14 +40,6 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.HeaderWriterFilter;
-
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import static com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME;
 import static com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity;
