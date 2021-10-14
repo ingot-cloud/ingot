@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.mapper;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * <p>

@@ -1,8 +1,5 @@
 package com.ingot.framework.core.utils;
 
-import cn.hutool.core.util.StrUtil;
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,6 +7,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import cn.hutool.core.util.StrUtil;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * <p>Description  : DigestUtils.</p>

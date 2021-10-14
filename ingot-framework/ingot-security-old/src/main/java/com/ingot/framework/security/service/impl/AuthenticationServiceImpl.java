@@ -1,14 +1,15 @@
 package com.ingot.framework.security.service.impl;
 
+import java.security.Principal;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.ingot.framework.security.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 
 /**
  * <p>Description  : AuthenticationServiceImpl.</p>

@@ -1,9 +1,9 @@
 package com.ingot.framework.security.config.annotation.web.configurers;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
-import java.util.List;
 
 /**
  * <p>Description  : DefaultHttpConfigurersAdapter.</p>

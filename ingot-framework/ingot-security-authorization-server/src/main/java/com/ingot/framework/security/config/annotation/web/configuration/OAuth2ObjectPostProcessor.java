@@ -1,5 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.util.Arrays;
+
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PasswordAuthenticationConverter;
@@ -11,8 +13,6 @@ import org.springframework.security.oauth2.server.authorization.web.authenticati
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2ClientCredentialsAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2RefreshTokenAuthenticationConverter;
-
-import java.util.Arrays;
 
 /**
  * <p>Description  : OAuth2ObjectPostProcessor.</p>

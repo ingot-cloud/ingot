@@ -1,5 +1,7 @@
 package com.ingot.framework.security.config;
 
+import java.io.IOException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -13,8 +15,6 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.lang.NonNull;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : AutoConfiguration.</p>

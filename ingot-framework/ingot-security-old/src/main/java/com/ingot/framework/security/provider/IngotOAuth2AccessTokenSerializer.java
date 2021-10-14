@@ -1,5 +1,9 @@
 package com.ingot.framework.security.provider;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.Set;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -7,10 +11,6 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.ingot.framework.security.provider.token.IngotOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.util.Assert;
-
-import java.io.IOException;
-import java.util.Date;
-import java.util.Set;
 
 /**
  * <p>Description  : IngotOAuth2AccessTokenSerializer.</p>

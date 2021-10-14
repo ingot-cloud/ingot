@@ -1,5 +1,7 @@
 package com.ingot.framework.tenant.interceptor;
 
+import java.io.IOException;
+
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.http.HttpRequest;
@@ -7,8 +9,6 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.lang.NonNull;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : TenantRequestInterceptor.</p>

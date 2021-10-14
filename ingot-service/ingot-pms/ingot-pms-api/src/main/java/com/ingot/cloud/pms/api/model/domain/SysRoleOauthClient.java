@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import com.ingot.framework.store.mybatis.model.BaseModel;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

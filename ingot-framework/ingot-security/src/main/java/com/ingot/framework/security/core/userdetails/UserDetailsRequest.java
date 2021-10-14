@@ -1,8 +1,8 @@
 package com.ingot.framework.security.core.userdetails;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * <p>Description  : UserDetailsRequest.</p>

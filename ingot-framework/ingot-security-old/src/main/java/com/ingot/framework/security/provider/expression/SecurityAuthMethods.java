@@ -1,5 +1,8 @@
 package com.ingot.framework.security.provider.expression;
 
+import java.util.Collection;
+import java.util.List;
+
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
@@ -10,9 +13,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * <p>Description  : PermissionService.</p>

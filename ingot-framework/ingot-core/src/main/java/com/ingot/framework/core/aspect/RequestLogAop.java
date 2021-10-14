@@ -1,5 +1,10 @@
 package com.ingot.framework.core.aspect;
 
+import java.util.Arrays;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.google.common.collect.Maps;
 import com.ingot.framework.core.context.RequestContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +15,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Map;
 
 /**
  * <p>Description  : RequestLogAop.</p>

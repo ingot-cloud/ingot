@@ -1,10 +1,10 @@
 package com.ingot.framework.core.jackson;
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.PackageVersion;
-
-import java.math.BigDecimal;
 
 /**
  * <p>Description  : IngotModule.</p>

@@ -1,10 +1,10 @@
 package com.ingot.framework.security.oauth2.core.http.converter;
 
+import java.util.Map;
+
 import com.ingot.framework.core.wrapper.R;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.OAuth2Error;
-
-import java.util.Map;
 
 /**
  * <p>Description  : IngotOAuth2ErrorConverter.</p>

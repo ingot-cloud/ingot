@@ -1,5 +1,11 @@
 package com.ingot.framework.security.properties;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 import cn.hutool.core.util.ReUtil;
 import com.ingot.framework.security.annotation.Permit;
 import com.ingot.framework.security.model.enums.PermitModel;
@@ -17,12 +23,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * <p>Description  : IngotPermitUrlProperties.</p>

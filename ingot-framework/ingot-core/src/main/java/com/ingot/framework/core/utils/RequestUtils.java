@@ -1,15 +1,16 @@
 package com.ingot.framework.core.utils;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Objects;
+
+import javax.servlet.http.HttpServletRequest;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.common.constants.GlobalConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Objects;
 
 /**
  * <p>Description  : RequestUtils.</p>

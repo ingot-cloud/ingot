@@ -1,12 +1,12 @@
 package com.ingot.component.id.worker.impl;
 
+import java.net.InetAddress;
+import java.util.Optional;
+
 import com.google.common.base.Preconditions;
 import com.ingot.component.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import java.net.InetAddress;
-import java.util.Optional;
 
 /**
  * <p>Description  : RedisWorkerIdFactory.</p>

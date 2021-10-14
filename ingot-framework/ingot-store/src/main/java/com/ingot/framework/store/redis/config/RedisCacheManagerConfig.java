@@ -1,5 +1,9 @@
 package com.ingot.framework.store.redis.config;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.ingot.framework.store.redis.cache.DefaultRedisCacheWriter;
 import com.ingot.framework.store.redis.cache.IngotRedisCacheManager;
 import org.springframework.beans.factory.ObjectProvider;
@@ -19,10 +23,6 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>Description  : RedisCacheManagerConfig.</p>

@@ -1,14 +1,14 @@
 package com.ingot.framework.feign.codec;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.util.HashMap;
 
 /**
  * <p>Description  : IngotErrorDecoder.</p>

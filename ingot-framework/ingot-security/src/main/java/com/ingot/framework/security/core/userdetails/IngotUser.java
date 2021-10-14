@@ -1,13 +1,13 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-
-import java.util.Collection;
 
 /**
  * <p>Description  : IngotUser.</p>

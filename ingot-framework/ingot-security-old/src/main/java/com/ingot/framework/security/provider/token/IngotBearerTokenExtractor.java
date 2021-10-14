@@ -1,12 +1,12 @@
 package com.ingot.framework.security.provider.token;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>Description  : IngotBearerTokenExtractor.</p>

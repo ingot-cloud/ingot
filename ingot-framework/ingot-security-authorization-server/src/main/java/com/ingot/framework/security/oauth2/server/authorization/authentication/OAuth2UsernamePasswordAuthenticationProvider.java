@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.authentication.IngotAbstractUserDetailsAuthenticationProvider;
+import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;

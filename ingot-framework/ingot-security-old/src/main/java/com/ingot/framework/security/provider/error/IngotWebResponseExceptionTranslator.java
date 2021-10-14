@@ -1,6 +1,12 @@
 package com.ingot.framework.security.provider.error;
 
-import com.ingot.framework.security.exception.*;
+import com.ingot.framework.security.exception.BadRequestException;
+import com.ingot.framework.security.exception.ForbiddenException;
+import com.ingot.framework.security.exception.IngotOAuth2Exception;
+import com.ingot.framework.security.exception.MethodNotAllowedException;
+import com.ingot.framework.security.exception.ServerErrorException;
+import com.ingot.framework.security.exception.TokenInvalidException;
+import com.ingot.framework.security.exception.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,7 +15,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.DefaultThrowableAnalyzer;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.*;
+import org.springframework.security.oauth2.common.exceptions.InsufficientScopeException;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.common.exceptions.UnsupportedGrantTypeException;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;

@@ -1,8 +1,8 @@
 package com.ingot.framework.security.service;
 
-import org.springframework.security.core.Authentication;
-
 import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.security.core.Authentication;
 
 /**
  * <p>Description  : AuthenticationService.</p>

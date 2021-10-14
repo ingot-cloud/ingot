@@ -1,5 +1,8 @@
 package com.ingot.framework.core.config;
 
+import java.util.Locale;
+import java.util.TimeZone;
+
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.jackson.IngotLocalTimeModule;
@@ -11,9 +14,6 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * <p>Description  : JacksonConfig.</p>

@@ -1,5 +1,10 @@
 package com.ingot.framework.sentinel.feign;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import feign.Contract;
 import feign.Feign;
@@ -16,11 +21,6 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.lang.NonNull;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
 
 /**
  * <p>Description  : Builder.</p>

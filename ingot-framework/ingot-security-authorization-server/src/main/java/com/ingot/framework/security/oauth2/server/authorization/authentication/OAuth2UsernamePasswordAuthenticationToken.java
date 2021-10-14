@@ -1,11 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.util.Collection;
 
 /**
  * <p>Description  : OAuth2UsernamePasswordAuthenticationToken.</p>

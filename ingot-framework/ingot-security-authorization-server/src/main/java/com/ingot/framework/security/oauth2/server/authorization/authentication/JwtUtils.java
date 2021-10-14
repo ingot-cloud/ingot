@@ -15,6 +15,11 @@
  */
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Set;
+
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -25,11 +30,6 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Utility methods used by the {@link AuthenticationProvider}'s when issuing {@link Jwt}'s.

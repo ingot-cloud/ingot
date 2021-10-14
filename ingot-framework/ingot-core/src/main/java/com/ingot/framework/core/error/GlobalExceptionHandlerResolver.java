@@ -1,5 +1,11 @@
 package com.ingot.framework.core.error;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.R;
@@ -16,11 +22,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import java.util.List;
-import java.util.Set;
 
 /**
  * <p>Description  : GlobalExceptionHandler.</p>

@@ -1,5 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
@@ -9,10 +14,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : OAuth2PasswordAuthenticationConverter.</p>

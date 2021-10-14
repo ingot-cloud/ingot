@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import lombok.Data;
 
 /**
  * <p>Description  : RolePageItemVo.</p>

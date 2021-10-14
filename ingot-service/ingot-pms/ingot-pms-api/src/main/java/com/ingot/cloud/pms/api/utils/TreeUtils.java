@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.api.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.ingot.cloud.pms.api.model.base.TreeNode;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : TreeUtils.</p>

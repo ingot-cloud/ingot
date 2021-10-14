@@ -1,8 +1,8 @@
 package com.ingot.framework.sentinel.webmvc.callback;
 
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginParser;
-
 import javax.servlet.http.HttpServletRequest;
+
+import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginParser;
 
 /**
  * <p>Description  : IngotRequestOriginParser.</p>

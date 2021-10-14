@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import lombok.Data;
 
 /**
  * <p>Description  : UserPageItemVo.</p>

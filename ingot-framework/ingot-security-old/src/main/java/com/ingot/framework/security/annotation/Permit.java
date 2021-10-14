@@ -1,8 +1,12 @@
 package com.ingot.framework.security.annotation;
 
-import com.ingot.framework.security.model.enums.PermitModel;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.lang.annotation.*;
+import com.ingot.framework.security.model.enums.PermitModel;
 
 /**
  * <p>Description  : IgnoreUserAuthentication.</p>

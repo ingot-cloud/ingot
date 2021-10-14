@@ -1,12 +1,16 @@
 package com.ingot.framework.security.annotation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.ingot.framework.security.provider.IngotResourceServerAuthorizeConfig;
 import com.ingot.framework.security.provider.IngotSecurityBeanDefinitionRegistrar;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-
-import java.lang.annotation.*;
 
 /**
  * <p>Description  : EnableIngotResourceServer.</p>

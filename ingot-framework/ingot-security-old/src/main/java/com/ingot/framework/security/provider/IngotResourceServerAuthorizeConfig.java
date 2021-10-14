@@ -2,8 +2,8 @@ package com.ingot.framework.security.provider;
 
 import com.ingot.framework.security.annotation.IgnoreUserAuthentication;
 import com.ingot.framework.security.provider.authorize.ActuatorSecurityConfigProvider;
-import com.ingot.framework.security.provider.authorize.SecurityPermitConfigProvider;
 import com.ingot.framework.security.provider.authorize.SecurityFilterConfigProvider;
+import com.ingot.framework.security.provider.authorize.SecurityPermitConfigProvider;
 import com.ingot.framework.security.service.ResourcePermitService;
 import com.ingot.framework.security.service.TokenService;
 import lombok.extern.slf4j.Slf4j;

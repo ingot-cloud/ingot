@@ -1,11 +1,11 @@
 package com.ingot.component.id.worker.impl;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+
 import com.ingot.component.id.impl.SnowFlakeIdGenerator;
 import com.ingot.component.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
-
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 
 /**
  * <p>Description  : MachineWorkerIdFactory.</p>

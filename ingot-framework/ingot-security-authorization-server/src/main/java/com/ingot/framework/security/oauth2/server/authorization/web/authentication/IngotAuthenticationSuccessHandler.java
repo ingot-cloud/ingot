@@ -1,5 +1,13 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -10,13 +18,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenRespon
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.util.CollectionUtils;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
 
 /**
  * <p>Description  : IngotAuthenticationSuccessHandler.</p>

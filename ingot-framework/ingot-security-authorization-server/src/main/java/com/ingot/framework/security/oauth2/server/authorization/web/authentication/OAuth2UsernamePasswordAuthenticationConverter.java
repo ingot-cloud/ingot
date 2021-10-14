@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,8 +11,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>Description  : OAuth2UsernamePasswordAuthenticationConverter.</p>

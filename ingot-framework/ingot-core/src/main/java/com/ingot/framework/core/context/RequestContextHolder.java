@@ -1,9 +1,10 @@
 package com.ingot.framework.core.context;
 
-import org.springframework.web.context.request.ServletRequestAttributes;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
+
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * <p>Description  : RequestContextHolder.</p>

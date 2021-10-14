@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.common;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * <p>Description  : CommonRoleRelationService.</p>

@@ -1,12 +1,12 @@
 package com.ingot.framework.security.provider.authorize;
 
+import java.util.List;
+
 import com.ingot.framework.security.config.SecurityConfigProvider;
 import com.ingot.framework.security.service.ResourcePermitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
-import java.util.List;
 
 /**
  * <p>Description  : AuthorizePermitConfig.</p>

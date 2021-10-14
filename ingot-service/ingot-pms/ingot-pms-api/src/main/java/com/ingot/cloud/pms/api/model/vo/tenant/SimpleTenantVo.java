@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.api.model.vo.tenant;
 
+import java.io.Serializable;
+
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * <p>Description  : SimpleTenantVo.</p>

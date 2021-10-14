@@ -1,5 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.security.oauth2.core.http.converter.IngotOAuth2ErrorConverter;
@@ -14,11 +20,6 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMessageConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * <p>Description  : IngotAuthenticationFailureHandler.</p>

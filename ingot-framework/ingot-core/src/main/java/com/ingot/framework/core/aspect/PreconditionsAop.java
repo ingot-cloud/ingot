@@ -1,5 +1,8 @@
 package com.ingot.framework.core.aspect;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.core.annotation.IngotPreconditions;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +17,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import static com.ingot.framework.core.status.CoreStatusCode.*;
+import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_BEANS;
+import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_ILLEGAL_ACCESS;
+import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_NO_SUCH_METHOD;
 
 /**
  * <p>Description  : PreconditionsAop.</p>

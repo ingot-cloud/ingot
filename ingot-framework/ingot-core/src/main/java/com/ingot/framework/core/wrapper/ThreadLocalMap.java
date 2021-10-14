@@ -1,10 +1,10 @@
 package com.ingot.framework.core.wrapper;
 
-import com.alibaba.ttl.TransmittableThreadLocal;
-import lombok.experimental.UtilityClass;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.alibaba.ttl.TransmittableThreadLocal;
+import lombok.experimental.UtilityClass;
 
 /**
  * <p>Description  : ThreadLocalMap.</p>

@@ -1,12 +1,12 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
+import java.util.Collections;
+
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.jwt.Jwt;
-
-import java.util.Collections;
 
 /**
  * <p>Description  : JwtIngotUserConverter.</p>

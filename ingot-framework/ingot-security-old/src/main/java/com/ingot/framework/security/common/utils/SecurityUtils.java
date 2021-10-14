@@ -1,5 +1,14 @@
 package com.ingot.framework.security.common.utils;
 
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.util.Base64;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -18,14 +27,6 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.Optional;
 
 import static com.ingot.framework.core.constants.SecurityConstants.OAUTH2_BASIC_TYPE_WITH_SPACE;
 import static com.ingot.framework.core.constants.SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE;

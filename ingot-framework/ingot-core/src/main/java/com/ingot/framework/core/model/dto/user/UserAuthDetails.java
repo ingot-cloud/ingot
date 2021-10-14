@@ -1,10 +1,10 @@
 package com.ingot.framework.core.model.dto.user;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import lombok.Data;
 
 /**
  * <p>Description  : UserAuthDetails.</p>

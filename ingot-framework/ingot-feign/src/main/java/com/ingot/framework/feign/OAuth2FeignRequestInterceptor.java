@@ -1,5 +1,11 @@
 package com.ingot.framework.feign;
 
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.google.common.collect.Lists;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
@@ -7,11 +13,6 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
 
 
 /**

@@ -1,5 +1,7 @@
 package com.ingot.cloud.auth.service;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
@@ -9,8 +11,6 @@ import org.springframework.security.oauth2.core.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-
-import java.util.List;
 
 /**
  * <p>Description  : IngotJdbcOAuth2AuthorizationService.</p>

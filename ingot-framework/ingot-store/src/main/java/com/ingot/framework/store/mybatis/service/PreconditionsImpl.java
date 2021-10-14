@@ -1,11 +1,11 @@
 package com.ingot.framework.store.mybatis.service;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
  * <p>Description  : PreconditionsImpl.</p>

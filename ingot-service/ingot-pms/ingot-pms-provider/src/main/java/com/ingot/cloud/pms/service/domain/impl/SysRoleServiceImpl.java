@@ -1,15 +1,32 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
+import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
+import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
-import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.service.domain.SysDeptService;
+import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
+import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
+import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
+import com.ingot.cloud.pms.service.domain.SysRoleService;
+import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -18,11 +35,6 @@ import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>

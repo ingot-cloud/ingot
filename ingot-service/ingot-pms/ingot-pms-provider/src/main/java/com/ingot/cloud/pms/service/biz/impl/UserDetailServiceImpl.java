@@ -1,5 +1,9 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
@@ -21,10 +25,6 @@ import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtension;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : UserDetailServiceImpl.</p>

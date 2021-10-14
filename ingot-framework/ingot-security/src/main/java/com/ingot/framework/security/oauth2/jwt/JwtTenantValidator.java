@@ -1,5 +1,10 @@
 package com.ingot.framework.security.oauth2.jwt;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
@@ -14,11 +19,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 /**
  * <p>Description  : JwtTenantValidator.</p>

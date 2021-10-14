@@ -1,8 +1,13 @@
 package com.ingot.framework.security.service.impl;
 
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.exception.TokenEmptyException;
 import com.ingot.framework.security.exception.TokenInvalidException;
 import com.ingot.framework.security.exception.TokenSignBackException;
@@ -10,16 +15,12 @@ import com.ingot.framework.security.model.UserStoreToken;
 import com.ingot.framework.security.provider.token.store.IngotJwtTokenStore;
 import com.ingot.framework.security.service.AuthenticationService;
 import com.ingot.framework.security.service.TokenService;
-import com.ingot.framework.security.common.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * <p>Description  : TokenServiceUtils.</p>

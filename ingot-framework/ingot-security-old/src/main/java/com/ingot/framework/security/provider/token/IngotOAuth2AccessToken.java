@@ -1,14 +1,14 @@
 package com.ingot.framework.security.provider.token;
 
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ingot.framework.security.provider.IngotOAuth2AccessTokenSerializer;
 import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
-
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>Description  : IngotOAuth2AccessToken.</p>

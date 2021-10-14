@@ -1,7 +1,5 @@
 package com.ingot.framework.core.utils;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -9,6 +7,8 @@ import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>Description  : IpUtils.</p>

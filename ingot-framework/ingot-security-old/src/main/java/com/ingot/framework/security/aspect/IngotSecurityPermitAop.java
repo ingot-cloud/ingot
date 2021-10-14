@@ -1,5 +1,7 @@
 package com.ingot.framework.security.aspect;
 
+import javax.servlet.http.HttpServletRequest;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.annotation.Permit;
@@ -12,8 +14,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>Description  : IngotSecurityPermitAop. 内部请求不鉴权</p>

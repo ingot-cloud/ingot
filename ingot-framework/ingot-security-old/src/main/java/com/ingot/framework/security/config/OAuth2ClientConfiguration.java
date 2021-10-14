@@ -1,8 +1,8 @@
 package com.ingot.framework.security.config;
 
+import com.ingot.framework.security.provider.ClientToken;
 import com.ingot.framework.security.provider.IngotAccessDeniedHandler;
 import com.ingot.framework.security.provider.IngotAuthenticationEntryPoint;
-import com.ingot.framework.security.provider.ClientToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +15,10 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.provider.expression.OAuth2WebSecurityExpressionHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import static com.ingot.framework.core.constants.BeanIds.*;
+import static com.ingot.framework.core.constants.BeanIds.ACCESS_DENIED_HANDLER;
+import static com.ingot.framework.core.constants.BeanIds.AUTHENTICATION_ENTRY_POINT;
+import static com.ingot.framework.core.constants.BeanIds.CLIENT_TOKEN_UTILS;
+import static com.ingot.framework.core.constants.BeanIds.OAUTH2_REST_TEMPLATE;
 
 /**
  * <p>Description  : OAuth2ClientConfig.</p>

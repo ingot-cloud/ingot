@@ -1,9 +1,9 @@
 package com.ingot.framework.core.model.dto.user;
 
+import java.io.Serializable;
+
 import com.ingot.framework.core.model.enums.UserDetailsModeEnum;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * <p>Description  : UserDetailsDto.</p>

@@ -1,8 +1,8 @@
 package com.ingot.framework.security.service;
 
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-
 import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 
 /**
  * <p>Description  : TokenService.</p>

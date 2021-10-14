@@ -1,5 +1,8 @@
 package com.ingot.framework.security.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.ingot.framework.security.properties.IngotPermitUrlProperties;
 import com.ingot.framework.security.provider.filter.UserAuthenticationFilter;
@@ -8,9 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : ResourcePermitUtils.</p>

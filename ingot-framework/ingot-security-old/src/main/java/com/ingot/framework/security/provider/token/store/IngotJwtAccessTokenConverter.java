@@ -1,5 +1,9 @@
 package com.ingot.framework.security.provider.token.store;
 
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
 import com.ingot.framework.security.provider.token.IngotUserAuthenticationConverter;
 import com.ingot.framework.security.service.JwtKeyService;
 import lombok.AllArgsConstructor;
@@ -12,9 +16,6 @@ import org.springframework.security.oauth2.provider.token.UserAuthenticationConv
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import javax.annotation.PostConstruct;
-import java.util.List;
 
 /**
  * <p>Description  : IngotJwtAccessTokenConverter.</p>

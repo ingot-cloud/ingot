@@ -1,12 +1,12 @@
 package com.ingot.component.id.impl;
 
+import java.util.Random;
+
 import com.google.common.base.Preconditions;
-import com.ingot.framework.common.exception.BizException;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.component.id.worker.WorkerIdFactory;
+import com.ingot.framework.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Random;
 
 import static com.ingot.framework.common.status.BaseStatusCode.ID_CLOCK_BACK;
 

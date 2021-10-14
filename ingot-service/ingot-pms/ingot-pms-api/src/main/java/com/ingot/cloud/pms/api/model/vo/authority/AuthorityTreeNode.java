@@ -1,14 +1,9 @@
 package com.ingot.cloud.pms.api.model.vo.authority;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.ingot.cloud.pms.api.model.base.TreeNode;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.Group;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 /**
  * <p>Description  : AuthorityTreeNode.</p>

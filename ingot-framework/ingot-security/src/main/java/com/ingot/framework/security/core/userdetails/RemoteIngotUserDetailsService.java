@@ -1,5 +1,7 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.List;
+
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.R;
@@ -13,8 +15,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import java.util.List;
 
 /**
  * <p>Description  : RemoteIngotUserDetailsService.</p>

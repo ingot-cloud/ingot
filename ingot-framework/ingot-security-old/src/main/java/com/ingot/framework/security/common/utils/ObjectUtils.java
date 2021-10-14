@@ -1,9 +1,9 @@
 package com.ingot.framework.security.common.utils;
 
+import java.util.Map;
+
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
-
-import java.util.Map;
 
 /**
  * <p>Description  : ObjectUtils.</p>
