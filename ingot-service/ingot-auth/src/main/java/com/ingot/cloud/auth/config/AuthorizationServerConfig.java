@@ -81,6 +81,8 @@ public class AuthorizationServerConfig {
 
     @Bean
     public ProviderSettings providerSettings(IngotOAuth2AuthProperties properties) {
+        // 1
+        // 2
         return ProviderSettings.builder().issuer(properties.getIssuer()).build();
     }
 
