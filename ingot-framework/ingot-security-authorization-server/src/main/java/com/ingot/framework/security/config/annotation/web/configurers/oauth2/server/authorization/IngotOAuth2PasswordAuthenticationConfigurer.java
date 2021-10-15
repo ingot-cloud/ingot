@@ -70,7 +70,6 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
 
         OAuth2PasswordAuthenticationProvider passwordAuthProvider =
                 new OAuth2PasswordAuthenticationProvider(authorizationService, jwtEncoder);
-        passwordAuthProvider.setProviderSettings(providerSettings);
         if (jwtCustomizer != null) {
             passwordAuthProvider.setJwtCustomizer(jwtCustomizer);
         }

@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -94,7 +95,8 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
      *
      * @param providerSettings the {@code ProviderSettings} that customizes the issuer for the generated {@code Jwt}
      */
-    public void setProviderSettings(ProviderSettings providerSettings) {
+    @Autowired(required = false)
+    protected void setProviderSettings(ProviderSettings providerSettings) {
         this.providerSettings = providerSettings;
     }
 

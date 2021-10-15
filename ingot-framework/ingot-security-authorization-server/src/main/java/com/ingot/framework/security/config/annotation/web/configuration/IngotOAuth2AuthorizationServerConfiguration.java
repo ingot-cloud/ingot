@@ -43,12 +43,13 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     }
 
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
-        http.objectPostProcessor(new OAuth2ObjectPostProcessor());
-
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer<>();
         RequestMatcher endpointsMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
+        authorizationServerConfigurer
+                .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
+                .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());
 
         IngotOAuth2PasswordAuthenticationConfigurer<HttpSecurity> passwordConfigurer =
                 new IngotOAuth2PasswordAuthenticationConfigurer<>();
