@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDto;
+import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVo;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 
@@ -15,4 +16,6 @@ import org.mapstruct.Mapper;
 public interface ClientTrans {
 
     Oauth2RegisteredClient to(OAuth2RegisteredClientDto in);
+
+    OAuth2RegisteredClientVo to(Oauth2RegisteredClient in);
 }

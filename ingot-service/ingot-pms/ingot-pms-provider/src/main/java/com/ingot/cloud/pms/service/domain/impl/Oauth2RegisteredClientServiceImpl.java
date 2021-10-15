@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -11,6 +12,7 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDto;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
+import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVo;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -19,6 +21,7 @@ import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
@@ -35,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author jymot
  * @since 2021-09-29
  */
+@Slf4j
 @Service
 @AllArgsConstructor
 public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2RegisteredClientMapper, Oauth2RegisteredClient>
@@ -51,8 +55,30 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    public IPage<Oauth2RegisteredClient> conditionPage(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
-        return page(page, Wrappers.lambdaQuery(condition));
+    public IPage<OAuth2RegisteredClientVo> conditionPage(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
+        IPage<Oauth2RegisteredClient> tmp = page(page, Wrappers.lambdaQuery(condition));
+
+        List<OAuth2RegisteredClientVo> list = tmp.getRecords().stream().map(client -> {
+            OAuth2RegisteredClientVo item = clientTrans.to(client);
+            item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());
+            item.setRequireProofKey(client.getClientSettings().isRequireProofKey());
+            item.setAccessTokenTimeToLive(
+                    String.valueOf(client.getTokenSettings().getAccessTokenTimeToLive().getSeconds()));
+            item.setRefreshTokenTimeToLive(
+                    String.valueOf(client.getTokenSettings().getRefreshTokenTimeToLive().getSeconds()));
+            item.setReuseRefreshTokens(client.getTokenSettings().isReuseRefreshTokens());
+            item.setIdTokenSignatureAlgorithm(
+                    client.getTokenSettings().getIdTokenSignatureAlgorithm().getName());
+            return item;
+        }).collect(Collectors.toList());
+
+        IPage<OAuth2RegisteredClientVo> result = new Page<>();
+        result.setCurrent(tmp.getCurrent());
+        result.setPages(tmp.getPages());
+        result.setSize(tmp.getSize());
+        result.setTotal(tmp.getTotal());
+        result.setRecords(list);
+        return result;
     }
 
     @Override
