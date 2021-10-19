@@ -37,7 +37,7 @@ public class ClientApi extends BaseController {
 
     @GetMapping("/{id}")
     public R<?> getOne(@PathVariable String id) {
-        return ok(oauth2RegisteredClientService.getById(id));
+        return ok(oauth2RegisteredClientService.getByClientId(id));
     }
 
     @PostMapping

@@ -39,6 +39,14 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
                                                   Oauth2RegisteredClient condition);
 
     /**
+     * 根据ID获取相关信息
+     *
+     * @param clientId ClientId
+     * @return {@link OAuth2RegisteredClientVo}
+     */
+    OAuth2RegisteredClientVo getByClientId(String clientId);
+
+    /**
      * 创建客户端
      *
      * @param params 参数

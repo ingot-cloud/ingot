@@ -58,19 +58,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     public IPage<OAuth2RegisteredClientVo> conditionPage(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
         IPage<Oauth2RegisteredClient> tmp = page(page, Wrappers.lambdaQuery(condition));
 
-        List<OAuth2RegisteredClientVo> list = tmp.getRecords().stream().map(client -> {
-            OAuth2RegisteredClientVo item = clientTrans.to(client);
-            item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());
-            item.setRequireProofKey(client.getClientSettings().isRequireProofKey());
-            item.setAccessTokenTimeToLive(
-                    String.valueOf(client.getTokenSettings().getAccessTokenTimeToLive().getSeconds()));
-            item.setRefreshTokenTimeToLive(
-                    String.valueOf(client.getTokenSettings().getRefreshTokenTimeToLive().getSeconds()));
-            item.setReuseRefreshTokens(client.getTokenSettings().isReuseRefreshTokens());
-            item.setIdTokenSignatureAlgorithm(
-                    client.getTokenSettings().getIdTokenSignatureAlgorithm().getName());
-            return item;
-        }).collect(Collectors.toList());
+        List<OAuth2RegisteredClientVo> list = tmp.getRecords()
+                .stream().map(this::toVo).collect(Collectors.toList());
 
         IPage<OAuth2RegisteredClientVo> result = new Page<>();
         result.setCurrent(tmp.getCurrent());
@@ -79,6 +68,11 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         result.setTotal(tmp.getTotal());
         result.setRecords(list);
         return result;
+    }
+
+    @Override
+    public OAuth2RegisteredClientVo getByClientId(String clientId) {
+        return toVo(getById(clientId));
     }
 
     @Override
@@ -160,5 +154,19 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         assertI18nService.checkOperation(removeById(clientId),
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
+    }
+
+    private OAuth2RegisteredClientVo toVo(Oauth2RegisteredClient client) {
+        OAuth2RegisteredClientVo item = clientTrans.to(client);
+        item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());
+        item.setRequireProofKey(client.getClientSettings().isRequireProofKey());
+        item.setAccessTokenTimeToLive(
+                String.valueOf(client.getTokenSettings().getAccessTokenTimeToLive().getSeconds()));
+        item.setRefreshTokenTimeToLive(
+                String.valueOf(client.getTokenSettings().getRefreshTokenTimeToLive().getSeconds()));
+        item.setReuseRefreshTokens(client.getTokenSettings().isReuseRefreshTokens());
+        item.setIdTokenSignatureAlgorithm(
+                client.getTokenSettings().getIdTokenSignatureAlgorithm().getName());
+        return item;
     }
 }
