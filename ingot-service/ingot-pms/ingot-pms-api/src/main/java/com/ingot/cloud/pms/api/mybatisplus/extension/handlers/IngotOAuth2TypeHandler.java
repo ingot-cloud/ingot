@@ -30,8 +30,15 @@ import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2A
 @MappedTypes({Object.class})
 @MappedJdbcTypes(JdbcType.VARCHAR)
 public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Class<?> type;
+
+    static {
+        ClassLoader classLoader = JdbcRegisteredClientRepository.class.getClassLoader();
+        List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
+        objectMapper.registerModules(securityModules);
+        objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
+    }
 
     public IngotOAuth2TypeHandler(Class<?> type) {
         if (log.isTraceEnabled()) {
@@ -39,10 +46,6 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
         }
         Assert.notNull(type, "Type argument cannot be null");
         this.type = type;
-        ClassLoader classLoader = JdbcRegisteredClientRepository.class.getClassLoader();
-        List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
-        this.objectMapper.registerModules(securityModules);
-        this.objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
     }
 
     @Override
@@ -65,6 +68,12 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
     @Override
     protected String toJson(Object obj) {
         try {
+            if (obj instanceof ClientSettings) {
+                return objectMapper.writeValueAsString(((ClientSettings) obj).getSettings());
+            }
+            if (obj instanceof TokenSettings) {
+                return objectMapper.writeValueAsString(((TokenSettings) obj).getSettings());
+            }
             return objectMapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -73,7 +82,7 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
 
     private Map<String, Object> parseMap(String data) {
         try {
-            return this.objectMapper.readValue(data, new TypeReference<Map<String, Object>>() {
+            return objectMapper.readValue(data, new TypeReference<Map<String, Object>>() {
             });
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);

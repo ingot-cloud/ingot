@@ -72,7 +72,10 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     public OAuth2RegisteredClientVo getByClientId(String clientId) {
-        return toVo(getById(clientId));
+        Oauth2RegisteredClient current;
+        OAuth2RegisteredClientVo result = toVo(current = getById(clientId));
+        result.setClientSecret(current.getClientSecret());
+        return result;
     }
 
     @Override
@@ -86,16 +89,13 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         client.setId(client.getClientId());
         client.setClientIdIssuedAt(DateUtils.now());
         client.setClientSecret(passwordEncoder.encode(client.getClientSecret()));
-        client.setClientSettings(ClientSettings.builder()
-                .requireAuthorizationConsent(params.getRequireAuthorizationConsent())
-                .requireProofKey(params.getRequireProofKey())
-                .build());
-        client.setTokenSettings(TokenSettings.builder()
-                .accessTokenTimeToLive(Duration.ofSeconds(Long.parseLong(params.getAccessTokenTimeToLive())))
-                .refreshTokenTimeToLive(Duration.ofSeconds(Long.parseLong(params.getRefreshTokenTimeToLive())))
-                .reuseRefreshTokens(params.getReuseRefreshTokens())
-                .idTokenSignatureAlgorithm(SignatureAlgorithm.from(params.getIdTokenSignatureAlgorithm()))
-                .build());
+
+        ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
+        TokenSettings.Builder tokenSettingsBuilder = TokenSettings.builder();
+        fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
+
+        client.setClientSettings(clientSettingsBuilder.build());
+        client.setTokenSettings(tokenSettingsBuilder.build());
         client.setUpdatedAt(DateUtils.now());
 
         assertI18nService.checkOperation(save(client),
@@ -108,30 +108,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         Oauth2RegisteredClient current = getById(params.getClientId());
         ClientSettings.Builder clientSettingsBuilder =
                 ClientSettings.withSettings(current.getClientSettings().getSettings());
-        if (params.getRequireAuthorizationConsent() != null) {
-            clientSettingsBuilder.requireAuthorizationConsent(params.getRequireAuthorizationConsent());
-        }
-        if (params.getRequireProofKey() != null) {
-            clientSettingsBuilder.requireProofKey(params.getRequireProofKey());
-        }
-
         TokenSettings.Builder tokenSettingsBuilder =
                 TokenSettings.withSettings(current.getTokenSettings().getSettings());
-        if (StrUtil.isNotEmpty(params.getAccessTokenTimeToLive())) {
-            tokenSettingsBuilder.accessTokenTimeToLive(
-                    Duration.ofSeconds(Long.parseLong(params.getAccessTokenTimeToLive())));
-        }
-        if (StrUtil.isNotEmpty(params.getRefreshTokenTimeToLive())) {
-            tokenSettingsBuilder.refreshTokenTimeToLive(
-                    Duration.ofSeconds(Long.parseLong(params.getRefreshTokenTimeToLive())));
-        }
-        if (params.getReuseRefreshTokens() != null) {
-            tokenSettingsBuilder.reuseRefreshTokens(params.getReuseRefreshTokens());
-        }
-        if (StrUtil.isNotEmpty(params.getIdTokenSignatureAlgorithm())) {
-            tokenSettingsBuilder.idTokenSignatureAlgorithm(
-                    SignatureAlgorithm.from(params.getIdTokenSignatureAlgorithm()));
-        }
+        fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
 
         Oauth2RegisteredClient client = clientTrans.to(params);
         client.setId(client.getClientId());
@@ -156,8 +135,37 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
     }
 
+    private void fillSettings(OAuth2RegisteredClientDto params,
+                              ClientSettings.Builder clientSettingsBuilder,
+                              TokenSettings.Builder tokenSettingsBuilder) {
+        if (params.getRequireAuthorizationConsent() != null) {
+            clientSettingsBuilder.requireAuthorizationConsent(params.getRequireAuthorizationConsent());
+        }
+        if (params.getRequireProofKey() != null) {
+            clientSettingsBuilder.requireProofKey(params.getRequireProofKey());
+        }
+
+        if (StrUtil.isNotEmpty(params.getAccessTokenTimeToLive())) {
+            tokenSettingsBuilder.accessTokenTimeToLive(
+                    Duration.ofSeconds(Long.parseLong(params.getAccessTokenTimeToLive())));
+        }
+        if (StrUtil.isNotEmpty(params.getRefreshTokenTimeToLive())) {
+            tokenSettingsBuilder.refreshTokenTimeToLive(
+                    Duration.ofSeconds(Long.parseLong(params.getRefreshTokenTimeToLive())));
+        }
+        if (params.getReuseRefreshTokens() != null) {
+            tokenSettingsBuilder.reuseRefreshTokens(params.getReuseRefreshTokens());
+        }
+        if (StrUtil.isNotEmpty(params.getIdTokenSignatureAlgorithm())) {
+            tokenSettingsBuilder.idTokenSignatureAlgorithm(
+                    SignatureAlgorithm.from(params.getIdTokenSignatureAlgorithm()));
+        }
+    }
+
     private OAuth2RegisteredClientVo toVo(Oauth2RegisteredClient client) {
         OAuth2RegisteredClientVo item = clientTrans.to(client);
+        // 覆盖秘钥为null
+        item.setClientSecret(null);
         item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());
         item.setRequireProofKey(client.getClientSettings().isRequireProofKey());
         item.setAccessTokenTimeToLive(

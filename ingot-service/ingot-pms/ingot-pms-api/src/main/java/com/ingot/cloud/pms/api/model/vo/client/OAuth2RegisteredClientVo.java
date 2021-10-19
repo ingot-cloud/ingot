@@ -30,6 +30,11 @@ public class OAuth2RegisteredClientVo implements Serializable {
     private LocalDateTime clientIdIssuedAt;
 
     /**
+     * 客户端秘钥
+     */
+    private String clientSecret;
+
+    /**
      * 客户端名称
      */
     private String clientName;
