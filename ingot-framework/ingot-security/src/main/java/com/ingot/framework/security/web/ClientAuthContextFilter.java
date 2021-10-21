@@ -1,4 +1,4 @@
-package com.ingot.framework.security.web.authentication;
+package com.ingot.framework.security.web;
 
 import java.io.IOException;
 
