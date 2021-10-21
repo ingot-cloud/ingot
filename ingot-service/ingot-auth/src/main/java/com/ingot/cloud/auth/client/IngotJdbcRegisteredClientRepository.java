@@ -16,8 +16,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.PreparedStatementSetter;
@@ -125,12 +127,14 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
     }
 
     @Override
+    @Cacheable(value = CacheConstants.REGISTERED_CLIENT_KEY, key = "#id", unless = "#result == null")
     public RegisteredClient findById(String id) {
         Assert.hasText(id, "id cannot be empty");
         return findBy("id = ?", id);
     }
 
     @Override
+    @Cacheable(value = CacheConstants.REGISTERED_CLIENT_KEY, key = "#clientId", unless = "#result == null")
     public RegisteredClient findByClientId(String clientId) {
         Assert.hasText(clientId, "clientId cannot be empty");
         return findBy("client_id = ?", clientId);

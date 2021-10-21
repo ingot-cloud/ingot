@@ -103,7 +103,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#params.clientId")
+    @CacheEvict(value = CacheConstants.REGISTERED_CLIENT_KEY, key = "#params.clientId")
     public void updateClientByClientId(OAuth2RegisteredClientDto params) {
         Oauth2RegisteredClient current = getById(params.getClientId());
         ClientSettings.Builder clientSettingsBuilder =
@@ -125,7 +125,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId")
+    @CacheEvict(value = CacheConstants.REGISTERED_CLIENT_KEY, key = "#clientId")
     public void removeClientByClientId(String clientId) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()

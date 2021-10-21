@@ -35,4 +35,5 @@ public class AuthTokenApi extends BaseController {
         oAuth2AuthorizationService.remove(record);
         return ok();
     }
+    // todo 签退相关逻辑
 }

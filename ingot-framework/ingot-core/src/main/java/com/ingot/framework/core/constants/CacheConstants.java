@@ -18,5 +18,5 @@ public interface CacheConstants {
     /**
      * OAuth 客户端缓存 key
      */
-    String CLIENT_DETAILS_KEY = NAME_PREFIX + "client_details";
+    String REGISTERED_CLIENT_KEY = NAME_PREFIX + "client";
 }
