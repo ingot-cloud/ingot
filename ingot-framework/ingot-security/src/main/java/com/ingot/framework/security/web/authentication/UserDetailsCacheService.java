@@ -39,9 +39,8 @@ public interface UserDetailsCacheService {
     /**
      * 获取当前 token value
      *
-     * @param username 用户名
-     * @param tenantId 租户ID
+     * @param user {@link IngotUser}
      * @return token value
      */
-    String get(String username, Integer tenantId);
+    String get(IngotUser user);
 }

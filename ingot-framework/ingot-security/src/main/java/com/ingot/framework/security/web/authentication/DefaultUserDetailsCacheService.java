@@ -29,7 +29,7 @@ public class DefaultUserDetailsCacheService implements UserDetailsCacheService {
         if (ignore(user)) {
             return;
         }
-        String key = key(user.getUsername(), user.getTenantId());
+        String key = key(user);
         long expiresIn = ChronoUnit.SECONDS.between(Instant.now(), expiresAt);
         this.redisTemplate.opsForValue().set(key, tokenValue, expiresIn, TimeUnit.SECONDS);
     }
@@ -39,7 +39,7 @@ public class DefaultUserDetailsCacheService implements UserDetailsCacheService {
         if (ignore(user)) {
             return;
         }
-        String key = key(user.getUsername(), user.getTenantId());
+        String key = key(user);
         Object current = this.redisTemplate.opsForValue().get(key);
         // 当前tokenValue和缓存tokenValue相同才可以remove
         if (current != null && StrUtil.equals(tokenValue, String.valueOf(current))) {
@@ -52,13 +52,13 @@ public class DefaultUserDetailsCacheService implements UserDetailsCacheService {
         if (ignore(user)) {
             return;
         }
-        String key = key(user.getUsername(), user.getTenantId());
+        String key = key(user);
         this.redisTemplate.opsForValue().getOperations().delete(key);
     }
 
     @Override
-    public String get(String username, Integer tenantId) {
-        String key = key(username, tenantId);
+    public String get(IngotUser user) {
+        String key = key(user);
         Object current = this.redisTemplate.opsForValue().get(key);
         return current == null ? null : String.valueOf(current);
     }
@@ -74,9 +74,12 @@ public class DefaultUserDetailsCacheService implements UserDetailsCacheService {
         return method != TokenAuthMethod.UNIQUE;
     }
 
-    private String key(String username, Integer tenantId) {
-        return String.format("%s:%d:%s",
-                AUTHORIZATION_KEY, tenantId, DigestUtils.sha256(username));
+    private String key(IngotUser user) {
+        return String.format("%s:%d:%s:%s",
+                AUTHORIZATION_KEY,
+                user.getTenantId(),
+                user.getClientId(),
+                DigestUtils.sha256(user.getUsername()));
     }
 
 }

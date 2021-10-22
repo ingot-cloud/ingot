@@ -38,8 +38,9 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
         Integer tenantId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "tenantId"));
         String tokenAuthMethod = JsonNodeUtils.findStringValue(root, "tokenAuthenticationMethod");
         String username = JsonNodeUtils.findStringValue(root, "username");
+        String clientId = JsonNodeUtils.findStringValue(root, "clientId");
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, "authorities", GRANTED_AUTH_COLL, mapper);
-        return new IngotUser(id, deptId, tenantId, tokenAuthMethod, username, authorities);
+        return new IngotUser(id, deptId, tenantId, tokenAuthMethod, username, clientId, authorities);
     }
 }

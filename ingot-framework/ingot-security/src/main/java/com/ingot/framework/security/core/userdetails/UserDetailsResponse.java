@@ -15,6 +15,10 @@ import lombok.Data;
 @Data
 public class UserDetailsResponse implements Serializable {
     /**
+     * 客户端ID
+     */
+    private String clientId;
+    /**
      * 用户ID
      */
     private Long id;

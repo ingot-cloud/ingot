@@ -94,8 +94,9 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
         log.info(">>> UserDetail - user={} role={}", data.getUsername(), authorities);
         boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
         boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-        return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(), data.getTokenAuthenticationMethod(),
-                data.getUsername(), data.getPassword(), enabled, true,
+        return new IngotUser(data.getId(), data.getDeptId(), data.getTenantId(),
+                data.getTokenAuthenticationMethod(), data.getUsername(), data.getPassword(),
+                data.getClientId(), enabled, true,
                 true, nonLocked, authorities);
     }
 }

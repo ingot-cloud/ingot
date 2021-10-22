@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
-import java.util.Collections;
-
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
@@ -25,8 +23,7 @@ public class JwtIngotUserConverter implements Converter<Jwt, IngotUser> {
         Long deptId = JwtClaimNamesExtension.getDept(source);
         Integer tenantId = JwtClaimNamesExtension.getTenantId(source);
         String authMethod = JwtClaimNamesExtension.getAuthMethod(source);
-        return new IngotUser(id, deptId, tenantId, authMethod, username, N_A, true,
-                true, true, true,
-                Collections.emptyList());
+        String clientId = JwtClaimNamesExtension.getAud(source);
+        return new IngotUser(id, deptId, tenantId, authMethod, username, clientId);
     }
 }

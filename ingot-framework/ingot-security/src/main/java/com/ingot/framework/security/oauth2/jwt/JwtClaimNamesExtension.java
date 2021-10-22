@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.jwt;
 
+import java.util.ArrayList;
+
 import cn.hutool.core.map.MapUtil;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -37,5 +39,11 @@ public interface JwtClaimNamesExtension extends JwtClaimNames {
 
     static String getAuthMethod(Jwt source) {
         return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.AUTH_METHOD, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    static String getAud(Jwt source) {
+        ArrayList<String> clientIds = MapUtil.get(source.getClaims(), AUD, ArrayList.class);
+        return clientIds.get(0);
     }
 }

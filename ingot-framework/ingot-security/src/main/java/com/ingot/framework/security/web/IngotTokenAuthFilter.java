@@ -53,7 +53,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         // 获取当前token
-        String cache = userDetailsCacheService.get(user.getUsername(), user.getTenantId());
+        String cache = userDetailsCacheService.get(user);
         if (StrUtil.isEmpty(cache)) {
             OAuth2ErrorUtils.throwInvalidToken();
         }

@@ -81,6 +81,7 @@ public class UserDetailServiceImpl implements UserDetailService {
             OAuth2ErrorUtils.throwInvalidRequest("未授权该应用");
         }
         userDetails.setTokenAuthenticationMethod(client.getTokenAuthenticationMethod());
+        userDetails.setClientId(params.getClientId());
         return userDetails;
     }
 
