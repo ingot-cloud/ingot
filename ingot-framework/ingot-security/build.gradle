@@ -8,6 +8,7 @@ dependencies {
     api(deps.spring.security_oauth2_resource_server)
 
     implementation(deps.spring.framework_webmvc)
+    implementation(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.javax_servlet_api)
 }

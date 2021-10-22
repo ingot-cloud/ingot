@@ -1,5 +1,7 @@
 package com.ingot.framework.security.common.constants;
 
+import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import lombok.Getter;
 
 /**
@@ -20,9 +22,23 @@ public enum TokenAuthMethod {
     UNIQUE("1");
 
 
-    private String value;
+    private final String value;
 
     TokenAuthMethod(String value) {
         this.value = value;
+    }
+
+    public static TokenAuthMethod getEnum(String value) {
+        if (StrUtil.isEmpty(value)) {
+            return null;
+        }
+        TokenAuthMethod[] arr = TokenAuthMethod.values();
+        for (TokenAuthMethod item : arr) {
+            if (StrUtil.equals(item.value, value)) {
+                return item;
+            }
+        }
+
+        return null;
     }
 }

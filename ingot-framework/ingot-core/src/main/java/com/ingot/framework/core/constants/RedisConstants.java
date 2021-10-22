@@ -2,7 +2,6 @@ package com.ingot.framework.core.constants;
 
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Preconditions;
-import com.ingot.framework.core.utils.DigestUtils;
 
 /**
  * <p>Description  : RedisConstants.</p>
@@ -27,16 +26,6 @@ public interface RedisConstants {
 
     String REDIS_VALIDATE_CODE_PRE = BASE_PREFIX + "validate_code:";
     String REDIS_SEND_SMS_COUNT = REDIS_VALIDATE_CODE_PRE + "sms:count";
-
-    /**
-     * Redis 用户 token 前缀
-     */
-    static String userTokenPreKey(String userId, String username){
-        Preconditions.checkArgument(StrUtil.isNotEmpty(userId), "非法请求token参数不存在");
-        Preconditions.checkArgument(StrUtil.isNotEmpty(username), "非法请求token参数不存在");
-        final String key = userId + username;
-        return REDIS_USER_ACCESS_TOKEN_KEY_PREFIX + DigestUtils.sha256(key);
-    }
 
     /**
      * Gets send sms count key.
