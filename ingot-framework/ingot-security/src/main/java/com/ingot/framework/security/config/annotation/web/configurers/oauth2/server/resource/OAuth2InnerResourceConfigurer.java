@@ -29,6 +29,6 @@ public class OAuth2InnerResourceConfigurer<H extends HttpSecurityBuilder<H>>
     public void configure(H builder) throws Exception {
         OAuth2InnerResourceFilter filter =
                 new OAuth2InnerResourceFilter();
-        builder.addFilterAfter(filter, HeaderWriterFilter.class);
+        builder.addFilterAfter(postProcess(filter), HeaderWriterFilter.class);
     }
 }

@@ -10,7 +10,8 @@ import com.ingot.framework.common.status.StatusCode;
  * <p>Time         : 2:33 下午.</p>
  */
 public enum OAuth2ErrorCodesExtension implements StatusCode {
-    USER_STATUS("user_status", "用户状态异常");
+    USER_STATUS("user_status", "Illegal user status"),
+    SIGN_OUT("user_sign_out", "User has been signed out");
 
     private final String code;
     private final String message;

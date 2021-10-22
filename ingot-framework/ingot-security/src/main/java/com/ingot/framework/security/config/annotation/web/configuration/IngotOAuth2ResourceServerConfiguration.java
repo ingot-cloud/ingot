@@ -1,6 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.IngotTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
 import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
@@ -52,6 +53,8 @@ public class IngotOAuth2ResourceServerConfiguration {
                     permitResolver.permitAllPublic(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })
+                .apply(new IngotTokenAuthConfigurer<>(permitResolver.publicRequestMatcher()))
+                .and()
                 .oauth2ResourceServer()
                 .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
                 .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))

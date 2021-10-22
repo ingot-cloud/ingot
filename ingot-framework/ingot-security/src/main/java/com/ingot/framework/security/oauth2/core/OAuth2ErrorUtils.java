@@ -63,6 +63,23 @@ public final class OAuth2ErrorUtils {
         throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null), cause);
     }
 
+    /**
+     * 用户已签退异常
+     */
+    public static void throwSignOut() {
+        throwAuthenticationException(OAuth2ErrorCodesExtension.SIGN_OUT);
+    }
+
+    /**
+     * 用户Token失效异常
+     */
+    public static void throwInvalidToken() {
+        throwAuthenticationException(OAuth2ErrorCodes.INVALID_TOKEN);
+    }
+
+    /**
+     * 无效请求
+     */
     public static void throwInvalidRequest() {
         throwAuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
     }

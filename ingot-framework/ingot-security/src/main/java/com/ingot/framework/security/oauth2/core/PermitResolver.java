@@ -70,6 +70,14 @@ public class PermitResolver implements InitializingBean {
     }
 
     /**
+     * public资源 RequestMatcher
+     */
+    public RequestMatcher publicRequestMatcher() {
+        List<AntPathRequestMatcher> matchers = getMatchers(properties.getPublicUrls());
+        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
+    }
+
+    /**
      * 获取所有 permitAll 的 RequestMatcher，包含 public url 和 inner url
      */
     public RequestMatcher permitAllRequestMatcher() {

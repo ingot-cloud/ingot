@@ -43,7 +43,7 @@ public final class SecurityUtils {
             if (StrUtil.startWithIgnoreCase(item, OAUTH2_BEARER_TYPE_WITH_SPACE)) {
                 bearerToken = item;
             }
-            log.info(">>> SecurityUtils - getBearerToken authorization while - header={}", item);
+            log.info("[SecurityUtils] - getBearerToken authorization while - header={}", item);
         }
 
         return Optional.ofNullable(bearerToken);
@@ -80,7 +80,7 @@ public final class SecurityUtils {
             if (StrUtil.startWithIgnoreCase(item, OAUTH2_BASIC_TYPE_WITH_SPACE)) {
                 basicHeader = item;
             }
-            log.info(">>> SecurityUtils - getBasicToken authorization while - header={}", item);
+            log.info("[SecurityUtils] - getBasicToken authorization while - header={}", item);
         }
 
         return Optional.ofNullable(basicHeader);
@@ -137,7 +137,7 @@ public final class SecurityUtils {
             String basicToken = getBasicToken(request).orElse("");
             return extractAndDecodeBasicToken(basicToken)[0];
         } catch (Exception e) {
-            log.info(">>> SecurityUtils getClientIdFromRequest 获取 client id 失败", e);
+            log.info("[SecurityUtils] getClientIdFromRequest 获取 client id 失败", e);
             return "";
         }
     }
