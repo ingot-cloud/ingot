@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Sets;
+import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
@@ -56,6 +57,15 @@ public class IngotSecurityExpression {
      */
     public boolean hasAnyScope(String... scopes) {
         return hasAnyAuthorityName(null, scopes);
+    }
+
+    /**
+     * 必须为管理员
+     *
+     * @return {boolean}
+     */
+    public boolean requiredAdmin() {
+        return hasAuthority(RoleConstants.ROLE_ADMIN_CODE);
     }
 
     private boolean hasAnyAuthorityName(String prefix, String... authorities) {
