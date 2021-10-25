@@ -12,8 +12,8 @@ import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJ
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
 import com.ingot.framework.security.web.ClientAuthContextFilter;
-import com.ingot.framework.security.web.authentication.DefaultUserDetailsCacheService;
-import com.ingot.framework.security.web.authentication.UserDetailsCacheService;
+import com.ingot.framework.security.web.authentication.DefaultAuthorizationCacheService;
+import com.ingot.framework.security.web.authentication.AuthorizationCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -93,9 +93,9 @@ public class IngotOAuth2ResourceServerConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(UserDetailsCacheService.class)
-    public UserDetailsCacheService userDetailsCacheService() {
-        return new DefaultUserDetailsCacheService();
+    @ConditionalOnMissingBean(AuthorizationCacheService.class)
+    public AuthorizationCacheService authorizationCacheService() {
+        return new DefaultAuthorizationCacheService();
     }
 
     @Bean("ingot")

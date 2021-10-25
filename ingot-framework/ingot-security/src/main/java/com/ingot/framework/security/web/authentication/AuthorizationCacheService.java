@@ -5,12 +5,12 @@ import java.time.Instant;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 
 /**
- * <p>Description  : UserDetailsCacheService.</p>
+ * <p>Description  : AuthorizationCacheService.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/21.</p>
  * <p>Time         : 5:46 下午.</p>
  */
-public interface UserDetailsCacheService {
+public interface AuthorizationCacheService {
 
     /**
      * 保存用户授权信息

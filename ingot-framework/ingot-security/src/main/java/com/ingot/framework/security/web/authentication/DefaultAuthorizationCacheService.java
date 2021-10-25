@@ -15,13 +15,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import static com.ingot.framework.core.constants.CacheConstants.AUTHORIZATION_KEY;
 
 /**
- * <p>Description  : DefaultUserDetailsCacheService.</p>
+ * <p>Description  : DefaultAuthorizationCacheService.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/22.</p>
  * <p>Time         : 2:32 下午.</p>
  */
 @Slf4j
-public class DefaultUserDetailsCacheService implements UserDetailsCacheService {
+public class DefaultAuthorizationCacheService implements AuthorizationCacheService {
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override

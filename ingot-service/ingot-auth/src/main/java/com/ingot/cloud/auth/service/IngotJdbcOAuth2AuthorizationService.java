@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
-import com.ingot.framework.security.web.authentication.UserDetailsCacheService;
+import com.ingot.framework.security.web.authentication.AuthorizationCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -26,7 +26,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 @Slf4j
 public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2AuthorizationService {
 
-    private UserDetailsCacheService userDetailsCacheService;
+    private AuthorizationCacheService authorizationCacheService;
 
     public IngotJdbcOAuth2AuthorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
         super(jdbcOperations, registeredClientRepository);
@@ -47,7 +47,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
     public void save(OAuth2Authorization authorization) {
         OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
             OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
-            userDetailsCacheService.save(
+            authorizationCacheService.save(
                     user, accessToken.getExpiresAt(), accessToken.getTokenValue());
         });
         super.save(authorization);
@@ -57,7 +57,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
     public void remove(OAuth2Authorization authorization) {
         OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
             OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
-            userDetailsCacheService.remove(user, accessToken.getTokenValue());
+            authorizationCacheService.remove(user, accessToken.getTokenValue());
         });
         super.remove(authorization);
     }
@@ -73,7 +73,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
     }
 
     @Autowired
-    public void setUserDetailsCacheService(UserDetailsCacheService userDetailsCacheService) {
-        this.userDetailsCacheService = userDetailsCacheService;
+    public void setUserDetailsCacheService(AuthorizationCacheService authorizationCacheService) {
+        this.authorizationCacheService = authorizationCacheService;
     }
 }

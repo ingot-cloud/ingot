@@ -22,6 +22,9 @@ public class OAuth2AuthorizationUtils {
      * @return {@link IngotUser}
      */
     public static Optional<IngotUser> getUser(OAuth2Authorization authorization) {
+        if (authorization == null) {
+            return Optional.empty();
+        }
         Object principal = authorization.getAttribute(Principal.class.getName());
         if (principal instanceof Authentication) {
             return Optional.of((IngotUser) ((Authentication) principal).getPrincipal());

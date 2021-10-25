@@ -14,7 +14,7 @@ import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.security.web.authentication.UserDetailsCacheService;
+import com.ingot.framework.security.web.authentication.AuthorizationCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class IngotTokenAuthFilter extends OncePerRequestFilter {
     private final RequestMatcher ignoreRequestMatcher;
-    private UserDetailsCacheService userDetailsCacheService;
+    private AuthorizationCacheService authorizationCacheService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -53,7 +53,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         // 获取当前token
-        String cache = userDetailsCacheService.get(user);
+        String cache = authorizationCacheService.get(user);
         if (StrUtil.isEmpty(cache)) {
             OAuth2ErrorUtils.throwInvalidToken();
         }
@@ -72,7 +72,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
     }
 
     @Autowired
-    public void setUserDetailsCacheService(UserDetailsCacheService userDetailsCacheService) {
-        this.userDetailsCacheService = userDetailsCacheService;
+    public void setAuthorizationCacheService(AuthorizationCacheService authorizationCacheService) {
+        this.authorizationCacheService = authorizationCacheService;
     }
 }
