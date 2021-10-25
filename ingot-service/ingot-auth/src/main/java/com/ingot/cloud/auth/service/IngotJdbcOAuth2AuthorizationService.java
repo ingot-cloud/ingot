@@ -1,17 +1,15 @@
 package com.ingot.cloud.auth.service;
 
-import java.security.Principal;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
 import com.ingot.framework.security.web.authentication.UserDetailsCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2TokenType;
@@ -47,25 +45,20 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
 
     @Override
     public void save(OAuth2Authorization authorization) {
-        Object principal = authorization.getAttribute(Principal.class.getName());
-        if (principal instanceof Authentication) {
-            IngotUser user = (IngotUser) ((Authentication) principal).getPrincipal();
+        OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
             OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
             userDetailsCacheService.save(
                     user, accessToken.getExpiresAt(), accessToken.getTokenValue());
-        }
-
+        });
         super.save(authorization);
     }
 
     @Override
     public void remove(OAuth2Authorization authorization) {
-        Object principal = authorization.getAttribute(Principal.class.getName());
-        if (principal instanceof Authentication) {
-            IngotUser user = (IngotUser) ((Authentication) principal).getPrincipal();
+        OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
             OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
             userDetailsCacheService.remove(user, accessToken.getTokenValue());
-        }
+        });
         super.remove(authorization);
     }
 
