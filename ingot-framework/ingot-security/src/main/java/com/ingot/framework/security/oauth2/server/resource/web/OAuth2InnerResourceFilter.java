@@ -29,7 +29,7 @@ public class OAuth2InnerResourceFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String header = request.getHeader(SecurityConstants.HEADER_FROM);
         if (!StrUtil.equals(SecurityConstants.HEADER_FROM_INSIDE_VALUE, header)) {
-            log.warn("--- OAuth2InnerResourceFilter 访问接口 {} 没有权限", request.getRequestURI());
+            log.warn("[OAuth2InnerResourceFilter] 访问接口 {} 没有权限", request.getRequestURI());
             throw new AccessDeniedException("Access is denied");
         }
 

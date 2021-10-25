@@ -7,6 +7,7 @@ import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsServi
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
+import com.ingot.framework.security.oauth2.server.resource.access.expression.IngotSecurityExpression;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
@@ -95,6 +96,11 @@ public class IngotOAuth2ResourceServerConfiguration {
     @ConditionalOnMissingBean(UserDetailsCacheService.class)
     public UserDetailsCacheService userDetailsCacheService() {
         return new DefaultUserDetailsCacheService();
+    }
+
+    @Bean("ingot")
+    public IngotSecurityExpression ingotSecurityExpression() {
+        return new IngotSecurityExpression();
     }
 
     @Bean

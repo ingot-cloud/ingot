@@ -46,7 +46,7 @@ public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationE
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        log.debug("commence error", authException);
+        log.debug("[IngotBearerTokenAuthenticationEntryPoint] commence error", authException);
 
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         R<Map<String, String>> body = new R<>(BaseStatusCode.UNAUTHORIZED.code(),

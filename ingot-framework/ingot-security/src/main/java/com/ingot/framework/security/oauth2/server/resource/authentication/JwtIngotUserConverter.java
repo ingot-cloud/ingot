@@ -12,9 +12,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
  * <p>Date         : 2021/9/17.</p>
  * <p>Time         : 5:51 下午.</p>
  */
-
 public class JwtIngotUserConverter implements Converter<Jwt, IngotUser> {
-    private static final String N_A = "N/A";
 
     @Override
     public IngotUser convert(@NonNull Jwt source) {
