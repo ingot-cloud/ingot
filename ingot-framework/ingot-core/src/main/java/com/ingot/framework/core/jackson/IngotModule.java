@@ -2,6 +2,7 @@ package com.ingot.framework.core.jackson;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.PackageVersion;
@@ -19,6 +20,8 @@ public class IngotModule extends SimpleModule {
         this.addSerializer(long.class, new ToStringSerializer());
         this.addSerializer(Long.class, new ToStringSerializer());
         this.addSerializer(BigDecimal.class, new ToStringSerializer());
+
+        this.addSerializer(IPage.class, new IPageSerializer());
     }
 
 }
