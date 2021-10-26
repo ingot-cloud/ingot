@@ -1,4 +1,4 @@
-package com.ingot.framework.security.web.authentication;
+package com.ingot.framework.security.oauth2.server.authorization;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -25,13 +25,13 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public void save(IngotUser user, Instant expiresAt, String tokenValue) {
+    public void save(IngotUser user, Instant expiresAt, AuthorizationCache value) {
         if (ignore(user)) {
             return;
         }
         String key = key(user);
         long expiresIn = ChronoUnit.SECONDS.between(Instant.now(), expiresAt);
-        this.redisTemplate.opsForValue().set(key, tokenValue, expiresIn, TimeUnit.SECONDS);
+        this.redisTemplate.opsForValue().set(key, value, expiresIn, TimeUnit.SECONDS);
     }
 
     @Override
@@ -57,10 +57,10 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     }
 
     @Override
-    public String get(IngotUser user) {
+    public AuthorizationCache get(IngotUser user) {
         String key = key(user);
         Object current = this.redisTemplate.opsForValue().get(key);
-        return current == null ? null : String.valueOf(current);
+        return current == null ? null : (AuthorizationCache) current;
     }
 
     @Autowired

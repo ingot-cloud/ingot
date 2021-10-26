@@ -1,4 +1,4 @@
-package com.ingot.framework.security.web.authentication;
+package com.ingot.framework.security.oauth2.server.authorization;
 
 import java.time.Instant;
 
@@ -15,11 +15,11 @@ public interface AuthorizationCacheService {
     /**
      * 保存用户授权信息
      *
-     * @param user       {@link IngotUser}
-     * @param expiresAt  过期时间
-     * @param tokenValue token
+     * @param user      {@link IngotUser}
+     * @param expiresAt 过期时间
+     * @param value     {@link AuthorizationCache} 缓存授权信息
      */
-    void save(IngotUser user, Instant expiresAt, String tokenValue);
+    void save(IngotUser user, Instant expiresAt, AuthorizationCache value);
 
     /**
      * 移除用户授权信息，并且校验 tokenValue
@@ -40,7 +40,7 @@ public interface AuthorizationCacheService {
      * 获取当前 token value
      *
      * @param user {@link IngotUser}
-     * @return token value
+     * @return {@link AuthorizationCache} 缓存授权信息
      */
-    String get(IngotUser user);
+    AuthorizationCache get(IngotUser user);
 }

@@ -14,7 +14,8 @@ import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.security.web.authentication.AuthorizationCacheService;
+import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCache;
+import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,8 +54,8 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         // 获取当前token
-        String cache = authorizationCacheService.get(user);
-        if (StrUtil.isEmpty(cache)) {
+        AuthorizationCache cache = authorizationCacheService.get(user);
+        if (cache == null) {
             OAuth2ErrorUtils.throwInvalidToken();
         }
 
@@ -64,7 +65,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         // 当前token和cache不相同，则已被签退
-        if (!StrUtil.equals(cache, SecurityUtils.getBearerTokenValue(token.get()))) {
+        if (!StrUtil.equals(cache.getTokenValue(), SecurityUtils.getBearerTokenValue(token.get()))) {
             OAuth2ErrorUtils.throwSignOut();
         }
 

@@ -5,8 +5,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
+import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCache;
 import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
-import com.ingot.framework.security.web.authentication.AuthorizationCacheService;
+import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -48,7 +49,13 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
         OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
             OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
             authorizationCacheService.save(
-                    user, accessToken.getExpiresAt(), accessToken.getTokenValue());
+                    user, accessToken.getExpiresAt(),
+                    AuthorizationCache.create(
+                            authorization.getId(),
+                            authorization.getRegisteredClientId(),
+                            authorization.getPrincipalName(),
+                            authorization.getAuthorizationGrantType().getValue(),
+                            accessToken.getTokenValue()));
         });
         super.save(authorization);
     }
