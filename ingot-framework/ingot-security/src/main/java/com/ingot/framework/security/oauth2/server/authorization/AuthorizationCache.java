@@ -18,10 +18,10 @@ public class AuthorizationCache implements Serializable {
     private String authorizationGrantType;
     private String tokenValue;
 
-    public static AuthorizationCache create(String id, String clinetId, String name, String grantType, String tokenValue) {
+    public static AuthorizationCache create(String id, String clientId, String name, String grantType, String tokenValue) {
         AuthorizationCache instance = new AuthorizationCache();
         instance.setId(id);
-        instance.setRegisteredClientId(clinetId);
+        instance.setRegisteredClientId(clientId);
         instance.setPrincipalName(name);
         instance.setAuthorizationGrantType(grantType);
         instance.setTokenValue(tokenValue);
