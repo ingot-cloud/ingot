@@ -102,6 +102,32 @@ public final class RSAUtils {
     /**
      * 获取RSA公钥
      *
+     * @param publicKey 公钥
+     * @return {@link PublicKey}
+     * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
+     */
+    public static PublicKey getPublicKey(byte[] publicKey) throws Exception {
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
+    }
+
+    /**
+     * 获取RSA私钥
+     *
+     * @param privateKey 私钥
+     * @return {@link PrivateKey}
+     * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
+     */
+    public static PrivateKey getPrivateKey(byte[] privateKey) throws Exception {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKey);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePrivate(spec);
+    }
+
+    /**
+     * 获取RSA公钥
+     *
      * @param filename 文件名
      * @return {@link PublicKey}
      * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException, IOException
@@ -136,32 +162,6 @@ public final class RSAUtils {
     }
 
     /**
-     * 获取RSA公钥
-     *
-     * @param publicKey 公钥
-     * @return {@link PublicKey}
-     * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
-     */
-    public static PublicKey getPublicKey(byte[] publicKey) throws Exception {
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
-    }
-
-    /**
-     * 获取RSA私钥
-     *
-     * @param privateKey 私钥
-     * @return {@link PrivateKey}
-     * @throws Exception NoSuchAlgorithmException, InvalidKeySpecException
-     */
-    public static PrivateKey getPrivateKey(byte[] privateKey) throws Exception {
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKey);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePrivate(spec);
-    }
-
-    /**
      * 生成RSA公钥和密钥
      *
      * @param publicKeyFilename  公钥文件名
@@ -174,7 +174,7 @@ public final class RSAUtils {
                                    String password) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         SecureRandom secureRandom = new SecureRandom(password.getBytes());
-        keyPairGenerator.initialize(1024, secureRandom);
+        keyPairGenerator.initialize(2048, secureRandom);
         KeyPair keyPair = keyPairGenerator.genKeyPair();
         byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
         FileOutputStream fos = new FileOutputStream(publicKeyFilename);
