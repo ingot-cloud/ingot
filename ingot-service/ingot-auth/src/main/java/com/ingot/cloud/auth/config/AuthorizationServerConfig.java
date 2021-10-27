@@ -1,7 +1,6 @@
 package com.ingot.cloud.auth.config;
 
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashSet;
@@ -11,6 +10,7 @@ import java.util.UUID;
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
+import com.ingot.framework.security.common.utils.RSAUtils;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import com.ingot.framework.tenant.filter.TenantFilter;
@@ -87,9 +87,7 @@ public class AuthorizationServerConfig {
     @Bean
     @SneakyThrows
     public JWKSource<SecurityContext> jwkSource() {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        KeyPair keyPair = RSAUtils.generateKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
 
