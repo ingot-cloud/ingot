@@ -1,10 +1,20 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import com.ingot.framework.security.bus.jwt.JWKSetUpdateEvent;
+import com.ingot.framework.security.bus.jwt.JWKSetUpdateListener;
+import com.ingot.framework.security.bus.jwt.JWKSetUpdateSender;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.IssuerUriCondition;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
+import org.springframework.cloud.bus.BusAutoConfiguration;
+import org.springframework.cloud.bus.BusProperties;
+import org.springframework.cloud.bus.ConditionalOnBusEnabled;
+import org.springframework.cloud.bus.jackson.RemoteApplicationEventScan;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -35,5 +45,24 @@ public class IngotOAuth2ResourceServerJwtConfiguration {
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(IngotJwtValidators.createDefaultWithIssuer(jwt.getIssuerUri()));
         return jwtDecoder;
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnBusEnabled
+    @AutoConfigureAfter(BusAutoConfiguration.class)
+    @RemoteApplicationEventScan(basePackageClasses = JWKSetUpdateEvent.class)
+    public static class JWKBusConfiguration {
+
+        @Bean
+        public JWKSetUpdateSender jwtSetUpdateSender(BusProperties properties,
+                                                     ApplicationEventPublisher publisher) {
+            return new JWKSetUpdateSender(properties.getId(), publisher);
+        }
+
+        @Bean
+        @ConditionalOnProperty(name = "spring.security.oauth2.resourceserver.jwt.issuer-uri")
+        public JWKSetUpdateListener jwkSetUpdateListener() {
+            return new JWKSetUpdateListener();
+        }
     }
 }

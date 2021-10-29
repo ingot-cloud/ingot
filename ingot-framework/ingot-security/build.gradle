@@ -9,6 +9,7 @@ dependencies {
 
     implementation(deps.spring.framework_webmvc)
     implementation(deps.spring.spring_boot.data_redis_starter)
+    implementation(deps.spring.spring_cloud.bus_amqp_start)
 
     compileOnly(deps.javax_servlet_api)
 }

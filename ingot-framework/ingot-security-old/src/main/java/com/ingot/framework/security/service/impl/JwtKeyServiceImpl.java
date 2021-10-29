@@ -3,7 +3,6 @@ package com.ingot.framework.security.service.impl;
 import java.util.List;
 import java.util.Map;
 
-import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.service.JwtKeyService;
 import lombok.AllArgsConstructor;
@@ -33,12 +32,15 @@ public class JwtKeyServiceImpl implements JwtKeyService {
     private final RestTemplate lbRestTemplate;
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Override public String fetch() {
+    @Override
+    public String fetch() {
         return getKeyFromServer();
     }
 
-    @Override public String fetchFromCache() {
-        return String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----", redisTemplate.opsForValue().get(RedisConstants.REDIS_JWT_PUB_KEY));
+    @Override
+    public String fetchFromCache() {
+        return "";
+//        return String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----", redisTemplate.opsForValue().get(RedisConstants.REDIS_JWT_PUB_KEY));
     }
 
     /**

@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import static com.ingot.framework.core.constants.CacheConstants.AUTHORIZATION_KEY;
+import static com.ingot.framework.core.constants.RedisConstants.Security.AUTHORIZATION;
 
 /**
  * <p>Description  : DefaultAuthorizationCacheService.</p>
@@ -76,7 +76,7 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
 
     private String key(IngotUser user) {
         return String.format("%s:%d:%s:%s",
-                AUTHORIZATION_KEY,
+                AUTHORIZATION,
                 user.getTenantId(),
                 user.getClientId(),
                 DigestUtils.sha256(user.getUsername()));

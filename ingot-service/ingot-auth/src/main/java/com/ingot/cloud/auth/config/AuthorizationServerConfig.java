@@ -1,29 +1,23 @@
 package com.ingot.cloud.auth.config;
 
-import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
-import com.ingot.framework.security.common.utils.RSAUtils;
+import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import com.ingot.framework.tenant.filter.TenantFilter;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -85,17 +79,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    @SneakyThrows
-    public JWKSource<SecurityContext> jwkSource() {
-        KeyPair keyPair = RSAUtils.generateKey();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-        JWKSet jwkSet = new JWKSet(rsaKey);
+    public JWKSource<SecurityContext> jwkSource(JWKService service) {
+        JWKSet jwkSet = service.fetch();
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
 
