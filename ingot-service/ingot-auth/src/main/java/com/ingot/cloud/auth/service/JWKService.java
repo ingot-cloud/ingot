@@ -8,14 +8,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.RedisConstants;
-import com.ingot.framework.security.bus.jwt.JWKSetUpdateSender;
 import com.ingot.framework.security.common.utils.RSAUtils;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +26,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JWKService implements CommandLineRunner {
-    private final JWKSetUpdateSender jwkSetUpdateSender;
+public class JWKService {
     private final StringRedisTemplate stringRedisTemplate;
 
     private final AtomicBoolean needUpdate = new AtomicBoolean(false);
@@ -80,14 +77,6 @@ public class JWKService implements CommandLineRunner {
                 .keyID(keyID)
                 .build();
         return new JWKSet(rsaKey);
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        if (this.needUpdate.getAndSet(false)) {
-            log.info("[JWKService] run() -- UPDATE JWK EVENT --");
-            jwkSetUpdateSender.exec();
-        }
     }
 
     private void cache(KeyPair keyPair, String keyID) {
