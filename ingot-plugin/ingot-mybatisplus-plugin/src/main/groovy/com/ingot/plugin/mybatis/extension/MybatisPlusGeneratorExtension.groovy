@@ -15,7 +15,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * 注释作者
      */
-    String author = "Jymot"
+    String author = "Jy.mot"
 
     /**
      * 需要生成的表
