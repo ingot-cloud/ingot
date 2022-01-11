@@ -13,23 +13,12 @@ dependencies {
     implementation(deps.mysql.connector)
 }
 
-// mavenLocal
-//uploadArchives {
-//    repositories {
-//        mavenDeployer {
-//            repository(url: mavenLocal().url)
-//        }
-//    }
-//}
-// nexus.secingot.com
-//uploadArchives {
-//    repositories.mavenDeployer {
-//        repository(url: INGOT_NEXUS_URL){
-//            authentication(userName: INGOT_NEXUS_USERNAME, password: INGOT_NEXUS_PASSWORD)
-//        }
-//    }
-//}
 publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
     repositories {
         maven {
             url = INGOT_NEXUS_URL

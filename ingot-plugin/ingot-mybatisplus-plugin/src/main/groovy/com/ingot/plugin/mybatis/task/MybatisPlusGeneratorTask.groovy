@@ -12,6 +12,7 @@ import com.ingot.plugin.mybatis.extension.MybatisPlusGeneratorExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
+
 /**
  * <p>Description  : MybatisPlusGeneratorTask.</p>
  * <p>Author       : wangchao.</p>
@@ -25,20 +26,21 @@ class MybatisPlusGeneratorTask extends DefaultTask {
         setDescription("Mybatis Plus Generator")
     }
 
-    @TaskAction void generator() {
+    @TaskAction
+    void generator() {
         IngotMybatisExtension ingotMybatisExtension = IngotMybatisExtension.getBuildExtension(project)
         MybatisPlusGeneratorExtension generatorExtension = ingotMybatisExtension.mybatisPlus
         String projectPath = generatorExtension.projectPath
 
-        if (projectPath == null || projectPath.isEmpty()){
+        if (projectPath == null || projectPath.isEmpty()) {
             throw new GradleException("请配置projectPath")
         }
 
-        if (generatorExtension.basePackage == null || generatorExtension.basePackage.isEmpty()){
+        if (generatorExtension.basePackage == null || generatorExtension.basePackage.isEmpty()) {
             throw new GradleException("请配置basePackage")
         }
 
-        if (generatorExtension.tables == null || generatorExtension.tables.length == 0){
+        if (generatorExtension.tables == null || generatorExtension.tables.length == 0) {
             throw new GradleException("请配置tables")
         }
 
@@ -82,7 +84,8 @@ class MybatisPlusGeneratorTask extends DefaultTask {
 
         // 自定义配置
         InjectionConfig cfg = new InjectionConfig() {
-            @Override void initMap() {
+            @Override
+            void initMap() {
                 // to do nothing
             }
         }
@@ -93,7 +96,8 @@ class MybatisPlusGeneratorTask extends DefaultTask {
         List<FileOutConfig> focList = new ArrayList<>()
         // 自定义配置会被优先输出
         focList.add(new FileOutConfig(templatePath) {
-            @Override String outputFile(TableInfo tableInfo) {
+            @Override
+            String outputFile(TableInfo tableInfo) {
                 // 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化！！
                 return "${projectPath}/src/main/resources/mapper/${tableInfo.getEntityName()}Mapper${StringPool.DOT_XML}"
             }
@@ -121,7 +125,7 @@ class MybatisPlusGeneratorTask extends DefaultTask {
         strategy.setSuperControllerClass(generatorExtension.superControllerClass)
         strategy.setSuperServiceClass(generatorExtension.superServiceClass)
         strategy.setSuperServiceImplClass(generatorExtension.superServiceImplClass)
-        if (generatorExtension.superMapperClass != null && !generatorExtension.superMapperClass.isEmpty()){
+        if (generatorExtension.superMapperClass != null && !generatorExtension.superMapperClass.isEmpty()) {
             strategy.setSuperMapperClass(generatorExtension.superMapperClass)
         }
         strategy.setEntityLombokModel(true)

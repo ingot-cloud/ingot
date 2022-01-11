@@ -15,7 +15,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * 注释作者
      */
-    String author = "magician"
+    String author = "Jymot"
 
     /**
      * 需要生成的表
@@ -45,12 +45,12 @@ class MybatisPlusGeneratorExtension {
     /**
      * 保存 service 的相对包名
      */
-    String servicePackage = "service"
+    String servicePackage = "service.domain"
 
     /**
      * 保存 serviceImpl 的相对包名
      */
-    String serviceImplPackage = "service.impl"
+    String serviceImplPackage = "service.domain.impl"
 
     /**
      * entity 文件名
