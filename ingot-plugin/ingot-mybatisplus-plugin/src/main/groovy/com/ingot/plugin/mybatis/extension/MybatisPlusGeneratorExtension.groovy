@@ -107,7 +107,7 @@ class MybatisPlusGeneratorExtension {
      */
     String superMapperClass = "com.ingot.framework.store.mybatis.mapper.BaseMapper"
 
-    MybatisPlusGeneratorExtension(){
+    MybatisPlusGeneratorExtension() {
 
     }
 }

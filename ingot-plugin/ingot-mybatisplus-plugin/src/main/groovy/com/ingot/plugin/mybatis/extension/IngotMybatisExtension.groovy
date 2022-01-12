@@ -2,6 +2,8 @@ package com.ingot.plugin.mybatis.extension
 
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
+
 /**
  * <p>Description  : IngotMybatisExtension.</p>
  * <p>Author       : wangchao.</p>
@@ -33,24 +35,19 @@ class IngotMybatisExtension {
     /**
      * Mybatis Plus 配置
      */
-    MybatisPlusGeneratorExtension mybatisPlus = new MybatisPlusGeneratorExtension()
+    MybatisPlusGeneratorExtension mybatisPlus
 
-    IngotMybatisExtension(){
-
+    IngotMybatisExtension(ObjectFactory objectFactory) {
+        mybatisPlus = objectFactory.newInstance(MybatisPlusGeneratorExtension)
     }
 
-    void mybatisPlus(Action<MybatisPlusGeneratorExtension> action){
+    void mybatisPlus(Action<MybatisPlusGeneratorExtension> action) {
         action.execute(this.mybatisPlus)
     }
 
-//    //创建内部Extension，名称为方法名 mybatisPlus
-//    void mybatisPlus(Closure c) {
-//        ConfigureUtil.configure(c, mybatisPlus)
-//    }
-
-    static IngotMybatisExtension getBuildExtension(Project project){
+    static IngotMybatisExtension getBuildExtension(Project project) {
         IngotMybatisExtension ingotMybatisExtension = project.getExtensions().findByType(IngotMybatisExtension)
-        if (ingotMybatisExtension == null){
+        if (ingotMybatisExtension == null) {
             ingotMybatisExtension = new IngotMybatisExtension()
         }
 

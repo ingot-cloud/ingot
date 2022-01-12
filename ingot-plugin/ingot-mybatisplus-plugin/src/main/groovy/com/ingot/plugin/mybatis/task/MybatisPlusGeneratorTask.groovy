@@ -41,6 +41,7 @@ class MybatisPlusGeneratorTask extends DefaultTask {
         }
 
         if (generatorExtension.tables == null || generatorExtension.tables.length == 0) {
+            project.logger.lifecycle("有一场！！！！！")
             throw new GradleException("请配置tables")
         }
 
