@@ -30,12 +30,6 @@ allprojects  {
     jar {
         enabled = true
     }
-
-    task cleanOut(type: Delete) {
-        group "ingot"
-        description "clean out dir"
-        delete new File(project.getProjectDir(), "out")
-    }
 }
 
 subprojects {
