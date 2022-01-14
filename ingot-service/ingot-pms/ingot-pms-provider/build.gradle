@@ -15,5 +15,6 @@ dependencies {
 }
 
 apply from: 'ingot-mybatis.gradle'
+apply from: 'ingot-assemble.gradle'
 apply from: "${project.getRootDir().path}/config/database.gradle"
 apply from: "${project.getRootDir().path}/config/service-base.gradle"

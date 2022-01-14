@@ -1,6 +1,4 @@
 apply plugin: 'org.springframework.boot'
-apply plugin: 'net.ltgt.apt-idea'
-apply plugin: 'com.ingot.plugin.assemble'
 
 dependencies {
     // test

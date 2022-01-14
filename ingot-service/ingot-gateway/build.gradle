@@ -11,4 +11,5 @@ dependencies {
     implementation project(ingot.framework_core)
 }
 
+apply from: 'ingot-assemble.gradle'
 apply from: "${project.getRootDir().path}/config/service-base.gradle"

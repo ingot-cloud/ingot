@@ -11,8 +11,8 @@ include 'ingot-framework:ingot-feign'
 findProject(':ingot-framework:ingot-feign')?.name = 'ingot-feign'
 include 'ingot-framework:ingot-sentinel'
 findProject(':ingot-framework:ingot-sentinel')?.name = 'ingot-sentinel'
-include 'ingot-framework:ingot-security-old'
-findProject(':ingot-framework:ingot-security-old')?.name = 'ingot-security-old'
+//include 'ingot-framework:ingot-security-old'
+//findProject(':ingot-framework:ingot-security-old')?.name = 'ingot-security-old'
 include 'ingot-framework:ingot-security'
 findProject(':ingot-framework:ingot-security')?.name = 'ingot-security'
 include 'ingot-framework:ingot-security-config'
@@ -39,4 +39,6 @@ findProject(':ingot-service:ingot-pms:ingot-pms-provider')?.name = 'ingot-pms-pr
 // Plugin
 include 'ingot-plugin:ingot-mybatisplus-plugin'
 findProject(':ingot-plugin:ingot-mybatisplus-plugin')?.name = 'ingot-mybatisplus-plugin'
+include 'ingot-plugin:ingot-assemble-plugin'
+findProject(':ingot-plugin:ingot-assemble-plugin')?.name = 'ingot-assemble-plugin'
 
