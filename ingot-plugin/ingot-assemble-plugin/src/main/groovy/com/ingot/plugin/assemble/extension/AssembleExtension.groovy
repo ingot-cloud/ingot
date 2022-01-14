@@ -2,6 +2,7 @@ package com.ingot.plugin.assemble.extension
 
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
 
 /**
  * <p>Description  : AssembleExtension.</p>
@@ -12,21 +13,18 @@ import org.gradle.api.Project
 class AssembleExtension {
 
     /**
-     * dockerfile 路径
-     */
-    String dockerFilePath
-
-    /**
      * 输出目录路径
      */
-    String outputPath
+    String outputDirPath
 
     /**
      * docker配置
      */
-    DockerExtension docker = new DockerExtension()
+    DockerExtension docker
 
-    AssembleExtension() {}
+    AssembleExtension(ObjectFactory objectFactory) {
+        docker = objectFactory.newInstance(DockerExtension)
+    }
 
     void docker(Action<DockerExtension> action) {
         action.execute(this.docker)

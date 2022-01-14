@@ -23,12 +23,7 @@ class AssembleReleaseTask extends DefaultTask {
         project.logger.lifecycle("Assemble release task running.")
 
         AssembleExtension assembleExtension = AssembleExtension.getBuildExtension(project)
-        String dockerfileDirPath = assembleExtension.dockerFilePath
-        String outputDirPath = assembleExtension.outputPath
-
-        if (Utils.isEmpty(dockerfileDirPath)) {
-            dockerfileDirPath = Utils.defaultDockerFileDirPath(project)
-        }
+        String outputDirPath = assembleExtension.outputDirPath
 
         if (Utils.isEmpty(outputDirPath)) {
             outputDirPath = Utils.defaultOutputDirPath(project)
@@ -40,7 +35,6 @@ class AssembleReleaseTask extends DefaultTask {
         String outputPath = Utils.projectOutputPath(outputDirPath, project)
         // 输出文件名字
         String outputFileName = project.name + ".jar"
-        project.logger.lifecycle(">>> dockerfile dir path: " + dockerfileDirPath)
         project.logger.lifecycle(">>> copy to: " + outputPath)
 
         // copy jar
@@ -52,10 +46,5 @@ class AssembleReleaseTask extends DefaultTask {
             }
         }
 
-        // copy dockerfile
-        project.copy {
-            from dockerfileDirPath
-            into outputPath
-        }
     }
 }

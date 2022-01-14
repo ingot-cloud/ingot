@@ -1,5 +1,6 @@
 package com.ingot.plugin.assemble.utils
 
+import com.ingot.plugin.assemble.extension.DockerExtension
 import org.gradle.api.Project
 
 /**
@@ -40,5 +41,25 @@ class Utils {
      */
     static String projectOutputPath(String outputDirPath, Project project) {
         return outputDirPath + "/" + project.name + "/" + project.version
+    }
+
+    /**
+     * 获取Tag
+     * @param dockerExtension
+     * @param project
+     * @return
+     */
+    static String getTag(DockerExtension dockerExtension, Project project) {
+        String name = dockerExtension.name
+        String registry = dockerExtension.registry
+        if (isEmpty(name)) {
+            name = project.name
+            name = String.join("/", name.split("-", 2))
+        }
+        String tag = name + ":" + project.version
+        if (!isEmpty(registry)) {
+            tag = registry + "/" + tag
+        }
+        return tag
     }
 }
