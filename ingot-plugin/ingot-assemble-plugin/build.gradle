@@ -1,6 +1,4 @@
-plugins {
-    id 'groovy'
-}
+apply plugin: 'groovy'
 
 dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
