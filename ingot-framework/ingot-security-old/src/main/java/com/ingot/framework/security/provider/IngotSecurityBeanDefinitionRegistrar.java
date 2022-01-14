@@ -26,7 +26,7 @@ public class IngotSecurityBeanDefinitionRegistrar implements ImportBeanDefinitio
         }
 
         GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
-        beanDefinition.setBeanClass(IngotResourceServerConfig.class);
+//        beanDefinition.setBeanClass(IngotResourceServerConfig.class);
         registry.registerBeanDefinition(SecurityConstants.RESOURCE_SERVER_CONFIGURER, beanDefinition);
     }
 }
