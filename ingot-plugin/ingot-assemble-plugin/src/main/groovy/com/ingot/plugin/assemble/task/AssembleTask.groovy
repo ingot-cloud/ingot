@@ -3,17 +3,18 @@ package com.ingot.plugin.assemble.task
 import com.ingot.plugin.assemble.extension.AssembleExtension
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.TaskAction
 
 /**
- * <p>Description  : AssembleReleaseTask.</p>
+ * <p>Description  : AssembleTask.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/12/12.</p>
  * <p>Time         : 9:37 AM.</p>
  */
-class AssembleReleaseTask extends DefaultTask {
+class AssembleTask extends DefaultTask {
 
-    AssembleReleaseTask() {
+    AssembleTask() {
         setGroup("ingot")
         setDescription("Ingot assemble")
     }
@@ -39,6 +40,7 @@ class AssembleReleaseTask extends DefaultTask {
 
         // copy jar
         project.copy {
+            duplicatesStrategy DuplicatesStrategy.INCLUDE
             from libsPath
             into outputPath
             rename {

@@ -5,6 +5,7 @@ import com.ingot.plugin.assemble.extension.DockerExtension
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.TaskAction
 
@@ -52,8 +53,9 @@ class DockerBuildTask extends DefaultTask {
         project.logger.lifecycle(">>> dockerfile dir: " + dockerfileDir)
         // copy dockerfile 已经目录中所有文件
         project.copy {
+            duplicatesStrategy DuplicatesStrategy.INCLUDE
             from dockerfileDir
-            into outputDirPath
+            into buildDirPath
         }
         project.logger.lifecycle(">>> dockerfile copyTo: " + outputDirPath)
 
@@ -62,8 +64,6 @@ class DockerBuildTask extends DefaultTask {
         project.exec {
             workingDir buildDirPath
             commandLine dockerCmd, 'build', '-t', tag, '.'
-            setStandardOutput System.in
-            setErrorOutput System.err
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
         }

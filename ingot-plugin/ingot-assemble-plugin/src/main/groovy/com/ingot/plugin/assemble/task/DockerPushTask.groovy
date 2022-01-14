@@ -46,8 +46,6 @@ class DockerPushTask extends DefaultTask {
             project.logger.lifecycle(">>> docker login")
             project.exec {
                 commandLine dockerCmd, "login", "-u", username, "-p", password, registry
-                setStandardOutput System.in
-                setErrorOutput System.err
                 logging.captureStandardOutput LogLevel.INFO
                 logging.captureStandardError LogLevel.ERROR
             }
@@ -57,8 +55,6 @@ class DockerPushTask extends DefaultTask {
         project.logger.lifecycle(">>> docker image push: " + tag)
         project.exec {
             commandLine dockerCmd, 'push', tag
-            setStandardOutput System.in
-            setErrorOutput System.err
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
         }

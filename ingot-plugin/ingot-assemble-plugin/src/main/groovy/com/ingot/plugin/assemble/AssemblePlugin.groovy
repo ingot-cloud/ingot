@@ -1,7 +1,7 @@
 package com.ingot.plugin.assemble
 
 import com.ingot.plugin.assemble.extension.AssembleExtension
-import com.ingot.plugin.assemble.task.AssembleReleaseTask
+import com.ingot.plugin.assemble.task.AssembleTask
 import com.ingot.plugin.assemble.task.CleanTask
 import com.ingot.plugin.assemble.task.DockerBuildTask
 import com.ingot.plugin.assemble.task.DockerPushTask
@@ -26,7 +26,7 @@ class AssemblePlugin implements Plugin<Project> {
             project.tasks.create("cleanAll", CleanTask)
 
             // build task
-            project.tasks.create("assembleRelease", AssembleReleaseTask) {
+            project.tasks.create("ingotAssemble", AssembleTask) {
                 dependsOn project.tasks.getByName("assemble")
             }
             // 生成 docker image
