@@ -2,6 +2,7 @@ apply plugin: 'com.ingot.plugin.assemble'
 
 ingotAssemble {
     docker {
-        dockerCmd "/usr/local/bin/docker"
+        registry "docker-registry.wangchao.im"
+        name "ingot/pms"
     }
 }
