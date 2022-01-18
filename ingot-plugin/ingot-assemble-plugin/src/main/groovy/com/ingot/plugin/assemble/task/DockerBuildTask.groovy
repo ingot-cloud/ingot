@@ -34,7 +34,7 @@ class DockerBuildTask extends DefaultTask {
     /**
      * build name
      */
-    private String name
+    private String imageName
 
     DockerBuildTask() {
         setGroup("ingot")
@@ -62,7 +62,7 @@ class DockerBuildTask extends DefaultTask {
         }
         project.logger.lifecycle(">>> dockerfile copyTo: " + buildDirPath)
 
-        String tag = Utils.getTag(project, name, registry)
+        String tag = Utils.getTag(project, imageName, registry)
 
         project.exec {
             workingDir buildDirPath
@@ -79,39 +79,39 @@ class DockerBuildTask extends DefaultTask {
         return registry
     }
 
-    String getOutputDirPath() {
-        return outputDirPath
-    }
-
-    String getDockerCmd() {
-        return dockerCmd
-    }
-
-    String getDockerfileDir() {
-        return dockerfileDir
-    }
-
-    String getName() {
-        return name
-    }
-
     void setRegistry(String registry) {
         this.registry = registry
+    }
+
+    String getOutputDirPath() {
+        return outputDirPath
     }
 
     void setOutputDirPath(String outputDirPath) {
         this.outputDirPath = outputDirPath
     }
 
+    String getDockerCmd() {
+        return dockerCmd
+    }
+
     void setDockerCmd(String dockerCmd) {
         this.dockerCmd = dockerCmd
+    }
+
+    String getDockerfileDir() {
+        return dockerfileDir
     }
 
     void setDockerfileDir(String dockerfileDir) {
         this.dockerfileDir = dockerfileDir
     }
 
-    void setName(String name) {
-        this.name = name
+    String getImageName() {
+        return imageName
+    }
+
+    void setImageName(String imageName) {
+        this.imageName = imageName
     }
 }

@@ -65,7 +65,7 @@ class AssemblePlugin implements Plugin<Project> {
             registry = dockerExtension.registry
             outputDirPath = ext.outputDirPath
             dockerCmd = dockerExtension.dockerCmd
-            name = imageName
+            imageName
             dockerfileDir = dockerfileDirPath
         })
 
@@ -75,7 +75,7 @@ class AssemblePlugin implements Plugin<Project> {
             username = dockerExtension.username
             password = dockerExtension.password
             dockerCmd = dockerExtension.dockerCmd
-            name = imageName
+            imageName
         })
     }
 }

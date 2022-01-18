@@ -33,7 +33,7 @@ class DockerPushTask extends DefaultTask {
     /**
      * push name
      */
-    private String name
+    private String imageName
 
     DockerPushTask() {
         setGroup("ingot")
@@ -47,7 +47,7 @@ class DockerPushTask extends DefaultTask {
             throw new GradleException("注册中心地址不能为空")
         }
 
-        String tag = Utils.getTag(project, name, registry)
+        String tag = Utils.getTag(project, imageName, registry)
 
         // login
         if (!Utils.isEmpty(username) && !Utils.isEmpty(password)) {
@@ -74,39 +74,39 @@ class DockerPushTask extends DefaultTask {
         return registry
     }
 
-    String getDockerCmd() {
-        return dockerCmd
-    }
-
-    String getUsername() {
-        return username
-    }
-
-    String getPassword() {
-        return password
-    }
-
-    String getName() {
-        return name
-    }
-
     void setRegistry(String registry) {
         this.registry = registry
+    }
+
+    String getDockerCmd() {
+        return dockerCmd
     }
 
     void setDockerCmd(String dockerCmd) {
         this.dockerCmd = dockerCmd
     }
 
+    String getUsername() {
+        return username
+    }
+
     void setUsername(String username) {
         this.username = username
+    }
+
+    String getPassword() {
+        return password
     }
 
     void setPassword(String password) {
         this.password = password
     }
 
-    void setName(String name) {
-        this.name = name
+    String getImageName() {
+        return imageName
+    }
+
+    void setImageName(String imageName) {
+        this.imageName = imageName
     }
 }
