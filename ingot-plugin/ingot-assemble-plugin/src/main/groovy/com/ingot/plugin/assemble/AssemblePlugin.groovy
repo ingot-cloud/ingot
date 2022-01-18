@@ -51,7 +51,7 @@ class AssemblePlugin implements Plugin<Project> {
     static void createDockerTask(Project project,
                                  AssembleExtension ext,
                                  String taskNameSuffix,
-                                 String imageName,
+                                 String inputImageName,
                                  String dockerfileDirPath) {
         DockerExtension dockerExtension = ext.docker
 
@@ -61,21 +61,21 @@ class AssemblePlugin implements Plugin<Project> {
         }.join("")
 
         project.tasks.create("dockerBuild${finalSuffix}", DockerBuildTask, {
-            description = "Docker image with name '${imageName}'"
+            description = "Docker image with name '${inputImageName}'"
             registry = dockerExtension.registry
             outputDirPath = ext.outputDirPath
             dockerCmd = dockerExtension.dockerCmd
-            imageName
+            imageName = inputImageName
             dockerfileDir = dockerfileDirPath
         })
 
         project.tasks.create("dockerPush${finalSuffix}", DockerPushTask, {
-            description = "Push the docker image named '${imageName}'"
+            description = "Push the docker image named '${inputImageName}'"
             registry = dockerExtension.registry
             username = dockerExtension.username
             password = dockerExtension.password
             dockerCmd = dockerExtension.dockerCmd
-            imageName
+            imageName = inputImageName
         })
     }
 }
