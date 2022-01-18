@@ -1,7 +1,6 @@
 package com.ingot.plugin.assemble.task
 
-import com.ingot.plugin.assemble.extension.AssembleExtension
-import com.ingot.plugin.assemble.extension.DockerExtension
+
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -16,32 +15,36 @@ import org.gradle.api.tasks.TaskAction
  * <p>Time         : 9:23 AM.</p>
  */
 class DockerBuildTask extends DefaultTask {
+    /**
+     * docker registry
+     */
+    private String registry
+    /**
+     * 工程打包输出目录路径
+     */
+    private String outputDirPath
+    /**
+     * docker命令path
+     */
+    private String dockerCmd
+    /**
+     * docker文件目录path
+     */
+    private String dockerfileDir
+    /**
+     * build name
+     */
+    private String name
 
     DockerBuildTask() {
         setGroup("ingot")
-        setDescription("Ingot make docker image")
     }
 
     @TaskAction
     dockerImage() {
-        AssembleExtension assembleExtension = AssembleExtension.getBuildExtension(project)
-        DockerExtension dockerExtension = assembleExtension.docker
-
-        String outputDirPath = assembleExtension.outputDirPath
-        String dockerfileDir = dockerExtension.dockerfileDir
-        String dockerCmd = dockerExtension.dockerCmd
-
-        if (Utils.isEmpty(dockerfileDir)) {
-            dockerfileDir = Utils.defaultDockerFileDirPath(project)
-        }
-
-        if (Utils.isEmpty(outputDirPath)) {
-            outputDirPath = Utils.defaultOutputDirPath(project)
-        }
-
-        if (Utils.isEmpty(dockerCmd)) {
-            dockerCmd = "docker"
-        }
+        dockerfileDir = Utils.getDockerFileDirPathOrDefault(project, dockerfileDir)
+        outputDirPath = Utils.getOutputDirPathOrDefault(project, outputDirPath)
+        dockerCmd = Utils.getDockerCmdOrDefault(dockerCmd)
 
         // build dockerfile 的目录
         String buildDirPath = Utils.projectOutputPath(outputDirPath, project)
@@ -57,9 +60,9 @@ class DockerBuildTask extends DefaultTask {
             from dockerfileDir
             into buildDirPath
         }
-        project.logger.lifecycle(">>> dockerfile copyTo: " + outputDirPath)
+        project.logger.lifecycle(">>> dockerfile copyTo: " + buildDirPath)
 
-        String tag = Utils.getTag(dockerExtension, project)
+        String tag = Utils.getTag(project, name, registry)
 
         project.exec {
             workingDir buildDirPath
@@ -70,5 +73,25 @@ class DockerBuildTask extends DefaultTask {
 
         project.logger.lifecycle(">>> docker build success, tag=" + tag)
 
+    }
+
+    void setRegistry(String registry) {
+        this.registry = registry
+    }
+
+    void setOutputDirPath(String outputDirPath) {
+        this.outputDirPath = outputDirPath
+    }
+
+    void setDockerCmd(String dockerCmd) {
+        this.dockerCmd = dockerCmd
+    }
+
+    void setDockerfileDir(String dockerfileDir) {
+        this.dockerfileDir = dockerfileDir
+    }
+
+    void setName(String name) {
+        this.name = name
     }
 }

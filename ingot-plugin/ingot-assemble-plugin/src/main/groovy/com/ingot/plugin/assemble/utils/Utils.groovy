@@ -1,6 +1,6 @@
 package com.ingot.plugin.assemble.utils
 
-import com.ingot.plugin.assemble.extension.DockerExtension
+
 import org.gradle.api.Project
 
 /**
@@ -13,6 +13,31 @@ class Utils {
 
     static boolean isEmpty(String str) {
         return str == null || str.length() == 0
+    }
+
+    static boolean isNotEmpty(String str) {
+        return !isEmpty(str)
+    }
+
+    static String getOutputDirPathOrDefault(Project project, String target) {
+        if (isEmpty(target)) {
+            return defaultOutputDirPath(project)
+        }
+        return target
+    }
+
+    static String getDockerFileDirPathOrDefault(Project project, String target) {
+        if (isEmpty(target)) {
+            return defaultDockerFileDirPath(project)
+        }
+        return target
+    }
+
+    static String getDockerCmdOrDefault(String target) {
+        if (isEmpty(target)) {
+            return "docker"
+        }
+        return target
     }
 
     /**
@@ -45,13 +70,12 @@ class Utils {
 
     /**
      * 获取Tag
-     * @param dockerExtension
      * @param project
+     * @param name
+     * @param registry
      * @return
      */
-    static String getTag(DockerExtension dockerExtension, Project project) {
-        String name = dockerExtension.name
-        String registry = dockerExtension.registry
+    static String getTag(Project project, String name, String registry) {
         if (isEmpty(name)) {
             name = project.name
             name = String.join("/", name.split("-", 2))

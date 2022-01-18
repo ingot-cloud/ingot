@@ -1,10 +1,13 @@
 package com.ingot.plugin.assemble
 
 import com.ingot.plugin.assemble.extension.AssembleExtension
+import com.ingot.plugin.assemble.extension.DockerExtension
+import com.ingot.plugin.assemble.extension.Tag
 import com.ingot.plugin.assemble.task.AssembleTask
 import com.ingot.plugin.assemble.task.CleanTask
 import com.ingot.plugin.assemble.task.DockerBuildTask
 import com.ingot.plugin.assemble.task.DockerPushTask
+import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -19,7 +22,7 @@ class AssemblePlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         // create extension
-        project.extensions.create("ingotAssemble", AssembleExtension, project.objects)
+        AssembleExtension ext = project.extensions.create("ingotAssemble", AssembleExtension, project.objects)
 
         project.afterEvaluate {
             // clean task
@@ -29,10 +32,50 @@ class AssemblePlugin implements Plugin<Project> {
             project.tasks.create("ingotAssemble", AssembleTask) {
                 dependsOn project.tasks.getByName("assemble")
             }
-            // 生成 docker image
-            project.tasks.create("dockerBuild", DockerBuildTask)
-            // push task
-            project.tasks.create("dockerPush", DockerPushTask)
+
+            DockerExtension dockerExtension = ext.docker
+            // docker task
+            if (Utils.isNotEmpty(dockerExtension.name)) {
+                createDockerTask(project, ext, dockerExtension.name, dockerExtension.name, dockerExtension.dockerfileDir)
+            }
+
+            Map<String, Tag> tags = dockerExtension.tags
+            if (tags != null && !tags.isEmpty()) {
+                tags.each { tagName, item ->
+                    createDockerTask(project, ext, tagName, item.name, item.dockerfileDir)
+                }
+            }
         }
+    }
+
+    static void createDockerTask(Project project,
+                                 AssembleExtension ext,
+                                 String taskNameSuffix,
+                                 String imageName,
+                                 String dockerfileDirPath) {
+        DockerExtension dockerExtension = ext.docker
+
+        String[] names = taskNameSuffix.split("/")
+        String finalSuffix = names.collect { name ->
+            name.capitalize()
+        }.join("")
+
+        project.tasks.create("dockerBuild${finalSuffix}", DockerBuildTask, {
+            description = "Docker image with name '${imageName}'"
+            registry = dockerExtension.registry
+            outputDirPath = ext.outputDirPath
+            dockerCmd = dockerExtension.dockerCmd
+            name = imageName
+            dockerfileDir = dockerfileDirPath
+        })
+
+        project.tasks.create("dockerPush${finalSuffix}", DockerPushTask, {
+            description = "Push the docker image named '${imageName}'"
+            registry = dockerExtension.registry
+            username = dockerExtension.username
+            password = dockerExtension.password
+            dockerCmd = dockerExtension.dockerCmd
+            name = imageName
+        })
     }
 }

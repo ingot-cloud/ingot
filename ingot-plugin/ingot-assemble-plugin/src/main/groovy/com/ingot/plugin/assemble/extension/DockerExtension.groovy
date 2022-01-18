@@ -14,33 +14,37 @@ class DockerExtension {
     /**
      * docker命令path
      */
-    String dockerCmd
-
-    /**
-     * dockerfile 存储目录
-     */
-    String dockerfileDir
+    String dockerCmd = "docker"
 
     /**
      * 注册中心地址
      */
-    String registry
+    String registry = ""
 
     /**
      * 注册中心登录用户名
      */
-    String username
+    String username = ""
 
     /**
      * 注册中心登录密码
      */
-    String password
+    String password = ""
+
+    /**
+     * dockerfile 存储目录
+     */
+    String dockerfileDir = ""
 
     /**
      * 存储库名称
      */
-    String name
+    String name = ""
 
+    /**
+     * 多个Tag打包
+     */
+    Map<String, Tag> tags = new HashMap<>()
 
     DockerExtension() {}
 }
