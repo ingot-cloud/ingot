@@ -75,6 +75,26 @@ class DockerBuildTask extends DefaultTask {
 
     }
 
+    String getRegistry() {
+        return registry
+    }
+
+    String getOutputDirPath() {
+        return outputDirPath
+    }
+
+    String getDockerCmd() {
+        return dockerCmd
+    }
+
+    String getDockerfileDir() {
+        return dockerfileDir
+    }
+
+    String getName() {
+        return name
+    }
+
     void setRegistry(String registry) {
         this.registry = registry
     }

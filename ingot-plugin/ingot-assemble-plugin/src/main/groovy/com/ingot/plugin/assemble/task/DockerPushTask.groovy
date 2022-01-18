@@ -70,6 +70,26 @@ class DockerPushTask extends DefaultTask {
 
     }
 
+    String getRegistry() {
+        return registry
+    }
+
+    String getDockerCmd() {
+        return dockerCmd
+    }
+
+    String getUsername() {
+        return username
+    }
+
+    String getPassword() {
+        return password
+    }
+
+    String getName() {
+        return name
+    }
+
     void setRegistry(String registry) {
         this.registry = registry
     }
