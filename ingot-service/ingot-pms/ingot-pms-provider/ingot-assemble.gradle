@@ -3,6 +3,8 @@ apply plugin: 'com.ingot.plugin.assemble'
 ingotAssemble {
     docker {
         registry "docker-registry.wangchao.im"
+        username JY_DOCKER_REGISTRY_USERNAME
+        password JY_DOCKER_REGISTRY_PASSWORD
         name "ingot/pms"
     }
 }
