@@ -39,7 +39,7 @@ public final class OAuth2ErrorUtils {
      * @param code error code
      */
     public static void throwAuthenticationException(OAuth2ErrorCodesExtension code) {
-        throwAuthenticationException(code.code(), code.message());
+        throwAuthenticationException(code.getCode(), code.getText());
     }
 
     /**

@@ -36,7 +36,7 @@ public class R<T> implements Serializable {
      * 响应码
      */
     @ApiModelProperty(value = "code：成功=0200")
-    private String code = BaseStatusCode.OK.code();
+    private String code = BaseStatusCode.OK.getCode();
     /**
      * 消息
      */
@@ -62,7 +62,7 @@ public class R<T> implements Serializable {
     }
 
     public R(StatusCode code) {
-        this(code.code(), code.message());
+        this(code.getCode(), code.getText());
     }
 
     public R(T data, StatusCode code) {
@@ -102,7 +102,7 @@ public class R<T> implements Serializable {
      */
     @JsonIgnore
     public boolean isSuccess() {
-        return StrUtil.equals(getCode(), BaseStatusCode.OK.code());
+        return StrUtil.equals(getCode(), BaseStatusCode.OK.getCode());
     }
 
     /**
@@ -130,7 +130,7 @@ public class R<T> implements Serializable {
      * 500, custom message
      */
     public static <T> R<T> error500(String message) {
-        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
@@ -144,7 +144,7 @@ public class R<T> implements Serializable {
      * 响应失败 500，附带自定义响应体
      */
     public static <T> R<T> error500WithData(T data, String message) {
-        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
@@ -165,7 +165,7 @@ public class R<T> implements Serializable {
      * 响应失败
      */
     public static <T> R<T> errorF(StatusCode code, Object... messages) {
-        return new R<>(code.code(), String.format(code.message(), messages));
+        return new R<>(code.getCode(), String.format(code.getText(), messages));
     }
 
     /**

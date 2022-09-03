@@ -22,13 +22,13 @@ public class BizException extends RuntimeException {
     }
 
     public BizException(StatusCode statusCode){
-        super(statusCode.message());
-        this.code = statusCode.code();
+        super(statusCode.getText());
+        this.code = statusCode.getCode();
     }
 
     public BizException(StatusCode responseCode, Object... args){
-        super(String.format(responseCode.message(), args));
-        this.code = responseCode.code();
+        super(String.format(responseCode.getText(), args));
+        this.code = responseCode.getCode();
     }
 
     public String getCode(){

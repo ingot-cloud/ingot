@@ -49,7 +49,7 @@ public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationE
         log.debug("[IngotBearerTokenAuthenticationEntryPoint] commence error", authException);
 
         HttpStatus status = HttpStatus.UNAUTHORIZED;
-        R<Map<String, String>> body = new R<>(BaseStatusCode.UNAUTHORIZED.code(),
+        R<Map<String, String>> body = new R<>(BaseStatusCode.UNAUTHORIZED.getCode(),
                 authException.getLocalizedMessage());
         Map<String, String> parameters = new LinkedHashMap<>();
 

@@ -79,14 +79,14 @@ public class RemoteIngotUserDetailsService implements IngotUserDetailsService {
 
     private IngotUser loadDetail(R<UserDetailsResponse> response) {
         if (response == null) {
-            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
+            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
         }
 
         OAuth2ErrorUtils.checkResponse(response);
 
         UserDetailsResponse data = response.getData();
         if (data == null) {
-            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.message());
+            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
         }
 
         List<String> userAuthorities = data.getRoles();

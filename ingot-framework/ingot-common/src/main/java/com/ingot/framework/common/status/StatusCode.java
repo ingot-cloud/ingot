@@ -11,11 +11,11 @@ public interface StatusCode {
      * 状态码
      * @return String
      */
-    String code();
+    String getCode();
 
     /**
-     * 消息
+     * 状态文本
      * @return String
      */
-    String message();
+    String getText();
 }

@@ -38,7 +38,7 @@ public class ResponseWrapper {
      * 500, custom message
      */
     public <T> R<T> error500(String message) {
-        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
@@ -52,7 +52,7 @@ public class ResponseWrapper {
      * 响应失败 500，附带自定义响应体
      */
     public <T> R<T> error500WithData(T data, String message) {
-        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.code(), message);
+        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
@@ -73,7 +73,7 @@ public class ResponseWrapper {
      * 响应失败
      */
     public <T> R<T> errorF(StatusCode code, Object... messages) {
-        return new R<>(code.code(), String.format(code.message(), messages));
+        return new R<>(code.getCode(), String.format(code.getText(), messages));
     }
 
     /**

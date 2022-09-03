@@ -117,7 +117,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         }
         if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
             OAuth2ErrorUtils.throwAuthenticationException(
-                    OAuth2ErrorCodesExtension.USER_STATUS.code(), "用户" + user.getStatus().getDesc());
+                    OAuth2ErrorCodesExtension.USER_STATUS.getCode(), "用户" + user.getStatus().getDesc());
         }
     }
 }

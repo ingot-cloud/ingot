@@ -42,7 +42,7 @@ public class IngotOAuth2AccessTokenResponseMapConverter
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put(R.CODE, BaseStatusCode.OK.code());
+        result.put(R.CODE, BaseStatusCode.OK.getCode());
         result.put(R.DATA, parameters);
         return result;
     }

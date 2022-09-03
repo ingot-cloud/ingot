@@ -52,7 +52,7 @@ public class IngotAuthenticationFailureHandler implements AuthenticationFailureH
                 error = new OAuth2Error(error.getErrorCode(), error.getErrorCode(), error.getUri());
             }
         } else {
-            error = new OAuth2Error(BaseStatusCode.BAD_REQUEST.code(),
+            error = new OAuth2Error(BaseStatusCode.BAD_REQUEST.getCode(),
                     exception.getLocalizedMessage(), "");
         }
 

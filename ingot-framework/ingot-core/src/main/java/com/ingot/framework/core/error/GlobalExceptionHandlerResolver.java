@@ -40,7 +40,7 @@ public class GlobalExceptionHandlerResolver {
     @ResponseBody
     public R<?> exception(Exception e) {
         log.error("Exception - message={}, e={}", e.getLocalizedMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.code(),
+        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
 
@@ -57,7 +57,7 @@ public class GlobalExceptionHandlerResolver {
     @ResponseBody
     public R<?> illegalArgumentException(IllegalArgumentException e) {
         log.error("IllegalArgumentException - message={}, e={}", e.getLocalizedMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.code(),
+        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
 

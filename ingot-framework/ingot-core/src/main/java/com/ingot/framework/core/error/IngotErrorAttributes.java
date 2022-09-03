@@ -57,8 +57,8 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
             finalAttributes.put(R.CODE, ((BizException) error).getCode());
             finalAttributes.put(R.MESSAGE, error.getMessage());
         } else {
-            finalAttributes.put(R.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.code());
-            finalAttributes.put(R.MESSAGE, BaseStatusCode.INTERNAL_SERVER_ERROR.message());
+            finalAttributes.put(R.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode());
+            finalAttributes.put(R.MESSAGE, BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
         }
 
 
