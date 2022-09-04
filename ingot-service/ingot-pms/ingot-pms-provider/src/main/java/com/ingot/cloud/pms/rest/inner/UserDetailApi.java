@@ -7,7 +7,7 @@ import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

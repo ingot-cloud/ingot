@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

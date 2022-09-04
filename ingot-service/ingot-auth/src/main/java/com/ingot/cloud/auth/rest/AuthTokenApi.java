@@ -8,7 +8,7 @@ import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;

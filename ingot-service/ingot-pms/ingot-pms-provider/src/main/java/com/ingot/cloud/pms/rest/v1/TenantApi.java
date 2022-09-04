@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

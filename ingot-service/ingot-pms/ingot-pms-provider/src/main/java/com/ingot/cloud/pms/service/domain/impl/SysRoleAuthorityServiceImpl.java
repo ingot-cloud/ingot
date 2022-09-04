@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.model.dto.common.RelationDto;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

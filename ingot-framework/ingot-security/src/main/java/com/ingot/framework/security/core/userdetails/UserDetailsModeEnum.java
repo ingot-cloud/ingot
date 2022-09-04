@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Getter;
 
 /**

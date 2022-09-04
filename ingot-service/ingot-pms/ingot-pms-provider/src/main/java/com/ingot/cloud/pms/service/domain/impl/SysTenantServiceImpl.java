@@ -12,7 +12,7 @@ import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**

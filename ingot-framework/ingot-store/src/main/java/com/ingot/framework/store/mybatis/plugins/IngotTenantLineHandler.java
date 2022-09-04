@@ -3,7 +3,7 @@ package com.ingot.framework.store.mybatis.plugins;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;

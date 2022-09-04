@@ -32,7 +32,7 @@ import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantEnv;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

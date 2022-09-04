@@ -23,7 +23,7 @@ import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorCodesExtension;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**

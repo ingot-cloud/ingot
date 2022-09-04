@@ -9,7 +9,7 @@ import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;

@@ -19,7 +19,7 @@ import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
