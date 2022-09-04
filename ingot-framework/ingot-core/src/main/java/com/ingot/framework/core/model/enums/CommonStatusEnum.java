@@ -2,8 +2,8 @@ package com.ingot.framework.core.model.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : CommonStatusEnum.</p>
@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>Time         : 12:16 下午.</p>
  */
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum CommonStatusEnum {
     ENABLE("0", "正常可用"),
     LOCK("9", "已锁定");

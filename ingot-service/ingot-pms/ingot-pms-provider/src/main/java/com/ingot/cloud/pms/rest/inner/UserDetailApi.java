@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Permit(mode = PermitMode.INNER)
 @RestController
 @RequestMapping(value = "/user/detail")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserDetailApi extends BaseController {
     private final UserDetailService userDetailService;
 

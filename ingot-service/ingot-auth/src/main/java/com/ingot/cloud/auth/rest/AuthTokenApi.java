@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/token")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthTokenApi extends BaseController {
     private final OAuth2AuthorizationService oAuth2AuthorizationService;
     private final AuthorizationCacheService authorizationCacheService;

@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.provider.authentication.BearerTokenEx
  * <p>Time         : 5:14 下午.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotBearerTokenExtractor extends BearerTokenExtractor {
     private final ResourcePermitService resourcePermitService;
 

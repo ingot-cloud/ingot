@@ -19,7 +19,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
  * <p>Time         : 下午2:59.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final HandlerExceptionResolver handlerExceptionResolver;
 

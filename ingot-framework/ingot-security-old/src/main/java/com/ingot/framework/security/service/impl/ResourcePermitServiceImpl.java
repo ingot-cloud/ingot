@@ -20,7 +20,7 @@ import org.springframework.util.AntPathMatcher;
  */
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ResourcePermitServiceImpl implements ResourcePermitService {
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
     private final IngotPermitUrlProperties ingotPermitUrlProperties;

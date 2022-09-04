@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
     private final SysRoleDeptService sysRoleDeptService;
 

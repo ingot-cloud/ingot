@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority> implements SysRoleAuthorityService {
     private final AuthorityTrans authorityTrans;
 

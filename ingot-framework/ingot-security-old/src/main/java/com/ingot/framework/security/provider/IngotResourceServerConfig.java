@@ -22,7 +22,7 @@
 // * <p>Time         : 下午9:55.</p>
 // */
 //@Slf4j
-//@AllArgsConstructor
+//@RequiredArgsConstructor
 //public class IngotResourceServerConfig extends ResourceServerConfigurerAdapter {
 //    private final AccessDeniedHandler ingotAccessDeniedHandler;
 //    private final OAuth2WebSecurityExpressionHandler ingotSecurityExpressionHandler;

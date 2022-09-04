@@ -17,7 +17,7 @@
 // * <p>Time         : 10:53 AM.</p>
 // */
 //@Slf4j
-//@AllArgsConstructor
+//@RequiredArgsConstructor
 //public class SecurityFilterConfigProvider implements SecurityConfigProvider {
 //    private final ResourcePermitService resourcePermitService;
 //    private final TokenService tokenService;

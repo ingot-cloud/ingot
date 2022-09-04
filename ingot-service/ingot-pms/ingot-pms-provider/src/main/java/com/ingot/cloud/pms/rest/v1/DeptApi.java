@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1/dept")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DeptApi extends BaseController {
     private final SysDeptService sysDeptService;
 

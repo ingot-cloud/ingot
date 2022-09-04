@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
  * <p>Time         : 5:27 下午.</p>
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;

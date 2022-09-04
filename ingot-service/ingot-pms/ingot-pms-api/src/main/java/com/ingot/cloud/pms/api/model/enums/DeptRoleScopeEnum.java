@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>Time         : 3:08 下午.</p>
  */
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum DeptRoleScopeEnum {
     /**
      * 当前部门所有角色

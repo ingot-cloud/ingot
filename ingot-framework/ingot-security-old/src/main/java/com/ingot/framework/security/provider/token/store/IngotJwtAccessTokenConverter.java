@@ -23,7 +23,7 @@ import org.springframework.util.StringUtils;
  * <p>Date         : 2019-07-26.</p>
  * <p>Time         : 14:33.</p>
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotJwtAccessTokenConverter extends JwtAccessTokenConverter {
     private final ResourceServerProperties resource;
     private final List<JwtAccessTokenConverterConfigurer> configurers;

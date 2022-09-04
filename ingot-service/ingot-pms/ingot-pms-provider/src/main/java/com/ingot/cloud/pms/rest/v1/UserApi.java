@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1/user")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserApi extends BaseController {
     private final SysUserService sysUserService;
 

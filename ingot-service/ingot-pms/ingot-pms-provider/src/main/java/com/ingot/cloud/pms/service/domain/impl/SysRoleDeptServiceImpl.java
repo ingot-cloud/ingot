@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDeptMapper, SysRoleDept> implements SysRoleDeptService {
     private final DeptTrans deptTrans;
 

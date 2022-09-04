@@ -3,7 +3,7 @@ package com.ingot.framework.core.validation.service.impl;
 import java.util.Locale;
 
 import com.ingot.framework.core.validation.service.I18nService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
@@ -14,7 +14,7 @@ import org.springframework.lang.Nullable;
  * <p>Date         : 2021/5/28.</p>
  * <p>Time         : 8:39 上午.</p>
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class I18ServiceImpl implements I18nService {
     private final MessageSource messageSource;
     private static final Object[] EMPTY = new Object[0];

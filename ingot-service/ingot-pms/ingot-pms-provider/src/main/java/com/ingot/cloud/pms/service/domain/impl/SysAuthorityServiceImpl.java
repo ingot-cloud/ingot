@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final AssertI18nService assertI18nService;

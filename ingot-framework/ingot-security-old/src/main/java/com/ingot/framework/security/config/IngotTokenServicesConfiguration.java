@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnProperty(name = {
         "security.oauth2.resource.jwt.key-uri"
 })
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotTokenServicesConfiguration {
 
 }

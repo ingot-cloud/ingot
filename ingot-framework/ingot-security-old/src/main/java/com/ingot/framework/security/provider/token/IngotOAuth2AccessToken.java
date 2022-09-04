@@ -16,7 +16,7 @@ import org.springframework.security.oauth2.common.OAuth2RefreshToken;
  * <p>Date         : 2020/11/26.</p>
  * <p>Time         : 5:17 下午.</p>
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @JsonSerialize(using = IngotOAuth2AccessTokenSerializer.class)
 public class IngotOAuth2AccessToken implements OAuth2AccessToken {
     /**

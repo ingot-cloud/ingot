@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
     private final SysDeptService sysDeptService;
     private final SysRoleAuthorityService sysRoleAuthorityService;

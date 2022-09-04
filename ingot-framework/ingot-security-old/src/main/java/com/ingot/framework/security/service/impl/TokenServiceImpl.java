@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @ConditionalOnBean(TokenStore.class)
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
     private final IngotJwtTokenStore tokenStore;
     private final AuthenticationService authenticationService;

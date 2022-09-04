@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
  * <p>Time         : 11:23.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RefreshJwtKeyEventListener implements ApplicationListener<RefreshJwtKeyApplicationEvent> {
     private final JwtAccessTokenConverter jwtTokenEnhancer;
     private final JwtKeyService jwtKeyService;

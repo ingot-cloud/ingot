@@ -46,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
     private final SysRoleService sysRoleService;
     private final SysRoleUserService sysRoleUserService;

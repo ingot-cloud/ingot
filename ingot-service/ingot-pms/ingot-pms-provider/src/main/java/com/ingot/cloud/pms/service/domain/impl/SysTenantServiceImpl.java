@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
  * @since 2020-11-20
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
     private final AssertI18nService assertI18nService;
 

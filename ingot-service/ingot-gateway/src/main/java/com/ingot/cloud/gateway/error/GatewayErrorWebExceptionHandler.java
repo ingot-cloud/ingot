@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Order(-1)
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler {
     private final ObjectMapper objectMapper;
 

@@ -14,7 +14,7 @@ import net.sf.jsqlparser.expression.NullValue;
  * <p>Date         : 2021/5/18.</p>
  * <p>Time         : 2:50 下午.</p>
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotTenantLineHandler implements TenantLineHandler {
     private final TenantProperties tenantProperties;
 

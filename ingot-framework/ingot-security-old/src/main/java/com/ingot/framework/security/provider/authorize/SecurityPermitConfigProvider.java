@@ -15,7 +15,7 @@
 // * <p>Time         : 上午9:46.</p>
 // */
 //@Slf4j
-//@AllArgsConstructor
+//@RequiredArgsConstructor
 //public class SecurityPermitConfigProvider implements SecurityConfigProvider {
 //    private final String applicationName;
 //    private final ResourcePermitService resourcePermitService;

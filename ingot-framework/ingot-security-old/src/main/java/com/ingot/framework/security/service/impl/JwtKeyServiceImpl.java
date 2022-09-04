@@ -25,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtKeyServiceImpl implements JwtKeyService {
     private final ResourceServerProperties resource;
     private final List<JwtAccessTokenConverterRestTemplateCustomizer> customizers;

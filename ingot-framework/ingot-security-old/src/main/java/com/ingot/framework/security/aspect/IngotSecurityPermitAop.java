@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Aspect
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class IngotSecurityPermitAop {
     private final HttpServletRequest request;
 

@@ -13,7 +13,7 @@
 // * <p>Time         : 11:37 AM.</p>
 // */
 //@Slf4j
-//@AllArgsConstructor
+//@RequiredArgsConstructor
 //public class ActuatorSecurityConfigProvider implements SecurityConfigProvider {
 //    private final WebEndpointProperties webEndpointProperties;
 //

@@ -2,8 +2,8 @@ package com.ingot.framework.core.model.enums;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : UserDetailsModeEnum.</p>
@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>Time         : 4:01 下午.</p>
  */
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum UserDetailsModeEnum {
     PASSWORD("password", "密码登录"),
     SOCIAL("social", "社交登录");

@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping(value = "/v1/tenant")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TenantApi extends BaseController {
     private final SysTenantService sysTenantService;
 

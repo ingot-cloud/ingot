@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>Time         : 4:01 下午.</p>
  */
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum UserDetailsModeEnum {
     PASSWORD("password", "密码登录"),
     SOCIAL("social", "社交登录");

@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping(value = "/v1/menu")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MenuApi extends BaseController {
     private final SysMenuService sysMenuService;
 

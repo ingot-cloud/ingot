@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping(value = "/v1/client")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ClientApi extends BaseController {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 

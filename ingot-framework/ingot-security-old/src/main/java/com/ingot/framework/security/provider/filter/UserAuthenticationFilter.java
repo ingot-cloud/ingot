@@ -23,7 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p>Time         : 2:42 PM.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final ResourcePermitService resourcePermitService;
     private final TokenService tokenService;

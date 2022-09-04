@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1/role")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RoleApi extends BaseController {
     private final SysRoleService sysRoleService;
     private final SysRoleAuthorityService sysRoleAuthorityService;

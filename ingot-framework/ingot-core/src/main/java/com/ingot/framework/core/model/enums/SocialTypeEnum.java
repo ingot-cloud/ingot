@@ -2,8 +2,8 @@ package com.ingot.framework.core.model.enums;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.SocialConstants;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : SocialTypeEnum.</p>
@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>Time         : 4:20 下午.</p>
  */
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum SocialTypeEnum {
     SMS("sms", SocialConstants.BEAN_PHONE, "短信登录"),
     WECHAT("wechat", SocialConstants.BEAN_WECHAT, "微信登录");

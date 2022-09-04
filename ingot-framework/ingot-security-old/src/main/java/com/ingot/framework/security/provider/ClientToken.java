@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
  * <p>Time         : 上午11:28.</p>
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ClientToken {
     private final OAuth2ClientContext oAuth2ClientContext;
     private final OAuth2RestTemplate ingotOAuth2RestTemplate;

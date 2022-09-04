@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping(value = "/v1/authority")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthorityApi extends BaseController {
     private final SysAuthorityService sysAuthorityService;
 
