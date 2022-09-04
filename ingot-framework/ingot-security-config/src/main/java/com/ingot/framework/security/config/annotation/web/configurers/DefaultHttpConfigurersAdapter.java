@@ -2,7 +2,7 @@ package com.ingot.framework.security.config.annotation.web.configurers;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 /**
@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
  * <p>Date         : 2021/9/15.</p>
  * <p>Time         : 5:38 下午.</p>
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DefaultHttpConfigurersAdapter implements IngotHttpConfigurersAdapter{
     private final List<IngotHttpConfigurer> httpConfigurers;
 
