@@ -1,9 +1,11 @@
 package com.ingot.framework.security.core.userdetails;
 
-import cn.hutool.core.util.StrUtil;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.RequiredArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : UserDetailsModeEnum.</p>
@@ -19,24 +21,22 @@ public enum UserDetailsModeEnum {
 
     @JsonValue
     private final String value;
-    private final String desc;
+    private final String text;
 
-    public static String getDesc(String value){
-        UserDetailsModeEnum en = getEnum(value);
-        return en != null ? en.desc : null;
+    private static final Map<String, UserDetailsModeEnum> valueMap = new HashMap<>();
+
+    static {
+        for (UserDetailsModeEnum item : UserDetailsModeEnum.values()) {
+            valueMap.put(item.getValue(), item);
+        }
     }
 
-    public static UserDetailsModeEnum getEnum(String value){
-        if (StrUtil.isEmpty(value)){
-            return null;
-        }
-        UserDetailsModeEnum[] arr = UserDetailsModeEnum.values();
-        for (UserDetailsModeEnum item: arr){
-            if (StrUtil.equals(item.value, value)){
-                return item;
-            }
-        }
+    public static String getDesc(String value) {
+        UserDetailsModeEnum en = get(value);
+        return en != null ? en.text : null;
+    }
 
-        return null;
+    public static UserDetailsModeEnum get(String value) {
+        return valueMap.get(value);
     }
 }

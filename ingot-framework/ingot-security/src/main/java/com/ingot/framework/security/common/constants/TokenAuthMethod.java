@@ -1,8 +1,10 @@
 package com.ingot.framework.security.common.constants;
 
-import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : TokenAuthMethod.</p>
@@ -11,6 +13,7 @@ import lombok.Getter;
  * <p>Time         : 10:15 上午.</p>
  */
 @Getter
+@RequiredArgsConstructor
 public enum TokenAuthMethod {
     /**
      * 登录类型，默认标准类型，单点登录不互踢
@@ -21,24 +24,17 @@ public enum TokenAuthMethod {
      */
     UNIQUE("1");
 
-
     private final String value;
 
-    TokenAuthMethod(String value) {
-        this.value = value;
+    private static final Map<String, TokenAuthMethod> valueMap = new HashMap<>();
+
+    static {
+        for (TokenAuthMethod item : TokenAuthMethod.values()) {
+            valueMap.put(item.getValue(), item);
+        }
     }
 
     public static TokenAuthMethod getEnum(String value) {
-        if (StrUtil.isEmpty(value)) {
-            return null;
-        }
-        TokenAuthMethod[] arr = TokenAuthMethod.values();
-        for (TokenAuthMethod item : arr) {
-            if (StrUtil.equals(item.value, value)) {
-                return item;
-            }
-        }
-
-        return null;
+        return valueMap.get(value);
     }
 }

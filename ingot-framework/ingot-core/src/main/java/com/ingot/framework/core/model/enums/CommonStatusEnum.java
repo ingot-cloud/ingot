@@ -27,5 +27,5 @@ public enum CommonStatusEnum {
     /**
      * 描述
      */
-    private final String desc;
+    private final String text;
 }

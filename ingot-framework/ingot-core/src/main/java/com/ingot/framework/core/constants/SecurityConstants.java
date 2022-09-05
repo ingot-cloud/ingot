@@ -1,8 +1,5 @@
 package com.ingot.framework.core.constants;
 
-import cn.hutool.core.util.StrUtil;
-import lombok.Getter;
-
 /**
  * <p>Description  : SecurityConstants.</p>
  * <p>Author       : wangchao.</p>
@@ -54,43 +51,6 @@ public interface SecurityConstants {
         String KEY_FIELD_AUTH_TYPE = "authType";
 
         String KEY_JTI = "jti";
-    }
-
-    /**
-     * Token 登录类型
-     */
-    @Getter
-    enum TokenAuthType {
-        /**
-         * 登录类型，唯一类型，当前账号只能在一个地方登录
-         */
-        UNIQUE("unique", "unq"),
-        /**
-         * 登录类型，默认标准类型，单点登录不互踢
-         */
-        STANDARD("standard", "std");
-
-        private final String type;
-        private final String shortType;
-
-        TokenAuthType(String type, String shortType) {
-            this.type = type;
-            this.shortType = shortType;
-        }
-
-        public static TokenAuthType get(String type) {
-            if (StrUtil.isEmpty(type)) {
-                return null;
-            }
-            TokenAuthType[] arr = TokenAuthType.values();
-            for (TokenAuthType item : arr) {
-                if (StrUtil.equals(item.type, type)) {
-                    return item;
-                }
-            }
-
-            return null;
-        }
     }
 
     /**

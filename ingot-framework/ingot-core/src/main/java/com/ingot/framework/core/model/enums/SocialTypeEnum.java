@@ -1,6 +1,8 @@
 package com.ingot.framework.core.model.enums;
 
-import cn.hutool.core.util.StrUtil;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.ingot.framework.core.constants.SocialConstants;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,24 +21,22 @@ public enum SocialTypeEnum {
 
     private final String value;
     private final String beanName;
-    private final String desc;
+    private final String text;
 
-    public static String getDesc(String value) {
-        SocialTypeEnum en = getEnum(value);
-        return en != null ? en.desc : null;
+    private static final Map<String, SocialTypeEnum> valueMap = new HashMap<>();
+
+    static {
+        for (SocialTypeEnum item : SocialTypeEnum.values()) {
+            valueMap.put(item.getValue(), item);
+        }
     }
 
-    public static SocialTypeEnum getEnum(String value) {
-        if (StrUtil.isEmpty(value)) {
-            return null;
-        }
-        SocialTypeEnum[] arr = SocialTypeEnum.values();
-        for (SocialTypeEnum item : arr) {
-            if (StrUtil.equals(item.value, value)) {
-                return item;
-            }
-        }
+    public static SocialTypeEnum get(String value) {
+        return valueMap.get(value);
+    }
 
-        return null;
+    public static String getText(String value) {
+        SocialTypeEnum en = get(value);
+        return en != null ? en.text : null;
     }
 }

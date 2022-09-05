@@ -39,7 +39,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public R<?> exception(Exception e) {
-        log.error("Exception - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - Exception - message={}, e={}",
+                e.getLocalizedMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
@@ -48,7 +49,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public R<?> baseExceptionHandler(BizException e) {
-        log.error("BaseException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - BizException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         return ResponseWrapper.error(e.getCode(), e.getLocalizedMessage());
     }
 
@@ -56,7 +58,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public R<?> illegalArgumentException(IllegalArgumentException e) {
-        log.error("IllegalArgumentException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - IllegalArgumentException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
@@ -65,7 +68,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public R<?> bindException(BindException e) {
-        log.error("BindException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - BindException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         List<ObjectError> list = e.getBindingResult().getAllErrors();
         String message = list.stream().map(ObjectError::getDefaultMessage)
                 .reduce((l, r) -> l + ";" + r)
@@ -77,7 +81,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public R<?> methodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.error("MethodArgumentNotValidException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - MethodArgumentNotValidException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         List<ObjectError> list = e.getBindingResult().getAllErrors();
         String message = list.stream().map(ObjectError::getDefaultMessage)
                 .reduce((l, r) -> l + ";" + r)
@@ -89,7 +94,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public R<?> constraintViolationException(ConstraintViolationException e) {
-        log.error("ConstraintViolationException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - ConstraintViolationException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         String message = constraintViolations.stream()
                 .map(o -> o.getMessage())
@@ -102,7 +108,8 @@ public class GlobalExceptionHandlerResolver {
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     @ResponseBody
     public R<?> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        log.error("HttpRequestMethodNotSupportedException - message={}, e={}", e.getLocalizedMessage(), e);
+        log.error("[GlobalExceptionHandlerResolver] - HttpRequestMethodNotSupportedException - message={}, e={}",
+                e.getLocalizedMessage(), e);
         return ResponseWrapper.errorF(BaseStatusCode.METHOD_NOT_ALLOWED, e.getLocalizedMessage());
     }
 }

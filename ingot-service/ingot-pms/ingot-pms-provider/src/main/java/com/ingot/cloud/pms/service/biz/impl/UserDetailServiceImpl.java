@@ -93,7 +93,7 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     private SysUser withSocialMode(UserDetailsRequest params) {
         String[] extract = SocialUtils.extract(params.getUniqueCode());
-        SocialTypeEnum socialType = SocialTypeEnum.getEnum(extract[0]);
+        SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);
         if (socialType == null) {
             OAuth2ErrorUtils.throwInvalidRequest("非法社交类型");
         }
@@ -117,7 +117,7 @@ public class UserDetailServiceImpl implements UserDetailService {
         }
         if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
             OAuth2ErrorUtils.throwAuthenticationException(
-                    OAuth2ErrorCodesExtension.USER_STATUS.getCode(), "用户" + user.getStatus().getDesc());
+                    OAuth2ErrorCodesExtension.USER_STATUS.getCode(), "用户" + user.getStatus().getText());
         }
     }
 }
