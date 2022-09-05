@@ -13,41 +13,41 @@ public class BaseController {
      * 响应成功
      */
     public <T> R<T> ok() {
-        return ResponseWrapper.ok();
+        return R.ok();
     }
 
     /**
      * 响应成功附带 data
      */
     public <T> R<T> ok(T data) {
-        return ResponseWrapper.ok(data);
+        return R.ok(data);
     }
 
     /**
      * 500 error
      */
     public <T> R<T> error() {
-        return ResponseWrapper.error500();
+        return R.error500();
     }
 
     /**
      * 500, custom message
      */
     public <T> R<T> error(String message) {
-        return ResponseWrapper.error500(message);
+        return R.error500(message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
     public <T> R<T> error(StatusCode code) {
-        return ResponseWrapper.error(code);
+        return R.error(code);
     }
 
     /**
      * 响应失败
      */
     public <T> R<T> error(String code, String message) {
-        return ResponseWrapper.error(code, message);
+        return R.error(code, message);
     }
 }

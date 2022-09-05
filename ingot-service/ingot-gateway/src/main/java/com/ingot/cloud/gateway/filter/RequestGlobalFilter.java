@@ -23,7 +23,7 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("RequestGlobalFilter - url={}", exchange.getRequest().getPath());
+        log.info("[Filter] - RequestGlobalFilter - path={}", exchange.getRequest().getPath());
 
         // 清洗 SecurityConstants.HEADER_FROM
         ServerHttpRequest request = exchange.getRequest().mutate()

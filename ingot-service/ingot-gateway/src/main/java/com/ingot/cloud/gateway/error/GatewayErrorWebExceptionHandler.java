@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.R;
-import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -42,12 +41,12 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         }
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        R<?> r = ResponseWrapper.error500(ex.getMessage());
+        R<?> r = R.error500(ex.getMessage());
         if (ex instanceof ResponseStatusException) {
             HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
-                r = ResponseWrapper.error(
+                r = R.error(
                         BaseStatusCode.REQUEST_FALLBACK.getCode(), ex.getMessage());
             }
         }

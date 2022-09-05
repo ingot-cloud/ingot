@@ -136,14 +136,14 @@ public class R<T> implements Serializable {
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public static <T> R<T> error500WithData(T data) {
+    public static <T> R<T> error500(T data) {
         return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
-    public static <T> R<T> error500WithData(T data, String message) {
+    public static <T> R<T> error500(T data, String message) {
         return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
@@ -171,14 +171,14 @@ public class R<T> implements Serializable {
     /**
      * 响应失败，附带自定义响应体
      */
-    public static <T> R<T> errorWithData(T data, StatusCode code) {
+    public static <T> R<T> error(T data, StatusCode code) {
         return new R<>(data, code);
     }
 
     /**
      * 响应失败
      */
-    public static <T> R<T> errorWithData(T data, String code, String message) {
+    public static <T> R<T> error(T data, String code, String message) {
         return new R<>(data, code, message);
     }
 }

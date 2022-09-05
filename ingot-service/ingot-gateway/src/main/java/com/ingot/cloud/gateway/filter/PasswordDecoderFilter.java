@@ -21,7 +21,7 @@ public class PasswordDecoderFilter extends AbstractGatewayFilterFactory {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getURI().getPath();
-            log.info("PasswordDecoderFilter pre doUrl={}", path);
+            log.info("[Filter] - PasswordDecoderFilter - path={}", path);
 
             return chain.filter(exchange);
         };

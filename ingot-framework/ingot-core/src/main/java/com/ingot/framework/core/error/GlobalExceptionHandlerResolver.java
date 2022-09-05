@@ -9,7 +9,6 @@ import javax.validation.ConstraintViolationException;
 import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.wrapper.R;
-import com.ingot.framework.core.wrapper.ResponseWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
@@ -41,7 +40,7 @@ public class GlobalExceptionHandlerResolver {
     public R<?> exception(Exception e) {
         log.error("[GlobalExceptionHandlerResolver] - Exception - message={}, e={}",
                 e.getLocalizedMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
+        return R.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
 
@@ -51,7 +50,7 @@ public class GlobalExceptionHandlerResolver {
     public R<?> baseExceptionHandler(BizException e) {
         log.error("[GlobalExceptionHandlerResolver] - BizException - message={}, e={}",
                 e.getLocalizedMessage(), e);
-        return ResponseWrapper.error(e.getCode(), e.getLocalizedMessage());
+        return R.error(e.getCode(), e.getLocalizedMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -60,7 +59,7 @@ public class GlobalExceptionHandlerResolver {
     public R<?> illegalArgumentException(IllegalArgumentException e) {
         log.error("[GlobalExceptionHandlerResolver] - IllegalArgumentException - message={}, e={}",
                 e.getLocalizedMessage(), e);
-        return ResponseWrapper.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
+        return R.error(BaseStatusCode.ILLEGAL_REQUEST_PARAMS.getCode(),
                 e.getLocalizedMessage());
     }
 
@@ -74,7 +73,7 @@ public class GlobalExceptionHandlerResolver {
         String message = list.stream().map(ObjectError::getDefaultMessage)
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
-        return ResponseWrapper.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
+        return R.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -87,7 +86,7 @@ public class GlobalExceptionHandlerResolver {
         String message = list.stream().map(ObjectError::getDefaultMessage)
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
-        return ResponseWrapper.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
+        return R.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -101,7 +100,7 @@ public class GlobalExceptionHandlerResolver {
                 .map(o -> o.getMessage())
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
-        return ResponseWrapper.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
+        return R.errorF(BaseStatusCode.ILLEGAL_REQUEST_PARAMS, message);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -110,6 +109,6 @@ public class GlobalExceptionHandlerResolver {
     public R<?> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.error("[GlobalExceptionHandlerResolver] - HttpRequestMethodNotSupportedException - message={}, e={}",
                 e.getLocalizedMessage(), e);
-        return ResponseWrapper.errorF(BaseStatusCode.METHOD_NOT_ALLOWED, e.getLocalizedMessage());
+        return R.errorF(BaseStatusCode.METHOD_NOT_ALLOWED, e.getLocalizedMessage());
     }
 }
