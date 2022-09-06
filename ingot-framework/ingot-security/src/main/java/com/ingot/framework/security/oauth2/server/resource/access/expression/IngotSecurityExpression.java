@@ -3,8 +3,8 @@ package com.ingot.framework.security.oauth2.server.resource.access.expression;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.google.common.collect.Sets;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
@@ -77,7 +77,7 @@ public class IngotSecurityExpression {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(StrUtil::isNotEmpty).collect(Collectors.toSet());
-        Set<String> requiredAuth = Sets.newHashSet(authorities);
+        Set<String> requiredAuth = CollUtil.newHashSet(authorities);
         return requiredAuth.stream()
                 .anyMatch(req -> userAuth.contains(getAuthorityWithPrefix(prefix, req)));
     }

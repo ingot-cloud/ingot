@@ -7,12 +7,12 @@ import com.ingot.component.id.worker.WorkerIdFactory;
 import com.ingot.component.id.worker.impl.MachineWorkerIdFactory;
 import com.ingot.component.id.worker.impl.RedisWorkerIdFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
 /**
@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  * <p>Date         : 2020/10/25.</p>
  * <p>Time         : 3:30 下午.</p>
  */
-@Configuration
+@AutoConfiguration
 @EnableConfigurationProperties(value = IdProperties.class)
 public class IdAutoConfig {
     @Value("${spring.application.name}")

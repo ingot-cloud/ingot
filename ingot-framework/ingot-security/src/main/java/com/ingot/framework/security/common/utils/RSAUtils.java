@@ -16,7 +16,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import cn.hutool.core.util.StrUtil;
-import com.google.common.base.Preconditions;
+import com.ingot.framework.core.utils.AssertionUtils;
 
 /**
  * <p>Description  : RSAUtils.</p>
@@ -196,7 +196,7 @@ public final class RSAUtils {
 
     private static InputStream getResourceAsStream(String filename) {
         InputStream stream = RSAUtils.class.getClassLoader().getResourceAsStream(filename);
-        Preconditions.checkArgument(stream != null);
+        AssertionUtils.checkArgument(stream != null);
         return stream;
     }
 }

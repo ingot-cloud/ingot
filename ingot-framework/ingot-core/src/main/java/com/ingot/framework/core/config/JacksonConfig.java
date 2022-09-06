@@ -7,13 +7,13 @@ import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.jackson.IngotLocalTimeModule;
 import com.ingot.framework.core.jackson.IngotModule;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * <p>Description  : JacksonConfig.</p>
@@ -21,9 +21,9 @@ import org.springframework.context.annotation.Configuration;
  * <p>Date         : 2020/11/17.</p>
  * <p>Time         : 8:37 下午.</p>
  */
-@Configuration
-@ConditionalOnClass(ObjectMapper.class)
+@AutoConfiguration
 @AutoConfigureBefore(JacksonAutoConfiguration.class)
+@ConditionalOnClass(ObjectMapper.class)
 public class JacksonConfig {
 
     private static final String ASIA_BEIJING = "Asia/Beijing";

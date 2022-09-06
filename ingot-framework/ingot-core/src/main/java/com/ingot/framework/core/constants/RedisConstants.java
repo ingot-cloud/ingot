@@ -1,7 +1,7 @@
 package com.ingot.framework.core.constants;
 
 import cn.hutool.core.util.StrUtil;
-import com.google.common.base.Preconditions;
+import com.ingot.framework.core.utils.AssertionUtils;
 
 /**
  * <p>Description  : RedisConstants.</p>
@@ -61,7 +61,7 @@ public interface RedisConstants {
          * @return the send sms count key
          */
         static String getSendSmsCountKey(String ipAddr, String type) {
-            Preconditions.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
+            AssertionUtils.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
             return SEND_SMS_COUNT + ":" + type + ":" + ipAddr;
         }
 
@@ -72,7 +72,7 @@ public interface RedisConstants {
          * @return the send sms rate key
          */
         static String getSendSmsRateKey(String ipAddr) {
-            Preconditions.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
+            AssertionUtils.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
             return SEND_SMS_COUNT + ":" + ipAddr;
         }
 

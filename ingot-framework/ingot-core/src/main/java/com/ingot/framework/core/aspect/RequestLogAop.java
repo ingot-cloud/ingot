@@ -5,16 +5,13 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.collect.Maps;
+import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * <p>Description  : RequestLogAop.</p>
@@ -24,9 +21,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Aspect
-@Component
-@Order(Integer.MIN_VALUE + 1)
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class RequestLogAop {
 
     /**
@@ -52,7 +46,7 @@ public class RequestLogAop {
             return pjp.proceed();
         }
 
-        Map<String, Object> param = Maps.newHashMap();
+        Map<String, Object> param = MapUtil.newHashMap();
         param.put("URL", request.getRequestURI());
         param.put("HTTP_METHOD", request.getMethod());
         param.put("IP", request.getRemoteAddr());

@@ -1,0 +1,5 @@
+com.ingot.framework.core.config.JacksonConfig
+com.ingot.framework.core.config.AspectConfig
+com.ingot.framework.core.config.CoreConfig
+com.ingot.framework.core.config.ErrorConfig
+com.ingot.framework.core.error.GlobalExceptionHandlerResolver

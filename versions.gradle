@@ -1,19 +1,19 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "2.6.3"
+versions.spring_boot = "2.7.3"
 versions.spring_cloud = "2021.0.3"
-versions.spring_cloud_alibaba = "2021.1"
+versions.spring_cloud_alibaba = "2021.0.1.0"
 
-versions.alibaba_druid = "1.2.3"
+versions.alibaba_druid = "1.2.9"
 versions.alibaba_transmittable_thread_local = "2.11.5"
-versions.swagger = "2.9.2"
+versions.swagger = "3.0.0"
 versions.commons_lang = "3.3.2"
 versions.commons_io = "2.4"
 versions.mapstruct = "1.4.1.Final"
-versions.jackson = "2.12.4"
-versions.mybatis_plus = "3.4.1"
+versions.jackson = "2.13.3"
+versions.mybatis_plus = "3.5.1"
 versions.mysql_connector = "8.0.16"
-versions.hutool = "5.7.3"
+versions.hutool = "5.8.5"
 
 def spring = [:]
 def spring_boot = [:]
@@ -79,6 +79,10 @@ alibaba.sentinel_gateway = "com.alibaba.cloud:spring-cloud-alibaba-sentinel-gate
 alibaba.druid_spring_boot_starter = "com.alibaba:druid-spring-boot-starter:${versions.alibaba_druid}"
 alibaba.transmittable_thread_local = "com.alibaba:transmittable-thread-local:${versions.alibaba_transmittable_thread_local}"
 deps.alibaba = alibaba
+
+def google = [:]
+google.jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
+google.guava = "com.google.guava:guava:31.1-jre"
 
 def swagger = [:]
 swagger.springfox_swagger2 = "io.springfox:springfox-swagger2:${versions.swagger}"
@@ -158,7 +162,6 @@ deps.rx_java = "io.reactivex.rxjava3:rxjava:3.0.7"
 deps.ltgt_apt_plugin = "net.ltgt.gradle:gradle-apt-plugin:0.21"
 deps.transmode_gradle_docker = "se.transmode.gradle:gradle-docker:1.2"
 deps.groovy = "org.codehaus.groovy:groovy:2.5.7"
-deps.google_findbugs_jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 deps.netty = "io.netty:netty-all:4.1.55.Final"
 
 def plugins = [:]

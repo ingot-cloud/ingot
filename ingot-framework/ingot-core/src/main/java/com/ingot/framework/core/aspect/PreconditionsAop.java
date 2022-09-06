@@ -15,7 +15,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 
 import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_BEANS;
 import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_ILLEGAL_ACCESS;
@@ -29,7 +28,6 @@ import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_NO_SUC
  */
 @Slf4j
 @Aspect
-@Component
 public class PreconditionsAop implements ApplicationContextAware {
 
     private ApplicationContext context;
@@ -85,7 +83,8 @@ public class PreconditionsAop implements ApplicationContextAware {
 //        log.info(">>> PreconditionsAop end");
 //    }
 
-    @Override public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
     }
 }

@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.collect.Lists;
+import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
 import feign.RequestInterceptor;
@@ -23,7 +23,7 @@ import org.springframework.http.HttpHeaders;
  */
 @Slf4j
 public class OAuth2FeignRequestInterceptor implements RequestInterceptor {
-    private final static List<String> relayHeaders = Lists.newArrayList(HttpHeaders.AUTHORIZATION, "deviceid");
+    private final static List<String> relayHeaders = CollUtil.newArrayList(HttpHeaders.AUTHORIZATION, "deviceid");
 
     public OAuth2FeignRequestInterceptor() {
     }
