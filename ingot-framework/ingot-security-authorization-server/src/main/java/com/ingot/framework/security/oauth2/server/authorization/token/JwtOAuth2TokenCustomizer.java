@@ -1,16 +1,17 @@
-package com.ingot.framework.security.oauth2.server.authorization.authentication;
+package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
 /**
  * <p>Description  : JwtOAuth2TokenCustomizer.</p>
