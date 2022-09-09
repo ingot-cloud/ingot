@@ -1,7 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.IngotOAuth2PasswordAuthenticationConfigurer;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.JwtOAuth2TokenCustomizer;
+import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -10,9 +10,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
-import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -43,10 +43,11 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     }
 
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-                new OAuth2AuthorizationServerConfigurer<>();
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
         RequestMatcher endpointsMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
+
         authorizationServerConfigurer
                 .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
                 .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());

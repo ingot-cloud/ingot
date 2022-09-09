@@ -20,7 +20,7 @@ import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * <p>Description  : UsernamePasswordEnhanceAuthenticationFilter.</p>
+ * <p>Description  : ClientAuthContextFilter.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/28.</p>
  * <p>Time         : 9:16 上午.</p>

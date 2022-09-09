@@ -1,5 +1,8 @@
 package com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UsernamePasswordAuthenticationFilter;
@@ -7,16 +10,16 @@ import com.ingot.framework.security.web.ClientAuthContextFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
-import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -28,33 +31,57 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  * <p>Time         : 10:05 上午.</p>
  */
 @Slf4j
-public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityBuilder<B>>
-        extends AbstractHttpConfigurer<IngotOAuth2PasswordAuthenticationConfigurer<B>, B> {
+public class IngotOAuth2PasswordAuthenticationConfigurer
+        extends AbstractHttpConfigurer<IngotOAuth2PasswordAuthenticationConfigurer, HttpSecurity> {
     private RequestMatcher requestMatcher;
 
     @Override
-    public void init(B builder) throws Exception {
-        if (!canConfig(builder)) {
+    public void init(HttpSecurity httpSecurity) throws Exception {
+        if (!canConfig(httpSecurity)) {
             return;
         }
 
-        ProviderSettings providerSettings = OAuth2ConfigurerUtils.getProviderSettings(builder);
+        ProviderSettings providerSettings = OAuth2ConfigurerUtils.getProviderSettings(httpSecurity);
         this.requestMatcher = new AntPathRequestMatcher(
-                providerSettings.getTokenEndpoint(),
-                HttpMethod.POST.name());
+                providerSettings.getTokenEndpoint(), HttpMethod.POST.name());
+
+        List<AuthenticationProvider> authenticationProviders =
+                createPasswordAuthenticationProviders(httpSecurity);
+        authenticationProviders.forEach(authenticationProvider ->
+                httpSecurity.authenticationProvider(postProcess(authenticationProvider)));
+    }
+
+    @Override
+    public void configure(HttpSecurity httpSecurity) throws Exception {
+        if (!canConfig(httpSecurity)) {
+            return;
+        }
+
+        AuthenticationManager authenticationManager = httpSecurity.getSharedObject(AuthenticationManager.class);
+
+        // ClientAuthContextFilter 在 OAuth2ClientAuthenticationFilter 后面
+        ClientAuthContextFilter clientAuthContextFilter = new ClientAuthContextFilter();
+        httpSecurity.addFilterAfter(postProcess(clientAuthContextFilter), OAuth2ClientAuthenticationFilter.class);
+
+        // OAuth2UsernamePasswordAuthenticationFilter 在 ClientAuthContextFilter 后面
+        OAuth2UsernamePasswordAuthenticationFilter filter =
+                new OAuth2UsernamePasswordAuthenticationFilter(authenticationManager, this.requestMatcher);
+        httpSecurity.addFilterAfter(postProcess(filter), ClientAuthContextFilter.class);
+    }
+
+    private List<AuthenticationProvider> createPasswordAuthenticationProviders(HttpSecurity httpSecurity) {
+        List<AuthenticationProvider> authenticationProviders = new ArrayList<>();
 
         OAuth2AuthorizationService authorizationService =
-                OAuth2ConfigurerUtils.getAuthorizationService(builder);
-        JwtEncoder jwtEncoder = OAuth2ConfigurerUtils.getJwtEncoder(builder);
-        OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer =
-                OAuth2ConfigurerUtils.getJwtCustomizer(builder);
-
+                OAuth2ConfigurerUtils.getAuthorizationService(httpSecurity);
+        OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator =
+                OAuth2ConfigurerUtils.getTokenGenerator(httpSecurity);
+        PasswordEncoder passwordEncoder = OAuth2ConfigurerUtils.getOptionalBean(
+                httpSecurity, PasswordEncoder.class);
+        UserDetailsPasswordService passwordManager = OAuth2ConfigurerUtils.getOptionalBean(
+                httpSecurity, UserDetailsPasswordService.class);
         UserDetailsService userDetailsService = OAuth2ConfigurerUtils.getBean(
-                builder, UserDetailsService.class);
-        PasswordEncoder passwordEncoder = OAuth2ConfigurerUtils.getBeanOrNull(
-                builder, PasswordEncoder.class);
-        UserDetailsPasswordService passwordManager = OAuth2ConfigurerUtils.getBeanOrNull(
-                builder, UserDetailsPasswordService.class);
+                httpSecurity, UserDetailsService.class);
 
         OAuth2UsernamePasswordAuthenticationProvider usernamePasswordProvider =
                 new OAuth2UsernamePasswordAuthenticationProvider();
@@ -65,39 +92,17 @@ public class IngotOAuth2PasswordAuthenticationConfigurer<B extends HttpSecurityB
         if (passwordManager != null) {
             usernamePasswordProvider.setUserDetailsPasswordService(passwordManager);
         }
-        builder.authenticationProvider(
-                postProcess(usernamePasswordProvider));
+        authenticationProviders.add(usernamePasswordProvider);
 
         OAuth2PasswordAuthenticationProvider passwordAuthProvider =
-                new OAuth2PasswordAuthenticationProvider(authorizationService, jwtEncoder);
-        if (jwtCustomizer != null) {
-            passwordAuthProvider.setJwtCustomizer(jwtCustomizer);
-        }
+                new OAuth2PasswordAuthenticationProvider(authorizationService, tokenGenerator);
+        authenticationProviders.add(passwordAuthProvider);
 
-        builder.authenticationProvider(
-                postProcess(passwordAuthProvider));
+        return authenticationProviders;
     }
 
-    @Override
-    public void configure(B builder) throws Exception {
-        if (!canConfig(builder)) {
-            return;
-        }
-
-        AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
-
-        // ClientAuthContextFilter 在 OAuth2ClientAuthenticationFilter 后面
-        ClientAuthContextFilter clientAuthContextFilter = new ClientAuthContextFilter();
-        builder.addFilterAfter(postProcess(clientAuthContextFilter), OAuth2ClientAuthenticationFilter.class);
-
-        // OAuth2UsernamePasswordAuthenticationFilter 在 ClientAuthContextFilter 后面
-        OAuth2UsernamePasswordAuthenticationFilter filter =
-                new OAuth2UsernamePasswordAuthenticationFilter(authenticationManager, this.requestMatcher);
-        builder.addFilterAfter(postProcess(filter), ClientAuthContextFilter.class);
-    }
-
-    private boolean canConfig(B builder) {
-        return OAuth2ConfigurerUtils.getBeanOrNull(
-                builder, UserDetailsService.class) != null;
+    private boolean canConfig(HttpSecurity httpSecurity) {
+        return OAuth2ConfigurerUtils.getOptionalBean(
+                httpSecurity, UserDetailsService.class) != null;
     }
 }

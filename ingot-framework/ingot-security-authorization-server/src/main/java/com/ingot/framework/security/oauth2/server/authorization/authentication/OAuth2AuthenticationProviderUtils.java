@@ -1,12 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.AbstractOAuth2Token;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 
 /**
@@ -39,7 +39,7 @@ final class OAuth2AuthenticationProviderUtils {
         throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);
     }
 
-    static <T extends AbstractOAuth2Token> OAuth2Authorization invalidate(
+    static <T extends OAuth2Token> OAuth2Authorization invalidate(
             OAuth2Authorization authorization, T token) {
 
         // @formatter:off
