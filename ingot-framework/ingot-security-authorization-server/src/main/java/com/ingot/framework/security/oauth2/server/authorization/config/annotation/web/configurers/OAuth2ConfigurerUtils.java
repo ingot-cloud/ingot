@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization;
+package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.ingot.framework.security.config.annotation.web.configuration;
+package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
 import java.util.Arrays;
 

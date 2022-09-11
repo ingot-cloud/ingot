@@ -1,6 +1,6 @@
-package com.ingot.framework.security.config.annotation.web.configuration;
+package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
-import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.authorization.IngotOAuth2PasswordAuthenticationConfigurer;
+import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.IngotOAuth2PasswordAuthenticationConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -48,12 +48,13 @@ public class IngotOAuth2AuthorizationServerConfiguration {
         RequestMatcher endpointsMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
 
+        // 设置 ObjectPostProcessor
         authorizationServerConfigurer
                 .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
                 .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());
 
-        IngotOAuth2PasswordAuthenticationConfigurer<HttpSecurity> passwordConfigurer =
-                new IngotOAuth2PasswordAuthenticationConfigurer<>();
+        IngotOAuth2PasswordAuthenticationConfigurer passwordConfigurer =
+                new IngotOAuth2PasswordAuthenticationConfigurer();
 
         http
                 .requestMatcher(endpointsMatcher)
