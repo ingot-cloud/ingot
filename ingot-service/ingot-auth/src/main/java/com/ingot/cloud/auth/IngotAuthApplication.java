@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth;
 
-import com.ingot.framework.security.config.annotation.web.configuration.EnableIngotAuthorizationServer;
+import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.EnableIngotAuthorizationServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
