@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.ingot.framework.security.oauth2.core.http.converter;
+package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;

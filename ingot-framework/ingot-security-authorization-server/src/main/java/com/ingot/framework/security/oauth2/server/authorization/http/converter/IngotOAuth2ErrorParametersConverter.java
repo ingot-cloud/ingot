@@ -1,4 +1,4 @@
-package com.ingot.framework.security.oauth2.core.http.converter;
+package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
 import java.util.HashMap;
 import java.util.Map;
