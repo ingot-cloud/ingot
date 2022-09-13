@@ -13,8 +13,8 @@ import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
-import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
 /**
  * <p>
