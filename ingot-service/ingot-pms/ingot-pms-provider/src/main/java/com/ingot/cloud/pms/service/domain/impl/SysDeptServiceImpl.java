@@ -68,7 +68,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         assertI18nService.checkOperation(success, "SysDeptServiceImpl.ExistLeaf");
 
         // 取消关联角色
-        int count = sysRoleDeptService.count(Wrappers.<SysRoleDept>lambdaQuery()
+        long count = sysRoleDeptService.count(Wrappers.<SysRoleDept>lambdaQuery()
                 .eq(SysRoleDept::getDeptId, id));
         if (count > 0) {
             success = sysRoleDeptService.remove(Wrappers.<SysRoleDept>lambdaQuery()

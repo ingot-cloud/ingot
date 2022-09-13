@@ -241,14 +241,14 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     public boolean matchDept(long deptId) {
-        int count = count(lambdaQuery().eq(SysUser::getDeptId, deptId));
+        long count = count(lambdaQuery().eq(SysUser::getDeptId, deptId));
         return count > 0;
     }
 
     @Override
     public boolean anyMatchDept(List<Long> deptIds) {
         List<Long> ids = Optional.ofNullable(deptIds).orElse(CollUtil.newArrayList());
-        int count = count(lambdaQuery().in(SysUser::getDeptId, deptIds));
+        long count = count(lambdaQuery().in(SysUser::getDeptId, deptIds));
         return count > 0;
     }
 }

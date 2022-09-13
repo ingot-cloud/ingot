@@ -43,7 +43,7 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUserRole(long userId, List<Long> roles) {
-        int userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
+        long userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
         if (userCount != 0) {
             assertI18nService.checkOperation(removeByUserId(userId),
                     "SysRoleUserServiceImpl.UpdateRoleFailed");

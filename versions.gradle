@@ -83,6 +83,7 @@ deps.alibaba = alibaba
 def google = [:]
 google.jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 google.guava = "com.google.guava:guava:31.1-jre"
+deps.google = google
 
 def swagger = [:]
 swagger.springfox_swagger2 = "io.springfox:springfox-swagger2:${versions.swagger}"

@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
  * <p>Time         : 5:38 下午.</p>
  */
 @RequiredArgsConstructor
-public class DefaultHttpConfigurersAdapter implements IngotHttpConfigurersAdapter{
+public class DefaultHttpConfigurersAdapter implements IngotHttpConfigurersAdapter {
     private final List<IngotHttpConfigurer> httpConfigurers;
 
     @Override

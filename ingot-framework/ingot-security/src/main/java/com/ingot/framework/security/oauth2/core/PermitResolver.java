@@ -90,7 +90,14 @@ public class PermitResolver implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        RequestMappingHandlerMapping mapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        /*
+        - requestMappingHandlerMapping: defined by method 'requestMappingHandlerMapping' in class path resource
+         [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]
+	    - controllerEndpointHandlerMapping: defined by method 'controllerEndpointHandlerMapping' in class path resource
+	     [org/springframework/boot/actuate/autoconfigure/endpoint/web/servlet/WebMvcEndpointManagementContextConfiguration.class]
+         */
+        RequestMappingHandlerMapping mapping = applicationContext.getBean("requestMappingHandlerMapping",
+                RequestMappingHandlerMapping.class);
         Map<RequestMappingInfo, HandlerMethod> map = mapping.getHandlerMethods();
 
         for (RequestMappingInfo info : map.keySet()) {

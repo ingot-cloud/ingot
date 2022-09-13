@@ -15,4 +15,6 @@ dependencies {
 
     // hutool
     api(deps.hutool)
+
+    api(deps.google.guava)
 }
