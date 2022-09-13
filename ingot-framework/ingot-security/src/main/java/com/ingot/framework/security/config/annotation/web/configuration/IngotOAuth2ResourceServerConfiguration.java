@@ -7,15 +7,14 @@ import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsServi
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
+import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
+import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.IngotSecurityExpression;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
 import com.ingot.framework.security.web.ClientAuthContextFilter;
-import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
-import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -43,18 +42,17 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
-    private IngotHttpConfigurersAdapter httpConfigurersAdapter;
-    private PermitResolver permitResolver;
-
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+                                                                      PermitResolver permitResolver,
+                                                                      HttpSecurity http) throws Exception {
         httpConfigurersAdapter.apply(http);
         http.authorizeRequests(authorizeRequests -> {
                     permitResolver.permitAllPublic(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })
-                .apply(new IngotTokenAuthConfigurer<>(permitResolver.publicRequestMatcher()))
+                .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
                 .and()
                 .oauth2ResourceServer()
                 .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
@@ -69,9 +67,10 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     @Bean
     @Order(HIGHEST_PRECEDENCE + 10)
-    public SecurityFilterChain innerResourceSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2InnerResourceConfigurer<HttpSecurity> innerResourceConfigurer =
-                new OAuth2InnerResourceConfigurer<>(permitResolver);
+    public SecurityFilterChain innerResourceSecurityFilterChain(PermitResolver permitResolver,
+                                                                HttpSecurity http) throws Exception {
+        OAuth2InnerResourceConfigurer innerResourceConfigurer =
+                new OAuth2InnerResourceConfigurer(permitResolver);
         RequestMatcher endpointsMatcher = innerResourceConfigurer
                 .getRequestMatcher();
 
@@ -109,13 +108,4 @@ public class IngotOAuth2ResourceServerConfiguration {
         return new PermitResolver(context, ingotOAuth2ResourceProperties);
     }
 
-    @Autowired
-    public void setPermitResolver(PermitResolver permitResolver) {
-        this.permitResolver = permitResolver;
-    }
-
-    @Autowired
-    public void setHttpConfigurersAdapter(IngotHttpConfigurersAdapter httpConfigurersAdapter) {
-        this.httpConfigurersAdapter = httpConfigurersAdapter;
-    }
 }

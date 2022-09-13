@@ -13,7 +13,7 @@ public interface IngotHttpConfigurersAdapter {
     /**
      * Http security  config
      *
-     * @param http HttpSecurity
+     * @param http {@link HttpSecurity}
      */
     void apply(HttpSecurity http) throws Exception;
 }

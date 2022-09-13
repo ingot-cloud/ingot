@@ -23,7 +23,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 public class IngotOAuth2ResourceServerJwtConfiguration {
 
     /**
-     * 参考 org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerJwtConfiguration
+     * 参考 {@link org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerJwtConfiguration}
      */
     @Bean
     @ConditionalOnMissingBean(JwtDecoder.class)
