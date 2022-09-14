@@ -110,19 +110,20 @@ public class PermitResolver implements InitializingBean {
                 Method[] methods = beanType.getDeclaredMethods();
                 Method method = handlerMethod.getMethod();
                 if (ArrayUtil.contains(methods, method)) {
-                    Optional.ofNullable(info.getPatternsCondition())
+                    Optional.ofNullable(info.getPathPatternsCondition())
                             .ifPresent(con -> con.getPatterns()
-                                    .forEach(url -> this.filterPath(url, info, controller)));
+                                    .forEach(url -> this.filterPath(url.getPatternString(), info, controller)));
                 }
                 continue;
             }
 
             // 获取方法中的 @Permit
             Permit method = AnnotationUtils.findAnnotation(handlerMethod.getMethod(), Permit.class);
-            Optional.ofNullable(method).flatMap(an -> Optional.ofNullable(info.getPatternsCondition()))
-                    .ifPresent(con ->
-                            con.getPatterns()
-                                    .forEach(url -> this.filterPath(url, info, method)));
+            if (method != null) {
+                Optional.ofNullable(info.getPathPatternsCondition())
+                        .ifPresent(con -> con.getPatterns()
+                                .forEach(url -> this.filterPath(url.getPatternString(), info, method)));
+            }
         }
 
         log.info("[PermitResolver] public urls = {}", properties.getPublicUrls());
