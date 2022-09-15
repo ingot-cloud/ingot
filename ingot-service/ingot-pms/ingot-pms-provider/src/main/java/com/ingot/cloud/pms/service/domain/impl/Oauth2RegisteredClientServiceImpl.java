@@ -145,6 +145,10 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
             clientSettingsBuilder.requireProofKey(params.getRequireProofKey());
         }
 
+        if (StrUtil.isNotEmpty(params.getAuthorizationCodeTimeToLive())) {
+            tokenSettingsBuilder.authorizationCodeTimeToLive(
+                    Duration.ofSeconds(Long.parseLong(params.getAuthorizationCodeTimeToLive())));
+        }
         if (StrUtil.isNotEmpty(params.getAccessTokenTimeToLive())) {
             tokenSettingsBuilder.accessTokenTimeToLive(
                     Duration.ofSeconds(Long.parseLong(params.getAccessTokenTimeToLive())));

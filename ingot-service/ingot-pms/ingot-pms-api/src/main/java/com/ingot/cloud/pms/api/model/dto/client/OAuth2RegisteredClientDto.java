@@ -76,6 +76,11 @@ public class OAuth2RegisteredClientDto implements Serializable {
     private Boolean requireAuthorizationConsent;
 
     /**
+     * 设置授权代码的有效时间
+     */
+    private String authorizationCodeTimeToLive;
+
+    /**
      * Token存活时间
      */
     private String accessTokenTimeToLive;
