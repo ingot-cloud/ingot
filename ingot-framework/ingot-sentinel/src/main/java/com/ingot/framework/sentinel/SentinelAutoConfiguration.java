@@ -7,12 +7,12 @@ import com.ingot.framework.sentinel.feign.SentinelFeignBuilder;
 import com.ingot.framework.sentinel.webmvc.callback.IngotBlockExceptionHandler;
 import com.ingot.framework.sentinel.webmvc.callback.IngotRequestOriginParser;
 import feign.Feign;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 /**
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Scope;
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 10:29 上午.</p>
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
 public class SentinelAutoConfiguration {
 

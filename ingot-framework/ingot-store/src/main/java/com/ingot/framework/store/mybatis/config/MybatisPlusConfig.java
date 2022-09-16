@@ -9,9 +9,9 @@ import com.ingot.framework.store.mybatis.plugins.IngotOptimisticLockerIntercepto
 import com.ingot.framework.store.mybatis.plugins.IngotTenantLineHandler;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * <p>Description  : MybatisPlusConfig.</p>
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>Date         : 2020/10/19.</p>
  * <p>Time         : 5:10 下午.</p>
  */
-@Configuration
+@AutoConfiguration
 @ConditionalOnBean(DataSource.class)
 @MapperScan("com.ingot.**.mapper")
 public class MybatisPlusConfig {

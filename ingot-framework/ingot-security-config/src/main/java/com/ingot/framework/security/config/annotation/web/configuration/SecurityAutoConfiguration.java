@@ -7,6 +7,7 @@ import com.ingot.framework.security.config.annotation.web.configurers.DefaultHtt
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Bean;
  * <p>Date         : 2021/9/15.</p>
  * <p>Time         : 5:32 下午.</p>
  */
+@AutoConfiguration
 public class SecurityAutoConfiguration {
     private List<IngotHttpConfigurer> httpConfigurers = Collections.emptyList();
 

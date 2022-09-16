@@ -7,6 +7,7 @@ import java.util.Map;
 import com.ingot.framework.store.redis.cache.DefaultRedisCacheWriter;
 import com.ingot.framework.store.redis.cache.IngotRedisCacheManager;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizers;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
@@ -16,7 +17,6 @@ import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
@@ -30,7 +30,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
  * <p>Date         : 2020/10/21.</p>
  * <p>Time         : 6:01 下午.</p>
  */
-@Configuration
+@AutoConfiguration
 @AutoConfigureAfter({RedisAutoConfiguration.class})
 @ConditionalOnBean({RedisConnectionFactory.class})
 @ConditionalOnMissingBean({CacheManager.class})

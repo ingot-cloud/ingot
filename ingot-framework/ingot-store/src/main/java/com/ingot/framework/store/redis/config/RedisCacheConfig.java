@@ -3,11 +3,11 @@ package com.ingot.framework.store.redis.config;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizer;
 import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizers;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * <p>Description  : RedisCacheConfig.</p>
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>Date         : 2020/10/21.</p>
  * <p>Time         : 6:00 下午.</p>
  */
-@Configuration
+@AutoConfiguration
 @ConditionalOnMissingBean(CacheManagerCustomizers.class)
 public class RedisCacheConfig {
 

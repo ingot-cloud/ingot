@@ -4,9 +4,9 @@ import com.ingot.framework.tenant.interceptor.TenantFeignInterceptor;
 import com.ingot.framework.tenant.interceptor.TenantRequestInterceptor;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import feign.RequestInterceptor;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 
 /**
@@ -15,7 +15,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
  * <p>Date         : 2020/11/23.</p>
  * <p>Time         : 6:05 下午.</p>
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @EnableConfigurationProperties(value = TenantProperties.class)
 public class TenantConfig {
 
@@ -27,5 +27,10 @@ public class TenantConfig {
     @Bean
     public ClientHttpRequestInterceptor tenantRequestInterceptor() {
         return new TenantRequestInterceptor();
+    }
+
+    @Bean
+    public TenantHttpConfigurer tenantHttpConfigurer() {
+        return new TenantHttpConfigurer();
     }
 }
