@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -39,7 +39,7 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<AuthorityTreeNode> getRoleAuthorities(long roleId,
-                                               boolean isBind,
-                                               SysAuthority condition);
+    List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
+                                                 boolean isBind,
+                                                 SysAuthority condition);
 }

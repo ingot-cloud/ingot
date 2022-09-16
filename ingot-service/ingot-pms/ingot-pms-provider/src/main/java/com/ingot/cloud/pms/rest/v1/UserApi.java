@@ -2,8 +2,8 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserDto;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
@@ -45,24 +45,24 @@ public class UserApi extends BaseController {
     }
 
     @GetMapping("/page")
-    public R<?> page(Page<SysUser> page, UserDto condition) {
+    public R<?> page(Page<SysUser> page, UserDTO condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
     @PostMapping
-    public R<?> create(@Validated(Group.Create.class) @RequestBody UserDto params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         sysUserService.createUser(params);
         return ok();
     }
 
     @PutMapping
-    public R<?> update(@Validated(Group.Update.class) @RequestBody UserDto params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         sysUserService.updateUser(params);
         return ok();
     }
 
     @PutMapping("/edit")
-    public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDto params) {
+    public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
         long userId = SecurityAuthContext.getUser().getId();
         sysUserService.updateUserBaseInfo(userId, params);
         return ok();

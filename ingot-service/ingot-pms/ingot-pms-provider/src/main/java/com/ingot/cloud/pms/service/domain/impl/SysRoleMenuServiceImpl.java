@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleMenuMapper;
@@ -56,15 +56,15 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
     }
 
     @Override
-    public List<MenuTreeNode> getRoleMenus(long roleId,
-                                           boolean isBind,
-                                           SysMenu condition) {
+    public List<MenuTreeNodeVO> getRoleMenus(long roleId,
+                                             boolean isBind,
+                                             SysMenu condition) {
         List<SysMenu> all = getBaseMapper().getRoleMenus(roleId, isBind, condition);
-        List<MenuTreeNode> allNode = all.stream()
+        List<MenuTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysMenu::getSort))
                 .map(menuTrans::to).collect(Collectors.toList());
 
-        List<MenuTreeNode> tree = TreeUtils.build(allNode, 0);
+        List<MenuTreeNodeVO> tree = TreeUtils.build(allNode, 0);
 
         // 如果是获取绑定列表，需要检测树中是否包含所有绑定的节点，如果存在未添加的，则直接添加到列表中
         // 由于可能存在角色只绑定了某一个子节点并未绑定该节点的父，那么在构建树的时候，

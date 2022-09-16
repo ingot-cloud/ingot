@@ -23,12 +23,11 @@ public class SysRoleMenu extends BaseModel<SysRoleAuthority> {
     /**
      * 角色ID
      */
-    private Long roleId;
+    private Integer roleId;
 
     /**
      * 菜单ID
      */
-    private Long menuId;
-
+    private Integer menuId;
 
 }

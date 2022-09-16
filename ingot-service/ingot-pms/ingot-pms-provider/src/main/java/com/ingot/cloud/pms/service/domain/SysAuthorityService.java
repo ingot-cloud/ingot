@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -19,9 +19,9 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
     /**
      * 权限tree
      *
-     * @return {@link AuthorityTreeNode}
+     * @return {@link AuthorityTreeNodeVO}
      */
-    List<AuthorityTreeNode> tree();
+    List<AuthorityTreeNodeVO> tree();
 
     /**
      * 创建权限

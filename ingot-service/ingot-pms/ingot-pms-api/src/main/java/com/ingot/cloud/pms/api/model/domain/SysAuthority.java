@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -32,14 +33,14 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     /**
      * ID
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
-    private Long id;
+    private Integer id;
 
     /**
      * 父ID
      */
-    private Long pid;
+    private Integer pid;
 
     /**
      * 权限名称

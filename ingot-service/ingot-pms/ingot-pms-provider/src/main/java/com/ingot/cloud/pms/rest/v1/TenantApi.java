@@ -8,7 +8,7 @@ import javax.validation.Valid;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVo;
+import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVO;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
@@ -43,7 +43,7 @@ public class TenantApi extends BaseController {
             list = CollUtil.newArrayList();
         }
 
-        return ok(list.stream().map(SimpleTenantVo::new).collect(Collectors.toList()));
+        return ok(list.stream().map(SimpleTenantVO::new).collect(Collectors.toList()));
     }
 
     @GetMapping("/page")

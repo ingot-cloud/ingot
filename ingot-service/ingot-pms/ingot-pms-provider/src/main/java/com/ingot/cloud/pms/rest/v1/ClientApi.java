@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.rest.v1;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDto;
+import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
@@ -41,13 +41,13 @@ public class ClientApi extends BaseController {
     }
 
     @PostMapping
-    public R<?> create(@RequestBody @Validated(Group.Create.class) OAuth2RegisteredClientDto params) {
+    public R<?> create(@RequestBody @Validated(Group.Create.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.createClient(params);
         return ok();
     }
 
     @PutMapping
-    public R<?> update(@RequestBody @Validated(Group.Update.class) OAuth2RegisteredClientDto params) {
+    public R<?> update(@RequestBody @Validated(Group.Update.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.updateClientByClientId(params);
         return ok();
     }

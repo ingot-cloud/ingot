@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -39,7 +39,7 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<DeptTreeNode> getRoleDepts(long roleId,
-                                    boolean isBind,
-                                    SysDept condition);
+    List<DeptTreeNodeVO> getRoleDepts(long roleId,
+                                      boolean isBind,
+                                      SysDept condition);
 }

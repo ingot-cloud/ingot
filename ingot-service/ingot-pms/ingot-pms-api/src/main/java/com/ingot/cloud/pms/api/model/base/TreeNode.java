@@ -17,12 +17,12 @@ public class TreeNode implements Serializable {
     /**
      * ID
      */
-    private Long id;
+    private Integer id;
 
     /**
      * 父ID
      */
-    private Long pid;
+    private Integer pid;
 
     /**
      * 子节点

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
@@ -53,14 +53,14 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     }
 
     @Override
-    public List<AuthorityTreeNode> getRoleAuthorities(long roleId,
-                                                      boolean isBind,
-                                                      SysAuthority condition) {
+    public List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
+                                                        boolean isBind,
+                                                        SysAuthority condition) {
         List<SysAuthority> all = baseMapper.getRoleAuthorities(roleId, isBind, condition);
-        List<AuthorityTreeNode> allNode = all.stream()
+        List<AuthorityTreeNodeVO> allNode = all.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNode> tree = TreeUtils.build(allNode, 0);
+        List<AuthorityTreeNodeVO> tree = TreeUtils.build(allNode, 0);
 
         if (isBind) {
             allNode.forEach(item -> {

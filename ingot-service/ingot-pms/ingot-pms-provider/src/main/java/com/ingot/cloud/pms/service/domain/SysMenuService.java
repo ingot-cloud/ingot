@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -18,9 +18,9 @@ public interface SysMenuService extends BaseService<SysMenu> {
     /**
      * 菜单tree
      *
-     * @return {@link MenuTreeNode} 节点
+     * @return {@link MenuTreeNodeVO} 节点
      */
-    List<MenuTreeNode> tree();
+    List<MenuTreeNodeVO> tree();
 
     /**
      * 创建菜单

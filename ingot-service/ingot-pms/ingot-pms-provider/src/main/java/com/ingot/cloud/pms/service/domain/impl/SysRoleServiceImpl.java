@@ -18,7 +18,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
-import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
+import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -104,16 +104,16 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public IPage<RolePageItemVo> conditionPage(Page<SysRole> page, SysRole condition) {
+    public IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition) {
         IPage<SysRole> temp = page(page, Wrappers.lambdaQuery(condition));
-        IPage<RolePageItemVo> result = new Page<>();
+        IPage<RolePageItemVO> result = new Page<>();
         result.setCurrent(temp.getCurrent());
         result.setTotal(temp.getTotal());
         result.setSize(temp.getSize());
 
-        List<RolePageItemVo> records = temp.getRecords()
+        List<RolePageItemVO> records = temp.getRecords()
                 .stream().map(item -> {
-                    RolePageItemVo v = roleTrans.to(item);
+                    RolePageItemVO v = roleTrans.to(item);
                     v.setCanAction(v.getId() != RoleConstants.ROLE_ADMIN_ID);
                     return v;
                 }).collect(Collectors.toList());

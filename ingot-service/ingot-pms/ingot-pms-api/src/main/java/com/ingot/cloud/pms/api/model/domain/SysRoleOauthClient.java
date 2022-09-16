@@ -23,12 +23,11 @@ public class SysRoleOauthClient extends BaseModel<SysRoleAuthority> {
     /**
      * 角色ID
      */
-    private Long roleId;
+    private Integer roleId;
 
     /**
      * 客户端ID
      */
     private String clientId;
-
 
 }

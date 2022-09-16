@@ -5,12 +5,12 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDto;
-import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
-import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
+import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -28,25 +28,25 @@ public interface SysUserService extends BaseService<SysUser> {
      * 通过 {@link IngotUser} 获取用户信息
      *
      * @param user {@link IngotUser} 当前登录用户
-     * @return {@link UserInfoDto}
+     * @return {@link UserInfoDTO}
      */
-    UserInfoDto getUserInfo(IngotUser user);
+    UserInfoDTO getUserInfo(IngotUser user);
 
     /**
      * 条件查询用户分页信息
      *
      * @param page      分页条件
      * @param condition 筛选条件
-     * @return {@link IPage}，数据项结构 {@link UserPageItemVo}
+     * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
      */
-    IPage<UserPageItemVo> conditionPage(Page<SysUser> page, UserDto condition);
+    IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserDTO condition);
 
     /**
      * 创建用户
      *
      * @param params 参数
      */
-    void createUser(UserDto params);
+    void createUser(UserDTO params);
 
     /**
      * 根据ID删除用户
@@ -60,14 +60,14 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param params 参数
      */
-    void updateUser(UserDto params);
+    void updateUser(UserDTO params);
 
     /**
      * 更新用户基本信息
      *
      * @param params 基本信息参数
      */
-    void updateUserBaseInfo(long id, UserBaseInfoDto params);
+    void updateUserBaseInfo(long id, UserBaseInfoDTO params);
 
     /**
      * 用户修改密码
@@ -75,15 +75,15 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param id     用户ID
      * @param params 参数
      */
-    void fixPassword(long id, UserPasswordDto params);
+    void fixPassword(long id, UserPasswordDTO params);
 
     /**
      * 获取用户简介信息
      *
      * @param id 用户ID
-     * @return {@link UserProfileVo}
+     * @return {@link UserProfileVO}
      */
-    UserProfileVo getUserProfile(long id);
+    UserProfileVO getUserProfile(long id);
 
     /**
      * 是否有用户关联了指定部门

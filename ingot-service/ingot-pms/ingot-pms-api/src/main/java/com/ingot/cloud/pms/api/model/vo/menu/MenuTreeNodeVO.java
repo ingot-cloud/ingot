@@ -6,14 +6,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>Description  : MenuTreeNode.</p>
+ * <p>Description  : MenuTreeNodeVO.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/5/29.</p>
  * <p>Time         : 8:31 上午.</p>
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class MenuTreeNode extends TreeNode {
+public class MenuTreeNodeVO extends TreeNode {
     /**
      * 菜单名称
      */

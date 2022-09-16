@@ -7,17 +7,17 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 
 /**
- * <p>Description  : RolePageItemVo.</p>
+ * <p>Description  : RolePageItemVO.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/3/22.</p>
  * <p>Time         : 3:30 下午.</p>
  */
 @Data
-public class RolePageItemVo implements Serializable {
+public class RolePageItemVO implements Serializable {
     /**
      * 角色ID
      */
-    private Long id;
+    private Integer id;
     /**
      * 角色名称
      */

@@ -17,15 +17,15 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class UserDto extends SysUser {
+public class UserDTO extends SysUser {
     /**
      * 拥有的角色ID
      */
-    private List<Long> roleIds;
+    private List<Integer> roleIds;
     /**
      * 用于查询条件，可以登录的客户端ID
      */
-    private List<Long> clientIds;
+    private List<String> clientIds;
     /**
      * 密码
      */

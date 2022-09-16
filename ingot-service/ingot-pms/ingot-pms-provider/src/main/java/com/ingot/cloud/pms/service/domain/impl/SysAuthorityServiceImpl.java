@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNode;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
@@ -39,12 +39,12 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     private final AuthorityTrans authorityTrans;
 
     @Override
-    public List<AuthorityTreeNode> tree() {
+    public List<AuthorityTreeNodeVO> tree() {
         List<SysAuthority> all = CollUtil.emptyIfNull(list(
                 Wrappers.<SysAuthority>lambdaQuery()
                         .orderByAsc(SysAuthority::getCreatedAt)));
 
-        List<AuthorityTreeNode> allNode = all.stream()
+        List<AuthorityTreeNodeVO> allNode = all.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
         return TreeUtils.build(allNode, 0);

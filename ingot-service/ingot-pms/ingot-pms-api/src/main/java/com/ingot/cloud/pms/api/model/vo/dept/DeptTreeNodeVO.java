@@ -7,14 +7,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>Description  : DeptPageItemVo.</p>
+ * <p>Description  : DeptTreeNodeVO.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/3/25.</p>
  * <p>Time         : 10:14 下午.</p>
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptTreeNode extends TreeNode {
+public class DeptTreeNodeVO extends TreeNode {
 
     /**
      * 部门名称

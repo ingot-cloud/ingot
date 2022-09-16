@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
@@ -54,15 +54,15 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
     }
 
     @Override
-    public List<DeptTreeNode> getRoleDepts(long roleId,
-                                           boolean isBind,
-                                           SysDept condition) {
+    public List<DeptTreeNodeVO> getRoleDepts(long roleId,
+                                             boolean isBind,
+                                             SysDept condition) {
         List<SysDept> all = getBaseMapper().getRoleDepts(roleId, isBind, condition);
-        List<DeptTreeNode> allNode = all.stream()
+        List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
-        List<DeptTreeNode> tree = TreeUtils.build(allNode, 0);
+        List<DeptTreeNodeVO> tree = TreeUtils.build(allNode, 0);
 
         if (isBind) {
             allNode.forEach(item -> {

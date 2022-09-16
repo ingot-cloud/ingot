@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.core.model.dto.common.RelationDto;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -39,7 +39,7 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<MenuTreeNode> getRoleMenus(long roleId,
-                                    boolean isBind,
-                                    SysMenu condition);
+    List<MenuTreeNodeVO> getRoleMenus(long roleId,
+                                      boolean isBind,
+                                      SysMenu condition);
 }

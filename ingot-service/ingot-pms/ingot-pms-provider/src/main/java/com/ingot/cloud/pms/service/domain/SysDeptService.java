@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -21,7 +21,7 @@ public interface SysDeptService extends BaseService<SysDept> {
      *
      * @return 部门tree节点列表
      */
-    List<DeptTreeNode> tree();
+    List<DeptTreeNodeVO> tree();
 
     /**
      * 创建部门

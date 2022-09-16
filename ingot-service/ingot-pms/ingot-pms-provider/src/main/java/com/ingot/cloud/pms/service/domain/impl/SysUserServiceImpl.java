@@ -13,13 +13,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDto;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDto;
+import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
-import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVo;
-import com.ingot.cloud.pms.api.model.vo.user.UserProfileVo;
+import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
+import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -57,7 +57,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final UserTrans userTrans;
 
     @Override
-    public UserInfoDto getUserInfo(IngotUser user) {
+    public UserInfoDTO getUserInfo(IngotUser user) {
         // 使用当前用户 tenant 进行操作
         return TenantEnv.applyAs(user.getTenantId(), () -> {
             SysUser userInfo = getById(user.getId());
@@ -69,7 +69,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             List<String> roleCodes = roles.stream()
                     .map(SysRole::getCode).collect(Collectors.toList());
 
-            UserInfoDto result = new UserInfoDto();
+            UserInfoDTO result = new UserInfoDTO();
             result.setUser(userInfo);
             result.setRoles(roleCodes);
             return result;
@@ -77,7 +77,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public IPage<UserPageItemVo> conditionPage(Page<SysUser> page, UserDto condition) {
+    public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserDTO condition) {
         List<Long> clientIds = condition.getClientIds();
         // 如果客户端ID不为空，那么查询客户端拥有的所有角色，和condition中的角色列表合并
         if (CollUtil.isNotEmpty(clientIds)) {
@@ -97,7 +97,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createUser(UserDto params) {
+    public void createUser(UserDTO params) {
         SysUser user = userTrans.to(params);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setId(idGenerator.nextId());
@@ -147,7 +147,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUser(UserDto params) {
+    public void updateUser(UserDTO params) {
         long userId = params.getId();
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
@@ -179,7 +179,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void updateUserBaseInfo(long id, UserBaseInfoDto params) {
+    public void updateUserBaseInfo(long id, UserBaseInfoDTO params) {
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
@@ -206,7 +206,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void fixPassword(long id, UserPasswordDto params) {
+    public void fixPassword(long id, UserPasswordDTO params) {
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
@@ -222,13 +222,13 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public UserProfileVo getUserProfile(long id) {
+    public UserProfileVO getUserProfile(long id) {
         SysUser user = getById(id);
         assertI18nService.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        UserProfileVo profile = userTrans.to(user);
+        UserProfileVO profile = userTrans.to(user);
 
         List<SysRole> list = sysRoleService.getRolesOfUser(id);
         if (CollUtil.isNotEmpty(list)) {

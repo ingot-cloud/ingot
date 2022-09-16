@@ -2,56 +2,56 @@ package com.ingot.cloud.pms.api.model.vo.user;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
 
 /**
- * <p>Description  : UserProfileVo.</p>
+ * <p>Description  : UserPageItemVO.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/6/24.</p>
- * <p>Time         : 10:59 上午.</p>
+ * <p>Date         : 2021/1/6.</p>
+ * <p>Time         : 4:51 下午.</p>
  */
 @Data
-public class UserProfileVo implements Serializable {
+public class UserPageItemVO implements Serializable {
     /**
-     * 部门ID
+     * 用户ID
      */
-    private Long deptId;
-
+    private Integer userId;
     /**
-     * 角色ID
+     * 租户名称
      */
-    private List<Long> roleIds;
-
+    private String tenantName;
+    /**
+     * 部门名称
+     */
+    private String deptName;
     /**
      * 用户名
      */
     private String username;
-
     /**
      * 姓名
      */
     private String realName;
-
     /**
      * 手机号
      */
     private String phone;
-
     /**
      * 邮件地址
      */
     private String email;
-
     /**
      * 状态, 0:正常，9:禁用
      */
     private UserStatusEnum status;
-
     /**
      * 创建日期
      */
     private LocalDateTime createdAt;
+    /**
+     * 删除日期
+     */
+    private LocalDateTime deletedAt;
 }

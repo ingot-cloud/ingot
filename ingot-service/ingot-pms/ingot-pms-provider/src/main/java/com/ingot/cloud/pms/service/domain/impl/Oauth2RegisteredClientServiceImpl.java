@@ -10,9 +10,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
-import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDto;
+import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
-import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVo;
+import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -55,13 +55,13 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    public IPage<OAuth2RegisteredClientVo> conditionPage(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
+    public IPage<OAuth2RegisteredClientVO> conditionPage(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
         IPage<Oauth2RegisteredClient> tmp = page(page, Wrappers.lambdaQuery(condition));
 
-        List<OAuth2RegisteredClientVo> list = tmp.getRecords()
+        List<OAuth2RegisteredClientVO> list = tmp.getRecords()
                 .stream().map(this::toVo).collect(Collectors.toList());
 
-        IPage<OAuth2RegisteredClientVo> result = new Page<>();
+        IPage<OAuth2RegisteredClientVO> result = new Page<>();
         result.setCurrent(tmp.getCurrent());
         result.setPages(tmp.getPages());
         result.setSize(tmp.getSize());
@@ -71,15 +71,15 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    public OAuth2RegisteredClientVo getByClientId(String clientId) {
+    public OAuth2RegisteredClientVO getByClientId(String clientId) {
         Oauth2RegisteredClient current;
-        OAuth2RegisteredClientVo result = toVo(current = getById(clientId));
+        OAuth2RegisteredClientVO result = toVo(current = getById(clientId));
         result.setClientSecret(current.getClientSecret());
         return result;
     }
 
     @Override
-    public void createClient(OAuth2RegisteredClientDto params) {
+    public void createClient(OAuth2RegisteredClientDTO params) {
         assertI18nService.checkOperation(count(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
                         .eq(Oauth2RegisteredClient::getClientId, params.getClientId())) == 0,
                 "Oauth2RegisteredClientServiceImpl.ExistClientId");
@@ -104,7 +104,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#params.clientId")
-    public void updateClientByClientId(OAuth2RegisteredClientDto params) {
+    public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getClientId());
         ClientSettings.Builder clientSettingsBuilder =
                 ClientSettings.withSettings(current.getClientSettings().getSettings());
@@ -135,7 +135,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
     }
 
-    private void fillSettings(OAuth2RegisteredClientDto params,
+    private void fillSettings(OAuth2RegisteredClientDTO params,
                               ClientSettings.Builder clientSettingsBuilder,
                               TokenSettings.Builder tokenSettingsBuilder) {
         if (params.getRequireAuthorizationConsent() != null) {
@@ -166,8 +166,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         }
     }
 
-    private OAuth2RegisteredClientVo toVo(Oauth2RegisteredClient client) {
-        OAuth2RegisteredClientVo item = clientTrans.to(client);
+    private OAuth2RegisteredClientVO toVo(Oauth2RegisteredClient client) {
+        OAuth2RegisteredClientVO item = clientTrans.to(client);
         // 覆盖秘钥为null
         item.setClientSecret(null);
         item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());

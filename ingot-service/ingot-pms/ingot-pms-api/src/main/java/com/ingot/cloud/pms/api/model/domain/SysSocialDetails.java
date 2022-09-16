@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.domain;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -27,8 +28,8 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     /**
      * ID
      */
-    @TableId
-    private Long id;
+    @TableId(type = IdType.AUTO)
+    private Integer id;
 
     /**
      * App ID

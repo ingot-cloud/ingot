@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNode;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
@@ -41,10 +41,10 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     private final MenuTrans menuTrans;
 
     @Override
-    public List<MenuTreeNode> tree() {
+    public List<MenuTreeNodeVO> tree() {
         List<SysMenu> all = CollUtil.emptyIfNull(list());
 
-        List<MenuTreeNode> allNode = all.stream()
+        List<MenuTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysMenu::getSort))
                 .map(menuTrans::to).collect(Collectors.toList());
 

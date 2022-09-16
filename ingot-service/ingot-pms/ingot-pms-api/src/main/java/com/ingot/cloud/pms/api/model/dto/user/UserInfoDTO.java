@@ -7,13 +7,13 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import lombok.Data;
 
 /**
- * <p>Description  : UserInfoDto.</p>
+ * <p>Description  : UserInfoDTO.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/1/6.</p>
  * <p>Time         : 11:36 上午.</p>
  */
 @Data
-public class UserInfoDto implements Serializable {
+public class UserInfoDTO implements Serializable {
     /**
      * 用户信息
      */
@@ -21,5 +21,5 @@ public class UserInfoDto implements Serializable {
     /**
      * 拥有角色
      */
-    private List<String> roles;
+    private List<Integer> roles;
 }

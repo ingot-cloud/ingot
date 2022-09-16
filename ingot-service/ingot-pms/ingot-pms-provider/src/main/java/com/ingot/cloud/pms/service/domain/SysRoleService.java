@@ -5,7 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVo;
+import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -48,9 +48,9 @@ public interface SysRoleService extends BaseService<SysRole> {
      *
      * @param page      分页条件
      * @param condition 筛选条件
-     * @return {@link IPage}，数据项结构 {@link RolePageItemVo}
+     * @return {@link IPage}，数据项结构 {@link RolePageItemVO}
      */
-    IPage<RolePageItemVo> conditionPage(Page<SysRole> page, SysRole condition);
+    IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition);
 
     /**
      * 创建角色

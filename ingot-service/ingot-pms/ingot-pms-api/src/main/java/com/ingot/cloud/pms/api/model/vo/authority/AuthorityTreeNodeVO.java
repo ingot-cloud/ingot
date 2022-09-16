@@ -6,14 +6,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>Description  : AuthorityTreeNode.</p>
+ * <p>Description  : AuthorityTreeNodeVO.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/8/27.</p>
  * <p>Time         : 5:19 下午.</p>
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class AuthorityTreeNode extends TreeNode {
+public class AuthorityTreeNodeVO extends TreeNode {
 
     /**
      * 权限名称

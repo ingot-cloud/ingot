@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNode;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
@@ -40,10 +40,10 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     private final AssertI18nService assertI18nService;
 
     @Override
-    public List<DeptTreeNode> tree() {
+    public List<DeptTreeNodeVO> tree() {
         List<SysDept> all = list();
 
-        List<DeptTreeNode> allNode = all.stream()
+        List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
