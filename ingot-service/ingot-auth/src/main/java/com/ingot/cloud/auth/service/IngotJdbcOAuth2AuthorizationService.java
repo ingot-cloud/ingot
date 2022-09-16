@@ -44,6 +44,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
             + "auth.registered_client_id, "
             + "auth.principal_name, "
             + "auth.authorization_grant_type, "
+            + "auth.authorized_scopes, "
             + "auth.attributes, "
             + "auth.state, "
             + "auth.authorization_code_value, "
