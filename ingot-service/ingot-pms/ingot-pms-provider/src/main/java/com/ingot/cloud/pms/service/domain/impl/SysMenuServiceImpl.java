@@ -15,7 +15,6 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
-import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -36,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
     private final SysRoleMenuService sysRoleMenuService;
 
-    private final IdGenerator idGenerator;
     private final AssertI18nService assertI18nService;
     private final MenuTrans menuTrans;
 
@@ -57,7 +55,6 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                         .eq(SysMenu::getPath, params.getPath())) == 0,
                 "SysMenuServiceImpl.ExistPath");
 
-        params.setId(idGenerator.nextId());
         params.setCreatedAt(DateUtils.now());
 
         assertI18nService.checkOperation(save(params),

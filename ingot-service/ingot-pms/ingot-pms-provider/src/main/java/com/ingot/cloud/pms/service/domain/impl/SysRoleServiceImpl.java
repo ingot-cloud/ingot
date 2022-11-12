@@ -27,7 +27,6 @@ import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
-import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
@@ -54,20 +53,19 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final SysRoleUserService sysRoleUserService;
 
-    private final IdGenerator idGenerator;
     private final AssertI18nService assertI18nService;
     private final RoleTrans roleTrans;
 
     @Override
     public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
         // 基础角色ID
-        Set<Long> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                .eq(SysRoleUser::getUserId, userId))
+        Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+                        .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
         // 获取部门角色ID
         SysDept dept = sysDeptService.getById(deptId);
-        Set<Long> deptRoleIds = new HashSet<>();
+        Set<Integer> deptRoleIds = new HashSet<>();
         deptRoleIds(dept, deptRoleIds);
 
         // 合并去重
@@ -80,8 +78,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public List<SysRole> getAllRolesOfClients(List<Long> clientIds) {
-        Set<Long> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                .in(SysRoleOauthClient::getClientId, clientIds))
+        Set<Integer> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
+                        .in(SysRoleOauthClient::getClientId, clientIds))
                 .stream()
                 .map(SysRoleOauthClient::getRoleId)
                 .collect(Collectors.toSet());
@@ -90,8 +88,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public List<SysRole> getRolesOfUser(long userId) {
-        Set<Long> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                .eq(SysRoleUser::getUserId, userId))
+        Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+                        .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
         if (CollUtil.isEmpty(baseRoleIds)) {
@@ -124,7 +122,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void createRole(SysRole params) {
-        params.setId(idGenerator.nextId());
         params.setStatus(CommonStatusEnum.ENABLE);
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
@@ -138,28 +135,28 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         // 是否关联权限
         assertI18nService.checkOperation(sysRoleAuthorityService.count(
-                Wrappers.<SysRoleAuthority>lambdaQuery()
-                        .eq(SysRoleAuthority::getRoleId, id)) == 0,
+                        Wrappers.<SysRoleAuthority>lambdaQuery()
+                                .eq(SysRoleAuthority::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联部门
         assertI18nService.checkOperation(sysRoleDeptService.count(
-                Wrappers.<SysRoleDept>lambdaQuery()
-                        .eq(SysRoleDept::getRoleId, id)) == 0,
+                        Wrappers.<SysRoleDept>lambdaQuery()
+                                .eq(SysRoleDept::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联菜单
         assertI18nService.checkOperation(sysRoleMenuService.count(
-                Wrappers.<SysRoleMenu>lambdaQuery()
-                        .eq(SysRoleMenu::getRoleId, id)) == 0,
+                        Wrappers.<SysRoleMenu>lambdaQuery()
+                                .eq(SysRoleMenu::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联客户端
         assertI18nService.checkOperation(sysRoleOauthClientService.count(
-                Wrappers.<SysRoleOauthClient>lambdaQuery()
-                        .eq(SysRoleOauthClient::getRoleId, id)) == 0,
+                        Wrappers.<SysRoleOauthClient>lambdaQuery()
+                                .eq(SysRoleOauthClient::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联用户
         assertI18nService.checkOperation(sysRoleUserService.count(
-                Wrappers.<SysRoleUser>lambdaQuery()
-                        .eq(SysRoleUser::getRoleId, id)) == 0,
+                        Wrappers.<SysRoleUser>lambdaQuery()
+                                .eq(SysRoleUser::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
 
         assertI18nService.checkOperation(removeById(id),
@@ -175,7 +172,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.UpdateFailed");
     }
 
-    private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
+    private void deptRoleIds(SysDept dept, Set<Integer> deptRoleIds) {
         DeptRoleScopeEnum scope = dept.getScope();
         switch (scope) {
             // 获取当前部门和子部门的角色ID
@@ -194,7 +191,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 // 获取当前部门角色ID
             case CURRENT:
                 deptRoleIds.addAll(sysRoleDeptService.list(Wrappers.<SysRoleDept>lambdaQuery()
-                        .eq(SysRoleDept::getDeptId, dept))
+                                .eq(SysRoleDept::getDeptId, dept))
                         .stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet()));
                 break;
         }

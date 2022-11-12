@@ -13,7 +13,6 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.service.AssertI18nService;
@@ -36,7 +35,6 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     private final SysRoleDeptService sysRoleDeptService;
 
     private final DeptTrans deptTrans;
-    private final IdGenerator idGenerator;
     private final AssertI18nService assertI18nService;
 
     @Override
@@ -53,7 +51,6 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     @Override
     public void createDept(SysDept params) {
         params.setCreatedAt(DateUtils.now());
-        params.setId(idGenerator.nextId());
         if (params.getStatus() == null) {
             params.setStatus(CommonStatusEnum.ENABLE);
         }

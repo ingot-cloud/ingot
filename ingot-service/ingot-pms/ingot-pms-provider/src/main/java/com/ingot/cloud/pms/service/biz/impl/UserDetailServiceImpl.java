@@ -71,7 +71,7 @@ public class UserDetailServiceImpl implements UserDetailService {
                 .map(SysRole::getCode).collect(Collectors.toList());
         userDetails.setRoles(roleCodes);
 
-        List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
+        List<Integer> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
         List<Oauth2RegisteredClient> clients = oauth2RegisteredClientService.getClientsByRoles(roleIds);
 
         Oauth2RegisteredClient client = clients.stream()

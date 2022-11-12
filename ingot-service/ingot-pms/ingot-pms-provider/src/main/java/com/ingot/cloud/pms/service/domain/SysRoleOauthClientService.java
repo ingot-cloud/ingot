@@ -22,14 +22,14 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
      *
      * @param params 关联参数
      */
-    void clientBindRoles(RelationDto<Long, Long> params);
+    void clientBindRoles(RelationDto<Integer, Integer> params);
 
     /**
      * 角色绑定客户端
      *
      * @param params 关联参数
      */
-    void roleBindClients(RelationDto<Long, Long> params);
+    void roleBindClients(RelationDto<Integer, Integer> params);
 
     /**
      * 获取角色客户端
@@ -40,7 +40,7 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
      * @param condition 条件参数
      * @return 分页用户
      */
-    IPage<Oauth2RegisteredClient> getRoleClients(long roleId,
+    IPage<Oauth2RegisteredClient> getRoleClients(int roleId,
                                                  Page<?> page,
                                                  boolean isBind,
                                                  Oauth2RegisteredClient condition);

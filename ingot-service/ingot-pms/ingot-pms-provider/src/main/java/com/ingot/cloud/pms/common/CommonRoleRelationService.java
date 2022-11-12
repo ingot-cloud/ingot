@@ -29,7 +29,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 目标类型关联角色
      */
-    public void bindRoles(RelationDto<Long, Long> params,
+    public void bindRoles(RelationDto<Integer, Integer> params,
                           Do remove,
                           Do bind,
                           String removeErrorMsgCode) {
@@ -39,7 +39,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 角色关联目标
      */
-    public void bindTargets(RelationDto<Long, Long> params,
+    public void bindTargets(RelationDto<Integer, Integer> params,
                             Do remove,
                             Do bind,
                             String removeErrorMsgCode) {
@@ -47,13 +47,13 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     }
 
     private void bind(int type,
-                      RelationDto<Long, Long> params,
+                      RelationDto<Integer, Integer> params,
                       Do remove,
                       Do bind,
                       String removeErrorMsgCode) {
-        Long id = params.getId();
-        List<Long> removeIds = params.getRemoveIds();
-        List<Long> bindIds = params.getBindIds();
+        Integer id = params.getId();
+        List<Integer> removeIds = params.getRemoveIds();
+        List<Integer> bindIds = params.getBindIds();
 
         if (CollUtil.isNotEmpty(removeIds)) {
             boolean removeRet = true;

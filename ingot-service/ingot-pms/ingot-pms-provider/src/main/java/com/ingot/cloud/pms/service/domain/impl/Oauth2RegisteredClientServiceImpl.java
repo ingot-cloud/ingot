@@ -50,7 +50,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final SysRoleOauthClientService sysRoleOauthClientService;
 
     @Override
-    public List<Oauth2RegisteredClient> getClientsByRoles(List<Long> roleIds) {
+    public List<Oauth2RegisteredClient> getClientsByRoles(List<Integer> roleIds) {
         return getBaseMapper().getClientsByRoles(roleIds);
     }
 

@@ -53,7 +53,7 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param id 用户ID
      */
-    void removeUserById(long id);
+    void removeUserById(int id);
 
     /**
      * 更新用户信息

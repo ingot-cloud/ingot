@@ -14,7 +14,6 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -35,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final AssertI18nService assertI18nService;
-    private final IdGenerator idGenerator;
     private final AuthorityTrans authorityTrans;
 
     @Override
@@ -57,7 +55,6 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                         .eq(SysAuthority::getCode, params.getCode())) == 0,
                 "SysAuthorityServiceImpl.ExistCode");
 
-        params.setId(idGenerator.nextId());
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
                 "SysAuthorityServiceImpl.CreateFailed");

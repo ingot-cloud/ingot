@@ -35,14 +35,14 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     };
 
     @Override
-    public boolean removeByUserId(long userId) {
+    public boolean removeByUserId(int userId) {
         return remove(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getUserId, userId));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUserRole(long userId, List<Long> roles) {
+    public void updateUserRole(int userId, List<Integer> roles) {
         long userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
         if (userCount != 0) {
             assertI18nService.checkOperation(removeByUserId(userId),
@@ -64,20 +64,20 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void userBindRoles(RelationDto<Long, Long> params) {
+    public void userBindRoles(RelationDto<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindUsers(RelationDto<Long, Long> params) {
+    public void roleBindUsers(RelationDto<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
-    public IPage<SysUser> getRoleUsers(long roleId, Page<?> page, boolean isBind, SysUser condition) {
+    public IPage<SysUser> getRoleUsers(int roleId, Page<?> page, boolean isBind, SysUser condition) {
         return baseMapper.getRoleUsers(page, roleId, isBind, condition);
     }
 }
