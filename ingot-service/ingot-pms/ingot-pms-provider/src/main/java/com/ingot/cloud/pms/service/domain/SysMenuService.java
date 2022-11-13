@@ -41,5 +41,5 @@ public interface SysMenuService extends BaseService<SysMenu> {
      *
      * @param id id
      */
-    void removeMenuById(long id);
+    void removeMenuById(int id);
 }

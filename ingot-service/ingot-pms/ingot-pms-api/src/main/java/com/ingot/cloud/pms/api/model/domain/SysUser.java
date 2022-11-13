@@ -49,7 +49,7 @@ public class SysUser extends BaseModel<SysUser> {
      * 部门ID
      */
     @NotNull(message = "{SysUser.deptId}", groups = Group.Create.class)
-    private Long deptId;
+    private Integer deptId;
 
     /**
      * 用户名

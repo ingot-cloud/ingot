@@ -22,14 +22,14 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
      *
      * @param params 关联参数
      */
-    void authorityBindRoles(RelationDto<Long, Long> params);
+    void authorityBindRoles(RelationDto<Integer, Integer> params);
 
     /**
      * 角色绑定权限
      *
      * @param params 关联参数
      */
-    void roleBindAuthorities(RelationDto<Long, Long> params);
+    void roleBindAuthorities(RelationDto<Integer, Integer> params);
 
     /**
      * 获取角色权限信息
@@ -39,7 +39,7 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
+    List<AuthorityTreeNodeVO> getRoleAuthorities(int roleId,
                                                  boolean isBind,
                                                  SysAuthority condition);
 }

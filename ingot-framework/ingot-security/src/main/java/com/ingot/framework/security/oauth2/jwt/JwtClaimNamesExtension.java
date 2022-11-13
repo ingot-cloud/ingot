@@ -25,12 +25,12 @@ public interface JwtClaimNamesExtension extends JwtClaimNames {
         return MapUtil.get(source.getClaims(), SUB, String.class);
     }
 
-    static Long getId(Jwt source) {
-        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.ID, Long.class);
+    static Integer getId(Jwt source) {
+        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.ID, Integer.class);
     }
 
-    static Long getDept(Jwt source) {
-        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.DEPT, Long.class);
+    static Integer getDept(Jwt source) {
+        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.DEPT, Integer.class);
     }
 
     static Integer getTenantId(Jwt source) {

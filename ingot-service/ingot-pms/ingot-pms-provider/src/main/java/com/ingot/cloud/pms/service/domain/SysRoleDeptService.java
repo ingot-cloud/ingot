@@ -22,14 +22,14 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
      *
      * @param params 关联参数
      */
-    void deptBindRoles(RelationDto<Long, Long> params);
+    void deptBindRoles(RelationDto<Integer, Integer> params);
 
     /**
      * 角色绑定部门
      *
      * @param params 关联参数
      */
-    void roleBindDepts(RelationDto<Long, Long> params);
+    void roleBindDepts(RelationDto<Integer, Integer> params);
 
     /**
      * 获取角色部门信息
@@ -39,7 +39,7 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<DeptTreeNodeVO> getRoleDepts(long roleId,
+    List<DeptTreeNodeVO> getRoleDepts(int roleId,
                                       boolean isBind,
                                       SysDept condition);
 }

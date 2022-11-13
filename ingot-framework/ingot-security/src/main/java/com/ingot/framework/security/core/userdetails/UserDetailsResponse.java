@@ -21,11 +21,11 @@ public class UserDetailsResponse implements Serializable {
     /**
      * 用户ID
      */
-    private Long id;
+    private Integer id;
     /**
      * 部门ID
      */
-    private Long deptId;
+    private Integer deptId;
     /**
      * 租户ID
      */

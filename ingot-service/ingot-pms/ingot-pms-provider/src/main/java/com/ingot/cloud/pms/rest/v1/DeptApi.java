@@ -48,7 +48,7 @@ public class DeptApi extends BaseController {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Integer id) {
         sysDeptService.removeDeptById(id);
         return ok();
     }

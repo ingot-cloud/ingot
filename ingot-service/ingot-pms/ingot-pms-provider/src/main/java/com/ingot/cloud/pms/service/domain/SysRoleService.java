@@ -25,7 +25,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @param deptId 部门ID
      * @return 角色列表
      */
-    List<SysRole> getAllRolesOfUser(long userId, long deptId);
+    List<SysRole> getAllRolesOfUser(int userId, int deptId);
 
     /**
      * 根据clientId获取对应所有的角色
@@ -33,7 +33,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @param clientIds 客户端ID列表
      * @return 角色列表
      */
-    List<SysRole> getAllRolesOfClients(List<Long> clientIds);
+    List<SysRole> getAllRolesOfClients(List<String> clientIds);
 
     /**
      * 获取用户所有可用角色
@@ -41,7 +41,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @param userId 用户ID
      * @return 角色列表
      */
-    List<SysRole> getRolesOfUser(long userId);
+    List<SysRole> getRolesOfUser(int userId);
 
     /**
      * 条件查询用户分页信息
@@ -64,7 +64,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      *
      * @param id 角色ID
      */
-    void removeRoleById(long id);
+    void removeRoleById(int id);
 
     /**
      * 根据ID更新角色

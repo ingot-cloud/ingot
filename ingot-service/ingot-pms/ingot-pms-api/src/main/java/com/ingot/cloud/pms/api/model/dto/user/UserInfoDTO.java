@@ -21,5 +21,5 @@ public class UserInfoDTO implements Serializable {
     /**
      * 拥有角色
      */
-    private List<Integer> roles;
+    private List<String> roles;
 }

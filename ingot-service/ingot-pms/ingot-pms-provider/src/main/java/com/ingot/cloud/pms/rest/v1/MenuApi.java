@@ -46,7 +46,7 @@ public class MenuApi extends BaseController {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Integer id) {
         sysMenuService.removeMenuById(id);
         return ok();
     }

@@ -57,7 +57,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final RoleTrans roleTrans;
 
     @Override
-    public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
+    public List<SysRole> getAllRolesOfUser(int userId, int deptId) {
         // 基础角色ID
         Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getUserId, userId))
@@ -77,7 +77,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public List<SysRole> getAllRolesOfClients(List<Long> clientIds) {
+    public List<SysRole> getAllRolesOfClients(List<String> clientIds) {
         Set<Integer> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
                         .in(SysRoleOauthClient::getClientId, clientIds))
                 .stream()
@@ -87,7 +87,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public List<SysRole> getRolesOfUser(long userId) {
+    public List<SysRole> getRolesOfUser(int userId) {
         Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
@@ -129,7 +129,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public void removeRoleById(long id) {
+    public void removeRoleById(int id) {
         assertI18nService.checkOperation(id != RoleConstants.ROLE_ADMIN_ID,
                 "SysRoleServiceImpl.SuperAdminRemoveFailed");
 

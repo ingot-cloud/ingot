@@ -60,7 +60,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeDeptById(long id) {
+    public void removeDeptById(int id) {
         boolean success = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id)) == 0;
         assertI18nService.checkOperation(success, "SysDeptServiceImpl.ExistLeaf");
 

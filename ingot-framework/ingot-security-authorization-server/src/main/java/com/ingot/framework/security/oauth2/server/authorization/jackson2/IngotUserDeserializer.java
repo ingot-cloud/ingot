@@ -33,8 +33,8 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
 
     private IngotUser deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        Long id = Long.parseLong(JsonNodeUtils.findStringValue(root, "id"));
-        Long deptId = Long.parseLong(JsonNodeUtils.findStringValue(root, "deptId"));
+        Integer id = Integer.parseInt(JsonNodeUtils.findStringValue(root, "id"));
+        Integer deptId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "deptId"));
         Integer tenantId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "tenantId"));
         String tokenAuthMethod = JsonNodeUtils.findStringValue(root, "tokenAuthenticationMethod");
         String username = JsonNodeUtils.findStringValue(root, "username");

@@ -40,7 +40,7 @@ public class UserApi extends BaseController {
     }
 
     @GetMapping("/profile/{id}")
-    public R<?> userProfile(@PathVariable Long id){
+    public R<?> userProfile(@PathVariable Integer id){
         return ok(sysUserService.getUserProfile(id));
     }
 
@@ -63,13 +63,13 @@ public class UserApi extends BaseController {
 
     @PutMapping("/edit")
     public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
-        long userId = SecurityAuthContext.getUser().getId();
+        int userId = SecurityAuthContext.getUser().getId();
         sysUserService.updateUserBaseInfo(userId, params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Long id) {
+    public R<?> removeById(@PathVariable Integer id) {
         sysUserService.removeUserById(id);
         return ok();
     }

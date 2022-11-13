@@ -22,10 +22,10 @@ public class IngotUser extends User {
 
     @Getter
     @JsonSerialize(using = ToStringSerializer.class)
-    private final Long id;
+    private final Integer id;
     @Getter
     @JsonSerialize(using = ToStringSerializer.class)
-    private final Long deptId;
+    private final Integer deptId;
     @Getter
     @JsonSerialize(using = ToStringSerializer.class)
     private final Integer tenantId;
@@ -35,8 +35,8 @@ public class IngotUser extends User {
     @Getter
     private final String clientId;
 
-    public IngotUser(Long id,
-                     Long deptId,
+    public IngotUser(Integer id,
+                     Integer deptId,
                      Integer tenantId,
                      String tokenAuthenticationMethod,
                      String username,
@@ -45,8 +45,8 @@ public class IngotUser extends User {
                 username, clientId, Collections.emptyList());
     }
 
-    public IngotUser(Long id,
-                     Long deptId,
+    public IngotUser(Integer id,
+                     Integer deptId,
                      Integer tenantId,
                      String tokenAuthenticationMethod,
                      String username,
@@ -57,8 +57,8 @@ public class IngotUser extends User {
                 authorities);
     }
 
-    public IngotUser(Long id,
-                     Long deptId,
+    public IngotUser(Integer id,
+                     Integer deptId,
                      Integer tenantId,
                      String tokenAuthenticationMethod,
                      String username,

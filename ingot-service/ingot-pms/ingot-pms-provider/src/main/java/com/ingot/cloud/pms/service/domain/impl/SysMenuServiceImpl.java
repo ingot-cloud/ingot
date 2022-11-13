@@ -76,7 +76,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeMenuById(long id) {
+    public void removeMenuById(int id) {
         // 判断是否为叶子节点
         assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
                         .eq(SysMenu::getPid, id)) == 0,

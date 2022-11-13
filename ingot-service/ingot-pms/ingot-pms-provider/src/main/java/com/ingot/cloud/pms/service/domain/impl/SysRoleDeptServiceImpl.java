@@ -41,20 +41,20 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deptBindRoles(RelationDto<Long, Long> params) {
+    public void deptBindRoles(RelationDto<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleDeptServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindDepts(RelationDto<Long, Long> params) {
+    public void roleBindDepts(RelationDto<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleDeptServiceImpl.RemoveFailed");
     }
 
     @Override
-    public List<DeptTreeNodeVO> getRoleDepts(long roleId,
+    public List<DeptTreeNodeVO> getRoleDepts(int roleId,
                                              boolean isBind,
                                              SysDept condition) {
         List<SysDept> all = getBaseMapper().getRoleDepts(roleId, isBind, condition);

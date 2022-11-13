@@ -40,20 +40,20 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void authorityBindRoles(RelationDto<Long, Long> params) {
+    public void authorityBindRoles(RelationDto<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindAuthorities(RelationDto<Long, Long> params) {
+    public void roleBindAuthorities(RelationDto<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
+    public List<AuthorityTreeNodeVO> getRoleAuthorities(int roleId,
                                                         boolean isBind,
                                                         SysAuthority condition) {
         List<SysAuthority> all = baseMapper.getRoleAuthorities(roleId, isBind, condition);
