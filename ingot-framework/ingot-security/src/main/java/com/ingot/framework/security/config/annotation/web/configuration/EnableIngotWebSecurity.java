@@ -21,7 +21,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @EnableConfigurationProperties(IngotOAuth2ResourceProperties.class)
 @Import({IngotOAuth2ResourceServerConfiguration.class,
         IngotOAuth2ResourceServerJwtConfiguration.class,
