@@ -31,7 +31,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.settings.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.HeaderWriterFilter;
 
@@ -74,8 +74,8 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public ProviderSettings providerSettings(IngotOAuth2AuthProperties properties) {
-        return ProviderSettings.builder().issuer(properties.getIssuer()).build();
+    public AuthorizationServerSettings providerSettings(IngotOAuth2AuthProperties properties) {
+        return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
     @Bean
@@ -86,7 +86,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
-                                 ProviderSettings providerSettings) {
+                                 AuthorizationServerSettings authorizationServerSettings) {
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
         jwsAlgs.addAll(JWSAlgorithm.Family.EC);
@@ -102,7 +102,7 @@ public class AuthorizationServerConfig {
         NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(
-                IngotJwtValidators.createDefaultWithIssuer(providerSettings.getIssuer()));
+                IngotJwtValidators.createDefaultWithIssuer(authorizationServerSettings.getIssuer()));
         return jwtDecoder;
     }
 }

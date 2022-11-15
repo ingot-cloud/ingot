@@ -18,7 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.settings.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -41,7 +41,7 @@ public class IngotOAuth2PasswordAuthenticationConfigurer
             return;
         }
 
-        ProviderSettings providerSettings = OAuth2ConfigurerUtils.getProviderSettings(httpSecurity);
+        AuthorizationServerSettings providerSettings = OAuth2ConfigurerUtils.getAuthorizationServerSettings(httpSecurity);
         this.requestMatcher = new AntPathRequestMatcher(
                 providerSettings.getTokenEndpoint(), HttpMethod.POST.name());
 
