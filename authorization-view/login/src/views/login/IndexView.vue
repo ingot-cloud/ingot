@@ -53,10 +53,11 @@ const handleCloseErrorHint = () => {
   flex-direction: column;
   align-items: center;
   margin-bottom: 15px;
+  height: 60px;
 }
 .logo-container .logo {
-  width: 64px;
-  height: 50px;
+  /* width: 64px; */
+  height: 100%;
 }
 .welcome-container {
   display: flex;
