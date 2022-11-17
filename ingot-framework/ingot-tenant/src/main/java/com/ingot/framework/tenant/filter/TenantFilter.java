@@ -34,16 +34,17 @@ public class TenantFilter extends GenericFilterBean {
         log.info("[TenantFilter] do filter url = {}", url);
 
         String tenantId = request.getHeader(TenantConstants.TENANT_HEADER_KEY);
-        log.info("[TenantFilter] 获取 header 中的 tenantID={}", tenantId);
+        boolean hasHeaderTenantId = StrUtil.isNotBlank(tenantId);
 
-        if (StrUtil.isNotBlank(tenantId)) {
-            TenantContextHolder.set(Integer.valueOf(tenantId));
-        } else {
-            log.info("[TenantFilter] 设置默认 tenantID");
-            TenantContextHolder.set(TenantConstants.DEFAULT_TENANT_ID);
+        try {
+            log.info("[TenantFilter] Header 中{}key={}",
+                    hasHeaderTenantId ? "存在" : "不存在", TenantConstants.TENANT_HEADER_KEY);
+            Integer tenant = hasHeaderTenantId ? Integer.valueOf(tenantId) : TenantConstants.DEFAULT_TENANT_ID;
+            log.info("[TenantFilter] tenantId = {}", tenant);
+            TenantContextHolder.set(tenant);
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContextHolder.clear();
         }
-
-        filterChain.doFilter(request, response);
-        TenantContextHolder.clear();
     }
 }
