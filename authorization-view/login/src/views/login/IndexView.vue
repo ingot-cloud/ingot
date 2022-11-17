@@ -18,7 +18,10 @@ const handleCloseErrorHint = () => {
 };
 </script>
 <template>
-  <image src="@/assets/logo.svg" class="logo" />
+  <div class="logo-container">
+    <img src="@/assets/logo-white.png" class="logo" />
+  </div>
+  <div class="welcome-container">登录到Ingot</div>
   <div shadow="never" v-if="showError" class="error-container">
     <div class="error-text">error message</div>
     <IconClose @click="handleCloseErrorHint" />
@@ -44,9 +47,29 @@ const handleCloseErrorHint = () => {
   </el-card>
 </template>
 <style scoped>
-.logo {
-  width: 30px;
-  height: 30px;
+.logo-container {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.logo-container .logo {
+  width: 100px;
+  height: 100px;
+}
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgb(201, 209, 217);
+  line-height: 36px;
+  height: 36px;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  margin-bottom: 15px;
 }
 .error-container {
   height: 55px;
