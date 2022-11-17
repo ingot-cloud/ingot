@@ -19,7 +19,7 @@ const handleCloseErrorHint = () => {
 </script>
 <template>
   <div class="logo-container">
-    <img src="@/assets/logo-white.png" class="logo" />
+    <img src="@/assets/logo-transparent.png" class="logo" />
   </div>
   <div class="welcome-container">登录到Ingot</div>
   <div shadow="never" v-if="showError" class="error-container">
@@ -52,10 +52,11 @@ const handleCloseErrorHint = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 15px;
 }
 .logo-container .logo {
-  width: 100px;
-  height: 100px;
+  width: 64px;
+  height: 50px;
 }
 .welcome-container {
   display: flex;
