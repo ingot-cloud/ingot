@@ -10,9 +10,6 @@ import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.IngotSecurityExpression;
-import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
-import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
-import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
 import com.ingot.framework.security.web.ClientAuthContextFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,7 +25,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * <p>Description  : IngotOAuth2ResourceServerConfiguration.</p>
@@ -54,14 +50,8 @@ public class IngotOAuth2ResourceServerConfiguration {
                 })
                 .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
                 .and()
-                .oauth2ResourceServer()
-                .authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
-                .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
-                .jwt()
-                .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
-
-        return http.formLogin(withDefaults())
-                .addFilterBefore(new ClientAuthContextFilter(), UsernamePasswordAuthenticationFilter.class)
+                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver));
+        return http.addFilterBefore(new ClientAuthContextFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

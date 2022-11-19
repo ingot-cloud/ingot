@@ -16,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -34,25 +33,34 @@ public class ClientAuthContextFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String clientId = null;
-        SavedRequest savedRequest = requestCache.getRequest(request, response);
-        if (savedRequest == null) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null) {
-                clientId = authentication.getName();
-            }
-        } else {
-            String[] ids = savedRequest.getParameterValues("client_id");
-            if (ArrayUtil.isNotEmpty(ids)) {
-                clientId = ids[0];
-            }
-        }
+        final String url = request.getRequestURI();
+        log.info("[ClientAuthContextFilter] do filter url = {}", url);
 
-        if (StrUtil.isNotEmpty(clientId)) {
-            ClientContextHolder.set(clientId);
-            log.info("[ClientAuthContextFilter] - ClientContextHolder Set Client Id = {}", clientId);
+        try {
+            String clientId = null;
+            HttpServletRequest savedRequest = requestCache.getMatchingRequest(request,
+                    response);
+            if (savedRequest == null) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null) {
+                    clientId = authentication.getName();
+                }
+            } else {
+                String[] ids = savedRequest.getParameterValues("client_id");
+                if (ArrayUtil.isNotEmpty(ids)) {
+                    clientId = ids[0];
+                }
+            }
+
+            log.info("[ClientAuthContextFilter] savedRequest {}, clientId = {}",
+                    (savedRequest == null) ? "不存在" : "存在", clientId);
+
+            if (StrUtil.isNotEmpty(clientId)) {
+                ClientContextHolder.set(clientId);
+            }
+            filterChain.doFilter(request, response);
+        } finally {
+            ClientContextHolder.clear();
         }
-        filterChain.doFilter(request, response);
-        ClientContextHolder.clear();
     }
 }

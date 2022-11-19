@@ -169,7 +169,8 @@ public class PermitResolver implements InitializingBean {
 
             List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
             for (String method : methods) {
-                registry.antMatchers(HttpMethod.valueOf(method), urlAndMethod.get(0)).permitAll();
+                registry.antMatchers(
+                        HttpMethod.valueOf(method.toUpperCase()), urlAndMethod.get(0)).permitAll();
             }
         }
     }
