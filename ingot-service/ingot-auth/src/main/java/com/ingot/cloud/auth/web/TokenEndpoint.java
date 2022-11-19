@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.rest;
+package com.ingot.cloud.auth.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.dto.OAuth2AuthorizationDTO;
@@ -23,16 +23,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <p>Description  : AuthTokenApi.</p>
+ * <p>Description  : TokenEndpoint.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/10/20.</p>
- * <p>Time         : 3:41 下午.</p>
+ * <p>Date         : 2022/11/19.</p>
+ * <p>Time         : 1:54 PM.</p>
  */
 @Slf4j
 @RestController
 @RequestMapping("/token")
 @RequiredArgsConstructor
-public class AuthTokenApi extends BaseController {
+public class TokenEndpoint extends BaseController {
     private final OAuth2AuthorizationService oAuth2AuthorizationService;
     private final AuthorizationCacheService authorizationCacheService;
 
@@ -78,5 +78,4 @@ public class AuthTokenApi extends BaseController {
     public R<?> page(Page<OAuth2AuthorizationDTO> page, OAuth2AuthorizationDTO params) {
         return ok(((IngotJdbcOAuth2AuthorizationService) oAuth2AuthorizationService).page(page, params));
     }
-
 }

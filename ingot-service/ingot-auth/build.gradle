@@ -1,6 +1,7 @@
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.thymeleaf_starter)
 
     implementation project(ingot.framework_security_auth_server)
     implementation project(ingot.framework_feign)

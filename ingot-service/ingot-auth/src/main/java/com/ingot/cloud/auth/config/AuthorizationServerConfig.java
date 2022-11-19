@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -53,7 +52,7 @@ public class AuthorizationServerConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applyDefaultSecurity(http);
         http.addFilterAfter(new TenantFilter(), HeaderWriterFilter.class);
-        return http.formLogin(Customizer.withDefaults()).build();
+        return http.formLogin(new FormLoginCustomizer()).build();
     }
 
     @Bean
