@@ -5,13 +5,6 @@ import IconClose from "./IconClose.vue";
 const showError = ref(true);
 const username = ref("");
 const password = ref("");
-const cardBodyStyle = {
-  paddingLeft: "20px",
-  paddingRight: "20px",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-};
 
 const handleCloseErrorHint = () => {
   showError.value = false;
@@ -19,32 +12,34 @@ const handleCloseErrorHint = () => {
 </script>
 <template>
   <div class="logo-container">
-    <img src="@/assets/logo-transparent.png" class="logo" />
+    <img src="@/assets/logo.png" class="logo" />
   </div>
   <div class="welcome-container">登录到Ingot</div>
   <div shadow="never" v-if="showError" class="error-container">
     <div class="error-text">error message</div>
     <IconClose @click="handleCloseErrorHint" />
   </div>
-  <el-card shadow="never" class="login-container" :body-style="cardBodyStyle">
-    <el-input
-      v-model="username"
-      name="username"
-      placeholder="账号"
-      clearable
-      class="input-item"
-    />
-    <el-input
-      v-model="password"
-      name="password"
-      type="password"
-      show-password
-      clearable
-      placeholder="密码"
-      class="input-item"
-    />
-    <el-button color="#4e8e2f" class="btn-item">登录</el-button>
-  </el-card>
+  <div class="login-container">
+    <form action="/oauth2/form" method="post">
+      <el-input
+        v-model="username"
+        name="username"
+        placeholder="账号"
+        clearable
+        class="input-item"
+      />
+      <el-input
+        v-model="password"
+        name="password"
+        type="password"
+        show-password
+        clearable
+        placeholder="密码"
+        class="input-item"
+      />
+      <el-button color="#4e8e2f" class="btn-item" type="submit">登录</el-button>
+    </form>
+  </div>
 </template>
 <style scoped>
 .logo-container {
@@ -53,10 +48,9 @@ const handleCloseErrorHint = () => {
   flex-direction: column;
   align-items: center;
   margin-bottom: 15px;
-  height: 60px;
+  height: 50px;
 }
 .logo-container .logo {
-  /* width: 64px; */
   height: 100%;
 }
 .welcome-container {
@@ -87,7 +81,7 @@ const handleCloseErrorHint = () => {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 16px;
 }
 .error-container .error-text {
   font-size: 14px;
@@ -98,7 +92,16 @@ const handleCloseErrorHint = () => {
     Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
 .login-container {
-  width: 330px;
+  background-color: rgb(22, 27, 34);
+  padding: 16px;
+  border: 1px solid rgb(33, 38, 45);
+  border-radius: 6px;
+}
+.login-container form {
+  width: 274px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .login-container .input-item {
   margin-bottom: 20px;
