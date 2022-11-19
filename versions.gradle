@@ -12,7 +12,7 @@ versions.commons_io = "2.4"
 versions.mapstruct = "1.4.1.Final"
 versions.jackson = "2.13.3"
 versions.mybatis_plus = "3.5.1"
-versions.mysql_connector = "8.0.16"
+versions.mysql_connector = "8.0.31"
 versions.hutool = "5.8.5"
 
 def spring = [:]
@@ -31,6 +31,7 @@ spring_boot.security_starter = "org.springframework.boot:spring-boot-starter-sec
 spring_boot.jdbc_starter = "org.springframework.boot:spring-boot-starter-jdbc"
 spring_boot.mail_starter = "org.springframework.boot:spring-boot-starter-mail"
 spring_boot.freemarker_starter = "org.springframework.boot:spring-boot-starter-freemarker"
+spring_boot.thymeleaf_starter = "org.springframework.boot:spring-boot-starter-thymeleaf"
 spring_boot.spring_boot_autoconfigure = "org.springframework.boot:spring-boot-autoconfigure"
 spring_boot.cache_starter = "org.springframework.boot:spring-boot-starter-cache"
 spring_boot.undertow_starter = "org.springframework.boot:spring-boot-starter-undertow"
@@ -109,7 +110,7 @@ mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis
 deps.mybatis = mybatis
 
 def mysql = [:]
-mysql.connector = "mysql:mysql-connector-java:${versions.mysql_connector}"
+mysql.connector = "com.mysql:mysql-connector-j:${versions.mysql_connector}"
 deps.mysql = mysql
 
 def mapstruct = [:]
