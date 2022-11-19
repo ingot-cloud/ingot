@@ -5,8 +5,12 @@ const router = createRouter({
   routes: [
     {
       path: "/",
+      redirect: "/oauth2/login",
+    },
+    {
+      path: "/oauth2/login",
       name: "login",
-      component: () => import("../views/login/IndexView.vue"),
+      component: () => import("@/views/login/IndexView.vue"),
     },
   ],
 });
