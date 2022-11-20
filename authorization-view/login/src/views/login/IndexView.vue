@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import IconClose from "./IconClose.vue";
-
-const showError = ref(true);
+const loginForm = ref();
+const errorMessage = ref("");
 const username = ref("");
 const password = ref("");
 
 const handleCloseErrorHint = () => {
-  showError.value = false;
+  errorMessage.value = "";
+};
+
+const handleLogin = () => {
+  if (!username.value) {
+    errorMessage.value = "请输入账号";
+    return;
+  }
+  if (!password.value) {
+    errorMessage.value = "请输入密码";
+    return;
+  }
+  loginForm.value.submit();
 };
 </script>
 <template>
@@ -15,12 +27,14 @@ const handleCloseErrorHint = () => {
     <img src="@/assets/logo.png" class="logo" />
   </div>
   <div class="welcome-container">登录到Ingot</div>
-  <div shadow="never" v-if="showError" class="error-container">
-    <div class="error-text">error message</div>
+  <div shadow="never" v-if="errorMessage" class="error-container">
+    <div class="error-text">
+      {{ errorMessage }}
+    </div>
     <IconClose @click="handleCloseErrorHint" />
   </div>
   <div class="login-container">
-    <form action="/oauth2/form" method="post">
+    <form action="/oauth2/form" method="post" ref="loginForm">
       <el-input
         v-model="username"
         name="username"
@@ -37,7 +51,9 @@ const handleCloseErrorHint = () => {
         placeholder="密码"
         class="input-item"
       />
-      <el-button color="#4e8e2f" class="btn-item" type="submit">登录</el-button>
+      <el-button color="#4e8e2f" class="btn-item" @click="handleLogin">
+        登录
+      </el-button>
     </form>
   </div>
 </template>

@@ -31,7 +31,10 @@ export default defineConfig(({ mode, command, ssrBuild }) => {
       port: 5173,
     },
     build: {
-      outDir: resolve(__dirname, "dist"),
+      outDir: resolve(
+        __dirname,
+        "../../ingot-service/ingot-auth/src/main/resources"
+      ),
       rollupOptions: {
         input: {
           entry: resolve(__dirname, "index.html"),
