@@ -10,7 +10,7 @@ import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.IngotSecurityExpression;
-import com.ingot.framework.security.web.ClientAuthContextFilter;
+import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -51,7 +51,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
                 .and()
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver));
-        return http.addFilterBefore(new ClientAuthContextFilter(), UsernamePasswordAuthenticationFilter.class)
+        return http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

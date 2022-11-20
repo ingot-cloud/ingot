@@ -6,7 +6,7 @@ import java.util.List;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UsernamePasswordAuthenticationFilter;
-import com.ingot.framework.security.web.ClientAuthContextFilter;
+import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -60,13 +60,13 @@ public class IngotOAuth2PasswordAuthenticationConfigurer
         AuthenticationManager authenticationManager = httpSecurity.getSharedObject(AuthenticationManager.class);
 
         // ClientAuthContextFilter 在 OAuth2ClientAuthenticationFilter 后面
-        ClientAuthContextFilter clientAuthContextFilter = new ClientAuthContextFilter();
+        ClientContextAwareFilter clientAuthContextFilter = new ClientContextAwareFilter();
         httpSecurity.addFilterAfter(postProcess(clientAuthContextFilter), OAuth2ClientAuthenticationFilter.class);
 
         // OAuth2UsernamePasswordAuthenticationFilter 在 ClientAuthContextFilter 后面
         OAuth2UsernamePasswordAuthenticationFilter filter =
                 new OAuth2UsernamePasswordAuthenticationFilter(authenticationManager, this.requestMatcher);
-        httpSecurity.addFilterAfter(postProcess(filter), ClientAuthContextFilter.class);
+        httpSecurity.addFilterAfter(postProcess(filter), ClientContextAwareFilter.class);
     }
 
     private List<AuthenticationProvider> createPasswordAuthenticationProviders(HttpSecurity httpSecurity) {

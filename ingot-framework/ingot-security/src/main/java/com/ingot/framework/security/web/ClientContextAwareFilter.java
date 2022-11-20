@@ -16,16 +16,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * <p>Description  : ClientAuthContextFilter.</p>
+ * <p>Description  : ClientContextAwareFilter.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/28.</p>
  * <p>Time         : 9:16 上午.</p>
  */
 @Slf4j
-public class ClientAuthContextFilter extends OncePerRequestFilter {
+public class ClientContextAwareFilter extends OncePerRequestFilter {
     private final RequestCache requestCache = new HttpSessionRequestCache();
 
     @Override
@@ -34,12 +35,10 @@ public class ClientAuthContextFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String url = request.getRequestURI();
-        log.info("[ClientAuthContextFilter] do filter url = {}", url);
-
+        log.info("[{}] do filter url = {}", ClientContextAwareFilter.class.getSimpleName(), url);
         try {
             String clientId = null;
-            HttpServletRequest savedRequest = requestCache.getMatchingRequest(request,
-                    response);
+            SavedRequest savedRequest = requestCache.getRequest(request, response);
             if (savedRequest == null) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null) {
@@ -52,9 +51,8 @@ public class ClientAuthContextFilter extends OncePerRequestFilter {
                 }
             }
 
-            log.info("[ClientAuthContextFilter] savedRequest {}, clientId = {}",
+            log.info("[{}] savedRequest {}, clientId = {}", ClientContextAwareFilter.class.getSimpleName(),
                     (savedRequest == null) ? "不存在" : "存在", clientId);
-
             if (StrUtil.isNotEmpty(clientId)) {
                 ClientContextHolder.set(clientId);
             }
