@@ -1,18 +1,22 @@
 import { createApp } from "vue";
-import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
-
-import App from "./App.vue";
-import router from "@/router";
-
 import "@/assets/main.css";
+import "./app.css";
 
-const app = createApp(App);
+import IconClose from "./IconClose.vue";
 
-app.use(createPinia());
-app.use(router);
+const app = createApp({
+  components: {
+    IconClose,
+  },
+  data() {
+    return {
+      message: "Hello Vue!",
+    };
+  },
+});
+
 app.use(ElementPlus);
-
 app.mount("#app");

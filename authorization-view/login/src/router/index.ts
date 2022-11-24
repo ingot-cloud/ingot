@@ -10,7 +10,7 @@ const router = createRouter({
     {
       path: "/oauth2/login",
       name: "login",
-      component: () => import("@/views/login/IndexView.vue"),
+      component: () => import("@/views/login/App.vue"),
     },
   ],
 });

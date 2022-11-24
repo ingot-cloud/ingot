@@ -1,0 +1,69 @@
+.logo-container {
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 15px;
+	height: 50px;
+  }
+  .logo-container .logo {
+	height: 100%;
+  }
+  .welcome-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: rgb(201, 209, 217);
+	line-height: 36px;
+	height: 36px;
+	font-size: 24px;
+	font-weight: 800;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+	  Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+	margin-bottom: 15px;
+  }
+  .error-container {
+	height: 55px;
+	margin-bottom: 15px;
+	border-radius: 4px;
+	border: 1px solid rgba(248, 81, 73, 0.4);
+	background-image: linear-gradient(
+	  rgba(248, 81, 73, 0.15),
+	  rgba(248, 81, 73, 0.15)
+	);
+	color: rgb(201, 209, 217);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px;
+  }
+  .error-container .error-text {
+	font-size: 14px;
+	height: 14px;
+	line-height: 14px;
+	word-wrap: break-word;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+	  Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+  .login-container {
+	background-color: rgb(22, 27, 34);
+	padding: 16px;
+	border: 1px solid rgb(33, 38, 45);
+	border-radius: 6px;
+  }
+  .login-container .form-container {
+	width: 274px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+  }
+  .login-container .form-container .input-item {
+	margin-bottom: 20px;
+	height: 35px;
+  }
+  .login-container .btn-item {
+	height: 35px;
+	border-radius: 6px;
+  }
