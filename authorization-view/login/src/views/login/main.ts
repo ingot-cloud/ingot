@@ -14,7 +14,7 @@ const app = createApp({
   },
   data() {
     return {
-      errorMessage: "Hello Vue!",
+      errorMessage: "",
       username: "",
       password: "",
     };
