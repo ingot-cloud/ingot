@@ -57,7 +57,6 @@
 	width: 274px;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
   }
   .login-container .form-container .input-item {
 	margin-bottom: 20px;

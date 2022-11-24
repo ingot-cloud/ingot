@@ -9,22 +9,27 @@
   <body>
     <div id="app">
       <div class="logo-container">
-        <!-- <img src="@/assets/logo.png" class="logo" /> -->
+        <img src="/static/logo.png" class="logo" />
       </div>
       <div class="welcome-container">登录到Ingot</div>
-      <!-- <div shadow="never" v-if="errorMessage" class="error-container">
+      <div shadow="never" v-if="errorMessage" class="error-container">
         <div class="error-text">{{ errorMessage }}</div>
         <IconClose @click="handleCloseErrorHint" />
-      </div> -->
+      </div>
       <div class="login-container">
-        <div action="/oauth2/form" method="post" class="form-container" ref="loginForm">
+        <form
+          action="/oauth2/form"
+          method="post"
+          class="form-container"
+          ref="loginForm"
+        >
           <el-input
             v-model="username"
             name="username"
             placeholder="账号"
             clearable
             class="input-item"
-          />
+          ></el-input>
           <el-input
             v-model="password"
             name="password"
@@ -33,11 +38,11 @@
             clearable
             placeholder="密码"
             class="input-item"
-          />
+          ></el-input>
           <el-button color="#4e8e2f" class="btn-item" @click="handleLogin">
             登录
           </el-button>
-        </div>
+        </form>
       </div>
     </div>
     <script type="module" src="/src/views/login/main.ts"></script>
