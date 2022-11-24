@@ -4,7 +4,6 @@ import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
 import "@/assets/main.css";
 import "./app.css";
-
 import IconClose from "./IconClose.vue";
 
 const app = createApp({
@@ -15,11 +14,26 @@ const app = createApp({
   },
   data() {
     return {
-      message: "Hello Vue!",
+      errorMessage: "Hello Vue!",
+      username: "",
+      password: "",
     };
   },
   methods: {
-    handleLogin() {},
+    handleLogin() {
+      if (!this.username) {
+        this.errorMessage = "请输入账号";
+        return;
+      }
+      if (!this.password) {
+        this.errorMessage = "请输入密码";
+        return;
+      }
+      this.$refs.loginForm.submit();
+    },
+    handleCloseErrorHint() {
+      this.errorMessage = "";
+    },
   },
 });
 
