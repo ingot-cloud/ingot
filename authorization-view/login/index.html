@@ -12,7 +12,7 @@
         <img src="/static/logo.png" class="logo" />
       </div>
       <div class="welcome-container">登录到Ingot</div>
-      <div shadow="never" v-if="errorMessage" class="error-container">
+      <div shadow="never" th:v-if="|ifErrorHint('${error}')|" v-if="ifErrorHint('11')" class="error-container">
         <div class="error-text">{{ errorMessage }}</div>
         <icon-close @click="handleCloseErrorHint"></icon-close>
       </div>

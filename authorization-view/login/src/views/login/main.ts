@@ -14,6 +14,7 @@ const app = createApp({
   },
   data() {
     return {
+      showError: false,
       errorMessage: "",
       username: "",
       password: "",
@@ -23,16 +24,25 @@ const app = createApp({
     handleLogin() {
       if (!this.username) {
         this.errorMessage = "请输入账号";
+        this.showError = true;
         return;
       }
       if (!this.password) {
         this.errorMessage = "请输入密码";
+        this.showError = true;
         return;
       }
       this.$refs.loginForm.submit();
     },
     handleCloseErrorHint() {
-      this.errorMessage = "";
+      this.showError = false;
+    },
+    ifErrorHint(params: string) {
+      if (params && !this.errorMessage) {
+        this.errorMessage = params;
+        this.showError = true;
+      }
+      return this.showError;
     },
   },
 });
