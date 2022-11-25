@@ -41,10 +41,9 @@ public class IngotAuthenticationFailureHandler implements AuthenticationFailureH
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
+        log.info("[IngotAuthenticationFailureHandler] - onAuthenticationFailure", exception);
+
         SecurityContextHolder.clearContext();
-
-        log.info("onAuthenticationFailure", exception);
-
         OAuth2Error error;
         if (exception instanceof OAuth2AuthenticationException) {
             error = ((OAuth2AuthenticationException) exception).getError();

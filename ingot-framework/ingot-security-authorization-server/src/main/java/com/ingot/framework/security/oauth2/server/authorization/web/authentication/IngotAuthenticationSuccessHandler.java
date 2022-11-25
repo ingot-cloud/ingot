@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import org.springframework.util.CollectionUtils;
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:48 上午.</p>
  */
+@Slf4j
 public class IngotAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final HttpMessageConverter<OAuth2AccessTokenResponse> accessTokenHttpResponseConverter =
             new IngotOAuth2AccessTokenResponseHttpMessageConverter();
@@ -33,6 +35,9 @@ public class IngotAuthenticationSuccessHandler implements AuthenticationSuccessH
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
+        log.info("[IngotAuthenticationFailureHandler] - onAuthenticationSuccess authentication={}",
+                authentication);
+
         OAuth2AccessTokenAuthenticationToken accessTokenAuthentication =
                 (OAuth2AccessTokenAuthenticationToken) authentication;
 
