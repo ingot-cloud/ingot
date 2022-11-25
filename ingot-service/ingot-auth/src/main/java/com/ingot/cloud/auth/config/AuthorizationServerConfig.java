@@ -7,7 +7,10 @@ import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
+import com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2ResourceServerConfiguration;
+import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
@@ -20,6 +23,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -50,6 +54,18 @@ public class AuthorizationServerConfig {
                                                                       TenantHttpConfigurer tenantHttpConfigurer) throws Exception {
         IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         tenantHttpConfigurer.configure(http);
+        http.exceptionHandling(new ExceptionHandlingCustomizer());
+        return http.build();
+    }
+
+    @Bean(IngotOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
+    @ConditionalOnMissingBean(name = {IngotOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME})
+    public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+                                                                 PermitResolver permitResolver,
+                                                                 HttpSecurity http) throws Exception {
+        IngotOAuth2ResourceServerConfiguration
+                .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
+        http.csrf(new CsrfCustomizer(permitResolver));
         return http.formLogin(new FormLoginCustomizer()).build();
     }
 

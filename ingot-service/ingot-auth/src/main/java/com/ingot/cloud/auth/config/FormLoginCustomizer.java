@@ -11,10 +11,12 @@ import org.springframework.security.config.annotation.web.configurers.FormLoginC
  * <p>Time         : 1:56 PM.</p>
  */
 public class FormLoginCustomizer implements Customizer<FormLoginConfigurer<HttpSecurity>> {
+    public static final String LOGIN_PAGE_URL = "/oauth2/login";
+    public static final String LOGIN_PROCESSING_URL = "/oauth2/form";
 
     @Override
     public void customize(FormLoginConfigurer<HttpSecurity> configurer) {
-        configurer.loginPage("/oauth2/login")
-                .loginProcessingUrl("/oauth2/form");
+        configurer.loginPage(LOGIN_PAGE_URL)
+                .loginProcessingUrl(LOGIN_PROCESSING_URL);
     }
 }
