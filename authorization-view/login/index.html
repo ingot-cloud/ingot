@@ -29,6 +29,7 @@
             placeholder="账号"
             clearable
             class="input-item"
+            @keyup.enter="handleLogin"
           ></el-input>
           <el-input
             v-model="password"
@@ -38,6 +39,7 @@
             clearable
             placeholder="密码"
             class="input-item"
+            @keyup.enter="handleLogin"
           ></el-input>
           <el-button color="#4e8e2f" class="btn-item" @click="handleLogin">
             登录
