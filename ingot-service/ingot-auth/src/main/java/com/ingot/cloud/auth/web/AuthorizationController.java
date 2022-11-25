@@ -1,7 +1,5 @@
 package com.ingot.cloud.auth.web;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.core.context.ClientContextHolder;
 import lombok.RequiredArgsConstructor;
@@ -29,16 +27,11 @@ public class AuthorizationController {
     @Permit
     @GetMapping("/login")
     public ModelAndView loginPage(ModelAndView modelAndView,
-                                  HttpServletRequest request,
                                   @RequestParam(required = false) String error) {
         log.info("login clientId={}", ClientContextHolder.get());
-        log.info("login error={}", error);
 //        RegisteredClient client = registeredClientRepository.findByClientId();
-
         modelAndView.setViewName("login/index");
         modelAndView.addObject("error", error);
-        modelAndView.addObject("testMsg", "hahah");
-        request.setAttribute("test2", "user3");
         return modelAndView;
     }
 }
