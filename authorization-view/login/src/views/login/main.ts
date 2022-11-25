@@ -38,7 +38,7 @@ const app = createApp({
       this.showError = false;
     },
     ifErrorHint(params: string) {
-      if (params && !this.errorMessage) {
+      if (params && params !== "null" && !this.errorMessage) {
         this.errorMessage = params;
         this.showError = true;
       }
