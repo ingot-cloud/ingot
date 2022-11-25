@@ -28,20 +28,6 @@ public class IngotOAuth2AuthorizationServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "authorizationServerSecurityFilterChain";
 
-    @Bean(SECURITY_FILTER_CHAIN_NAME)
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        applyDefaultSecurity(http);
-        return http.formLogin(Customizer.withDefaults()).build();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
-    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
-        return new JwtOAuth2TokenCustomizer();
-    }
-
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
@@ -65,5 +51,19 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                 .apply(authorizationServerConfigurer)
                 .and()
                 .apply(passwordConfigurer);
+    }
+
+    @Bean(SECURITY_FILTER_CHAIN_NAME)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        applyDefaultSecurity(http);
+        return http.formLogin(Customizer.withDefaults()).build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
+    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
+        return new JwtOAuth2TokenCustomizer();
     }
 }

@@ -38,12 +38,17 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
-    @Bean(SECURITY_FILTER_CHAIN_NAME)
-    @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain authorizationServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
-                                                                      PermitResolver permitResolver,
-                                                                      HttpSecurity http) throws Exception {
-        httpConfigurersAdapter.apply(http);
+    public static void applyDefaultSecurity(PermitResolver permitResolver,
+                                            HttpSecurity http) throws Exception {
+        applyDefaultSecurity(null, permitResolver, http);
+    }
+
+    public static void applyDefaultSecurity(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+                                            PermitResolver permitResolver,
+                                            HttpSecurity http) throws Exception {
+        if (httpConfigurersAdapter != null) {
+            httpConfigurersAdapter.apply(http);
+        }
         http.authorizeRequests(authorizeRequests -> {
                     permitResolver.permitAllPublic(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
@@ -51,8 +56,16 @@ public class IngotOAuth2ResourceServerConfiguration {
                 .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
                 .and()
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver));
-        return http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class)
-                .build();
+        http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean(SECURITY_FILTER_CHAIN_NAME)
+    @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
+    public SecurityFilterChain authorizationServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+                                                                      PermitResolver permitResolver,
+                                                                      HttpSecurity http) throws Exception {
+        applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
+        return http.build();
     }
 
     @Bean

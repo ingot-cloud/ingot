@@ -9,7 +9,8 @@ import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
-import com.ingot.framework.tenant.filter.TenantFilter;
+import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
+import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -32,10 +33,6 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.header.HeaderWriterFilter;
-
-import static com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME;
-import static com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity;
 
 /**
  * <p>Description  : AuthServerConfiguration.</p>
@@ -47,11 +44,12 @@ import static com.ingot.framework.security.oauth2.server.authorization.config.an
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
-    @Bean(SECURITY_FILTER_CHAIN_NAME)
+    @Bean(IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        applyDefaultSecurity(http);
-        http.addFilterAfter(new TenantFilter(), HeaderWriterFilter.class);
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
+                                                                      TenantHttpConfigurer tenantHttpConfigurer) throws Exception {
+        IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        tenantHttpConfigurer.configure(http);
         return http.formLogin(new FormLoginCustomizer()).build();
     }
 

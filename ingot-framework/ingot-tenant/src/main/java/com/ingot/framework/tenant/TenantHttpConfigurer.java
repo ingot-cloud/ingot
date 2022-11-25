@@ -17,7 +17,7 @@ public class TenantHttpConfigurer extends IngotHttpConfigurer {
 
     @Override
     public void configure(HttpSecurity builder) throws Exception {
-        log.info("Config TenantFilter.");
+        log.info("[TenantHttpConfigurer] Config TenantFilter.");
         TenantFilter filter = new TenantFilter();
         builder.addFilterAfter(filter, HeaderWriterFilter.class);
     }
