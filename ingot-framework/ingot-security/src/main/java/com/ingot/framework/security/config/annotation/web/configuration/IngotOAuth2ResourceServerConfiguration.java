@@ -61,7 +61,7 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain authorizationServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+    public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
                                                                       PermitResolver permitResolver,
                                                                       HttpSecurity http) throws Exception {
         applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
