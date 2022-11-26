@@ -27,8 +27,10 @@ public class AuthorizationController {
     @Permit
     @GetMapping("/login")
     public ModelAndView loginPage(ModelAndView modelAndView,
-                                  @SessionAttribute(name = WebAttributes.AUTHENTICATION_EXCEPTION, required = false)
-                                  Exception exception) {
+                                  @SessionAttribute(
+                                          name = WebAttributes.AUTHENTICATION_EXCEPTION,
+                                          required = false
+                                  ) Exception exception) {
         // 从session中获取错误信息
         String error = exception != null ? exception.getLocalizedMessage() : "";
 

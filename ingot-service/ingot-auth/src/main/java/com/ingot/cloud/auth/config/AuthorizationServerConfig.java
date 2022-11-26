@@ -66,7 +66,8 @@ public class AuthorizationServerConfig {
         IngotOAuth2ResourceServerConfiguration
                 .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
         http.csrf(new CsrfCustomizer(permitResolver))
-                .formLogin(new FormLoginCustomizer());
+                .formLogin(new FormLoginCustomizer())
+                .logout(new LogoutCustomizer());
         return http.build();
     }
 
