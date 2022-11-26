@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
@@ -93,17 +94,19 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
 
     @Override
     public void save(OAuth2Authorization authorization) {
-        OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user -> {
-            OAuth2AccessToken accessToken = authorization.getAccessToken().getToken();
-            authorizationCacheService.save(
-                    user, accessToken.getExpiresAt(),
-                    AuthorizationCache.create(
-                            authorization.getId(),
-                            authorization.getRegisteredClientId(),
-                            authorization.getPrincipalName(),
-                            authorization.getAuthorizationGrantType().getValue(),
-                            accessToken.getTokenValue()));
-        });
+        OAuth2AuthorizationUtils.getUser(authorization).ifPresent(user ->
+                Optional.ofNullable(authorization.getAccessToken()).ifPresent(accessToken -> {
+                    OAuth2AccessToken token = accessToken.getToken();
+                    authorizationCacheService.save(
+                            user, token.getExpiresAt(),
+                            AuthorizationCache.create(
+                                    authorization.getId(),
+                                    authorization.getRegisteredClientId(),
+                                    authorization.getPrincipalName(),
+                                    authorization.getAuthorizationGrantType().getValue(),
+                                    token.getTokenValue()));
+                })
+        );
         super.save(authorization);
     }
 
