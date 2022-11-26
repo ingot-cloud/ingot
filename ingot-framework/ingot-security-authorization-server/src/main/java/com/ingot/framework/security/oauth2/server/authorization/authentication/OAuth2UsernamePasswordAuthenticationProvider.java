@@ -1,10 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.authentication.IngotAbstractUserDetailsAuthenticationProvider;
-import com.ingot.framework.security.authentication.IngotUsernamePasswordAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +29,7 @@ import static com.ingot.framework.security.oauth2.server.authorization.authentic
  * <p>Time         : 6:11 下午.</p>
  */
 @Slf4j
-public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractUserDetailsAuthenticationProvider {
+public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
     /**
      * The plaintext password used to perform PasswordEncoder#matches(CharSequence,
@@ -80,9 +80,8 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     protected void additionalAuthenticationChecks(UserDetails userDetails,
-                                                  IngotUsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+                                                  UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         if (authentication.getCredentials() == null) {
             log.debug("Failed to authenticate since no credentials provided");
             throw new BadCredentialsException(this.messages
@@ -102,7 +101,7 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
     }
 
     @Override
-    protected final UserDetails retrieveUser(String username, IngotUsernamePasswordAuthenticationToken authentication)
+    protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication)
             throws AuthenticationException {
         prepareTimingAttackProtection();
         try {
@@ -161,7 +160,7 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends IngotAbstractU
         }
     }
 
-    private void mitigateAgainstTimingAttack(IngotUsernamePasswordAuthenticationToken authentication) {
+    private void mitigateAgainstTimingAttack(UsernamePasswordAuthenticationToken authentication) {
         if (authentication.getCredentials() != null) {
             String presentedPassword = authentication.getCredentials().toString();
             this.passwordEncoder.matches(presentedPassword, this.userNotFoundEncodedPassword);

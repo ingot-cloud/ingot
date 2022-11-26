@@ -64,7 +64,6 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
                 this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, authenticationResult);
             }
             filterChain.doFilter(request, response);
-
         } catch (AuthenticationException ex) {
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }
