@@ -65,8 +65,9 @@ public class AuthorizationServerConfig {
                                                                  HttpSecurity http) throws Exception {
         IngotOAuth2ResourceServerConfiguration
                 .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
-        http.csrf(new CsrfCustomizer(permitResolver));
-        return http.formLogin(new FormLoginCustomizer()).build();
+        http.csrf(new CsrfCustomizer(permitResolver))
+                .formLogin(new FormLoginCustomizer());
+        return http.build();
     }
 
     @Bean
