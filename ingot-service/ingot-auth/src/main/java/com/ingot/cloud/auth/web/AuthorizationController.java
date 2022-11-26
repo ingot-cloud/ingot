@@ -1,13 +1,14 @@
 package com.ingot.cloud.auth.web;
 
+import javax.servlet.http.HttpSession;
+
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
-import com.ingot.framework.security.core.context.ClientContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -27,9 +28,11 @@ public class AuthorizationController {
     @Permit
     @GetMapping("/login")
     public ModelAndView loginPage(ModelAndView modelAndView,
-                                  @RequestParam(required = false) String error) {
-        log.info("login clientId={}", ClientContextHolder.get());
-//        RegisteredClient client = registeredClientRepository.findByClientId();
+                                  HttpSession session) {
+        // 从session中获取错误信息
+        Exception exception = (Exception) session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+        String error = exception != null ? exception.getLocalizedMessage() : "";
+
         modelAndView.setViewName("login/index");
         modelAndView.addObject("error", error);
         return modelAndView;
