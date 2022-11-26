@@ -7,6 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
@@ -18,6 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.server.authorization.web.authentication.DelegatingAuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -26,26 +28,28 @@ import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * <p>Description  : OAuth2UsernamePasswordAuthenticationFilter.</p>
+ * <p>Description  : 用户详情认证过滤器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/10.</p>
  * <p>Time         : 9:28 上午.</p>
  */
 @Slf4j
-public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFilter {
+public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
     private AuthenticationConverter authenticationConverter;
     private AuthenticationSuccessHandler authenticationSuccessHandler = this::setSecurityContext;
     private AuthenticationFailureHandler authenticationFailureHandler = new AccessTokenAuthenticationFailureHandler();
 
-    public OAuth2UsernamePasswordAuthenticationFilter(AuthenticationManager authenticationManager,
-                                                      RequestMatcher requestMatcher) {
+    public OAuth2UserDetailsAuthenticationFilter(AuthenticationManager authenticationManager,
+                                                 RequestMatcher requestMatcher) {
         Assert.notNull(authenticationManager, "authenticationManager cannot be null");
         Assert.notNull(requestMatcher, "requestMatcher cannot be null");
         this.authenticationManager = authenticationManager;
         this.requestMatcher = requestMatcher;
-        this.authenticationConverter = new OAuth2UsernamePasswordAuthenticationConverter();
+        this.authenticationConverter = new DelegatingAuthenticationConverter(
+                ListUtil.of(
+                        new OAuth2UsernamePasswordAuthenticationConverter()));
     }
 
     @Override
@@ -65,6 +69,7 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
             }
             filterChain.doFilter(request, response);
         } catch (AuthenticationException ex) {
+            SecurityContextHolder.clearContext();
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }
     }
