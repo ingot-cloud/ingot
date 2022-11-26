@@ -21,13 +21,13 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.util.CollectionUtils;
 
 /**
- * <p>Description  : IngotAuthenticationSuccessHandler.</p>
+ * <p>Description  : AccessTokenAuthenticationSuccessHandler.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:48 上午.</p>
  */
 @Slf4j
-public class IngotAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final HttpMessageConverter<OAuth2AccessTokenResponse> accessTokenHttpResponseConverter =
             new IngotOAuth2AccessTokenResponseHttpMessageConverter();
 
@@ -35,7 +35,7 @@ public class IngotAuthenticationSuccessHandler implements AuthenticationSuccessH
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        log.info("[IngotAuthenticationFailureHandler] - onAuthenticationSuccess authentication={}",
+        log.info("[AccessTokenAuthenticationSuccessHandler] - onAuthenticationSuccess authentication={}",
                 authentication);
 
         OAuth2AccessTokenAuthenticationToken accessTokenAuthentication =

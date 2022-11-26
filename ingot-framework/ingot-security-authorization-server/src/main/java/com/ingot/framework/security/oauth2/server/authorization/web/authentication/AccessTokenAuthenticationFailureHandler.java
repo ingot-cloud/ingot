@@ -22,16 +22,16 @@ import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMe
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 /**
- * <p>Description  : IngotAuthenticationFailureHandler.</p>
+ * <p>Description  : AccessTokenAuthenticationFailureHandler.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:46 上午.</p>
  */
 @Slf4j
-public class IngotAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class AccessTokenAuthenticationFailureHandler implements AuthenticationFailureHandler {
     private final OAuth2ErrorHttpMessageConverter errorHttpResponseConverter;
 
-    public IngotAuthenticationFailureHandler() {
+    public AccessTokenAuthenticationFailureHandler() {
         this.errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
         this.errorHttpResponseConverter.setErrorConverter(new IngotOAuth2ErrorConverter());
         this.errorHttpResponseConverter.setErrorParametersConverter(new IngotOAuth2ErrorParametersConverter());
@@ -41,7 +41,7 @@ public class IngotAuthenticationFailureHandler implements AuthenticationFailureH
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
-        log.info("[IngotAuthenticationFailureHandler] - onAuthenticationFailure", exception);
+        log.info("[AccessTokenAuthenticationFailureHandler] - onAuthenticationFailure", exception);
 
         SecurityContextHolder.clearContext();
         OAuth2Error error;

@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotAuthenticationFailureHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -37,7 +37,7 @@ public class OAuth2UsernamePasswordAuthenticationFilter extends OncePerRequestFi
     private final RequestMatcher requestMatcher;
     private AuthenticationConverter authenticationConverter;
     private AuthenticationSuccessHandler authenticationSuccessHandler = this::setSecurityContext;
-    private AuthenticationFailureHandler authenticationFailureHandler = new IngotAuthenticationFailureHandler();
+    private AuthenticationFailureHandler authenticationFailureHandler = new AccessTokenAuthenticationFailureHandler();
 
     public OAuth2UsernamePasswordAuthenticationFilter(AuthenticationManager authenticationManager,
                                                       RequestMatcher requestMatcher) {
