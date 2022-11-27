@@ -1,9 +1,14 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.util.List;
+
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.IngotTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
-import com.ingot.framework.security.core.userdetails.RemoteIngotUserDetailsService;
+import com.ingot.framework.security.core.userdetails.DefaultOAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsService;
+import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.core.userdetails.RemoteOAuth2UserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
@@ -62,8 +67,8 @@ public class IngotOAuth2ResourceServerConfiguration {
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
     public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
-                                                                      PermitResolver permitResolver,
-                                                                      HttpSecurity http) throws Exception {
+                                                                 PermitResolver permitResolver,
+                                                                 HttpSecurity http) throws Exception {
         applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
         return http.build();
     }
@@ -90,8 +95,15 @@ public class IngotOAuth2ResourceServerConfiguration {
     @Bean
     @ConditionalOnBean(RemoteUserDetailsService.class)
     @ConditionalOnMissingBean(UserDetailsService.class)
-    public UserDetailsService userDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
-        return new RemoteIngotUserDetailsService(remoteUserDetailsService);
+    public OAuth2UserDetailsService userDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
+        return new RemoteOAuth2UserDetailsService(remoteUserDetailsService);
+    }
+
+    @Bean
+    @ConditionalOnBean(OAuth2UserDetailsService.class)
+    @ConditionalOnMissingBean(OAuth2UserDetailsServiceManager.class)
+    public OAuth2UserDetailsServiceManager userDetailsServiceManager(List<OAuth2UserDetailsService> userDetailsServices) {
+        return new DefaultOAuth2UserDetailsServiceManager(userDetailsServices);
     }
 
     @Bean

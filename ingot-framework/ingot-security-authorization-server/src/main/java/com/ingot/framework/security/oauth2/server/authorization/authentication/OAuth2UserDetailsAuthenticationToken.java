@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import java.util.Collection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.security.core.OAuth2Authentication;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,7 +16,7 @@ import org.springframework.util.Assert;
  * <p>Date         : 2021/9/9.</p>
  * <p>Time         : 5:30 下午.</p>
  */
-public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthenticationToken {
+public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthenticationToken implements OAuth2Authentication {
     private final Authentication clientPrincipal;
     private final Object principal;
     private Object credentials;
@@ -59,11 +60,13 @@ public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthentication
     }
 
     @JsonIgnore
-    public Authentication getClientPrincipal() {
+    @Override
+    public Authentication getClient() {
         return this.clientPrincipal;
     }
 
     @JsonIgnore
+    @Override
     public AuthorizationGrantType getGrantType() {
         return this.grantType;
     }

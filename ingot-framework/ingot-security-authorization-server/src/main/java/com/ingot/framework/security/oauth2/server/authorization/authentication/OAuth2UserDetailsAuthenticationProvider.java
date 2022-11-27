@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,7 +14,6 @@ import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,7 +48,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
      */
     private volatile String userNotFoundEncodedPassword;
 
-    private UserDetailsService userDetailsService;
+    private OAuth2UserDetailsServiceManager userDetailsServiceManager;
     private UserDetailsPasswordService userDetailsPasswordService;
     private PasswordEncoder passwordEncoder;
     private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
@@ -73,8 +73,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        String username = unauthenticatedToken.getName();
-        UserDetails user = retrieveUser(username, unauthenticatedToken);
+        UserDetails user = retrieveUser(unauthenticatedToken);
         this.authenticationChecks.check(user);
         return createSuccessAuthentication(user, unauthenticatedToken);
     }
@@ -102,14 +101,13 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     @Override
     protected void doAfterPropertiesSet() {
-        Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
+        Assert.notNull(this.userDetailsServiceManager, "A OAuth2UserDetailsService must be set");
     }
 
-    protected UserDetails retrieveUser(String username,
-                                       OAuth2UserDetailsAuthenticationToken authentication) {
+    protected UserDetails retrieveUser(OAuth2UserDetailsAuthenticationToken authentication) {
         prepareTimingAttackProtection();
         try {
-            UserDetails loadedUser = this.getUserDetailsService().loadUserByUsername(username);
+            UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
             if (loadedUser == null) {
                 throw new InternalAuthenticationServiceException(
                         "UserDetailsService returned null, which is an interface contract violation");
@@ -117,7 +115,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);
-            log.debug("Failed to find user '" + username + "'");
+            log.debug("Failed to find user '" + authentication.getName() + "'");
             if (!this.hideUserNotFoundExceptions) {
                 throw ex;
             }
@@ -143,7 +141,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         OAuth2UserDetailsAuthenticationToken result =
                 OAuth2UserDetailsAuthenticationToken.authenticated(user,
                         user.getPassword(),
-                        authentication.getClientPrincipal(),
+                        authentication.getClient(),
                         this.authoritiesMapper.mapAuthorities(user.getAuthorities()));
         result.setDetails(authentication.getDetails());
         return result;
@@ -191,12 +189,12 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         return this.passwordEncoder;
     }
 
-    public void setUserDetailsService(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
+    public void setUserDetailsServiceManager(OAuth2UserDetailsServiceManager userDetailsServiceManager) {
+        this.userDetailsServiceManager = userDetailsServiceManager;
     }
 
-    protected UserDetailsService getUserDetailsService() {
-        return this.userDetailsService;
+    protected OAuth2UserDetailsServiceManager getUserDetailsServiceManager() {
+        return this.userDetailsServiceManager;
     }
 
     public void setUserDetailsPasswordService(UserDetailsPasswordService userDetailsPasswordService) {

@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
@@ -84,12 +85,12 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
                 httpSecurity, UserDetailsPasswordService.class);
         UserDetailsChecker userDetailsChecker = OAuth2ConfigurerUtils.getOptionalBean(
                 httpSecurity, UserDetailsChecker.class);
-        UserDetailsService userDetailsService = OAuth2ConfigurerUtils.getBean(
-                httpSecurity, UserDetailsService.class);
+        OAuth2UserDetailsServiceManager userDetailsServiceManager = OAuth2ConfigurerUtils.getBean(
+                httpSecurity, OAuth2UserDetailsServiceManager.class);
 
         OAuth2UserDetailsAuthenticationProvider userDetailsAuthenticationProvider =
                 new OAuth2UserDetailsAuthenticationProvider();
-        userDetailsAuthenticationProvider.setUserDetailsService(userDetailsService);
+        userDetailsAuthenticationProvider.setUserDetailsServiceManager(userDetailsServiceManager);
         if (passwordEncoder != null) {
             userDetailsAuthenticationProvider.setPasswordEncoder(passwordEncoder);
         }

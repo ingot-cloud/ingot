@@ -28,9 +28,9 @@ final class OAuth2AuthenticationProviderUtils {
         // 扩展增加 OAuth2UserDetailsAuthenticationToken 判断
         if (authentication instanceof OAuth2UserDetailsAuthenticationToken) {
             if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(
-                    ((OAuth2UserDetailsAuthenticationToken) authentication).getClientPrincipal().getClass())) {
+                    ((OAuth2UserDetailsAuthenticationToken) authentication).getClient().getClass())) {
                 clientPrincipal = (OAuth2ClientAuthenticationToken)
-                        ((OAuth2UserDetailsAuthenticationToken) authentication).getClientPrincipal();
+                        ((OAuth2UserDetailsAuthenticationToken) authentication).getClient();
             }
         }
         if (clientPrincipal != null && clientPrincipal.isAuthenticated()) {

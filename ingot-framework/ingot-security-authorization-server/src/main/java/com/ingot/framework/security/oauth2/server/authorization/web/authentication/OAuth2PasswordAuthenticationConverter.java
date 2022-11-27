@@ -44,6 +44,6 @@ public final class OAuth2PasswordAuthenticationConverter implements Authenticati
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
 
         return new OAuth2PasswordAuthenticationToken(
-                userPrincipal, userPrincipal.getClientPrincipal(), additionalParameters);
+                userPrincipal, userPrincipal.getClient(), additionalParameters);
     }
 }
