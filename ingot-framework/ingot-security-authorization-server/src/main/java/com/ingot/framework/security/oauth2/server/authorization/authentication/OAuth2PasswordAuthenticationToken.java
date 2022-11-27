@@ -18,7 +18,7 @@ public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantA
     /**
      * Sub-class constructor.
      *
-     * @param userPrincipal        the authenticated user principal {@link OAuth2UsernamePasswordAuthenticationToken}
+     * @param userPrincipal        the authenticated user principal {@link OAuth2UserDetailsAuthenticationToken}
      * @param clientPrincipal      the authenticated client principal
      * @param additionalParameters the additional parameters
      */

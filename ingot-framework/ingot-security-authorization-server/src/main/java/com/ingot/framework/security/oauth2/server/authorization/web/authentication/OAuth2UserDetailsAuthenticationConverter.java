@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -13,12 +13,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
- * <p>Description  : OAuth2UsernamePasswordAuthenticationConverter.</p>
+ * <p>Description  : {@link OAuth2UserDetailsAuthenticationToken}转换器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/9.</p>
  * <p>Time         : 5:56 下午.</p>
  */
-public class OAuth2UsernamePasswordAuthenticationConverter implements AuthenticationConverter {
+public class OAuth2UserDetailsAuthenticationConverter implements AuthenticationConverter {
 
     @Override
     public Authentication convert(HttpServletRequest request) {
@@ -45,6 +45,6 @@ public class OAuth2UsernamePasswordAuthenticationConverter implements Authentica
                     OAuth2ParameterNames.PASSWORD);
         }
 
-        return new OAuth2UsernamePasswordAuthenticationToken(username, password, clientPrincipal);
+        return OAuth2UserDetailsAuthenticationToken.unauthenticated(username, password, clientPrincipal);
     }
 }

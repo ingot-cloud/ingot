@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,9 +25,9 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
     @Override
     public void customize(JwtEncodingContext context) {
         Object principal = context.getPrincipal();
-        if (principal instanceof OAuth2UsernamePasswordAuthenticationToken) {
+        if (principal instanceof OAuth2UserDetailsAuthenticationToken) {
             UserDetails user =
-                    (UserDetails) ((OAuth2UsernamePasswordAuthenticationToken) principal).getPrincipal();
+                    (UserDetails) ((OAuth2UserDetailsAuthenticationToken) principal).getPrincipal();
             customizeWithUser(context, user);
         } else if (principal instanceof UsernamePasswordAuthenticationToken) {
             UserDetails user =

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,19 +82,25 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
                 httpSecurity, PasswordEncoder.class);
         UserDetailsPasswordService passwordManager = OAuth2ConfigurerUtils.getOptionalBean(
                 httpSecurity, UserDetailsPasswordService.class);
+        UserDetailsChecker userDetailsChecker = OAuth2ConfigurerUtils.getOptionalBean(
+                httpSecurity, UserDetailsChecker.class);
         UserDetailsService userDetailsService = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, UserDetailsService.class);
 
-        OAuth2UsernamePasswordAuthenticationProvider usernamePasswordProvider =
-                new OAuth2UsernamePasswordAuthenticationProvider();
-        usernamePasswordProvider.setUserDetailsService(userDetailsService);
+        OAuth2UserDetailsAuthenticationProvider userDetailsAuthenticationProvider =
+                new OAuth2UserDetailsAuthenticationProvider();
+        userDetailsAuthenticationProvider.setUserDetailsService(userDetailsService);
         if (passwordEncoder != null) {
-            usernamePasswordProvider.setPasswordEncoder(passwordEncoder);
+            userDetailsAuthenticationProvider.setPasswordEncoder(passwordEncoder);
         }
         if (passwordManager != null) {
-            usernamePasswordProvider.setUserDetailsPasswordService(passwordManager);
+            userDetailsAuthenticationProvider.setUserDetailsPasswordService(passwordManager);
         }
-        authenticationProviders.add(usernamePasswordProvider);
+        log.info("------- userDetailsChecker = {}", userDetailsChecker);
+        if (userDetailsChecker != null) {
+            userDetailsAuthenticationProvider.setAuthenticationChecks(userDetailsChecker);
+        }
+        authenticationProviders.add(userDetailsAuthenticationProvider);
 
         OAuth2PasswordAuthenticationProvider passwordAuthProvider =
                 new OAuth2PasswordAuthenticationProvider(authorizationService, tokenGenerator);

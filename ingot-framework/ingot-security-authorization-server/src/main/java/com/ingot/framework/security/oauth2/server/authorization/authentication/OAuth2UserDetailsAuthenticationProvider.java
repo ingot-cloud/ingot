@@ -1,13 +1,17 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,21 +27,19 @@ import org.springframework.util.Assert;
 import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
 /**
- * <p>Description  : OAuth2UsernamePasswordAuthenticationProvider.</p>
+ * <p>Description  : {@link OAuth2UserDetailsAuthenticationToken} Provider.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/9.</p>
  * <p>Time         : 6:11 下午.</p>
  */
 @Slf4j
-public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
+public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
     /**
      * The plaintext password used to perform PasswordEncoder#matches(CharSequence,
      * String)} on when the user is not found to avoid SEC-2056.
      */
     private static final String USER_NOT_FOUND_PASSWORD = "userNotFoundPassword";
-
-    private PasswordEncoder passwordEncoder;
 
     /**
      * The password used to perform {@link PasswordEncoder#matches(CharSequence, String)}
@@ -48,21 +50,23 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
     private volatile String userNotFoundEncodedPassword;
 
     private UserDetailsService userDetailsService;
-
     private UserDetailsPasswordService userDetailsPasswordService;
+    private PasswordEncoder passwordEncoder;
+    private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
+    private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
 
-    public OAuth2UsernamePasswordAuthenticationProvider() {
+    public OAuth2UserDetailsAuthenticationProvider() {
         setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                (OAuth2UsernamePasswordAuthenticationToken) authentication;
+        OAuth2UserDetailsAuthenticationToken unauthenticatedToken =
+                (OAuth2UserDetailsAuthenticationToken) authentication;
 
         // 验证 client
         OAuth2ClientAuthenticationToken clientPrincipal =
-                getAuthenticatedClientElseThrowInvalidClient(usernamePasswordAuthenticationToken);
+                getAuthenticatedClientElseThrowInvalidClient(unauthenticatedToken);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
 
         if (registeredClient == null ||
@@ -70,13 +74,15 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
             throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        // user password 认证
-        return super.authenticate(authentication);
+        String username = unauthenticatedToken.getName();
+        UserDetails user = retrieveUser(username, unauthenticatedToken);
+        this.authenticationChecks.check(user);
+        return createSuccessAuthentication(user, unauthenticatedToken);
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return (OAuth2UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
+        return (OAuth2UserDetailsAuthenticationToken.class.isAssignableFrom(authentication));
     }
 
     @Override
@@ -100,9 +106,8 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
         Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
     }
 
-    @Override
-    protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication)
-            throws AuthenticationException {
+    protected UserDetails retrieveUser(String username,
+                                       OAuth2UserDetailsAuthenticationToken authentication) {
         prepareTimingAttackProtection();
         try {
             UserDetails loadedUser = this.getUserDetailsService().loadUserByUsername(username);
@@ -113,7 +118,12 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);
-            throw ex;
+            log.debug("Failed to find user '" + username + "'");
+            if (!this.hideUserNotFoundExceptions) {
+                throw ex;
+            }
+            throw new BadCredentialsException(this.messages
+                    .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
         } catch (InternalAuthenticationServiceException | OAuth2AuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -121,17 +131,8 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
         }
     }
 
-    /**
-     * 重写创建认证成功信息
-     *
-     * @param principal      that should be the principal in the returned object (defined by the isForcePrincipalAsString() method)
-     * @param authentication that was presented to the provider for validation
-     * @param user           that was loaded by the implementation
-     * @return the successful authentication token
-     */
-    @Override
-    protected Authentication createSuccessAuthentication(Object principal, Authentication authentication,
-                                                         UserDetails user) {
+    protected Authentication createSuccessAuthentication(UserDetails user,
+                                                         OAuth2UserDetailsAuthenticationToken authentication) {
         boolean upgradeEncoding = this.userDetailsPasswordService != null
                 && this.passwordEncoder.upgradeEncoding(user.getPassword());
         if (upgradeEncoding) {
@@ -140,18 +141,24 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
             user = this.userDetailsPasswordService.updatePassword(user, newPassword);
         }
 
-        Authentication superAuth = super.createSuccessAuthentication(principal, authentication, user);
-        OAuth2UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                (OAuth2UsernamePasswordAuthenticationToken) authentication;
-
-        OAuth2UsernamePasswordAuthenticationToken result =
-                new OAuth2UsernamePasswordAuthenticationToken(
-                        superAuth.getPrincipal(),
-                        superAuth.getCredentials(),
-                        superAuth.getAuthorities(),
-                        usernamePasswordAuthenticationToken.getClientPrincipal());
-        result.setDetails(superAuth.getDetails());
+        OAuth2UserDetailsAuthenticationToken result =
+                OAuth2UserDetailsAuthenticationToken.authenticated(user,
+                        user.getPassword(),
+                        authentication.getClientPrincipal(),
+                        this.authoritiesMapper.mapAuthorities(user.getAuthorities()));
+        result.setDetails(authentication.getDetails());
         return result;
+    }
+
+    @Override
+    protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication)
+            throws AuthenticationException {
+        return null;
+    }
+
+    @Override
+    protected final Authentication createSuccessAuthentication(Object principal, Authentication authentication, UserDetails user) {
+        return super.createSuccessAuthentication(principal, authentication, user);
     }
 
     private void prepareTimingAttackProtection() {
@@ -160,7 +167,7 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
         }
     }
 
-    private void mitigateAgainstTimingAttack(UsernamePasswordAuthenticationToken authentication) {
+    private void mitigateAgainstTimingAttack(OAuth2UserDetailsAuthenticationToken authentication) {
         if (authentication.getCredentials() != null) {
             String presentedPassword = authentication.getCredentials().toString();
             this.passwordEncoder.matches(presentedPassword, this.userNotFoundEncodedPassword);
@@ -195,5 +202,17 @@ public class OAuth2UsernamePasswordAuthenticationProvider extends AbstractUserDe
 
     public void setUserDetailsPasswordService(UserDetailsPasswordService userDetailsPasswordService) {
         this.userDetailsPasswordService = userDetailsPasswordService;
+    }
+
+    public void setAuthenticationChecks(UserDetailsChecker authenticationChecks) {
+        this.authenticationChecks = authenticationChecks;
+    }
+
+    protected UserDetailsChecker getAuthenticationChecks() {
+        return authenticationChecks;
+    }
+
+    public void setAuthoritiesMapper(GrantedAuthoritiesMapper authoritiesMapper) {
+        this.authoritiesMapper = authoritiesMapper;
     }
 }

@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UsernamePasswordAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UsernamePasswordAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -49,7 +49,7 @@ public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter 
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new DelegatingAuthenticationConverter(
                 ListUtil.of(
-                        new OAuth2UsernamePasswordAuthenticationConverter()));
+                        new OAuth2UserDetailsAuthenticationConverter()));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter 
 
     /**
      * Sets the {@link AuthenticationConverter} used when attempting to extract password from {@link HttpServletRequest}
-     * to an instance of {@link OAuth2UsernamePasswordAuthenticationToken} used for authenticating the client.
+     * to an instance of {@link OAuth2UserDetailsAuthenticationToken} used for authenticating the client.
      *
      * @param authenticationConverter the {@link AuthenticationConverter} used when attempting to extract client credentials from {@link HttpServletRequest}
      */
@@ -87,7 +87,7 @@ public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter 
 
     /**
      * Sets the {@link AuthenticationSuccessHandler} used for handling a successful password authentication
-     * and associating the {@link OAuth2UsernamePasswordAuthenticationToken} to the {@link SecurityContext}.
+     * and associating the {@link OAuth2UserDetailsAuthenticationToken} to the {@link SecurityContext}.
      *
      * @param authenticationSuccessHandler the {@link AuthenticationSuccessHandler} used for handling a successful client authentication
      */
