@@ -96,7 +96,6 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
         if (passwordManager != null) {
             userDetailsAuthenticationProvider.setUserDetailsPasswordService(passwordManager);
         }
-        log.info("------- userDetailsChecker = {}", userDetailsChecker);
         if (userDetailsChecker != null) {
             userDetailsAuthenticationProvider.setAuthenticationChecks(userDetailsChecker);
         }
