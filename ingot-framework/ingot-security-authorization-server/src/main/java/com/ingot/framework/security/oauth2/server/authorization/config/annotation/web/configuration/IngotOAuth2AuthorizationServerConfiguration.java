@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
-import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.IngotOAuth2PasswordAuthenticationConfigurer;
+import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -39,8 +39,8 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                 .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
                 .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());
 
-        IngotOAuth2PasswordAuthenticationConfigurer passwordConfigurer =
-                new IngotOAuth2PasswordAuthenticationConfigurer();
+        OAuth2AuthorizationServerEnhanceConfigurer enhanceConfigurer =
+                new OAuth2AuthorizationServerEnhanceConfigurer();
 
         http
                 .requestMatcher(endpointsMatcher)
@@ -50,7 +50,7 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
                 .apply(authorizationServerConfigurer)
                 .and()
-                .apply(passwordConfigurer);
+                .apply(enhanceConfigurer);
     }
 
     @Bean(SECURITY_FILTER_CHAIN_NAME)

@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
@@ -25,14 +26,14 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
- * <p>Description  : OAuth2UsernamePasswordAuthenticationConfigurer.</p>
+ * <p>Description  : 增强{@link OAuth2AuthorizationServerConfigurer}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/10.</p>
  * <p>Time         : 10:05 上午.</p>
  */
 @Slf4j
-public class IngotOAuth2PasswordAuthenticationConfigurer
-        extends AbstractHttpConfigurer<IngotOAuth2PasswordAuthenticationConfigurer, HttpSecurity> {
+public class OAuth2AuthorizationServerEnhanceConfigurer
+        extends AbstractHttpConfigurer<OAuth2AuthorizationServerEnhanceConfigurer, HttpSecurity> {
     private RequestMatcher requestMatcher;
 
     @Override
