@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
  * <p>Date         : 2022/11/27.</p>
  * <p>Time         : 6:14 PM.</p>
  */
-public class OAuth2UserDetailsPasswordAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
+public final class OAuth2UserDetailsPasswordAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
     @Override
     protected AuthorizationGrantType getGrantType() {
         return AuthorizationGrantType.PASSWORD;
