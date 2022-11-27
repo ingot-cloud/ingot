@@ -2,6 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import javax.servlet.http.HttpServletRequest;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,17 +19,23 @@ import org.springframework.util.StringUtils;
  * <p>Date         : 2021/9/9.</p>
  * <p>Time         : 5:56 下午.</p>
  */
-public class OAuth2UserDetailsAuthenticationConverter implements AuthenticationConverter {
+public abstract class OAuth2UserDetailsAuthenticationConverter implements AuthenticationConverter {
 
     @Override
     public Authentication convert(HttpServletRequest request) {
         // grant_type (REQUIRED)
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        if (!AuthorizationGrantType.PASSWORD.getValue().equals(grantType)) {
+        if (!StrUtil.equals(getGrantType().getValue(), grantType)) {
             return null;
         }
 
         Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
+        return createUnauthenticated(request, clientPrincipal);
+    }
+
+    protected abstract AuthorizationGrantType getGrantType();
+
+    protected Authentication createUnauthenticated(HttpServletRequest request, Authentication clientPrincipal) {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
         String username = parameters.getFirst(OAuth2ParameterNames.USERNAME);
@@ -45,6 +52,7 @@ public class OAuth2UserDetailsAuthenticationConverter implements AuthenticationC
                     OAuth2ParameterNames.PASSWORD);
         }
 
-        return OAuth2UserDetailsAuthenticationToken.unauthenticated(username, password, clientPrincipal);
+        return OAuth2UserDetailsAuthenticationToken
+                .unauthenticated(username, password, getGrantType(), clientPrincipal);
     }
 }

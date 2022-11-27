@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.util.Assert;
 
 /**
@@ -18,13 +19,16 @@ public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthentication
     private final Authentication clientPrincipal;
     private final Object principal;
     private Object credentials;
+    private AuthorizationGrantType grantType;
 
     public OAuth2UserDetailsAuthenticationToken(Object principal,
                                                 Object credentials,
+                                                AuthorizationGrantType grantType,
                                                 Authentication clientPrincipal) {
         super(null);
         this.principal = principal;
         this.credentials = credentials;
+        this.grantType = grantType;
         this.clientPrincipal = clientPrincipal;
     }
 
@@ -41,8 +45,10 @@ public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthentication
 
     public static OAuth2UserDetailsAuthenticationToken unauthenticated(Object principal,
                                                                        Object credentials,
+                                                                       AuthorizationGrantType grantType,
                                                                        Authentication clientPrincipal) {
-        return new OAuth2UserDetailsAuthenticationToken(principal, credentials, clientPrincipal);
+        return new OAuth2UserDetailsAuthenticationToken(principal, credentials,
+                grantType, clientPrincipal);
     }
 
     public static OAuth2UserDetailsAuthenticationToken authenticated(Object principal,
@@ -55,6 +61,11 @@ public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthentication
     @JsonIgnore
     public Authentication getClientPrincipal() {
         return this.clientPrincipal;
+    }
+
+    @JsonIgnore
+    public AuthorizationGrantType getGrantType() {
+        return this.grantType;
     }
 
     @Override
