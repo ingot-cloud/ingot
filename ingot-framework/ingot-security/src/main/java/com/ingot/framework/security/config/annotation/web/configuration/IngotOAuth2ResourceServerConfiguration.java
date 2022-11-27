@@ -102,7 +102,7 @@ public class IngotOAuth2ResourceServerConfiguration {
     @Bean
     @ConditionalOnBean(OAuth2UserDetailsService.class)
     @ConditionalOnMissingBean(OAuth2UserDetailsServiceManager.class)
-    public OAuth2UserDetailsServiceManager userDetailsServiceManager(List<OAuth2UserDetailsService> userDetailsServices) {
+    public OAuth2UserDetailsServiceManager userDetailsServiceManager(List<UserDetailsService> userDetailsServices) {
         return new DefaultOAuth2UserDetailsServiceManager(userDetailsServices);
     }
 
