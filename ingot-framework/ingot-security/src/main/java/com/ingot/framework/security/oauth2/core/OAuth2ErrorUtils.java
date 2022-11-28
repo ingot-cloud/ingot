@@ -18,9 +18,9 @@ public final class OAuth2ErrorUtils {
      *
      * @param response {@link R}
      */
-    public static void checkResponse(R<?> response) {
-        if (!response.isSuccess()) {
-            throwAuthenticationException(response.getCode(), response.getMessage());
+    public static void checkResponse(R<?> r) {
+        if (!r.isSuccess()) {
+            throwAuthenticationException(r.getCode(), r.getMessage());
         }
     }
 
