@@ -49,7 +49,7 @@ public final class DefaultOAuth2UserDetailsServiceManager implements OAuth2UserD
             if (!((OAuth2UserDetailsService) service).supports(authentication.getGrantType())) {
                 continue;
             }
-            userDetails = ((OAuth2UserDetailsService) service).loadUser(authentication);
+            userDetails = service.loadUserByUsername(authentication.getName());
         }
         return userDetails;
     }

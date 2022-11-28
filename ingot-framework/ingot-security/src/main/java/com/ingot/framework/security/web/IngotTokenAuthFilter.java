@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.common.constants.TokenAuthMethod;
+import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -25,7 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * <p>Description  : IngotTokenAuthFilter.
- * 用于验证{@link TokenAuthMethod}为{@link TokenAuthMethod#UNIQUE}时的情况，提示签退等逻辑。
+ * 用于验证{@link TokenAuthType}为{@link TokenAuthType#UNIQUE}时的情况，提示签退等逻辑。
  * 该Filter在{@link org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter} 之后</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/22.</p>
@@ -47,8 +47,8 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         IngotUser user = SecurityAuthContext.getUser();
-        TokenAuthMethod method = TokenAuthMethod.getEnum(user.getTokenAuthenticationMethod());
-        if (method != TokenAuthMethod.UNIQUE) {
+        TokenAuthType authType = TokenAuthType.getEnum(user.getTokenAuthType());
+        if (authType != TokenAuthType.UNIQUE) {
             filterChain.doFilter(request, response);
             return;
         }

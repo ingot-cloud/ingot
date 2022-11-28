@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.utils.DigestUtils;
-import com.ingot.framework.security.common.constants.TokenAuthMethod;
+import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +70,8 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
 
     // 只处理唯一类型
     private boolean ignore(IngotUser user) {
-        TokenAuthMethod method = TokenAuthMethod.getEnum(user.getTokenAuthenticationMethod());
-        return method != TokenAuthMethod.UNIQUE;
+        TokenAuthType type = TokenAuthType.getEnum(user.getTokenAuthType());
+        return type != TokenAuthType.UNIQUE;
     }
 
     private String key(IngotUser user) {

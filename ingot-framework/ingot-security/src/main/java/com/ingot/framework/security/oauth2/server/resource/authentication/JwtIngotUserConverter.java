@@ -20,8 +20,8 @@ public class JwtIngotUserConverter implements Converter<Jwt, IngotUser> {
         Integer id = JwtClaimNamesExtension.getId(source);
         Integer deptId = JwtClaimNamesExtension.getDept(source);
         Integer tenantId = JwtClaimNamesExtension.getTenantId(source);
-        String authMethod = JwtClaimNamesExtension.getAuthMethod(source);
+        String authType = JwtClaimNamesExtension.getAuthType(source);
         String clientId = JwtClaimNamesExtension.getAud(source);
-        return new IngotUser(id, deptId, tenantId, authMethod, username, clientId);
+        return IngotUser.simple(id, deptId, tenantId, clientId, authType, username);
     }
 }

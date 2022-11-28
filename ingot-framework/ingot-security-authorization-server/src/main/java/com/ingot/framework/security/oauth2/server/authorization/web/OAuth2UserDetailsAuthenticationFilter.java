@@ -11,6 +11,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsPasswordAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsSocialAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -49,7 +50,8 @@ public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter 
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new DelegatingAuthenticationConverter(
                 ListUtil.of(
-                        new OAuth2UserDetailsPasswordAuthenticationConverter()));
+                        new OAuth2UserDetailsPasswordAuthenticationConverter(),
+                        new OAuth2UserDetailsSocialAuthenticationConverter()));
     }
 
     @Override

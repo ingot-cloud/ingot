@@ -18,7 +18,7 @@ public interface JwtClaimNamesExtension extends JwtClaimNames {
     String ID = "i";
     String TENANT = "tenant";
     String DEPT = "dept";
-    String AUTH_METHOD = "am";
+    String AUTH_TYPE = "tat";
     String SCOPE = OAuth2ParameterNames.SCOPE;
 
     static String getUsername(Jwt source) {
@@ -37,8 +37,8 @@ public interface JwtClaimNamesExtension extends JwtClaimNames {
         return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.TENANT, Integer.class);
     }
 
-    static String getAuthMethod(Jwt source) {
-        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.AUTH_METHOD, String.class);
+    static String getAuthType(Jwt source) {
+        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.AUTH_TYPE, String.class);
     }
 
     @SuppressWarnings("unchecked")

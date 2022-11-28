@@ -16,6 +16,6 @@ public class DefaultSecurityConfig {
 
     @Bean
     public RemoteUserDetailsService remoteUserDetailsService(PmsUserAuthFeignApi pmsApi) {
-        return pmsApi::getUserAuthDetail;
+        return (params) -> pmsApi.getUserAuthDetail(params.getUsername());
     }
 }

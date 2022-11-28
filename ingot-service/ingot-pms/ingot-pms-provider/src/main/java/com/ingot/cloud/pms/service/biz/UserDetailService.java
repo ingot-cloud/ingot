@@ -1,6 +1,5 @@
 package com.ingot.cloud.pms.service.biz;
 
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 
 /**
@@ -14,8 +13,8 @@ public interface UserDetailService {
     /**
      * 获取用户详情信息
      *
-     * @param params 参数
+     * @param username 用户名
      * @return {@link UserDetailsResponse}
      */
-    UserDetailsResponse getUserAuthDetails(UserDetailsRequest params);
+    UserDetailsResponse getUserAuthDetails(String username);
 }

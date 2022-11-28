@@ -1,9 +1,16 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.security.core.OAuth2Authentication;
+import java.util.List;
+
+import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
@@ -13,6 +20,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
  * <p>Time         : 4:33 PM.</p>
  */
 public interface OAuth2UserDetailsService extends UserDetailsService {
+
     /**
      * 判断 {@link AuthorizationGrantType}
      *
@@ -24,13 +32,28 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
     }
 
     /**
-     * 根据Authentication加载User
+     * 解析响应为 {@link UserDetails}
      *
-     * @param authentication {@link OAuth2Authentication}
+     * @param response 响应结果
      * @return {@link UserDetails}
-     * @throws UsernameNotFoundException if the user could not be found or the user has no GrantedAuthority
      */
-    default UserDetails loadUser(OAuth2Authentication authentication) throws UsernameNotFoundException {
-        return loadUserByUsername(authentication.getName());
+    default UserDetails parse(R<UserDetailsResponse> response) {
+        if (response == null) {
+            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
+        }
+        OAuth2ErrorUtils.checkResponse(response);
+
+        UserDetailsResponse data = response.getData();
+        if (data == null) {
+            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
+        }
+
+        List<String> userAuthorities = data.getRoles();
+        List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
+        boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
+        boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
+        return IngotUser.noClientInfo(data.getId(), data.getDeptId(), data.getTenantId(),
+                data.getUsername(), data.getPassword(),
+                enabled, true, true, nonLocked, authorities);
     }
 }

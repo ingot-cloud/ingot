@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum TokenAuthMethod {
+public enum TokenAuthType {
     /**
      * 登录类型，默认标准类型，单点登录不互踢
      */
@@ -26,15 +26,15 @@ public enum TokenAuthMethod {
 
     private final String value;
 
-    private static final Map<String, TokenAuthMethod> valueMap = new HashMap<>();
+    private static final Map<String, TokenAuthType> valueMap = new HashMap<>();
 
     static {
-        for (TokenAuthMethod item : TokenAuthMethod.values()) {
+        for (TokenAuthType item : TokenAuthType.values()) {
             valueMap.put(item.getValue(), item);
         }
     }
 
-    public static TokenAuthMethod getEnum(String value) {
+    public static TokenAuthType getEnum(String value) {
         return valueMap.get(value);
     }
 }

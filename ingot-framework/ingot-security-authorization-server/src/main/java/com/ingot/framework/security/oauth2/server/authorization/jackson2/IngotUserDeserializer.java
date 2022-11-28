@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.IngotUserFieldNames;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -33,14 +34,14 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
 
     private IngotUser deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        Integer id = Integer.parseInt(JsonNodeUtils.findStringValue(root, "id"));
-        Integer deptId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "deptId"));
-        Integer tenantId = Integer.parseInt(JsonNodeUtils.findStringValue(root, "tenantId"));
-        String tokenAuthMethod = JsonNodeUtils.findStringValue(root, "tokenAuthenticationMethod");
-        String username = JsonNodeUtils.findStringValue(root, "username");
-        String clientId = JsonNodeUtils.findStringValue(root, "clientId");
+        Integer id = Integer.parseInt(JsonNodeUtils.findStringValue(root, IngotUserFieldNames.ID));
+        Integer deptId = Integer.parseInt(JsonNodeUtils.findStringValue(root, IngotUserFieldNames.DEPT_ID));
+        Integer tenantId = Integer.parseInt(JsonNodeUtils.findStringValue(root, IngotUserFieldNames.TENANT_ID));
+        String clientId = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.CLIENT_ID);
+        String tokenAuthType = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.TOKEN_AUTH_TYPE);
+        String username = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.USERNAME);
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
-                root, "authorities", GRANTED_AUTH_COLL, mapper);
-        return new IngotUser(id, deptId, tenantId, tokenAuthMethod, username, clientId, authorities);
+                root, IngotUserFieldNames.AUTHORITIES, GRANTED_AUTH_COLL, mapper);
+        return IngotUser.stateless(id, deptId, tenantId, clientId, tokenAuthType, username, authorities);
     }
 }

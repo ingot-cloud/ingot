@@ -17,9 +17,9 @@ import org.springframework.util.Assert;
  * <p>Time         : 5:30 下午.</p>
  */
 public class OAuth2UserDetailsAuthenticationToken extends AbstractAuthenticationToken implements OAuth2Authentication {
-    private final Authentication clientPrincipal;
     private final Object principal;
     private Object credentials;
+    private final Authentication clientPrincipal;
     private AuthorizationGrantType grantType;
 
     public OAuth2UserDetailsAuthenticationToken(Object principal,

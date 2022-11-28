@@ -15,21 +15,17 @@ import lombok.Data;
 @Data
 public class UserDetailsResponse implements Serializable {
     /**
-     * 客户端ID
-     */
-    private String clientId;
-    /**
      * 用户ID
      */
     private Integer id;
     /**
-     * 部门ID
-     */
-    private Integer deptId;
-    /**
      * 租户ID
      */
     private Integer tenantId;
+    /**
+     * 部门ID
+     */
+    private Integer deptId;
     /**
      * 用户名
      */
@@ -42,10 +38,6 @@ public class UserDetailsResponse implements Serializable {
      * 状态, 0:正常，9:禁用
      */
     private UserStatusEnum status;
-    /**
-     * token认证方法
-     */
-    private String tokenAuthenticationMethod;
     /**
      * 拥有的角色编码
      */

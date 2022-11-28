@@ -13,15 +13,7 @@ import lombok.Data;
 @Data
 public class UserDetailsRequest implements Serializable {
     /**
-     * 客户端ID
+     * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId等
      */
-    private String clientId;
-    /**
-     * 授权模式
-     */
-    private UserDetailsModeEnum mode;
-    /**
-     * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId
-     */
-    private String uniqueCode;
+    private String username;
 }

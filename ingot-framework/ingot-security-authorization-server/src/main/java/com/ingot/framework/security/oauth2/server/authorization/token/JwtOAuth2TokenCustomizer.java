@@ -44,8 +44,8 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
                     ((IngotUser) user).getTenantId());
             context.getClaims().claim(JwtClaimNamesExtension.DEPT,
                     ((IngotUser) user).getDeptId());
-            context.getClaims().claim(JwtClaimNamesExtension.AUTH_METHOD,
-                    ((IngotUser) user).getTokenAuthenticationMethod());
+            context.getClaims().claim(JwtClaimNamesExtension.AUTH_TYPE,
+                    ((IngotUser) user).getTokenAuthType());
 
             Set<String> authorities = user.getAuthorities()
                     .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());

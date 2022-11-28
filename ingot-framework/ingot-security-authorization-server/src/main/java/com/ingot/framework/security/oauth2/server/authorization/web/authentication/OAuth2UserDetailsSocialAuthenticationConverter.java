@@ -4,14 +4,14 @@ import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGra
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
- * <p>Description  : OAuth2UserDetailsPasswordAuthenticationConverter.</p>
+ * <p>Description  : OAuth2UserDetailsSocialAuthenticationConverter.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2022/11/27.</p>
- * <p>Time         : 6:14 PM.</p>
+ * <p>Date         : 2022/11/28.</p>
+ * <p>Time         : 12:00 PM.</p>
  */
-public final class OAuth2UserDetailsPasswordAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
+public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
     @Override
     protected AuthorizationGrantType getGrantType() {
-        return UserDetailsAuthorizationGrantType.PASSWORD;
+        return UserDetailsAuthorizationGrantType.SOCIAL;
     }
 }

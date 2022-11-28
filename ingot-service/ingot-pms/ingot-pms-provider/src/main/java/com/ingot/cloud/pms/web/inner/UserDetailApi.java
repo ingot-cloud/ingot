@@ -5,12 +5,11 @@ import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,13 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Permit(mode = PermitMode.INNER)
 @RestController
-@RequestMapping(value = "/user/detail")
+@RequestMapping(value = "/user/details")
 @RequiredArgsConstructor
 public class UserDetailApi extends BaseController {
     private final UserDetailService userDetailService;
 
-    @PostMapping
-    public R<UserDetailsResponse> getUserAuthDetail(@RequestBody UserDetailsRequest params) {
-        return ok(userDetailService.getUserAuthDetails(params));
+    @PostMapping("/{username}")
+    public R<UserDetailsResponse> getUserAuthDetail(@PathVariable String username) {
+        return ok(userDetailService.getUserAuthDetails(username));
     }
 }

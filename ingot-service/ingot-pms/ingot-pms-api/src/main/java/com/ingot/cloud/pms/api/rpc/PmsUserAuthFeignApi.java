@@ -2,11 +2,10 @@ package com.ingot.cloud.pms.api.rpc;
 
 import com.ingot.framework.core.constants.ServiceNameConstants;
 import com.ingot.framework.core.wrapper.R;
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 /**
@@ -18,6 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(contextId = "pmsUserAuthFeignApi", value = ServiceNameConstants.PMS_SERVICE)
 public interface PmsUserAuthFeignApi {
 
-    @PostMapping(value = "/user/detail")
-    R<UserDetailsResponse> getUserAuthDetail(@RequestBody UserDetailsRequest params);
+    @PostMapping(value = "/user/details/{username}")
+    R<UserDetailsResponse> getUserAuthDetail(@PathVariable("username") String username);
 }
