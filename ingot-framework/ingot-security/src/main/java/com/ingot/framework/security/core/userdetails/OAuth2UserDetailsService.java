@@ -1,16 +1,16 @@
 package com.ingot.framework.security.core.userdetails;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.ingot.framework.common.status.BaseStatusCode;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.R;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
@@ -38,22 +38,20 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
      * @return {@link UserDetails}
      */
     default UserDetails parse(R<UserDetailsResponse> response) {
-        if (response == null) {
-            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
-        }
-        OAuth2ErrorUtils.checkResponse(response);
-
-        UserDetailsResponse data = response.getData();
-        if (data == null) {
-            throw new BadCredentialsException(BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
-        }
-
-        List<String> userAuthorities = data.getRoles();
-        List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
-        boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
-        boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-        return IngotUser.noClientInfo(data.getId(), data.getDeptId(), data.getTenantId(),
-                data.getUsername(), data.getPassword(),
-                enabled, true, true, nonLocked, authorities);
+        return Optional.ofNullable(response)
+                .map(r -> {
+                    OAuth2ErrorUtils.checkResponse(response);
+                    return r.getData();
+                })
+                .map(data -> {
+                    List<String> userAuthorities = data.getRoles();
+                    List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
+                    boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
+                    boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
+                    return IngotUser.noClientInfo(data.getId(), data.getDeptId(), data.getTenantId(),
+                            data.getUsername(), data.getPassword(),
+                            enabled, true, true, nonLocked, authorities);
+                })
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }
 }
