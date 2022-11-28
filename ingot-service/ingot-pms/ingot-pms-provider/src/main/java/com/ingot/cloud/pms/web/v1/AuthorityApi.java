@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.rest.v1;
+package com.ingot.cloud.pms.web.v1;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;

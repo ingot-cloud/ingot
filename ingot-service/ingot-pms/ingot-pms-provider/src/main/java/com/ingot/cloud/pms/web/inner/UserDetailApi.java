@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.rest.inner;
+package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.framework.core.wrapper.BaseController;

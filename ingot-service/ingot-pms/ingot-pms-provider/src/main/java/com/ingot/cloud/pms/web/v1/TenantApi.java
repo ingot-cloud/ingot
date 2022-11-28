@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.rest.v1;
+package com.ingot.cloud.pms.web.v1;
 
 import java.util.List;
 import java.util.stream.Collectors;
