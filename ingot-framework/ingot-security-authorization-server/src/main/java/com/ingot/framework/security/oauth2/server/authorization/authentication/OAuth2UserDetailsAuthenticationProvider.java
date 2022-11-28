@@ -1,6 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
+import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
+import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -52,6 +57,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     private UserDetailsPasswordService userDetailsPasswordService;
     private PasswordEncoder passwordEncoder;
     private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
+    private RegisteredClientChecker clientChecker = new DefaultRegisteredClientChecker();
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
 
     public OAuth2UserDetailsAuthenticationProvider() {
@@ -73,7 +79,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        UserDetails user = retrieveUser(unauthenticatedToken);
+        this.clientChecker.check(registeredClient);
+        UserDetails user = retrieveUser(registeredClient, unauthenticatedToken);
         this.authenticationChecks.check(user);
         return createSuccessAuthentication(user, unauthenticatedToken);
     }
@@ -104,7 +111,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         Assert.notNull(this.userDetailsServiceManager, "A OAuth2UserDetailsService must be set");
     }
 
-    protected UserDetails retrieveUser(OAuth2UserDetailsAuthenticationToken authentication) {
+    protected UserDetails retrieveUser(RegisteredClient registeredClient,
+                                       OAuth2UserDetailsAuthenticationToken authentication) {
         prepareTimingAttackProtection();
         try {
             UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
@@ -112,6 +120,9 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
                 throw new InternalAuthenticationServiceException(
                         "UserDetailsService returned null, which is an interface contract violation");
             }
+            TokenAuthType tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
+            loadedUser = IngotUser.fillClientInfo((IngotUser) loadedUser,
+                    registeredClient.getClientId(), tokenAuthType.getValue());
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);
@@ -203,6 +214,10 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     public void setAuthenticationChecks(UserDetailsChecker authenticationChecks) {
         this.authenticationChecks = authenticationChecks;
+    }
+
+    public void setClientChecker(RegisteredClientChecker clientChecker) {
+        this.clientChecker = clientChecker;
     }
 
     protected UserDetailsChecker getAuthenticationChecks() {

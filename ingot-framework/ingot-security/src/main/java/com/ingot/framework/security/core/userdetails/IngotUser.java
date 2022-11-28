@@ -114,7 +114,7 @@ public class IngotUser extends User {
      *
      * @return {@link IngotUser}
      */
-    public IngotUser fillClientInfo(IngotUser current, String clientId, String tokenAuthType) {
+    public static IngotUser fillClientInfo(IngotUser current, String clientId, String tokenAuthType) {
         return standard(current.getId(), current.getDeptId(), current.getTenantId(),
                 clientId, tokenAuthType, current.getUsername(), current.getPassword(),
                 current.isEnabled(), current.isAccountNonExpired(),
