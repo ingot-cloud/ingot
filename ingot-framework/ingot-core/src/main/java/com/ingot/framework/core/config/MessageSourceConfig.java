@@ -4,10 +4,8 @@ import java.nio.charset.StandardCharsets;
 
 import com.ingot.framework.core.context.IngotMessageSource;
 import com.ingot.framework.core.context.support.IngotReloadableResourceBundleMessageSource;
-import com.ingot.framework.core.validation.service.AssertI18nService;
-import com.ingot.framework.core.validation.service.I18nService;
-import com.ingot.framework.core.validation.service.impl.AssertI18nServiceImpl;
-import com.ingot.framework.core.validation.service.impl.I18ServiceImpl;
+import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.validation.DefaultAssertionChecker;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -42,12 +40,7 @@ public class MessageSourceConfig {
     }
 
     @Bean
-    public I18nService i18nService(MessageSource messageSource) {
-        return new I18ServiceImpl(messageSource);
-    }
-
-    @Bean
-    public AssertI18nService assertI18nService(I18nService i18nService) {
-        return new AssertI18nServiceImpl(i18nService);
+    public AssertionChecker assertionChecker(IngotMessageSource messageSource) {
+        return new DefaultAssertionChecker(messageSource);
     }
 }

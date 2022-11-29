@@ -29,7 +29,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +53,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final SysRoleUserService sysRoleUserService;
 
-    private final AssertI18nService assertI18nService;
+    private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
 
     @Override

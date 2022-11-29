@@ -4,7 +4,7 @@ import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +19,10 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     private static final int TYPE_ROLE = 1;
     private static final int TYPE_TARGET = 2;
 
-    protected AssertI18nService assertI18nService;
+    protected AssertionChecker assertI18nService;
 
     @Autowired
-    public void setAssertI18nService(AssertI18nService assertI18nService) {
+    public void setAssertI18nService(AssertionChecker assertI18nService) {
         this.assertI18nService = assertI18nService;
     }
 

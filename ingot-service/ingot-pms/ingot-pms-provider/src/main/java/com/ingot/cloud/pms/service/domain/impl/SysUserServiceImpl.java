@@ -26,7 +26,7 @@ import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -52,7 +52,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     private final PasswordEncoder passwordEncoder;
     private final IdGenerator idGenerator;
-    private final AssertI18nService assertI18nService;
+    private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
 
     @Override

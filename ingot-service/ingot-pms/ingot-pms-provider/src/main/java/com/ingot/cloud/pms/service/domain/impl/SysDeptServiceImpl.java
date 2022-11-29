@@ -15,7 +15,7 @@ import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     private final SysRoleDeptService sysRoleDeptService;
 
     private final DeptTrans deptTrans;
-    private final AssertI18nService assertI18nService;
+    private final AssertionChecker assertI18nService;
 
     @Override
     public List<DeptTreeNodeVO> tree() {

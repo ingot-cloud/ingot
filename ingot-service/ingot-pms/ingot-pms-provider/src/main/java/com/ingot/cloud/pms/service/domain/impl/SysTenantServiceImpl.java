@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
-    private final AssertI18nService assertI18nService;
+    private final AssertionChecker assertI18nService;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {

@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.framework.common.utils.DateUtils;
-import com.ingot.framework.core.validation.service.AssertI18nService;
+import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
     private final SysRoleMenuService sysRoleMenuService;
 
-    private final AssertI18nService assertI18nService;
+    private final AssertionChecker assertI18nService;
     private final MenuTrans menuTrans;
 
     @Override

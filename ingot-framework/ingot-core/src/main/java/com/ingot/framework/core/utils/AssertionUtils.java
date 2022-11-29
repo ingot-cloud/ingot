@@ -5,7 +5,7 @@ import com.ingot.framework.common.exception.IllegalOperationException;
 import com.ingot.framework.core.wrapper.R;
 
 /**
- * <p>Description  : ResponseUtils.</p>
+ * <p>Description  : AssertionUtils.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019/5/24.</p>
  * <p>Time         : 4:45 PM.</p>
