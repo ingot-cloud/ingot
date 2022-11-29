@@ -22,14 +22,14 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
      *
      * @param params 关联参数
      */
-    void menuBindRoles(RelationDTO<Integer, Integer> params);
+    void menuBindRoles(RelationDTO<Long, Long> params);
 
     /**
      * 角色绑定菜单
      *
      * @param params 关联参数
      */
-    void roleBindMenus(RelationDTO<Integer, Integer> params);
+    void roleBindMenus(RelationDTO<Long, Long> params);
 
     /**
      * 获取角色菜单
@@ -39,7 +39,7 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
      * @param condition 条件
      * @return 分页信息
      */
-    List<MenuTreeNodeVO> getRoleMenus(int roleId,
+    List<MenuTreeNodeVO> getRoleMenus(long roleId,
                                       boolean isBind,
                                       SysMenu condition);
 }

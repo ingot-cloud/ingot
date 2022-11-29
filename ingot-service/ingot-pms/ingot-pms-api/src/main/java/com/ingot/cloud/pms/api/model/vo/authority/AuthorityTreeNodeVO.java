@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class AuthorityTreeNodeVO extends TreeNode {
+public class AuthorityTreeNodeVO extends TreeNode<Long> {
 
     /**
      * 权限名称

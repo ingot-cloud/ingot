@@ -33,14 +33,14 @@ public class SysMenu extends BaseModel<SysMenu> {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
-    private Integer id;
+    private Long id;
 
     /**
      * 父ID
      */
-    private Integer pid;
+    private Long pid;
 
     /**
      * 菜单名称

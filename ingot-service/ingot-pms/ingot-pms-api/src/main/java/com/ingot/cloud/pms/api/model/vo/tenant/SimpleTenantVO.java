@@ -13,7 +13,7 @@ import lombok.Data;
  */
 @Data
 public class SimpleTenantVO implements Serializable {
-    private int id;
+    private Long id;
     private String name;
 
     public SimpleTenantVO(SysTenant tenant){

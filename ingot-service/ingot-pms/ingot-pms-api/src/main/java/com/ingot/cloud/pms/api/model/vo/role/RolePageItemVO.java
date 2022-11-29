@@ -17,7 +17,7 @@ public class RolePageItemVO implements Serializable {
     /**
      * 角色ID
      */
-    private Integer id;
+    private Long id;
     /**
      * 角色名称
      */

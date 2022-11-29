@@ -35,21 +35,21 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
-    private Integer id;
+    private Long id;
 
     /**
      * 所属租户
      */
     @JsonIgnoreProperties(allowSetters = true)
-    private Integer tenantId;
+    private Long tenantId;
 
     /**
      * 部门ID
      */
     @NotNull(message = "{SysUser.deptId}", groups = Group.Create.class)
-    private Integer deptId;
+    private Long deptId;
 
     /**
      * 用户名

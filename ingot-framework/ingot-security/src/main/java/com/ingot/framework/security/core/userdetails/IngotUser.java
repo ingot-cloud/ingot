@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,20 +22,17 @@ public class IngotUser extends User {
      * 用户ID
      */
     @Getter
-    @JsonSerialize(using = ToStringSerializer.class)
-    private final Integer id;
+    private final Long id;
     /**
      * 部门ID
      */
     @Getter
-    @JsonSerialize(using = ToStringSerializer.class)
-    private final Integer deptId;
+    private final Long deptId;
     /**
      * 租户ID
      */
     @Getter
-    @JsonSerialize(using = ToStringSerializer.class)
-    private final Integer tenantId;
+    private final Long tenantId;
     /**
      * 登录客户端ID
      */
@@ -49,9 +44,9 @@ public class IngotUser extends User {
     @Getter
     private final String tokenAuthType;
 
-    public IngotUser(Integer id,
-                     Integer deptId,
-                     Integer tenantId,
+    public IngotUser(Long id,
+                     Long deptId,
+                     Long tenantId,
                      String clientId,
                      String tokenAuthType,
                      String username,
@@ -75,7 +70,7 @@ public class IngotUser extends User {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser simple(Integer id, Integer deptId, Integer tenantId, String clientId,
+    public static IngotUser simple(Long id, Long deptId, Long tenantId, String clientId,
                                    String tokenAuthType, String username) {
         return stateless(id, deptId, tenantId, clientId,
                 tokenAuthType, username, Collections.emptyList());
@@ -86,7 +81,7 @@ public class IngotUser extends User {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser stateless(Integer id, Integer deptId, Integer tenantId, String clientId,
+    public static IngotUser stateless(Long id, Long deptId, Long tenantId, String clientId,
                                       String tokenAuthType, String username,
                                       Collection<? extends GrantedAuthority> authorities) {
         return standard(id, deptId, tenantId, clientId, tokenAuthType, username, N_A,
@@ -99,7 +94,7 @@ public class IngotUser extends User {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser noClientInfo(Integer id, Integer deptId, Integer tenantId,
+    public static IngotUser noClientInfo(Long id, Long deptId, Long tenantId,
                                          String username, String password,
                                          boolean enabled, boolean accountNonExpired,
                                          boolean credentialsNonExpired, boolean accountNonLocked,
@@ -127,7 +122,7 @@ public class IngotUser extends User {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser standard(Integer id, Integer deptId, Integer tenantId, String clientId,
+    public static IngotUser standard(Long id, Long deptId, Long tenantId, String clientId,
                                      String tokenAuthType, String username, String password,
                                      boolean enabled, boolean accountNonExpired,
                                      boolean credentialsNonExpired, boolean accountNonLocked,

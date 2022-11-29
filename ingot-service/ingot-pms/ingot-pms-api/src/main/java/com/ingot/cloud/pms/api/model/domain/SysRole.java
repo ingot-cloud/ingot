@@ -33,9 +33,9 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
-    private Integer id;
+    private Long id;
 
     /**
      * 角色名称

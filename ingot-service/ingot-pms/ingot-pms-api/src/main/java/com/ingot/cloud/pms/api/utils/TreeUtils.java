@@ -51,7 +51,7 @@ public class TreeUtils {
      * @return 展开列表
      */
     @SuppressWarnings("unchecked")
-    public static <T extends TreeNode> List<T> stretch(List<T> tree) {
+    public static <T extends TreeNode<?>> List<T> stretch(List<T> tree) {
         List<T> list = new ArrayList<>();
 
         for (T node : tree) {

@@ -43,20 +43,20 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void menuBindRoles(RelationDTO<Integer, Integer> params) {
+    public void menuBindRoles(RelationDTO<Long, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleMenuServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindMenus(RelationDTO<Integer, Integer> params) {
+    public void roleBindMenus(RelationDTO<Long, Long> params) {
         bindTargets(params, remove, bind,
                 "SysRoleMenuServiceImpl.RemoveFailed");
     }
 
     @Override
-    public List<MenuTreeNodeVO> getRoleMenus(int roleId,
+    public List<MenuTreeNodeVO> getRoleMenus(long roleId,
                                              boolean isBind,
                                              SysMenu condition) {
         List<SysMenu> all = getBaseMapper().getRoleMenus(roleId, isBind, condition);

@@ -18,12 +18,12 @@ public class UserProfileVO implements Serializable {
     /**
      * 部门ID
      */
-    private Integer deptId;
+    private Long deptId;
 
     /**
      * 角色ID
      */
-    private List<Integer> roleIds;
+    private List<Long> roleIds;
 
     /**
      * 用户名

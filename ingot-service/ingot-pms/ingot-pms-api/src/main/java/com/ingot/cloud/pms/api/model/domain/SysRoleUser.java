@@ -23,11 +23,11 @@ public class SysRoleUser extends BaseModel<SysRoleAuthority> {
     /**
      * 角色ID
      */
-    private Integer roleId;
+    private Long roleId;
 
     /**
      * 用户ID
      */
-    private Integer userId;
+    private Long userId;
 
 }

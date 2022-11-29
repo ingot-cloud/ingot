@@ -23,7 +23,6 @@ import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.component.id.IdGenerator;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.validation.AssertionChecker;
@@ -51,7 +50,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysRoleUserService sysRoleUserService;
 
     private final PasswordEncoder passwordEncoder;
-    private final IdGenerator idGenerator;
     private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
 
@@ -80,10 +78,10 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         List<String> clientIds = condition.getClientIds();
         // 如果客户端ID不为空，那么查询客户端拥有的所有角色，和condition中的角色列表合并
         if (CollUtil.isNotEmpty(clientIds)) {
-            Set<Integer> roleIds = sysRoleService.getAllRolesOfClients(clientIds)
+            Set<Long> roleIds = sysRoleService.getAllRolesOfClients(clientIds)
                     .stream().map(SysRole::getId).collect(Collectors.toSet());
             if (CollUtil.isNotEmpty(roleIds)) {
-                List<Integer> currentRoleIds = condition.getRoleIds();
+                List<Long> currentRoleIds = condition.getRoleIds();
                 if (CollUtil.isNotEmpty(currentRoleIds)) {
                     roleIds.addAll(currentRoleIds);
                 }
@@ -119,7 +117,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
 
-        List<Integer> roles = params.getRoleIds();
+        List<Long> roles = params.getRoleIds();
         if (CollUtil.isNotEmpty(roles)) {
             boolean result = roles.stream().allMatch(roleId -> {
                 SysRoleUser entity = new SysRoleUser();
@@ -134,7 +132,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeUserById(int id) {
+    public void removeUserById(long id) {
         // 取消关联角色
         assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
                 "SysUserServiceImpl.RemoveFailed");
@@ -146,7 +144,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUser(UserDTO params) {
-        int userId = params.getId();
+        long userId = params.getId();
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
@@ -177,7 +175,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void updateUserBaseInfo(int id, UserBaseInfoDTO params) {
+    public void updateUserBaseInfo(long id, UserBaseInfoDTO params) {
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
@@ -204,7 +202,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void fixPassword(int id, UserPasswordDTO params) {
+    public void fixPassword(long id, UserPasswordDTO params) {
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
@@ -220,7 +218,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public UserProfileVO getUserProfile(int id) {
+    public UserProfileVO getUserProfile(long id) {
         SysUser user = getById(id);
         assertI18nService.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
@@ -238,13 +236,13 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public boolean matchDept(int deptId) {
+    public boolean matchDept(long deptId) {
         long count = count(lambdaQuery().eq(SysUser::getDeptId, deptId));
         return count > 0;
     }
 
     @Override
-    public boolean anyMatchDept(List<Integer> deptIds) {
+    public boolean anyMatchDept(List<Long> deptIds) {
         if (CollUtil.isEmpty(deptIds)) {
             return false;
         }

@@ -19,17 +19,17 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     private static final int TYPE_ROLE = 1;
     private static final int TYPE_TARGET = 2;
 
-    protected AssertionChecker assertI18nService;
+    protected AssertionChecker assertionChecker;
 
     @Autowired
-    public void setAssertI18nService(AssertionChecker assertI18nService) {
-        this.assertI18nService = assertI18nService;
+    public void setAssertI18nService(AssertionChecker assertionChecker) {
+        this.assertionChecker = assertionChecker;
     }
 
     /**
      * 目标类型关联角色
      */
-    public void bindRoles(RelationDTO<Integer, Integer> params,
+    public void bindRoles(RelationDTO<Long, Long> params,
                           Do remove,
                           Do bind,
                           String removeErrorMsgCode) {
@@ -39,7 +39,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 角色关联目标
      */
-    public void bindTargets(RelationDTO<Integer, Integer> params,
+    public void bindTargets(RelationDTO<Long, Long> params,
                             Do remove,
                             Do bind,
                             String removeErrorMsgCode) {
@@ -47,13 +47,13 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     }
 
     private void bind(int type,
-                      RelationDTO<Integer, Integer> params,
+                      RelationDTO<Long, Long> params,
                       Do remove,
                       Do bind,
                       String removeErrorMsgCode) {
-        Integer id = params.getId();
-        List<Integer> removeIds = params.getRemoveIds();
-        List<Integer> bindIds = params.getBindIds();
+        Long id = params.getId();
+        List<Long> removeIds = params.getRemoveIds();
+        List<Long> bindIds = params.getBindIds();
 
         if (CollUtil.isNotEmpty(removeIds)) {
             boolean removeRet = true;
@@ -65,7 +65,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
                     removeRet = removeIds.stream().allMatch(roleId -> remove.exec(roleId, id));
                     break;
             }
-            assertI18nService.checkOperation(removeRet, removeErrorMsgCode);
+            assertionChecker.checkOperation(removeRet, removeErrorMsgCode);
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {

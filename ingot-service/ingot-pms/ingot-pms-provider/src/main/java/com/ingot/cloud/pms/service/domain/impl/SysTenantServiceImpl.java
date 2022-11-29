@@ -48,7 +48,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     }
 
     @Override
-    public void removeTenantById(int id) {
+    public void removeTenantById(long id) {
         assertI18nService.checkOperation(id != TenantConstants.DEFAULT_TENANT_ID,
                 "SysTenantServiceImpl.DefaultTenantRemoveFailed");
 

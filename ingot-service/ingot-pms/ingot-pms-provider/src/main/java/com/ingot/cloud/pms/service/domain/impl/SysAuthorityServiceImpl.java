@@ -76,7 +76,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeAuthorityById(int id) {
+    public void removeAuthorityById(long id) {
         // 叶子权限才可以删除
         boolean result = count(Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0;
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailedMustLeaf");

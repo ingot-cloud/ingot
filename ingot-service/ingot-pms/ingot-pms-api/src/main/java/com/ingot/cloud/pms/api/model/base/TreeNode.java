@@ -13,28 +13,28 @@ import lombok.Data;
  * <p>Time         : 10:37 下午.</p>
  */
 @Data
-public class TreeNode implements Serializable {
+public class TreeNode<IdType> implements Serializable {
     /**
      * ID
      */
-    private Integer id;
+    private IdType id;
 
     /**
      * 父ID
      */
-    private Integer pid;
+    private IdType pid;
 
     /**
      * 子节点
      */
-    private List<TreeNode> children;
+    private List<TreeNode<IdType>> children;
 
     /**
      * 添加子节点
      *
      * @param node {@link TreeNode}
      */
-    public void add(TreeNode node) {
+    public void add(TreeNode<IdType> node) {
         if (children == null) {
             children = new ArrayList<>();
         }

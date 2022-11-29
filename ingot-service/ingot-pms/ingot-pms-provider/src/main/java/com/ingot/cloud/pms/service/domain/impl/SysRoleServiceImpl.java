@@ -57,15 +57,15 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final RoleTrans roleTrans;
 
     @Override
-    public List<SysRole> getAllRolesOfUser(int userId, int deptId) {
+    public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
         // 基础角色ID
-        Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+        Set<Long> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
         // 获取部门角色ID
         SysDept dept = sysDeptService.getById(deptId);
-        Set<Integer> deptRoleIds = new HashSet<>();
+        Set<Long> deptRoleIds = new HashSet<>();
         deptRoleIds(dept, deptRoleIds);
 
         // 合并去重
@@ -78,7 +78,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public List<SysRole> getAllRolesOfClients(List<String> clientIds) {
-        Set<Integer> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
+        Set<Long> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
                         .in(SysRoleOauthClient::getClientId, clientIds))
                 .stream()
                 .map(SysRoleOauthClient::getRoleId)
@@ -87,8 +87,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public List<SysRole> getRolesOfUser(int userId) {
-        Set<Integer> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+    public List<SysRole> getRolesOfUser(long userId) {
+        Set<Long> baseRoleIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
                         .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
@@ -129,7 +129,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public void removeRoleById(int id) {
+    public void removeRoleById(long id) {
         assertI18nService.checkOperation(id != RoleConstants.ROLE_ADMIN_ID,
                 "SysRoleServiceImpl.SuperAdminRemoveFailed");
 
@@ -172,7 +172,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.UpdateFailed");
     }
 
-    private void deptRoleIds(SysDept dept, Set<Integer> deptRoleIds) {
+    private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
         DeptRoleScopeEnum scope = dept.getScope();
         switch (scope) {
             // 获取当前部门和子部门的角色ID

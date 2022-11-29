@@ -42,5 +42,5 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
      *
      * @param id 权限ID
      */
-    void removeAuthorityById(int id);
+    void removeAuthorityById(long id);
 }

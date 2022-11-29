@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class MenuTreeNodeVO extends TreeNode {
+public class MenuTreeNodeVO extends TreeNode<Long> {
     /**
      * 菜单名称
      */

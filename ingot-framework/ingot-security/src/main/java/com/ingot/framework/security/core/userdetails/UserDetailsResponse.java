@@ -17,15 +17,15 @@ public class UserDetailsResponse implements Serializable {
     /**
      * 用户ID
      */
-    private Integer id;
+    private Long id;
     /**
      * 租户ID
      */
-    private Integer tenantId;
+    private Long tenantId;
     /**
      * 部门ID
      */
-    private Integer deptId;
+    private Long deptId;
     /**
      * 用户名
      */

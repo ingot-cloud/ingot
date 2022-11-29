@@ -21,7 +21,7 @@ public class UserDTO extends SysUser {
     /**
      * 拥有的角色ID
      */
-    private List<Integer> roleIds;
+    private List<Long> roleIds;
     /**
      * 用于查询条件，可以登录的客户端ID
      */

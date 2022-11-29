@@ -39,7 +39,7 @@ public class TenantFilter extends GenericFilterBean {
         try {
             log.info("[TenantFilter] Header 中{}key={}",
                     hasHeaderTenantId ? "存在" : "不存在", TenantConstants.TENANT_HEADER_KEY);
-            Integer tenant = hasHeaderTenantId ? Integer.valueOf(tenantId) : TenantConstants.DEFAULT_TENANT_ID;
+            Long tenant = hasHeaderTenantId ? Long.parseLong(tenantId) : TenantConstants.DEFAULT_TENANT_ID;
             log.info("[TenantFilter] tenantId = {}", tenant);
             TenantContextHolder.set(tenant);
             filterChain.doFilter(request, response);

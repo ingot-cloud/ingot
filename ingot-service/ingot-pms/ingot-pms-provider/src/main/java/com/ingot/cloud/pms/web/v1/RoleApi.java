@@ -72,7 +72,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindAuthority")
-    public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
+    public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         return ok();
     }
@@ -85,7 +85,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindDept")
-    public R<?> bindDept(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
+    public R<?> bindDept(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleDeptService.roleBindDepts(params);
         return ok();
     }
@@ -98,7 +98,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindMenu")
-    public R<?> bindMenu(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
+    public R<?> bindMenu(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleMenuService.roleBindMenus(params);
         return ok();
     }
@@ -111,7 +111,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindClient")
-    public R<?> bindClient(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
+    public R<?> bindClient(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleOauthClientService.roleBindClients(params);
         return ok();
     }
@@ -125,13 +125,13 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindUser")
-    public R<?> bindUser(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
+    public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleUserService.roleBindUsers(params);
         return ok();
     }
 
     @GetMapping("/bindUser/{id}")
-    public R<?> getBindUsers(@PathVariable Integer id,
+    public R<?> getBindUsers(@PathVariable Long id,
                              Page<?> page,
                              @RequestParam("isBind") boolean isBind,
                              SysUser condition) {

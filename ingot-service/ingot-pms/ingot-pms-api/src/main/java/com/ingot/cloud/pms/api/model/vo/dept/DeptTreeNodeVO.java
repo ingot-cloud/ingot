@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptTreeNodeVO extends TreeNode {
+public class DeptTreeNodeVO extends TreeNode<Long> {
 
     /**
      * 部门名称

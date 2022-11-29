@@ -28,8 +28,8 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
 
     /**
      * App ID

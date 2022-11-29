@@ -63,7 +63,7 @@ public class UserApi extends BaseController {
 
     @PutMapping("/edit")
     public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
-        int userId = SecurityAuthContext.getUser().getId();
+        long userId = SecurityAuthContext.getUser().getId();
         sysUserService.updateUserBaseInfo(userId, params);
         return ok();
     }

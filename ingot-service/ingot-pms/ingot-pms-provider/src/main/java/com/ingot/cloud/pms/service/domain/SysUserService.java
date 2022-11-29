@@ -53,7 +53,7 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param id 用户ID
      */
-    void removeUserById(int id);
+    void removeUserById(long id);
 
     /**
      * 更新用户信息
@@ -67,7 +67,7 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param params 基本信息参数
      */
-    void updateUserBaseInfo(int id, UserBaseInfoDTO params);
+    void updateUserBaseInfo(long id, UserBaseInfoDTO params);
 
     /**
      * 用户修改密码
@@ -75,7 +75,7 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param id     用户ID
      * @param params 参数
      */
-    void fixPassword(int id, UserPasswordDTO params);
+    void fixPassword(long id, UserPasswordDTO params);
 
     /**
      * 获取用户简介信息
@@ -83,7 +83,7 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param id 用户ID
      * @return {@link UserProfileVO}
      */
-    UserProfileVO getUserProfile(int id);
+    UserProfileVO getUserProfile(long id);
 
     /**
      * 是否有用户关联了指定部门
@@ -91,7 +91,7 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param deptId 部门ID
      * @return Boolean 是否关联
      */
-    boolean matchDept(int deptId);
+    boolean matchDept(long deptId);
 
     /**
      * 是否有用户关联了指定部门中的任意一个
@@ -99,5 +99,5 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param deptIds 部门ID列表
      * @return 是否存在，只要有用户关联任一部门即返回ture
      */
-    boolean anyMatchDept(List<Integer> deptIds);
+    boolean anyMatchDept(List<Long> deptIds);
 }

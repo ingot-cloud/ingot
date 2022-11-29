@@ -33,20 +33,20 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void clientBindRoles(RelationDTO<Integer, Integer> params) {
+    public void clientBindRoles(RelationDTO<Long, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindClients(RelationDTO<Integer, Integer> params) {
+    public void roleBindClients(RelationDTO<Long, Long> params) {
         bindTargets(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
     }
 
     @Override
-    public IPage<Oauth2RegisteredClient> getRoleClients(int roleId,
+    public IPage<Oauth2RegisteredClient> getRoleClients(long roleId,
                                                        Page<?> page,
                                                        boolean isBind,
                                                        Oauth2RegisteredClient condition) {

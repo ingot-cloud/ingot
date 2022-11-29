@@ -20,7 +20,7 @@ public class IngotTenantLineHandler implements TenantLineHandler {
 
     @Override
     public Expression getTenantId() {
-        Integer tenantId = TenantContextHolder.get();
+        Long tenantId = TenantContextHolder.get();
         if (tenantId == null) {
             return new NullValue();
         }
@@ -48,7 +48,7 @@ public class IngotTenantLineHandler implements TenantLineHandler {
      */
     @Override
     public boolean ignoreTable(String tableName) {
-        Integer tenantId = TenantContextHolder.get();
+        Long tenantId = TenantContextHolder.get();
         if (tenantId == null) {
             return Boolean.TRUE;
         }

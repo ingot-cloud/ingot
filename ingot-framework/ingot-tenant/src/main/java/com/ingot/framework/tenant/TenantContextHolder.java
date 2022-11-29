@@ -10,13 +10,13 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  */
 public class TenantContextHolder {
 
-    private static final ThreadLocal<Integer> THREAD_CONTEXT = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<Long> THREAD_CONTEXT = new TransmittableThreadLocal<>();
 
-    public static Integer get() {
+    public static Long get() {
         return THREAD_CONTEXT.get();
     }
 
-    public static void set(Integer id) {
+    public static void set(Long id) {
         THREAD_CONTEXT.set(id);
     }
 

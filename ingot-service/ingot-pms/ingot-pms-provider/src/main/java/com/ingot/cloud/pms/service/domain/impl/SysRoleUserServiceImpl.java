@@ -35,17 +35,17 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
     };
 
     @Override
-    public boolean removeByUserId(int userId) {
+    public boolean removeByUserId(long userId) {
         return remove(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getUserId, userId));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUserRole(int userId, List<Integer> roles) {
+    public void updateUserRole(long userId, List<Long> roles) {
         long userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
         if (userCount != 0) {
-            assertI18nService.checkOperation(removeByUserId(userId),
+            assertionChecker.checkOperation(removeByUserId(userId),
                     "SysRoleUserServiceImpl.UpdateRoleFailed");
         }
 
@@ -58,26 +58,26 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
             entity.setRoleId(roleId);
             return entity.insert();
         });
-        assertI18nService.checkOperation(result,
+        assertionChecker.checkOperation(result,
                 "SysRoleUserServiceImpl.UpdateRoleFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void userBindRoles(RelationDTO<Integer, Integer> params) {
+    public void userBindRoles(RelationDTO<Long, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindUsers(RelationDTO<Integer, Integer> params) {
+    public void roleBindUsers(RelationDTO<Long, Long> params) {
         bindTargets(params, remove, bind,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
-    public IPage<SysUser> getRoleUsers(int roleId, Page<?> page, boolean isBind, SysUser condition) {
+    public IPage<SysUser> getRoleUsers(long roleId, Page<?> page, boolean isBind, SysUser condition) {
         return baseMapper.getRoleUsers(page, roleId, isBind, condition);
     }
 }

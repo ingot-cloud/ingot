@@ -16,5 +16,5 @@ public interface TenantConstants {
     /**
      * 默认租户ID
      */
-    Integer DEFAULT_TENANT_ID = 1;
+    Long DEFAULT_TENANT_ID = 1L;
 }

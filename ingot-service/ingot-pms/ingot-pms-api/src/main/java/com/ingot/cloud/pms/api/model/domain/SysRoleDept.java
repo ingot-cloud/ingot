@@ -23,11 +23,11 @@ public class SysRoleDept extends BaseModel<SysRoleAuthority> {
     /**
      * 角色ID
      */
-    private Integer roleId;
+    private Long roleId;
 
     /**
      * 部门ID
      */
-    private Integer deptId;
+    private Long deptId;
 
 }

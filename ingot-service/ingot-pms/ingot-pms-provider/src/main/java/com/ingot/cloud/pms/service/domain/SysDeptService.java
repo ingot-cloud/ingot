@@ -35,7 +35,7 @@ public interface SysDeptService extends BaseService<SysDept> {
      *
      * @param id 部门ID
      */
-    void removeDeptById(int id);
+    void removeDeptById(long id);
 
     /**
      * 更新部门
