@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
@@ -62,6 +63,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     public OAuth2UserDetailsAuthenticationProvider() {
         setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+        setMessageSource(new IngotSecurityMessageSource());
     }
 
     @Override
