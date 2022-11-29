@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.core.validation.Group;
 import com.ingot.framework.core.wrapper.BaseController;
 import com.ingot.framework.core.wrapper.R;
@@ -72,7 +72,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindAuthority")
-    public R<?> bindAuthority(@RequestBody @Validated RelationDto<Integer, Integer> params) {
+    public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         return ok();
     }
@@ -85,7 +85,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindDept")
-    public R<?> bindDept(@RequestBody @Validated RelationDto<Integer, Integer> params) {
+    public R<?> bindDept(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
         sysRoleDeptService.roleBindDepts(params);
         return ok();
     }
@@ -98,7 +98,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindMenu")
-    public R<?> bindMenu(@RequestBody @Validated RelationDto<Integer, Integer> params) {
+    public R<?> bindMenu(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
         sysRoleMenuService.roleBindMenus(params);
         return ok();
     }
@@ -111,7 +111,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindClient")
-    public R<?> bindClient(@RequestBody @Validated RelationDto<Integer, Integer> params) {
+    public R<?> bindClient(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
         sysRoleOauthClientService.roleBindClients(params);
         return ok();
     }
@@ -125,7 +125,7 @@ public class RoleApi extends BaseController {
     }
 
     @PutMapping("/bindUser")
-    public R<?> bindUser(@RequestBody @Validated RelationDto<Integer, Integer> params) {
+    public R<?> bindUser(@RequestBody @Validated RelationDTO<Integer, Integer> params) {
         sysRoleUserService.roleBindUsers(params);
         return ok();
     }

@@ -5,7 +5,7 @@ import java.util.List;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -22,14 +22,14 @@ public interface SysRoleMenuService extends BaseService<SysRoleMenu> {
      *
      * @param params 关联参数
      */
-    void menuBindRoles(RelationDto<Integer, Integer> params);
+    void menuBindRoles(RelationDTO<Integer, Integer> params);
 
     /**
      * 角色绑定菜单
      *
      * @param params 关联参数
      */
-    void roleBindMenus(RelationDto<Integer, Integer> params);
+    void roleBindMenus(RelationDTO<Integer, Integer> params);
 
     /**
      * 获取角色菜单

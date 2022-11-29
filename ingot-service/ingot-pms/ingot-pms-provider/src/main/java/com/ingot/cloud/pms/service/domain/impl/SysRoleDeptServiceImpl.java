@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,14 +41,14 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deptBindRoles(RelationDto<Integer, Integer> params) {
+    public void deptBindRoles(RelationDTO<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleDeptServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindDepts(RelationDto<Integer, Integer> params) {
+    public void roleBindDepts(RelationDTO<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleDeptServiceImpl.RemoveFailed");
     }

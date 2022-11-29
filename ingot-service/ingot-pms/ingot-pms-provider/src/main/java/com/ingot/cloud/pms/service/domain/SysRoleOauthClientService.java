@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -22,14 +22,14 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
      *
      * @param params 关联参数
      */
-    void clientBindRoles(RelationDto<Integer, Integer> params);
+    void clientBindRoles(RelationDTO<Integer, Integer> params);
 
     /**
      * 角色绑定客户端
      *
      * @param params 关联参数
      */
-    void roleBindClients(RelationDto<Integer, Integer> params);
+    void roleBindClients(RelationDTO<Integer, Integer> params);
 
     /**
      * 获取角色客户端

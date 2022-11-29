@@ -12,7 +12,7 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,14 +40,14 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void authorityBindRoles(RelationDto<Integer, Integer> params) {
+    public void authorityBindRoles(RelationDTO<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindAuthorities(RelationDto<Integer, Integer> params) {
+    public void roleBindAuthorities(RelationDTO<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }

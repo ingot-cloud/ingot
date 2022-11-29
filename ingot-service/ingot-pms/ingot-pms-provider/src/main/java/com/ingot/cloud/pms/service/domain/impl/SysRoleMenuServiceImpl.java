@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,14 +43,14 @@ public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMen
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void menuBindRoles(RelationDto<Integer, Integer> params) {
+    public void menuBindRoles(RelationDTO<Integer, Integer> params) {
         bindRoles(params, remove, bind,
                 "SysRoleMenuServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindMenus(RelationDto<Integer, Integer> params) {
+    public void roleBindMenus(RelationDTO<Integer, Integer> params) {
         bindTargets(params, remove, bind,
                 "SysRoleMenuServiceImpl.RemoveFailed");
     }

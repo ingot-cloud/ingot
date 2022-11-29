@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.common;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.core.validation.service.AssertI18nService;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -29,7 +29,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 目标类型关联角色
      */
-    public void bindRoles(RelationDto<Integer, Integer> params,
+    public void bindRoles(RelationDTO<Integer, Integer> params,
                           Do remove,
                           Do bind,
                           String removeErrorMsgCode) {
@@ -39,7 +39,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 角色关联目标
      */
-    public void bindTargets(RelationDto<Integer, Integer> params,
+    public void bindTargets(RelationDTO<Integer, Integer> params,
                             Do remove,
                             Do bind,
                             String removeErrorMsgCode) {
@@ -47,7 +47,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     }
 
     private void bind(int type,
-                      RelationDto<Integer, Integer> params,
+                      RelationDTO<Integer, Integer> params,
                       Do remove,
                       Do bind,
                       String removeErrorMsgCode) {

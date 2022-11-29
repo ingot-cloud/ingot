@@ -5,7 +5,7 @@ import java.util.List;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
-import com.ingot.framework.core.model.dto.common.RelationDto;
+import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -22,14 +22,14 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
      *
      * @param params 关联参数
      */
-    void deptBindRoles(RelationDto<Integer, Integer> params);
+    void deptBindRoles(RelationDTO<Integer, Integer> params);
 
     /**
      * 角色绑定部门
      *
      * @param params 关联参数
      */
-    void roleBindDepts(RelationDto<Integer, Integer> params);
+    void roleBindDepts(RelationDTO<Integer, Integer> params);
 
     /**
      * 获取角色部门信息

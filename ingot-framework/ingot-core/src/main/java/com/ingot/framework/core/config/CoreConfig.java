@@ -1,8 +1,10 @@
 package com.ingot.framework.core.config;
 
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * <p>Description  : CoreConfig.</p>
@@ -21,5 +23,11 @@ public class CoreConfig {
     @Bean
     public CommonTypeTransform commonTypeTransform() {
         return new CommonTypeTransform();
+    }
+
+    @Bean
+    @Lazy(false)
+    public SpringContextHolder springContextHolder() {
+        return new SpringContextHolder();
     }
 }

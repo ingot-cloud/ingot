@@ -1,6 +1,5 @@
 package com.ingot.cloud.pms;
 
-import com.ingot.framework.core.annotation.ImportMessageSource;
 import com.ingot.framework.security.config.annotation.web.configuration.EnableIngotWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @EnableIngotWebSecurity
 @EnableTransactionManagement
-@ImportMessageSource
 @EnableDiscoveryClient
 @SpringBootApplication
 public class IngotPmsApplication {

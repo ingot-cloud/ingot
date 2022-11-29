@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>Time         : 2:53 下午.</p>
  */
 @Data
-public class RelationDto<ID, BID> implements Serializable {
+public class RelationDTO<ID, BID> implements Serializable {
     @NotNull(message = "{Common.IDNonNull}")
     private ID id;
     private List<BID> removeIds;
