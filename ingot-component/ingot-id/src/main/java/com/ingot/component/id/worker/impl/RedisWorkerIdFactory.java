@@ -43,7 +43,7 @@ public class RedisWorkerIdFactory extends AbsWorkerIdFactory {
             } else {
                 Long index = redisTemplate.opsForValue().increment(KEY_INDEX, 1L);
                 Preconditions.checkArgument(index != null);
-                log.info(">>> RedisWorkerIdFactory current index={}", index);
+                log.info("[RedisWorkerIdFactory] current index={}", index);
 
                 workerID = index.intValue();
                 redisTemplate.opsForValue().set(key, workerID);
@@ -51,12 +51,12 @@ public class RedisWorkerIdFactory extends AbsWorkerIdFactory {
 
             // 更新本地缓存
             updateLocalWorkerID(workerID);
-            log.info(">>> RedisWorkerIdFactory init with workID={}", workerID);
+            log.info("[RedisWorkerIdFactory] init with workID={}", workerID);
         } catch (Exception e){
-            log.error(">>> RedisWorkerIdFactory init error={}", e.getMessage());
+            log.error("[RedisWorkerIdFactory] init error={}", e.getMessage());
             try {
                 workerID = getCacheWorkId();
-                log.info(">>> RedisWorkerIdFactory init from cache workID={}", workerID);
+                log.info("[RedisWorkerIdFactory] init from cache workID={}", workerID);
             } catch (Exception ignore) {
                 return false;
             }
@@ -88,7 +88,7 @@ public class RedisWorkerIdFactory extends AbsWorkerIdFactory {
             ip = addr.getHostAddress();
         } catch(Exception ex) {
             ip = "";
-            log.warn("Get IP warn", ex);
+            log.warn("[RedisWorkerIdFactory] Get IP warn", ex);
         }
         return ip;
     }

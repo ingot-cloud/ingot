@@ -1,6 +1,7 @@
 package com.ingot.component.id.impl;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
 import com.ingot.component.id.IdGenerator;
@@ -47,16 +48,17 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
     public SnowFlakeIdGenerator(WorkerIdFactory factory) {
         boolean initFlag = factory.init();
-        if (initFlag){
+        if (initFlag) {
             workerId = factory.getWorkerId();
-            log.info(">>> SnowFlakeIdGenerator START SUCCESS USE WORKER-ID={}", workerId);
+            log.info("[SnowFlakeIdGenerator] START SUCCESS USE WORKER-ID={}", workerId);
         }
         Preconditions.checkArgument(initFlag, "Snowflake Id Gen is not init ok");
         Preconditions.checkArgument(workerId >= 0 && workerId <= MAX_WORKER_ID,
                 "workerID must gte 0 and lte 1023");
     }
 
-    @Override public long nextId() {
+    @Override
+    public long nextId() {
         long timestamp = timeGen();
         if (timestamp < lastTimestamp) {
             long offset = lastTimestamp - timestamp;
@@ -79,18 +81,19 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
         }
 
-        // 相同时间，序列自增
+        // 如果是同一时间生成的，则进行毫秒内序列
         if (lastTimestamp == timestamp) {
             sequence = (sequence + 1) & SEQUENCE_MASK;
+            // 毫秒内序列溢出
             if (sequence == 0) {
-                //seq 为0的时候表示是下一毫秒时间开始对seq做随机
-                sequence = RANDOM.nextInt(100);
+                // 阻塞到下一个毫秒,获得新的时间戳
                 timestamp = tilNextMillis(lastTimestamp);
             }
         } else {
-            //如果是新的ms开始
-            sequence = RANDOM.nextInt(100);
+            // 不同毫秒内，序列号置为 1 - 3 随机数
+            sequence = ThreadLocalRandom.current().nextLong(1, 3);
         }
+
         lastTimestamp = timestamp;
 
         return ((timestamp - START_TIMESTAMP) << TIMESTAMP_LEFT_SHIFT) |

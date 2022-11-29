@@ -1,8 +1,8 @@
 package com.ingot.component.id.worker;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Properties;
 
 import cn.hutool.core.io.FileUtil;
@@ -35,7 +35,7 @@ public abstract class AbsWorkerIdFactory implements WorkerIdFactory {
      */
     protected int getCacheWorkId() throws Exception {
         Properties properties = new Properties();
-        properties.load(new FileInputStream(new File(localCachePath)));
+        properties.load(Files.newInputStream(new File(localCachePath).toPath()));
         return Integer.parseInt(properties.getProperty("workerID"));
     }
 
@@ -47,29 +47,29 @@ public abstract class AbsWorkerIdFactory implements WorkerIdFactory {
     protected void updateLocalWorkerID(int workerID) {
         File confFile = new File(localCachePath);
         boolean exists = confFile.exists();
-        log.info(">>> AbsWorkerIdFactory - file exists status is {}", exists);
+        log.info("[AbsWorkerIdFactory] - file exists status is {}", exists);
         if (exists) {
             try {
                 FileUtil.writeUtf8String("workerID=" + workerID, confFile);
-                log.info(">>> AbsWorkerIdFactory - update file cache workerID is {}", workerID);
+                log.info("[AbsWorkerIdFactory] - update file cache workerID is {}", workerID);
             } catch (IORuntimeException e) {
-                log.error(">>> AbsWorkerIdFactory - update file cache error ", e);
+                log.error("[AbsWorkerIdFactory] - update file cache error ", e);
             }
         } else {
             //不存在文件,父目录页肯定不存在
             try {
                 boolean mkdirs = confFile.getParentFile().mkdirs();
-                log.info(">>> AbsWorkerIdFactory - init local file cache create parent dis status is {}, worker id is {}", mkdirs, workerID);
+                log.info("[AbsWorkerIdFactory] - init local file cache create parent dis status is {}, worker id is {}", mkdirs, workerID);
                 if (mkdirs) {
                     if (confFile.createNewFile()) {
                         FileUtil.writeUtf8String("workerID=" + workerID, confFile);
-                        log.info(">>> AbsWorkerIdFactory - local file cache workerID is {}", workerID);
+                        log.info("[AbsWorkerIdFactory] - local file cache workerID is {}", workerID);
                     }
                 } else {
-                    log.warn(">>> AbsWorkerIdFactory - create parent dir error");
+                    log.warn("[AbsWorkerIdFactory] - create parent dir error");
                 }
             } catch (IOException e) {
-                log.warn(">>> AbsWorkerIdFactory - create workerID conf file error", e);
+                log.warn("[AbsWorkerIdFactory] - create workerID conf file error", e);
             }
         }
     }

@@ -13,6 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ingot.id")
 public class IdProperties {
 
-    private String localPathPrefix = "/data/ingot/id/";
+    private String localPathPrefix = "/ingot-data/worker-id/";
     private String mode;
 }

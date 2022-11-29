@@ -26,12 +26,12 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
         try {
             this.workerID = (int) getWorkerIdWithMac();
             updateLocalWorkerID(this.workerID);
-            log.info(">>> MachineWorkerIdFactory init with workID={}", workerID);
+            log.info("[MachineWorkerIdFactory] init with workID={}", workerID);
         } catch (Exception e) {
-            log.warn(">>> MachineWorkerIdFactory - getDatacenterId: " + e.getMessage());
+            log.warn("[MachineWorkerIdFactory] - getDatacenterId: " + e.getMessage());
             try {
                 this.workerID = getCacheWorkId();
-                log.info(">>> MachineWorkerIdFactory init from cache workID={}", workerID);
+                log.info("[MachineWorkerIdFactory] init from cache workID={}", workerID);
             } catch (Exception exception) {
                 return false;
             }
