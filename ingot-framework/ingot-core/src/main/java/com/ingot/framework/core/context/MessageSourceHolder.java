@@ -1,10 +1,11 @@
 package com.ingot.framework.core.context;
 
+import com.ingot.framework.core.config.MessageSourceConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 
 /**
- * <p>Description  : MessageSourceHolder.</p>
+ * <p>Description  : 用于加载{@link MessageSourceConfig#BASENAME}中的message.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2022/11/29.</p>
  * <p>Time         : 1:44 PM.</p>

@@ -22,11 +22,13 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 @AutoConfiguration
 public class MessageSourceConfig {
 
+    public static final String BASENAME = "classpath:i18n/messages";
+
     @Bean
     public IngotMessageSource messageSource() {
         IngotReloadableResourceBundleMessageSource messageSource =
                 new IngotReloadableResourceBundleMessageSource();
-        messageSource.setBasename("classpath:i18n/messages");
+        messageSource.setBasename(BASENAME);
 //        messageSource.setUseCodeAsDefaultMessage(true);
         messageSource.setDefaultEncoding(StandardCharsets.UTF_8.name());
         return messageSource;
