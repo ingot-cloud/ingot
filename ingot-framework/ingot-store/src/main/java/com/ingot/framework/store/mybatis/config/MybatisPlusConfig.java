@@ -2,9 +2,12 @@ package com.ingot.framework.store.mybatis.config;
 
 import javax.sql.DataSource;
 
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
+import com.ingot.component.id.IdGenerator;
+import com.ingot.framework.store.mybatis.incrementer.IngotIdGenerator;
 import com.ingot.framework.store.mybatis.plugins.IngotOptimisticLockerInterceptor;
 import com.ingot.framework.store.mybatis.plugins.IngotTenantLineHandler;
 import com.ingot.framework.tenant.properties.TenantProperties;
@@ -37,5 +40,11 @@ public class MybatisPlusConfig {
         // page
         mybatisPlusInterceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         return mybatisPlusInterceptor;
+    }
+
+    @Bean
+    @ConditionalOnBean(IdGenerator.class)
+    public IdentifierGenerator idGenerator(IdGenerator idGenerator) {
+        return new IngotIdGenerator(idGenerator);
     }
 }
