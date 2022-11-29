@@ -43,8 +43,8 @@ public class IdAutoConfig {
     @Bean("idGenerator")
     @ConditionalOnMissingBean(IdGenerator.class)
     @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "machine", matchIfMissing = true)
-    public IdGenerator machineIdGenerator(IdProperties properties){
-        WorkerIdFactory factory = new MachineWorkerIdFactory(properties.getLocalPathPrefix(),
+    public IdGenerator machineIdGenerator(IdProperties properties) {
+        WorkerIdFactory factory = new MachineWorkerIdFactory(properties,
                 serverName, String.valueOf(port));
         return new SnowFlakeIdGenerator(factory);
     }

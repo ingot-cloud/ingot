@@ -1,9 +1,15 @@
 package com.ingot.component.id.worker.impl;
 
+import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.List;
 
 import com.ingot.component.id.impl.SnowFlakeIdGenerator;
+import com.ingot.component.id.properties.IdProperties;
 import com.ingot.component.id.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,12 +23,15 @@ import lombok.extern.slf4j.Slf4j;
 public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
 
     private int workerID;
+    private final IdProperties properties;
 
-    public MachineWorkerIdFactory(String prefix, String serviceName, String port) {
-        super(prefix, serviceName, port);
+    public MachineWorkerIdFactory(IdProperties properties, String serviceName, String port) {
+        super(properties.getLocalPathPrefix(), serviceName, port);
+        this.properties = properties;
     }
 
-    @Override public boolean init() {
+    @Override
+    public boolean init() {
         try {
             this.workerID = (int) getWorkerIdWithMac();
             updateLocalWorkerID(this.workerID);
@@ -40,7 +49,8 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
         return true;
     }
 
-    @Override public int getWorkerId() {
+    @Override
+    public int getWorkerId() {
         return workerID;
     }
 
@@ -49,7 +59,7 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
      */
     private long getWorkerIdWithMac() throws Exception {
         long id = 0L;
-        InetAddress ip = InetAddress.getLocalHost();
+        InetAddress ip = findFirstNonLoopbackAddress();
         NetworkInterface network = NetworkInterface.getByInetAddress(ip);
         if (network == null) {
             id = 1L;
@@ -62,5 +72,90 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
             }
         }
         return id;
+    }
+
+    /**
+     * org.springframework.cloud.commons.util包，InetUtils#findFirstNonLoopbackAddress()
+     */
+    private InetAddress findFirstNonLoopbackAddress() {
+        InetAddress result = null;
+        try {
+            int lowest = Integer.MAX_VALUE;
+            for (Enumeration<NetworkInterface> nics = NetworkInterface.getNetworkInterfaces(); nics
+                    .hasMoreElements(); ) {
+                NetworkInterface ifc = nics.nextElement();
+                if (ifc.isUp()) {
+                    log.trace("Testing interface: " + ifc.getDisplayName());
+                    if (ifc.getIndex() < lowest || result == null) {
+                        lowest = ifc.getIndex();
+                    } else if (result != null) {
+                        continue;
+                    }
+
+                    // @formatter:off
+                    if (!ignoreInterface(ifc.getDisplayName())) {
+                        for (Enumeration<InetAddress> addrs = ifc
+                                .getInetAddresses(); addrs.hasMoreElements(); ) {
+                            InetAddress address = addrs.nextElement();
+                            if (address instanceof Inet4Address
+                                    && !address.isLoopbackAddress()
+                                    && isPreferredAddress(address)) {
+                                log.trace("Found non-loopback interface: "
+                                        + ifc.getDisplayName());
+                                result = address;
+                            }
+                        }
+                    }
+                    // @formatter:on
+                }
+            }
+        } catch (IOException ex) {
+            log.error("Cannot get first non-loopback address", ex);
+        }
+
+        if (result != null) {
+            return result;
+        }
+
+        try {
+            return InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            log.warn("Unable to retrieve localhost");
+        }
+
+        return null;
+    }
+
+    boolean isPreferredAddress(InetAddress address) {
+
+        if (this.properties.isUseOnlySiteLocalInterfaces()) {
+            final boolean siteLocalAddress = address.isSiteLocalAddress();
+            if (!siteLocalAddress) {
+                log.trace("Ignoring address: " + address.getHostAddress());
+            }
+            return siteLocalAddress;
+        }
+        final List<String> preferredNetworks = this.properties.getPreferredNetworks();
+        if (preferredNetworks.isEmpty()) {
+            return true;
+        }
+        for (String regex : preferredNetworks) {
+            final String hostAddress = address.getHostAddress();
+            if (hostAddress.matches(regex) || hostAddress.startsWith(regex)) {
+                return true;
+            }
+        }
+        log.trace("Ignoring address: " + address.getHostAddress());
+        return false;
+    }
+
+    boolean ignoreInterface(String interfaceName) {
+        for (String regex : this.properties.getIgnoredInterfaces()) {
+            if (interfaceName.matches(regex)) {
+                log.trace("Ignoring interface: " + interfaceName);
+                return true;
+            }
+        }
+        return false;
     }
 }
