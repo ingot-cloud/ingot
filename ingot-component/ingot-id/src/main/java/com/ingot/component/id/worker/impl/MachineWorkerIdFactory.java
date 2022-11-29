@@ -59,17 +59,23 @@ public class MachineWorkerIdFactory extends AbsWorkerIdFactory {
      */
     private long getWorkerIdWithMac() throws Exception {
         long id = 0L;
-        InetAddress ip = findFirstNonLoopbackAddress();
-        NetworkInterface network = NetworkInterface.getByInetAddress(ip);
-        if (network == null) {
-            id = 1L;
-        } else {
-            byte[] mac = network.getHardwareAddress();
-            if (null != mac) {
-                id = ((0x000000FF & (long) mac[mac.length - 2]) |
-                        (0x0000FF00 & (((long) mac[mac.length - 1]) << 8))) >> 6;
-                id = id % (SnowFlakeIdGenerator.MAX_WORKER_ID + 1);
+        InetAddress inetAddress = findFirstNonLoopbackAddress();
+        try {
+            if (inetAddress == null) {
+                inetAddress = InetAddress.getLocalHost();
             }
+            NetworkInterface network = NetworkInterface.getByInetAddress(inetAddress);
+            if (network == null) {
+                id = 1L;
+            } else {
+                byte[] mac = network.getHardwareAddress();
+                if (null != mac) {
+                    id = ((0x000000FF & (long) mac[mac.length - 2]) | (0x0000FF00 & (((long) mac[mac.length - 1]) << 8))) >> 6;
+                    id = id % (SnowFlakeIdGenerator.MAX_WORKER_ID + 1);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[MachineWorkerIdFactory] getWorkerIdWithMac: " + e.getMessage());
         }
         return id;
     }
