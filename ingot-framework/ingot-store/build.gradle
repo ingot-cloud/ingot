@@ -1,10 +1,10 @@
-
 dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
     api(deps.mybatis.plus_extension)
     api(deps.spring.spring_boot.data_redis_starter)
 
+    compileOnly(deps.mybatis.plus_starter)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_tenant)

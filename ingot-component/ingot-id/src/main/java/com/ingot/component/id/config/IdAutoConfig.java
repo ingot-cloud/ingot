@@ -29,7 +29,7 @@ public class IdAutoConfig {
     @Value("${server.port}")
     private int port;
 
-    @Bean("idGenerator")
+    @Bean
     @ConditionalOnMissingBean(IdGenerator.class)
     @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "redis")
     @ConditionalOnBean(RedisTemplate.class)
@@ -40,7 +40,7 @@ public class IdAutoConfig {
         return new SnowFlakeIdGenerator(factory);
     }
 
-    @Bean("idGenerator")
+    @Bean
     @ConditionalOnMissingBean(IdGenerator.class)
     @ConditionalOnProperty(value = "ingot.id.mode", havingValue = "machine", matchIfMissing = true)
     public IdGenerator machineIdGenerator(IdProperties properties) {

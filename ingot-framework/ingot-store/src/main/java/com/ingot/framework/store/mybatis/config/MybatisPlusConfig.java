@@ -2,6 +2,7 @@ package com.ingot.framework.store.mybatis.config;
 
 import javax.sql.DataSource;
 
+import com.baomidou.mybatisplus.autoconfigure.IdentifierGeneratorAutoConfiguration;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
@@ -13,6 +14,7 @@ import com.ingot.framework.store.mybatis.plugins.IngotTenantLineHandler;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 
@@ -23,6 +25,7 @@ import org.springframework.context.annotation.Bean;
  * <p>Time         : 5:10 下午.</p>
  */
 @AutoConfiguration
+@AutoConfigureBefore(IdentifierGeneratorAutoConfiguration.class)
 @ConditionalOnBean(DataSource.class)
 @MapperScan("com.ingot.**.mapper")
 public class MybatisPlusConfig {
@@ -42,9 +45,12 @@ public class MybatisPlusConfig {
         return mybatisPlusInterceptor;
     }
 
+    /**
+     * 需要在 {@link IdentifierGeneratorAutoConfiguration} 前配置
+     */
     @Bean
     @ConditionalOnBean(IdGenerator.class)
-    public IdentifierGenerator idGenerator(IdGenerator idGenerator) {
+    public IdentifierGenerator customIdentifierGenerator(IdGenerator idGenerator) {
         return new IngotIdGenerator(idGenerator);
     }
 }
