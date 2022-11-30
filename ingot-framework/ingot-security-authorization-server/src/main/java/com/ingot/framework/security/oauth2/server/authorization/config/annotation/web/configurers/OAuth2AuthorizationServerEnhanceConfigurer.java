@@ -16,7 +16,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -111,6 +110,6 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
 
     private boolean canConfig(HttpSecurity httpSecurity) {
         return OAuth2ConfigurerUtils.getOptionalBean(
-                httpSecurity, UserDetailsService.class) != null;
+                httpSecurity, OAuth2UserDetailsServiceManager.class) != null;
     }
 }

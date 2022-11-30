@@ -11,10 +11,18 @@ import com.ingot.framework.core.wrapper.R;
 public interface RemoteUserDetailsService {
 
     /**
-     * 获取用户详情响应信息
+     * 密码模式，获取用户详情
      *
-     * @param params 请求参数
-     * @return response
+     * @param params 详情请求参数
+     * @return {@link UserDetailsResponse}
      */
     R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params);
+
+    /**
+     * 社交模式，获取用户详情
+     *
+     * @param params 详情请求参数
+     * @return {@link UserDetailsResponse}
+     */
+    R<UserDetailsResponse> fetchUserDetailsSocial(UserDetailsRequest params);
 }

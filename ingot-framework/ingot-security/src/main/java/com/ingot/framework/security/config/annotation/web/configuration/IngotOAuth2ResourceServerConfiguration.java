@@ -8,6 +8,7 @@ import com.ingot.framework.security.config.annotation.web.configurers.oauth2.ser
 import com.ingot.framework.security.core.userdetails.DefaultOAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsService;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.core.userdetails.RemoteOAuth2SocialUserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteOAuth2UserDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
@@ -95,8 +96,14 @@ public class IngotOAuth2ResourceServerConfiguration {
     @Bean
     @ConditionalOnBean(RemoteUserDetailsService.class)
     @ConditionalOnMissingBean(UserDetailsService.class)
-    public OAuth2UserDetailsService userDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
+    public OAuth2UserDetailsService passwordUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
         return new RemoteOAuth2UserDetailsService(remoteUserDetailsService);
+    }
+
+    @Bean
+    @ConditionalOnBean({RemoteUserDetailsService.class, OAuth2UserDetailsService.class})
+    public OAuth2UserDetailsService socialUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
+        return new RemoteOAuth2SocialUserDetailsService(remoteUserDetailsService);
     }
 
     @Bean
