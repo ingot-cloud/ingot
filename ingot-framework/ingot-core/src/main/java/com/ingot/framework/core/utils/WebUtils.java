@@ -13,13 +13,13 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * <p>Description  : RequestUtils.</p>
+ * <p>Description  : WebUtils.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/5/4.</p>
  * <p>Time         : 上午10:25.</p>
  */
 @Slf4j
-public final class RequestUtils {
+public final class WebUtils extends org.springframework.web.util.WebUtils {
 
     /**
      * Gets request.
@@ -29,7 +29,7 @@ public final class RequestUtils {
     public static HttpServletRequest getRequest() {
         try {
             return Objects.requireNonNull(
-                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()))
+                            ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()))
                     .getRequest();
         } catch (Exception e) {
             log.debug(">>> RequestUtils - RequestUtils.getRequest() error, message={}, e={}",
