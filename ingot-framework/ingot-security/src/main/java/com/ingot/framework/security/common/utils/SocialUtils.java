@@ -14,18 +14,18 @@ public final class SocialUtils {
      * 生成唯一码
      *
      * @param socialType 社交类型 {@link com.ingot.framework.core.model.enums.SocialTypeEnum}
-     * @param openId     社交登录唯一ID
+     * @param code       社交登录code
      * @return 唯一码
      */
-    public static String uniqueCode(String socialType, String openId) {
-        return socialType.concat(GlobalConstants.AT).concat(openId);
+    public static String uniqueCode(String socialType, String code) {
+        return socialType.concat(GlobalConstants.AT).concat(code);
     }
 
     /**
      * 提取唯一码
      *
      * @param uniqueCode 唯一码
-     * @return 提取唯一码数组，第0个为socialType，第一个为openId
+     * @return 提取唯一码数组，第0个为socialType，第一个为code
      */
     public static String[] extract(String uniqueCode) {
         return uniqueCode.split(GlobalConstants.AT);

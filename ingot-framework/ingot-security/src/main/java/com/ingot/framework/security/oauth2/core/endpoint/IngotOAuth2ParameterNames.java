@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.core.endpoint;
 
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
 /**
@@ -29,5 +30,15 @@ public interface IngotOAuth2ParameterNames extends OAuth2ParameterNames {
      * {@code refresh_token} - used in Access Token Request and Access Token Response.
      */
     String REFRESH_TOKEN = "refreshToken";
+
+    /**
+     * 社交类型 {@link SocialTypeEnum}
+     */
+    String SOCIAL_TYPE = "socialType";
+
+    /**
+     * 社交code
+     */
+    String SOCIAL_CODE = "socialCode";
 
 }

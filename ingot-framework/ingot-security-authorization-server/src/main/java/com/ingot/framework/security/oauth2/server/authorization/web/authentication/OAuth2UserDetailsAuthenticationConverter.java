@@ -38,21 +38,19 @@ public abstract class OAuth2UserDetailsAuthenticationConverter implements Authen
     protected Authentication createUnauthenticated(HttpServletRequest request, Authentication clientPrincipal) {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
-        String username = parameters.getFirst(OAuth2ParameterNames.USERNAME);
-        if (!StringUtils.hasText(username) || parameters.get(OAuth2ParameterNames.USERNAME).size() != 1) {
-            OAuth2EndpointUtils.throwError(
-                    OAuth2ErrorCodes.INVALID_REQUEST,
-                    OAuth2ParameterNames.USERNAME);
-        }
-
-        String password = parameters.getFirst(OAuth2ParameterNames.PASSWORD);
-        if (!StringUtils.hasText(password) || parameters.get(OAuth2ParameterNames.PASSWORD).size() != 1) {
-            OAuth2EndpointUtils.throwError(
-                    OAuth2ErrorCodes.INVALID_REQUEST,
-                    OAuth2ParameterNames.PASSWORD);
-        }
-
+        String username = getParameter(parameters, OAuth2ParameterNames.USERNAME);
+        String password = getParameter(parameters, OAuth2ParameterNames.PASSWORD);
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(username, password, getGrantType(), clientPrincipal);
+    }
+
+    protected String getParameter(MultiValueMap<String, String> parameters, String key) {
+        String value = parameters.getFirst(key);
+        if (!StringUtils.hasText(value) || parameters.get(key).size() != 1) {
+            OAuth2EndpointUtils.throwError(
+                    OAuth2ErrorCodes.INVALID_REQUEST,
+                    key);
+        }
+        return value;
     }
 }

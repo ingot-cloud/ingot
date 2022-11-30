@@ -8,6 +8,7 @@ import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
@@ -88,28 +89,13 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         this.clientChecker.check(registeredClient);
         UserDetails user = retrieveUser(registeredClient, unauthenticatedToken);
         this.authenticationChecks.check(user);
+        this.additionalAuthenticationChecks(registeredClient, user, unauthenticatedToken);
         return createSuccessAuthentication(user, unauthenticatedToken);
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
         return (OAuth2UserDetailsAuthenticationToken.class.isAssignableFrom(authentication));
-    }
-
-    @Override
-    protected void additionalAuthenticationChecks(UserDetails userDetails,
-                                                  UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
-        if (authentication.getCredentials() == null) {
-            log.debug("Failed to authenticate since no credentials provided");
-            throw new BadCredentialsException(this.messages
-                    .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
-        }
-        String presentedPassword = authentication.getCredentials().toString();
-        if (!this.passwordEncoder.matches(presentedPassword, userDetails.getPassword())) {
-            log.debug("Failed to authenticate since password does not match stored value");
-            throw new BadCredentialsException(this.messages
-                    .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
-        }
     }
 
     @Override
@@ -122,12 +108,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         prepareTimingAttackProtection();
         try {
             UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
-            // 判断是否可以登陆该客户端
-            Set<String> grantClients = IngotAuthorityUtils.extractClientIds(loadedUser.getAuthorities());
-            boolean grant = grantClients.contains(registeredClient.getClientId());
-            AssertionUtils.check(grant, () -> OAuth2ErrorUtils.throwNotAllowClient(this.messages
-                    .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
-                            "不允许访问客户端")));
             // 填充客户端信息
             TokenAuthType tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
             loadedUser = IngotUser.fillClientInfo((IngotUser) loadedUser,
@@ -139,6 +119,34 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             if (!this.hideUserNotFoundExceptions) {
                 throw ex;
             }
+            throw new BadCredentialsException(this.messages
+                    .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
+        }
+    }
+
+    protected void additionalAuthenticationChecks(RegisteredClient registeredClient,
+                                                  UserDetails user,
+                                                  OAuth2UserDetailsAuthenticationToken token) {
+        // 判断是否可以登陆该客户端
+        Set<String> grantClients = IngotAuthorityUtils.extractClientIds(user.getAuthorities());
+        boolean grant = grantClients.contains(registeredClient.getClientId());
+        AssertionUtils.check(grant, () -> OAuth2ErrorUtils.throwNotAllowClient(this.messages
+                .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
+                        "不允许访问客户端")));
+
+        // 如果是社交登录不需要校验密码
+        if (token.getGrantType() == UserDetailsAuthorizationGrantType.SOCIAL) {
+            return;
+        }
+
+        if (token.getCredentials() == null) {
+            log.debug("Failed to authenticate since no credentials provided");
+            throw new BadCredentialsException(this.messages
+                    .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
+        }
+        String presentedPassword = token.getCredentials().toString();
+        if (!this.passwordEncoder.matches(presentedPassword, user.getPassword())) {
+            log.debug("Failed to authenticate since password does not match stored value");
             throw new BadCredentialsException(this.messages
                     .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
         }
@@ -164,14 +172,20 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     }
 
     @Override
+    protected final void additionalAuthenticationChecks(UserDetails userDetails,
+                                                        UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        throw new RuntimeException("不可调用该方法(additionalAuthenticationChecks)");
+    }
+
+    @Override
     protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication)
             throws AuthenticationException {
-        return null;
+        throw new RuntimeException("不可调用该方法(retrieveUser)");
     }
 
     @Override
     protected final Authentication createSuccessAuthentication(Object principal, Authentication authentication, UserDetails user) {
-        return super.createSuccessAuthentication(principal, authentication, user);
+        throw new RuntimeException("不可调用该方法(createSuccessAuthentication)");
     }
 
     private void prepareTimingAttackProtection() {
