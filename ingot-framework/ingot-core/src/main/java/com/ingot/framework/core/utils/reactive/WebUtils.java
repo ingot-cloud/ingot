@@ -15,13 +15,13 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 
 
 /**
- * <p>Description  : RequestUtils.</p>
+ * <p>Description  : WebUtils.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019-08-19.</p>
  * <p>Time         : 09:27.</p>
  */
 @Slf4j
-public final class RequestUtils {
+public final class WebUtils {
 
     /**
      * 获得用户远程地址
