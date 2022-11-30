@@ -6,4 +6,5 @@ dependencies {
     implementation project(ingot.framework_common)
 
     compileOnly(deps.spring.spring_boot.data_redis_starter)
+    compileOnly(deps.mybatis.plus_starter)
 }

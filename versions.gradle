@@ -106,6 +106,7 @@ deps.apache = apache
 def mybatis = [:]
 mybatis.plus_starter = "com.baomidou:mybatis-plus-boot-starter:${versions.mybatis_plus}"
 mybatis.plus_extension = "com.baomidou:mybatis-plus-extension:${versions.mybatis_plus}"
+mybatis.plus_core = "com.baomidou:mybatis-plus-core:${versions.mybatis_plus}"
 mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis_plus}"
 deps.mybatis = mybatis
 
