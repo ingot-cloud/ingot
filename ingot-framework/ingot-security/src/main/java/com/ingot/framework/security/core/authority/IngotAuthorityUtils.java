@@ -34,7 +34,21 @@ public final class IngotAuthorityUtils {
     }
 
     /**
-     * Converts authorities into a List of GrantedAuthority objects.
+     * 将 {@link GrantedAuthority} 列表转换为Set，并且不包括 {@link ClientGrantedAuthority}
+     *
+     * @return a Set of the Strings obtained from each call to
+     * GrantedAuthority.getAuthority()
+     */
+    public static Set<String> authorityListToSetWithoutClient(Collection<? extends GrantedAuthority> userAuthorities) {
+        Assert.notNull(userAuthorities, "userAuthorities cannot be null");
+        return userAuthorities.stream()
+                .filter(authority -> !(authority instanceof ClientGrantedAuthority))
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 将权限转化为 {@link ClientGrantedAuthority} 列表
      *
      * @param authorities the authorities to convert
      * @return a List of GrantedAuthority objects
