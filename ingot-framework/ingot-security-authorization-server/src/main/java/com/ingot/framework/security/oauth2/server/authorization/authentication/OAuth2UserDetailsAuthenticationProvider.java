@@ -68,7 +68,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     public OAuth2UserDetailsAuthenticationProvider() {
         setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
-        setMessageSource(new IngotSecurityMessageSource());
     }
 
     @Override
@@ -101,6 +100,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     @Override
     protected void doAfterPropertiesSet() {
         Assert.notNull(this.userDetailsServiceManager, "A OAuth2UserDetailsService must be set");
+        // 强制使用 IngotSecurityMessageSource，覆盖默认的以及MessageSourceAware接口注入的MessageSource
+        setMessageSource(new IngotSecurityMessageSource());
     }
 
     protected UserDetails retrieveUser(RegisteredClient registeredClient,
