@@ -20,9 +20,12 @@ import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
@@ -93,6 +96,21 @@ public class IngotOAuth2ResourceServerConfiguration {
         return http.build();
     }
 
+    /**
+     * 由于注入了多个{@link UserDetailsService}，为了保证
+     * {@link AbstractUserDetailsAuthenticationProvider}可用，增加如下配置
+     */
+    @Bean
+    public InitializeUserDetailsBeanManagerConfigurer ingotInitializeUserDetailsBeanManagerConfigurer(
+            ApplicationContext context) {
+        return new InitializeUserDetailsBeanManagerConfigurer(context);
+    }
+
+    /**
+     * 由于注入了多个 {@link UserDetailsService}，{@link InitializeUserDetailsBeanManagerConfigurer}
+     * 默认使用该 {@link UserDetailsService}
+     */
+    @Primary
     @Bean
     @ConditionalOnBean(RemoteUserDetailsService.class)
     @ConditionalOnMissingBean(UserDetailsService.class)
@@ -100,6 +118,9 @@ public class IngotOAuth2ResourceServerConfiguration {
         return new RemoteOAuth2UserDetailsService(remoteUserDetailsService);
     }
 
+    /**
+     * 社交登录{@link UserDetailsService}
+     */
     @Bean
     @ConditionalOnBean({RemoteUserDetailsService.class, OAuth2UserDetailsService.class})
     public OAuth2UserDetailsService socialUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
