@@ -31,4 +31,9 @@ public class UserDetailApi extends BaseController {
     public R<UserDetailsResponse> getUserAuthDetail(@PathVariable String username) {
         return ok(userDetailService.getUserAuthDetails(username));
     }
+
+    @PostMapping(value = "/social/{unique}")
+    public R<UserDetailsResponse> getUserAuthDetailsSocial(@PathVariable String unique) {
+        return ok(userDetailService.getUserAuthDetailsSocial(unique));
+    }
 }

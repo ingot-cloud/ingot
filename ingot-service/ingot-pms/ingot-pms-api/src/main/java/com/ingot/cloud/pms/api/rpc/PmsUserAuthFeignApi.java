@@ -18,5 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 public interface PmsUserAuthFeignApi {
 
     @PostMapping(value = "/user/details/{username}")
-    R<UserDetailsResponse> getUserAuthDetail(@PathVariable("username") String username);
+    R<UserDetailsResponse> getUserAuthDetails(@PathVariable("username") String username);
+
+    @PostMapping(value = "/user/details/social/{unique}")
+    R<UserDetailsResponse> getUserAuthDetailsSocial(@PathVariable("unique") String unique);
 }

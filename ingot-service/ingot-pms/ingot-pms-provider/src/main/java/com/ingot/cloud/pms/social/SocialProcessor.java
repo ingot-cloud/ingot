@@ -1,7 +1,6 @@
 package com.ingot.cloud.pms.social;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 
 /**
  * <p>Description  : SocialProcessor.</p>
@@ -14,8 +13,8 @@ public interface SocialProcessor {
     /**
      * 执行社交流程，获取用户信息
      *
-     * @param params 获取用户信息详情数据
+     * @param code 获取用户信息详情数据
      * @return {@link SysUser}
      */
-    SysUser exec(UserDetailsRequest params);
+    SysUser exec(String code);
 }

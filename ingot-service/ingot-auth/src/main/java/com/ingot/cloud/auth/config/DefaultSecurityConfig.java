@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth.config;
 
+import com.ingot.cloud.auth.service.DefaultRemoteUserDetailsService;
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,6 @@ public class DefaultSecurityConfig {
 
     @Bean
     public RemoteUserDetailsService remoteUserDetailsService(PmsUserAuthFeignApi pmsApi) {
-        return (params) -> pmsApi.getUserAuthDetail(params.getUsername());
+        return new DefaultRemoteUserDetailsService(pmsApi);
     }
 }

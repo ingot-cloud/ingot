@@ -2,7 +2,6 @@ package com.ingot.cloud.pms.social.impl;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import org.springframework.stereotype.Component;
 
 import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
@@ -17,7 +16,7 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
 public class WechatSocialProcessor implements SocialProcessor {
 
     @Override
-    public SysUser exec(UserDetailsRequest params) {
+    public SysUser exec(String code) {
         return null;
     }
 }

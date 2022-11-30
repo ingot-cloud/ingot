@@ -17,8 +17,11 @@ import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.security.common.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
  * <p>Date         : 2020/12/29.</p>
  * <p>Time         : 5:27 下午.</p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailService {
@@ -40,7 +44,28 @@ public class UserDetailServiceImpl implements UserDetailService {
     public UserDetailsResponse getUserAuthDetails(String username) {
         SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getUsername, username));
+        return map(user);
+    }
 
+    @Override
+    public UserDetailsResponse getUserAuthDetailsSocial(String unique) {
+        String[] extract = SocialUtils.extract(unique);
+        SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);
+        if (socialType == null) {
+            log.error("[UserDetailServiceImpl] 非法社交类型={}", extract[0]);
+            return null;
+        }
+
+        SocialProcessor processor = socialProcessorMap.get(socialType.getBeanName());
+        if (processor == null) {
+            log.error("[UserDetailServiceImpl] 非法社交类型={}, 不存在该类型社交执行流程", extract[0]);
+            return null;
+        }
+
+        return map(processor.exec(extract[1]));
+    }
+
+    private UserDetailsResponse map(SysUser user) {
         UserDetailsResponse result = userTrans.toUserDetails(user);
         // 查询拥有的角色
         List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
@@ -59,20 +84,4 @@ public class UserDetailServiceImpl implements UserDetailService {
         result.setClients(clientIds);
         return result;
     }
-
-//    private SysUser withSocialMode(UserDetailsRequest params) {
-//        String[] extract = SocialUtils.extract(params.getUniqueCode());
-//        SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);
-//        if (socialType == null) {
-//            OAuth2ErrorUtils.throwInvalidRequest("非法社交类型");
-//        }
-//
-//        SocialProcessor processor = socialProcessorMap.get(socialType.getBeanName());
-//        if (processor == null) {
-//            OAuth2ErrorUtils.throwInvalidRequest("非法社交类型");
-//        }
-//
-//        params.setUniqueCode(extract[1]);
-//        return processor.exec(params);
-//    }
 }

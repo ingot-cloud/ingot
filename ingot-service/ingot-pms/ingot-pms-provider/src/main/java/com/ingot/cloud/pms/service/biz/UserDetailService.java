@@ -17,4 +17,11 @@ public interface UserDetailService {
      * @return {@link UserDetailsResponse}
      */
     UserDetailsResponse getUserAuthDetails(String username);
+
+    /**
+     * 社交获取用户详情
+     * @param unique 唯一码
+     * @return {@link UserDetailsResponse}
+     */
+    UserDetailsResponse getUserAuthDetailsSocial(String unique);
 }
