@@ -62,4 +62,16 @@ public final class AssertionUtils {
             throw e;
         }
     }
+
+    /**
+     * 检测表达式，如果不满足则执行Function
+     *
+     * @param expression 表达式
+     * @param runnable   Function
+     */
+    public static void check(boolean expression, Runnable runnable) {
+        if (!expression) {
+            runnable.run();
+        }
+    }
 }

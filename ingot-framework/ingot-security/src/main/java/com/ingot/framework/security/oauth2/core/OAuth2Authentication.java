@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core;
+package com.ingot.framework.security.oauth2.core;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;

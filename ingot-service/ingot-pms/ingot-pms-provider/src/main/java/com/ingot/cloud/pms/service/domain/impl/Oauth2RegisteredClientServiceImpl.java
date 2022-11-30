@@ -18,6 +18,7 @@ import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.RedisConstants;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     public List<Oauth2RegisteredClient> getClientsByRoles(List<Long> roleIds) {
-        return getBaseMapper().getClientsByRoles(roleIds);
+        return getBaseMapper().getClientsByRoles(roleIds, CommonStatusEnum.ENABLE.getValue());
     }
 
     @Override

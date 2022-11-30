@@ -1,16 +1,20 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.util.Set;
+
+import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -118,10 +122,13 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         prepareTimingAttackProtection();
         try {
             UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
-            if (loadedUser == null) {
-                throw new InternalAuthenticationServiceException(
-                        "UserDetailsService returned null, which is an interface contract violation");
-            }
+            // 判断是否可以登陆该客户端
+            Set<String> grantClients = IngotAuthorityUtils.extractClientIds(loadedUser.getAuthorities());
+            boolean grant = grantClients.contains(registeredClient.getClientId());
+            AssertionUtils.check(grant, () -> OAuth2ErrorUtils.throwNotAllowClient(this.messages
+                    .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
+                            "不允许访问客户端")));
+            // 填充客户端信息
             TokenAuthType tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
             loadedUser = IngotUser.fillClientInfo((IngotUser) loadedUser,
                     registeredClient.getClientId(), tokenAuthType.getValue());
@@ -134,10 +141,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             }
             throw new BadCredentialsException(this.messages
                     .getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
-        } catch (InternalAuthenticationServiceException | OAuth2AuthenticationException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new InternalAuthenticationServiceException(ex.getMessage(), ex);
         }
     }
 

@@ -21,5 +21,6 @@ public interface Oauth2RegisteredClientMapper extends BaseMapper<Oauth2Registere
      * @param roleIds 角色ID
      * @return Oauth2RegisteredClient 列表
      */
-    List<Oauth2RegisteredClient> getClientsByRoles(@Param("list") List<Long> roleIds);
+    List<Oauth2RegisteredClient> getClientsByRoles(@Param("list") List<Long> roleIds,
+                                                   @Param("status") String status);
 }

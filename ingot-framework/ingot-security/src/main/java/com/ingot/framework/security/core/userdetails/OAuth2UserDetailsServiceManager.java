@@ -1,6 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.security.core.OAuth2Authentication;
+import com.ingot.framework.security.oauth2.core.OAuth2Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 

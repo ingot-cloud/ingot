@@ -87,4 +87,11 @@ public final class OAuth2ErrorUtils {
     public static void throwInvalidRequest(String desc) {
         throwAuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST, desc);
     }
+
+    /**
+     * 不允许访问客户端
+     */
+    public static void throwNotAllowClient(String desc) {
+        throwAuthenticationException(OAuth2ErrorCodesExtension.NOT_ALLOW_CLIENT.getCode(), desc);
+    }
 }

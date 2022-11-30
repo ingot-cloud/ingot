@@ -2,9 +2,13 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
@@ -41,20 +45,18 @@ public class UserDetailServiceImpl implements UserDetailService {
         // 查询拥有的角色
         List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
         List<String> roleCodes = roles.stream()
-                .map(SysRole::getCode).collect(Collectors.toList());
+                .map(SysRole::getCode)
+                .collect(Collectors.toList());
         result.setRoles(roleCodes);
 
-//        List<Integer> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
-//        List<Oauth2RegisteredClient> clients = oauth2RegisteredClientService.getClientsByRoles(roleIds);
-//
-//        Oauth2RegisteredClient client = clients.stream()
-//                .filter(item -> StrUtil.equals(item.getClientId(), params.getClientId()))
-//                .findFirst().orElse(null);
-//        if (client == null) {
-//            OAuth2ErrorUtils.throwInvalidRequest("未授权该应用");
-//        }
-//        userDetails.setTokenAuthenticationMethod(client.getTokenAuthenticationMethod());
-//        userDetails.setClientId(params.getClientId());
+        List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
+        // 查询可访问的客户端
+        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByRoles(roleIds))
+                .map(clients -> clients.stream()
+                        .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
+                .map(ListUtil::toList)
+                .orElse(CollUtil.empty(List.class));
+        result.setClients(clientIds);
         return result;
     }
 
@@ -72,19 +74,5 @@ public class UserDetailServiceImpl implements UserDetailService {
 //
 //        params.setUniqueCode(extract[1]);
 //        return processor.exec(params);
-//    }
-
-//    private UserDetailsResponse ofUser(SysUser user) {
-//        return userTrans.toUserDetails(user);
-//    }
-
-//    private void checkUser(SysUser user) {
-//        if (user == null) {
-//            OAuth2ErrorUtils.throwInvalidRequest("用户名或密码不正确");
-//        }
-//        if (user.getStatus().ordinal() > UserStatusEnum.ENABLE.ordinal()) {
-//            OAuth2ErrorUtils.throwAuthenticationException(
-//                    OAuth2ErrorCodesExtension.USER_STATUS.getCode(), "用户" + user.getStatus().getText());
-//        }
 //    }
 }

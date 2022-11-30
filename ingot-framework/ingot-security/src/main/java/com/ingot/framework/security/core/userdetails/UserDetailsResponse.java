@@ -39,7 +39,11 @@ public class UserDetailsResponse implements Serializable {
      */
     private UserStatusEnum status;
     /**
-     * 角色列表
+     * 角色列表，roleCode
      */
     private List<String> roles;
+    /**
+     * 客户端列表，clientId
+     */
+    private List<String> clients;
 }

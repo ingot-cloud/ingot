@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import java.util.Collection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.security.core.OAuth2Authentication;
+import com.ingot.framework.security.oauth2.core.OAuth2Authentication;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

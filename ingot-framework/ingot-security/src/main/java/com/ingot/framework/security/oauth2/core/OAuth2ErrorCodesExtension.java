@@ -15,7 +15,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum OAuth2ErrorCodesExtension implements StatusCode {
     USER_STATUS("user_status", "Illegal user status"),
-    SIGN_OUT("user_sign_out", "User has been signed out");
+    SIGN_OUT("user_sign_out", "User has been signed out"),
+    NOT_ALLOW_CLIENT("not_allow_client", "The user is not allowed to access the client");
 
     private final String code;
     private final String text;

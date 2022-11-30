@@ -9,7 +9,6 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.context.RequestContextHolder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -119,26 +118,5 @@ public final class SecurityUtils {
             throw new BadCredentialsException("Invalid basic authentication token");
         }
         return new String[]{token.substring(0, delim), token.substring(delim + 1)};
-    }
-
-    /**
-     * 从当前 servlet request 中获取 Client id
-     *
-     * @return {@link String}
-     */
-    public static String getClientIdFromRequest() {
-        try {
-            HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
-            if (request == null) {
-                return "";
-            }
-
-            // 尝试从请求头 Authorization 中获取
-            String basicToken = getBasicToken(request).orElse("");
-            return extractAndDecodeBasicToken(basicToken)[0];
-        } catch (Exception e) {
-            log.info("[SecurityUtils] getClientIdFromRequest 获取 client id 失败", e);
-            return "";
-        }
     }
 }

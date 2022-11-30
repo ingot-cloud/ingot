@@ -1,10 +1,14 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -44,8 +48,12 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                     return r.getData();
                 })
                 .map(data -> {
-                    List<String> userAuthorities = data.getRoles();
-                    List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0]));
+                    List<String> userAuthorities = Optional.ofNullable(data.getRoles()).orElse(ListUtil.empty());
+                    List<String> clients = Optional.ofNullable(data.getClients()).orElse(ListUtil.empty());
+                    List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(userAuthorities) + CollUtil.size(clients));
+                    authorities.addAll(AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0])));
+                    authorities.addAll(IngotAuthorityUtils.createClientAuthorityList(clients.toArray(new String[0])));
+
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
                     return IngotUser.noClientInfo(data.getId(), data.getDeptId(), data.getTenantId(),
