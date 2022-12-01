@@ -14,6 +14,7 @@ versions.jackson = "2.13.3"
 versions.mybatis_plus = "3.5.1"
 versions.mysql_connector = "8.0.31"
 versions.hutool = "5.8.5"
+versions.redisson = "3.18.1"
 
 def spring = [:]
 def spring_boot = [:]
@@ -147,6 +148,7 @@ def aspectj = [:]
 aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
 deps.aspectj = aspectj
 
+deps.redisson = "org.redisson:redisson:${versions.redisson}"
 deps.minio = "io.minio:minio:6.0.10"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
