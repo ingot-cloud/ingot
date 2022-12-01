@@ -2,11 +2,10 @@
 
 ## 功能点
 * [ ] RBAC
-* [ ] 租户功能
+* [ ] 多租户
 * [ ] dubbo
 * [ ] grpc
 * [ ] Seata
 * [ ] Sentinel
-* [ ] Nacos最新
-* [ ] 
+* [ ] 脱敏组件
 
