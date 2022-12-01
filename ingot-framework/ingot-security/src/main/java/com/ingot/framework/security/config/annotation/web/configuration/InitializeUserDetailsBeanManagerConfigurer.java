@@ -1,5 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import com.ingot.framework.security.authentication.IngotDaoAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -29,9 +30,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthenticationConfigurerAdapter {
 
     /**
-     * 要比Spring的InitializeUserDetailsBeanManagerConfigurer，DEFAULT_ORDER大，也就是在其之后生效
+     * 要在Spring的InitializeUserDetailsBeanManagerConfigurer之前生效
      */
-    static final int DEFAULT_ORDER = Ordered.LOWEST_PRECEDENCE - 4990;
+    static final int DEFAULT_ORDER = Ordered.LOWEST_PRECEDENCE - 5010;
 
     private final ApplicationContext context;
 
@@ -60,7 +61,7 @@ class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthenticationCon
             }
             PasswordEncoder passwordEncoder = getBeanOrNull(PasswordEncoder.class);
             UserDetailsPasswordService passwordManager = getBeanOrNull(UserDetailsPasswordService.class);
-            DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+            IngotDaoAuthenticationProvider provider = new IngotDaoAuthenticationProvider();
             provider.setUserDetailsService(userDetailsService);
             if (passwordEncoder != null) {
                 provider.setPasswordEncoder(passwordEncoder);

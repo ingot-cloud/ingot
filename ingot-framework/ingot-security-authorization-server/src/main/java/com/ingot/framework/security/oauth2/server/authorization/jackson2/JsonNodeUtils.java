@@ -58,6 +58,14 @@ public class JsonNodeUtils {
         return (value != null && value.isTextual()) ? value.asText() : null;
     }
 
+    static Number findNumberValue(JsonNode jsonNode, String fieldName) {
+        if (jsonNode == null) {
+            return null;
+        }
+        JsonNode value = jsonNode.findValue(fieldName);
+        return (value != null && value.isNumber()) ? value.numberValue() : null;
+    }
+
     static <T> T findValue(JsonNode jsonNode, String fieldName, TypeReference<T> valueTypeReference,
                            ObjectMapper mapper) {
         if (jsonNode == null) {

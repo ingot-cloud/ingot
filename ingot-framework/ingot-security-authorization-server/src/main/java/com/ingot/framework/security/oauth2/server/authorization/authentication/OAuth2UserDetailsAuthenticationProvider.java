@@ -157,6 +157,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
                                                          OAuth2UserDetailsAuthenticationToken authentication) {
         boolean upgradeEncoding = this.userDetailsPasswordService != null
                 && this.passwordEncoder.upgradeEncoding(user.getPassword());
+        log.debug("[OAuth2UserDetailsAuthenticationProvider] - 是否进行upgradeEncoding={}", upgradeEncoding);
         if (upgradeEncoding) {
             String presentedPassword = authentication.getCredentials().toString();
             String newPassword = this.passwordEncoder.encode(presentedPassword);
