@@ -5,8 +5,10 @@ import java.util.TimeZone;
 
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.jackson.IngotLocalTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ingot.framework.core.jackson.IngotJavaTimeModule;
 import com.ingot.framework.core.jackson.IngotModule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.Bean;
  * <p>Date         : 2020/11/17.</p>
  * <p>Time         : 8:37 下午.</p>
  */
+@Slf4j
 @AutoConfiguration
 @AutoConfigureBefore(JacksonAutoConfiguration.class)
 @ConditionalOnClass(ObjectMapper.class)
@@ -32,10 +35,11 @@ public class JacksonConfig {
     @ConditionalOnMissingBean
     public Jackson2ObjectMapperBuilderCustomizer customizer() {
         return builder -> {
-            builder.locale(Locale.CHINA);
+            builder.locale(Locale.getDefault());
             builder.timeZone(TimeZone.getTimeZone(ASIA_BEIJING));
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
-            builder.modules(new IngotLocalTimeModule(), new IngotModule());
+            // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
+            builder.modules(new IngotModule(), new JavaTimeModule(), new IngotJavaTimeModule());
         };
     }
 }

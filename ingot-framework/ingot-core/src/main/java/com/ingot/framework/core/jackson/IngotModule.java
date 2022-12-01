@@ -15,7 +15,7 @@ import com.fasterxml.jackson.datatype.jsr310.PackageVersion;
  */
 public class IngotModule extends SimpleModule {
     public IngotModule() {
-        super(PackageVersion.VERSION);
+        super(IngotModule.class.getName(), PackageVersion.VERSION);
 
         this.addSerializer(long.class, new ToStringSerializer());
         this.addSerializer(Long.class, new ToStringSerializer());

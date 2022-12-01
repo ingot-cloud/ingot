@@ -21,10 +21,10 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
  * <p>Date         : 2020/11/17.</p>
  * <p>Time         : 8:11 下午.</p>
  */
-public class IngotLocalTimeModule extends SimpleModule {
+public class IngotJavaTimeModule extends SimpleModule {
 
-    public IngotLocalTimeModule() {
-        super(PackageVersion.VERSION);
+    public IngotJavaTimeModule() {
+        super(IngotJavaTimeModule.class.getName(), PackageVersion.VERSION);
 
         this.serializer();
         this.deserializer();
