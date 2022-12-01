@@ -1,7 +1,7 @@
 package com.ingot.framework.core.config;
 
-import com.ingot.framework.core.aspect.PreconditionsAop;
-import com.ingot.framework.core.aspect.RequestLogAop;
+import com.ingot.framework.core.utils.preconditions.PreconditionsAop;
+import com.ingot.framework.core.utils.RequestLogAop;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;

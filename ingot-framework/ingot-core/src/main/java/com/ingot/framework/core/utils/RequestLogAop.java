@@ -1,4 +1,4 @@
-package com.ingot.framework.core.aspect;
+package com.ingot.framework.core.utils;
 
 import java.util.Arrays;
 import java.util.Map;

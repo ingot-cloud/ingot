@@ -1,4 +1,4 @@
-package com.ingot.framework.core.annotation;
+package com.ingot.framework.core.utils.preconditions;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
