@@ -19,9 +19,6 @@ dependencies {
 
     // log
     implementation(deps.log.logstash_logback_encoder)
-
-    // todo 适配 spring cloud alibaba 2.2.3，所以需要增加依赖 spring-cloud-starter-bootstrap
-    implementation(deps.spring.spring_cloud.bootstrap_starter)
 }
 
 test {

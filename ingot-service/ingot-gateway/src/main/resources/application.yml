@@ -4,9 +4,6 @@ server:
 spring:
   application:
     name: ingot-service-gateway
-  rabbitmq:
-    username: admin
-    password: admin
   redis:
     password: ingotredis
   cloud:
@@ -17,6 +14,7 @@ spring:
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         namespace: ${spring.cloud.nacos.discovery.namespace}
-        file-extension: yml
-        shared-configs:
-          - application-common.${spring.cloud.nacos.config.file-extension}
+  config:
+    import:
+      - optional:nacos:application-common.yml
+      - optional:nacos:${spring.application.name}.yml
