@@ -20,7 +20,9 @@ public interface UserTrans {
 
     SysUser to(UserBaseInfoDTO in);
 
-    UserProfileVO to(SysUser in);
+    UserBaseInfoDTO toUserBaseInfo(SysUser in);
+
+    UserProfileVO toUserProfile(SysUser in);
 
     UserDetailsResponse toUserDetails(SysUser in);
 }

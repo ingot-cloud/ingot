@@ -67,7 +67,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                     .map(SysRole::getCode).collect(Collectors.toList());
 
             UserInfoDTO result = new UserInfoDTO();
-            result.setUser(userInfo);
+            result.setUser(userTrans.toUserBaseInfo(userInfo));
             result.setRoles(roleCodes);
             return result;
         });
@@ -224,7 +224,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        UserProfileVO profile = userTrans.to(user);
+        UserProfileVO profile = userTrans.toUserProfile(user);
 
         List<SysRole> list = sysRoleService.getRolesOfUser(id);
         if (CollUtil.isNotEmpty(list)) {
