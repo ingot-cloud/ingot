@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.Group;
+import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

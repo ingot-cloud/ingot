@@ -5,7 +5,7 @@ import java.util.List;
 import javax.validation.constraints.NotBlank;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.framework.core.validation.Group;
+import com.ingot.framework.core.utils.validation.Group;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

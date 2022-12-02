@@ -15,7 +15,7 @@ import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

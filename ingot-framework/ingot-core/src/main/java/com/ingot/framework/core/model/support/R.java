@@ -1,4 +1,4 @@
-package com.ingot.framework.core.wrapper;
+package com.ingot.framework.core.model.support;
 
 import java.io.Serializable;
 

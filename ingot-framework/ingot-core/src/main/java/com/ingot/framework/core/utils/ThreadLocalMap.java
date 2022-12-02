@@ -1,4 +1,4 @@
-package com.ingot.framework.core.wrapper;
+package com.ingot.framework.core.utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,7 +72,8 @@ public class ThreadLocalMap {
          *
          * @return the map
          */
-        @Override protected Map<String, Object> initialValue() {
+        @Override
+        protected Map<String, Object> initialValue() {
             return new HashMap<String, Object>(8) {
 
                 private static final long serialVersionUID = 3637958959138295593L;

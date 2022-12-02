@@ -14,9 +14,9 @@ import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
-import com.ingot.framework.core.validation.Group;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/role")
 @RequiredArgsConstructor
-public class RoleApi extends BaseController {
+public class RoleApi implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;

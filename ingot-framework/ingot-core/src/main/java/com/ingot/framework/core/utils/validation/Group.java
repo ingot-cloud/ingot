@@ -1,4 +1,4 @@
-package com.ingot.framework.core.validation;
+package com.ingot.framework.core.utils.validation;
 
 /**
  * <p>Description  : Group.</p>

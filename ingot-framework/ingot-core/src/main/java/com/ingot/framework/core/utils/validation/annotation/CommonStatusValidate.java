@@ -1,4 +1,4 @@
-package com.ingot.framework.core.validation.annotation;
+package com.ingot.framework.core.utils.validation.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
-import com.ingot.framework.core.validation.constraintvalidators.CommonStatusValidator;
+import com.ingot.framework.core.utils.validation.constraintvalidators.CommonStatusValidator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;

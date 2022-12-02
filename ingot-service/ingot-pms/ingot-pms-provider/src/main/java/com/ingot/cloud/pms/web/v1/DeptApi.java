@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.web.v1;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.framework.core.validation.Group;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/dept")
 @RequiredArgsConstructor
-public class DeptApi extends BaseController {
+public class DeptApi implements RShortcuts {
     private final SysDeptService sysDeptService;
 
     @GetMapping("/tree")

@@ -1,10 +1,10 @@
-package com.ingot.framework.core.validation.constraintvalidators;
+package com.ingot.framework.core.utils.validation.constraintvalidators;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.annotation.CommonStatusValidate;
+import com.ingot.framework.core.utils.validation.annotation.CommonStatusValidate;
 
 /**
  * <p>Description  : CommonStatusValidator.</p>

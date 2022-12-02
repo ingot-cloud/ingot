@@ -1,4 +1,4 @@
-package com.ingot.framework.core.validation;
+package com.ingot.framework.core.utils.validation;
 
 import com.ingot.framework.common.exception.IllegalOperationException;
 

@@ -10,8 +10,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVO;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/tenant")
 @RequiredArgsConstructor
-public class TenantApi extends BaseController {
+public class TenantApi implements RShortcuts {
     private final SysTenantService sysTenantService;
 
     @Permit

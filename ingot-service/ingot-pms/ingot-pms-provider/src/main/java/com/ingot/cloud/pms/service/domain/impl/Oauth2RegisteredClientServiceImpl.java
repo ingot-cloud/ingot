@@ -19,7 +19,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

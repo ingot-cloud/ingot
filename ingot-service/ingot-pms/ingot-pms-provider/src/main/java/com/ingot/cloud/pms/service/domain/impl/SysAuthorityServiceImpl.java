@@ -15,7 +15,7 @@ import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.common.utils.DateUtils;
-import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

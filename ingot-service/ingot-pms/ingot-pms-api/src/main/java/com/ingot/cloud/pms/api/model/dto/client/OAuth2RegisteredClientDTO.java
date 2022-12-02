@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.Group;
+import com.ingot.framework.core.utils.validation.Group;
 import lombok.Data;
 
 /**

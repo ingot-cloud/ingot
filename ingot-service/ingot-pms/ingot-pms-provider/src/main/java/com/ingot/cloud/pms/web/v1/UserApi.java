@@ -5,9 +5,9 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.framework.core.validation.Group;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/user")
 @RequiredArgsConstructor
-public class UserApi extends BaseController {
+public class UserApi implements RShortcuts {
     private final SysUserService sysUserService;
 
     @GetMapping

@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
-import com.ingot.framework.core.validation.Group;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/client")
 @RequiredArgsConstructor
-public class ClientApi extends BaseController {
+public class ClientApi implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @GetMapping("/page")

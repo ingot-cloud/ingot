@@ -1,7 +1,7 @@
 package com.ingot.cloud.auth.service;
 
 import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;

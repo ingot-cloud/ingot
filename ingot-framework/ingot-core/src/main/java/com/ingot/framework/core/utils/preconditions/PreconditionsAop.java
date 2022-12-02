@@ -15,9 +15,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 
-import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_BEANS;
-import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_ILLEGAL_ACCESS;
-import static com.ingot.framework.core.status.CoreStatusCode.PRECONDITION_NO_SUCH_METHOD;
+import static com.ingot.framework.core.model.status.CoreStatusCode.PRECONDITION_BEANS;
+import static com.ingot.framework.core.model.status.CoreStatusCode.PRECONDITION_ILLEGAL_ACCESS;
+import static com.ingot.framework.core.model.status.CoreStatusCode.PRECONDITION_NO_SUCH_METHOD;
 
 /**
  * <p>Description  : PreconditionsAop.</p>

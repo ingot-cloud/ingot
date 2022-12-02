@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.rpc;
 
 import com.ingot.framework.core.constants.ServiceNameConstants;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;

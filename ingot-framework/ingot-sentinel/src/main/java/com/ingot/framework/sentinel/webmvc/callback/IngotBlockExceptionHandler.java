@@ -9,7 +9,7 @@ import cn.hutool.http.ContentType;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 

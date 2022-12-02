@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;

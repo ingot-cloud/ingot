@@ -4,8 +4,8 @@ import java.nio.charset.StandardCharsets;
 
 import com.ingot.framework.core.context.IngotMessageSource;
 import com.ingot.framework.core.context.support.IngotReloadableResourceBundleMessageSource;
-import com.ingot.framework.core.validation.AssertionChecker;
-import com.ingot.framework.core.validation.DefaultAssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.DefaultAssertionChecker;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;

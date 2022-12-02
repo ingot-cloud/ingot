@@ -29,7 +29,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;

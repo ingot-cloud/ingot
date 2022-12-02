@@ -1,4 +1,4 @@
-package com.ingot.framework.core.status;
+package com.ingot.framework.core.model.status;
 
 import com.ingot.framework.common.status.StatusCode;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.R;
 
 /**
  * <p>Description  : RemoteUserDetailsService.</p>

@@ -25,7 +25,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.validation.AssertionChecker;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

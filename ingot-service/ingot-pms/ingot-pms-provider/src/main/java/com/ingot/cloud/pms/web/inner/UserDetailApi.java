@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.service.biz.UserDetailService;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/user/details")
 @RequiredArgsConstructor
-public class UserDetailApi extends BaseController {
+public class UserDetailApi implements RShortcuts {
     private final UserDetailService userDetailService;
 
     @PostMapping("/{username}")

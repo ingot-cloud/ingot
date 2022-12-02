@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.dto.OAuth2AuthorizationDTO;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
-import com.ingot.framework.core.wrapper.BaseController;
-import com.ingot.framework.core.wrapper.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/token")
 @RequiredArgsConstructor
-public class TokenEndpoint extends BaseController {
+public class TokenEndpoint implements RShortcuts {
     private final OAuth2AuthorizationService oAuth2AuthorizationService;
     private final AuthorizationCacheService authorizationCacheService;
 
