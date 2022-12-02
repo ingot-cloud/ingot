@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * <p>Description  : Sensitive.</p>
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotationsInside
+@JsonSerialize(using = SensitiveJsonSerialize.class)
 public @interface Sensitive {
 
     /**
