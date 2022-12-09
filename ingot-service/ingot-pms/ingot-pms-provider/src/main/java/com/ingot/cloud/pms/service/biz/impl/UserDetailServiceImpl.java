@@ -66,22 +66,25 @@ public class UserDetailServiceImpl implements UserDetailService {
     }
 
     private UserDetailsResponse map(SysUser user) {
-        UserDetailsResponse result = userTrans.toUserDetails(user);
-        // 查询拥有的角色
-        List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
-        List<String> roleCodes = roles.stream()
-                .map(SysRole::getCode)
-                .collect(Collectors.toList());
-        result.setRoles(roleCodes);
+        return Optional.ofNullable(user)
+                .map(value -> {
+                    UserDetailsResponse result = userTrans.toUserDetails(value);
+                    // 查询拥有的角色
+                    List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+                    List<String> roleCodes = roles.stream()
+                            .map(SysRole::getCode)
+                            .collect(Collectors.toList());
+                    result.setRoles(roleCodes);
 
-        List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
-        // 查询可访问的客户端
-        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByRoles(roleIds))
-                .map(clients -> clients.stream()
-                        .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
-                .map(ListUtil::toList)
-                .orElse(CollUtil.empty(List.class));
-        result.setClients(clientIds);
-        return result;
+                    List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
+                    // 查询可访问的客户端
+                    List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByRoles(roleIds))
+                            .map(clients -> clients.stream()
+                                    .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
+                            .map(ListUtil::toList)
+                            .orElse(CollUtil.empty(List.class));
+                    result.setClients(clientIds);
+                    return result;
+                }).orElse(null);
     }
 }
