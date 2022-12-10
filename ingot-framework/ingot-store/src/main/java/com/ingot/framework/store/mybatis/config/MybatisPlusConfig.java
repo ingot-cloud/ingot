@@ -5,12 +5,15 @@ import javax.sql.DataSource;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
+import com.ingot.framework.store.mybatis.filter.DruidSqlLogFilter;
 import com.ingot.framework.store.mybatis.plugins.IngotOptimisticLockerInterceptor;
 import com.ingot.framework.store.mybatis.plugins.IngotTenantLineHandler;
+import com.ingot.framework.store.mybatis.properties.MybatisProperties;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -22,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @ConditionalOnBean(DataSource.class)
 @MapperScan("com.ingot.**.mapper")
+@EnableConfigurationProperties(MybatisProperties.class)
 public class MybatisPlusConfig {
 
     @Bean
@@ -37,5 +41,10 @@ public class MybatisPlusConfig {
         // page
         mybatisPlusInterceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         return mybatisPlusInterceptor;
+    }
+
+    @Bean
+    public DruidSqlLogFilter sqlLogFilter(MybatisProperties properties) {
+        return new DruidSqlLogFilter(properties);
     }
 }

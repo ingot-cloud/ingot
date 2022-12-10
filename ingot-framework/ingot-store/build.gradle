@@ -5,6 +5,7 @@ dependencies {
     api(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.mybatis.plus_starter)
+    compileOnly(deps.alibaba.druid_spring_boot_starter)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_tenant)

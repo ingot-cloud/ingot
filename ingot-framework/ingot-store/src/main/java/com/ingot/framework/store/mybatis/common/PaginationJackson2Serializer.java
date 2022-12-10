@@ -20,7 +20,8 @@ public class PaginationJackson2Serializer extends StdSerializer<Pagination> {
         super(Pagination.class);
     }
 
-    @Override public void serialize(Pagination value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    @Override
+    public void serialize(Pagination value, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
         gen.writeNumberField("size", value.getSize());
         gen.writeNumberField("current", value.getCurrent());

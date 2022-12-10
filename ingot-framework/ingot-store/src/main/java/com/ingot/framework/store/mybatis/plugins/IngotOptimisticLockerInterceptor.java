@@ -16,7 +16,8 @@ import org.apache.ibatis.plugin.Signature;
 @Intercepts({@Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class})})
 public class IngotOptimisticLockerInterceptor extends OptimisticLockerInnerInterceptor {
 
-    @Override protected Object getUpdatedVersionVal(Class<?> clazz, Object originalVersionVal) {
+    @Override
+    protected Object getUpdatedVersionVal(Class<?> clazz, Object originalVersionVal) {
         // 重新处理 Long，使用时间戳
         if (long.class.equals(clazz) || Long.class.equals(clazz)) {
             // UTC time millis
