@@ -10,6 +10,7 @@ import com.ingot.framework.store.mybatis.plugins.IngotOptimisticLockerIntercepto
 import com.ingot.framework.store.mybatis.plugins.IngotTenantLineHandler;
 import com.ingot.framework.store.mybatis.properties.MybatisProperties;
 import com.ingot.framework.tenant.properties.TenantProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Bean;
  * <p>Date         : 2020/10/19.</p>
  * <p>Time         : 5:10 下午.</p>
  */
+@Slf4j
 @AutoConfiguration
 @ConditionalOnBean(DataSource.class)
 @MapperScan("com.ingot.**.mapper")
@@ -45,6 +47,12 @@ public class MybatisPlusConfig {
 
     @Bean
     public DruidSqlLogFilter sqlLogFilter(MybatisProperties properties) {
+        if (properties.isShowSqlLog()) {
+            log.warn("\n********************************************************************" +
+                    "\n**********                SQL日志打印已经打开               **********" +
+                    "\n**********             包含敏感信息请不用用于生产            **********" +
+                    "\n********************************************************************");
+        }
         return new DruidSqlLogFilter(properties);
     }
 }
