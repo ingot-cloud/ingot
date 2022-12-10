@@ -79,8 +79,13 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     @Bean
     @Order(HIGHEST_PRECEDENCE + 10)
-    public SecurityFilterChain innerResourceSecurityFilterChain(PermitResolver permitResolver,
+    public SecurityFilterChain innerResourceSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+                                                                PermitResolver permitResolver,
                                                                 HttpSecurity http) throws Exception {
+        if (httpConfigurersAdapter != null) {
+            httpConfigurersAdapter.apply(http);
+        }
+
         OAuth2InnerResourceConfigurer innerResourceConfigurer =
                 new OAuth2InnerResourceConfigurer(permitResolver);
         RequestMatcher endpointsMatcher = innerResourceConfigurer
