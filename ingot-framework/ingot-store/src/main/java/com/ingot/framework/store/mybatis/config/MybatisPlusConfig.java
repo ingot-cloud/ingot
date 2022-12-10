@@ -48,10 +48,12 @@ public class MybatisPlusConfig {
     @Bean
     public DruidSqlLogFilter sqlLogFilter(MybatisProperties properties) {
         if (properties.isShowSqlLog()) {
-            log.warn("\n********************************************************************" +
+            log.warn("\n\n" +
+                    "\n********************************************************************" +
                     "\n**********                SQL日志打印已经打开               **********" +
                     "\n**********             包含敏感信息请不用用于生产            **********" +
-                    "\n********************************************************************");
+                    "\n********************************************************************" +
+                    "\n\n");
         }
         return new DruidSqlLogFilter(properties);
     }

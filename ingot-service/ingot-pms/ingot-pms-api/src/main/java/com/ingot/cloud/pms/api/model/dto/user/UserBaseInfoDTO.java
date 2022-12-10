@@ -14,6 +14,7 @@ import lombok.Data;
  */
 @Data
 public class UserBaseInfoDTO implements Serializable {
+    private String username;
     @Sensitive(mode = SensitiveMode.MOBILE_PHONE)
     private String phone;
     @Sensitive(mode = SensitiveMode.EMAIL)
