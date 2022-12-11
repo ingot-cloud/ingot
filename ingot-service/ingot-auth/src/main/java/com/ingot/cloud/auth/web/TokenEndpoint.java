@@ -47,7 +47,9 @@ public class TokenEndpoint implements RShortcuts {
         String token = SecurityUtils.getBearerTokenValue(authorization);
         OAuth2Authorization record =
                 oAuth2AuthorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
-        oAuth2AuthorizationService.remove(record);
+        if (record != null) {
+            oAuth2AuthorizationService.remove(record);
+        }
         return ok();
     }
 
