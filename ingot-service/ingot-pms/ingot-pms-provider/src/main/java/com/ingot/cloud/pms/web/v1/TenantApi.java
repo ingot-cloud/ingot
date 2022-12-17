@@ -64,7 +64,7 @@ public class TenantApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysTenantService.removeTenantById(id);
         return ok();
     }

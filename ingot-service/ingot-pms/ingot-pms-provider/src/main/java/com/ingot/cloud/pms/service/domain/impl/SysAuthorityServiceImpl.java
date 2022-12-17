@@ -15,6 +15,7 @@ import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         List<AuthorityTreeNodeVO> allNode = all.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, 0);
+        return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
     }
 
     @Override

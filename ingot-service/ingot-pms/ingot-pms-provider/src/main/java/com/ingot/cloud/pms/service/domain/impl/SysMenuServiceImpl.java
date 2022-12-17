@@ -16,6 +16,7 @@ import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                 .sorted(Comparator.comparingInt(SysMenu::getSort))
                 .map(menuTrans::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, 0);
+        return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
     }
 
     @Override

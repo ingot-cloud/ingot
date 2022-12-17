@@ -14,6 +14,7 @@ import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -45,7 +46,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, 0);
+        return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
     }
 
     @Override
