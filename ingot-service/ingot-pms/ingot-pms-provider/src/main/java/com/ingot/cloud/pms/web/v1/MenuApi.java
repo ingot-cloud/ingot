@@ -46,7 +46,7 @@ public class MenuApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysMenuService.removeMenuById(id);
         return ok();
     }

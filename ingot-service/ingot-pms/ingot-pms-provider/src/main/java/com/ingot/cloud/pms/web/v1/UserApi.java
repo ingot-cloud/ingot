@@ -40,7 +40,7 @@ public class UserApi implements RShortcuts {
     }
 
     @GetMapping("/profile/{id}")
-    public R<?> userProfile(@PathVariable Integer id){
+    public R<?> userProfile(@PathVariable Long id){
         return ok(sysUserService.getUserProfile(id));
     }
 
@@ -69,7 +69,7 @@ public class UserApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysUserService.removeUserById(id);
         return ok();
     }

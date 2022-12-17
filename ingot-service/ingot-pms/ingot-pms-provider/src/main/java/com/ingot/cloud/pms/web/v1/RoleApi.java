@@ -66,7 +66,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id);
         return ok();
     }
@@ -78,7 +78,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @GetMapping("/bindAuthority/{id}")
-    public R<?> getBindAuthorities(@PathVariable Integer id,
+    public R<?> getBindAuthorities(@PathVariable Long id,
                                    @RequestParam("isBind") boolean isBind,
                                    SysAuthority condition) {
         return ok(sysRoleAuthorityService.getRoleAuthorities(id, isBind, condition));
@@ -91,7 +91,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @GetMapping("/bindDept/{id}")
-    public R<?> getBindDepts(@PathVariable Integer id,
+    public R<?> getBindDepts(@PathVariable Long id,
                              @RequestParam("isBind") boolean isBind,
                              SysDept condition) {
         return ok(sysRoleDeptService.getRoleDepts(id, isBind, condition));
@@ -104,7 +104,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @GetMapping("/bindMenu/{id}")
-    public R<?> getBindMenus(@PathVariable Integer id,
+    public R<?> getBindMenus(@PathVariable Long id,
                              @RequestParam("isBind") boolean isBind,
                              SysMenu condition) {
         return ok(sysRoleMenuService.getRoleMenus(id, isBind, condition));
@@ -117,7 +117,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @GetMapping("/bindClient/{id}")
-    public R<?> getBindClients(@PathVariable Integer id,
+    public R<?> getBindClients(@PathVariable Long id,
                                Page<?> page,
                                @RequestParam("isBind") boolean isBind,
                                Oauth2RegisteredClient condition) {

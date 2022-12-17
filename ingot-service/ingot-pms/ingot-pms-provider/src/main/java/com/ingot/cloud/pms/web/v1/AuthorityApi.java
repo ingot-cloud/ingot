@@ -46,7 +46,7 @@ public class AuthorityApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysAuthorityService.removeAuthorityById(id);
         return ok();
     }

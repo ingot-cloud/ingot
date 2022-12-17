@@ -48,7 +48,7 @@ public class DeptApi implements RShortcuts {
     }
 
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Integer id) {
+    public R<?> removeById(@PathVariable Long id) {
         sysDeptService.removeDeptById(id);
         return ok();
     }
