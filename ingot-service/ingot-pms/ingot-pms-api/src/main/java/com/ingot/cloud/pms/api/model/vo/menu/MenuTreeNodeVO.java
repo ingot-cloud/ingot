@@ -45,11 +45,11 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
     /**
      * 是否缓存
      */
-    private boolean cache;
+    private Boolean isCache;
     /**
      * 是否隐藏
      */
-    private boolean hidden;
+    private Boolean hidden;
     /**
      * 参数
      */
