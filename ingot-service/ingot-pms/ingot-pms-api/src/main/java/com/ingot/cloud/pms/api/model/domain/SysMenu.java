@@ -59,6 +59,11 @@ public class SysMenu extends BaseModel<SysMenu> {
     private String viewPath;
 
     /**
+     * 重定向
+     */
+    private String redirect;
+
+    /**
      * 图标
      */
     private String icon;

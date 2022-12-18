@@ -27,6 +27,10 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private String viewPath;
     /**
+     * 重定向
+     */
+    private String redirect;
+    /**
      * 图标
      */
     private String icon;
