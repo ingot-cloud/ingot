@@ -1,5 +1,8 @@
 package com.ingot.framework.core.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
@@ -28,4 +31,16 @@ public enum CommonStatusEnum {
      * 描述
      */
     private final String text;
+
+    private static final Map<String, CommonStatusEnum> valueMap = new HashMap<>();
+
+    static {
+        for (CommonStatusEnum item : CommonStatusEnum.values()) {
+            valueMap.put(item.getValue(), item);
+        }
+    }
+
+    public static CommonStatusEnum getEnum(String value) {
+        return valueMap.get(value);
+    }
 }

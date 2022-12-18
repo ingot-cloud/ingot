@@ -29,13 +29,81 @@ public final class RegisteredClientOps {
     /**
      * 获取自定义TokenSetting，TokenAuthType
      *
+     * @param settings {@link TokenSettings}
+     * @return {@link TokenAuthType}
+     */
+    public static TokenAuthType getTokenAuthType(TokenSettings settings) {
+        return Optional.<String>ofNullable(settings.getSetting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE))
+                .map(TokenAuthType::getEnum)
+                .orElse(TokenAuthType.STANDARD);
+    }
+
+    /**
+     * {@link TokenSettings.Builder} 设置 {@link TokenAuthType}
+     *
+     * @param builder       {@link TokenSettings.Builder}
+     * @param tokenAuthType {@link TokenAuthType}
+     * @return {@link TokenSettings.Builder}
+     */
+    public static TokenSettings.Builder setTokenAuthType(TokenSettings.Builder builder, TokenAuthType tokenAuthType) {
+        builder.setting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE, tokenAuthType.getValue());
+        return builder;
+    }
+
+    /**
+     * 给 {@link TokenSettings} 设置 {@link TokenAuthType}
+     *
+     * @param tokenSettings {@link TokenSettings}
+     * @param tokenAuthType {@link TokenAuthType}
+     * @return {@link TokenSettings}
+     */
+    public static TokenSettings setTokenAuthType(TokenSettings tokenSettings, TokenAuthType tokenAuthType) {
+        Map<String, Object> settings = tokenSettings.getSettings();
+        return setTokenAuthType(TokenSettings.withSettings(settings), tokenAuthType).build();
+    }
+
+    /**
+     * 获取自定义ClientSetting，Status
+     *
+     * @param settings {@link ClientSettings}
+     * @return 客户端状态
+     */
+    public static String getClientStatus(ClientSettings settings) {
+        return Optional.<String>of(settings.getSetting(ExtConfigurationSettingNames.CLIENT_STATUS))
+                .orElse("");
+    }
+
+    /**
+     * {@link ClientSettings.Builder} 设置状态
+     *
+     * @param builder {@link ClientSettings.Builder}
+     * @param status  状态
+     * @return {@link ClientSettings.Builder}
+     */
+    public static ClientSettings.Builder setClientStatus(ClientSettings.Builder builder, String status) {
+        builder.setting(ExtConfigurationSettingNames.CLIENT_STATUS, status);
+        return builder;
+    }
+
+    /**
+     * 给 {@link ClientSettings} 设置状态
+     *
+     * @param clientSettings {@link ClientSettings}
+     * @param status         状态
+     * @return {@link ClientSettings}
+     */
+    public static ClientSettings setClientStatus(ClientSettings clientSettings, String status) {
+        Map<String, Object> settings = clientSettings.getSettings();
+        return setClientStatus(ClientSettings.withSettings(settings), status).build();
+    }
+
+    /**
+     * 获取自定义TokenSetting，TokenAuthType
+     *
      * @return {@link TokenAuthType}
      */
     public TokenAuthType getTokenAuthType() {
-        return Optional.<String>ofNullable(client.getTokenSettings()
-                        .getSetting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE))
-                .map(TokenAuthType::getEnum)
-                .orElse(TokenAuthType.STANDARD);
+        return getTokenAuthType(client.getTokenSettings());
     }
 
     /**
@@ -45,11 +113,8 @@ public final class RegisteredClientOps {
      * @return {@link RegisteredClient}
      */
     public RegisteredClient withTokenAuthType(TokenAuthType tokenAuthType) {
-        Map<String, Object> settings = client.getTokenSettings().getSettings();
         return RegisteredClient.from(client)
-                .tokenSettings(TokenSettings.withSettings(settings)
-                        .setting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE, tokenAuthType.getValue())
-                        .build())
+                .tokenSettings(setTokenAuthType(client.getTokenSettings(), tokenAuthType))
                 .build();
     }
 
@@ -73,9 +138,7 @@ public final class RegisteredClientOps {
     public RegisteredClient withClientStatus(String status) {
         Map<String, Object> settings = client.getClientSettings().getSettings();
         return RegisteredClient.from(client)
-                .clientSettings(ClientSettings.withSettings(settings)
-                        .setting(ExtConfigurationSettingNames.CLIENT_STATUS, status)
-                        .build())
+                .clientSettings(setClientStatus(client.getClientSettings(), status))
                 .build();
     }
 }

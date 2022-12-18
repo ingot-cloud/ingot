@@ -101,9 +101,9 @@ public class OAuth2RegisteredClientDTO implements Serializable {
     private String idTokenSignatureAlgorithm;
 
     /**
-     * token认证方法
+     * token认证类型
      */
-    private String tokenAuthenticationMethod;
+    private String tokenAuthType;
 
     /**
      * 状态, 0:正常，9:禁用

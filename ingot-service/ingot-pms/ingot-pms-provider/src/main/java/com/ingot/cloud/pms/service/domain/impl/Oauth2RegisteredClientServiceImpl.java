@@ -20,6 +20,8 @@ import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.RedisConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,6 +147,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         if (params.getRequireProofKey() != null) {
             clientSettingsBuilder.requireProofKey(params.getRequireProofKey());
         }
+        if (params.getStatus() != null) {
+            RegisteredClientOps.setClientStatus(clientSettingsBuilder, params.getStatus().getValue());
+        }
 
         if (StrUtil.isNotEmpty(params.getAuthorizationCodeTimeToLive())) {
             tokenSettingsBuilder.authorizationCodeTimeToLive(
@@ -165,6 +170,12 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
             tokenSettingsBuilder.idTokenSignatureAlgorithm(
                     SignatureAlgorithm.from(params.getIdTokenSignatureAlgorithm()));
         }
+        if (StrUtil.isNotEmpty(params.getTokenAuthType())) {
+            TokenAuthType type = TokenAuthType.getEnum(params.getTokenAuthType());
+            if (type != null) {
+                RegisteredClientOps.setTokenAuthType(tokenSettingsBuilder, type);
+            }
+        }
     }
 
     private OAuth2RegisteredClientVO toVo(Oauth2RegisteredClient client) {
@@ -180,6 +191,11 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         item.setReuseRefreshTokens(client.getTokenSettings().isReuseRefreshTokens());
         item.setIdTokenSignatureAlgorithm(
                 client.getTokenSettings().getIdTokenSignatureAlgorithm().getName());
+
+        item.setTokenAuthType(
+                RegisteredClientOps.getTokenAuthType(client.getTokenSettings()).getValue());
+        item.setStatus(
+                CommonStatusEnum.getEnum(RegisteredClientOps.getClientStatus(client.getClientSettings())));
         return item;
     }
 }
