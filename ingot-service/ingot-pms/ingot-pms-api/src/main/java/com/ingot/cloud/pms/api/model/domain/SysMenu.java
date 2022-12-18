@@ -48,6 +48,11 @@ public class SysMenu extends BaseModel<SysMenu> {
     private String name;
 
     /**
+     * 菜单编码
+     */
+    private String code;
+
+    /**
      * 菜单url
      */
     @NotBlank(message = "{SysMenu.path}", groups = Group.Create.class)

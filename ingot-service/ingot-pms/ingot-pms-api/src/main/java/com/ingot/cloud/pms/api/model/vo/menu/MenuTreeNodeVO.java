@@ -19,6 +19,10 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private String name;
     /**
+     * 菜单编码
+     */
+    private String code;
+    /**
      * 菜单url
      */
     private String path;
