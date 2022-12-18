@@ -55,18 +55,6 @@ public class SysAuthority extends BaseModel<SysAuthority> {
     private String code;
 
     /**
-     * URL
-     */
-    @NotBlank(message = "{SysAuthority.path}", groups = Group.Create.class)
-    private String path;
-
-    /**
-     * 方法
-     */
-    @NotBlank(message = "{SysAuthority.method}", groups = Group.Create.class)
-    private String method;
-
-    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;

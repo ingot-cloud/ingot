@@ -26,16 +26,6 @@ public class AuthorityTreeNodeVO extends TreeNode<Long> {
     private String code;
 
     /**
-     * URL
-     */
-    private String path;
-
-    /**
-     * 方法
-     */
-    private String method;
-
-    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
