@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.context.ClientContextHolder;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
@@ -43,6 +44,9 @@ public class ClientContextAwareFilter extends OncePerRequestFilter {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null) {
                     clientId = authentication.getName();
+                    if (authentication instanceof IngotUser) {
+                        clientId = ((IngotUser) authentication).getClientId();
+                    }
                 }
             } else {
                 String[] ids = savedRequest.getParameterValues("client_id");
