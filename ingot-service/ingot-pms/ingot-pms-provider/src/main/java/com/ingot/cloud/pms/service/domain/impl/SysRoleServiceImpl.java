@@ -28,6 +28,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.model.dto.common.OptionDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
@@ -99,6 +100,14 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(SysRole::getId, baseRoleIds));
+    }
+
+    @Override
+    public List<OptionDTO> options() {
+        return list(Wrappers.<SysRole>lambdaQuery()
+                .eq(SysRole::getStatus, CommonStatusEnum.ENABLE))
+                .stream()
+                .map(roleTrans::option).collect(Collectors.toList());
     }
 
     @Override

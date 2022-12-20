@@ -48,6 +48,11 @@ public class RoleApi implements RShortcuts {
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final SysRoleUserService sysRoleUserService;
 
+    @GetMapping("/options")
+    public R<?> options() {
+        return ok(sysRoleService.options());
+    }
+
     @GetMapping("/page")
     public R<?> page(Page<SysRole> page, SysRole condition) {
         return ok(sysRoleService.conditionPage(page, condition));

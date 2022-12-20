@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
+import com.ingot.framework.core.model.dto.common.OptionDTO;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
 /**
@@ -42,6 +43,13 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @return 角色列表
      */
     List<SysRole> getRolesOfUser(long userId);
+
+    /**
+     * 获取可用的options
+     *
+     * @return {@link List<OptionDTO>}
+     */
+    List<OptionDTO> options();
 
     /**
      * 条件查询用户分页信息
