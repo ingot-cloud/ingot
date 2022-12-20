@@ -54,7 +54,18 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     public List<Oauth2RegisteredClient> getClientsByRoles(List<Long> roleIds) {
-        return getBaseMapper().getClientsByRoles(roleIds, CommonStatusEnum.ENABLE.getValue());
+        List<String> clientIds = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
+                        .in(SysRoleOauthClient::getRoleId, roleIds))
+                .stream()
+                .map(SysRoleOauthClient::getClientId)
+                .collect(Collectors.toList());
+        return list(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
+                .in(Oauth2RegisteredClient::getId, clientIds))
+                .stream()
+                .filter(client -> {
+                    String status = RegisteredClientOps.getClientStatus(client.getClientSettings());
+                    return CommonStatusEnum.getEnum(status) == CommonStatusEnum.ENABLE;
+                }).collect(Collectors.toList());
     }
 
     @Override

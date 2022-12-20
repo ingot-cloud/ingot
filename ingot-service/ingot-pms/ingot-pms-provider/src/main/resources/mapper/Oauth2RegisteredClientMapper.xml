@@ -3,20 +3,4 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper">
 
-    <select id="getClientsByRoles"
-            resultType="com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient">
-        SELECT client.*
-        FROM oauth2_registered_client AS client
-                 INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
-        WHERE client.status = #{status}
-          AND client.deleted_at IS NULL
-        <if test="list != null and list.size > 0">
-            AND rc.role_id IN
-            <foreach close=")" collection="list" index="index" item="item" open="("
-                     separator=",">
-                #{item}
-            </foreach>
-        </if>
-    </select>
-
 </mapper>
