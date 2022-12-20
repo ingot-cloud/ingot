@@ -89,6 +89,16 @@ public class SysMenu extends BaseModel<SysMenu> {
     private Boolean hidden;
 
     /**
+     * 是否隐藏面包屑
+     */
+    private Boolean hideBreadcrumb;
+
+    /**
+     * 是否匹配props
+     */
+    private Boolean props;
+
+    /**
      * 参数
      */
     private String params;

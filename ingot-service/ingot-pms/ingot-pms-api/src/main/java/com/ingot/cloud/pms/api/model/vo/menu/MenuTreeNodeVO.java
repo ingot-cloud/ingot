@@ -51,6 +51,14 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private Boolean hidden;
     /**
+     * 是否隐藏面包屑
+     */
+    private Boolean hideBreadcrumb;
+    /**
+     * 是否匹配props
+     */
+    private Boolean props;
+    /**
      * 参数
      */
     private String params;
