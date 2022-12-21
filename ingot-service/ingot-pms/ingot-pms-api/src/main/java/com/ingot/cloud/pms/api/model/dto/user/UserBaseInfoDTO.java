@@ -2,8 +2,6 @@ package com.ingot.cloud.pms.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.core.utils.sensitive.Sensitive;
-import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import lombok.Data;
 
 /**
@@ -14,11 +12,7 @@ import lombok.Data;
  */
 @Data
 public class UserBaseInfoDTO implements Serializable {
-    private String username;
-    @Sensitive(mode = SensitiveMode.MOBILE_PHONE)
     private String phone;
-    @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
-    @Sensitive(mode = SensitiveMode.CHINESE_NAME)
     private String realName;
 }

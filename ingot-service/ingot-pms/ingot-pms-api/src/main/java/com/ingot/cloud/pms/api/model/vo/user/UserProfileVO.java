@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.utils.sensitive.Sensitive;
+import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import lombok.Data;
 
 /**
@@ -33,16 +35,19 @@ public class UserProfileVO implements Serializable {
     /**
      * 姓名
      */
+    @Sensitive(mode = SensitiveMode.CHINESE_NAME)
     private String realName;
 
     /**
      * 手机号
      */
+    @Sensitive(mode = SensitiveMode.MOBILE_PHONE)
     private String phone;
 
     /**
      * 邮件地址
      */
+    @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
 
     /**

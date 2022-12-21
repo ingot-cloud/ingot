@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -33,15 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserApi implements RShortcuts {
     private final SysUserService sysUserService;
+    private final BizUserService bizUserService;
 
     @GetMapping
     public R<?> user() {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
-    }
-
-    @GetMapping("/profile/{id}")
-    public R<?> userProfile(@PathVariable Long id){
-        return ok(sysUserService.getUserProfile(id));
     }
 
     @GetMapping("/page")
@@ -61,16 +58,25 @@ public class UserApi implements RShortcuts {
         return ok();
     }
 
-    @PutMapping("/edit")
-    public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
-        long userId = SecurityAuthContext.getUser().getId();
-        sysUserService.updateUserBaseInfo(userId, params);
-        return ok();
-    }
-
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
+        long userId = SecurityAuthContext.getUser().getId();
+
         sysUserService.removeUserById(id);
         return ok();
     }
+
+    @GetMapping("/profile/{id}")
+    public R<?> userProfile(@PathVariable Long id) {
+        return ok(bizUserService.getUserProfile(id));
+    }
+
+    @PutMapping("/edit")
+    public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
+        long userId = SecurityAuthContext.getUser().getId();
+        bizUserService.updateUserBaseInfo(userId, params);
+        return ok();
+    }
+
+
 }

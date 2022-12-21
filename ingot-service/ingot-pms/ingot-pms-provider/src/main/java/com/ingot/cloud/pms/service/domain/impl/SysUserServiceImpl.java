@@ -12,13 +12,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -175,33 +173,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void updateUserBaseInfo(long id, UserBaseInfoDTO params) {
-        SysUser current = getById(id);
-        assertI18nService.checkOperation(current != null,
-                "SysUserServiceImpl.UserNonExist");
-        assert current != null;
-
-        SysUser user = userTrans.to(params);
-        if (StrUtil.isNotEmpty(user.getPhone())
-                && !StrUtil.equals(user.getPhone(), current.getPhone())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getPhone, user.getPhone())) == 0,
-                    "SysUserServiceImpl.PhoneExist");
-        }
-
-        if (StrUtil.isNotEmpty(user.getEmail())
-                && !StrUtil.equals(user.getEmail(), current.getEmail())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getEmail, user.getEmail())) == 0,
-                    "SysUserServiceImpl.EmailExist");
-        }
-
-        user.setUpdatedAt(DateUtils.now());
-        assertI18nService.checkOperation(updateById(user),
-                "SysUserServiceImpl.UpdateFailed");
-    }
-
-    @Override
     public void fixPassword(long id, UserPasswordDTO params) {
         SysUser current = getById(id);
         assertI18nService.checkOperation(current != null,
@@ -215,24 +186,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         assertI18nService.checkOperation(user.updateById(),
                 "SysUserServiceImpl.UpdatePasswordFailed");
-    }
-
-    @Override
-    public UserProfileVO getUserProfile(long id) {
-        SysUser user = getById(id);
-        assertI18nService.checkOperation(user != null,
-                "SysUserServiceImpl.UserNonExist");
-        assert user != null;
-
-        UserProfileVO profile = userTrans.toUserProfile(user);
-
-        List<SysRole> list = sysRoleService.getRolesOfUser(id);
-        if (CollUtil.isNotEmpty(list)) {
-            profile.setRoleIds(list.stream()
-                    .map(SysRole::getId).collect(Collectors.toList()));
-        }
-
-        return profile;
     }
 
     @Override

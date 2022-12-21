@@ -5,12 +5,10 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.store.mybatis.service.BaseService;
 
@@ -63,27 +61,12 @@ public interface SysUserService extends BaseService<SysUser> {
     void updateUser(UserDTO params);
 
     /**
-     * 更新用户基本信息
-     *
-     * @param params 基本信息参数
-     */
-    void updateUserBaseInfo(long id, UserBaseInfoDTO params);
-
-    /**
      * 用户修改密码
      *
      * @param id     用户ID
      * @param params 参数
      */
     void fixPassword(long id, UserPasswordDTO params);
-
-    /**
-     * 获取用户简介信息
-     *
-     * @param id 用户ID
-     * @return {@link UserProfileVO}
-     */
-    UserProfileVO getUserProfile(long id);
 
     /**
      * 是否有用户关联了指定部门
