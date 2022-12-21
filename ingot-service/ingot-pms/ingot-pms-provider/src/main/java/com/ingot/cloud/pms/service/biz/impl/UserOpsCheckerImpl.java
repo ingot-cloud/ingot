@@ -32,7 +32,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
     @Override
     public void removeUser(long id) {
         long userId = SecurityAuthContext.getUser().getId();
-        assertI18nService.checkOperation(userId == id, "UserOpsCheckerImpl.RemoveSelfFailed");
+        assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.RemoveSelfFailed");
 
         Optional<SysRole> admin = getAdmin(id);
         if (!admin.isPresent()) {
@@ -50,7 +50,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
     @Override
     public void disableUser(long id) {
         long userId = SecurityAuthContext.getUser().getId();
-        assertI18nService.checkOperation(userId == id, "UserOpsCheckerImpl.DisableSelfFailed");
+        assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.DisableSelfFailed");
 
         Optional<SysRole> admin = getAdmin(id);
         if (!admin.isPresent()) {
