@@ -7,12 +7,6 @@ package com.ingot.framework.security.common.constants;
  * <p>Time         : 下午1:38.</p>
  */
 public interface RoleConstants {
-
-    /**
-     * 超管角色Id
-     */
-    long ROLE_ADMIN_ID = 1;
-
     /**
      * 超管角色编码
      */

@@ -5,10 +5,12 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserApi implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
+    private final UserOpsChecker userOpsChecker;
 
     @GetMapping
     public R<?> user() {
@@ -54,14 +57,16 @@ public class UserApi implements RShortcuts {
 
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
+        if (params.getStatus() == UserStatusEnum.LOCK) {
+            userOpsChecker.disableUser(params.getId());
+        }
         sysUserService.updateUser(params);
         return ok();
     }
 
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        long userId = SecurityAuthContext.getUser().getId();
-
+        userOpsChecker.removeUser(id);
         sysUserService.removeUserById(id);
         return ok();
     }

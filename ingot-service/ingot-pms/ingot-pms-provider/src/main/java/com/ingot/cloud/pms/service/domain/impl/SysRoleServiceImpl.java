@@ -31,7 +31,7 @@ import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.dto.common.OptionDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.security.common.utils.RoleUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -121,7 +121,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         List<RolePageItemVO> records = temp.getRecords()
                 .stream().map(item -> {
                     RolePageItemVO v = roleTrans.to(item);
-                    v.setCanAction(v.getId() != RoleConstants.ROLE_ADMIN_ID);
+                    // admin角色不可编辑
+                    v.setCanAction(!RoleUtils.isAdmin(v.getCode()));
                     return v;
                 }).collect(Collectors.toList());
 
@@ -139,7 +140,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void removeRoleById(long id) {
-        assertI18nService.checkOperation(id != RoleConstants.ROLE_ADMIN_ID,
+        SysRole role = getById(id);
+        assertI18nService.checkOperation(role != null,
+                "SysRoleServiceImpl.NonExist");
+
+        assertI18nService.checkOperation(!RoleUtils.isAdmin(role.getCode()),
                 "SysRoleServiceImpl.SuperAdminRemoveFailed");
 
         // 是否关联权限
