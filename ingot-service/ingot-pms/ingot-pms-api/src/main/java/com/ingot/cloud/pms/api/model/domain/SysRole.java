@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
@@ -52,7 +53,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 角色类型
      */
-    private String type;
+    private RoleTypeEnums type;
 
     /**
      * 状态, 0:正常，9:禁用

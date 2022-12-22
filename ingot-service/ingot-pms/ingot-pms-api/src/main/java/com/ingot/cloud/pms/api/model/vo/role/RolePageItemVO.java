@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.vo.role;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 
@@ -29,7 +30,7 @@ public class RolePageItemVO implements Serializable {
     /**
      * 角色类型
      */
-    private String type;
+    private RoleTypeEnums type;
     /**
      * 角色状态
      */

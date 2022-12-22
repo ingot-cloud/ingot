@@ -179,6 +179,15 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void updateRoleById(SysRole params) {
+        SysRole role = getById(params.getId());
+        assertI18nService.checkOperation(role != null,
+                "SysRoleServiceImpl.NonExist");
+
+        if (params.getStatus() == CommonStatusEnum.LOCK) {
+            assertI18nService.checkOperation(!RoleUtils.isAdmin(role.getCode()),
+                    "SysRoleServiceImpl.DisableAdminFailed");
+        }
+
         // 角色编码不可修改
         params.setCode(null);
         params.setUpdatedAt(DateUtils.now());
