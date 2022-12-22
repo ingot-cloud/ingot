@@ -100,17 +100,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             user.setStatus(UserStatusEnum.ENABLE);
         }
 
-        if (StrUtil.isNotEmpty(user.getPhone())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getPhone, user.getPhone())) == 0,
-                    "SysUserServiceImpl.PhoneExist");
-        }
-
-        if (StrUtil.isNotEmpty(user.getEmail())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getEmail, user.getEmail())) == 0,
-                    "SysUserServiceImpl.EmailExist");
-        }
+        checkUserUniqueField(user);
 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
@@ -148,19 +138,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         }
 
-        if (StrUtil.isNotEmpty(user.getPhone())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getPhone, user.getPhone())
-                            .ne(SysUser::getId, userId)) == 0,
-                    "SysUserServiceImpl.PhoneExist");
-        }
-
-        if (StrUtil.isNotEmpty(user.getEmail())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getEmail, user.getEmail())
-                            .ne(SysUser::getId, userId)) == 0,
-                    "SysUserServiceImpl.EmailExist");
-        }
+        checkUserUniqueField(user);
 
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(user),
@@ -171,6 +149,27 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             sysRoleUserService.updateUserRole(userId, params.getRoleIds());
         }
     }
+
+    private void checkUserUniqueField(SysUser user) {
+        if (StrUtil.isNotEmpty(user.getUsername())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getUsername, user.getUsername())) == 0,
+                    "SysUserServiceImpl.UsernameExist");
+        }
+
+        if (StrUtil.isNotEmpty(user.getPhone())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getPhone, user.getPhone())) == 0,
+                    "SysUserServiceImpl.PhoneExist");
+        }
+
+        if (StrUtil.isNotEmpty(user.getEmail())) {
+            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getEmail, user.getEmail())) == 0,
+                    "SysUserServiceImpl.EmailExist");
+        }
+    }
+
 
     @Override
     public void fixPassword(long id, UserPasswordDTO params) {
