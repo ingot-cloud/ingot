@@ -106,6 +106,10 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
         TokenSettings.Builder tokenSettingsBuilder = TokenSettings.builder();
+        params.setStatus(CommonStatusEnum.ENABLE);
+        if (StrUtil.isEmpty(params.getTokenAuthType())) {
+            params.setTokenAuthType(TokenAuthType.STANDARD.getValue());
+        }
         fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
 
         client.setClientSettings(clientSettingsBuilder.build());

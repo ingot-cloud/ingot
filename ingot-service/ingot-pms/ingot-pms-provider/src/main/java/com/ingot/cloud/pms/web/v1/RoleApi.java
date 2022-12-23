@@ -6,7 +6,6 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
@@ -14,9 +13,9 @@ import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
-import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.utils.validation.Group;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -127,19 +126,5 @@ public class RoleApi implements RShortcuts {
                                @RequestParam("isBind") boolean isBind,
                                Oauth2RegisteredClient condition) {
         return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind, condition));
-    }
-
-    @PutMapping("/bindUser")
-    public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleUserService.roleBindUsers(params);
-        return ok();
-    }
-
-    @GetMapping("/bindUser/{id}")
-    public R<?> getBindUsers(@PathVariable Long id,
-                             Page<?> page,
-                             @RequestParam("isBind") boolean isBind,
-                             SysUser condition) {
-        return ok(sysRoleUserService.getRoleUsers(id, page, isBind, condition));
     }
 }

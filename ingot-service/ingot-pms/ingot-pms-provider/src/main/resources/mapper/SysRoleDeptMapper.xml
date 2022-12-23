@@ -21,7 +21,7 @@
                 AND LOCATE(#{condition.name}, dept.name) > 0
             </if>
         </where>
-        ORDER BY dept.created_at ASC
+        ORDER BY dept.id ASC
     </select>
 
 </mapper>
