@@ -29,13 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDeptMapper, SysRoleDept> implements SysRoleDeptService {
+public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDeptMapper, SysRoleDept, Long> implements SysRoleDeptService {
     private final DeptTrans deptTrans;
 
-    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleDept>lambdaQuery()
+    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleDept>lambdaQuery()
             .eq(SysRoleDept::getRoleId, roleId)
             .eq(SysRoleDept::getDeptId, targetId));
-    private final Do bind = (roleId, targetId) -> {
+    private final Do<Long> bind = (roleId, targetId) -> {
         getBaseMapper().insertIgnore(roleId, targetId);
         return true;
     };

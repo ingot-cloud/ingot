@@ -31,13 +31,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMenuMapper, SysRoleMenu> implements SysRoleMenuService {
+public class SysRoleMenuServiceImpl extends CommonRoleRelationService<SysRoleMenuMapper, SysRoleMenu, Long> implements SysRoleMenuService {
     private final MenuTrans menuTrans;
 
-    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleMenu>lambdaQuery()
+    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleMenu>lambdaQuery()
             .eq(SysRoleMenu::getRoleId, roleId)
             .eq(SysRoleMenu::getMenuId, targetId));
-    private final Do bind = (roleId, targetId) -> {
+    private final Do<Long> bind = (roleId, targetId) -> {
         getBaseMapper().insertIgnore(roleId, targetId);
         return true;
     };

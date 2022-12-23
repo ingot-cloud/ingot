@@ -28,13 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority> implements SysRoleAuthorityService {
+public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority, Long> implements SysRoleAuthorityService {
     private final AuthorityTrans authorityTrans;
 
-    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
             .eq(SysRoleAuthority::getRoleId, roleId)
             .eq(SysRoleAuthority::getAuthorityId, targetId));
-    private final Do bind = (roleId, targetId) -> {
+    private final Do<Long> bind = (roleId, targetId) -> {
         getBaseMapper().insertIgnore(roleId, targetId);
         return true;
     };

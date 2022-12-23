@@ -24,7 +24,7 @@ public interface SysRoleOauthClientMapper extends BaseMapper<SysRoleOauthClient>
      * @param roleId   角色ID
      * @param clientId 客户端ID
      */
-    void insertIgnore(@Param("roleId") long roleId, @Param("clientId") long clientId);
+    void insertIgnore(@Param("roleId") long roleId, @Param("clientId") String clientId);
 
     /**
      * 获取指定角色绑定的所有客户端信息

@@ -7,6 +7,7 @@ import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -15,10 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * <p>Date         : 2021/5/31.</p>
  * <p>Time         : 9:59 上午.</p>
  */
-public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseServiceImpl<M, T> {
-    private static final int TYPE_ROLE = 1;
-    private static final int TYPE_TARGET = 2;
-
+@Slf4j
+public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> extends BaseServiceImpl<M, T> {
     protected AssertionChecker assertionChecker;
 
     @Autowired
@@ -29,59 +28,51 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T> extends BaseS
     /**
      * 目标类型关联角色
      */
-    public void bindRoles(RelationDTO<Long, Long> params,
-                          Do remove,
-                          Do bind,
+    public void bindRoles(RelationDTO<TargetID, Long> params,
+                          Do<TargetID> remove,
+                          Do<TargetID> bind,
                           String removeErrorMsgCode) {
-        bind(TYPE_TARGET, params, remove, bind, removeErrorMsgCode);
+        TargetID id = params.getId();
+        List<Long> removeIds = params.getRemoveIds();
+        List<Long> bindIds = params.getBindIds();
+
+        if (CollUtil.isNotEmpty(removeIds)) {
+            log.debug("[CommonRoleRelationService] - 目标[{}]绑定角色 取消关联[{}]", id, removeIds);
+            boolean removeRet = removeIds.stream().allMatch(roleId -> remove.exec(roleId, id));
+            assertionChecker.checkOperation(removeRet, removeErrorMsgCode);
+        }
+
+        if (CollUtil.isNotEmpty(bindIds)) {
+            log.debug("[CommonRoleRelationService] - 目标[{}]绑定角色 关联[{}]", id, bindIds);
+            bindIds.forEach(roleId -> bind.exec(roleId, id));
+        }
     }
 
     /**
      * 角色关联目标
      */
-    public void bindTargets(RelationDTO<Long, Long> params,
-                            Do remove,
-                            Do bind,
+    public void bindTargets(RelationDTO<Long, TargetID> params,
+                            Do<TargetID> remove,
+                            Do<TargetID> bind,
                             String removeErrorMsgCode) {
-        bind(TYPE_ROLE, params, remove, bind, removeErrorMsgCode);
-    }
-
-    private void bind(int type,
-                      RelationDTO<Long, Long> params,
-                      Do remove,
-                      Do bind,
-                      String removeErrorMsgCode) {
         Long id = params.getId();
-        List<Long> removeIds = params.getRemoveIds();
-        List<Long> bindIds = params.getBindIds();
+        List<TargetID> removeIds = params.getRemoveIds();
+        List<TargetID> bindIds = params.getBindIds();
 
         if (CollUtil.isNotEmpty(removeIds)) {
-            boolean removeRet = true;
-            switch (type) {
-                case TYPE_ROLE:
-                    removeRet = removeIds.stream().allMatch(targetId -> remove.exec(id, targetId));
-                    break;
-                case TYPE_TARGET:
-                    removeRet = removeIds.stream().allMatch(roleId -> remove.exec(roleId, id));
-                    break;
-            }
+            log.debug("[CommonRoleRelationService] - 角色[{}]绑定目标 取消关联[{}]", id, removeIds);
+            boolean removeRet = removeIds.stream().allMatch(targetId -> remove.exec(id, targetId));
             assertionChecker.checkOperation(removeRet, removeErrorMsgCode);
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {
-            switch (type) {
-                case TYPE_ROLE:
-                    bindIds.forEach(targetId -> bind.exec(id, targetId));
-                    break;
-                case TYPE_TARGET:
-                    bindIds.forEach(roleId -> bind.exec(roleId, id));
-                    break;
-            }
+            log.debug("[CommonRoleRelationService] - 角色[{}]绑定目标 关联[{}]", id, bindIds);
+            bindIds.forEach(targetId -> bind.exec(id, targetId));
         }
     }
 
     @FunctionalInterface
-    public interface Do {
-        boolean exec(long roleId, long targetId);
+    public interface Do<TargetID> {
+        boolean exec(Long roleId, TargetID targetId);
     }
 }

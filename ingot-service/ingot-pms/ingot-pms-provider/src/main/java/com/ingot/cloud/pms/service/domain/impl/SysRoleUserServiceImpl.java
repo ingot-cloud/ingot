@@ -24,12 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUserMapper, SysRoleUser> implements SysRoleUserService {
+public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUserMapper, SysRoleUser, Long> implements SysRoleUserService {
 
-    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
+    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleUser>lambdaQuery()
             .eq(SysRoleUser::getRoleId, roleId)
             .eq(SysRoleUser::getUserId, targetId));
-    private final Do bind = (roleId, targetId) -> {
+    private final Do<Long> bind = (roleId, targetId) -> {
         getBaseMapper().insertIgnore(roleId, targetId);
         return true;
     };

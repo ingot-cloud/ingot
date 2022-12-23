@@ -23,14 +23,14 @@ public interface SysRoleOauthClientService extends BaseService<SysRoleOauthClien
      *
      * @param params 关联参数
      */
-    void clientBindRoles(RelationDTO<Long, Long> params);
+    void clientBindRoles(RelationDTO<String, Long> params);
 
     /**
      * 角色绑定客户端
      *
      * @param params 关联参数
      */
-    void roleBindClients(RelationDTO<Long, Long> params);
+    void roleBindClients(RelationDTO<Long, String> params);
 
     /**
      * 获取角色客户端

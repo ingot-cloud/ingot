@@ -115,7 +115,7 @@ public class RoleApi implements RShortcuts {
     }
 
     @PutMapping("/bindClient")
-    public R<?> bindClient(@RequestBody @Validated RelationDTO<Long, Long> params) {
+    public R<?> bindClient(@RequestBody @Validated RelationDTO<Long, String> params) {
         sysRoleOauthClientService.roleBindClients(params);
         return ok();
     }

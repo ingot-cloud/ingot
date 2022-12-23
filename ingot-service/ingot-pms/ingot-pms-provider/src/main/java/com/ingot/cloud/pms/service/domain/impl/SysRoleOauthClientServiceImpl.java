@@ -22,26 +22,26 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2020-11-20
  */
 @Service
-public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<SysRoleOauthClientMapper, SysRoleOauthClient> implements SysRoleOauthClientService {
+public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<SysRoleOauthClientMapper, SysRoleOauthClient, String> implements SysRoleOauthClientService {
 
-    private final Do remove = (roleId, targetId) -> remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
+    private final Do<String> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
             .eq(SysRoleOauthClient::getRoleId, roleId)
             .eq(SysRoleOauthClient::getClientId, targetId));
-    private final Do bind = (roleId, targetId) -> {
+    private final Do<String> bind = (roleId, targetId) -> {
         getBaseMapper().insertIgnore(roleId, targetId);
         return true;
     };
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void clientBindRoles(RelationDTO<Long, Long> params) {
+    public void clientBindRoles(RelationDTO<String, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindClients(RelationDTO<Long, Long> params) {
+    public void roleBindClients(RelationDTO<Long, String> params) {
         bindTargets(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
     }
