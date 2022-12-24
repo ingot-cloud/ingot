@@ -4,17 +4,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -34,18 +31,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
-    private final SysRoleMenuService sysRoleMenuService;
-
     private final AssertionChecker assertI18nService;
     private final MenuTrans menuTrans;
 
     @Override
     public List<MenuTreeNodeVO> tree() {
-        List<SysMenu> all = CollUtil.emptyIfNull(list());
-
-        List<MenuTreeNodeVO> allNode = all.stream()
-                .sorted(Comparator.comparingInt(SysMenu::getSort))
-                .map(menuTrans::to).collect(Collectors.toList());
+        List<MenuTreeNodeVO> allNode = getBaseMapper().getAll().stream()
+                .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
+                .collect(Collectors.toList());
 
         return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
     }
@@ -82,10 +75,6 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
                         .eq(SysMenu::getPid, id)) == 0,
                 "SysMenuServiceImpl.ExistLeaf");
-
-        // 取消角色关联
-        sysRoleMenuService.remove(Wrappers.<SysRoleMenu>lambdaQuery()
-                .eq(SysRoleMenu::getMenuId, id));
 
         assertI18nService.checkOperation(removeById(id), "SysMenuServiceImpl.RemoveFailed");
     }

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
@@ -48,15 +49,25 @@ public class SysMenu extends BaseModel<SysMenu> {
     private String name;
 
     /**
-     * 菜单编码
+     * 菜单类型
      */
-    private String code;
+    private MenuTypeEnums menuType;
 
     /**
      * 菜单url
      */
     @NotBlank(message = "{SysMenu.path}", groups = Group.Create.class)
     private String path;
+
+    /**
+     * 权限ID
+     */
+    private Long authorityId;
+
+    /**
+     * 命名路由
+     */
+    private String routeName;
 
     /**
      * 视图路径
@@ -99,19 +110,9 @@ public class SysMenu extends BaseModel<SysMenu> {
     private Boolean props;
 
     /**
-     * 参数
-     */
-    private String params;
-
-    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
-
-    /**
-     * 备注
-     */
-    private String remark;
 
     /**
      * 创建日期
@@ -128,6 +129,5 @@ public class SysMenu extends BaseModel<SysMenu> {
      */
     @TableLogic
     private LocalDateTime deletedAt;
-
 
 }

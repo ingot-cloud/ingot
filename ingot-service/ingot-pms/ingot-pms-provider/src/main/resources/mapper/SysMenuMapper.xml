@@ -2,4 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ingot.cloud.pms.mapper.SysMenuMapper">
 
+    <select id="getAll" resultType="com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO">
+        SELECT menu.*, authority.code as authority_code
+        FROM sys_menu AS menu
+                 LEFT JOIN sys_authority AS authority ON authority.id = menu.authority_id
+    </select>
 </mapper>

@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
 import com.ingot.cloud.pms.api.model.base.TreeNode;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,13 +20,25 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private String name;
     /**
-     * 菜单编码
+     * 菜单类型
      */
-    private String code;
+    private MenuTypeEnums menuType;
     /**
      * 菜单url
      */
     private String path;
+    /**
+     * 权限ID
+     */
+    private Long authorityId;
+    /**
+     * 权限编码
+     */
+    private String authorityCode;
+    /**
+     * 命名路由
+     */
+    private String routeName;
     /**
      * 视图路径
      */
@@ -59,15 +72,7 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private Boolean props;
     /**
-     * 参数
-     */
-    private String params;
-    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
-    /**
-     * 备注
-     */
-    private String remark;
 }
