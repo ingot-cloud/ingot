@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
@@ -56,20 +57,25 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                         .eq(SysAuthority::getCode, params.getCode())) == 0,
                 "SysAuthorityServiceImpl.ExistCode");
 
+        // 检测父权限，填充编码
+        params.setCode(formatCode(params.getPid(), params.getCode()));
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
                 "SysAuthorityServiceImpl.CreateFailed");
     }
 
+    private String formatCode(Long pid, String code) {
+        return Optional.ofNullable(pid)
+                .filter(id -> id != IDConstants.ROOT_TREE_ID)
+                .map(this::getById)
+                .map(item -> item.getCode() + StrUtil.DOT + code)
+                .orElse(code);
+    }
+
     @Override
     public void updateAuthority(SysAuthority params) {
-        if (StrUtil.isNotEmpty(params.getCode())) {
-            // code 不能重复
-            assertI18nService.checkOperation(count(Wrappers.<SysAuthority>lambdaQuery()
-                            .eq(SysAuthority::getCode, params.getCode())) == 0,
-                    "SysAuthorityServiceImpl.ExistCode");
-        }
-
+        // 权限编码不可更新
+        params.setCode(null);
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysAuthorityServiceImpl.UpdateFailed");
