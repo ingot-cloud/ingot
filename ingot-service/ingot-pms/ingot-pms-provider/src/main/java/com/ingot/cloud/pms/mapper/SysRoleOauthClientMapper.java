@@ -2,7 +2,6 @@ package com.ingot.cloud.pms.mapper;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.framework.store.mybatis.mapper.BaseMapper;
@@ -35,8 +34,7 @@ public interface SysRoleOauthClientMapper extends BaseMapper<SysRoleOauthClient>
      * @param condition 条件参数
      * @return 客户端列表
      */
-    List<Oauth2RegisteredClient> getRoleClients(Page<?> page,
-                                                @Param("roleId") long roleId,
+    List<Oauth2RegisteredClient> getRoleClients(@Param("roleId") long roleId,
                                                 @Param("isBind") boolean isBind,
                                                 @Param("condition") Oauth2RegisteredClient condition);
 

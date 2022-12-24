@@ -122,9 +122,8 @@ public class RoleApi implements RShortcuts {
 
     @GetMapping("/bindClient/{id}")
     public R<?> getBindClients(@PathVariable Long id,
-                               Page<?> page,
                                @RequestParam("isBind") boolean isBind,
                                Oauth2RegisteredClient condition) {
-        return ok(sysRoleOauthClientService.getRoleClients(id, page, isBind, condition));
+        return ok(sysRoleOauthClientService.getRoleClients(id, isBind, condition));
     }
 }
