@@ -8,33 +8,19 @@
     </insert>
 
     <select id="getRoleClients" resultType="com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient">
-        SELECT
-            client.*
-        FROM
-            oauth2_registered_client AS client
-                <if test="isBind">
-                    INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
-                </if>
-        WHERE
-        <choose>
-            <when test="isBind">
+        SELECT client.*
+        FROM oauth2_registered_client AS client
+            <if test="isBind">
+                INNER JOIN sys_role_oauth_client AS rc ON rc.client_id = client.id
+            </if>
+        <where>
+            <if test="isBind">
                 rc.role_id = #{roleId}
-            </when>
-            <otherwise>
-                client.id NOT IN (
-                SELECT
-                    rc.client_id
-                FROM
-                    sys_role_oauth_client AS rc
-                WHERE
-                    rc.role_id = #{roleId}
-                )
-            </otherwise>
-        </choose>
-        <if test="condition.clientId != null and condition.clientId != ''">
-            AND LOCATE(#{condition.clientId}, client.client_id) > 0
-        </if>
+            </if>
+            <if test="condition.clientId != null and condition.clientId != ''">
+                AND LOCATE(#{condition.clientId}, client.client_id) > 0
+            </if>
+        </where>
         ORDER BY client.client_id_issued_at ASC
     </select>
-
 </mapper>

@@ -58,15 +58,15 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
     public List<DeptTreeNodeVO> getRoleDepts(long roleId,
                                              boolean isBind,
                                              SysDept condition) {
-        List<SysDept> all = getBaseMapper().getRoleDepts(roleId, isBind, condition);
-        List<DeptTreeNodeVO> allNode = all.stream()
+        List<SysDept> deptList = getBaseMapper().getRoleDepts(roleId, isBind, condition);
+        List<DeptTreeNodeVO> nodeList = deptList.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
-        List<DeptTreeNodeVO> tree = TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
+        List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList, IDConstants.ROOT_TREE_ID);
 
         if (isBind) {
-            allNode.forEach(item -> {
+            nodeList.forEach(item -> {
                 if (!TreeUtils.contains(tree, item)) {
                     tree.add(item);
                 }

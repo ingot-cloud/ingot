@@ -57,14 +57,14 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     public List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
                                                         boolean isBind,
                                                         SysAuthority condition) {
-        List<SysAuthority> all = baseMapper.getRoleAuthorities(roleId, isBind, condition);
-        List<AuthorityTreeNodeVO> allNode = all.stream()
+        List<SysAuthority> authorities = baseMapper.getRoleAuthorities(roleId, isBind, condition);
+        List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
+        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList, IDConstants.ROOT_TREE_ID);
 
         if (isBind) {
-            allNode.forEach(item -> {
+            nodeList.forEach(item -> {
                 if (!TreeUtils.contains(tree, item)) {
                     tree.add(item);
                 }
