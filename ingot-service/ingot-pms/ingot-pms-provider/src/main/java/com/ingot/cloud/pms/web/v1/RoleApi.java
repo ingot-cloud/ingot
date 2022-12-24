@@ -4,14 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -43,9 +40,7 @@ public class RoleApi implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
-    private final SysRoleMenuService sysRoleMenuService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
-    private final SysRoleUserService sysRoleUserService;
 
     @GetMapping("/options")
     public R<?> options() {
@@ -99,19 +94,6 @@ public class RoleApi implements RShortcuts {
                              @RequestParam("isBind") boolean isBind,
                              SysDept condition) {
         return ok(sysRoleDeptService.getRoleDepts(id, isBind, condition));
-    }
-
-    @PutMapping("/bindMenu")
-    public R<?> bindMenu(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleMenuService.roleBindMenus(params);
-        return ok();
-    }
-
-    @GetMapping("/bindMenu/{id}")
-    public R<?> getBindMenus(@PathVariable Long id,
-                             @RequestParam("isBind") boolean isBind,
-                             SysMenu condition) {
-        return ok(sysRoleMenuService.getRoleMenus(id, isBind, condition));
     }
 
     @PutMapping("/bindClient")
