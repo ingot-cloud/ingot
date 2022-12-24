@@ -11,23 +11,16 @@
     <select id="getRoleUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
         SELECT u.*
         FROM sys_user AS u
-            <if test="isBind">
-                INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
-            </if>
-        WHERE
         <choose>
             <when test="isBind">
-                ru.role_id = #{roleId}
+                INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
+            WHERE ru.role_id = #{roleId}
             </when>
             <otherwise>
-                u.id NOT IN (
-                SELECT
-                    ru.user_id
-                FROM
-                    sys_role_user AS ru
-                WHERE
-                    ru.role_id = #{roleId}
-                )
+                LEFT JOIN (SELECT ru.user_id
+                           FROM sys_role_user AS ru
+                           WHERE ru.role_id = #{roleId}) AS tmp ON tmp.user_id = u.id
+            WHERE tmp.user_id IS NULL
             </otherwise>
         </choose>
         <if test="condition.username != null and condition.username != ''">
