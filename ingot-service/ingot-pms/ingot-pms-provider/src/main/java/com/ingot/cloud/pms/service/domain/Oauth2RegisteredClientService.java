@@ -41,10 +41,10 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
     /**
      * 根据ID获取相关信息
      *
-     * @param clientId ClientId
+     * @param id 客户端表ID，并非clientId
      * @return {@link OAuth2RegisteredClientVO}
      */
-    OAuth2RegisteredClientVO getByClientId(String clientId);
+    OAuth2RegisteredClientVO getByClientId(String id);
 
     /**
      * 创建客户端
@@ -63,7 +63,7 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
     /**
      * 根据ID删除客户端
      *
-     * @param clientId clientId
+     * @param id 客户端表ID，并非clientId
      */
-    void removeClientByClientId(String clientId);
+    void removeClientByClientId(String id);
 }

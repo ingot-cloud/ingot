@@ -85,9 +85,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    public OAuth2RegisteredClientVO getByClientId(String clientId) {
+    public OAuth2RegisteredClientVO getByClientId(String id) {
         Oauth2RegisteredClient current;
-        OAuth2RegisteredClientVO result = toVo(current = getById(clientId));
+        OAuth2RegisteredClientVO result = toVo(current = getById(id));
         result.setClientSecret(current.getClientSecret());
         return result;
     }
@@ -121,9 +121,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#params.clientId")
+    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#params.id")
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
-        Oauth2RegisteredClient current = getById(params.getClientId());
+        Oauth2RegisteredClient current = getById(params.getId());
         ClientSettings.Builder clientSettingsBuilder =
                 ClientSettings.withSettings(current.getClientSettings().getSettings());
         TokenSettings.Builder tokenSettingsBuilder =
@@ -131,7 +131,6 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
 
         Oauth2RegisteredClient client = clientTrans.to(params);
-        client.setId(client.getClientId());
         client.setClientSecret(null);
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
@@ -143,13 +142,13 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#clientId")
-    public void removeClientByClientId(String clientId) {
+    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#id")
+    public void removeClientByClientId(String id) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                .eq(SysRoleOauthClient::getClientId, clientId));
+                .eq(SysRoleOauthClient::getClientId, id));
 
-        assertI18nService.checkOperation(removeById(clientId),
+        assertI18nService.checkOperation(removeById(id),
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
     }
 
