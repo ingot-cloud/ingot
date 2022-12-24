@@ -13,7 +13,6 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
-import com.ingot.cloud.pms.api.model.domain.SysRoleMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
@@ -23,7 +22,6 @@ import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -50,7 +48,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysDeptService sysDeptService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
-    private final SysRoleMenuService sysRoleMenuService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final SysRoleUserService sysRoleUserService;
 
@@ -156,11 +153,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(sysRoleDeptService.count(
                         Wrappers.<SysRoleDept>lambdaQuery()
                                 .eq(SysRoleDept::getRoleId, id)) == 0,
-                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
-        // 是否关联菜单
-        assertI18nService.checkOperation(sysRoleMenuService.count(
-                        Wrappers.<SysRoleMenu>lambdaQuery()
-                                .eq(SysRoleMenu::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联客户端
         assertI18nService.checkOperation(sysRoleOauthClientService.count(
