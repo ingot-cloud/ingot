@@ -25,7 +25,7 @@ public interface RedisConstants {
         /**
          * OAuth2 客户端缓存 key
          */
-        String REGISTERED_CLIENT_KEY = CACHE_PREFIX + ":client";
+        String REGISTERED_CLIENT_KEY_ID = CACHE_PREFIX + ":client";
     }
 
     interface Security {

@@ -127,14 +127,14 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
     }
 
     @Override
-    @Cacheable(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#id", unless = "#result == null")
+    @Cacheable(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#id", unless = "#result == null")
     public RegisteredClient findById(String id) {
         Assert.hasText(id, "id cannot be empty");
         return findBy("id = ?", id);
     }
 
     @Override
-    @Cacheable(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#clientId", unless = "#result == null")
+    @Cacheable(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#clientId", unless = "#result == null")
     public RegisteredClient findByClientId(String clientId) {
         Assert.hasText(clientId, "clientId cannot be empty");
         return findBy("client_id = ?", clientId);

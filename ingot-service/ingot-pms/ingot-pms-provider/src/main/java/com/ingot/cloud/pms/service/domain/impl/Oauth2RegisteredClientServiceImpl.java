@@ -121,7 +121,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#params.id")
+    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#params.id")
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getId());
         ClientSettings.Builder clientSettingsBuilder =
@@ -142,7 +142,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY, key = "#id")
+    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#id")
     public void removeClientByClientId(String id) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
