@@ -1,11 +1,11 @@
-package com.ingot.cloud.pms.api.utils;
+package com.ingot.framework.core.utils.tree;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.ingot.cloud.pms.api.model.base.TreeNode;
+import com.ingot.framework.core.constants.IDConstants;
 
 /**
  * <p>Description  : TreeUtils.</p>
@@ -15,6 +15,10 @@ import com.ingot.cloud.pms.api.model.base.TreeNode;
  */
 public class TreeUtils {
 
+    public static <T extends TreeNode<Long>> List<T> build(List<T> all) {
+        return build(all, IDConstants.ROOT_TREE_ID);
+    }
+
     /**
      * 构建Tree
      *
@@ -23,7 +27,7 @@ public class TreeUtils {
      * @param <T>    子类型
      * @return 树节点列表
      */
-    public static <T extends TreeNode> List<T> build(List<T> all, Object rootId) {
+    public static <ID, T extends TreeNode<ID>> List<T> build(List<T> all, ID rootId) {
         List<T> trees = new ArrayList<>();
 
         for (T node : all) {
@@ -51,7 +55,7 @@ public class TreeUtils {
      * @return 展开列表
      */
     @SuppressWarnings("unchecked")
-    public static <T extends TreeNode<?>> List<T> stretch(List<T> tree) {
+    public static <ID, T extends TreeNode<ID>> List<T> stretch(List<T> tree) {
         List<T> list = new ArrayList<>();
 
         for (T node : tree) {
@@ -85,5 +89,20 @@ public class TreeUtils {
         }
 
         return false;
+    }
+
+    /**
+     * 自动补全遗漏节点，比如树节点列表中包含某节点的子节点，但是由于没有父节点，</br>
+     * 那么在build树列表的时候不会返回该节点，需要进行补偿
+     *
+     * @param trees 树列表
+     * @param list  树节点列表
+     */
+    public static <T extends TreeNode> void compensate(List<T> trees, List<T> list) {
+        list.forEach(node -> {
+            if (!contains(trees, node)) {
+                trees.add(node);
+            }
+        });
     }
 }

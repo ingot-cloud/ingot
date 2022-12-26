@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.base;
+package com.ingot.framework.core.utils.tree;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.domain;
 
 import java.util.List;
 
+import cn.hutool.core.lang.tree.Tree;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;

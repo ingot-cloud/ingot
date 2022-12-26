@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
-import com.ingot.cloud.pms.api.model.base.TreeNode;
+import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;

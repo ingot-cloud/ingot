@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
-import com.ingot.cloud.pms.api.utils.TreeUtils;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;

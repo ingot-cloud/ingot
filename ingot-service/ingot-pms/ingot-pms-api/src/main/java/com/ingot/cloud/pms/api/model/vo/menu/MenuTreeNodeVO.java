@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
-import com.ingot.cloud.pms.api.model.base.TreeNode;
+import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;

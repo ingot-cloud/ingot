@@ -8,12 +8,11 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,14 +60,10 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
         List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .map(authorityTrans::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList, IDConstants.ROOT_TREE_ID);
+        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
 
         if (isBind) {
-            nodeList.forEach(item -> {
-                if (!TreeUtils.contains(tree, item)) {
-                    tree.add(item);
-                }
-            });
+            TreeUtils.compensate(tree, nodeList);
         }
 
         return tree;
