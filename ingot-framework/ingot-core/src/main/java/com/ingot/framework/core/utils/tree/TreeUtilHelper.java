@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNode;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
@@ -91,19 +90,4 @@ public class TreeUtilHelper {
                         || (!CollUtil.isEmpty(node.getChildren()) && contains(node.getChildren(), id)));
     }
 
-    /**
-     * 自动补全遗漏节点，比如树节点列表中包含某节点的子节点，但是由于没有父节点，</br>
-     * 那么在build树列表的时候不会返回该节点，需要进行补偿
-     *
-     * @param trees 树列表
-     * @param list  树节点列表
-     * @param <T>   id类型
-     */
-    public static <T> void compensate(List<Tree<T>> trees, List<TreeNode<T>> list) {
-        list.forEach(node -> {
-            if (contains(trees, node.getId())) {
-                trees.add(buildSingle(ListUtil.toList(node), node.getParentId()));
-            }
-        });
-    }
 }
