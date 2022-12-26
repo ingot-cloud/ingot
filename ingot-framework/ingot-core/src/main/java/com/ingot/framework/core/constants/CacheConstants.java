@@ -4,32 +4,25 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.utils.AssertionUtils;
 
 /**
- * <p>Description  : RedisConstants.</p>
+ * <p>Description  : 缓存常量.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/6/4.</p>
  * <p>Time         : 下午2:09.</p>
  */
-public interface RedisConstants {
+public interface CacheConstants {
 
     /**
-     * Redis 前缀
+     * 忽略tenant前缀
      */
-    String BASE_PREFIX = "ingot";
+    String IGNORE_TENANT_PREFIX = "in";
 
-    interface Cache {
-        /**
-         * cache 前缀
-         */
-        String CACHE_PREFIX = BASE_PREFIX + ":cache";
-
-        /**
-         * OAuth2 客户端缓存 key
-         */
-        String REGISTERED_CLIENT_KEY_ID = CACHE_PREFIX + ":client";
-    }
+    /**
+     * OAuth2 客户端详情
+     */
+    String CLIENT_DETAILS = "client_details";
 
     interface Security {
-        String PREFIX = BASE_PREFIX + ":security";
+        String PREFIX = IGNORE_TENANT_PREFIX + ":security";
 
         /**
          * OAuth2 授权信息 key
@@ -38,19 +31,19 @@ public interface RedisConstants {
         /**
          * 授权私钥
          */
-        String AUTHORIZATION_PRI = PREFIX + ":key:pri";
+        String AUTHORIZATION_PRI = PREFIX + ":key_pri";
         /**
          * 公钥
          */
-        String AUTHORIZATION_PUB = PREFIX + ":key:pub";
+        String AUTHORIZATION_PUB = PREFIX + ":key_pub";
         /**
          * Key ID
          */
-        String AUTHORIZATION_KEY_ID = PREFIX + ":key:id";
+        String AUTHORIZATION_KEY_ID = PREFIX + ":key_id";
     }
 
     interface Validator {
-        String CODE_PRE = BASE_PREFIX + ":validate_code";
+        String CODE_PRE = "validate_code";
         String SEND_SMS_COUNT = CODE_PRE + ":sms:count";
 
         /**

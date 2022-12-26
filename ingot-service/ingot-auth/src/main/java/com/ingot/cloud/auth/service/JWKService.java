@@ -7,7 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.RedisConstants;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.security.common.utils.RSAUtils;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -37,11 +37,11 @@ public class JWKService {
         RSAPrivateKey privateKey;
 
         String priStr = stringRedisTemplate.opsForValue()
-                .get(RedisConstants.Security.AUTHORIZATION_PRI);
+                .get(CacheConstants.Security.AUTHORIZATION_PRI);
         String pubStr = stringRedisTemplate.opsForValue()
-                .get(RedisConstants.Security.AUTHORIZATION_PUB);
+                .get(CacheConstants.Security.AUTHORIZATION_PUB);
         String keyID = stringRedisTemplate.opsForValue()
-                .get(RedisConstants.Security.AUTHORIZATION_KEY_ID);
+                .get(CacheConstants.Security.AUTHORIZATION_KEY_ID);
         if (StrUtil.isEmpty(priStr) || StrUtil.isEmpty(pubStr) || StrUtil.isEmpty(keyID)) {
             KeyPair keyPair = RSAUtils.generateKey();
             keyID = UUID.randomUUID().toString();
@@ -80,11 +80,11 @@ public class JWKService {
     }
 
     private void cache(KeyPair keyPair, String keyID) {
-        stringRedisTemplate.opsForValue().set(RedisConstants.Security.AUTHORIZATION_PRI,
+        stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_PRI,
                 RSAUtils.toHexString(keyPair.getPrivate().getEncoded()));
-        stringRedisTemplate.opsForValue().set(RedisConstants.Security.AUTHORIZATION_PUB,
+        stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_PUB,
                 RSAUtils.toHexString(keyPair.getPublic().getEncoded()));
-        stringRedisTemplate.opsForValue().set(RedisConstants.Security.AUTHORIZATION_KEY_ID,
+        stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_KEY_ID,
                 keyID);
         this.needUpdate.set(true);
     }

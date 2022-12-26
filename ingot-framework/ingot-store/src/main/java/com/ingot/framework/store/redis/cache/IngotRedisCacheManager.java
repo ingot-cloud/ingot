@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Map;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -59,6 +60,9 @@ public class IngotRedisCacheManager extends RedisCacheManager {
     @Override
     public Cache getCache(@NonNull String name) {
         log.info(">>> IngotRedisCacheManager - getCache name={}", name);
-        return super.getCache(name + StrUtil.COLON + TenantContextHolder.get());
+        if (StrUtil.startWith(name, CacheConstants.IGNORE_TENANT_PREFIX)) {
+            return super.getCache(name);
+        }
+        return super.getCache(TenantContextHolder.get() + StrUtil.COLON + name);
     }
 }

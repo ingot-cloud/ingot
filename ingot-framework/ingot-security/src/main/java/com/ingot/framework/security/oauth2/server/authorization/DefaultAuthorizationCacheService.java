@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import static com.ingot.framework.core.constants.RedisConstants.Security.AUTHORIZATION;
+import static com.ingot.framework.core.constants.CacheConstants.Security.AUTHORIZATION;
 
 /**
  * <p>Description  : DefaultAuthorizationCacheService.</p>
