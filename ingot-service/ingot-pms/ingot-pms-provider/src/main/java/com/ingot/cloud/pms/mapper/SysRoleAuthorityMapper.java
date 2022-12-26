@@ -32,7 +32,5 @@ public interface SysRoleAuthorityMapper extends BaseMapper<SysRoleAuthority> {
      * @param isBind 是否绑定
      * @return 分页信息
      */
-    List<SysAuthority> getRoleAuthorities(@Param("roleId") long roleId,
-                                          @Param("isBind") boolean isBind,
-                                          @Param("condition") SysAuthority condition);
+    List<SysAuthority> getAuthoritiesByRole(@Param("roleId") long roleId);
 }

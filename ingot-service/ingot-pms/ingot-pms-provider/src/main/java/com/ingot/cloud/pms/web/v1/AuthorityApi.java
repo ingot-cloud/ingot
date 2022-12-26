@@ -30,7 +30,7 @@ public class AuthorityApi implements RShortcuts {
 
     @GetMapping("/tree")
     public R<?> tree() {
-        return ok(sysAuthorityService.tree());
+        return ok(sysAuthorityService.treeList());
     }
 
     @PostMapping

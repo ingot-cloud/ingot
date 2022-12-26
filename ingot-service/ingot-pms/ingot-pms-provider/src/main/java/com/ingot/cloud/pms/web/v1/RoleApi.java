@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RoleApi implements RShortcuts {
     private final SysRoleService sysRoleService;
+    private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
@@ -80,7 +82,10 @@ public class RoleApi implements RShortcuts {
     public R<?> getBindAuthorities(@PathVariable Long id,
                                    @RequestParam("isBind") boolean isBind,
                                    SysAuthority condition) {
-        return ok(sysRoleAuthorityService.getRoleAuthorities(id, isBind, condition));
+        if (isBind) {
+            return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
+        }
+        return ok(sysAuthorityService.treeList());
     }
 
     @PutMapping("/bindDept")

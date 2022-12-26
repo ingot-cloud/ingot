@@ -7,21 +7,11 @@
         VALUES (#{roleId}, #{authorityId})
     </insert>
 
-    <select id="getRoleAuthorities" resultType="com.ingot.cloud.pms.api.model.domain.SysAuthority">
+    <select id="getAuthoritiesByRole" resultType="com.ingot.cloud.pms.api.model.domain.SysAuthority">
         SELECT auth.*
         FROM sys_authority AS auth
-            <if test="isBind">
-                INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
-            </if>
-        <where>
-            <if test="isBind">
-                AND ra.role_id = #{roleId}
-            </if>
-            <if test="condition.name != null and condition.name != ''">
-                AND LOCATE(#{condition.name}, auth.name) > 0
-            </if>
-        </where>
-        ORDER BY auth.id ASC
+                 INNER JOIN sys_role_authority AS ra ON ra.authority_id = auth.id
+        WHERE ra.role_id = #{roleId}
     </select>
 
 </mapper>

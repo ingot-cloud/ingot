@@ -21,6 +21,12 @@ public interface CacheConstants {
      */
     String CLIENT_DETAILS = "client_details";
 
+    /**
+     * 所有权限
+     */
+    String AUTHORITY_DETAILS= "authority_details";
+
+
     interface Security {
         String PREFIX = IGNORE_TENANT_PREFIX + ":security";
 

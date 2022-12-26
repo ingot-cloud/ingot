@@ -1,25 +1,31 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
+import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author magician
  * @since 2020-11-20
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
@@ -39,18 +46,33 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     private final AuthorityTrans authorityTrans;
 
     @Override
-    public List<AuthorityTreeNodeVO> tree() {
-        List<SysAuthority> all = CollUtil.emptyIfNull(list(
-                Wrappers.<SysAuthority>lambdaQuery()
-                        .orderByAsc(SysAuthority::getCreatedAt)));
-
-        List<AuthorityTreeNodeVO> allNode = all.stream()
-                .map(authorityTrans::to).collect(Collectors.toList());
-
-        return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
+    @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = "'list'", unless = "#result.isEmpty()")
+    public List<SysAuthority> list() {
+        return super.list();
     }
 
     @Override
+    public List<SysAuthority> getAuthorityByRoles(List<SysRole> roles) {
+        return roles.stream()
+                .flatMap(role -> sysRoleAuthorityService.getAuthoritiesByRole(role.getId()).stream())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AuthorityTreeNodeVO> treeList() {
+        // 同类调用方法不触发aop，导致@Cacheable无法工作，从而缓存失败
+        // 所以使用
+        List<AuthorityTreeNodeVO> nodeList = SpringContextHolder
+                .getBean(SysAuthorityService.class)
+                .list()
+                .stream()
+                .sorted(Comparator.comparing(SysAuthority::getId))
+                .map(authorityTrans::to).collect(Collectors.toList());
+        return TreeUtils.build(nodeList);
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
     public void createAuthority(SysAuthority params) {
         // code 不能重复
         assertI18nService.checkOperation(count(Wrappers.<SysAuthority>lambdaQuery()
@@ -73,6 +95,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     }
 
     @Override
+    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
     public void updateAuthority(SysAuthority params) {
         // 权限编码不可更新
         params.setCode(null);
@@ -83,6 +106,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
     public void removeAuthorityById(long id) {
         // 叶子权限才可以删除
         boolean result = count(Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0;

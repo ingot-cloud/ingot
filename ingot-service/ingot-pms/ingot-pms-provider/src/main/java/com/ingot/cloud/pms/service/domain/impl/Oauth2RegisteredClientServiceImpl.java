@@ -17,7 +17,7 @@ import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.common.utils.DateUtils;
-import com.ingot.framework.core.constants.RedisConstants;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.TokenAuthType;
@@ -121,7 +121,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#params.id")
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#params.id")
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getId());
         ClientSettings.Builder clientSettingsBuilder =
@@ -142,7 +142,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = RedisConstants.Cache.REGISTERED_CLIENT_KEY_ID, key = "#id")
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#id")
     public void removeClientByClientId(String id) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
