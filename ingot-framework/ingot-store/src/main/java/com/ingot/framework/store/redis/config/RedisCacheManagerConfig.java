@@ -18,6 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.redis.cache.BatchStrategies;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -50,7 +51,7 @@ public class RedisCacheManagerConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory, ResourceLoader resourceLoader) {
-        DefaultRedisCacheWriter redisCacheWriter = new DefaultRedisCacheWriter(connectionFactory);
+        DefaultRedisCacheWriter redisCacheWriter = new DefaultRedisCacheWriter(connectionFactory, BatchStrategies.scan(1000));
         RedisCacheConfiguration cacheConfiguration = this.determineConfiguration(resourceLoader.getClassLoader());
         List<String> cacheNames = this.cacheProperties.getCacheNames();
         Map<String, RedisCacheConfiguration> initialCaches = new LinkedHashMap<>();
