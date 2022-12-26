@@ -175,8 +175,33 @@ public class DefaultRedisCacheWriter implements RedisCacheWriter {
         Assert.notNull(name, "Name must not be null!");
         Assert.notNull(key, "Key must not be null!");
 
-        execute(name, connection -> connection.del(key));
-        statistics.incDeletes(name);
+        // remove 修改为匹配key
+        execute(name, connection -> {
+            boolean wasLocked = false;
+            try {
+
+                if (isLockingCacheWriter()) {
+                    doLock(name, connection);
+                    wasLocked = true;
+                }
+
+                byte[][] keys = Optional.ofNullable(connection.keys(key)).orElse(Collections.emptySet())
+                        .toArray(new byte[0][]);
+
+                if (keys.length > 0) {
+                    statistics.incDeletesBy(name, keys.length);
+                    return connection.del(keys);
+                }
+                return 0;
+            } finally {
+                if (wasLocked && isLockingCacheWriter()) {
+                    doUnlock(name, connection);
+                }
+            }
+        });
+
+//        execute(name, connection -> connection.del(key));
+//        statistics.incDeletes(name);
     }
 
     /*
