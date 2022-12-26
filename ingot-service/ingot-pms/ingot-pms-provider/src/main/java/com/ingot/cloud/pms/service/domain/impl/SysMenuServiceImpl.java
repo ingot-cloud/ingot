@@ -6,14 +6,15 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.api.utils.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.IDConstants;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
     private final AssertionChecker assertI18nService;
     private final MenuTrans menuTrans;
+
+    @Override
+    public List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities) {
+        List<MenuTreeNodeVO> nodeList = getBaseMapper().getAll().stream()
+                .filter(node -> node.getAuthorityId() == null ||
+                        authorities.stream()
+                                .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
+                .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
+                .collect(Collectors.toList());
+
+        List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList, IDConstants.ROOT_TREE_ID);
+        TreeUtils.compensate(tree, nodeList);
+        return tree;
+    }
 
     @Override
     public List<MenuTreeNodeVO> tree() {
