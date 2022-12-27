@@ -26,6 +26,8 @@ import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
@@ -51,6 +53,12 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final ClientTrans clientTrans;
 
     private final SysRoleOauthClientService sysRoleOauthClientService;
+
+    @Override
+    @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = "'list'", unless = "#result.isEmpty()")
+    public List<Oauth2RegisteredClient> list() {
+        return super.list();
+    }
 
     @Override
     public List<Oauth2RegisteredClient> getClientsByRoles(List<Long> roleIds) {
@@ -93,6 +101,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'")
     public void createClient(OAuth2RegisteredClientDTO params) {
         assertI18nService.checkOperation(count(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
                         .eq(Oauth2RegisteredClient::getClientId, params.getClientId())) == 0,
@@ -121,7 +130,11 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#params.id")
+    @Caching(evict = {
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#params.id"),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'"),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+    })
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getId());
         ClientSettings.Builder clientSettingsBuilder =
@@ -142,7 +155,11 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#id"),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'"),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+    })
     public void removeClientByClientId(String id) {
         // 取消关联
         sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()

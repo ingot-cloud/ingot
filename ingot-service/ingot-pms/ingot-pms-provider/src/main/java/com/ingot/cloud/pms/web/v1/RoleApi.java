@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -45,6 +46,7 @@ public class RoleApi implements RShortcuts {
     private final SysDeptService sysDeptService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
+    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @GetMapping("/options")
     public R<?> options() {
@@ -116,6 +118,9 @@ public class RoleApi implements RShortcuts {
     public R<?> getBindClients(@PathVariable Long id,
                                @RequestParam("isBind") boolean isBind,
                                Oauth2RegisteredClient condition) {
-        return ok(sysRoleOauthClientService.getRoleClients(id, isBind, condition));
+        if (isBind) {
+            return ok(sysRoleOauthClientService.getRoleClients(id, condition));
+        }
+        return ok(oauth2RegisteredClientService.list());
     }
 }

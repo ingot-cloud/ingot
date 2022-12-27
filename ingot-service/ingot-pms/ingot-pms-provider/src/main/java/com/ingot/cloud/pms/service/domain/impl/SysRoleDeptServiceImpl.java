@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
@@ -56,7 +57,7 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
 
     @Override
     public List<SysDept> getDeptsByRole(long roleId) {
-        return baseMapper.getDeptsByRole(roleId);
+        return CollUtil.emptyIfNull(baseMapper.getDeptsByRole(roleId));
     }
 
     @Override

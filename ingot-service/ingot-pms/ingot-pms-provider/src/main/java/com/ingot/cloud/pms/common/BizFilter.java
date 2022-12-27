@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.common;
 import java.util.function.Predicate;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 
@@ -22,6 +23,9 @@ public final class BizFilter {
      */
     public static Predicate<SysAuthority> authorityFilter(SysAuthority condition) {
         return (item) -> {
+            if (condition == null) {
+                return true;
+            }
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());
             }
@@ -37,8 +41,29 @@ public final class BizFilter {
      */
     public static Predicate<SysDept> deptFilter(SysDept condition) {
         return (item) -> {
+            if (condition == null) {
+                return true;
+            }
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());
+            }
+            return true;
+        };
+    }
+
+    /**
+     * 客户端过滤器
+     *
+     * @param condition 条件
+     * @return {@link Predicate}
+     */
+    public static Predicate<Oauth2RegisteredClient> clientFilter(Oauth2RegisteredClient condition) {
+        return (item) -> {
+            if (condition == null) {
+                return true;
+            }
+            if (StrUtil.isNotEmpty(condition.getClientId())) {
+                return StrUtil.startWith(item.getClientId(), condition.getClientId());
             }
             return true;
         };

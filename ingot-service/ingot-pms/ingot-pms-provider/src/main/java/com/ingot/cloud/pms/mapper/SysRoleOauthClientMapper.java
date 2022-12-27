@@ -28,14 +28,9 @@ public interface SysRoleOauthClientMapper extends BaseMapper<SysRoleOauthClient>
     /**
      * 获取指定角色绑定的所有客户端信息
      *
-     * @param page      分页参数
-     * @param roleId    角色ID
-     * @param isBind    是否绑定
-     * @param condition 条件参数
+     * @param roleId 角色ID
      * @return 客户端列表
      */
-    List<Oauth2RegisteredClient> getRoleClients(@Param("roleId") long roleId,
-                                                @Param("isBind") boolean isBind,
-                                                @Param("condition") Oauth2RegisteredClient condition);
+    List<Oauth2RegisteredClient> getClientsByRole(@Param("roleId") long roleId);
 
 }
