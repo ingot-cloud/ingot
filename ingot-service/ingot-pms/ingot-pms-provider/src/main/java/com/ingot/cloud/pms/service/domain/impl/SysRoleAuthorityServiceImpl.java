@@ -10,6 +10,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
+import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -46,7 +47,7 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = "'role-*'")
+    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleAllKey)
     public void authorityBindRoles(RelationDTO<Long, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
@@ -54,14 +55,14 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = "'role-*'")
+    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleAllKey)
     public void roleBindAuthorities(RelationDTO<Long, Long> params) {
         bindTargets(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
-    @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = "'role-' + #roleId", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleKey, unless = "#result.isEmpty()")
     public List<SysAuthority> getAuthoritiesByRole(long roleId) {
         return CollUtil.emptyIfNull(baseMapper.getAuthoritiesByRole(roleId));
     }

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.common.BizFilter;
+import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleOauthClientMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -41,7 +42,7 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
     public void clientBindRoles(RelationDTO<String, Long> params) {
         bindRoles(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
@@ -49,14 +50,14 @@ public class SysRoleOauthClientServiceImpl extends CommonRoleRelationService<Sys
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
     public void roleBindClients(RelationDTO<Long, String> params) {
         bindTargets(params, remove, bind,
                 "SysRoleOauthClientServiceImpl.RemoveFailed");
     }
 
     @Override
-    @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = "'role-' + #roleId", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleKey, unless = "#result.isEmpty()")
     public List<Oauth2RegisteredClient> getRoleClients(long roleId) {
         return CollUtil.emptyIfNull(baseMapper.getClientsByRole(roleId));
     }

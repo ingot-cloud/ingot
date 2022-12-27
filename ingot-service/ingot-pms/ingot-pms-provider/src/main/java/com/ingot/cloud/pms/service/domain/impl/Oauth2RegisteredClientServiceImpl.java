@@ -13,6 +13,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
+import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -55,7 +56,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final SysRoleOauthClientService sysRoleOauthClientService;
 
     @Override
-    @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = "'list'", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
     public List<Oauth2RegisteredClient> list() {
         return super.list();
     }
@@ -101,7 +102,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'")
+    @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey)
     public void createClient(OAuth2RegisteredClientDTO params) {
         assertI18nService.checkOperation(count(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
                         .eq(Oauth2RegisteredClient::getClientId, params.getClientId())) == 0,
@@ -132,8 +133,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     @Override
     @Caching(evict = {
             @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#params.id"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
     })
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getId());
@@ -157,8 +158,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {
             @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#id"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'list'"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "'role-*'")
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey),
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
     })
     public void removeClientByClientId(String id) {
         // 取消关联
