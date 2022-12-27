@@ -7,9 +7,11 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
@@ -18,6 +20,7 @@ import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
+    private final SysMenuService sysMenuService;
     private final AssertionChecker assertI18nService;
     private final AuthorityTrans authorityTrans;
 
@@ -147,7 +152,10 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true),
+            @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    })
     public void removeAuthorityById(long id) {
         // 叶子权限才可以删除
         boolean result = count(Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0;
@@ -156,6 +164,16 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         // 取消关联的角色
         sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
                 .eq(SysRoleAuthority::getAuthorityId, id));
+
+        // 取消关联菜单
+        sysMenuService.nodeList().forEach(menu -> {
+            if (ObjectUtil.equals(menu.getAuthorityId(), id)) {
+                SysMenu sysMenu = new SysMenu();
+                sysMenu.setId(menu.getId());
+                sysMenu.setAuthorityId(0L);
+                sysMenu.updateById();
+            }
+        });
 
         result = removeById(id);
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");
