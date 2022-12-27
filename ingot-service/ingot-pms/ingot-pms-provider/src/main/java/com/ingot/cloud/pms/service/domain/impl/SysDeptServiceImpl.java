@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
@@ -46,6 +47,18 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
                 .map(deptTrans::to).collect(Collectors.toList());
 
         return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
+    }
+
+    @Override
+    public List<DeptTreeNodeVO> treeList(SysDept condition) {
+        List<DeptTreeNodeVO> nodeList = list().stream()
+                .filter(BizFilter.deptFilter(condition))
+                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .map(deptTrans::to).collect(Collectors.toList());
+
+        List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
+        TreeUtils.compensate(tree, nodeList);
+        return tree;
     }
 
     @Override

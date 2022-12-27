@@ -21,6 +21,13 @@ import org.apache.ibatis.annotations.Param;
 public interface Oauth2RegisteredClientService extends BaseService<Oauth2RegisteredClient> {
 
     /**
+     * 条件list
+     * @param condition 条件
+     * @return {@link Oauth2RegisteredClient} List
+     */
+    List<Oauth2RegisteredClient> list(Oauth2RegisteredClient condition);
+
+    /**
      * 根据角色id获取对应可用的client
      *
      * @param roleIds 角色ID

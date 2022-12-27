@@ -12,6 +12,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
@@ -70,6 +71,21 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                 .sorted(Comparator.comparing(SysAuthority::getId))
                 .map(authorityTrans::to).collect(Collectors.toList());
         return TreeUtils.build(nodeList);
+    }
+
+    @Override
+    public List<AuthorityTreeNodeVO> treeList(SysAuthority condition) {
+        List<AuthorityTreeNodeVO> nodeList =SpringContextHolder
+                .getBean(SysAuthorityService.class)
+                .list()
+                .stream()
+                .filter(BizFilter.authorityFilter(condition))
+                .sorted(Comparator.comparing(SysAuthority::getId))
+                .map(authorityTrans::to).collect(Collectors.toList());
+
+        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
+        TreeUtils.compensate(tree, nodeList);
+        return tree;
     }
 
     @Override

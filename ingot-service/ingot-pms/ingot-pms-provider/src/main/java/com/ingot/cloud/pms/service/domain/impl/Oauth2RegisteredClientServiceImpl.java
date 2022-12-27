@@ -13,12 +13,14 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
+import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.TokenAuthType;
@@ -59,6 +61,13 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
     public List<Oauth2RegisteredClient> list() {
         return super.list();
+    }
+
+    @Override
+    public List<Oauth2RegisteredClient> list(Oauth2RegisteredClient condition) {
+        return SpringContextHolder.getBean(Oauth2RegisteredClientService.class)
+                .list().stream()
+                .filter(BizFilter.clientFilter(condition)).collect(Collectors.toList());
     }
 
     @Override

@@ -33,6 +33,14 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
     List<AuthorityTreeNodeVO> treeList();
 
     /**
+     * 条件树
+     *
+     * @param condition 条件
+     * @return {@link AuthorityTreeNodeVO}
+     */
+    List<AuthorityTreeNodeVO> treeList(SysAuthority condition);
+
+    /**
      * 创建权限
      *
      * @param params 参数

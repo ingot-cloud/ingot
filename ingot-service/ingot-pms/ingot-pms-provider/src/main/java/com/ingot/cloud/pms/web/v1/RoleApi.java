@@ -89,7 +89,7 @@ public class RoleApi implements RShortcuts {
         if (isBind) {
             return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
         }
-        return ok(sysAuthorityService.treeList());
+        return ok(sysAuthorityService.treeList(condition));
     }
 
     @PutMapping("/bindDept")
@@ -105,7 +105,7 @@ public class RoleApi implements RShortcuts {
         if (isBind) {
             return ok(sysRoleDeptService.getRoleDepts(id, condition));
         }
-        return ok(sysDeptService.treeList());
+        return ok(sysDeptService.treeList(condition));
     }
 
     @PutMapping("/bindClient")
@@ -121,6 +121,6 @@ public class RoleApi implements RShortcuts {
         if (isBind) {
             return ok(sysRoleOauthClientService.getRoleClients(id, condition));
         }
-        return ok(oauth2RegisteredClientService.list());
+        return ok(oauth2RegisteredClientService.list(condition));
     }
 }

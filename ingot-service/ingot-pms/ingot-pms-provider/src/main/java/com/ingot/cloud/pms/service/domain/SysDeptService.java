@@ -24,6 +24,14 @@ public interface SysDeptService extends BaseService<SysDept> {
     List<DeptTreeNodeVO> treeList();
 
     /**
+     * 条件tree
+     *
+     * @param condition 条件
+     * @return tree列表
+     */
+    List<DeptTreeNodeVO> treeList(SysDept condition);
+
+    /**
      * 创建部门
      *
      * @param params 参数
