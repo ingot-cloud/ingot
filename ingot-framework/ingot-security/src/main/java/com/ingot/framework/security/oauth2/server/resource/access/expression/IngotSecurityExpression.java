@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.resource.access.expression;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,13 +74,42 @@ public class IngotSecurityExpression {
         if (authentication == null) {
             return false;
         }
+
         Set<String> userAuth = authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(StrUtil::isNotEmpty).collect(Collectors.toSet());
-        Set<String> requiredAuth = CollUtil.newHashSet(authorities);
+                .filter(StrUtil::isNotEmpty)
+                .map(String::toUpperCase).collect(Collectors.toSet());
+        Set<String> requiredAuth = CollUtil.newHashSet(authorities)
+                .stream().map(String::toUpperCase).collect(Collectors.toSet());
+
         return requiredAuth.stream()
-                .anyMatch(req -> userAuth.contains(getAuthorityWithPrefix(prefix, req)));
+                .anyMatch(req -> {
+                    // 层级权限，拥有父级权限也可以通过
+                    // req: a     - user: a   => true
+                    // req: a     - user: a.b => false
+                    // req: a.b.c - user: a.b => true
+                    // req: a.b   - user: a.b => true
+                    // req: a.b   - user: a.c => false
+                    // req: a.b   - user: a.b.c => false
+                    String reqAuth = getAuthorityWithPrefix(prefix, req);
+                    List<String> scopes = StrUtil.split(reqAuth, StrUtil.DOT);
+                    return userAuth.stream().anyMatch(user -> {
+                        boolean start = StrUtil.startWith(reqAuth, user);
+                        if (!start) {
+                            return false;
+                        }
+
+                        List<String> userScopes = StrUtil.split(user, StrUtil.DOT);
+                        int uLen = CollUtil.size(userScopes);
+                        for (int i = 0; i < uLen; i++) {
+                            if (!StrUtil.equals(userScopes.get(i), scopes.get(i))) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                });
     }
 
     private String getAuthorityWithPrefix(String prefix, String authority) {
