@@ -3,17 +3,20 @@ package com.ingot.cloud.pms.service.biz.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.service.biz.UserDetailService;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
@@ -36,6 +39,7 @@ import org.springframework.stereotype.Service;
 public class UserDetailServiceImpl implements UserDetailService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
+    private final SysAuthorityService sysAuthorityService;
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
     private final Map<String, SocialProcessor> socialProcessorMap;
     private final UserTrans userTrans;
@@ -74,6 +78,10 @@ public class UserDetailServiceImpl implements UserDetailService {
                     List<String> roleCodes = roles.stream()
                             .map(SysRole::getCode)
                             .collect(Collectors.toList());
+                    // 拥有的权限
+                    Set<String> authorities = sysAuthorityService.getAuthorityByRoles(roles)
+                            .stream().map(SysAuthority::getCode).collect(Collectors.toSet());
+                    roleCodes.addAll(authorities);
                     result.setRoles(roleCodes);
 
                     List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
