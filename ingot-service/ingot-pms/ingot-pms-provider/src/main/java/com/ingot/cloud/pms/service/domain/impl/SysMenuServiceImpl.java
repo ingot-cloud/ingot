@@ -9,7 +9,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
@@ -38,7 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
     private final AssertionChecker assertI18nService;
-    private final MenuTrans menuTrans;
 
     @Override
     public List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities) {

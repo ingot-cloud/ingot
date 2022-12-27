@@ -6,5 +6,6 @@
         SELECT menu.*, authority.code as authority_code
         FROM sys_menu AS menu
                  LEFT JOIN sys_authority AS authority ON authority.id = menu.authority_id
+        WHERE menu.deleted_at IS NULL
     </select>
 </mapper>
