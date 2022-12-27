@@ -26,11 +26,17 @@ public interface SysMenuService extends BaseService<SysMenu> {
     List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities);
 
     /**
+     * 获取所有菜单，非树形结构
+     * @return {@link MenuTreeNodeVO} List
+     */
+    List<MenuTreeNodeVO> nodeList();
+
+    /**
      * 菜单tree
      *
      * @return {@link MenuTreeNodeVO} 节点
      */
-    List<MenuTreeNodeVO> tree();
+    List<MenuTreeNodeVO> treeList();
 
     /**
      * 创建菜单

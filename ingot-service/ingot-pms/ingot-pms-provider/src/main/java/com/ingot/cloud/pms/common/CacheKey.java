@@ -14,4 +14,5 @@ public interface CacheKey {
     String ClientListKey = "'list'";
     String ClientRoleKey = "'role-' + #roleId";
     String ClientRoleAllKey = "'role-*'";
+    String MenuListKey = "'list'";
 }

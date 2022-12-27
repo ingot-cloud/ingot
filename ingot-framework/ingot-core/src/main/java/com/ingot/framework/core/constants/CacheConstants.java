@@ -26,6 +26,11 @@ public interface CacheConstants {
      */
     String AUTHORITY_DETAILS= "authority_details";
 
+    /**
+     * 菜单
+     */
+    String MENU_DETAILS = "menu_details";
+
 
     interface Security {
         String PREFIX = IGNORE_TENANT_PREFIX + ":security";
