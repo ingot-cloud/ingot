@@ -6,16 +6,21 @@ import java.util.stream.Collectors;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +37,8 @@ import org.springframework.stereotype.Service;
 public class BizUserServiceImpl implements BizUserService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
+    private final SysAuthorityService sysAuthorityService;
+    private final SysMenuService sysMenuService;
     private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
 
@@ -78,5 +85,12 @@ public class BizUserServiceImpl implements BizUserService {
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(sysUserService.updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
+    }
+
+    @Override
+    public List<MenuTreeNodeVO> getUserMenus(IngotUser user) {
+        List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+        List<SysAuthority> authorities = sysAuthorityService.getAuthorityByRoles(roles);
+        return sysMenuService.getMenuByAuthorities(authorities);
     }
 }

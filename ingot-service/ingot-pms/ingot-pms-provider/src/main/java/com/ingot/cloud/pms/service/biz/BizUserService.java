@@ -1,7 +1,11 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 
 /**
  * <p>Description  : 业务用户service.</p>
@@ -25,4 +29,11 @@ public interface BizUserService {
      * @param params 基本信息参数
      */
     void updateUserBaseInfo(long id, UserBaseInfoDTO params);
+
+    /**
+     * 获取用户可用菜单
+     * @param user {@link IngotUser}
+     * @return {@link MenuTreeNodeVO} List
+     */
+    List<MenuTreeNodeVO> getUserMenus(IngotUser user);
 }

@@ -1,10 +1,12 @@
 package com.ingot.cloud.pms.web.v1;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
+import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,10 +29,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MenuApi implements RShortcuts {
     private final SysMenuService sysMenuService;
+    private final BizUserService bizUserService;
+
+    @GetMapping("/userMenu")
+    public R<?> userMenu() {
+        return ok(bizUserService.getUserMenus(SecurityAuthContext.getUser()));
+    }
 
     @GetMapping("/tree")
     public R<?> tree() {
-        return ok(sysMenuService.tree());
+        return ok(sysMenuService.treeList());
     }
 
     @PostMapping
