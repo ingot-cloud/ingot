@@ -4,6 +4,7 @@ import java.util.function.Predicate;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
 
 /**
  * <p>Description  : BizFilter.</p>
@@ -20,6 +21,21 @@ public final class BizFilter {
      * @return {@link Predicate}
      */
     public static Predicate<SysAuthority> authorityFilter(SysAuthority condition) {
+        return (item) -> {
+            if (StrUtil.isNotEmpty(condition.getName())) {
+                return StrUtil.startWith(item.getName(), condition.getName());
+            }
+            return true;
+        };
+    }
+
+    /**
+     * 部门过滤器
+     *
+     * @param condition 条件
+     * @return {@link Predicate}
+     */
+    public static Predicate<SysDept> deptFilter(SysDept condition) {
         return (item) -> {
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());

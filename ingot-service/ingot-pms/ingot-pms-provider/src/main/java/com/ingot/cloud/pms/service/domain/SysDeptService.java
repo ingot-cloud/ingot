@@ -21,7 +21,7 @@ public interface SysDeptService extends BaseService<SysDept> {
      *
      * @return 部门tree节点列表
      */
-    List<DeptTreeNodeVO> tree();
+    List<DeptTreeNodeVO> treeList();
 
     /**
      * 创建部门

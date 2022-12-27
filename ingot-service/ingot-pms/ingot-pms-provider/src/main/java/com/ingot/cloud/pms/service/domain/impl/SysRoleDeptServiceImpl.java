@@ -9,12 +9,12 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
-import com.ingot.framework.core.utils.tree.TreeUtils;
+import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,24 +55,21 @@ public class SysRoleDeptServiceImpl extends CommonRoleRelationService<SysRoleDep
     }
 
     @Override
+    public List<SysDept> getDeptsByRole(long roleId) {
+        return baseMapper.getDeptsByRole(roleId);
+    }
+
+    @Override
     public List<DeptTreeNodeVO> getRoleDepts(long roleId,
-                                             boolean isBind,
                                              SysDept condition) {
-        List<SysDept> deptList = getBaseMapper().getRoleDepts(roleId, isBind, condition);
+        List<SysDept> deptList = getDeptsByRole(roleId);
         List<DeptTreeNodeVO> nodeList = deptList.stream()
+                .filter(BizFilter.deptFilter(condition))
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());
 
-        List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList, IDConstants.ROOT_TREE_ID);
-
-        if (isBind) {
-            nodeList.forEach(item -> {
-                if (!TreeUtils.contains(tree, item)) {
-                    tree.add(item);
-                }
-            });
-        }
-
+        List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
+        TreeUtils.compensate(tree, nodeList);
         return tree;
     }
 }

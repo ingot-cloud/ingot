@@ -27,11 +27,8 @@ public interface SysRoleDeptMapper extends BaseMapper<SysRoleDept> {
     /**
      * 获取角色部门信息
      *
-     * @param roleId 角色Id
-     * @param isBind 是否绑定
-     * @return 分页信息
+     * @param roleId
+     * @return List
      */
-    List<SysDept> getRoleDepts(@Param("roleId") long roleId,
-                               @Param("isBind") boolean isBind,
-                               @Param("condition") SysDept condition);
+    List<SysDept> getDeptsByRole(@Param("roleId") long roleId);
 }

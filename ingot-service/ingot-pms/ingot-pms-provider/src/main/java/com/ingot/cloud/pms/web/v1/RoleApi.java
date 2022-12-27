@@ -6,6 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
@@ -41,6 +42,7 @@ public class RoleApi implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
+    private final SysDeptService sysDeptService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleOauthClientService sysRoleOauthClientService;
 
@@ -98,7 +100,10 @@ public class RoleApi implements RShortcuts {
     public R<?> getBindDepts(@PathVariable Long id,
                              @RequestParam("isBind") boolean isBind,
                              SysDept condition) {
-        return ok(sysRoleDeptService.getRoleDepts(id, isBind, condition));
+        if (isBind) {
+            return ok(sysRoleDeptService.getRoleDepts(id, condition));
+        }
+        return ok(sysDeptService.treeList());
     }
 
     @PutMapping("/bindClient")

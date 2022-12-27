@@ -32,14 +32,20 @@ public interface SysRoleDeptService extends BaseService<SysRoleDept> {
     void roleBindDepts(RelationDTO<Long, Long> params);
 
     /**
+     * 根据角色获取部门
+     *
+     * @param roleId 角色ID
+     * @return {@link SysDept} List
+     */
+    List<SysDept> getDeptsByRole(long roleId);
+
+    /**
      * 获取角色部门信息
      *
      * @param roleId    角色ID
-     * @param isBind    是否绑定
      * @param condition 条件
      * @return 分页信息
      */
     List<DeptTreeNodeVO> getRoleDepts(long roleId,
-                                      boolean isBind,
                                       SysDept condition);
 }

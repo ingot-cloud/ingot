@@ -39,9 +39,8 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     private final AssertionChecker assertI18nService;
 
     @Override
-    public List<DeptTreeNodeVO> tree() {
+    public List<DeptTreeNodeVO> treeList() {
         List<SysDept> all = list();
-
         List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).collect(Collectors.toList());

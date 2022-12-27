@@ -32,7 +32,7 @@ public class DeptApi implements RShortcuts {
 
     @GetMapping("/tree")
     public R<?> tree() {
-        return ok(sysDeptService.tree());
+        return ok(sysDeptService.treeList());
     }
 
     @PostMapping

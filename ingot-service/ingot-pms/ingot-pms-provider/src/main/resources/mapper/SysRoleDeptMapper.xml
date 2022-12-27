@@ -7,21 +7,11 @@
         VALUES (#{roleId}, #{deptId})
     </insert>
 
-    <select id="getRoleDepts" resultType="com.ingot.cloud.pms.api.model.domain.SysDept">
+    <select id="getDeptsByRole" resultType="com.ingot.cloud.pms.api.model.domain.SysDept">
         SELECT dept.*
         FROM sys_dept AS dept
-            <if test="isBind">
-                INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
-            </if>
-        <where>
-            <if test="isBind">
-                AND rd.role_id = #{roleId}
-            </if>
-            <if test="condition.name != null and condition.name != ''">
-                AND LOCATE(#{condition.name}, dept.name) > 0
-            </if>
-        </where>
-        ORDER BY dept.id ASC
+                 INNER JOIN sys_role_dept AS rd ON rd.dept_id = dept.id
+        WHERE rd.role_id = #{roleId}
     </select>
 
 </mapper>
