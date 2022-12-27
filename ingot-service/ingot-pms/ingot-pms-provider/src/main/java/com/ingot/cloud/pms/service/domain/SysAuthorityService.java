@@ -26,6 +26,13 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
     List<SysAuthority> getAuthorityByRoles(List<SysRole> roles);
 
     /**
+     * 根据角色获取权限，并且获取所以子权限
+     * @param roles 角色列表
+     * @return {@link SysAuthority} List
+     */
+    List<SysAuthority> getAuthorityAndChildrenByRoles(List<SysRole> roles);
+
+    /**
      * 权限tree
      *
      * @return {@link AuthorityTreeNodeVO}

@@ -2,7 +2,9 @@ package com.ingot.cloud.pms.service.domain.impl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
@@ -61,6 +63,28 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     }
 
     @Override
+    public List<SysAuthority> getAuthorityAndChildrenByRoles(List<SysRole> roles) {
+        List<SysAuthority> all = SpringContextHolder.getBean(SysAuthorityService.class).list();
+        CopyOnWriteArrayList<SysAuthority> authorities = new CopyOnWriteArrayList<>(getAuthorityByRoles(roles));
+        authorities.forEach(item -> fillChildren(authorities, all, item));
+        return authorities;
+    }
+
+    /**
+     * 填充子权限
+     */
+    private void fillChildren(List<SysAuthority> result, List<SysAuthority> all, SysAuthority parent) {
+        all.stream()
+                .filter(item -> item.getPid() != null && item.getPid().equals(parent.getId()))
+                .forEach(item -> {
+                    if (result.stream().noneMatch(a -> Objects.equals(a.getId(), item.getId()))) {
+                        result.add(item);
+                    }
+                    fillChildren(result, all, item);
+                });
+    }
+
+    @Override
     public List<AuthorityTreeNodeVO> treeList() {
         // 同类调用方法不触发aop，导致@Cacheable无法工作，从而缓存失败
         // 所以使用
@@ -75,7 +99,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
 
     @Override
     public List<AuthorityTreeNodeVO> treeList(SysAuthority condition) {
-        List<AuthorityTreeNodeVO> nodeList =SpringContextHolder
+        List<AuthorityTreeNodeVO> nodeList = SpringContextHolder
                 .getBean(SysAuthorityService.class)
                 .list()
                 .stream()

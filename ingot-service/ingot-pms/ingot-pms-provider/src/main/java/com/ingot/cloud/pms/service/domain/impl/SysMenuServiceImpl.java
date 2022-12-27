@@ -42,7 +42,8 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     @Override
     public List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities) {
-        List<MenuTreeNodeVO> nodeList = getBaseMapper().getAll().stream()
+        List<MenuTreeNodeVO> nodeList = SpringContextHolder.getBean(SysMenuService.class)
+                .nodeList().stream()
                 .filter(node -> node.getAuthorityId() == null ||
                         authorities.stream()
                                 .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
