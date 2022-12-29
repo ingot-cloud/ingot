@@ -31,14 +31,13 @@ public interface CacheConstants {
      */
     String MENU_DETAILS = "menu_details";
 
+    /**
+     * 授权信息
+     */
+    String AUTHORIZATION_DETAILS = "auth_details";
 
     interface Security {
         String PREFIX = IGNORE_TENANT_PREFIX + ":security";
-
-        /**
-         * OAuth2 授权信息 key
-         */
-        String AUTHORIZATION = PREFIX + ":auth";
         /**
          * 授权私钥
          */
