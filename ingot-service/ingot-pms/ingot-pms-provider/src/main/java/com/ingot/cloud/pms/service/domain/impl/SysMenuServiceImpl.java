@@ -1,10 +1,12 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
@@ -15,11 +17,13 @@ import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author magician
  * @since 2020-11-20
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
@@ -40,16 +45,30 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
     @Override
     public List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities) {
-        List<MenuTreeNodeVO> nodeList = SpringContextHolder.getBean(SysMenuService.class)
-                .nodeList().stream()
+        List<MenuTreeNodeVO> allNodeList = SpringContextHolder
+                .getBean(SysMenuService.class).nodeList();
+        List<MenuTreeNodeVO> nodeList = allNodeList.stream()
                 .filter(node -> node.getAuthorityId() == null ||
                         authorities.stream()
                                 .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
 
+        // 如果过滤后的列表中存在父节点，并且不在当前列表中，那么需要增加
+        List<MenuTreeNodeVO> copy = new ArrayList<>(nodeList);
+        copy.stream()
+                .filter(node -> node.getPid() != IDConstants.ROOT_TREE_ID)
+                .forEach(node -> {
+                    if (nodeList.stream().noneMatch(item -> ObjectUtil.equals(item.getId(), node.getPid()))) {
+                        allNodeList.stream()
+                                .filter(item -> ObjectUtil.equals(item.getId(), node.getPid()))
+                                .findFirst()
+                                .ifPresent(nodeList::add);
+                    }
+                });
+
         List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList);
-        TreeUtils.compensate(tree, nodeList);
+        log.debug("[SysMenuServiceImpl] - tree={}", tree);
         return tree;
     }
 
