@@ -2,7 +2,7 @@ FROM anapsix/alpine-java:8_server-jre_unlimited
 
 VOLUME ["/ingot-data"]
 
-ADD ingot-pms-provider.jar app.jar
+ADD ingot-auth.jar app.jar
 
 RUN sh -c 'touch ./app.jar'
 
