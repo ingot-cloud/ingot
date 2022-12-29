@@ -1,12 +1,11 @@
 package com.ingot.plugin.assemble.task
 
-
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-
 /**
  * <p>Description  : DockerPushTask.</p>
  * <p>Author       : wangchao.</p>
@@ -17,22 +16,27 @@ class DockerPushTask extends DefaultTask {
     /**
      * docker registry
      */
+    @Internal
     private String registry
     /**
      * docker命令path
      */
+    @Internal
     private String dockerCmd
     /**
      * docker registry username，如果需要登录则必填
      */
+    @Internal
     private String username
     /**
      * docker registry password，如果需要登录则必填
      */
+    @Internal
     private String password
     /**
      * push name
      */
+    @Internal
     private String imageName
 
     DockerPushTask() {

@@ -8,7 +8,6 @@ import lombok.Data
  * <p>Date         : 2022/1/11.</p>
  * <p>Time         : 11:25 上午.</p>
  */
-@Data
 class DockerExtension {
 
     /**
@@ -47,4 +46,60 @@ class DockerExtension {
     Map<String, Tag> tags = new HashMap<>()
 
     DockerExtension() {}
+
+    String getDockerCmd() {
+        return dockerCmd
+    }
+
+    void setDockerCmd(String dockerCmd) {
+        this.dockerCmd = dockerCmd
+    }
+
+    String getRegistry() {
+        return registry
+    }
+
+    void setRegistry(String registry) {
+        this.registry = registry
+    }
+
+    String getUsername() {
+        return username
+    }
+
+    void setUsername(String username) {
+        this.username = username
+    }
+
+    String getPassword() {
+        return password
+    }
+
+    void setPassword(String password) {
+        this.password = password
+    }
+
+    String getDockerfileDir() {
+        return dockerfileDir
+    }
+
+    void setDockerfileDir(String dockerfileDir) {
+        this.dockerfileDir = dockerfileDir
+    }
+
+    String getName() {
+        return name
+    }
+
+    void setName(String name) {
+        this.name = name
+    }
+
+    Map<String, Tag> getTags() {
+        return tags
+    }
+
+    void setTags(Map<String, Tag> tags) {
+        this.tags = tags
+    }
 }

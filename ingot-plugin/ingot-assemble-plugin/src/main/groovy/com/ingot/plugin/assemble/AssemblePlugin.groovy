@@ -60,21 +60,23 @@ class AssemblePlugin implements Plugin<Project> {
             name.capitalize()
         }.join("")
 
+        project.logger.lifecycle("registry:" + dockerExtension.getRegistry())
+
         project.tasks.create("dockerBuild${finalSuffix}", DockerBuildTask, {
             description = "Docker image with name '${inputImageName}'"
-            registry = dockerExtension.registry
-            outputDirPath = ext.outputDirPath
-            dockerCmd = dockerExtension.dockerCmd
+            registry = dockerExtension.getRegistry()
+            outputDirPath = ext.getOutputDirPath()
+            dockerCmd = dockerExtension.getDockerCmd()
             imageName = inputImageName
             dockerfileDir = dockerfileDirPath
         })
 
         project.tasks.create("dockerPush${finalSuffix}", DockerPushTask, {
             description = "Push the docker image named '${inputImageName}'"
-            registry = dockerExtension.registry
-            username = dockerExtension.username
-            password = dockerExtension.password
-            dockerCmd = dockerExtension.dockerCmd
+            registry = dockerExtension.getRegistry()
+            username = dockerExtension.getUsername()
+            password = dockerExtension.getPassword()
+            dockerCmd = dockerExtension.getDockerCmd()
             imageName = inputImageName
         })
     }
