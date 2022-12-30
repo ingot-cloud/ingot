@@ -5,7 +5,7 @@ spring:
   application:
     name: ingot-service-gateway
   redis:
-    password: ingotredis
+    password: ${REDIS_PASSWORD:ingotredis}
   cloud:
     nacos:
       discovery:

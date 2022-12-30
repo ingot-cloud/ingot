@@ -5,10 +5,10 @@ spring:
   application:
     name: ingot-service-auth
   datasource:
-    username: root
-    password: 123456
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
   redis:
-    password: ingotredis
+    password: ${REDIS_PASSWORD:ingotredis}
   cloud:
     nacos:
       discovery:
