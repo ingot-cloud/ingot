@@ -14,6 +14,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Date         : 2021/3/30.</p>
  * <p>Time         : 10:13 下午.</p>
  */
+@Slf4j
 @RestController
 @RequestMapping(value = "/v1/tenant")
 @RequiredArgsConstructor
@@ -37,12 +39,8 @@ public class TenantApi implements RShortcuts {
 
     @Permit
     @GetMapping("/list")
-    public R<?> list(){
-        List<SysTenant> list = sysTenantService.list();
-        if (CollUtil.isEmpty(list)) {
-            list = CollUtil.newArrayList();
-        }
-
+    public R<?> list() {
+        List<SysTenant> list = CollUtil.emptyIfNull(sysTenantService.list());
         return ok(list.stream().map(SimpleTenantVO::new).collect(Collectors.toList()));
     }
 
