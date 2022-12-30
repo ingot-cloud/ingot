@@ -12,15 +12,11 @@ public interface SecurityConstants {
     String OAUTH2_BASIC_TYPE_WITH_SPACE = OAUTH2_BASIC_TYPE + " ";
     String OAUTH2_BEARER_TYPE_WITH_SPACE = OAUTH2_BEARER_TYPE + " ";
 
-    /**
-     * 资源服务器默认bean名称
-     */
-    String RESOURCE_SERVER_CONFIGURER = "resourceServerConfigurerAdapter";
 
     /**
-     * 客户端模式
+     * The endpoint URI for access token requests.
      */
-    String CLIENT_CREDENTIALS = "client_credentials";
+    String TOKEN_ENDPOINT_URI = "/oauth2/token";
 
     /**
      * Renew token
@@ -38,30 +34,6 @@ public interface SecurityConstants {
      * 显示图形验证码 header，1为需要显示验证码，0为不需要
      */
     String HEADER_VALIDATE_IMAGE_DISPLAY_TIME = "ingot-image-code";
-
-    /**
-     * Jwt token enhancer claim key
-     */
-    interface TokenEnhancer {
-        String KEY_USER_OBJECT = "user";
-        String KEY_FIELD_USERNAME = "username";
-        String KEY_FIELD_USER_ID = "id";
-        String KEY_FIELD_DEPT_ID = "deptId";
-        String KEY_FIELD_TENANT_ID = "tenantId";
-        String KEY_FIELD_AUTH_TYPE = "authType";
-
-        String KEY_JTI = "jti";
-    }
-
-    /**
-     * Security path
-     */
-    interface Path {
-        /**
-         * 密码登录
-         */
-        String TOKEN_PASSWORD = "/auth/token";
-    }
 
     /**
      * 验证图片验证码时，http请求中默认的携带图片验证码信息的参数的名称

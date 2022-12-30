@@ -11,6 +11,7 @@ dependencies {
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.framework_webmvc)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.spring_cloud.context)
     implementation(deps.mybatis.plus_extension)
 
     compileOnly(deps.javax_servlet_api)

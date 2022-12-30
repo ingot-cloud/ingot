@@ -50,6 +50,7 @@ spring_cloud.bus_amqp_start = "org.springframework.cloud:spring-cloud-starter-bu
 spring_cloud.zipkin_starter = "org.springframework.cloud:spring-cloud-starter-zipkin"
 spring_cloud.bootstrap_starter = "org.springframework.cloud:spring-cloud-starter-bootstrap"
 spring_cloud.commons = "org.springframework.cloud:spring-cloud-commons"
+spring_cloud.context = "org.springframework.cloud:spring-cloud-context"
 
 // security
 spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure"
