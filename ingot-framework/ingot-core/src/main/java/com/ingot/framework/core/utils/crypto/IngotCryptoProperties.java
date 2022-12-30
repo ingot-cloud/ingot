@@ -1,4 +1,4 @@
-package com.ingot.framework.core.crypto;
+package com.ingot.framework.core.utils.crypto;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

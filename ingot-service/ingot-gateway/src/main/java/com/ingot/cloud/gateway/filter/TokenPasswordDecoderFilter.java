@@ -9,7 +9,7 @@ import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.core.crypto.IngotCryptoProperties;
+import com.ingot.framework.core.utils.crypto.IngotCryptoProperties;
 import com.ingot.framework.core.utils.AESUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

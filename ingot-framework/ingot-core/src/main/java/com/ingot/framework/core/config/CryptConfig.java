@@ -1,6 +1,6 @@
 package com.ingot.framework.core.config;
 
-import com.ingot.framework.core.crypto.IngotCryptoProperties;
+import com.ingot.framework.core.utils.crypto.IngotCryptoProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
