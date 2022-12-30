@@ -41,7 +41,9 @@ class AssembleTask extends DefaultTask {
         // copy jar
         project.copy {
             duplicatesStrategy DuplicatesStrategy.INCLUDE
-            from libsPath
+            from(libsPath){
+                include "${project.name}-${project.version}.jar"
+            }
             into outputPath
             rename {
                 outputFileName
