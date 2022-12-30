@@ -15,7 +15,7 @@ INGOT_AUTH_SERVER=172.88.0.110
 INGOT_GATEWAY=172.88.0.100
 
 VIRTUAL_HOST=ingot-api.wangchao.im
-VIRTUAL_PORT=8020
+VIRTUAL_PORT=7980
 
 # 停止运行当前容器
 docker ps -q --filter name="${serviceName}" | xargs -r docker rm -f
