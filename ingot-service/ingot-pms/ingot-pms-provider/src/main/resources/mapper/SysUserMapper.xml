@@ -36,7 +36,7 @@
         WHERE
             u.deleted_at IS NULL
             <if test="condition.username != null and condition.username != ''">
-                AND u.username LIKE CONCAT('%', #{condition}, '%')
+                AND u.username LIKE CONCAT('%', #{condition.username}, '%')
             </if>
             <if test="condition.realName != null and condition.realName != ''">
                 AND u.real_name LIKE CONCAT('%', #{condition.realName}, '%')
