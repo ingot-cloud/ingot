@@ -29,7 +29,7 @@ import org.springframework.util.Assert;
 @Slf4j
 public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
     private final Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
-    private final JwtClaimValidator<Integer> validator;
+    private final JwtClaimValidator<Long> validator;
 
     public JwtTenantValidator() {
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -38,7 +38,7 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
                 .setAuthorityPrefix(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX);
 
-        Predicate<Integer> testClaimValue = (tenantId) -> {
+        Predicate<Long> testClaimValue = (tenantId) -> {
             if (tenantId == null) {
                 return false;
             }
