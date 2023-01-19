@@ -66,7 +66,8 @@ public class UserDetailServiceImpl implements UserDetailService {
             return null;
         }
 
-        return map(processor.exec(extract[1]));
+        String uniqueID = processor.uniqueID(extract[1]);
+        return map(processor.info(uniqueID));
     }
 
     private UserDetailsResponse map(SysUser user) {

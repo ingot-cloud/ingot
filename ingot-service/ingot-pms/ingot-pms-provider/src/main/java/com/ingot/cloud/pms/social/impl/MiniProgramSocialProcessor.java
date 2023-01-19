@@ -34,7 +34,7 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @Override
-    public SysUser exec(String code) {
+    public String uniqueID(String code) {
         SysSocialDetails socialDetails = sysSocialDetailsService.getOne(
                 Wrappers.<SysSocialDetails>lambdaQuery()
                         .eq(SysSocialDetails::getType, SocialTypeEnums.MINI_PROGRAM));
@@ -49,7 +49,7 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
         log.debug("微信小程序响应报文:{}", result);
 
         Object obj = JSONUtil.parseObj(result).get("openid");
-        return info(obj.toString());
+        return obj.toString();
     }
 
     @Override

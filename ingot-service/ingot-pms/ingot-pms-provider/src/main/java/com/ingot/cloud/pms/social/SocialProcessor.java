@@ -14,9 +14,9 @@ public interface SocialProcessor {
      * 执行社交流程，获取用户信息
      *
      * @param code 获取用户信息详情数据
-     * @return {@link SysUser}
+     * @return 渠道唯一ID
      */
-    SysUser exec(String code);
+    String uniqueID(String code);
 
     /**
      * 根据OpenId获取用户信息

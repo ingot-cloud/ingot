@@ -16,7 +16,7 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
 public class WechatSocialProcessor implements SocialProcessor {
 
     @Override
-    public SysUser exec(String code) {
+    public String uniqueID(String code) {
         return null;
     }
 
