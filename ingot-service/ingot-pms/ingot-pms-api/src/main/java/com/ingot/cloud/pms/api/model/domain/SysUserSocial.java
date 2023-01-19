@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +39,7 @@ public class SysUserSocial extends BaseModel<SysUserSocial> {
     /**
      * 渠道类型
      */
-    private String type;
+    private SocialTypeEnums type;
 
     /**
      * 渠道唯一ID
