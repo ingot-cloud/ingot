@@ -20,7 +20,7 @@ import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.security.common.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +54,7 @@ public class UserDetailServiceImpl implements UserDetailService {
     @Override
     public UserDetailsResponse getUserAuthDetailsSocial(String unique) {
         String[] extract = SocialUtils.extract(unique);
-        SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);
+        SocialTypeEnums socialType = SocialTypeEnums.get(extract[0]);
         if (socialType == null) {
             log.error("[UserDetailServiceImpl] 非法社交类型={}", extract[0]);
             return null;

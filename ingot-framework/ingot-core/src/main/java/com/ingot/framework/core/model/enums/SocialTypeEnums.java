@@ -15,28 +15,29 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum SocialTypeEnum {
+public enum SocialTypeEnums {
     SMS("sms", SocialConstants.BEAN_PHONE, "短信登录"),
-    WECHAT("wechat", SocialConstants.BEAN_WECHAT, "微信登录");
+    WECHAT("wechat", SocialConstants.BEAN_WECHAT, "微信登录"),
+    MINI_PROGRAM("miniprogram", SocialConstants.BEAN_MINI_PROGRAM, "微信小程序");
 
     private final String value;
     private final String beanName;
     private final String text;
 
-    private static final Map<String, SocialTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, SocialTypeEnums> valueMap = new HashMap<>();
 
     static {
-        for (SocialTypeEnum item : SocialTypeEnum.values()) {
+        for (SocialTypeEnums item : SocialTypeEnums.values()) {
             valueMap.put(item.getValue(), item);
         }
     }
 
-    public static SocialTypeEnum get(String value) {
+    public static SocialTypeEnums get(String value) {
         return valueMap.get(value);
     }
 
     public static String getText(String value) {
-        SocialTypeEnum en = get(value);
+        SocialTypeEnums en = get(value);
         return en != null ? en.text : null;
     }
 }

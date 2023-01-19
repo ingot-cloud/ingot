@@ -4,19 +4,20 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import org.springframework.stereotype.Component;
 
-import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
+import static com.ingot.framework.core.constants.SocialConstants.BEAN_MINI_PROGRAM;
 
 /**
- * <p>Description  : WechatSocialProcessor.</p>
+ * <p>Description  : MiniProgramSocialProcessor.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/1/4.</p>
- * <p>Time         : 9:58 上午.</p>
+ * <p>Date         : 2023/1/19.</p>
+ * <p>Time         : 10:15 AM.</p>
  */
-@Component(BEAN_WECHAT)
-public class WechatSocialProcessor implements SocialProcessor {
+@Component(BEAN_MINI_PROGRAM)
+public class MiniProgramSocialProcessor implements SocialProcessor {
 
     @Override
     public SysUser exec(String code) {
+
         return null;
     }
 

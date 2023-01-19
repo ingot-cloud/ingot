@@ -19,4 +19,14 @@ public class PhoneSocialProcessor implements SocialProcessor {
     public SysUser exec(String code) {
         return null;
     }
+
+    @Override
+    public SysUser info(String uniqueID) {
+        return null;
+    }
+
+    @Override
+    public void bind(SysUser user, String uniqueID) {
+
+    }
 }

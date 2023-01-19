@@ -2,17 +2,23 @@ package com.ingot.cloud.pms.api.model.domain;
 
 import java.time.LocalDateTime;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.store.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -29,16 +35,24 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
      * ID
      */
     @TableId(type = IdType.ASSIGN_ID)
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
+
+    /**
+     * 租户ID
+     */
+    private Long tenantId;
 
     /**
      * App ID
      */
+    @NotBlank(message = "{SysSocialDetails.appId}", groups = Group.Create.class)
     private String appId;
 
     /**
      * App Secret
      */
+    @NotBlank(message = "{SysSocialDetails.appSecret}", groups = Group.Create.class)
     private String appSecret;
 
     /**
@@ -54,12 +68,13 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
     /**
      * 类型
      */
-    private String type;
+    @NotNull(message = "{SysSocialDetails.type}", groups = Group.Create.class)
+    private SocialTypeEnums type;
 
     /**
      * 状态, 0:正常，9:禁用
      */
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 创建日期
