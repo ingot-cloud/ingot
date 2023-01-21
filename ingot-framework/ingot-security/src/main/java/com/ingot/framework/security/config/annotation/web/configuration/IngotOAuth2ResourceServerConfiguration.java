@@ -64,6 +64,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 })
                 .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
                 .and()
+                .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver));
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
