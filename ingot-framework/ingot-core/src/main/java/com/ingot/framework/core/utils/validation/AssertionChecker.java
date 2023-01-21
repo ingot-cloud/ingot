@@ -35,4 +35,13 @@ public interface AssertionChecker {
      * @param args       参数
      */
     void checkOperation(boolean expression, String code, Object... args);
+
+    /**
+     * 检查操作
+     *
+     * @param expression  表达式结果
+     * @param bizCode     业务代码
+     * @param messageCode message code
+     */
+    void checkBiz(boolean expression, String bizCode, String messageCode);
 }

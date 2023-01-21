@@ -2,7 +2,9 @@ package com.ingot.cloud.pms.service.domain.impl;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
@@ -30,6 +32,7 @@ import com.ingot.framework.core.model.dto.common.OptionDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.utils.RoleUtils;
+import com.ingot.framework.store.mybatis.common.PageUtils;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,6 +56,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
+
+    private final Map<String, SysRole> roleCache = new ConcurrentHashMap<>();
+
 
     @Override
     public List<SysRole> getAllRolesOfUser(long userId, long deptId) {
@@ -110,21 +116,25 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition) {
         IPage<SysRole> temp = page(page, Wrappers.lambdaQuery(condition));
-        IPage<RolePageItemVO> result = new Page<>();
-        result.setCurrent(temp.getCurrent());
-        result.setTotal(temp.getTotal());
-        result.setSize(temp.getSize());
+        return PageUtils.map(temp, item -> {
+            RolePageItemVO v = roleTrans.to(item);
+            // admin角色不可编辑
+            v.setCanAction(!RoleUtils.isAdmin(v.getCode()));
+            return v;
+        });
+    }
 
-        List<RolePageItemVO> records = temp.getRecords()
-                .stream().map(item -> {
-                    RolePageItemVO v = roleTrans.to(item);
-                    // admin角色不可编辑
-                    v.setCanAction(!RoleUtils.isAdmin(v.getCode()));
-                    return v;
-                }).collect(Collectors.toList());
+    @Override
+    public SysRole getRoleByCode(String code) {
+        SysRole role = roleCache.get(code);
+        if (role == null) {
+            role = getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getCode, code));
+            if (role != null) {
+                roleCache.put(code, role);
+            }
+        }
 
-        result.setRecords(records);
-        return result;
+        return role;
     }
 
     @Override
@@ -167,6 +177,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         assertI18nService.checkOperation(removeById(id),
                 "SysRoleServiceImpl.RemoveFailed");
+
+        roleCache.remove(role.getCode());
     }
 
     @Override
@@ -185,9 +197,14 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
+
+        roleCache.remove(role.getCode());
     }
 
     private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
+        if (dept == null) {
+            return;
+        }
         DeptRoleScopeEnum scope = dept.getScope();
         switch (scope) {
             // 获取当前部门和子部门的角色ID

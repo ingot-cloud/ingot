@@ -61,6 +61,14 @@ public interface SysRoleService extends BaseService<SysRole> {
     IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition);
 
     /**
+     * 根据角色编码获取角色
+     *
+     * @param code 角色编码
+     * @return {@link SysRole}
+     */
+    SysRole getRoleByCode(String code);
+
+    /**
      * 创建角色
      *
      * @param params 创建参数

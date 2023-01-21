@@ -1,5 +1,6 @@
 package com.ingot.framework.core.utils.validation;
 
+import com.ingot.framework.common.exception.BizException;
 import com.ingot.framework.core.context.IngotMessageSource;
 import com.ingot.framework.core.utils.AssertionUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,11 @@ public class DefaultAssertionChecker implements AssertionChecker {
     @Override
     public void checkOperation(boolean expression, String code, Object... args) {
         AssertionUtils.checkOperation(expression, messageSource.getMessage(code, args));
+    }
+
+    @Override
+    public void checkBiz(boolean expression, String bizCode, String messageCode) {
+        String message = messageSource.getMessage(messageCode);
+        AssertionUtils.check(expression, new BizException(bizCode, message));
     }
 }
