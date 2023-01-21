@@ -67,6 +67,14 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
 
     @Override
     public void bind(SysUser user, String uniqueID) {
+        long count = sysUserSocialService.count(Wrappers.<SysUserSocial>lambdaQuery()
+                .eq(SysUserSocial::getType, SocialTypeEnums.MINI_PROGRAM)
+                .eq(SysUserSocial::getUniqueId, uniqueID)
+                .eq(SysUserSocial::getUserId, user.getId()));
+        if (count > 0) {
+            return;
+        }
+
         SysUserSocial userSocial = new SysUserSocial();
         userSocial.setUserId(user.getId());
         userSocial.setType(SocialTypeEnums.MINI_PROGRAM);
