@@ -7,12 +7,12 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
 /**
- * <p>Description  : OAuth2PasswordAuthenticationToken.</p>
+ * <p>Description  : 自定义OAuth2认证Token.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:24 下午.</p>
  */
-public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
+public class OAuth2CustomAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
     private final Authentication userPrincipal;
 
     /**
@@ -22,9 +22,9 @@ public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantA
      * @param clientPrincipal      the authenticated client principal
      * @param additionalParameters the additional parameters
      */
-    public OAuth2PasswordAuthenticationToken(Authentication userPrincipal,
-                                             Authentication clientPrincipal,
-                                             Map<String, Object> additionalParameters) {
+    public OAuth2CustomAuthenticationToken(Authentication userPrincipal,
+                                           Authentication clientPrincipal,
+                                           Map<String, Object> additionalParameters) {
         super(AuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);
         this.userPrincipal = userPrincipal;
         setDetails(userPrincipal.getDetails());

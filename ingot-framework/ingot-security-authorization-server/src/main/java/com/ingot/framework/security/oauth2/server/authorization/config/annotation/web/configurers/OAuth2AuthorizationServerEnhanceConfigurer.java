@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PasswordAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
@@ -101,8 +101,8 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
         }
         authenticationProviders.add(userDetailsAuthenticationProvider);
 
-        OAuth2PasswordAuthenticationProvider passwordAuthProvider =
-                new OAuth2PasswordAuthenticationProvider(authorizationService, tokenGenerator);
+        OAuth2CustomAuthenticationProvider passwordAuthProvider =
+                new OAuth2CustomAuthenticationProvider(authorizationService, tokenGenerator);
         authenticationProviders.add(passwordAuthProvider);
 
         return authenticationProviders;

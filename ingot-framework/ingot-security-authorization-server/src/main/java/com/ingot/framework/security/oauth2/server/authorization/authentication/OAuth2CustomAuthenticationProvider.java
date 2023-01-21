@@ -31,13 +31,13 @@ import org.springframework.util.Assert;
 import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
 /**
- * <p>Description  : OAuth2PasswordAuthenticationProvider.</p>
+ * <p>Description  : 自定义OAuth2认证器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:23 下午.</p>
  */
 @Slf4j
-public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvider {
+public class OAuth2CustomAuthenticationProvider implements AuthenticationProvider {
     private static final String ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-5.2";
     private final OAuth2AuthorizationService authorizationService;
     private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
@@ -48,8 +48,8 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
      * @param authorizationService the authorization service
      * @param tokenGenerator       the token encoder
      */
-    public OAuth2PasswordAuthenticationProvider(OAuth2AuthorizationService authorizationService,
-                                                OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
+    public OAuth2CustomAuthenticationProvider(OAuth2AuthorizationService authorizationService,
+                                              OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
         Assert.notNull(authorizationService, "authorizationService cannot be null");
         Assert.notNull(tokenGenerator, "tokenGenerator cannot be null");
         this.authorizationService = authorizationService;
@@ -58,8 +58,8 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2PasswordAuthenticationToken passwordAuthentication =
-                (OAuth2PasswordAuthenticationToken) authentication;
+        OAuth2CustomAuthenticationToken passwordAuthentication =
+                (OAuth2CustomAuthenticationToken) authentication;
 
         OAuth2ClientAuthenticationToken clientPrincipal =
                 getAuthenticatedClientElseThrowInvalidClient(passwordAuthentication);
@@ -138,6 +138,6 @@ public class OAuth2PasswordAuthenticationProvider implements AuthenticationProvi
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return OAuth2PasswordAuthenticationToken.class.isAssignableFrom(authentication);
+        return OAuth2CustomAuthenticationToken.class.isAssignableFrom(authentication);
     }
 }

@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationSuccessHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PasswordAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2CustomAuthenticationConverter;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2TokenEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.DelegatingAuthenticationConverter;
@@ -28,7 +28,7 @@ public class OAuth2TokenEndpointFilterPostProcessor implements ObjectPostProcess
                                 new OAuth2AuthorizationCodeAuthenticationConverter(),
                                 new OAuth2RefreshTokenAuthenticationConverter(),
                                 new OAuth2ClientCredentialsAuthenticationConverter(),
-                                new OAuth2PasswordAuthenticationConverter())
+                                new OAuth2CustomAuthenticationConverter())
                 )
         );
 
