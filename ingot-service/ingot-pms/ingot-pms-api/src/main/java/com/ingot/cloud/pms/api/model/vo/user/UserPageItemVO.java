@@ -32,11 +32,11 @@ public class UserPageItemVO implements Serializable {
      * 用户名
      */
     private String username;
+
     /**
-     * 姓名
+     * 昵称
      */
-    @Sensitive(mode = SensitiveMode.CHINESE_NAME)
-    private String realName;
+    private String nickname;
     /**
      * 手机号
      */

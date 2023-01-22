@@ -66,10 +66,9 @@ public class SysUser extends BaseModel<SysUser> {
     private String password;
 
     /**
-     * 姓名
+     * 昵称
      */
-    @Sensitive(mode = SensitiveMode.CHINESE_NAME)
-    private String realName;
+    private String nickname;
 
     /**
      * 手机号

@@ -8,7 +8,7 @@
         <result column="dept_name" property="deptName"/>
         <result column="user_id" property="userId"/>
         <result column="username" property="username"/>
-        <result column="real_name" property="realName"/>
+        <result column="nickname" property="nickname"/>
         <result column="phone" property="phone"/>
         <result column="email" property="email"/>
         <result column="status" property="status"/>
@@ -19,7 +19,7 @@
     <select id="conditionPage" resultMap="UserPageItemVo">
         SELECT u.id AS user_id,
                u.username,
-               u.real_name,
+               u.nickname,
                u.phone,
                u.email,
                u.status,
@@ -38,8 +38,8 @@
             <if test="condition.username != null and condition.username != ''">
                 AND u.username LIKE CONCAT('%', #{condition.username}, '%')
             </if>
-            <if test="condition.realName != null and condition.realName != ''">
-                AND u.real_name LIKE CONCAT('%', #{condition.realName}, '%')
+            <if test="condition.nickname != null and condition.nickname != ''">
+                AND u.nickname LIKE CONCAT('%', #{condition.nickname}, '%')
             </if>
             <if test="condition.phone != null and condition.phone != ''">
                 AND u.phone LIKE CONCAT('%', #{condition.phone}, '%')
