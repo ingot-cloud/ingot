@@ -11,16 +11,49 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 public class TenantContextHolder {
 
     private static final ThreadLocal<Long> THREAD_CONTEXT = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<Boolean> THREAD_CONTEXT_FLAG = new TransmittableThreadLocal<>();
 
+    /**
+     * 设置租户ID
+     *
+     * @param id 租户ID
+     */
+    public static void set(Long id) {
+        THREAD_CONTEXT.set(id);
+        THREAD_CONTEXT_FLAG.set(Boolean.FALSE);
+    }
+
+    /**
+     * 获取租户ID
+     *
+     * @return 租户ID
+     */
     public static Long get() {
         return THREAD_CONTEXT.get();
     }
 
-    public static void set(Long id) {
+    /**
+     * 设置默认组合ID
+     */
+    public static void setDefault(Long id) {
         THREAD_CONTEXT.set(id);
+        THREAD_CONTEXT_FLAG.set(Boolean.TRUE);
     }
 
+    /**
+     * 当前租户ID是否为默认租户ID
+     *
+     * @return Boolean
+     */
+    public static Boolean isUseDefault() {
+        return THREAD_CONTEXT_FLAG.get();
+    }
+
+    /**
+     * 清空
+     */
     public static void clear() {
         THREAD_CONTEXT.remove();
+        THREAD_CONTEXT_FLAG.remove();
     }
 }
