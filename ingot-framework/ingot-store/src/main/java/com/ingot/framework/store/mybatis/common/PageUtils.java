@@ -34,15 +34,4 @@ public class PageUtils {
         return result;
     }
 
-    public static <In, Out> IPage<Out> mapAndSorted(IPage<In> inPage, Function<In, Out> map, Comparator<? super Out> comparator) {
-        IPage<Out> result = new Page<>();
-        result.setCurrent(inPage.getCurrent());
-        result.setTotal(inPage.getTotal());
-        result.setSize(inPage.getSize());
-        result.setRecords(inPage.getRecords()
-                .stream()
-                .map(map)
-                .sorted(comparator).collect(Collectors.toList()));
-        return result;
-    }
 }
