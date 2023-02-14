@@ -17,6 +17,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "ingot.tenant")
 public class TenantProperties {
+    private static final Long DEFAULT_TENANT_ID = 1L;
+
+    /**
+     * 默认租户ID
+     */
+    private Long defaultId = DEFAULT_TENANT_ID;
 
     /**
      * 租户字段名

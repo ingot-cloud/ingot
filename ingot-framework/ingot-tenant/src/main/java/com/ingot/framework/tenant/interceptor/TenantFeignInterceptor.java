@@ -1,6 +1,6 @@
 package com.ingot.framework.tenant.interceptor;
 
-import com.ingot.framework.core.constants.TenantConstants;
+import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -21,7 +21,7 @@ public class TenantFeignInterceptor implements RequestInterceptor {
             log.debug("Feign 请求拦截器 tenantID 为空");
             return;
         }
-        requestTemplate.header(TenantConstants.TENANT_HEADER_KEY,
+        requestTemplate.header(HeaderConstants.TENANT,
                 String.valueOf(TenantContextHolder.get()));
     }
 }

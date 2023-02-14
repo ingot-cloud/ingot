@@ -8,10 +8,10 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.common.utils.DateUtils;
-import com.ingot.framework.core.constants.TenantConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
     private final AssertionChecker assertI18nService;
+    private final TenantProperties tenantProperties;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -49,7 +50,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void removeTenantById(long id) {
-        assertI18nService.checkOperation(id != TenantConstants.DEFAULT_TENANT_ID,
+        assertI18nService.checkOperation(id != tenantProperties.getDefaultId(),
                 "SysTenantServiceImpl.DefaultTenantRemoveFailed");
 
         assertI18nService.checkOperation(removeById(id),

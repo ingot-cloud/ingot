@@ -2,7 +2,7 @@ package com.ingot.framework.tenant.interceptor;
 
 import java.io.IOException;
 
-import com.ingot.framework.core.constants.TenantConstants;
+import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -26,7 +26,7 @@ public class TenantRequestInterceptor implements ClientHttpRequestInterceptor {
             throws IOException {
 
         if (TenantContextHolder.get() != null) {
-            request.getHeaders().set(TenantConstants.TENANT_HEADER_KEY,
+            request.getHeaders().set(HeaderConstants.TENANT,
                     String.valueOf(TenantContextHolder.get()));
         }
 

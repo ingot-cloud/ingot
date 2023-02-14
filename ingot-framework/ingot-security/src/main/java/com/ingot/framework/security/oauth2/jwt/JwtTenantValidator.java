@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.TenantConstants;
+import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
@@ -43,7 +43,7 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
                 return false;
             }
             String headerValue = RequestContextHolder.getRequest()
-                    .map(request -> request.getHeader(TenantConstants.TENANT_HEADER_KEY))
+                    .map(request -> request.getHeader(HeaderConstants.TENANT))
                     .orElse("");
             return StrUtil.isEmpty(headerValue)
                     || StrUtil.equals(headerValue, String.valueOf(tenantId));

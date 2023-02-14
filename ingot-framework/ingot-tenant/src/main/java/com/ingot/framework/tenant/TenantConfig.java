@@ -30,7 +30,7 @@ public class TenantConfig {
     }
 
     @Bean
-    public TenantHttpConfigurer tenantHttpConfigurer() {
-        return new TenantHttpConfigurer();
+    public TenantHttpConfigurer tenantHttpConfigurer(TenantProperties tenantProperties) {
+        return new TenantHttpConfigurer(tenantProperties);
     }
 }
