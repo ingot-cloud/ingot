@@ -25,7 +25,7 @@ public interface SecurityConstants {
     /**
      * 请求来源，内部 Header 字段
      */
-    String HEADER_FROM = "Ingot-From";
+    String HEADER_FROM = HeaderConstants.SECURITY_FROM;
     /**
      * 内部请求标识
      */

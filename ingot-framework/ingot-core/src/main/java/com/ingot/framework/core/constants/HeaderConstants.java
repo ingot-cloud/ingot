@@ -12,4 +12,9 @@ public interface HeaderConstants {
      * 租户
      */
     String TENANT = "Tenant";
+
+    /**
+     * 请求来源，内部 Header 字段
+     */
+    String SECURITY_FROM = "Ingot-From";
 }
