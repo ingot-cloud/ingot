@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
-import com.ingot.framework.core.model.dto.common.OptionDTO;
+import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,5 +20,5 @@ public interface RoleTrans {
 
     @Mapping(target = "value", source = "id")
     @Mapping(target = "label", source = "name")
-    OptionDTO<Long> option(SysRole role);
+    Option<Long> option(SysRole role);
 }

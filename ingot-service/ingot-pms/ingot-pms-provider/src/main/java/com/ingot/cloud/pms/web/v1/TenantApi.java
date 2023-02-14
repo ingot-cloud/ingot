@@ -8,10 +8,11 @@ import javax.validation.Valid;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.api.model.vo.tenant.SimpleTenantVO;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,10 @@ public class TenantApi implements RShortcuts {
     @GetMapping("/list")
     public R<?> list() {
         List<SysTenant> list = CollUtil.emptyIfNull(sysTenantService.list());
-        return ok(list.stream().map(SimpleTenantVO::new).collect(Collectors.toList()));
+        return ok(list.stream()
+                .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
+                .map(item -> Option.of(item.getId(), item.getName()))
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/page")
