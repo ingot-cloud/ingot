@@ -15,7 +15,10 @@ public class CommonTypeTransform {
     }
 
     public Long stringToLong(String value) {
-        return StrUtil.isEmpty(value) ? null : Long.valueOf(value);
+        // 避免金额格式化，去掉逗号和句号
+        return StrUtil.isEmpty(value) ? null : Long.valueOf(value
+                .replaceAll(",", "")
+                .replaceAll("\\.", ""));
     }
 
     public String intToString(Integer value) {
