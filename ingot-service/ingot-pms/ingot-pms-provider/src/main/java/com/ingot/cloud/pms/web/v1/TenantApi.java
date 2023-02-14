@@ -39,8 +39,8 @@ public class TenantApi implements RShortcuts {
     private final SysTenantService sysTenantService;
 
     @Permit
-    @GetMapping("/list")
-    public R<?> list() {
+    @GetMapping("/options")
+    public R<?> options() {
         List<SysTenant> list = CollUtil.emptyIfNull(sysTenantService.list());
         return ok(list.stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
