@@ -2,11 +2,11 @@
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.security_config)
+    implementation project(ingot.framework_core)
+    implementation project(ingot.framework_security_config)
 
     compileOnly(deps.spring.framework_spring_web)
     compileOnly(deps.javax_servlet_api)
     compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly(deps.spring.security_web)
-    compileOnly project(ingot.framework_core)
-    compileOnly project(ingot.framework_security_config)
 }
