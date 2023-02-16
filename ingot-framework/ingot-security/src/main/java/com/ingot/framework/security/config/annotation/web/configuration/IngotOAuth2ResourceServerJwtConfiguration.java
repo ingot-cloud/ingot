@@ -1,5 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,12 +29,14 @@ public class IngotOAuth2ResourceServerJwtConfiguration {
     @Bean
     @ConditionalOnMissingBean(JwtDecoder.class)
     @Conditional(IssuerUriCondition.class)
-    JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties) {
+    JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties,
+                                     IngotSecurityProperties ingotSecurityProperties) {
         log.info("[IngotOAuth2ResourceServerJwtConfiguration] 扩展 JwtValidator，使用 IngotJwtValidators.createDefaultWithIssuer");
         OAuth2ResourceServerProperties.Jwt jwt = properties.getJwt();
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(jwt.getIssuerUri());
         // 扩展 JwtValidator
-        jwtDecoder.setJwtValidator(IngotJwtValidators.createDefaultWithIssuer(jwt.getIssuerUri()));
+        jwtDecoder.setJwtValidator(IngotJwtValidators.createDefaultWithIssuer(
+                jwt.getIssuerUri(), ingotSecurityProperties));
         return jwtDecoder;
     }
 }

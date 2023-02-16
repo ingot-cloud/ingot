@@ -9,6 +9,7 @@ import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2ResourceServerConfiguration;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
@@ -101,7 +102,8 @@ public class AuthorizationServerConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
-                                 AuthorizationServerSettings authorizationServerSettings) {
+                                 AuthorizationServerSettings authorizationServerSettings,
+                                 IngotSecurityProperties properties) {
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
         jwsAlgs.addAll(JWSAlgorithm.Family.EC);
@@ -117,7 +119,8 @@ public class AuthorizationServerConfig {
         NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(
-                IngotJwtValidators.createDefaultWithIssuer(authorizationServerSettings.getIssuer()));
+                IngotJwtValidators.createDefaultWithIssuer(
+                        authorizationServerSettings.getIssuer(), properties));
         return jwtDecoder;
     }
 }

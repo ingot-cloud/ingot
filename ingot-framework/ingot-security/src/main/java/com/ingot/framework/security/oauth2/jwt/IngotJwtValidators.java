@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.jwt;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.security.core.IngotSecurityProperties;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -29,15 +30,17 @@ public final class IngotJwtValidators {
      * result of this method to {@code DelegatingOAuth2TokenValidator} along with the
      * additional validators.
      * </p>
+     *
      * @param issuer the issuer
      * @return - a delegating validator containing all standard validators as well as any
      * supplied
      */
-    public static OAuth2TokenValidator<Jwt> createDefaultWithIssuer(String issuer) {
+    public static OAuth2TokenValidator<Jwt> createDefaultWithIssuer(String issuer,
+                                                                    IngotSecurityProperties properties) {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
         validators.add(new JwtIssuerValidator(issuer));
-        validators.add(new JwtTenantValidator());
+        validators.add(new JwtTenantValidator(properties));
         return new DelegatingOAuth2TokenValidator<>(validators);
     }
 }

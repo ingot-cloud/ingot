@@ -2,13 +2,16 @@ package com.ingot.framework.security.oauth2.jwt;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
@@ -30,8 +33,10 @@ import org.springframework.util.Assert;
 public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
     private final Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
     private final JwtClaimValidator<Long> validator;
+    private final IngotSecurityProperties properties;
 
-    public JwtTenantValidator() {
+    public JwtTenantValidator(IngotSecurityProperties properties) {
+        this.properties = properties;
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
                 .setAuthoritiesClaimName(JwtClaimNamesExtension.SCOPE);
@@ -54,14 +59,18 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {
         Assert.notNull(token, "token cannot be null");
-        boolean isSuperAdmin = Optional.ofNullable(jwtGrantedAuthoritiesConverter.convert(token))
+
+        List<String> ignoreRoleCodes = CollUtil.emptyIfNull(
+                        properties.getIgnoreTenantValidateRoleCodeList())
+                .stream()
+                .map(item -> IngotJwtAuthenticationConverter.AUTHORITY_PREFIX + item)
+                .collect(Collectors.toList());
+        boolean ignoreValidate = Optional.ofNullable(jwtGrantedAuthoritiesConverter.convert(token))
                 .orElse(Collections.emptyList())
                 .stream()
-                .anyMatch(auth -> StrUtil.equals(
-                        IngotJwtAuthenticationConverter.AUTHORITY_PREFIX + RoleConstants.ROLE_ADMIN_CODE,
-                        auth.getAuthority()));
+                .anyMatch(auth -> CollUtil.contains(ignoreRoleCodes, auth.getAuthority()));
 
-        if (isSuperAdmin) {
+        if (ignoreValidate) {
             return OAuth2TokenValidatorResult.success();
         }
 

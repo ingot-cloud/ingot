@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Date         : 2021/10/8.</p>
  * <p>Time         : 2:44 下午.</p>
  */
-@ConfigurationProperties(prefix = "ingot.oauth2.resource")
+@ConfigurationProperties(prefix = "ingot.security.oauth2.resource")
 public class IngotOAuth2ResourceProperties {
 
     @Getter
