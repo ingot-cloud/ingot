@@ -15,6 +15,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.status.PmsStatusCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
@@ -100,7 +101,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             user.setStatus(UserStatusEnum.ENABLE);
         }
 
-        checkUserUniqueField(user);
+        checkUserUniqueField(user, null);
 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
@@ -133,12 +134,13 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Transactional(rollbackFor = Exception.class)
     public void updateUser(UserDTO params) {
         long userId = params.getId();
+        SysUser current = getById(userId);
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         }
 
-        checkUserUniqueField(user);
+        checkUserUniqueField(user, current);
 
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(user),
@@ -150,22 +152,29 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         }
     }
 
-    private void checkUserUniqueField(SysUser user) {
-        if (StrUtil.isNotEmpty(user.getUsername())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getUsername, user.getUsername())) == 0,
+    private void checkUserUniqueField(SysUser update, SysUser current) {
+        // 更新字段不为空，并且不等于当前值
+        if (StrUtil.isNotEmpty(update.getUsername())
+                && (current == null || !StrUtil.equals(update.getUsername(), current.getUsername()))) {
+            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getUsername, update.getUsername())) == 0,
+                    PmsStatusCode.ExistUsername.getCode(),
                     "SysUserServiceImpl.UsernameExist");
         }
 
-        if (StrUtil.isNotEmpty(user.getPhone())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getPhone, user.getPhone())) == 0,
+        if (StrUtil.isNotEmpty(update.getPhone())
+                && (current == null || !StrUtil.equals(update.getPhone(), current.getPhone()))) {
+            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getPhone, update.getPhone())) == 0,
+                    PmsStatusCode.ExistPhone.getCode(),
                     "SysUserServiceImpl.PhoneExist");
         }
 
-        if (StrUtil.isNotEmpty(user.getEmail())) {
-            assertI18nService.checkOperation(count(Wrappers.<SysUser>lambdaQuery()
-                            .eq(SysUser::getEmail, user.getEmail())) == 0,
+        if (StrUtil.isNotEmpty(update.getEmail())
+                && (current == null || !StrUtil.equals(update.getEmail(), current.getEmail()))) {
+            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+                            .eq(SysUser::getEmail, update.getEmail())) == 0,
+                    PmsStatusCode.ExistEmail.getCode(),
                     "SysUserServiceImpl.EmailExist");
         }
     }
