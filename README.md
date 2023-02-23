@@ -2,7 +2,7 @@
 
 ## 功能点
 * [ ] RBAC
-* [ ] 多租户
+* [X] 多租户
 * [ ] dubbo
 * [ ] grpc
 * [ ] Seata

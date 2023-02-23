@@ -59,7 +59,7 @@ public class IngotRedisCacheManager extends RedisCacheManager {
      */
     @Override
     public Cache getCache(@NonNull String name) {
-        log.info(">>> IngotRedisCacheManager - getCache name={}", name);
+        log.info("IngotRedisCacheManager - getCache name={}", name);
         if (StrUtil.startWith(name, CacheConstants.IGNORE_TENANT_PREFIX)) {
             return super.getCache(name);
         }
