@@ -151,7 +151,7 @@ aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
 deps.aspectj = aspectj
 
 deps.redisson = "org.redisson:redisson:${versions.redisson}"
-deps.minio = "io.minio:minio:6.0.10"
+deps.minio = "io.minio:minio:8.4.6"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
 deps.lombok = "org.projectlombok:lombok:1.18.16"

@@ -1,0 +1,6 @@
+
+dependencies {
+    implementation(deps.minio)
+    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
+    compileOnly(deps.spring.framework_spring_web)
+}
