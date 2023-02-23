@@ -20,4 +20,5 @@ public class UserBaseInfoDTO implements Serializable {
     private String email;
     private String nickname;
     private String avatar;
+    private Boolean initPwd;
 }

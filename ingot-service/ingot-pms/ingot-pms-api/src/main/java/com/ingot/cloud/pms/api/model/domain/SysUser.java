@@ -65,6 +65,11 @@ public class SysUser extends BaseModel<SysUser> {
     private String password;
 
     /**
+     * 初始化密码标识
+     */
+    private Boolean initPwd;
+
+    /**
      * 昵称
      */
     private String nickname;
@@ -80,6 +85,11 @@ public class SysUser extends BaseModel<SysUser> {
      */
     @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
+
+    /**
+     * 头像
+     */
+    private String avatar;
 
     /**
      * 状态, 0:正常，9:禁用

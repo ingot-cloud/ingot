@@ -51,6 +51,7 @@ public class UserApi implements RShortcuts {
 
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
+        params.setInitPwd(null);
         sysUserService.createUser(params);
         return ok();
     }

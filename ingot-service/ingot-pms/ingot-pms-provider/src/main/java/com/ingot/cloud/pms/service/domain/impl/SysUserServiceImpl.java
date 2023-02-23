@@ -140,6 +140,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(params.getNewPassword())) {
             user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+            user.setInitPwd(false);
         }
 
         checkUserUniqueField(user, current);
@@ -194,6 +195,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         SysUser user = new SysUser();
         user.setId(id);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+        user.setInitPwd(false);
         assertI18nService.checkOperation(user.updateById(),
                 "SysUserServiceImpl.UpdatePasswordFailed");
     }
