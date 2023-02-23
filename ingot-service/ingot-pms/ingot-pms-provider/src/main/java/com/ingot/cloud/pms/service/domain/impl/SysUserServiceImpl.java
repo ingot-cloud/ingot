@@ -93,7 +93,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createUser(UserDTO params) {
+    public SysUser createUser(UserDTO params) {
         SysUser user = userTrans.to(params);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setCreatedAt(DateUtils.now());
@@ -117,6 +117,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             assertI18nService.checkOperation(result,
                     "SysUserServiceImpl.CreateFailed");
         }
+
+        return user;
     }
 
     @Override
