@@ -21,10 +21,8 @@ include 'ingot-framework:ingot-security-authorization-server'
 findProject(':ingot-framework:ingot-security-authorization-server')?.name = 'ingot-security-authorization-server'
 include 'ingot-framework:ingot-tenant'
 findProject(':ingot-framework:ingot-tenant')?.name = 'ingot-tenant'
-
-// Component
-include 'ingot-component:ingot-id'
-findProject(':ingot-component:ingot-id')?.name = 'ingot-id'
+include 'ingot-framework:ingot-id'
+findProject(':ingot-framework:ingot-id')?.name = 'ingot-id'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'

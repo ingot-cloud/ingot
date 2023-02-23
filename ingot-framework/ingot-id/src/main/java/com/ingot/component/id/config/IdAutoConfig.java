@@ -1,14 +1,18 @@
 package com.ingot.component.id.config;
 
+import javax.sql.DataSource;
+
 import com.baomidou.mybatisplus.autoconfigure.IdentifierGeneratorAutoConfiguration;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
+import com.ingot.component.id.BizGenerator;
 import com.ingot.component.id.IdGenerator;
-import com.ingot.component.id.impl.SnowFlakeIdGenerator;
-import com.ingot.component.id.incrementer.IngotIdentifierGenerator;
+import com.ingot.component.id.leaf.DefaultBizGenerator;
+import com.ingot.component.id.mybatis.IngotIdentifierGenerator;
 import com.ingot.component.id.properties.IdProperties;
-import com.ingot.component.id.worker.WorkerIdFactory;
-import com.ingot.component.id.worker.impl.MachineWorkerIdFactory;
-import com.ingot.component.id.worker.impl.RedisWorkerIdFactory;
+import com.ingot.component.id.snowflake.impl.SnowFlakeIdGenerator;
+import com.ingot.component.id.snowflake.worker.WorkerIdFactory;
+import com.ingot.component.id.snowflake.worker.impl.MachineWorkerIdFactory;
+import com.ingot.component.id.snowflake.worker.impl.RedisWorkerIdFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -52,6 +56,13 @@ public class IdAutoConfig {
         WorkerIdFactory factory = new MachineWorkerIdFactory(properties,
                 serverName, String.valueOf(port));
         return new SnowFlakeIdGenerator(factory);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(BizGenerator.class)
+    @ConditionalOnBean(DataSource.class)
+    public BizGenerator bizGenerator(DataSource dataSource) {
+        return new DefaultBizGenerator(dataSource);
     }
 
     /**

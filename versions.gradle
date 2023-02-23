@@ -150,6 +150,7 @@ def aspectj = [:]
 aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
 deps.aspectj = aspectj
 
+deps.perf4j = "org.perf4j:perf4j:0.9.16"
 deps.redisson = "org.redisson:redisson:${versions.redisson}"
 deps.minio = "io.minio:minio:8.4.6"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"

@@ -1,4 +1,4 @@
-package com.ingot.component.id.worker.impl;
+package com.ingot.component.id.snowflake.worker.impl;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -8,9 +8,9 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.List;
 
-import com.ingot.component.id.impl.SnowFlakeIdGenerator;
+import com.ingot.component.id.snowflake.impl.SnowFlakeIdGenerator;
 import com.ingot.component.id.properties.IdProperties;
-import com.ingot.component.id.worker.AbsWorkerIdFactory;
+import com.ingot.component.id.snowflake.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**

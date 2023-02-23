@@ -1,4 +1,4 @@
-package com.ingot.component.id.incrementer;
+package com.ingot.component.id.mybatis;
 
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.ingot.component.id.IdGenerator;

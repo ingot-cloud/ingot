@@ -1,4 +1,4 @@
-package com.ingot.component.id.worker;
+package com.ingot.component.id.snowflake.worker;
 
 /**
  * <p>Description  : WorkerIdFactory.</p>

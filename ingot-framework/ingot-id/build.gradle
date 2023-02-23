@@ -3,6 +3,7 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.perf4j)
     implementation project(ingot.framework_common)
 
     compileOnly(deps.spring.spring_boot.data_redis_starter)

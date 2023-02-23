@@ -13,7 +13,7 @@ ingot.framework_tenant = ":ingot-framework:ingot-tenant"
 ingot.framework_minio = ":ingot-framework:ingot-minio"
 
 // component
-ingot.cmp_id = ":ingot-component:ingot-id"
+ingot.cmp_id = ":ingot-framework:ingot-id"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"

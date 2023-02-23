@@ -1,11 +1,11 @@
-package com.ingot.component.id.impl;
+package com.ingot.component.id.snowflake.impl;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
 import com.ingot.component.id.IdGenerator;
-import com.ingot.component.id.worker.WorkerIdFactory;
+import com.ingot.component.id.snowflake.worker.WorkerIdFactory;
 import com.ingot.framework.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 
