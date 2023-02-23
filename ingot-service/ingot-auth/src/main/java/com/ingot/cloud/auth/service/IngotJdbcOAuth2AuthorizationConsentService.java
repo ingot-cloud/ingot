@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -43,8 +42,7 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
 
     private static final String TABLE_NAME = "oauth2_authorization_consent";
 
-    private static final String PK_FILTER = "tenant_id = ? "
-            + "AND registered_client_id = ? "
+    private static final String PK_FILTER = "registered_client_id = ? "
             + "AND principal_name = ? ";
 
     // @formatter:off
@@ -55,7 +53,7 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
 
     // @formatter:off
     private static final String SAVE_AUTHORIZATION_CONSENT_SQL = "INSERT INTO " + TABLE_NAME
-            + " (" + COLUMN_NAMES + ",tenant_id" + ") VALUES (?, ?, ?, ?)";
+            + " (" + COLUMN_NAMES + ") VALUES (?, ?, ?, ?)";
     // @formatter:on
 
     // @formatter:off
@@ -117,8 +115,6 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
     public void remove(OAuth2AuthorizationConsent authorizationConsent) {
         Assert.notNull(authorizationConsent, "authorizationConsent cannot be null");
         SqlParameterValue[] parameters = new SqlParameterValue[]{
-                // 增加tenant_id
-                new SqlParameterValue(Types.INTEGER, TenantContextHolder.get()),
                 new SqlParameterValue(Types.VARCHAR, authorizationConsent.getRegisteredClientId()),
                 new SqlParameterValue(Types.VARCHAR, authorizationConsent.getPrincipalName())
         };
@@ -132,8 +128,6 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
         Assert.hasText(registeredClientId, "registeredClientId cannot be empty");
         Assert.hasText(principalName, "principalName cannot be empty");
         SqlParameterValue[] parameters = new SqlParameterValue[]{
-                // 增加tenant_id
-                new SqlParameterValue(Types.INTEGER, TenantContextHolder.get()),
                 new SqlParameterValue(Types.VARCHAR, registeredClientId),
                 new SqlParameterValue(Types.VARCHAR, principalName)};
         PreparedStatementSetter pss = new ArgumentPreparedStatementSetter(parameters);
@@ -237,8 +231,6 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
                 authorities.add(authority.getAuthority());
             }
             parameters.add(new SqlParameterValue(Types.VARCHAR, StringUtils.collectionToDelimitedString(authorities, ",")));
-            // 增加tenant_id
-            parameters.add(new SqlParameterValue(Types.INTEGER, TenantContextHolder.get()));
             return parameters;
         }
 

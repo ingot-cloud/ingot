@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
@@ -71,7 +70,7 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
 
     // @formatter:off
     private static final String INSERT_REGISTERED_CLIENT_SQL = "INSERT INTO " + TABLE_NAME
-            + "(" + COLUMN_NAMES + " ,tenant_id" + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "(" + COLUMN_NAMES + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     // @formatter:on
 
     // @formatter:off
@@ -79,7 +78,7 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
             + " SET client_secret = ?, client_secret_expires_at = ?,"
             + " client_name = ?, client_authentication_methods = ?, authorization_grant_types = ?,"
             + " redirect_uris = ?, scopes = ?, client_settings = ?, token_settings = ?"
-            + " WHERE tenant_id = ? and " + PK_FILTER;
+            + " WHERE " + PK_FILTER;
     // @formatter:on
 
     private final JdbcOperations jdbcOperations;
@@ -141,10 +140,8 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
     }
 
     private RegisteredClient findBy(String filter, Object... args) {
-        filter += " and tenant_id = ? and deleted_at IS NULL";
+        filter += " and deleted_at IS NULL";
         List<Object> argsList = Lists.newArrayList(args);
-        // 增加 tenant_id
-        argsList.add(TenantContextHolder.get());
         args = argsList.toArray();
         List<RegisteredClient> result = this.jdbcOperations.query(
                 LOAD_REGISTERED_CLIENT_SQL + filter, this.registeredClientRowMapper, args);
@@ -319,9 +316,7 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
                     new SqlParameterValue(Types.VARCHAR, StringUtils.collectionToCommaDelimitedString(registeredClient.getRedirectUris())),
                     new SqlParameterValue(Types.VARCHAR, StringUtils.collectionToCommaDelimitedString(registeredClient.getScopes())),
                     new SqlParameterValue(Types.VARCHAR, writeMap(registeredClient.getClientSettings().getSettings())),
-                    new SqlParameterValue(Types.VARCHAR, writeMap(registeredClient.getTokenSettings().getSettings())),
-                    // 增加Tenant
-                    new SqlParameterValue(Types.INTEGER, TenantContextHolder.get()));
+                    new SqlParameterValue(Types.VARCHAR, writeMap(registeredClient.getTokenSettings().getSettings())));
         }
 
         public final void setObjectMapper(ObjectMapper objectMapper) {

@@ -19,7 +19,7 @@ public interface CacheConstants {
     /**
      * OAuth2 客户端详情
      */
-    String CLIENT_DETAILS = "client_details";
+    String CLIENT_DETAILS = IGNORE_TENANT_PREFIX + ":client_details";
 
     /**
      * 所有权限
