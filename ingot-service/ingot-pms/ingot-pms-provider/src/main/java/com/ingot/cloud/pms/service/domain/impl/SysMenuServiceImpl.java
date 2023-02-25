@@ -112,21 +112,34 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     @Override
     @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public void updateMenu(SysMenu params) {
+        SysMenu current = getById(params.getId());
+        assertI18nService.checkOperation(current != null,
+                "SysMenuServiceImpl.NonExist");
+
+        // 路径不为空，需要判断是否重复
         if (StrUtil.isNotEmpty(params.getPath())) {
             assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
                             .eq(SysMenu::getPath, params.getPath())) == 0,
                     "SysMenuServiceImpl.ExistPath");
         }
-        if (params.getCustomViewPath() != null) {
-            if (BooleanUtil.isTrue(params.getCustomViewPath())) {
+
+        if (params.getCustomViewPath() == null) {
+            params.setCustomViewPath(current.getCustomViewPath());
+        }
+
+        // 非自定义视图
+        if (BooleanUtil.isFalse(params.getCustomViewPath())) {
+            if (StrUtil.isNotEmpty(params.getPath())) {
+                // 如果修改了路径，那么需要修改默认视图path
+                String path = params.getPath();
+                params.setViewPath("@/pages" + path + "/IndexPage.vue");
+            }
+        } else {
+            // 自定义视图
+            // 如果当前自定义视图路径是空，那么更新字段不能为空
+            if (StrUtil.isEmpty(current.getViewPath())) {
                 assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                         "SysMenuServiceImpl.ViewPathNotNull");
-            } else {
-                // 如果修改了路径，那么需要修改默认视图path
-                if (StrUtil.isNotEmpty(params.getPath())) {
-                    String path = params.getPath();
-                    params.setViewPath("@/pages" + path + "/IndexPage.vue");
-                }
             }
         }
 
