@@ -65,14 +65,19 @@ public class SysMenu extends BaseModel<SysMenu> {
     private Long authorityId;
 
     /**
-     * 命名路由
+     * 是否自定义视图路径
      */
-    private String routeName;
+    private Boolean customViewPath;
 
     /**
      * 视图路径
      */
     private String viewPath;
+
+    /**
+     * 命名路由
+     */
+    private String routeName;
 
     /**
      * 重定向

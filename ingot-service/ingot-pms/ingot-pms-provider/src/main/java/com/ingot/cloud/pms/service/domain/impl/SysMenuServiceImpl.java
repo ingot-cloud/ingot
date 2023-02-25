@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -95,6 +96,13 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                         .eq(SysMenu::getPath, params.getPath())) == 0,
                 "SysMenuServiceImpl.ExistPath");
 
+        if (BooleanUtil.isTrue(params.getCustomViewPath())) {
+            assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
+                    "SysMenuServiceImpl.ViewPathNotNull");
+        } else {
+            String path = params.getPath();
+            params.setViewPath("@/pages" + path + "/IndexPage.vue");
+        }
         params.setCreatedAt(DateUtils.now());
 
         assertI18nService.checkOperation(save(params),
@@ -108,6 +116,18 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
             assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
                             .eq(SysMenu::getPath, params.getPath())) == 0,
                     "SysMenuServiceImpl.ExistPath");
+        }
+        if (params.getCustomViewPath() != null) {
+            if (BooleanUtil.isTrue(params.getCustomViewPath())) {
+                assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
+                        "SysMenuServiceImpl.ViewPathNotNull");
+            } else {
+                // 如果修改了路径，那么需要修改默认视图path
+                if (StrUtil.isNotEmpty(params.getPath())) {
+                    String path = params.getPath();
+                    params.setViewPath("@/pages" + path + "/IndexPage.vue");
+                }
+            }
         }
 
         params.setUpdatedAt(DateUtils.now());
