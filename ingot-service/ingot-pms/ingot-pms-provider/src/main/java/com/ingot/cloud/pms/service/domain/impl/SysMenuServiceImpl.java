@@ -100,8 +100,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
             assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                     "SysMenuServiceImpl.ViewPathNotNull");
         } else {
-            String path = params.getPath();
-            params.setViewPath("@/pages" + path + "/IndexPage.vue");
+            setViewPathAccordingToPath(params);
         }
         params.setCreatedAt(DateUtils.now());
 
@@ -126,13 +125,15 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         if (params.getCustomViewPath() == null) {
             params.setCustomViewPath(current.getCustomViewPath());
         }
+        if (params.getProps() == null) {
+            params.setProps(current.getProps());
+        }
 
         // 非自定义视图
         if (BooleanUtil.isFalse(params.getCustomViewPath())) {
             if (StrUtil.isNotEmpty(params.getPath())) {
                 // 如果修改了路径，那么需要修改默认视图path
-                String path = params.getPath();
-                params.setViewPath("@/pages" + path + "/IndexPage.vue");
+                setViewPathAccordingToPath(params);
             }
         } else {
             // 自定义视图
@@ -146,6 +147,14 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysMenuServiceImpl.UpdateFailed");
+    }
+
+    private void setViewPathAccordingToPath(SysMenu menu) {
+        String path = menu.getPath();
+        if (BooleanUtil.isTrue(menu.getProps())) {
+            path = StrUtil.subBefore(path, "/", true);
+        }
+        menu.setViewPath("@/pages" + path + "/IndexPage.vue");
     }
 
     @Override
