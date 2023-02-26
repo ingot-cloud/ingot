@@ -16,6 +16,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,23 +49,27 @@ public class TenantApi implements RShortcuts {
                 .collect(Collectors.toList()));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write', 'basic.tenant.read')")
     @GetMapping("/page")
     public R<?> page(Page<SysTenant> page, SysTenant params) {
         return ok(sysTenantService.conditionPage(page, params));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
     @PostMapping
     public R<?> create(@Valid @RequestBody SysTenant params) {
         sysTenantService.createTenant(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
     @PutMapping
     public R<?> update(@Valid @RequestBody SysTenant params) {
         sysTenantService.updateTenantById(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysTenantService.removeTenantById(id);

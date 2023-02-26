@@ -11,6 +11,7 @@ import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,11 +35,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SocialApi implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write', 'basic.social.read')")
     @GetMapping("/page")
     public R<?> page(Page<SysSocialDetails> page, SysSocialDetails condition) {
         return ok(sysSocialDetailsService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
         params.setTenantId(TenantContextHolder.get());
@@ -48,6 +51,7 @@ public class SocialApi implements RShortcuts {
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
     @PutMapping
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
         params.setUpdatedAt(DateUtils.now());
@@ -55,6 +59,7 @@ public class SocialApi implements RShortcuts {
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
     @DeleteMapping("/{id}")
     public R<?> remove(@PathVariable Long id) {
         sysSocialDetailsService.removeById(id);

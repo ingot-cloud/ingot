@@ -18,6 +18,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,40 +49,47 @@ public class RoleApi implements RShortcuts {
     private final SysRoleOauthClientService sysRoleOauthClientService;
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/options")
     public R<?> options() {
         return ok(sysRoleService.options());
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/page")
     public R<?> page(Page<SysRole> page, SysRole condition) {
         return ok(sysRoleService.conditionPage(page, condition));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
         sysRoleService.createRole(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
         sysRoleService.updateRoleById(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PutMapping("/bindAuthority")
     public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,
                                    @RequestParam("isBind") boolean isBind,
@@ -92,12 +100,14 @@ public class RoleApi implements RShortcuts {
         return ok(sysAuthorityService.treeList(condition));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PutMapping("/bindDept")
     public R<?> bindDept(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleDeptService.roleBindDepts(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @GetMapping("/bindDept/{id}")
     public R<?> getBindDepts(@PathVariable Long id,
                              @RequestParam("isBind") boolean isBind,
@@ -108,12 +118,14 @@ public class RoleApi implements RShortcuts {
         return ok(sysDeptService.treeList(condition));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PutMapping("/bindClient")
     public R<?> bindClient(@RequestBody @Validated RelationDTO<Long, String> params) {
         sysRoleOauthClientService.roleBindClients(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @GetMapping("/bindClient/{id}")
     public R<?> getBindClients(@PathVariable Long id,
                                @RequestParam("isBind") boolean isBind,

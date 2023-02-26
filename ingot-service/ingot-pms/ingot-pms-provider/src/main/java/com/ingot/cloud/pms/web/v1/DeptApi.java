@@ -7,6 +7,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,23 +31,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class DeptApi implements RShortcuts {
     private final SysDeptService sysDeptService;
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write', 'basic.dept.read')")
     @GetMapping("/tree")
     public R<?> tree() {
         return ok(sysDeptService.treeList());
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
         sysDeptService.createDept(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
         sysDeptService.updateDept(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysDeptService.removeDeptById(id);

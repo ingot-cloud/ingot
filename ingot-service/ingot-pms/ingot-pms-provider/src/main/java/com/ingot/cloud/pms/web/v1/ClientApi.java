@@ -8,6 +8,7 @@ import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,22 +31,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClientApi implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write', 'basic.client.read')")
     @GetMapping("/page")
     public R<?> page(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
         return ok(oauth2RegisteredClientService.conditionPage(page, condition));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
     @GetMapping("/{id}")
     public R<?> getOne(@PathVariable String id) {
         return ok(oauth2RegisteredClientService.getByClientId(id));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.createClient(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
     @PutMapping
     public R<?> update(@RequestBody @Validated(Group.Update.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.updateClientByClientId(params);

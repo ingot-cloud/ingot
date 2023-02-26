@@ -14,6 +14,7 @@ import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,11 +45,13 @@ public class UserApi implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserDTO condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
+    @PreAuthorize("@ingot.hasAuthority('basic.user.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         params.setInitPwd(null);
@@ -56,6 +59,7 @@ public class UserApi implements RShortcuts {
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAuthority('basic.user.write')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         if (params.getStatus() == UserStatusEnum.LOCK) {
@@ -65,6 +69,7 @@ public class UserApi implements RShortcuts {
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAuthority('basic.user.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         userOpsChecker.removeUser(id);
