@@ -20,6 +20,7 @@ import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
@@ -52,6 +53,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                 .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
                         authorities.stream()
                                 .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
+                .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
 
