@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
 
-version=0.1.0
-serviceName=ingot-gateway-${version}
-imageName=docker-registry.wangchao.im/ingot/gateway:${version}
+# 域名配置
+VIRTUAL_HOST=ingot-api.wangchao.im
+VIRTUAL_PORT=7980
 
+# 中间件Host配置
+MYSQL_HOST=172.88.0.10
 NACOS_HOST=172.88.0.20
 NACOS_PORT=8848
 REDIS_HOST=172.88.0.90
-MYSQL_HOST=172.88.0.10
 
-REDIS_PASSWORD=123456
-
+# Ingot Host配置
 INGOT_AUTH_SERVER=172.88.0.110
 INGOT_GATEWAY=172.88.0.100
 
-VIRTUAL_HOST=ingot-api.wangchao.im
-VIRTUAL_PORT=7980
+# 账号配置
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=123456
+REDIS_PASSWORD=123456
+
+# 客户端版本信息配置
+version=0.1.0
+serviceName=ingot-gateway-${version}
+imageName=docker-registry.wangchao.im/ingot/gateway:${version}
 
 # 停止运行当前容器
 docker ps -q --filter name="${serviceName}" | xargs -r docker rm -f
