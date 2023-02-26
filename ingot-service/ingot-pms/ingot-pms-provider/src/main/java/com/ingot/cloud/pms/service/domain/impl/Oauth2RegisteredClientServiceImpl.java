@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -77,6 +78,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                 .stream()
                 .map(SysRoleOauthClient::getClientId)
                 .collect(Collectors.toList());
+        if (CollUtil.isEmpty(clientIds)) {
+            return CollUtil.empty(List.class);
+        }
         return list(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
                 .in(Oauth2RegisteredClient::getId, clientIds))
                 .stream()
