@@ -1,23 +1,10 @@
 #!/usr/bin/env bash
 
+source ./config.properties
+
 # 域名配置
 VIRTUAL_HOST=ingot-api.wangchao.im
 VIRTUAL_PORT=7980
-
-# 中间件Host配置
-MYSQL_HOST=172.88.0.10
-NACOS_HOST=172.88.0.20
-NACOS_PORT=8848
-REDIS_HOST=172.88.0.90
-
-# Ingot Host配置
-INGOT_AUTH_SERVER=172.88.0.110
-INGOT_GATEWAY=172.88.0.100
-
-# 账号配置
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=123456
-REDIS_PASSWORD=123456
 
 # 客户端版本信息配置
 version=0.1.0
