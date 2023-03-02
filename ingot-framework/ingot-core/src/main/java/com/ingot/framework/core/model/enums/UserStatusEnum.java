@@ -1,6 +1,10 @@
 package com.ingot.framework.core.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -28,4 +32,18 @@ public enum UserStatusEnum {
      * 描述
      */
     private final String text;
+
+
+    private static final Map<String, UserStatusEnum> valueMap = new HashMap<>();
+
+    static {
+        for (UserStatusEnum item : UserStatusEnum.values()) {
+            valueMap.put(item.getValue(), item);
+        }
+    }
+
+    @JsonCreator
+    public static UserStatusEnum getEnum(String value) {
+        return valueMap.get(value);
+    }
 }

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public enum CommonStatusEnum {
         }
     }
 
+    @JsonCreator
     public static CommonStatusEnum getEnum(String value) {
         return valueMap.get(value);
     }
