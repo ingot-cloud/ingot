@@ -28,5 +28,4 @@ docker run -d --name ${serviceName} --restart always \
     -e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
     -e REDIS_PASSWORD=${REDIS_PASSWORD} \
     -v /ingot-data:/ingot-data \
-    -v /etc/localtime:/etc/localtime \
     ${imageName}
