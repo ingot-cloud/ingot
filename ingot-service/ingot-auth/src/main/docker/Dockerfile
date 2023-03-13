@@ -8,8 +8,4 @@ RUN sh -c 'touch ./app.jar'
 
 RUN mkdir -p /ingot-data
 
- # 设定时区
-ENV TZ=Asia/Shanghai
-RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
 ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar app.jar
