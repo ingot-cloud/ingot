@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.SysUserSocial;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
@@ -22,6 +23,7 @@ import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
+import com.ingot.cloud.pms.service.domain.SysUserSocialService;
 import com.ingot.framework.common.utils.DateUtils;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -47,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
     private final SysRoleService sysRoleService;
     private final SysRoleUserService sysRoleUserService;
+    private final SysUserSocialService sysUserSocialService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
@@ -126,6 +129,11 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     public void removeUserById(long id) {
         // 取消关联角色
         assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
+                "SysUserServiceImpl.RemoveFailed");
+
+        // 取消关联社交信息
+        assertI18nService.checkOperation(sysUserSocialService.remove(
+                        Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id)),
                 "SysUserServiceImpl.RemoveFailed");
 
         assertI18nService.checkOperation(removeById(id),
