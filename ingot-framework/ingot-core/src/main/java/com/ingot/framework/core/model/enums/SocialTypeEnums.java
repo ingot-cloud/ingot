@@ -3,6 +3,7 @@ package com.ingot.framework.core.model.enums;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.ingot.framework.core.constants.SocialConstants;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public enum SocialTypeEnums {
         }
     }
 
+    @JsonCreator
     public static SocialTypeEnums get(String value) {
         return valueMap.get(value);
     }
