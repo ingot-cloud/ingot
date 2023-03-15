@@ -1,6 +1,10 @@
 package com.ingot.cloud.pms.api.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -23,4 +27,17 @@ public enum MenuTypeEnums {
     @EnumValue
     private final String value;
     private final String text;
+
+    private static final Map<String, MenuTypeEnums> valueMap = new HashMap<>();
+
+    static {
+        for (MenuTypeEnums item : MenuTypeEnums.values()) {
+            valueMap.put(item.getValue(), item);
+        }
+    }
+
+    @JsonCreator
+    public static MenuTypeEnums getEnum(String value) {
+        return valueMap.get(value);
+    }
 }

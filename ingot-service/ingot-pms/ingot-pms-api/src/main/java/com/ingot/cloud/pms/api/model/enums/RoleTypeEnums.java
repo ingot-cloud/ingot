@@ -1,6 +1,10 @@
 package com.ingot.cloud.pms.api.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,4 +26,17 @@ public enum RoleTypeEnums {
     @EnumValue
     private final String value;
     private final String text;
+
+    private static final Map<String, RoleTypeEnums> valueMap = new HashMap<>();
+
+    static {
+        for (RoleTypeEnums item : RoleTypeEnums.values()) {
+            valueMap.put(item.getValue(), item);
+        }
+    }
+
+    @JsonCreator
+    public static RoleTypeEnums getEnum(String value) {
+        return valueMap.get(value);
+    }
 }

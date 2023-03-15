@@ -3,7 +3,9 @@ package com.ingot.framework.core.model.enums;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.ingot.framework.core.constants.SocialConstants;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,8 @@ public enum SocialTypeEnums {
     WECHAT("wechat", SocialConstants.BEAN_WECHAT, "微信登录"),
     MINI_PROGRAM("miniprogram", SocialConstants.BEAN_MINI_PROGRAM, "微信小程序");
 
+    @JsonValue
+    @EnumValue
     private final String value;
     private final String beanName;
     private final String text;
