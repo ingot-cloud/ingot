@@ -17,14 +17,14 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 /**
  * <p>Description  : CookieUtils.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2018/12/3.</p>
- * <p>Time         : 10:24 AM.</p>
+ * <p>Date         : 2023/3/16.</p>
+ * <p>Time         : 10:17 AM.</p>
  */
 @Slf4j
 public final class CookieUtils {
 
     /**
-     * 设置cookie域，默认为：ingot.com
+     * 设置cookie域，默认为：secingot.com
      */
     private static final String DEFAULT_COOKIE_DOMAIN = ".ingot.com";
     /**
