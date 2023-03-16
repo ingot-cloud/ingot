@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;

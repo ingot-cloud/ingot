@@ -1,6 +1,6 @@
 package com.ingot.framework.security.common.utils;
 
-import com.ingot.framework.common.constants.GlobalConstants;
+import com.ingot.framework.core.constants.GlobalConstants;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 
 /**

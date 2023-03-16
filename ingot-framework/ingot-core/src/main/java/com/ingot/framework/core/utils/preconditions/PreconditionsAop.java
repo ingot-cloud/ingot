@@ -3,7 +3,7 @@ package com.ingot.framework.core.utils.preconditions;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import com.ingot.framework.common.exception.BizException;
+import com.ingot.framework.core.error.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;

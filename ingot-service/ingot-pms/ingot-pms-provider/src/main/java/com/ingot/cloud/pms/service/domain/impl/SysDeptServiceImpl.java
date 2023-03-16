@@ -14,7 +14,7 @@ import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;

@@ -19,7 +19,7 @@ import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;

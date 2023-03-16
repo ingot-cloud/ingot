@@ -1,4 +1,4 @@
-package com.ingot.framework.common.utils;
+package com.ingot.framework.core.utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

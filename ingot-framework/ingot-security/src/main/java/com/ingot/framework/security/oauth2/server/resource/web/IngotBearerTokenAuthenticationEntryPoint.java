@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import org.springframework.core.convert.converter.Converter;

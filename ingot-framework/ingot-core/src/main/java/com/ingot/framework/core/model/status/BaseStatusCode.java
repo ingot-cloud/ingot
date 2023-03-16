@@ -1,4 +1,4 @@
-package com.ingot.framework.common.status;
+package com.ingot.framework.core.model.status;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -9,8 +9,8 @@ import java.util.Map;
 import javax.servlet.ServletException;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.ingot.framework.common.exception.BizException;
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;

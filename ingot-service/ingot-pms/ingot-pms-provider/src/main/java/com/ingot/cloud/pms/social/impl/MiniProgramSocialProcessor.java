@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserSocialService;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.SocialConstants;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import lombok.RequiredArgsConstructor;

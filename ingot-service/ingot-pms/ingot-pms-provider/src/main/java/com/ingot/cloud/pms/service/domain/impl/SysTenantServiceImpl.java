@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.store.mybatis.service.BaseServiceImpl;

@@ -1,4 +1,4 @@
-package com.ingot.framework.common.status;
+package com.ingot.framework.core.model.status;
 
 /**
  * <p>Description  : StatusCode.</p>

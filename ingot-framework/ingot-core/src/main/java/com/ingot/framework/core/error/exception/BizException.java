@@ -1,6 +1,6 @@
-package com.ingot.framework.common.exception;
+package com.ingot.framework.core.error.exception;
 
-import com.ingot.framework.common.status.StatusCode;
+import com.ingot.framework.core.model.status.StatusCode;
 
 /**
  * <p>Description  : 业务异常.</p>

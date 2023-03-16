@@ -1,6 +1,6 @@
 package com.ingot.framework.core.model.support;
 
-import com.ingot.framework.common.status.StatusCode;
+import com.ingot.framework.core.model.status.StatusCode;
 
 /**
  * <p>Description  : {@link R}快捷方法.</p>

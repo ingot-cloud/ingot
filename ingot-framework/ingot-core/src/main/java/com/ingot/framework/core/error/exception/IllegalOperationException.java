@@ -1,6 +1,6 @@
-package com.ingot.framework.common.exception;
+package com.ingot.framework.core.error.exception;
 
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 
 /**
  * <p>Description  : IllegalOperationException.</p>

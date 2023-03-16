@@ -6,8 +6,8 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
-import com.ingot.framework.common.exception.BizException;
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;

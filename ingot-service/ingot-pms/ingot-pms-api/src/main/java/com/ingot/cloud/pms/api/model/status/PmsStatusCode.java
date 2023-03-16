@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.status;
 
-import com.ingot.framework.common.status.StatusCode;
+import com.ingot.framework.core.model.status.StatusCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

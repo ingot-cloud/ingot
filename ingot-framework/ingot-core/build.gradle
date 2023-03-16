@@ -4,7 +4,18 @@ dependencies {
     api(deps.rx_java)
     api(deps.aspectj.aspectjweaver)
     api(deps.alibaba.transmittable_thread_local)
-    api project(ingot.framework_common)
+    api(deps.java_validation_api)
+    // swagger cloud
+    api(deps.swagger.springfox_swagger2)
+    // jackson
+    api(deps.jackson.annotation)
+    api(deps.jackson.data_bind)
+    api(deps.jackson.jsr310)
+    // log basic
+    api(deps.log.logback_classic)
+    // hutool
+    api(deps.hutool)
+    api(deps.google.guava)
     api(deps.spring.spring_boot.validation_starter)
 
     implementation(deps.apache.common_codec)

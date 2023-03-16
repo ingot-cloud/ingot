@@ -6,10 +6,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.google.common.base.Preconditions;
 import com.ingot.frameword.id.IdGenerator;
 import com.ingot.frameword.id.snowflake.worker.WorkerIdFactory;
-import com.ingot.framework.common.exception.BizException;
+import com.ingot.framework.core.error.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.ingot.framework.common.status.BaseStatusCode.ID_CLOCK_BACK;
+import static com.ingot.framework.core.model.status.BaseStatusCode.ID_CLOCK_BACK;
 
 /**
  * <p>Description  : SnowFlakeIdGenerator.</p>

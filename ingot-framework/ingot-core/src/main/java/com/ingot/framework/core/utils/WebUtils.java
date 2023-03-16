@@ -7,7 +7,7 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.common.constants.GlobalConstants;
+import com.ingot.framework.core.constants.GlobalConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;

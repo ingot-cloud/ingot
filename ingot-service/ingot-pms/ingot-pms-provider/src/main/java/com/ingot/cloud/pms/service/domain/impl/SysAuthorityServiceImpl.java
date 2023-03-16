@@ -22,7 +22,7 @@ import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.framework.common.utils.DateUtils;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;

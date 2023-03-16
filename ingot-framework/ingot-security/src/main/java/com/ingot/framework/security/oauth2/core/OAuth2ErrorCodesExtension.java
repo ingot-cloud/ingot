@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.core;
 
-import com.ingot.framework.common.status.StatusCode;
+import com.ingot.framework.core.model.status.StatusCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

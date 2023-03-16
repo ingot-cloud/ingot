@@ -11,8 +11,8 @@ import com.ingot.frameword.id.leaf.common.Status;
 import com.ingot.frameword.id.leaf.segment.SegmentIDGenImpl;
 import com.ingot.frameword.id.leaf.segment.dao.IDAllocDao;
 import com.ingot.frameword.id.leaf.segment.dao.impl.IDAllocDaoImpl;
-import com.ingot.framework.common.exception.BizException;
-import com.ingot.framework.common.status.BaseStatusCode;
+import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.core.model.status.BaseStatusCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

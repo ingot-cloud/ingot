@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.common.status.BaseStatusCode;
-import com.ingot.framework.common.status.StatusCode;
+import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.StatusCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.ToString;

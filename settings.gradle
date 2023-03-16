@@ -1,8 +1,6 @@
 rootProject.name = 'ingot'
 
 // Framework
-include 'ingot-framework:ingot-common'
-findProject(':ingot-framework:ingot-common')?.name = 'ingot-common'
 include 'ingot-framework:ingot-core'
 findProject(':ingot-framework:ingot-core')?.name = 'ingot-core'
 include 'ingot-framework:ingot-store'
