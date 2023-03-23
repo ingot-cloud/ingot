@@ -1,6 +1,8 @@
 package com.ingot.framework.vc;
 
+import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
  * <p>Description  : VCConfig.</p>
@@ -9,5 +11,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
  * <p>Time         : 10:07 PM.</p>
  */
 @AutoConfiguration
+@EnableConfigurationProperties(IngotVCProperties.class)
 public class VCConfig {
 }
