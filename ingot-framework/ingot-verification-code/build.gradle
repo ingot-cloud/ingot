@@ -2,6 +2,4 @@ dependencies {
     implementation project(ingot.framework_core)
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
     compileOnly(deps.spring.framework_spring_webflux)
-    compileOnly project(ingot.common_security)
-    compileOnly project(ingot.common_core)
 }
