@@ -1,0 +1,86 @@
+image: docker:20.10.9
+
+variables:
+  DEV_VERSION: $CI_COMMIT_SHORT_SHA
+  # 中间件Host配置
+  MYSQL_HOST: 172.88.0.10
+  NACOS_HOST: 172.88.0.20
+  NACOS_PORT: 8848
+  REDIS_HOST: 172.88.0.90
+  # Ingot Host配置
+  INGOT_AUTH_SERVER: 172.88.0.110
+  INGOT_GATEWAY: 172.88.0.100
+  # 账号配置
+  MYSQL_USERNAME: ${CI_INGOT_MYSQL_USERNAME}
+  MYSQL_PASSWORD: ${CI_INGOT_MYSQL_PASSWORD}
+  REDIS_PASSWORD: ${CI_INGOT_REDIS_PASSWORD}
+  # auth
+  AUTH_MODULE_NAME: ingot-auth
+  AUTH_VERSION: 0.1.0
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - output/
+
+stages:
+  - assemble
+  - docker-build
+  - deploy
+
+auth-assemble:
+  stage: install
+  image: gradle:7-jdk8
+  script:
+    - ./gradlew :ingot-service:ingot-auth:ingotAssemble
+    - ./gradlew :ingot-service:ingot-auth:shiftDockerfileIngotAuth
+  when: manual
+  tags: [ingot]
+
+auth-docker-build:
+  stage: docker-build
+  variables:
+    MODULE_NAME: ${AUTH_MODULE_NAME}
+    INNER_VERSION: ${AUTH_VERSION}
+  script:
+    - cd ./output/${MODULE_NAME}/${INNER_VERSION}
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - docker build -t docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION} .
+    - docker push docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
+
+auth-docker-run:
+  stage: deploy
+  variables:
+    MODULE_NAME: ${AUTH_MODULE_NAME}
+    INNER_VERSION: ${AUTH_VERSION}
+    SERVICE_NAME: ${MODULE_NAME}-${INNER_VERSION}
+    IMAGE_NAME: docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - docker ps -q --filter name="${SERVICE_NAME}" | xargs -r docker rm -f
+    - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
+    - docker pull ${IMAGE_NAME}
+    - docker run -d --name ${SERVICE_NAME} --restart always
+      --network ingot-net --ip ${INGOT_AUTH_SERVER}
+      --add-host ingot-db-redis:${REDIS_HOST}
+      --add-host ingot-db-mysql:${MYSQL_HOST}
+      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
+      --add-host ingot-gateway:${INGOT_GATEWAY}
+      -e NACOS_HOST=${NACOS_HOST}
+      -e NACOS_PORT=${NACOS_PORT}
+      -e REDIS_HOST=${REDIS_HOST}
+      -e MYSQL_HOST=${MYSQL_HOST}
+      -e MYSQL_USERNAME=${MYSQL_USERNAME}
+      -e MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      -e REDIS_PASSWORD=${REDIS_PASSWORD}
+      -v /ingot-data:/ingot-data
+      ${IMAGE_NAME}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
+
