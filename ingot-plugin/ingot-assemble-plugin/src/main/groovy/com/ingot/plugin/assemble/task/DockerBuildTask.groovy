@@ -2,8 +2,6 @@ package com.ingot.plugin.assemble.task
 
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
-import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
@@ -30,11 +28,6 @@ class DockerBuildTask extends DefaultTask {
     @Internal
     private String dockerCmd
     /**
-     * docker文件目录path
-     */
-    @Internal
-    private String dockerfileDir
-    /**
      * build name
      */
     @Internal
@@ -46,26 +39,12 @@ class DockerBuildTask extends DefaultTask {
 
     @TaskAction
     dockerImage() {
-        dockerfileDir = Utils.getDockerFileDirPathOrDefault(project, dockerfileDir)
+        project.logger.lifecycle("DockerBuildTask running.")
         outputDirPath = Utils.getOutputDirPathOrDefault(project, outputDirPath)
         dockerCmd = Utils.getDockerCmdOrDefault(dockerCmd)
 
         // build dockerfile 的目录
         String buildDirPath = Utils.projectOutputPath(outputDirPath, project)
-
-        if (!new File(buildDirPath).exists()) {
-            throw new GradleException("不存在执行文件夹")
-        }
-
-        project.logger.lifecycle(">>> dockerfile dir: " + dockerfileDir)
-        // copy dockerfile 已经目录中所有文件
-        project.copy {
-            duplicatesStrategy DuplicatesStrategy.INCLUDE
-            from dockerfileDir
-            into buildDirPath
-        }
-        project.logger.lifecycle(">>> dockerfile copyTo: " + buildDirPath)
-
         String tag = Utils.getTag(project, imageName, registry)
 
         project.exec {
@@ -75,7 +54,7 @@ class DockerBuildTask extends DefaultTask {
             logging.captureStandardError LogLevel.ERROR
         }
 
-        project.logger.lifecycle(">>> docker build success, tag=" + tag)
+        project.logger.lifecycle("DockerBuildTask - docker build success, tag=" + tag)
 
     }
 
@@ -101,14 +80,6 @@ class DockerBuildTask extends DefaultTask {
 
     void setDockerCmd(String dockerCmd) {
         this.dockerCmd = dockerCmd
-    }
-
-    String getDockerfileDir() {
-        return dockerfileDir
-    }
-
-    void setDockerfileDir(String dockerfileDir) {
-        this.dockerfileDir = dockerfileDir
     }
 
     String getImageName() {

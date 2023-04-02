@@ -45,6 +45,8 @@ class DockerPushTask extends DefaultTask {
 
     @TaskAction
     push() {
+        project.logger.lifecycle("DockerPushTask running")
+
         dockerCmd = Utils.getDockerCmdOrDefault(dockerCmd)
 
         if (Utils.isEmpty(registry)) {
@@ -55,22 +57,22 @@ class DockerPushTask extends DefaultTask {
 
         // login
         if (!Utils.isEmpty(username) && !Utils.isEmpty(password)) {
-            project.logger.lifecycle(">>> docker login")
+            project.logger.lifecycle("ShiftDockerfileTask - docker login")
             project.exec {
                 commandLine dockerCmd, "login", "-u", username, "-p", password, registry
                 logging.captureStandardOutput LogLevel.INFO
                 logging.captureStandardError LogLevel.ERROR
             }
-            project.logger.lifecycle(">>> docker login success")
+            project.logger.lifecycle("DockerPushTask - docker login success")
         }
 
-        project.logger.lifecycle(">>> docker image push: " + tag)
+        project.logger.lifecycle("DockerPushTask - docker image push: " + tag)
         project.exec {
             commandLine dockerCmd, 'push', tag
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
         }
-        project.logger.lifecycle(">>> docker image push success")
+        project.logger.lifecycle("DockerPushTask - docker image push success")
 
     }
 

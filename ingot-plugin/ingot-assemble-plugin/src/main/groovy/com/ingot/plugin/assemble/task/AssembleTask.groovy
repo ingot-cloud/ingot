@@ -1,11 +1,11 @@
 package com.ingot.plugin.assemble.task
 
-import com.ingot.plugin.assemble.extension.AssembleExtension
+
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-
 /**
  * <p>Description  : AssembleTask.</p>
  * <p>Author       : wangchao.</p>
@@ -13,6 +13,12 @@ import org.gradle.api.tasks.TaskAction
  * <p>Time         : 9:37 AM.</p>
  */
 class AssembleTask extends DefaultTask {
+
+    /**
+     * 工程打包输出目录路径
+     */
+    @Internal
+    private String outputDirPath
 
     AssembleTask() {
         setGroup("ingot")
@@ -22,13 +28,7 @@ class AssembleTask extends DefaultTask {
     @TaskAction
     void assembleRelease() {
         project.logger.lifecycle("Assemble release task running.")
-
-        AssembleExtension assembleExtension = AssembleExtension.getBuildExtension(project)
-        String outputDirPath = assembleExtension.outputDirPath
-
-        if (Utils.isEmpty(outputDirPath)) {
-            outputDirPath = Utils.defaultOutputDirPath(project)
-        }
+        outputDirPath = Utils.getOutputDirPathOrDefault(project, outputDirPath)
 
         // assemble 生成的 jar 包文件夹
         String libsPath = project.buildDir.path + "/libs"
@@ -50,5 +50,13 @@ class AssembleTask extends DefaultTask {
             }
         }
 
+    }
+
+    String getOutputDirPath() {
+        return outputDirPath
+    }
+
+    void setOutputDirPath(String outputDirPath) {
+        this.outputDirPath = outputDirPath
     }
 }

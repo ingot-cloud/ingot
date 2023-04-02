@@ -7,10 +7,10 @@ import com.ingot.plugin.assemble.task.AssembleTask
 import com.ingot.plugin.assemble.task.CleanTask
 import com.ingot.plugin.assemble.task.DockerBuildTask
 import com.ingot.plugin.assemble.task.DockerPushTask
+import com.ingot.plugin.assemble.task.ShiftDockerfileTask
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-
 /**
  * <p>Description  : BulidPlugin.</p>
  * <p>Author       : wangchao.</p>
@@ -29,9 +29,10 @@ class AssemblePlugin implements Plugin<Project> {
             project.tasks.create("cleanAll", CleanTask)
 
             // build task
-            project.tasks.create("ingotAssemble", AssembleTask) {
+            project.tasks.create("ingotAssemble", AssembleTask, {
                 dependsOn project.tasks.getByName("assemble")
-            }
+                outputDirPath = ext.getOutputDirPath()
+            })
 
             DockerExtension dockerExtension = ext.docker
             // docker task
@@ -62,16 +63,23 @@ class AssemblePlugin implements Plugin<Project> {
 
         project.logger.lifecycle("registry:" + dockerExtension.getRegistry())
 
+        project.tasks.create("shiftDockerfile${finalSuffix}", ShiftDockerfileTask, {
+            description = "Shift dockerfile"
+            outputDirPath = ext.getOutputDirPath()
+            dockerfileDir = dockerfileDirPath
+        })
+
         project.tasks.create("dockerBuild${finalSuffix}", DockerBuildTask, {
+            dependsOn project.tasks.getByName("shiftDockerfile${finalSuffix}")
             description = "Docker image with name '${inputImageName}'"
             registry = dockerExtension.getRegistry()
             outputDirPath = ext.getOutputDirPath()
             dockerCmd = dockerExtension.getDockerCmd()
             imageName = inputImageName
-            dockerfileDir = dockerfileDirPath
         })
 
         project.tasks.create("dockerPush${finalSuffix}", DockerPushTask, {
+            dependsOn project.tasks.getByName("dockerBuild${finalSuffix}")
             description = "Push the docker image named '${inputImageName}'"
             registry = dockerExtension.getRegistry()
             username = dockerExtension.getUsername()
