@@ -39,10 +39,8 @@ auth-assemble:
   stage: assemble
   image: gradle:7.2-jdk8
   script:
-    - gradle -v
-    - java -v
-#    - ./gradlew :ingot-service:ingot-auth:ingotAssemble
-#    - ./gradlew :ingot-service:ingot-auth:shiftDockerfileIngotAuth
+    - gradle :ingot-service:ingot-auth:ingotAssemble
+    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
   when: manual
   tags: [ingot]
 
