@@ -43,13 +43,14 @@ auth-assemble:
   stage: assemble
   image: gradle:7.2-jdk8
   script:
+    - cat ~/.gradle/gradle.properties
     - export INGOT_NEXUS_URL=${INGOT_NEXUS_URL}
     - export INGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
     - export INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
     - export JY_DOCKER_REGISTRY_USERNAME=${CI_REGISTRY_USER}
     - export JY_DOCKER_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}
-    - gradle :ingot-service:ingot-auth:ingotAssemble
-    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
+#    - gradle :ingot-service:ingot-auth:ingotAssemble
+#    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
   when: manual
   tags: [ingot]
 
