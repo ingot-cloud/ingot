@@ -1,7 +1,11 @@
 image: docker:20.10.9
 
 variables:
-  DEV_VERSION: $CI_COMMIT_SHORT_SHA
+  DEV_VERSION: ${CI_COMMIT_SHORT_SHA}
+  # nexus
+  INGOT_NEXUS_URL: ${CI_INGOT_NEXUS_URL}
+  INGOT_NEXUS_USERNAME: ${CI_INGOT_NEXUS_USERNAME}
+  INGOT_NEXUS_PASSWORD: ${CI_INGOT_NEXUS_PASSWORD}
   # 中间件Host配置
   MYSQL_HOST: 172.88.0.10
   NACOS_HOST: 172.88.0.20
@@ -39,6 +43,11 @@ auth-assemble:
   stage: assemble
   image: gradle:7.2-jdk8
   script:
+    - export INGOT_NEXUS_URL=${INGOT_NEXUS_URL}
+    - export INGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
+    - export INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
+    - export JY_DOCKER_REGISTRY_USERNAME=${CI_REGISTRY_USER}
+    - export JY_DOCKER_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}
     - gradle :ingot-service:ingot-auth:ingotAssemble
     - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
   when: manual
