@@ -28,6 +28,13 @@ stages:
   - docker-build
   - deploy
 
+.docker-build:
+  script:
+    - cd ./output/${MODULE_NAME}/${INNER_VERSION}
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - docker build -t docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION} .
+    - docker push docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+
 auth-assemble:
   stage: assemble
   image: gradle:7-jdk8
@@ -39,14 +46,10 @@ auth-assemble:
 
 auth-docker-build:
   stage: docker-build
+  extends: .docker-build
   variables:
     MODULE_NAME: ${AUTH_MODULE_NAME}
     INNER_VERSION: ${AUTH_VERSION}
-  script:
-    - cd ./output/${MODULE_NAME}/${INNER_VERSION}
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
-    - docker build -t docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION} .
-    - docker push docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
   tags: [ingot]
   when: manual
   only:
