@@ -43,7 +43,7 @@ auth-assemble:
   stage: assemble
   image: gradle:7.2-jdk8
   script:
-    - cat ~/.gradle/gradle.properties
+    - cat /opt/gradle/gradle.properties
     - export INGOT_NEXUS_URL=${INGOT_NEXUS_URL}
     - export INGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
     - export INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
