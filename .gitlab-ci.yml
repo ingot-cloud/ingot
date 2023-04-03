@@ -48,12 +48,12 @@ auth-assemble:
     - export INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
     - export JY_DOCKER_REGISTRY_USERNAME=${CI_REGISTRY_USER}
     - export JY_DOCKER_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}
-    - gradle -Dorg.gradle.project.INGOT_NEXUS_URL=${INGOT_NEXUS_URL}
-        -Dorg.gradle.project.INGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
-        -Dorg.gradle.project.INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
-        -Dorg.gradle.project.JY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
-        -Dorg.gradle.project.JY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
-        :ingot-service:ingot-auth:ingotAssemble
+    - gradle -PINGOT_NEXUS_URL=${INGOT_NEXUS_URL}
+      -PINGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
+      -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
+      -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
+      -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
+      :ingot-service:ingot-auth:ingotAssemble
 #    - gradle :ingot-service:ingot-auth:ingotAssemble
 #    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
   when: manual
