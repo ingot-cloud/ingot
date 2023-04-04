@@ -21,6 +21,12 @@ variables:
   # auth
   AUTH_MODULE_NAME: ingot-auth
   AUTH_VERSION: 0.1.0
+  # pms
+  PMS_MODULE_NAME: ingot-pms
+  PMS_VERSION: 0.1.0
+  # gateway
+  GATEWAY_MODULE_NAME: ingot-gateway
+  GATEWAY_VERSION: 0.1.0
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
@@ -43,19 +49,13 @@ auth-assemble:
   stage: assemble
   image: gradle:7.2-jdk8
   script:
-    - export INGOT_NEXUS_URL=${INGOT_NEXUS_URL}
-    - export INGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
-    - export INGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
-    - export JY_DOCKER_REGISTRY_USERNAME=${CI_REGISTRY_USER}
-    - export JY_DOCKER_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}
     - gradle -PINGOT_NEXUS_URL=${INGOT_NEXUS_URL}
       -PINGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
       -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
       -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
       -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
       :ingot-service:ingot-auth:ingotAssemble
-#    - gradle :ingot-service:ingot-auth:ingotAssemble
-#    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
+    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
   when: manual
   tags: [ingot]
 
