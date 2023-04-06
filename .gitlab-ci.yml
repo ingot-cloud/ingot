@@ -59,12 +59,62 @@ auth-assemble:
   when: manual
   tags: [ingot]
 
+pms-assemble:
+  stage: assemble
+  image: gradle:7.2-jdk8
+  script:
+    - gradle -PINGOT_NEXUS_URL=${INGOT_NEXUS_URL}
+      -PINGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
+      -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
+      -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
+      -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
+      :ingot-service:ingot-pms:ingot-pms-provider:ingotAssemble
+    - gradle :ingot-service:ingot-pms:ingot-pms-provider:shiftDockerfileIngotAuth
+  when: manual
+  tags: [ingot]
+
+gateway-assemble:
+  stage: assemble
+  image: gradle:7.2-jdk8
+  script:
+    - gradle -PINGOT_NEXUS_URL=${INGOT_NEXUS_URL}
+      -PINGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
+      -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
+      -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
+      -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
+      :ingot-service:ingot-gateway:ingotAssemble
+    - gradle :ingot-service:ingot-gateway:shiftDockerfileIngotAuth
+  when: manual
+  tags: [ingot]
+
 auth-docker-build:
   stage: docker-build
   extends: .docker-build
   variables:
     MODULE_NAME: ${AUTH_MODULE_NAME}
     INNER_VERSION: ${AUTH_VERSION}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
+
+pms-docker-build:
+  stage: docker-build
+  extends: .docker-build
+  variables:
+    MODULE_NAME: ${PMS_MODULE_NAME}
+    INNER_VERSION: ${PMS_VERSION}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
+
+gateway-docker-build:
+  stage: docker-build
+  extends: .docker-build
+  variables:
+    MODULE_NAME: ${GATEWAY_MODULE_NAME}
+    INNER_VERSION: ${GATEWAY_VERSION}
   tags: [ingot]
   when: manual
   only:
@@ -102,3 +152,66 @@ auth-docker-run:
   only:
     - main
 
+pms-docker-run:
+  stage: deploy
+  variables:
+    MODULE_NAME: ${AUTH_MODULE_NAME}
+    INNER_VERSION: ${AUTH_VERSION}
+    SERVICE_NAME: ${MODULE_NAME}-${INNER_VERSION}
+    IMAGE_NAME: docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - docker ps -q --filter name="${SERVICE_NAME}" | xargs -r docker rm -f
+    - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
+    - docker pull ${IMAGE_NAME}
+    - docker run -d --name ${SERVICE_NAME} --restart always
+      --network ingot-net
+      --add-host ingot-db-redis:${REDIS_HOST}
+      --add-host ingot-db-mysql:${MYSQL_HOST}
+      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
+      --add-host ingot-gateway:${INGOT_GATEWAY}
+      -e NACOS_HOST=${NACOS_HOST}
+      -e NACOS_PORT=${NACOS_PORT}
+      -e REDIS_HOST=${REDIS_HOST}
+      -e MYSQL_HOST=${MYSQL_HOST}
+      -e MYSQL_USERNAME=${MYSQL_USERNAME}
+      -e MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      -e REDIS_PASSWORD=${REDIS_PASSWORD}
+      -v /ingot-data:/ingot-data
+      ${IMAGE_NAME}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
+
+gateway-docker-run:
+  stage: deploy
+  variables:
+    MODULE_NAME: ${AUTH_MODULE_NAME}
+    INNER_VERSION: ${AUTH_VERSION}
+    SERVICE_NAME: ${MODULE_NAME}-${INNER_VERSION}
+    IMAGE_NAME: docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - docker ps -q --filter name="${SERVICE_NAME}" | xargs -r docker rm -f
+    - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
+    - docker pull ${IMAGE_NAME}
+    - docker run -d --name ${SERVICE_NAME} --restart always
+      --network ingot-net --ip ${INGOT_GATEWAY}
+      --add-host ingot-db-redis:${REDIS_HOST}
+      --add-host ingot-db-mysql:${MYSQL_HOST}
+      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
+      --add-host ingot-gateway:${INGOT_GATEWAY}
+      -e NACOS_HOST=${NACOS_HOST}
+      -e NACOS_PORT=${NACOS_PORT}
+      -e REDIS_HOST=${REDIS_HOST}
+      -e MYSQL_HOST=${MYSQL_HOST}
+      -e MYSQL_USERNAME=${MYSQL_USERNAME}
+      -e MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      -e REDIS_PASSWORD=${REDIS_PASSWORD}
+      -v /ingot-data:/ingot-data
+      ${IMAGE_NAME}
+  tags: [ingot]
+  when: manual
+  only:
+    - main
