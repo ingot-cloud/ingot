@@ -12,10 +12,21 @@ import lombok.Data;
  * <p>Time         : 11:42 PM.</p>
  */
 @Data
-public class VerificationCode implements Serializable {
-    private String type;
+public class VC implements Serializable {
+    /**
+     * 验证码类型
+     */
+    private VCType type;
+    /**
+     * 验证码
+     */
     private String code;
+    /**
+     * 过期时间
+     */
     private int expireIn;
+    /**
+     * 到期时间
+     */
     private LocalDateTime expireTime;
-
 }
