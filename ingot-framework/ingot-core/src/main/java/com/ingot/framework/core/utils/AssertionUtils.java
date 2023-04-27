@@ -12,13 +12,53 @@ import com.ingot.framework.core.model.support.R;
  */
 public final class AssertionUtils {
 
+    @FunctionalInterface
+    public interface Predicate {
+        boolean test();
+    }
+
+    /**
+     * 检测表达式，如果表达式为 false，则抛出指定异常
+     *
+     * @param expression 表达式
+     * @param e          异常
+     */
+    public static void check(boolean expression, RuntimeException e) {
+        check(() -> expression, () -> {
+            throw e;
+        });
+    }
+
+    /**
+     * 检测表达式，如果不满足则执行Function
+     *
+     * @param expression 表达式
+     * @param runnable   Function
+     */
+    public static void check(boolean expression, Runnable runnable) {
+        check(() -> expression, runnable);
+    }
+
+    /**
+     * 检查表达式
+     *
+     * @param predicate {@link Predicate}
+     * @param runnable  {@link Runnable}
+     */
+    public static void check(Predicate predicate, Runnable runnable) {
+        if (predicate.test()) {
+            return;
+        }
+        runnable.run();
+    }
+
     /**
      * 检测{@link R}，如果返回失败则抛出异常
      */
-    public static void checkR(R<?> response) {
-        if (!response.isSuccess()) {
+    public static void check(R<?> response) {
+        check(response::isSuccess, () -> {
             throw new BizException(response.getCode(), response.getMessage());
-        }
+        });
     }
 
     /**
@@ -49,29 +89,5 @@ public final class AssertionUtils {
      */
     public static void checkArgument(boolean expression, String message) {
         check(expression, new IllegalArgumentException(message));
-    }
-
-    /**
-     * 检测表达式，如果表达式为 false，则抛出指定异常
-     *
-     * @param expression 表达式
-     * @param e          异常
-     */
-    public static void check(boolean expression, RuntimeException e) {
-        if (!expression) {
-            throw e;
-        }
-    }
-
-    /**
-     * 检测表达式，如果不满足则执行Function
-     *
-     * @param expression 表达式
-     * @param runnable   Function
-     */
-    public static void check(boolean expression, Runnable runnable) {
-        if (!expression) {
-            runnable.run();
-        }
     }
 }
