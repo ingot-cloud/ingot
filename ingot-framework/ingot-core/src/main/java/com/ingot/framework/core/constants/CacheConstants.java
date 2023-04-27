@@ -1,8 +1,5 @@
 package com.ingot.framework.core.constants;
 
-import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.utils.AssertionUtils;
-
 /**
  * <p>Description  : 缓存常量.</p>
  * <p>Author       : wangchao.</p>
@@ -50,34 +47,5 @@ public interface CacheConstants {
          * Key ID
          */
         String AUTHORIZATION_KEY_ID = PREFIX + ":key_id";
-    }
-
-    interface Validator {
-        String CODE_PRE = "validate_code";
-        String SEND_SMS_COUNT = CODE_PRE + ":sms:count";
-
-        /**
-         * Gets send sms count key.
-         *
-         * @param ipAddr the ip addr
-         * @param type   mobile;ip;total
-         * @return the send sms count key
-         */
-        static String getSendSmsCountKey(String ipAddr, String type) {
-            AssertionUtils.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
-            return SEND_SMS_COUNT + ":" + type + ":" + ipAddr;
-        }
-
-        /**
-         * Gets send sms rate key.
-         *
-         * @param ipAddr the ip addr
-         * @return the send sms rate key
-         */
-        static String getSendSmsRateKey(String ipAddr) {
-            AssertionUtils.checkArgument(StrUtil.isNotEmpty(ipAddr), "请不要篡改IP地址");
-            return SEND_SMS_COUNT + ":" + ipAddr;
-        }
-
     }
 }
