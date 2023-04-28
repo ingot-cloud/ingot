@@ -1,8 +1,8 @@
-package com.ingot.framework.vc;
+package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.vc.common.VCException;
+import com.ingot.framework.vc.VCGenerator;
 
 /**
  * <p>Description  : VCConstants.</p>
@@ -34,5 +34,15 @@ public interface VCConstants {
             throw new VCException("仓库Key参数异常");
         });
         return CACHE_CODE + ":" + type.getValue() + ":" + key;
+    }
+
+    /**
+     * 获取生成验证码类 Bean Name
+     *
+     * @param type {@link VCType}
+     * @return bean name
+     */
+    static String getGeneratorBeanName(VCType type) {
+        return type.getBeanNamePrefix() + VCGenerator.class.getSimpleName();
     }
 }

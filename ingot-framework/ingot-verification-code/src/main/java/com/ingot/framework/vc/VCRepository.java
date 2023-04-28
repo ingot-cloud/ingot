@@ -1,5 +1,8 @@
 package com.ingot.framework.vc;
 
+import com.ingot.framework.vc.common.VCType;
+import com.ingot.framework.vc.common.VC;
+
 /**
  * <p>Description  : VCRepository.</p>
  * <p>Author       : wangchao.</p>

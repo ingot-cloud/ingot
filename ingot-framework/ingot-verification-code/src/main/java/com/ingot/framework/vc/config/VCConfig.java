@@ -1,4 +1,4 @@
-package com.ingot.framework.vc;
+package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

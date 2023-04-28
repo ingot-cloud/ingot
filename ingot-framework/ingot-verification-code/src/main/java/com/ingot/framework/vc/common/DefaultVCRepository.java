@@ -1,7 +1,8 @@
-package com.ingot.framework.vc;
+package com.ingot.framework.vc.common;
 
 import java.util.concurrent.TimeUnit;
 
+import com.ingot.framework.vc.VCRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 

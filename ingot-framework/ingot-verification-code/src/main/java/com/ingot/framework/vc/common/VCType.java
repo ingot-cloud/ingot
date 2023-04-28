@@ -1,4 +1,4 @@
-package com.ingot.framework.vc;
+package com.ingot.framework.vc.common;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,12 +18,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum VCType {
 
-    SMS("1", "短信验证码"),
-    EMAIL("2", "邮箱验证码"),
-    IMAGE("3", "图形验证码");
+    SMS("1", "sms", "短信验证码"),
+    EMAIL("2", "sms", "邮箱验证码"),
+    IMAGE("3", "sms", "图形验证码");
 
     @JsonValue
     private final String value;
+    private final String beanNamePrefix;
     private final String text;
 
     private static final Map<String, VCType> valueMap = new HashMap<>();
