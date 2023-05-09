@@ -19,5 +19,5 @@ public class EmailCodeProperties {
     /**
      * 过期时间
      */
-    private int expireIn = 60 * 60 * 24;
+    private int expireIn = 60 * 10;
 }
