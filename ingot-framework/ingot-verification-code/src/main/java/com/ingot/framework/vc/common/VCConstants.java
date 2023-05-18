@@ -33,7 +33,10 @@ public interface VCConstants {
         return CACHE_CODE + ":" + type.getValue() + ":" + key;
     }
 
-    String URL_PREFIX = "/code";
+    /**
+     * api前缀
+     */
+    String PATH_PREFIX = "/vc";
 
     /**
      * 请求参数，接收人，比如手机号，邮箱等
