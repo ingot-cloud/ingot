@@ -17,4 +17,7 @@ public class VCException extends BizException {
         super(VCStatusCode.Illegal.getCode(), message);
     }
 
+    public VCException(VCStatusCode code, String message) {
+        super(code.getCode(), message);
+    }
 }

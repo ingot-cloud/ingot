@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum VCStatusCode implements StatusCode {
-    Illegal("illegal_vc", "验证码异常");
+    Illegal("illegal_vc", "验证码异常"),
+    Send("send_error", "验证码发送失败"),
+    Check("check_vc", "检验验证码异常");
 
     private final String code;
     private final String text;

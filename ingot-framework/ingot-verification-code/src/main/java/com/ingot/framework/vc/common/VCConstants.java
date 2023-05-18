@@ -1,8 +1,6 @@
 package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.utils.AssertionUtils;
-import com.ingot.framework.vc.VCGenerator;
 
 /**
  * <p>Description  : VCConstants.</p>
@@ -30,19 +28,19 @@ public interface VCConstants {
      * @return 仓库KEY
      */
     static String getRepositoryKey(String key, VCType type) {
-        AssertionUtils.check(StrUtil.isNotEmpty(key) && type != null, () -> {
-            throw new VCException("仓库Key参数异常");
-        });
+        InnerCheck.check(StrUtil.isNotEmpty(key) && type != null,
+                "vc.common.repositoryKey");
         return CACHE_CODE + ":" + type.getValue() + ":" + key;
     }
 
+    String URL_PREFIX = "/code";
+
     /**
-     * 获取生成验证码类 Bean Name
-     *
-     * @param type {@link VCType}
-     * @return bean name
+     * 请求参数，接收人，比如手机号，邮箱等
      */
-    static String getGeneratorBeanName(VCType type) {
-        return type.getBeanNamePrefix() + VCGenerator.class.getSimpleName();
-    }
+    String QUERY_PARAMS_RECEIVER = "_vc_receiver";
+    /**
+     * 请求参数，验证码
+     */
+    String QUERY_PARAMS_CODE = "_vc_code";
 }

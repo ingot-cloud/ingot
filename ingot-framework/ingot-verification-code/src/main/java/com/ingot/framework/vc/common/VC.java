@@ -23,13 +23,23 @@ public class VC implements Serializable {
      */
     private String code;
     /**
-     * 过期时间
+     * 过期时间，单位秒
      */
     private int expireIn;
     /**
      * 到期时间
      */
     private LocalDateTime expireTime;
+
+    public VC() {
+    }
+
+    public VC(VCType type, String code, int expireIn) {
+        this.type = type;
+        this.code = code;
+        this.expireIn = expireIn;
+        this.expireTime = LocalDateTime.now().plusSeconds(expireIn);
+    }
 
     /**
      * Is expired boolean.

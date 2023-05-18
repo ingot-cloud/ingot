@@ -24,10 +24,9 @@ public interface VCRepository {
      * 保存验证码
      *
      * @param key  验证码KEY
-     * @param type 验证码类型 {@link VCType}
      * @param code 验证码 {@link VC}
      */
-    void save(String key, VCType type, VC code);
+    void save(String key, VC code);
 
     /**
      * 清空验证码

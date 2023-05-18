@@ -27,8 +27,8 @@ public class DefaultVCRepository implements VCRepository {
     }
 
     @Override
-    public void save(String key, VCType type, VC code) {
-        String redisKey = VCConstants.getRepositoryKey(key, type);
+    public void save(String key, VC code) {
+        String redisKey = VCConstants.getRepositoryKey(key, code.getType());
         redisTemplate.opsForValue().set(redisKey, code, code.getExpireIn(), TimeUnit.SECONDS);
     }
 
