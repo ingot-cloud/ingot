@@ -32,7 +32,7 @@ public final class WebUtils extends org.springframework.web.util.WebUtils {
                             ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()))
                     .getRequest();
         } catch (Exception e) {
-            log.debug(">>> RequestUtils - RequestUtils.getRequest() error, message={}, e={}",
+            log.debug("[WebUtils] - RequestUtils.getRequest() error, error={}",
                     e.getMessage(), e);
             return null;
         }
@@ -72,12 +72,12 @@ public final class WebUtils extends org.springframework.web.util.WebUtils {
                 try {
                     inet = InetAddress.getLocalHost();
                 } catch (UnknownHostException e) {
-                    log.error("RequestUtils servlet - 获取IP地址, 出现异常={}", e.getMessage(), e);
+                    log.error("[WebUtils] servlet - 获取IP地址, 出现异常={}", e.getMessage(), e);
                 }
                 assert inet != null;
                 ipAddress = inet.getHostAddress();
             }
-            log.info("RequestUtils servlet - 获取IP地址 ipAddress={}", ipAddress);
+            log.info("[WebUtils] servlet - 获取IP地址 ipAddress={}", ipAddress);
         }
         // 对于通过多个代理的情况, 第一个IP为客户端真实IP,多个IP按照','分割 //"***.***.***.***".length() = 15
         if (ipAddress != null && ipAddress.length() > GlobalConstants.MAX_IP_LENGTH) {

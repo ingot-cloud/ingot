@@ -55,12 +55,12 @@ public final class WebUtils {
                 try {
                     inet = InetAddress.getLocalHost();
                 } catch (UnknownHostException e) {
-                    log.error("RequestUtils reactive ServerRequest - 获取IP地址, 出现异常={}", e.getMessage(), e);
+                    log.error("[WebUtils] reactive ServerRequest - 获取IP地址, 出现异常={}", e.getMessage(), e);
                 }
                 assert inet != null;
                 ipAddress = inet.getHostAddress();
             }
-            log.info("RequestUtils reactive ServerRequest - 获取IP地址 ipAddress={}", ipAddress);
+            log.info("[WebUtils] reactive ServerRequest - 获取IP地址 ipAddress={}", ipAddress);
         }
         // 对于通过多个代理的情况, 第一个IP为客户端真实IP,多个IP按照','分割 //"***.***.***.***".length() = 15
         if (ipAddress != null && ipAddress.length() > GlobalConstants.MAX_IP_LENGTH) {
@@ -108,12 +108,12 @@ public final class WebUtils {
                 try {
                     inet = InetAddress.getLocalHost();
                 } catch (UnknownHostException e) {
-                    log.error("RequestUtils reactive ServerHttpRequest - 获取IP地址, 出现异常={}", e.getMessage(), e);
+                    log.error("[WebUtils] reactive ServerHttpRequest - 获取IP地址, 出现异常={}", e.getMessage(), e);
                 }
                 assert inet != null;
                 ipAddress = inet.getHostAddress();
             }
-            log.info("RequestUtils reactive ServerHttpRequest - 获取IP地址 ipAddress={}", ipAddress);
+            log.info("[WebUtils] reactive ServerHttpRequest - 获取IP地址 ipAddress={}", ipAddress);
         }
         // 对于通过多个代理的情况, 第一个IP为客户端真实IP,多个IP按照','分割 //"***.***.***.***".length() = 15
         if (ipAddress != null && ipAddress.length() > GlobalConstants.MAX_IP_LENGTH) {
