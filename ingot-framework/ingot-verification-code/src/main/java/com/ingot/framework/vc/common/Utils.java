@@ -18,15 +18,21 @@ public class Utils {
      */
     public static void checkCode(String codeInRequest, VC codeInCache) {
         if (StrUtil.isBlank(codeInRequest)) {
-            throw new VCException(VCStatusCode.Check, "验证码不能为空");
+            throw new VCException(VCStatusCode.Check,
+                    IngotVCMessageSource.getAccessor()
+                            .getMessage("vc.check.notNull"));
         }
 
         if (codeInCache == null || codeInCache.isExpired()) {
-            throw new VCException(VCStatusCode.Check, "验证码已过期");
+            throw new VCException(VCStatusCode.Check,
+                    IngotVCMessageSource.getAccessor()
+                            .getMessage("vc.check.expired"));
         }
 
         if (!StrUtil.equals(codeInCache.getCode(), codeInRequest)) {
-            throw new VCException(VCStatusCode.Check, "验证码不正确");
+            throw new VCException(VCStatusCode.Check,
+                    IngotVCMessageSource.getAccessor()
+                            .getMessage("vc.check.notAvailable"));
         }
     }
 }
