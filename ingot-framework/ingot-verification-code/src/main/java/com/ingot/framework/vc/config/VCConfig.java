@@ -7,7 +7,7 @@ import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.DefaultVCRepository;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.servlet.DefaultVCProviderManager;
-import com.ingot.framework.vc.module.servlet.SmsVCProvider;
+import com.ingot.framework.vc.module.sms.DefaultSmsVCProvider;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.module.servlet.VCProviderManager;
 import com.ingot.framework.vc.module.sms.DefaultSmsCodeSender;
@@ -61,7 +61,7 @@ public class VCConfig {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public VCProvider smsProvider(VCRepository repository,
                                   SmsCodeSender smsCodeSender) {
-        return new SmsVCProvider(repository, smsCodeSender);
+        return new DefaultSmsVCProvider(repository, smsCodeSender);
     }
 
 

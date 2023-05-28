@@ -1,9 +1,10 @@
-package com.ingot.framework.vc.module.servlet;
+package com.ingot.framework.vc.module.sms;
 
 import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
-import com.ingot.framework.vc.module.sms.SmsCodeSender;
+import com.ingot.framework.vc.module.servlet.AbstractVCProvider;
+import com.ingot.framework.vc.module.servlet.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.ServletWebRequest;
 
@@ -14,10 +15,10 @@ import org.springframework.web.context.request.ServletWebRequest;
  * <p>Time         : 5:10 PM.</p>
  */
 @Slf4j
-public class SmsVCProvider extends AbstractVCProvider {
+public class DefaultSmsVCProvider extends AbstractVCProvider {
     private final SmsCodeSender smsCodeSender;
 
-    public SmsVCProvider(VCRepository repository, SmsCodeSender smsCodeSender) {
+    public DefaultSmsVCProvider(VCRepository repository, SmsCodeSender smsCodeSender) {
         super(repository);
         this.smsCodeSender = smsCodeSender;
     }
