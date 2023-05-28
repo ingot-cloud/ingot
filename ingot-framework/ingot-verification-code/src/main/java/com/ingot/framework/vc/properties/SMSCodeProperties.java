@@ -21,7 +21,7 @@ public class SMSCodeProperties {
      */
     private int length = 6;
     /**
-     * 过期时间
+     * 过期时间，单位秒
      */
     private int expireIn = 60;
     /**
