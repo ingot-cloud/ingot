@@ -21,7 +21,7 @@ public class VC implements Serializable {
     /**
      * 验证码
      */
-    private String code;
+    private String value;
     /**
      * 过期时间，单位秒
      */
@@ -31,12 +31,24 @@ public class VC implements Serializable {
      */
     private LocalDateTime expireTime;
 
+    /**
+     * 实例化
+     *
+     * @param type     {@link VCType}
+     * @param value    验证码
+     * @param expireIn 过期时间
+     * @return {@link VC}
+     */
+    public static VC instance(VCType type, String value, int expireIn) {
+        return new VC(type, value, expireIn);
+    }
+
     public VC() {
     }
 
-    public VC(VCType type, String code, int expireIn) {
+    public VC(VCType type, String value, int expireIn) {
         this.type = type;
-        this.code = code;
+        this.value = value;
         this.expireIn = expireIn;
         this.expireTime = LocalDateTime.now().plusSeconds(expireIn);
     }
@@ -58,7 +70,7 @@ public class VC implements Serializable {
      */
     @Override
     public String toString() {
-        return "VC{" + "code='" + code + '\'' +
+        return "VC{" + "value='" + value + '\'' +
                 ", type='" + type + '\'' +
                 ", expireTime=" + expireTime +
                 '}';

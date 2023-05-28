@@ -5,8 +5,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.module.servlet.VCProvider;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -19,10 +17,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum VCType {
-
-    SMS("sms", "短信验证码"),
-    EMAIL("email", "邮箱验证码"),
-    IMAGE("image", "图形验证码");
+    SMS(VCConstants.TYPE_VALUE_SMS, "短信验证码"),
+    EMAIL(VCConstants.TYPE_VALUE_EMAIL, "邮箱验证码"),
+    IMAGE(VCConstants.TYPE_VALUE_IMAGE, "图形验证码");
 
     @JsonValue
     private final String value;
@@ -34,7 +31,7 @@ public enum VCType {
      * @return bean name
      */
     public String getProviderBeanName() {
-        return value + VCProvider.class.getSimpleName();
+        return value + VCConstants.BEAN_NAME_PROVIDER;
     }
 
     /**
@@ -43,7 +40,7 @@ public enum VCType {
      * @return bean name
      */
     public String getGeneratorBeanName() {
-        return value + VCGenerator.class.getSimpleName();
+        return value + VCConstants.BEAN_NAME_GENERATOR;
     }
 
     private static final Map<String, VCType> valueMap = new HashMap<>();
