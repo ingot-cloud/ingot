@@ -30,29 +30,4 @@ public interface SecurityConstants {
      * 内部请求标识
      */
     String HEADER_FROM_INSIDE_VALUE = "Inside";
-    /**
-     * 显示图形验证码 header，1为需要显示验证码，0为不需要
-     */
-    String HEADER_VALIDATE_IMAGE_DISPLAY_TIME = "ingot-image-code";
-
-    /**
-     * 验证图片验证码时，http请求中默认的携带图片验证码信息的参数的名称
-     */
-    String DEFAULT_PARAMETER_NAME_CODE_IMAGE = "image_code";
-    /**
-     * 验证短信验证码时，http请求中默认的携带短信验证码信息的参数的名称
-     */
-    String DEFAULT_PARAMETER_NAME_CODE_SMS = "sms_code";
-    /**
-     * 验证邮箱验证码时，http请求中默认的携带短信验证码信息的参数的名称
-     */
-    String DEFAULT_PARAMETER_NAME_CODE_EMAIL = "email_code";
-    /**
-     * 发送短信验证码 或 验证短信验证码时，传递手机号的参数的名称
-     */
-    String DEFAULT_PARAMETER_NAME_MOBILE = "mobile";
-    /**
-     * 发送邮箱验证码 或 验证邮箱验证码时，传递邮箱的参数的名称
-     */
-    String DEFAULT_PARAMETER_NAME_EMAIL = "email";
 }
