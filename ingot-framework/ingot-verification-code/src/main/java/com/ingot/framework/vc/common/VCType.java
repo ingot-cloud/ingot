@@ -43,6 +43,15 @@ public enum VCType {
         return value + VCConstants.BEAN_NAME_GENERATOR;
     }
 
+    /**
+     * 获取发送检测器 Bean Name
+     *
+     * @return bean name
+     */
+    public String getSendCheckerBeanName() {
+        return value + VCConstants.BEAN_NAME_SEND_CHECKER;
+    }
+
     private static final Map<String, VCType> valueMap = new HashMap<>();
 
     static {

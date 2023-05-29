@@ -2,8 +2,10 @@ package com.ingot.framework.vc.module.servlet;
 
 import java.util.Map;
 
+import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.common.InnerCheck;
+import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -18,31 +20,23 @@ import org.springframework.web.context.request.ServletWebRequest;
 public class DefaultVCProviderManager implements VCProviderManager {
     private final Map<String, VCProvider> providerMap;
     private final Map<String, VCGenerator> generatorMap;
+    private final Map<String, VCSendChecker> checkerMap;
 
     @Override
     public void create(VCType type, ServletWebRequest request) {
-        VCProvider provider = getProvider(type);
-        VCGenerator generator = getGenerator(type);
+        VCProvider provider = Utils.getProvider(type, providerMap);
+        VCGenerator generator = Utils.getGenerator(type, generatorMap);
+        VCSendChecker checker = Utils.getSendChecker(type, checkerMap);
+
+        String receiver = ServletUtils.getReceiver(request);
+        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
+        checker.check(receiver, remoteIP);
         provider.create(request, generator);
     }
 
     @Override
     public void validate(VCType type, ServletWebRequest request) {
-        VCProvider provider = getProvider(type);
+        VCProvider provider = Utils.getProvider(type, providerMap);
         provider.validate(request, type);
-    }
-
-    private VCProvider getProvider(VCType type) {
-        String beanName = type.getProviderBeanName();
-        VCProvider provider = providerMap.get(beanName);
-        InnerCheck.check(provider != null, "vc.common.typeError");
-        return provider;
-    }
-
-    private VCGenerator getGenerator(VCType type) {
-        String beanName = type.getGeneratorBeanName();
-        VCGenerator generator = generatorMap.get(beanName);
-        InnerCheck.check(generator != null, "vc.common.typeError");
-        return generator;
     }
 }

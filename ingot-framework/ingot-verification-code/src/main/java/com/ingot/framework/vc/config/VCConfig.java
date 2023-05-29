@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
+import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.DefaultVCRepository;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.servlet.DefaultVCProviderManager;
@@ -12,6 +13,7 @@ import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.module.servlet.VCProviderManager;
 import com.ingot.framework.vc.module.sms.DefaultSmsCodeSender;
 import com.ingot.framework.vc.module.sms.DefaultSmsVCGenerator;
+import com.ingot.framework.vc.module.sms.DefaultSmsVCSendChecker;
 import com.ingot.framework.vc.module.sms.SmsCodeSender;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -38,10 +40,12 @@ public class VCConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean(VCProviderManager.class)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public VCProviderManager vcProviderManager(Map<String, VCProvider> providerMap,
-                                               Map<String, VCGenerator> generatorMap) {
-        return new DefaultVCProviderManager(providerMap, generatorMap);
+                                               Map<String, VCGenerator> generatorMap,
+                                               Map<String, VCSendChecker> checkerMap) {
+        return new DefaultVCProviderManager(providerMap, generatorMap, checkerMap);
     }
 
     @Bean
@@ -56,6 +60,12 @@ public class VCConfig {
         return new DefaultSmsVCGenerator(properties.getSms());
     }
 
+    @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_SMS)
+    @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_SMS})
+    public VCSendChecker smsSendChecker() {
+        return new DefaultSmsVCSendChecker();
+    }
+
     @Bean(VCConstants.BEAN_NAME_PROVIDER_SMS)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_PROVIDER_SMS})
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -63,6 +73,5 @@ public class VCConfig {
                                   SmsCodeSender smsCodeSender) {
         return new DefaultSmsVCProvider(repository, smsCodeSender);
     }
-
 
 }
