@@ -17,5 +17,5 @@ public interface SmsCodeSender {
      * @param code  验证码
      * @param ip    IP
      */
-    void send(String phone, VC code, String ip);
+    void send(String phone, String ip, VC code);
 }

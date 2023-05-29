@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultSmsCodeSender implements SmsCodeSender {
 
     @Override
-    public void send(String phone, VC code, String ip) {
+    public void send(String phone, String ip, VC code) {
         log.warn("[验证码发送器] - 请配置真实的短信验证码发送器(SmsCodeSender)");
         log.info("[验证码发送器] - 向手机[{}]发送短信验证码[{}]ip={}", phone, code.getValue(), ip);
     }
