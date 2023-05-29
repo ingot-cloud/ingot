@@ -62,8 +62,9 @@ public class VCConfig {
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_SMS)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_SMS})
-    public VCSendChecker smsSendChecker() {
-        return new DefaultSmsVCSendChecker();
+    public VCSendChecker smsSendChecker(RedisTemplate<String, Object> redisTemplate,
+                                        IngotVCProperties properties) {
+        return new DefaultSmsVCSendChecker(redisTemplate, properties.getSms());
     }
 
     @Bean(VCConstants.BEAN_NAME_PROVIDER_SMS)

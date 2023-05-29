@@ -23,17 +23,25 @@ public class SMSCodeProperties {
     /**
      * 过期时间，单位秒
      */
-    private int expireIn = 60;
+    private int expireIn = 5 * 60;
     /**
-     * 每天每个手机号最大送送短信数量
+     * 操作频率，单位秒
      */
-    private int mobileMaxSendCount;
+    private int opsRate = 60;
     /**
-     * 每天每个IP最大送送短信数量
+     * 每天每个手机号最大短信发送数量, 0表示无限制
      */
-    private int ipMaxSendCount;
+    private int phoneLimitCountOfDay = 0;
     /**
-     * 每天最大发送短信数量
+     * 每天每个IP最大短信发送数量, 0表示无限制
      */
-    private int totalMaxSendCount;
+    private int ipLimitCountOfDay = 0;
+    /**
+     * 每天每个IP每个手机号最大短信发送数量，0表示无限制
+     */
+    private int ipPhoneLimitCountOfDay = 0;
+    /**
+     * 每天最大短信发送数量, 0表示无限制
+     */
+    private int limitCountOfDay = 0;
 }

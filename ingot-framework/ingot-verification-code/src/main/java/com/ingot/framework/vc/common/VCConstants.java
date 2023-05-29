@@ -1,6 +1,7 @@
 package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.core.utils.DigestUtils;
 
 /**
  * <p>Description  : VCConstants.</p>
@@ -21,6 +22,11 @@ public interface VCConstants {
     String CACHE_CODE = CACHE_KEY_PREFIX + ":code";
 
     /**
+     * 保存短信检查参数前缀
+     */
+    String CACHE_SMS_CHECK = CACHE_KEY_PREFIX + ":sms";
+
+    /**
      * 获取仓库KEY
      *
      * @param key  自定义key
@@ -31,6 +37,19 @@ public interface VCConstants {
         InnerCheck.check(StrUtil.isNotEmpty(key) && type != null,
                 "vc.common.repositoryKey");
         return CACHE_CODE + ":" + type.getValue() + ":" + key;
+    }
+
+    /**
+     * 获取短信检查key
+     *
+     * @param receiver 接收者
+     * @param remoteIP IP
+     * @param type     类型
+     * @return cache key
+     */
+    static String getSmsCheckKey(String receiver, String remoteIP, String type) {
+        String digest = DigestUtils.md5(receiver + remoteIP);
+        return CACHE_SMS_CHECK + ":" + type + ":" + digest;
     }
 
     /**
