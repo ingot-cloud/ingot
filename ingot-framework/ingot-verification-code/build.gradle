@@ -4,5 +4,6 @@ dependencies {
     implementation(deps.spring.spring_boot.data_redis_starter)
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
     compileOnly(deps.spring.framework_spring_webflux)
+    compileOnly(deps.spring.framework_webmvc)
     compileOnly(deps.javax_servlet_api)
 }
