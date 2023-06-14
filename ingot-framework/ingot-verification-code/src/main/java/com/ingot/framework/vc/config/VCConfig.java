@@ -1,20 +1,16 @@
 package com.ingot.framework.vc.config;
 
-import java.util.Map;
-
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.DefaultVCRepository;
 import com.ingot.framework.vc.common.VCConstants;
+import com.ingot.framework.vc.common.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.DefaultVCProviderManager;
-import com.ingot.framework.vc.module.sms.DefaultSmsVCProvider;
+import com.ingot.framework.vc.module.servlet.VCHttpConfigurer;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.module.servlet.VCProviderManager;
-import com.ingot.framework.vc.module.sms.DefaultSmsCodeSender;
-import com.ingot.framework.vc.module.sms.DefaultSmsVCGenerator;
-import com.ingot.framework.vc.module.sms.DefaultSmsVCSendChecker;
-import com.ingot.framework.vc.module.sms.SmsCodeSender;
+import com.ingot.framework.vc.module.sms.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,6 +18,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.util.Map;
 
 /**
  * <p>Description  : VCConfig.</p>
@@ -32,6 +31,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 @AutoConfiguration
 @EnableConfigurationProperties(IngotVCProperties.class)
 public class VCConfig {
+
+    @Bean
+    public VCVerifyResolver vcVerifyResolver(WebApplicationContext applicationContext,
+                                             IngotVCProperties properties) {
+        return new VCVerifyResolver(applicationContext, properties);
+    }
 
     @Bean
     @ConditionalOnMissingBean(VCRepository.class)
@@ -46,6 +51,13 @@ public class VCConfig {
                                                Map<String, VCGenerator> generatorMap,
                                                Map<String, VCSendChecker> checkerMap) {
         return new DefaultVCProviderManager(providerMap, generatorMap, checkerMap);
+    }
+
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public VCHttpConfigurer vcHttpConfigurer(VCProviderManager vcProviderManager,
+                                             VCVerifyResolver vcVerifyResolver) {
+        return new VCHttpConfigurer(vcProviderManager, vcVerifyResolver);
     }
 
     @Bean
