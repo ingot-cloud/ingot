@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
@@ -59,13 +60,14 @@ public class VCVerifyResolver implements InitializingBean {
     }
 
     /**
-     * 获取指定验证码的 request matchers
+     * 获取指定验证码的 {@link RequestMatcher}
      *
      * @param type {@link VCType}
-     * @return {@link AntPathRequestMatcher}
+     * @return {@link RequestMatcher}
      */
-    public List<AntPathRequestMatcher> getMatchers(VCType type) {
-        return getMatchers(type, properties.getVerifyUrls());
+    public RequestMatcher getMatcher(VCType type) {
+        List<AntPathRequestMatcher> matchers = getMatchers(type, properties.getVerifyUrls());
+        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
     private List<AntPathRequestMatcher> getMatchers(VCType type, List<String> urls) {
