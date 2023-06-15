@@ -15,11 +15,11 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultSmsVCGenerator implements VCGenerator {
-    private final SMSCodeProperties smsCodeProperties;
+    private final SMSCodeProperties properties;
 
     @Override
     public VC generate() {
-        String code = RandomUtil.randomNumbers(smsCodeProperties.getLength());
-        return VC.instance(VCType.SMS, code, smsCodeProperties.getExpireIn());
+        String code = RandomUtil.randomNumbers(properties.getLength());
+        return VC.instance(VCType.SMS, code, properties.getExpireIn());
     }
 }
