@@ -1,5 +1,6 @@
 package com.ingot.framework.vc.module.servlet;
 
+import cn.hutool.core.util.CharsetUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.common.VCException;
@@ -28,6 +29,7 @@ public class DefaultVCFailureHandler implements VCFailureHandler {
                           VCException exception) throws IOException, ServletException {
         R<?> body = R.error(exception.getCode(), exception.getMessage());
         response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setCharacterEncoding(CharsetUtil.UTF_8);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));
         response.flushBuffer();

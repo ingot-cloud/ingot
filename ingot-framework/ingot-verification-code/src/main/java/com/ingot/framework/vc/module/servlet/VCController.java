@@ -2,6 +2,7 @@ package com.ingot.framework.vc.module.servlet;
 
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.vc.common.VCConstants;
+import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class VCController {
     private final VCProviderManager providerManager;
+    private final VCFailureHandler failureHandler;
 
     @Permit
     @PostMapping(VCConstants.PATH_PREFIX + "/{type}")
@@ -34,6 +36,14 @@ public class VCController {
     public void createCode(@PathVariable String type,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        providerManager.create(VCType.getEnum(type), new ServletWebRequest(request, response));
+        try {
+            providerManager.create(VCType.getEnum(type), new ServletWebRequest(request, response));
+        } catch (VCException e) {
+            try {
+                failureHandler.onFailure(request, response, e);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 }

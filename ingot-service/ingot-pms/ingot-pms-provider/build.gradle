@@ -12,6 +12,8 @@ dependencies {
     implementation project(ingot.framework_security_auth_server)
     implementation project(ingot.framework_tenant)
     implementation project(ingot.framework_id)
+
+    implementation project(ingot.framework_vc)
 }
 
 apply from: 'ingot-mybatis.gradle'

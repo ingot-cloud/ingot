@@ -4,7 +4,6 @@ import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCVerifyResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.NonNull;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,7 +22,7 @@ import java.io.IOException;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class VCFilter extends OncePerRequestFilter implements InitializingBean {
+public class VCFilter extends OncePerRequestFilter {
     private final VCProviderManager providerManager;
     private final VCVerifyResolver verifyResolver;
     private final VCFailureHandler failureHandler;
