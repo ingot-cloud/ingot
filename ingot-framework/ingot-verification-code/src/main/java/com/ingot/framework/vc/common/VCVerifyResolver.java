@@ -16,10 +16,9 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -37,6 +36,9 @@ public class VCVerifyResolver implements InitializingBean {
 
     private final WebApplicationContext applicationContext;
     private final IngotVCProperties properties;
+
+    private final List<VCType> typeList = new ArrayList<>();
+    private final List<RequestMatcher> requestMatcherList = new ArrayList<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -57,6 +59,34 @@ public class VCVerifyResolver implements InitializingBean {
         }
 
         log.info("[VCVerifyResolver] verify urls = {}", properties.getVerifyUrls());
+
+        // 遍历type
+        VCType[] typeArray = VCType.values();
+        for (VCType item : typeArray) {
+            typeList.add(item);
+            requestMatcherList.add(getMatcher(item));
+        }
+
+        log.info("[VCVerifyResolver] afterPropertiesSet - typeList={}", typeList);
+        log.info("[VCVerifyResolver] afterPropertiesSet - requestMatcherList={}", requestMatcherList);
+    }
+
+    /**
+     * 匹配请求
+     *
+     * @param request  {@link HttpServletRequest}
+     * @param consumer {@link Consumer}
+     */
+    public void matches(HttpServletRequest request, Consumer<VCType> consumer) {
+        int len = typeList.size();
+        for (int i = 0; i < len; i++) {
+            RequestMatcher matcher = requestMatcherList.get(i);
+            if (matcher.matches(request)) {
+                VCType type = typeList.get(i);
+                consumer.accept(type);
+                break;
+            }
+        }
     }
 
     /**

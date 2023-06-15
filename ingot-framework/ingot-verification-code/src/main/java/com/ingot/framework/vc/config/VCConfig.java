@@ -6,10 +6,7 @@ import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.DefaultVCRepository;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCVerifyResolver;
-import com.ingot.framework.vc.module.servlet.DefaultVCProviderManager;
-import com.ingot.framework.vc.module.servlet.VCHttpConfigurer;
-import com.ingot.framework.vc.module.servlet.VCProvider;
-import com.ingot.framework.vc.module.servlet.VCProviderManager;
+import com.ingot.framework.vc.module.servlet.*;
 import com.ingot.framework.vc.module.sms.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -33,6 +30,7 @@ import java.util.Map;
 public class VCConfig {
 
     @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public VCVerifyResolver vcVerifyResolver(WebApplicationContext applicationContext,
                                              IngotVCProperties properties) {
         return new VCVerifyResolver(applicationContext, properties);
@@ -42,6 +40,13 @@ public class VCConfig {
     @ConditionalOnMissingBean(VCRepository.class)
     public VCRepository repository(RedisTemplate<String, Object> redisTemplate) {
         return new DefaultVCRepository(redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(VCFailureHandler.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public VCFailureHandler failureHandler() {
+        return new DefaultVCFailureHandler();
     }
 
     @Bean
@@ -56,8 +61,9 @@ public class VCConfig {
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public VCHttpConfigurer vcHttpConfigurer(VCProviderManager vcProviderManager,
-                                             VCVerifyResolver vcVerifyResolver) {
-        return new VCHttpConfigurer(vcProviderManager, vcVerifyResolver);
+                                             VCVerifyResolver vcVerifyResolver,
+                                             VCFailureHandler failureHandler) {
+        return new VCHttpConfigurer(vcProviderManager, vcVerifyResolver, failureHandler);
     }
 
     @Bean

@@ -1,0 +1,35 @@
+package com.ingot.framework.vc.module.servlet;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.vc.common.VCException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * <p>Description  : DefaultVCFailureHandler.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2023/6/15.</p>
+ * <p>Time         : 11:12 AM.</p>
+ */
+@Slf4j
+public class DefaultVCFailureHandler implements VCFailureHandler {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public void onFailure(HttpServletRequest request,
+                          HttpServletResponse response,
+                          VCException exception) throws IOException, ServletException {
+        R<?> body = R.error(exception.getCode(), exception.getMessage());
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.flushBuffer();
+    }
+}
