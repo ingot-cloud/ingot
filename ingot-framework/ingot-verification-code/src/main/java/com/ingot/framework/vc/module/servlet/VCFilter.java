@@ -26,8 +26,8 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class VCFilter extends OncePerRequestFilter {
-    private final VCProviderManager vcProviderManager;
-    private final VCVerifyResolver vcVerifyResolver;
+    private final VCProviderManager providerManager;
+    private final VCVerifyResolver verifyResolver;
 
     private final List<VCType> typeList = new ArrayList<>();
     private final List<RequestMatcher> requestMatcherList = new ArrayList<>();
@@ -40,7 +40,7 @@ public class VCFilter extends OncePerRequestFilter {
         VCType[] typeArray = VCType.values();
         for (VCType item : typeArray) {
             typeList.add(item);
-            requestMatcherList.add(vcVerifyResolver.getMatcher(item));
+            requestMatcherList.add(verifyResolver.getMatcher(item));
         }
     }
 
@@ -56,7 +56,7 @@ public class VCFilter extends OncePerRequestFilter {
                 continue;
             }
             VCType type = typeList.get(i);
-            vcProviderManager.validate(type, new ServletWebRequest(request, response));
+            providerManager.validate(type, new ServletWebRequest(request, response));
         }
 
         filterChain.doFilter(request, response);

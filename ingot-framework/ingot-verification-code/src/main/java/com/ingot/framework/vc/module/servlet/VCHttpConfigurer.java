@@ -16,13 +16,13 @@ import org.springframework.security.web.header.HeaderWriterFilter;
 @Slf4j
 @RequiredArgsConstructor
 public class VCHttpConfigurer extends IngotHttpConfigurer {
-    private final VCProviderManager vcProviderManager;
-    private final VCVerifyResolver vcVerifyResolver;
+    private final VCProviderManager providerManager;
+    private final VCVerifyResolver verifyResolver;
 
     @Override
     public void configure(HttpSecurity builder) throws Exception {
         log.info("[VCHttpConfigurer] Config TenantFilter.");
-        VCFilter filter = new VCFilter(vcProviderManager, vcVerifyResolver);
+        VCFilter filter = new VCFilter(providerManager, verifyResolver);
         builder.addFilterAfter(filter, HeaderWriterFilter.class);
     }
 

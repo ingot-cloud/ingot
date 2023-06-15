@@ -1,8 +1,5 @@
 package com.ingot.framework.vc.module.servlet;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCType;
@@ -15,6 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * <p>Description  : VCAPI.</p>
  * <p>Author       : wangchao.</p>
@@ -26,7 +26,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 @RequiredArgsConstructor
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class VCController {
-    private final VCProviderManager vcProviderManager;
+    private final VCProviderManager providerManager;
 
     @Permit
     @PostMapping(VCConstants.PATH_PREFIX + "/{type}")
@@ -34,6 +34,6 @@ public class VCController {
     public void createCode(@PathVariable String type,
                            HttpServletRequest request,
                            HttpServletResponse response) {
-        vcProviderManager.create(VCType.getEnum(type), new ServletWebRequest(request, response));
+        providerManager.create(VCType.getEnum(type), new ServletWebRequest(request, response));
     }
 }
