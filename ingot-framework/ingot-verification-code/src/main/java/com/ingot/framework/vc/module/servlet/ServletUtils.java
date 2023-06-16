@@ -1,11 +1,17 @@
 package com.ingot.framework.vc.module.servlet;
 
+import cn.hutool.core.util.CharsetUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.common.IngotVCMessageSource;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.context.request.ServletWebRequest;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <p>Description  : Utils.</p>
@@ -34,6 +40,24 @@ public class ServletUtils {
      */
     public static String getCode(ServletWebRequest request) {
         return getFromRequest(request, VCConstants.QUERY_PARAMS_CODE);
+    }
+
+    /**
+     * 默认发送成功处理
+     *
+     * @param request      {@link ServletWebRequest}
+     * @param objectMapper {@link ObjectMapper}
+     * @throws Exception error
+     */
+    public static void defaultSendSuccess(ServletWebRequest request,
+                                          ObjectMapper objectMapper) throws Exception {
+        // 响应结果
+        HttpServletResponse response = request.getResponse();
+        assert response != null;
+        response.setCharacterEncoding(CharsetUtil.UTF_8);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(objectMapper.writeValueAsString(R.ok(true)));
+        response.flushBuffer();
     }
 
     private static String getFromRequest(ServletWebRequest request, String key) {

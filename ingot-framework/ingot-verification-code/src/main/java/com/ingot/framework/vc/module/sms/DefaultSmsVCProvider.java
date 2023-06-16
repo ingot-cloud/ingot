@@ -1,16 +1,12 @@
 package com.ingot.framework.vc.module.sms;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
 import com.ingot.framework.vc.module.servlet.AbstractVCProvider;
 import com.ingot.framework.vc.module.servlet.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.web.context.request.ServletWebRequest;
 
 /**
@@ -36,12 +32,6 @@ public class DefaultSmsVCProvider extends AbstractVCProvider {
 
         // 发送短息
         smsCodeSender.send(receiver, remoteIP, validateCode);
-
-        // 响应结果
-        HttpServletResponse response = request.getResponse();
-        assert response != null;
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(R.ok(true)));
-        response.flushBuffer();
+        ServletUtils.defaultSendSuccess(request, objectMapper);
     }
 }

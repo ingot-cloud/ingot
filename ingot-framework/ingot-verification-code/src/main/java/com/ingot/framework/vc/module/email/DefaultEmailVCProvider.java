@@ -1,9 +1,11 @@
 package com.ingot.framework.vc.module.email;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
 import com.ingot.framework.vc.module.servlet.AbstractVCProvider;
+import com.ingot.framework.vc.module.servlet.ServletUtils;
 import org.springframework.web.context.request.ServletWebRequest;
 
 /**
@@ -23,6 +25,11 @@ public class DefaultEmailVCProvider extends AbstractVCProvider {
 
     @Override
     protected void send(ServletWebRequest request, VC validateCode) throws Exception {
+        String receiver = ServletUtils.getReceiver(request);
+        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
 
+        // 发送短息
+        emailCodeSender.send(receiver, remoteIP, validateCode);
+        ServletUtils.defaultSendSuccess(request, objectMapper);
     }
 }
