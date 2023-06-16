@@ -1,7 +1,5 @@
 package com.ingot.framework.vc.properties;
 
-import java.util.List;
-
 import lombok.Data;
 
 /**
@@ -13,11 +11,15 @@ import lombok.Data;
 @Data
 public class EmailCodeProperties {
     /**
-     * 要拦截的url, ant pattern
+     * 验证码长度
      */
-    private List<String> urls;
+    private int length = 6;
     /**
-     * 过期时间
+     * 过期时间, 单位秒
      */
-    private int expireIn = 60 * 10;
+    private int expireIn = 10 * 60;
+    /**
+     * 操作频率，单位秒
+     */
+    private int opsRate = 60;
 }

@@ -1,7 +1,5 @@
 package com.ingot.framework.vc.properties;
 
-import java.util.List;
-
 import lombok.Data;
 
 /**
@@ -12,10 +10,6 @@ import lombok.Data;
  */
 @Data
 public class SMSCodeProperties {
-    /**
-     * 要拦截的url, ant pattern
-     */
-    private List<String> urls;
     /**
      * 验证码长度
      */

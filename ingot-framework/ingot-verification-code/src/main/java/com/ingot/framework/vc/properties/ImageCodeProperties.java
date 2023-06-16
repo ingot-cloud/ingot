@@ -1,9 +1,8 @@
 package com.ingot.framework.vc.properties;
 
-import java.util.List;
-import java.util.Map;
-
 import lombok.Data;
+
+import java.util.Map;
 
 /**
  * <p>Description  : ImageCodeProperties.</p>
@@ -13,10 +12,6 @@ import lombok.Data;
  */
 @Data
 public class ImageCodeProperties {
-    /**
-     * 要拦截的url, ant pattern
-     */
-    private List<String> urls;
     /**
      * 默认验证码模式
      */
