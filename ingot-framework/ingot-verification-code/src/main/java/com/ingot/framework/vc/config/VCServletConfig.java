@@ -1,13 +1,9 @@
 package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.VCSendChecker;
-import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.*;
-import com.ingot.framework.vc.module.sms.DefaultSmsVCProvider;
-import com.ingot.framework.vc.module.sms.SmsCodeSender;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -56,11 +52,4 @@ public class VCServletConfig {
         return new VCHttpConfigurer(vcProviderManager, vcVerifyResolver, failureHandler);
     }
 
-    @Bean(VCConstants.BEAN_NAME_PROVIDER_SMS)
-    @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_PROVIDER_SMS})
-    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public VCProvider smsProvider(VCRepository repository,
-                                  SmsCodeSender smsCodeSender) {
-        return new DefaultSmsVCProvider(repository, smsCodeSender);
-    }
 }

@@ -27,6 +27,11 @@ public interface VCConstants {
     String CACHE_SMS_CHECK = CACHE_KEY_PREFIX + ":sms";
 
     /**
+     * 保存邮件检查参数前缀
+     */
+    String CACHE_EMAIL_CHECK = CACHE_KEY_PREFIX + ":email";
+
+    /**
      * 获取仓库KEY
      *
      * @param key  自定义key
@@ -40,7 +45,7 @@ public interface VCConstants {
     }
 
     /**
-     * 获取短信检查key
+     * 获取短信检查Key
      *
      * @param receiver 接收者
      * @param remoteIP IP
@@ -50,6 +55,18 @@ public interface VCConstants {
     static String getSmsCheckKey(String receiver, String remoteIP, String type) {
         String digest = DigestUtils.md5(receiver + remoteIP);
         return CACHE_SMS_CHECK + ":" + type + ":" + digest;
+    }
+
+    /**
+     * 获取邮件检查Key
+     *
+     * @param receiver 接收者
+     * @param remoteIP IP
+     * @return cache key
+     */
+    static String getEmailCheckKey(String receiver, String remoteIP) {
+        String digest = DigestUtils.md5(receiver + remoteIP);
+        return CACHE_EMAIL_CHECK + ":" + digest;
     }
 
     /**
@@ -80,6 +97,9 @@ public interface VCConstants {
     String BEAN_NAME_SEND_CHECKER_SMS = TYPE_VALUE_SMS + BEAN_NAME_SEND_CHECKER;
     String BEAN_NAME_PROVIDER_EMAIL = TYPE_VALUE_EMAIL + BEAN_NAME_PROVIDER;
     String BEAN_NAME_GENERATOR_EMAIL = TYPE_VALUE_EMAIL + BEAN_NAME_GENERATOR;
+    String BEAN_NAME_SEND_CHECKER_EMAIL = TYPE_VALUE_EMAIL + BEAN_NAME_SEND_CHECKER;
     String BEAN_NAME_PROVIDER_IMAGE = TYPE_VALUE_IMAGE + BEAN_NAME_GENERATOR;
     String BEAN_NAME_GENERATOR_IMAGE = TYPE_VALUE_IMAGE + BEAN_NAME_PROVIDER;
+    String BEAN_NAME_SEND_CHECKER_IMAGE = TYPE_VALUE_IMAGE + BEAN_NAME_SEND_CHECKER;
+
 }
