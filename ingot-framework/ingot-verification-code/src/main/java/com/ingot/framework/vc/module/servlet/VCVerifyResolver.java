@@ -1,8 +1,10 @@
-package com.ingot.framework.vc.common;
+package com.ingot.framework.vc.module.servlet;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.vc.common.VCType;
+import com.ingot.framework.vc.common.VCVerify;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,6 @@
 package com.ingot.framework.vc.module.servlet;
 
 import com.ingot.framework.vc.common.VCException;
-import com.ingot.framework.vc.common.VCVerifyResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
