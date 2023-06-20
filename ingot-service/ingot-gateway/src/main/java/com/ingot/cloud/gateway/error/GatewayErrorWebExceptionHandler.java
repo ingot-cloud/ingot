@@ -2,6 +2,7 @@ package com.ingot.cloud.gateway.error;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.core.error.exception.BizException;
 import com.ingot.framework.core.model.status.BaseStatusCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, @NonNull Throwable ex) {
         ServerHttpResponse response = exchange.getResponse();
+        log.debug("GatewayErrorWebExceptionHandler - error", ex);
 
         if (response.isCommitted()) {
             return Mono.error(ex);
@@ -42,7 +44,9 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
 
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         R<?> r = R.error500(ex.getMessage());
-        if (ex instanceof ResponseStatusException) {
+        if (ex instanceof BizException) {
+            r = R.error(((BizException) ex).getCode(), ex.getMessage());
+        } else if (ex instanceof ResponseStatusException) {
             HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
@@ -57,7 +61,7 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
             try {
                 return bufferFactory.wrap(objectMapper.writeValueAsBytes(finalResponse));
             } catch (JsonProcessingException e) {
-                log.error("Error writing response", ex);
+                log.error("GatewayErrorWebExceptionHandler - Error writing response", ex);
                 return bufferFactory.wrap(new byte[0]);
             }
         }));
