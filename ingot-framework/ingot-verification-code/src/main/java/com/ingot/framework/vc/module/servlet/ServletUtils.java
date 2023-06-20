@@ -56,7 +56,7 @@ public class ServletUtils {
         assert response != null;
         response.setCharacterEncoding(CharsetUtil.UTF_8);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(R.ok(true)));
+        response.getWriter().write(objectMapper.writeValueAsString(R.ok(Boolean.TRUE)));
         response.flushBuffer();
     }
 
