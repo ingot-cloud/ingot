@@ -49,7 +49,7 @@ public class VCVerifyResolver implements InitializingBean {
         for (RequestMappingInfo info : map.keySet()) {
             HandlerMethod handlerMethod = map.get(info);
 
-            // 获取方法中的 @Permit
+            // 获取方法中的 @VCVerify
             VCVerify verify = AnnotationUtils.findAnnotation(handlerMethod.getMethod(), VCVerify.class);
             if (verify != null) {
                 Optional.ofNullable(info.getPathPatternsCondition())
