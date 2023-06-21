@@ -1,12 +1,12 @@
 package com.ingot.framework.vc.common;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Description  : VerificationCodeType.</p>
@@ -32,6 +32,15 @@ public enum VCType {
      */
     public String getProviderBeanName() {
         return value + VCConstants.BEAN_NAME_PROVIDER;
+    }
+
+    /**
+     * 获取Processor bean name
+     *
+     * @return bean name
+     */
+    public String getProcessorBeanName() {
+        return value + VCConstants.BEAN_NAME_PROCESSOR;
     }
 
     /**

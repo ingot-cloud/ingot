@@ -1,12 +1,13 @@
 package com.ingot.framework.vc.common;
 
-import java.util.Map;
-
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 /**
  * <p>Description  : Utils.</p>
@@ -16,6 +17,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class Utils {
+
+    /**
+     * 获取Processor
+     *
+     * @param type         {@link VCType}
+     * @param processorMap processor映射表
+     * @return {@link VCProvider}
+     */
+    public static VCProcessor getProcessor(VCType type, Map<String, VCProcessor> processorMap) {
+        String beanName = type.getProcessorBeanName();
+        VCProcessor processor = processorMap.get(beanName);
+        InnerCheck.check(processor != null, "vc.common.typeError");
+        return processor;
+    }
 
     /**
      * 获取Provider
