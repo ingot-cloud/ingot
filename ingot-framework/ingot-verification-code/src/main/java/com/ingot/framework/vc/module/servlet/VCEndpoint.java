@@ -7,10 +7,7 @@ import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +28,7 @@ public class VCEndpoint {
     private final VCFailureHandler failureHandler;
 
     @Permit
-    @PostMapping(VCConstants.PATH_PREFIX + "/{type}")
+    @GetMapping(VCConstants.PATH_PREFIX + "/{type}")
     @ResponseBody
     public void createCode(@PathVariable String type,
                            HttpServletRequest request,
