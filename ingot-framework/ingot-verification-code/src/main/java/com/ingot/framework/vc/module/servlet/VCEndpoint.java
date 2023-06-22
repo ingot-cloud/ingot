@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * <p>Description  : VCAPI.</p>
+ * <p>Description  : VCEndpoint.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/5/18.</p>
  * <p>Time         : 4:08 PM.</p>
@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequiredArgsConstructor
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-public class VCController {
+public class VCEndpoint {
     private final VCProviderManager providerManager;
     private final VCFailureHandler failureHandler;
 
