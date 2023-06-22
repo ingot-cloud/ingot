@@ -1,16 +1,13 @@
 package com.ingot.framework.vc.module.servlet;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.common.VCVerify;
+import com.ingot.framework.vc.common.VCVerifyUtils;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
@@ -19,9 +16,11 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -33,9 +32,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class VCVerifyResolver implements InitializingBean {
-    private static final Pattern PATTERN = Pattern.compile("\\{(.*?)\\}");
-    private static final String VERTICAL_LINE = "|";
-
     private final WebApplicationContext applicationContext;
     private final IngotVCProperties properties;
 
@@ -56,7 +52,13 @@ public class VCVerifyResolver implements InitializingBean {
             if (verify != null) {
                 Optional.ofNullable(info.getPathPatternsCondition())
                         .ifPresent(con -> con.getPatterns()
-                                .forEach(url -> this.filterPath(url.getPatternString(), info, verify)));
+                                .forEach(url -> {
+                                    List<String> methodList = info.getMethodsCondition().getMethods()
+                                            .stream().map(RequestMethod::name).collect(Collectors.toList());
+                                    String verifyUrl = VCVerifyUtils.getFinalVerifyPath(
+                                            url.getPatternString(), methodList, verify);
+                                    properties.getVerifyUrls().add(verifyUrl);
+                                }));
             }
         }
 
@@ -66,7 +68,7 @@ public class VCVerifyResolver implements InitializingBean {
         VCType[] typeArray = VCType.values();
         for (VCType item : typeArray) {
             typeList.add(item);
-            requestMatcherList.add(getMatcher(item));
+            requestMatcherList.add(VCVerifyUtils.getMatcher(item, properties.getVerifyUrls()));
         }
 
         log.info("[VCVerifyResolver] afterPropertiesSet - typeList={}", typeList);
@@ -89,51 +91,6 @@ public class VCVerifyResolver implements InitializingBean {
                 break;
             }
         }
-    }
-
-    /**
-     * 获取指定验证码的 {@link RequestMatcher}
-     *
-     * @param type {@link VCType}
-     * @return {@link RequestMatcher}
-     */
-    public RequestMatcher getMatcher(VCType type) {
-        List<AntPathRequestMatcher> matchers = getMatchers(type, properties.getVerifyUrls());
-        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
-    }
-
-    private List<AntPathRequestMatcher> getMatchers(VCType type, List<String> urls) {
-        return urls.stream()
-                .filter(url -> {
-                    List<String> typeAndUrlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    return typeAndUrlAndMethod.size() == 3 && type == VCType.getEnum(typeAndUrlAndMethod.get(0));
-                }).flatMap(url -> {
-                    List<String> typeAndUrlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    String requestUrl = typeAndUrlAndMethod.get(1);
-                    String requestMethod = typeAndUrlAndMethod.get(2);
-                    // method
-                    if (StrUtil.equals(requestMethod, "*")) {
-                        AntPathRequestMatcher[] antPathRequestMatchers =
-                                {new AntPathRequestMatcher(requestUrl)};
-                        return Arrays.stream(antPathRequestMatchers);
-                    }
-                    List<String> methods = StrUtil.split(requestMethod, VERTICAL_LINE);
-                    return Arrays.stream(methods.stream()
-                            .map(method -> new AntPathRequestMatcher(requestUrl, method))
-                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
-                }).collect(Collectors.toList());
-    }
-
-    private void filterPath(String url, RequestMappingInfo info, VCVerify verify) {
-        List<String> methodList = info.getMethodsCondition().getMethods()
-                .stream().map(RequestMethod::name).collect(Collectors.toList());
-        String resultUrl = ReUtil.replaceAll(url, PATTERN, "*");
-        VCType type = verify.type();
-        String method = CollUtil.isEmpty(methodList) ?
-                "*" : CollUtil.join(methodList, VERTICAL_LINE);
-        String verifyUrl = String.format("%s%s%s%s%s",
-                type.getValue(), StrUtil.COMMA, resultUrl, StrUtil.COMMA, method);
-        properties.getVerifyUrls().add(verifyUrl);
     }
 
 }
