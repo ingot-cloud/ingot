@@ -21,7 +21,7 @@ import java.util.Map;
  * <p>Time         : 3:53 PM.</p>
  */
 @Configuration(proxyBeanMethods = false)
-@Import({VCController.class})
+@Import({VCEndpoint.class})
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class VCServletConfig {
 
