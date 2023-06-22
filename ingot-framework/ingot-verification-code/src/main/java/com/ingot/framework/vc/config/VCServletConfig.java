@@ -2,7 +2,7 @@ package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCSendChecker;
-import com.ingot.framework.vc.common.VCVerifyResolver;
+import com.ingot.framework.vc.module.servlet.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

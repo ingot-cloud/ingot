@@ -17,6 +17,7 @@ import java.util.Map;
 @Getter
 @RequiredArgsConstructor
 public enum VCType {
+    DEFAULT("default", "默认"),
     SMS(VCConstants.TYPE_VALUE_SMS, "短信验证码"),
     EMAIL(VCConstants.TYPE_VALUE_EMAIL, "邮箱验证码"),
     IMAGE(VCConstants.TYPE_VALUE_IMAGE, "图形验证码");

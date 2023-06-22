@@ -4,6 +4,7 @@ import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.VCConstants;
+import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.module.sms.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
@@ -48,4 +49,13 @@ public class SmsConfig {
                                   SmsCodeSender codeSender) {
         return new DefaultSmsVCProvider(repository, codeSender);
     }
+
+    @Bean(VCConstants.BEAN_NAME_PROCESSOR_SMS)
+    @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_PROCESSOR_SMS})
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    public VCProcessor smsProcessor(VCRepository repository,
+                                    SmsCodeSender codeSender) {
+        return new DefaultSmsVCProcessor(repository, codeSender);
+    }
+
 }

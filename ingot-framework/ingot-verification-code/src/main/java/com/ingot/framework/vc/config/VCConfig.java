@@ -17,7 +17,10 @@ import org.springframework.data.redis.core.RedisTemplate;
  * <p>Time         : 10:07 PM.</p>
  */
 @AutoConfiguration
-@Import({VCServletConfig.class, SmsConfig.class, EmailConfig.class})
+@Import({VCReactiveConfig.class,
+        VCServletConfig.class,
+        SmsConfig.class,
+        EmailConfig.class})
 @EnableConfigurationProperties(IngotVCProperties.class)
 public class VCConfig {
 
