@@ -2,6 +2,8 @@ package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.common.VCConstants;
+import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.reactive.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -9,6 +11,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
 import java.util.Map;
 
@@ -40,5 +45,15 @@ public class VCReactiveConfig {
     public VCWebFilter vcWebFilter(VCProcessorManager processorManager,
                                    VCVerifyResolver verifyResolver) {
         return new VCWebFilter(processorManager, verifyResolver);
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> vcRouterFunction(VCProcessorManager processorManager) {
+        return RouterFunctions.route()
+                .GET(VCConstants.PATH_PREFIX + "/{type}", request -> {
+                    String type = request.pathVariable("type");
+                    return processorManager.handle(VCType.getEnum(type), request);
+                })
+                .build();
     }
 }
