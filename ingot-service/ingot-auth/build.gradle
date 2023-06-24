@@ -6,7 +6,6 @@ dependencies {
     implementation project(ingot.framework_security_auth_server)
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_sentinel)
-    implementation project(ingot.framework_store)
     implementation project(ingot.framework_tenant)
     implementation project(ingot.pms_api)
 }

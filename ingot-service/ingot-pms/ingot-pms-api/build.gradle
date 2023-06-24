@@ -7,7 +7,7 @@ dependencies {
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
 
-    compileOnly project(ingot.framework_store)
+    compileOnly project(ingot.framework_data_mybatis)
     compileOnly project(ingot.framework_security)
 
     //mapstruct

@@ -2,7 +2,8 @@ def ingot = [:]
 
 // framework
 ingot.framework_core = ":ingot-framework:ingot-core"
-ingot.framework_store = ":ingot-framework:ingot-store"
+ingot.framework_data_mybatis = ":ingot-framework:ingot-data-mybatis"
+ingot.framework_data_redis = ":ingot-framework:ingot-data-redis"
 ingot.framework_feign = ":ingot-framework:ingot-feign"
 ingot.framework_sentinel = ":ingot-framework:ingot-sentinel"
 ingot.framework_security = ":ingot-framework:ingot-security"

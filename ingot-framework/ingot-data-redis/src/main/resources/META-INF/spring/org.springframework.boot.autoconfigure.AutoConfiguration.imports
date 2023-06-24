@@ -1,4 +1,3 @@
-com.ingot.framework.data.mybatis.config.MybatisPlusConfig
 com.ingot.framework.data.redis.config.RedisTemplateConfig
 com.ingot.framework.data.redis.config.RedisCacheConfig
 com.ingot.framework.data.redis.config.RedisCacheManagerConfig

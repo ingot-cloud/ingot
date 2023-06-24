@@ -1,7 +1,7 @@
 
 dependencies {
     implementation(deps.spring.spring_boot.actuator_starter)
-//    implementation(deps.spring.spring_boot.data_redis_reactive_starter)
+    implementation(deps.spring.spring_boot.data_redis_reactive_starter)
 
     implementation(deps.spring.spring_cloud.gateway_starter)
     implementation(deps.spring.spring_cloud.openfeign_starter)
@@ -12,7 +12,6 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_core)
 
-//    implementation project(ingot.framework_store)
 //    implementation project(ingot.framework_vc)
 }
 
