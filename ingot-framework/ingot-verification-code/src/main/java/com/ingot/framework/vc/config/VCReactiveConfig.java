@@ -6,6 +6,7 @@ import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.reactive.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
@@ -23,6 +24,7 @@ import java.util.Map;
  * <p>Date         : 2023/6/20.</p>
  * <p>Time         : 3:27 PM.</p>
  */
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 public class VCReactiveConfig {

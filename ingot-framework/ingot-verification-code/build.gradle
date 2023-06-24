@@ -1,7 +1,7 @@
 dependencies {
     implementation project(ingot.framework_core)
-    implementation project(ingot.framework_security)
-    implementation(deps.spring.spring_boot.data_redis_starter)
+    compileOnly project(ingot.framework_security)
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
