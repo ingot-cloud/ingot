@@ -1,18 +1,18 @@
 
 dependencies {
-    implementation(deps.spring.spring_boot.actuator_starter)
+//    implementation(deps.spring.spring_boot.actuator_starter)
     implementation(deps.spring.spring_boot.data_redis_reactive_starter)
 
     implementation(deps.spring.spring_cloud.gateway_starter)
     implementation(deps.spring.spring_cloud.openfeign_starter)
     implementation(deps.spring.spring_cloud.loadbalancer_starter)
     implementation(deps.alibaba.sentinel_gateway)
-    implementation(deps.spring.security_oauth2_core)
 
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_core)
 
 //    implementation project(ingot.framework_vc)
+//    implementation project(ingot.framework_data_redis)
 }
 
 apply from: 'ingot-assemble.gradle'
