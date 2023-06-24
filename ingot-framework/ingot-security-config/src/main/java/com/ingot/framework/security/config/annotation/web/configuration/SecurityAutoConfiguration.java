@@ -1,15 +1,16 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.ingot.framework.security.config.annotation.web.configurers.DefaultHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <p>Description  : SecurityAutoConfiguration.</p>
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Bean;
  * <p>Time         : 5:32 下午.</p>
  */
 @AutoConfiguration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class SecurityAutoConfiguration {
     private List<IngotHttpConfigurer> httpConfigurers = Collections.emptyList();
 
