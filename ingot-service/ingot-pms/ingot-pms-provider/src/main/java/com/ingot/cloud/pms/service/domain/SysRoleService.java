@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.core.model.support.Option;
-import com.ingot.framework.store.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**
  * <p>

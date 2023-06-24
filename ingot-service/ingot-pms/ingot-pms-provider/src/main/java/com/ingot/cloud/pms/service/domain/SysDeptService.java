@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
-import com.ingot.framework.store.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**
  * <p>

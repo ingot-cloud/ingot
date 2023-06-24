@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.mapper;
 
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 
 /**
  * <p>

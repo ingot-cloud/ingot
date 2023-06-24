@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.framework.store.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.store.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**
  * <p>

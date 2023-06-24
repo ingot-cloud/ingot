@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

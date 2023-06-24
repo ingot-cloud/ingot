@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.common;
+package com.ingot.framework.data.mybatis.common;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

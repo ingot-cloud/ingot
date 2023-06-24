@@ -23,7 +23,7 @@ import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;

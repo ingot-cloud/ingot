@@ -5,7 +5,7 @@ import java.util.List;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.framework.store.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**
  * <p>

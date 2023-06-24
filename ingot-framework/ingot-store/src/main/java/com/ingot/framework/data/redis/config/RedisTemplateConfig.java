@@ -1,4 +1,4 @@
-package com.ingot.framework.store.redis.config;
+package com.ingot.framework.data.redis.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

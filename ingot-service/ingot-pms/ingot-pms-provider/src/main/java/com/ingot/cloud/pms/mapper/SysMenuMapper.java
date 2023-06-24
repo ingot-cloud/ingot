@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 
 /**
  * <p>

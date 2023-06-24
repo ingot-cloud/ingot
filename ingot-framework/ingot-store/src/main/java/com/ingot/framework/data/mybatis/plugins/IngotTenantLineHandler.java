@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.plugins;
+package com.ingot.framework.data.mybatis.plugins;
 
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.ingot.framework.tenant.TenantContextHolder;

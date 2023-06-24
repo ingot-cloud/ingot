@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 
 /**

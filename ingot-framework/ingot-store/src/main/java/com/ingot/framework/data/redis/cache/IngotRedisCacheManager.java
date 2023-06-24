@@ -1,4 +1,4 @@
-package com.ingot.framework.store.redis.cache;
+package com.ingot.framework.data.redis.cache;
 
 import java.time.Duration;
 import java.util.Map;

@@ -1,7 +1,7 @@
-package com.ingot.framework.store.mybatis.service;
+package com.ingot.framework.data.mybatis.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 
 /**
  * <p>Description  : BaseServiceImpl.</p>

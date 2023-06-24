@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.filter;
+package com.ingot.framework.data.mybatis.filter;
 
 import java.sql.SQLException;
 import java.time.temporal.TemporalAccessor;
@@ -13,7 +13,7 @@ import com.alibaba.druid.proxy.jdbc.ResultSetProxy;
 import com.alibaba.druid.proxy.jdbc.StatementProxy;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.util.StringUtils;
-import com.ingot.framework.store.mybatis.properties.MybatisProperties;
+import com.ingot.framework.data.mybatis.properties.MybatisProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

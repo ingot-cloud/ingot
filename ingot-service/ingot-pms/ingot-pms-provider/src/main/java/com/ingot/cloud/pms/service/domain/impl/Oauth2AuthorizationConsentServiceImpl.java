@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 import com.ingot.cloud.pms.api.model.domain.Oauth2AuthorizationConsent;
 import com.ingot.cloud.pms.mapper.Oauth2AuthorizationConsentMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2AuthorizationConsentService;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

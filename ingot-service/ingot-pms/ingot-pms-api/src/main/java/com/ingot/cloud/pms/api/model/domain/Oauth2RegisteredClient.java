@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.store.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;

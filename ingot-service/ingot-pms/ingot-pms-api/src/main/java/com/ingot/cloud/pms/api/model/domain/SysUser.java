@@ -15,7 +15,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.store.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

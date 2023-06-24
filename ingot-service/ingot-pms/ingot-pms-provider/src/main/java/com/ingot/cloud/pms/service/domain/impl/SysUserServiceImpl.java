@@ -29,7 +29,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

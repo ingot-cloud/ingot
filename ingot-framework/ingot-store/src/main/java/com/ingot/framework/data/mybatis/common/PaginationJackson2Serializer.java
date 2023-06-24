@@ -1,11 +1,11 @@
-package com.ingot.framework.store.mybatis.common;
+package com.ingot.framework.data.mybatis.common;
 
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.ingot.framework.store.mybatis.model.Pagination;
+import com.ingot.framework.data.mybatis.model.Pagination;
 
 /**
  * <p>Description  : PaginationJackson2Serializer.</p>

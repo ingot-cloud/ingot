@@ -1,7 +1,7 @@
-package com.ingot.framework.store.redis.config;
+package com.ingot.framework.data.redis.config;
 
-import com.ingot.framework.store.redis.cache.DefaultRedisCacheWriter;
-import com.ingot.framework.store.redis.cache.IngotRedisCacheManager;
+import com.ingot.framework.data.redis.cache.DefaultRedisCacheWriter;
+import com.ingot.framework.data.redis.cache.IngotRedisCacheManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;

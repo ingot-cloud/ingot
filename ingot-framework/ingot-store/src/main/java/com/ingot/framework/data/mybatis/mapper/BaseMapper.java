@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.mapper;
+package com.ingot.framework.data.mybatis.mapper;
 
 /**
  * <p>Description  : BaseMapper.</p>

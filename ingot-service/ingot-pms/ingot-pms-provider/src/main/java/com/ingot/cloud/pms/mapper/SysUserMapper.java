@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 
 /**

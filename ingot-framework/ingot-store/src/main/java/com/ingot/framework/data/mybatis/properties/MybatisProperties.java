@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.properties;
+package com.ingot.framework.data.mybatis.properties;
 
 import lombok.Getter;
 import lombok.Setter;

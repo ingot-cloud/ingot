@@ -1,4 +1,4 @@
-package com.ingot.framework.store.redis.config;
+package com.ingot.framework.data.redis.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,4 +1,4 @@
-package com.ingot.framework.store.redis.cache;
+package com.ingot.framework.data.redis.cache;
 
 
 import java.nio.charset.StandardCharsets;

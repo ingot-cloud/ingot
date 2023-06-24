@@ -5,8 +5,8 @@ import java.util.List;
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.model.dto.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.store.mybatis.mapper.BaseMapper;
-import com.ingot.framework.store.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 

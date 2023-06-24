@@ -1,4 +1,4 @@
-package com.ingot.framework.store.mybatis.service;
+package com.ingot.framework.data.mybatis.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 
