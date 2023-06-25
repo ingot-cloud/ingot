@@ -15,6 +15,8 @@ versions.mybatis_plus = "3.5.3.1"
 versions.mysql_connector = "8.0.31"
 versions.hutool = "5.8.5"
 versions.redisson = "3.18.1"
+versions.minio = "8.4.6"
+versions.aj_captcha = "1.3.0"
 
 def spring = [:]
 def spring_boot = [:]
@@ -53,7 +55,6 @@ spring_cloud.commons = "org.springframework.cloud:spring-cloud-commons"
 spring_cloud.context = "org.springframework.cloud:spring-cloud-context"
 
 // security
-spring.security_oauth_boot = "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure"
 spring.security_config = "org.springframework.security:spring-security-config"
 spring.security_core = "org.springframework.security:spring-security-core"
 spring.security_web = "org.springframework.security:spring-security-web"
@@ -152,8 +153,9 @@ deps.aspectj = aspectj
 
 deps.perf4j = "org.perf4j:perf4j:0.9.16"
 deps.redisson = "org.redisson:redisson:${versions.redisson}"
-deps.minio = "io.minio:minio:8.4.6"
+deps.minio = "io.minio:minio:${versions.minio}"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
+deps.aj_captcha = "com.anji-plus:spring-boot-starter-captcha:${versions.aj_captcha}"
 deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
 deps.lombok = "org.projectlombok:lombok:1.18.16"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
