@@ -34,5 +34,14 @@ public interface VCProcessor {
      * @param chain    provides a way to delegate to the next filter
      * @return {@code Mono<Void>} to indicate when request processing is complete
      */
-    Mono<Void> validate(VCType type, ServerWebExchange exchange, WebFilterChain chain);
+    Mono<Void> checkOnly(VCType type, ServerWebExchange exchange, WebFilterChain chain);
+
+    /**
+     * Check request
+     *
+     * @param type    {@link VCType}
+     * @param request the request to check
+     * @return the response
+     */
+    Mono<ServerResponse> check(VCType type, ServerRequest request);
 }

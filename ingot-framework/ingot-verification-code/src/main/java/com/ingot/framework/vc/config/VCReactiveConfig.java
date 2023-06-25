@@ -56,6 +56,10 @@ public class VCReactiveConfig {
                     String type = request.pathVariable("type");
                     return processorManager.handle(VCType.getEnum(type), request);
                 })
+                .POST(VCConstants.PATH_PREFIX + "/{type}/check", request -> {
+                    String type = request.pathVariable("type");
+                    return processorManager.check(VCType.getEnum(type), request);
+                })
                 .build();
     }
 }

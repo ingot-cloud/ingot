@@ -64,9 +64,19 @@ public class ReactorUtils {
      * @return ServerResponse stream
      */
     public static Mono<ServerResponse> defaultSendSuccess() {
+        return successResponse(R.ok(Boolean.TRUE));
+    }
+
+    /**
+     * 成功响应
+     *
+     * @param data response data
+     * @return ServerResponse stream
+     */
+    public static <T> Mono<ServerResponse> successResponse(T data) {
         return ServerResponse
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(R.ok(Boolean.TRUE)));
+                .body(BodyInserters.fromValue(data));
     }
 }

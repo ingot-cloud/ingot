@@ -46,7 +46,7 @@ public class VCWebFilter implements WebFilter {
                     if (item == VCType.DEFAULT) {
                         return chain.filter(exchange);
                     }
-                    return processorManager.validate(item, exchange, chain);
+                    return processorManager.checkOnly(item, exchange, chain);
                 });
     }
 }

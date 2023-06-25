@@ -1,5 +1,6 @@
 package com.ingot.framework.vc.module.reactive;
 
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.Utils;
@@ -49,13 +50,25 @@ public abstract class AbstractVCProcessor implements VCProcessor {
     }
 
     @Override
-    public Mono<Void> validate(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> checkOnly(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
         try {
             ServerHttpRequest request = exchange.getRequest();
             VC codeInCache = repository.get(ReactorUtils.getReceiver(request), type);
             String codeInRequest = ReactorUtils.getCode(request);
             Utils.checkCode(codeInRequest, codeInCache);
             return chain.filter(exchange);
+        } catch (VCException e) {
+            return Mono.error(e);
+        }
+    }
+
+    @Override
+    public Mono<ServerResponse> check(VCType type, ServerRequest request) {
+        try {
+            VC codeInCache = repository.get(ReactorUtils.getReceiver(request), type);
+            String codeInRequest = ReactorUtils.getCode(request);
+            Utils.checkCode(codeInRequest, codeInCache);
+            return ReactorUtils.successResponse(R.ok(Boolean.TRUE));
         } catch (VCException e) {
             return Mono.error(e);
         }

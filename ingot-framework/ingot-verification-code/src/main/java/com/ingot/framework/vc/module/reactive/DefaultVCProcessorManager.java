@@ -45,8 +45,14 @@ public class DefaultVCProcessorManager implements VCProcessorManager {
     }
 
     @Override
-    public Mono<Void> validate(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> checkOnly(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
         VCProcessor processor = Utils.getProcessor(type, processorMap);
-        return processor.validate(type, exchange, chain);
+        return processor.checkOnly(type, exchange, chain);
+    }
+
+    @Override
+    public Mono<ServerResponse> check(VCType type, ServerRequest request) {
+        VCProcessor processor = Utils.getProcessor(type, processorMap);
+        return processor.check(type, request);
     }
 }
