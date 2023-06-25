@@ -1,6 +1,6 @@
 
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
-    implementation(deps.spring.security_config)
+    api(deps.spring.security_config)
     compileOnly(deps.spring.security_web)
 }
