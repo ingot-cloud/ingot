@@ -4,10 +4,10 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,14 +44,12 @@ public class VCVerifyUtils {
      * @return {@link ServerWebExchangeMatcher}
      */
     public static ServerWebExchangeMatcher getServerWebExchangeMatcher(VCType type, List<String> urls) {
-        List<PathPatternParserServerWebExchangeMatcher> matchers = getServerWebExchangeMatchers(type, urls);
+        List<RequestMeta> matchers = getRequestMeta(type, urls);
         return exchange -> {
-            boolean isMatch = matchers.stream().anyMatch(matcher -> {
-                ServerWebExchangeMatcher.MatchResult result = matcher.matches(exchange).blockOptional().orElse(null);
-                return result != null && result.isMatch();
-            });
-            return isMatch ? ServerWebExchangeMatcher.MatchResult.match()
-                    : ServerWebExchangeMatcher.MatchResult.notMatch();
+            ServerHttpRequest request = exchange.getRequest();
+            String path = request.getURI().getPath();
+            HttpMethod method = request.getMethod();
+            return Mono.just(matchers.stream().anyMatch(matcher -> matcher.matches(path, method)));
         };
     }
 
@@ -94,25 +92,18 @@ public class VCVerifyUtils {
                 }).collect(Collectors.toList());
     }
 
-    private static List<PathPatternParserServerWebExchangeMatcher> getServerWebExchangeMatchers(VCType type, List<String> urls) {
+    private static List<RequestMeta> getRequestMeta(VCType type, List<String> urls) {
         return urls.stream()
                 .filter(url -> {
                     List<String> typeAndUrlAndMethod = StrUtil.split(url, StrUtil.COMMA);
                     return typeAndUrlAndMethod.size() == 3 && type == VCType.getEnum(typeAndUrlAndMethod.get(0));
-                }).flatMap(url -> {
+                })
+                .map(url -> {
                     List<String> typeAndUrlAndMethod = StrUtil.split(url, StrUtil.COMMA);
                     String requestUrl = typeAndUrlAndMethod.get(1);
                     String requestMethod = typeAndUrlAndMethod.get(2);
-                    // method
-                    if (StrUtil.equals(requestMethod, "*")) {
-                        PathPatternParserServerWebExchangeMatcher[] matchers =
-                                {new PathPatternParserServerWebExchangeMatcher(requestUrl)};
-                        return Arrays.stream(matchers);
-                    }
-                    List<String> methods = StrUtil.split(requestMethod, VERTICAL_LINE);
-                    return Arrays.stream(methods.stream()
-                            .map(method -> new PathPatternParserServerWebExchangeMatcher(requestUrl, HttpMethod.resolve(method)))
-                            .collect(Collectors.toList()).toArray(new PathPatternParserServerWebExchangeMatcher[methods.size()]));
+                    List<String> methods = StrUtil.split(requestMethod, VERTICAL_LINE, true, true);
+                    return RequestMeta.create(requestUrl, methods);
                 }).collect(Collectors.toList());
     }
 }

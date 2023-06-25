@@ -1,11 +1,11 @@
 package com.ingot.framework.vc.module.reactive;
 
 import cn.hutool.core.collection.CollUtil;
+import com.ingot.framework.vc.common.ServerWebExchangeMatcher;
 import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -39,7 +39,7 @@ public class VCWebFilter implements WebFilter {
         }
 
         return Flux.zip(Flux.fromIterable(typeList), Flux.fromIterable(requestMatcherList))
-                .filterWhen(item -> item.getT2().matches(exchange).map(ServerWebExchangeMatcher.MatchResult::isMatch))
+                .filterWhen(item -> item.getT2().matches(exchange))
                 .map(Tuple2::getT1)
                 .elementAt(0, VCType.DEFAULT)
                 .flatMap(item -> {

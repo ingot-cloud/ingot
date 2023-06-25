@@ -1,5 +1,6 @@
 package com.ingot.framework.vc.module.reactive;
 
+import com.ingot.framework.vc.common.ServerWebExchangeMatcher;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.common.VCVerify;
 import com.ingot.framework.vc.common.VCVerifyUtils;
@@ -10,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.result.method.RequestMappingInfo;

@@ -1,5 +1,6 @@
 package com.ingot.framework.vc.module.reactive;
 
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.common.VCConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,7 +55,7 @@ public class ReactorUtils {
      * @return 验证码
      */
     public static String getCode(ServerHttpRequest request) {
-        return request.getQueryParams().getFirst(VCConstants.QUERY_PARAMS_RECEIVER);
+        return request.getQueryParams().getFirst(VCConstants.QUERY_PARAMS_CODE);
     }
 
     /**
@@ -66,6 +67,6 @@ public class ReactorUtils {
         return ServerResponse
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(Boolean.TRUE));
+                .body(BodyInserters.fromValue(R.ok(Boolean.TRUE)));
     }
 }
