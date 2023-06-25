@@ -33,7 +33,7 @@ public class VCFilter extends OncePerRequestFilter {
 
         try {
             verifyResolver.matches(request, (type) -> {
-                providerManager.validate(type, new ServletWebRequest(request, response));
+                providerManager.checkOnly(type, new ServletWebRequest(request, response));
             });
         } catch (VCException e) {
             failureHandler.onFailure(request, response, e);

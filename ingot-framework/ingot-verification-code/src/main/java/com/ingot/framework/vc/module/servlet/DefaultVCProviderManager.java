@@ -1,7 +1,5 @@
 package com.ingot.framework.vc.module.servlet;
 
-import java.util.Map;
-
 import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCSendChecker;
@@ -9,6 +7,8 @@ import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.context.request.ServletWebRequest;
+
+import java.util.Map;
 
 /**
  * <p>Description  : DefaultVCProviderManager.</p>
@@ -35,8 +35,14 @@ public class DefaultVCProviderManager implements VCProviderManager {
     }
 
     @Override
-    public void validate(VCType type, ServletWebRequest request) {
+    public void checkOnly(VCType type, ServletWebRequest request) {
         VCProvider provider = Utils.getProvider(type, providerMap);
-        provider.validate(request, type);
+        provider.checkOnly(request, type);
+    }
+
+    @Override
+    public void check(VCType type, ServletWebRequest request) {
+        VCProvider provider = Utils.getProvider(type, providerMap);
+        provider.check(request, type);
     }
 }

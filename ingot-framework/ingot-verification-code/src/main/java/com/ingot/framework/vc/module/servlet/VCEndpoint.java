@@ -43,4 +43,21 @@ public class VCEndpoint {
             }
         }
     }
+
+    @Permit
+    @PostMapping(VCConstants.PATH_PREFIX + "/{type}/check")
+    @ResponseBody
+    public void checkCode(@PathVariable String type,
+                          HttpServletRequest request,
+                          HttpServletResponse response) {
+        try {
+            providerManager.check(VCType.getEnum(type), new ServletWebRequest(request, response));
+        } catch (VCException e) {
+            try {
+                failureHandler.onFailure(request, response, e);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
 }

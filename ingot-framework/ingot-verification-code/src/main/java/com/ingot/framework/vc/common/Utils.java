@@ -102,8 +102,31 @@ public class Utils {
      * @param code message code
      */
     public static void throwCheckException(String code) {
-        throw new VCException(VCStatusCode.Check,
+        throwVCException(VCStatusCode.Check, code);
+    }
+
+    /**
+     * 验证码异常
+     *
+     * @param statusCode  {@link VCStatusCode}
+     * @param messageCode message code
+     */
+    public static void throwVCException(VCStatusCode statusCode, String messageCode) {
+        throw new VCException(statusCode,
                 IngotVCMessageSource.getAccessor()
-                        .getMessage(code));
+                        .getMessage(messageCode));
+    }
+
+    /**
+     * 验证码异常
+     *
+     * @param statusCode  {@link VCStatusCode}
+     * @param messageCode message code
+     * @param args        message args
+     */
+    public static void throwVCException(VCStatusCode statusCode, String messageCode, Object[] args) {
+        throw new VCException(statusCode,
+                IngotVCMessageSource.getAccessor()
+                        .getMessage(messageCode, args));
     }
 }

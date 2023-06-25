@@ -21,10 +21,18 @@ public interface VCProvider {
     void create(ServletWebRequest request, VCGenerator generator);
 
     /**
-     * 校验验证码
+     * 仅做检查，如果检查失败抛出异常
      *
      * @param request {@link ServletWebRequest}
      * @param type    {@link VCType}
      */
-    void validate(ServletWebRequest request, VCType type);
+    void checkOnly(ServletWebRequest request, VCType type);
+
+    /**
+     * 校验验证码，返回响应结果
+     *
+     * @param request {@link ServletWebRequest}
+     * @param type    {@link VCType}
+     */
+    void check(ServletWebRequest request, VCType type);
 }

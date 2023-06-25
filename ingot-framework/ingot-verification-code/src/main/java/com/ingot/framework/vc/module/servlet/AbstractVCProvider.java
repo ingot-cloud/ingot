@@ -1,14 +1,10 @@
 package com.ingot.framework.vc.module.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
-import com.ingot.framework.vc.common.IngotVCMessageSource;
-import com.ingot.framework.vc.common.Utils;
-import com.ingot.framework.vc.common.VC;
-import com.ingot.framework.vc.common.VCConstants;
-import com.ingot.framework.vc.common.VCException;
-import com.ingot.framework.vc.common.VCStatusCode;
-import com.ingot.framework.vc.common.VCType;
+import com.ingot.framework.vc.common.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -23,6 +19,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 @RequiredArgsConstructor
 public abstract class AbstractVCProvider implements VCProvider {
     private final VCRepository repository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 发送校验码，由子类实现
@@ -40,19 +37,27 @@ public abstract class AbstractVCProvider implements VCProvider {
             send(request, code);
         } catch (Exception e) {
             log.error("[验证码] - 验证码发送失败", e);
-            throw new VCException(VCStatusCode.Send,
-                    IngotVCMessageSource.getAccessor()
-                            .getMessage("vc.common.sendError",
-                                    new String[]{VCConstants.QUERY_PARAMS_RECEIVER}));
+            Utils.throwVCException(VCStatusCode.Send, "vc.common.sendError");
         }
         save(request, code);
     }
 
     @Override
-    public void validate(ServletWebRequest request, VCType type) {
+    public void checkOnly(ServletWebRequest request, VCType type) {
         VC codeInCache = repository.get(ServletUtils.getReceiver(request), type);
         String codeInRequest = ServletUtils.getCode(request);
         Utils.checkCode(codeInRequest, codeInCache);
+    }
+
+    @Override
+    public void check(ServletWebRequest request, VCType type) {
+        checkOnly(request, type);
+        try {
+            ServletUtils.successResponse(request, objectMapper, R.ok(Boolean.TRUE));
+        } catch (Exception e) {
+            log.error("[验证码] - 验证码校验失败", e);
+            Utils.throwVCException(VCStatusCode.Check, "vc.common.checkError");
+        }
     }
 
     /**
