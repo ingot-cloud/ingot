@@ -5,6 +5,7 @@ import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.email.*;
+import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.properties.IngotVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -47,5 +48,13 @@ public class EmailConfig {
     public VCProvider emailProvider(VCRepository repository,
                                     EmailCodeSender codeSender) {
         return new DefaultEmailVCProvider(repository, codeSender);
+    }
+
+    @Bean(VCConstants.BEAN_NAME_PROCESSOR_EMAIL)
+    @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_PROCESSOR_EMAIL})
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    public VCProcessor emailProcessor(VCRepository repository,
+                                      EmailCodeSender codeSender) {
+        return new DefaultEmailVCProcessor(repository, codeSender);
     }
 }
