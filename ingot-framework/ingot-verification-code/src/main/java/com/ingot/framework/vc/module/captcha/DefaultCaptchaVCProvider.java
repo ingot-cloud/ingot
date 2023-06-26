@@ -11,6 +11,7 @@ import com.ingot.framework.vc.common.*;
 import com.ingot.framework.vc.module.servlet.ServletUtils;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.ServletWebRequest;
 
 /**
@@ -19,6 +20,7 @@ import org.springframework.web.context.request.ServletWebRequest;
  * <p>Date         : 2023/6/25.</p>
  * <p>Time         : 3:11 PM.</p>
  */
+@Slf4j
 @RequiredArgsConstructor
 public class DefaultCaptchaVCProvider implements VCProvider {
     private final CaptchaService captchaService;
@@ -40,7 +42,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
 
     @Override
     public void checkOnly(ServletWebRequest request, VCType type) {
-        String code = ServletUtils.getFromRequest(request, "code");
+        String code = ServletUtils.getCode(request);
         InnerCheck.check(StrUtil.isNotEmpty(code), "vc.check.image.illegalArgs");
 
         CaptchaVO vo = new CaptchaVO();
