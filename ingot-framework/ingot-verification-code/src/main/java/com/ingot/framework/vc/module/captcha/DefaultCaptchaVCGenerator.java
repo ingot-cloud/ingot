@@ -18,6 +18,6 @@ public class DefaultCaptchaVCGenerator implements VCGenerator {
 
     @Override
     public VC generate() {
-        return VC.instance(VCType.IMAGE, "1", properties.getExpireIn());
+        return VC.instance(VCType.IMAGE, "1", 1);
     }
 }
