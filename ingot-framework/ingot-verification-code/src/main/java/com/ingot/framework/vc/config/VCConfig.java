@@ -20,7 +20,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Import({VCReactiveConfig.class,
         VCServletConfig.class,
         SmsConfig.class,
-        EmailConfig.class})
+        EmailConfig.class,
+        CaptchaConfig.class})
 @EnableConfigurationProperties(IngotVCProperties.class)
 public class VCConfig {
 
