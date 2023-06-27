@@ -30,4 +30,15 @@ public interface SecurityConstants {
      * 内部请求标识
      */
     String HEADER_FROM_INSIDE_VALUE = "Inside";
+
+    /**
+     * Grant type
+     */
+    interface GrantType {
+        String PASSWORD = "password";
+        String AUTHORIZATION_CODE = "authorization_code";
+        String REFRESH_TOKEN = "refresh_token";
+        String CLIENT_CREDENTIALS = "client_credentials";
+        String SOCIAL = "social";
+    }
 }

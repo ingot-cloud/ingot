@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
+import com.ingot.framework.core.constants.SecurityConstants;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
@@ -12,10 +13,10 @@ public interface UserDetailsAuthorizationGrantType {
     /**
      * 账号密码授权类型
      */
-    AuthorizationGrantType PASSWORD = AuthorizationGrantType.PASSWORD;
+    AuthorizationGrantType PASSWORD = new AuthorizationGrantType(SecurityConstants.GrantType.PASSWORD);
 
     /**
      * 社交授权类型
      */
-    AuthorizationGrantType SOCIAL = new AuthorizationGrantType("social");
+    AuthorizationGrantType SOCIAL = new AuthorizationGrantType(SecurityConstants.GrantType.SOCIAL);
 }
