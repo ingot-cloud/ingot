@@ -1,6 +1,6 @@
 dependencies {
     implementation project(ingot.framework_core)
-    implementation(deps.aj_captcha)
+    api(deps.aj_captcha)
 
     compileOnly project(ingot.framework_security)
     compileOnly(deps.spring.security_web)
