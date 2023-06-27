@@ -31,6 +31,7 @@ public class VCWebFilter implements WebFilter {
     @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange,
                              @NonNull WebFilterChain chain) {
+        log.info("[VCWebFilter] - request path={}", exchange.getRequest().getPath());
 
         List<VCType> typeList = verifyResolver.getTypeList();
         List<ServerWebExchangeMatcher> requestMatcherList = verifyResolver.getRequestMatcherList();
