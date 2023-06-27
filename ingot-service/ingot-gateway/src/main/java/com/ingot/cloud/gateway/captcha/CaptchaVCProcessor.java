@@ -25,11 +25,9 @@ import reactor.core.publisher.Mono;
 @Component(VCConstants.BEAN_NAME_PROCESSOR_IMAGE)
 public class CaptchaVCProcessor implements VCProcessor {
     private static final String TOKEN_ENDPOINT = "/auth" + SecurityConstants.TOKEN_ENDPOINT_URI;
-    private final CaptchaService captchaService;
     private final DefaultCaptchaVCProcessor defaultCaptchaVCProcessor;
 
     public CaptchaVCProcessor(CaptchaService captchaService) {
-        this.captchaService = captchaService;
         this.defaultCaptchaVCProcessor = new DefaultCaptchaVCProcessor(captchaService);
     }
 
@@ -43,10 +41,10 @@ public class CaptchaVCProcessor implements VCProcessor {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // 登录path单独处理
+        // token端点单独处理，判断grant_type
+        // 目前仅password需要进行验证码验证
         if (StrUtil.equals(TOKEN_ENDPOINT, path)) {
             String grantType = request.getQueryParams().getFirst("grant_type");
-            // 目前仅password模式需要进行验证码校验
             if (!StrUtil.equals(grantType, "password")) {
                 return chain.filter(exchange);
             }
