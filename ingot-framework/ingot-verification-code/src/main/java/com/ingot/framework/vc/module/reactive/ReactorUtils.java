@@ -59,6 +59,17 @@ public class ReactorUtils {
     }
 
     /**
+     * 获取参数
+     *
+     * @param request {@link ServerRequest}
+     * @param key     key
+     * @return value
+     */
+    public static String getFromRequest(ServerRequest request, String key) {
+        return request.queryParam(key).orElse(null);
+    }
+
+    /**
      * 默认发送成功响应
      *
      * @return ServerResponse stream
