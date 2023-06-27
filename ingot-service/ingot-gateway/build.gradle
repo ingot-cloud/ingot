@@ -11,8 +11,8 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_core)
 
-//    implementation project(ingot.framework_vc)
-//    implementation project(ingot.framework_data_redis)
+    implementation project(ingot.framework_vc)
+    implementation project(ingot.framework_data_redis)
 }
 
 apply from: 'ingot-assemble.gradle'
