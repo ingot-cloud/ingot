@@ -45,7 +45,7 @@ public class CaptchaVCProcessor implements VCProcessor {
         // 目前仅password需要进行验证码验证
         if (StrUtil.equals(TOKEN_ENDPOINT, path)) {
             String grantType = request.getQueryParams().getFirst("grant_type");
-            if (!StrUtil.equals(grantType, "password")) {
+            if (!StrUtil.equals(grantType, SecurityConstants.GrantType.PASSWORD)) {
                 return chain.filter(exchange);
             }
         }
