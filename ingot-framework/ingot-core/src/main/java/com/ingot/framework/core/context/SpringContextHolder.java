@@ -1,7 +1,5 @@
 package com.ingot.framework.core.context;
 
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
@@ -12,6 +10,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.lang.NonNull;
+
+import java.util.Map;
 
 /**
  * <p>Description  : SpringContextHolder.</p>
@@ -84,6 +84,18 @@ public final class SpringContextHolder implements BeanFactoryPostProcessor, Appl
      * @param event {@link ApplicationEvent}
      */
     public static void publishEvent(ApplicationEvent event) {
+        if (applicationContext == null) {
+            return;
+        }
+        applicationContext.publishEvent(event);
+    }
+
+    /**
+     * 发布事件
+     *
+     * @param event object
+     */
+    public static void publishEvent(Object event) {
         if (applicationContext == null) {
             return;
         }
