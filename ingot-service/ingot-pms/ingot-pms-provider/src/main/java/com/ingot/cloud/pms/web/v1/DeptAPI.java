@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.web.v1;
 
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,41 +19,42 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <p>Description  : AuthorityApi.</p>
+ * <p>Description  : DeptApi.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/3/30.</p>
- * <p>Time         : 10:12 下午.</p>
+ * <p>Time         : 10:05 下午.</p>
  */
+@Slf4j
 @RestController
-@RequestMapping(value = "/v1/authority")
+@RequestMapping(value = "/v1/dept")
 @RequiredArgsConstructor
-public class AuthorityApi implements RShortcuts {
-    private final SysAuthorityService sysAuthorityService;
+public class DeptAPI implements RShortcuts {
+    private final SysDeptService sysDeptService;
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write', 'basic.dept.read')")
     @GetMapping("/tree")
     public R<?> tree() {
-        return ok(sysAuthorityService.treeList());
+        return ok(sysDeptService.treeList());
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @PostMapping
-    public R<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
-        sysAuthorityService.createAuthority(params);
+    public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
+        sysDeptService.createDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @PutMapping
-    public R<?> update(@RequestBody @Validated(Group.Update.class) SysAuthority params) {
-        sysAuthorityService.updateAuthority(params);
+    public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
+        sysDeptService.updateDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        sysAuthorityService.removeAuthorityById(id);
+        sysDeptService.removeDeptById(id);
         return ok();
     }
 }

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/menu")
 @RequiredArgsConstructor
-public class MenuApi implements RShortcuts {
+public class MenuAPI implements RShortcuts {
     private final SysMenuService sysMenuService;
     private final BizUserService bizUserService;
 

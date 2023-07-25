@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/user")
 @RequiredArgsConstructor
-public class UserApi implements RShortcuts {
+public class UserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
     private final UserOpsChecker userOpsChecker;

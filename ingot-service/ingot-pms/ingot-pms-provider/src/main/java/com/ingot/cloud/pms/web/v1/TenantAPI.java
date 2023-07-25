@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/tenant")
 @RequiredArgsConstructor
-public class TenantApi implements RShortcuts {
+public class TenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
 
     @Permit

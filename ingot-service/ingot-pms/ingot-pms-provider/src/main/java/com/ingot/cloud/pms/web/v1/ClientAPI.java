@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/client")
 @RequiredArgsConstructor
-public class ClientApi implements RShortcuts {
+public class ClientAPI implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write', 'basic.client.read')")

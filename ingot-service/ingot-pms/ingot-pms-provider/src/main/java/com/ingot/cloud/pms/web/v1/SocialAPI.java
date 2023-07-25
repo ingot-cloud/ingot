@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/v1/social")
 @RequiredArgsConstructor
-public class SocialApi implements RShortcuts {
+public class SocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write', 'basic.social.read')")
