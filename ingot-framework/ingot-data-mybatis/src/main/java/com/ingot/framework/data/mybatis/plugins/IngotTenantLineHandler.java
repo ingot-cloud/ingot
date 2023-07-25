@@ -1,6 +1,7 @@
 package com.ingot.framework.data.mybatis.plugins;
 
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
+import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,11 @@ public class IngotTenantLineHandler implements TenantLineHandler {
     @Override
     public boolean ignoreTable(String tableName) {
         Long tenantId = TenantContextHolder.get();
+        // 如果当前租户为null或者为默认租户，那么不进行数据隔离
         if (tenantId == null) {
+            return Boolean.TRUE;
+        }
+        if (tenantId == IDConstants.DEFAULT_TENANT_ID) {
             return Boolean.TRUE;
         }
 

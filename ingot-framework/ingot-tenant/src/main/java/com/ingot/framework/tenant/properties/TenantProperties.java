@@ -1,11 +1,12 @@
 package com.ingot.framework.tenant.properties;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.ingot.framework.core.constants.IDConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>Description  : TenantProperties.</p>
@@ -17,12 +18,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "ingot.tenant")
 public class TenantProperties {
-    private static final Long DEFAULT_TENANT_ID = 1L;
-
     /**
      * 默认租户ID
      */
-    private Long defaultId = DEFAULT_TENANT_ID;
+    private Long defaultId = IDConstants.DEFAULT_TENANT_ID;
 
     /**
      * 租户字段名

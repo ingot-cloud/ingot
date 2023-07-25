@@ -12,4 +12,9 @@ public interface IDConstants {
      * 属性结构公共根ID
      */
     long ROOT_TREE_ID = 0L;
+
+    /**
+     * 默认租户ID
+     */
+    long DEFAULT_TENANT_ID = 1L;
 }
