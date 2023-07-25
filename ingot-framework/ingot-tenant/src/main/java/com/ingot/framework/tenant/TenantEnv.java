@@ -22,8 +22,9 @@ public class TenantEnv {
 
     /**
      * 切换租户环境运行
+     *
      * @param tenantId 目标租户
-     * @param func 执行操作
+     * @param func     执行操作
      */
     public static void runAs(Long tenantId, Run func) {
         final Long pre = TenantContextHolder.get();
@@ -31,11 +32,9 @@ public class TenantEnv {
             log.trace("TenantEnv - 切换租户环境 {} -> {}, 开始执行", pre, tenantId);
             TenantContextHolder.set(tenantId);
             func.exec();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new TenantEnvException(e.getMessage(), e);
-        }
-        finally {
+        } finally {
             log.trace("TenantEnv - 还原租户 {} <- {}, 执行结束", pre, tenantId);
             TenantContextHolder.set(pre);
         }
@@ -43,8 +42,9 @@ public class TenantEnv {
 
     /**
      * 切换租户环境运行
+     *
      * @param tenantId 目标租户
-     * @param func 执行操作
+     * @param func     执行操作
      * @return 返回结果
      */
     public static <T> T applyAs(Long tenantId, Apply<T> func) {
@@ -53,11 +53,9 @@ public class TenantEnv {
             log.trace("TenantEnv - 切换租户环境 {} -> {}, 开始执行", pre, tenantId);
             TenantContextHolder.set(tenantId);
             return func.exec();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new TenantEnvException(e.getMessage(), e);
-        }
-        finally {
+        } finally {
             log.trace("TenantEnv - 还原租户 {} <- {}, 执行结束", pre, tenantId);
             TenantContextHolder.set(pre);
         }
