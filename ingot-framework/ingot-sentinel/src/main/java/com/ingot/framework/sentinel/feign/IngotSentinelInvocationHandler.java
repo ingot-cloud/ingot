@@ -14,7 +14,7 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Feign;
@@ -118,7 +118,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                             if (ex instanceof IngotFeignException) {
                                 return R.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }
-                            return R.error(BaseStatusCode.REQUEST_FALLBACK.getCode(), ex.getLocalizedMessage());
+                            return R.error(BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getLocalizedMessage());
                         } else {
                             // throw exception if fallbackFactory is null
                             throw ex;

@@ -10,14 +10,14 @@ import com.ingot.framework.core.error.exception.BizException;
  */
 public class VCException extends BizException {
     public VCException() {
-        super(VCStatusCode.Illegal);
+        super(VCErrorCode.Illegal);
     }
 
     public VCException(String message) {
-        super(VCStatusCode.Illegal.getCode(), message);
+        super(VCErrorCode.Illegal.getCode(), message);
     }
 
-    public VCException(VCStatusCode code, String message) {
+    public VCException(VCErrorCode code, String message) {
         super(code.getCode(), message);
     }
 }

@@ -1,14 +1,14 @@
 package com.ingot.framework.core.model.support;
 
-import java.io.Serializable;
-
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.core.model.status.BaseStatusCode;
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.ToString;
+
+import java.io.Serializable;
 
 /**
  * <p>Description  : R.</p>
@@ -20,7 +20,7 @@ import lombok.ToString;
 @ApiModel(description = "响应信息主体")
 public class R<T> implements Serializable {
     /**
-     * 响应码字段
+     * 错误码字段
      */
     public static final String CODE = "code";
     /**
@@ -28,19 +28,19 @@ public class R<T> implements Serializable {
      */
     public static final String DATA = "data";
     /**
-     * 响应消息字段
+     * 错误消息字段
      */
     public static final String MESSAGE = "message";
 
     /**
      * 响应码
      */
-    @ApiModelProperty(value = "code：成功=0200")
-    private String code = BaseStatusCode.OK.getCode();
+    @ApiModelProperty(value = "错误码")
+    private String code = BaseErrorCode.OK.getCode();
     /**
      * 消息
      */
-    @ApiModelProperty(value = "消息")
+    @ApiModelProperty(value = "错误消息")
     private String message;
     /**
      * 响应体
@@ -61,11 +61,11 @@ public class R<T> implements Serializable {
         this.data = data;
     }
 
-    public R(StatusCode code) {
+    public R(ErrorCode code) {
         this(code.getCode(), code.getText());
     }
 
-    public R(T data, StatusCode code) {
+    public R(T data, ErrorCode code) {
         this(code);
         this.data = data;
     }
@@ -102,55 +102,55 @@ public class R<T> implements Serializable {
      */
     @JsonIgnore
     public boolean isSuccess() {
-        return StrUtil.equals(getCode(), BaseStatusCode.OK.getCode());
+        return StrUtil.equals(getCode(), BaseErrorCode.OK.getCode());
     }
 
     /**
      * 响应成功
      */
     public static <T> R<T> ok() {
-        return new R<>(BaseStatusCode.OK);
+        return new R<>(BaseErrorCode.OK);
     }
 
     /**
      * 响应成功附带 data
      */
     public static <T> R<T> ok(T data) {
-        return new R<>(data, BaseStatusCode.OK);
+        return new R<>(data, BaseErrorCode.OK);
     }
 
     /**
      * 500 error
      */
     public static <T> R<T> error500() {
-        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR);
+        return new R<>(BaseErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 500, custom message
      */
     public static <T> R<T> error500(String message) {
-        return new R<>(BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
+        return new R<>(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
     public static <T> R<T> error500(T data) {
-        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR);
+        return new R<>(data, BaseErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     /**
      * 响应失败 500，附带自定义响应体
      */
     public static <T> R<T> error500(T data, String message) {
-        return new R<>(data, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode(), message);
+        return new R<>(data, BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), message);
     }
 
     /**
      * 响应失败，附带 ResponseCode
      */
-    public static <T> R<T> error(StatusCode code) {
+    public static <T> R<T> error(ErrorCode code) {
         return new R<>(code);
     }
 
@@ -164,14 +164,14 @@ public class R<T> implements Serializable {
     /**
      * 响应失败
      */
-    public static <T> R<T> errorF(StatusCode code, Object... messages) {
+    public static <T> R<T> errorF(ErrorCode code, Object... messages) {
         return new R<>(code.getCode(), String.format(code.getText(), messages));
     }
 
     /**
      * 响应失败，附带自定义响应体
      */
-    public static <T> R<T> error(T data, StatusCode code) {
+    public static <T> R<T> error(T data, ErrorCode code) {
         return new R<>(data, code);
     }
 

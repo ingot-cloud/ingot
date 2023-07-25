@@ -1,16 +1,8 @@
 package com.ingot.framework.core.error;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-
 import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -21,6 +13,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
+
+import javax.servlet.ServletException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 /**
@@ -57,8 +56,8 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
             finalAttributes.put(R.CODE, ((BizException) error).getCode());
             finalAttributes.put(R.MESSAGE, error.getMessage());
         } else {
-            finalAttributes.put(R.CODE, BaseStatusCode.INTERNAL_SERVER_ERROR.getCode());
-            finalAttributes.put(R.MESSAGE, BaseStatusCode.INTERNAL_SERVER_ERROR.getText());
+            finalAttributes.put(R.CODE, BaseErrorCode.INTERNAL_SERVER_ERROR.getCode());
+            finalAttributes.put(R.MESSAGE, BaseErrorCode.INTERNAL_SERVER_ERROR.getText());
         }
 
 

@@ -3,7 +3,7 @@ package com.ingot.cloud.gateway.error;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
             response.setStatusCode(httpStatus);
             if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
                 r = R.error(
-                        BaseStatusCode.REQUEST_FALLBACK.getCode(), ex.getMessage());
+                        BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getMessage());
             }
         }
 

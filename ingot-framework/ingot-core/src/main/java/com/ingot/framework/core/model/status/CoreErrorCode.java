@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum CoreStatusCode implements StatusCode {
+public enum CoreErrorCode implements ErrorCode {
     PRECONDITION_BEANS("C0001", "预校验类中没有相关校验方法"),
     PRECONDITION_NO_SUCH_METHOD("C0002", "无法访问预校验中的校验方法"),
     PRECONDITION_ILLEGAL_ACCESS("C0003", "无法注入指定的预校验类");

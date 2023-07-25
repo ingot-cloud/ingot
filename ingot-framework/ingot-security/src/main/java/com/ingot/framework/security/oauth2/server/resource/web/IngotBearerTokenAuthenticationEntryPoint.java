@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -49,7 +49,7 @@ public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationE
         log.debug("[IngotBearerTokenAuthenticationEntryPoint] commence error", authException);
 
         HttpStatus status = HttpStatus.UNAUTHORIZED;
-        R<Map<String, String>> body = new R<>(BaseStatusCode.UNAUTHORIZED.getCode(),
+        R<Map<String, String>> body = new R<>(BaseErrorCode.UNAUTHORIZED.getCode(),
                 authException.getLocalizedMessage());
         Map<String, String> parameters = new LinkedHashMap<>();
 

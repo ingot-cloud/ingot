@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum BaseStatusCode implements StatusCode {
+public enum BaseErrorCode implements ErrorCode {
     OK("S0200", "Success"),
     BAD_REQUEST("S0400", "错误的请求"),
     UNAUTHORIZED("S0401", "未授权访问"),

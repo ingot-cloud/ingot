@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.core;
 
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum OAuth2ErrorCodesExtension implements StatusCode {
+public enum OAuth2ErrorCodesExtension implements ErrorCode {
     USER_STATUS("user_status", "Illegal user status"),
     SIGN_OUT("user_sign_out", "User has been signed out"),
     NOT_ALLOW_CLIENT("not_allow_client", "The user is not allowed to access the client");

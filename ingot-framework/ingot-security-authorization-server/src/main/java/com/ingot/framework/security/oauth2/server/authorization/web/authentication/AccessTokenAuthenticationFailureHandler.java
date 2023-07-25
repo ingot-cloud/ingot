@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2ErrorConverter;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2ErrorParametersConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class AccessTokenAuthenticationFailureHandler implements AuthenticationFa
                 error = new OAuth2Error(error.getErrorCode(), error.getErrorCode(), error.getUri());
             }
         } else {
-            error = new OAuth2Error(BaseStatusCode.BAD_REQUEST.getCode(),
+            error = new OAuth2Error(BaseErrorCode.BAD_REQUEST.getCode(),
                     exception.getLocalizedMessage(), "");
         }
 

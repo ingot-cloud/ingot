@@ -5,7 +5,7 @@ import com.ingot.framework.vc.VCSendChecker;
 import com.ingot.framework.vc.common.InnerCheck;
 import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCConstants;
-import com.ingot.framework.vc.common.VCStatusCode;
+import com.ingot.framework.vc.common.VCErrorCode;
 import com.ingot.framework.vc.properties.SMSCodeProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class DefaultSmsVCSendChecker implements VCSendChecker {
     @Override
     public void check(String receiver, String remoteIP) {
         InnerCheck.check(StrUtil.isNotEmpty(receiver),
-                VCStatusCode.Check, "vc.check.sms.receiverNotNull");
+                VCErrorCode.Check, "vc.check.sms.receiverNotNull");
 
         // 当前手机号当前ip短信发送频率
         String rateKey = VCConstants.getSmsCheckKey(receiver, remoteIP, "rate");

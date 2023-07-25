@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.common;
 
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum VCStatusCode implements StatusCode {
+public enum VCErrorCode implements ErrorCode {
     Illegal("illegal_vc", "验证码异常"),
     Send("send_error", "验证码发送失败"),
     Check("check_vc", "检验验证码异常");

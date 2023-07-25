@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.status;
 
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum PmsStatusCode implements StatusCode {
+public enum PmsErrorCode implements ErrorCode {
     ExistUsername("PUE01", "用户名已存在"),
     ExistPhone("PUE02", "手机号已存在"),
     ExistEmail("PUE03", "Email已存在");

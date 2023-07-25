@@ -12,7 +12,7 @@ import com.ingot.framework.id.leaf.segment.SegmentIDGenImpl;
 import com.ingot.framework.id.leaf.segment.dao.IDAllocDao;
 import com.ingot.framework.id.leaf.segment.dao.impl.IDAllocDaoImpl;
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseStatusCode;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +47,7 @@ public class DefaultBizGenerator implements BizGenerator {
     public long getId(String key) {
         Result result = idGen.get(key);
         if (result.getStatus() == Status.EXCEPTION) {
-            throw new BizException(BaseStatusCode.INTERNAL_SERVER_ERROR,
+            throw new BizException(BaseErrorCode.INTERNAL_SERVER_ERROR,
                     "获取ID失败，错误码" + result.getId());
         }
         return result.getId();

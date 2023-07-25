@@ -37,7 +37,7 @@ public abstract class AbstractVCProvider implements VCProvider {
             send(request, code);
         } catch (Exception e) {
             log.error("[验证码] - 验证码发送失败", e);
-            Utils.throwVCException(VCStatusCode.Send, "vc.common.sendError");
+            Utils.throwVCException(VCErrorCode.Send, "vc.common.sendError");
         }
         save(request, code);
     }
@@ -56,7 +56,7 @@ public abstract class AbstractVCProvider implements VCProvider {
             ServletUtils.successResponse(request, objectMapper, R.ok(Boolean.TRUE));
         } catch (Exception e) {
             log.error("[验证码] - 验证码校验失败", e);
-            Utils.throwVCException(VCStatusCode.Check, "vc.common.checkError");
+            Utils.throwVCException(VCErrorCode.Check, "vc.common.checkError");
         }
     }
 

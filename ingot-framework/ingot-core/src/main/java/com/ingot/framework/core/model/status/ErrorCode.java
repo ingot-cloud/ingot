@@ -6,7 +6,7 @@ package com.ingot.framework.core.model.status;
  * <p>Date         : 2020/10/10.</p>
  * <p>Time         : 2:00 下午.</p>
  */
-public interface StatusCode {
+public interface ErrorCode {
     /**
      * 状态码
      * @return String

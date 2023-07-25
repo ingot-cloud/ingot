@@ -102,16 +102,16 @@ public class Utils {
      * @param code message code
      */
     public static void throwCheckException(String code) {
-        throwVCException(VCStatusCode.Check, code);
+        throwVCException(VCErrorCode.Check, code);
     }
 
     /**
      * 验证码异常
      *
-     * @param statusCode  {@link VCStatusCode}
+     * @param statusCode  {@link VCErrorCode}
      * @param messageCode message code
      */
-    public static void throwVCException(VCStatusCode statusCode, String messageCode) {
+    public static void throwVCException(VCErrorCode statusCode, String messageCode) {
         throw new VCException(statusCode,
                 IngotVCMessageSource.getAccessor()
                         .getMessage(messageCode));
@@ -120,11 +120,11 @@ public class Utils {
     /**
      * 验证码异常
      *
-     * @param statusCode  {@link VCStatusCode}
+     * @param statusCode  {@link VCErrorCode}
      * @param messageCode message code
      * @param args        message args
      */
-    public static void throwVCException(VCStatusCode statusCode, String messageCode, Object[] args) {
+    public static void throwVCException(VCErrorCode statusCode, String messageCode, Object[] args) {
         throw new VCException(statusCode,
                 IngotVCMessageSource.getAccessor()
                         .getMessage(messageCode, args));

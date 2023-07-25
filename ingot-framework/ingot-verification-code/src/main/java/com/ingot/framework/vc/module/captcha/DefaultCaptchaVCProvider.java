@@ -34,7 +34,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             ResponseModel responseModel = captchaService.get(vo);
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
-            throw new VCException(VCStatusCode.Send,
+            throw new VCException(VCErrorCode.Send,
                     IngotVCMessageSource.getAccessor()
                             .getMessage("vc.common.sendError"));
         }
@@ -64,7 +64,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             ResponseModel responseModel = captchaService.check(vo);
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
-            throw new VCException(VCStatusCode.Check,
+            throw new VCException(VCErrorCode.Check,
                     IngotVCMessageSource.getAccessor()
                             .getMessage("vc.common.checkError"));
         }

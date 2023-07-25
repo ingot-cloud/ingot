@@ -1,6 +1,6 @@
 package com.ingot.framework.core.model.support;
 
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 
 /**
  * <p>Description  : {@link R}快捷方法.</p>
@@ -40,7 +40,7 @@ public interface RShortcuts {
     /**
      * 响应失败，附带 ResponseCode
      */
-    default <T> R<T> error(StatusCode code) {
+    default <T> R<T> error(ErrorCode code) {
         return R.error(code);
     }
 

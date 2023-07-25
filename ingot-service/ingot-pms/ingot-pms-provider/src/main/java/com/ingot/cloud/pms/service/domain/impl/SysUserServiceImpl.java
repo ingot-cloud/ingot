@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUserSocial;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.status.PmsStatusCode;
+import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
@@ -169,7 +169,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 && (current == null || !StrUtil.equals(update.getUsername(), current.getUsername()))) {
             assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getUsername, update.getUsername())) == 0,
-                    PmsStatusCode.ExistUsername.getCode(),
+                    PmsErrorCode.ExistUsername.getCode(),
                     "SysUserServiceImpl.UsernameExist");
         }
 
@@ -177,7 +177,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 && (current == null || !StrUtil.equals(update.getPhone(), current.getPhone()))) {
             assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getPhone, update.getPhone())) == 0,
-                    PmsStatusCode.ExistPhone.getCode(),
+                    PmsErrorCode.ExistPhone.getCode(),
                     "SysUserServiceImpl.PhoneExist");
         }
 
@@ -185,7 +185,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 && (current == null || !StrUtil.equals(update.getEmail(), current.getEmail()))) {
             assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getEmail, update.getEmail())) == 0,
-                    PmsStatusCode.ExistEmail.getCode(),
+                    PmsErrorCode.ExistEmail.getCode(),
                     "SysUserServiceImpl.EmailExist");
         }
     }

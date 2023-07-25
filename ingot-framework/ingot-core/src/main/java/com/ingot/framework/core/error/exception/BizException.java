@@ -1,6 +1,6 @@
 package com.ingot.framework.core.error.exception;
 
-import com.ingot.framework.core.model.status.StatusCode;
+import com.ingot.framework.core.model.status.ErrorCode;
 
 /**
  * <p>Description  : 业务异常.</p>
@@ -21,12 +21,12 @@ public class BizException extends RuntimeException {
         this.code = code;
     }
 
-    public BizException(StatusCode statusCode){
-        super(statusCode.getText());
-        this.code = statusCode.getCode();
+    public BizException(ErrorCode errorCode){
+        super(errorCode.getText());
+        this.code = errorCode.getCode();
     }
 
-    public BizException(StatusCode responseCode, Object... args){
+    public BizException(ErrorCode responseCode, Object... args){
         super(String.format(responseCode.getText(), args));
         this.code = responseCode.getCode();
     }

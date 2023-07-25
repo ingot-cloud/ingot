@@ -29,7 +29,7 @@ public class InnerCheck {
      * @param code        状态码
      * @param messageCode 消息编码
      */
-    public static void check(boolean expression, VCStatusCode code, String messageCode) {
+    public static void check(boolean expression, VCErrorCode code, String messageCode) {
         AssertionUtils.check(expression, () -> {
             throw new VCException(code,
                     IngotVCMessageSource.getAccessor().getMessage(messageCode));
