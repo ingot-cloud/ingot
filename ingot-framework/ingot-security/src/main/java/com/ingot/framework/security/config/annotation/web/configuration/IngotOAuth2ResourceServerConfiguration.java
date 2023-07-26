@@ -1,16 +1,12 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import java.util.List;
-
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.IngotTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
-import com.ingot.framework.security.core.userdetails.DefaultOAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsService;
-import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.core.userdetails.RemoteOAuth2SocialUserDetailsService;
-import com.ingot.framework.security.core.userdetails.RemoteOAuth2UserDetailsService;
-import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
+import com.ingot.framework.security.core.tenantdetails.DefaultTenantDetailsService;
+import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
+import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
+import com.ingot.framework.security.core.userdetails.*;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
@@ -32,6 +28,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.util.List;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
@@ -138,6 +136,13 @@ public class IngotOAuth2ResourceServerConfiguration {
     @ConditionalOnMissingBean(OAuth2UserDetailsServiceManager.class)
     public OAuth2UserDetailsServiceManager userDetailsServiceManager(List<UserDetailsService> userDetailsServices) {
         return new DefaultOAuth2UserDetailsServiceManager(userDetailsServices);
+    }
+
+    @Bean
+    @ConditionalOnBean(RemoteTenantDetailsService.class)
+    @ConditionalOnMissingBean(TenantDetailsService.class)
+    public TenantDetailsService tenantDetailsService(RemoteTenantDetailsService remoteTenantDetailsService) {
+        return new DefaultTenantDetailsService(remoteTenantDetailsService);
     }
 
     @Bean
