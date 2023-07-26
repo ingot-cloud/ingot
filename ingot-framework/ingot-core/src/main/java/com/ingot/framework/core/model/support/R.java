@@ -1,7 +1,6 @@
 package com.ingot.framework.core.model.support;
 
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.status.ErrorCode;
 import io.swagger.annotations.ApiModel;
@@ -100,7 +99,6 @@ public class R<T> implements Serializable {
     /**
      * 请求是否成功
      */
-    @JsonIgnore
     public boolean isSuccess() {
         return StrUtil.equals(getCode(), BaseErrorCode.OK.getCode());
     }
