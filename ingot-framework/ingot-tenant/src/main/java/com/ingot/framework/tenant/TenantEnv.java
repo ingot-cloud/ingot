@@ -61,6 +61,25 @@ public class TenantEnv {
         }
     }
 
+    /**
+     * 忽略租户环境运行
+     *
+     * @param func 执行操作
+     */
+    public static void globalRun(Run func) {
+        runAs(null, func);
+    }
+
+    /**
+     * 忽略租户环境运行
+     *
+     * @param func 执行操作
+     * @return T
+     */
+    public static <T> T globalApply(Apply<T> func) {
+        return applyAs(null, func);
+    }
+
     public static class TenantEnvException extends RuntimeException {
 
         public TenantEnvException(String message, Throwable cause) {
