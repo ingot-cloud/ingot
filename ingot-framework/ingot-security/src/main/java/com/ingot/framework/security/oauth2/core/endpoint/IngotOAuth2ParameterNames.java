@@ -41,4 +41,8 @@ public interface IngotOAuth2ParameterNames extends OAuth2ParameterNames {
      */
     String SOCIAL_CODE = "socialCode";
 
+    /**
+     * 预授权
+     */
+    String PRE_AUTHORIZATION = "preAuthorization";
 }
