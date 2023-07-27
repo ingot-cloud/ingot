@@ -1,11 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2ErrorConverter;
@@ -21,17 +15,22 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMessageConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 /**
- * <p>Description  : AccessTokenAuthenticationFailureHandler.</p>
+ * <p>Description  : 默认认证失败处理器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:46 上午.</p>
  */
 @Slf4j
-public class AccessTokenAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class DefaultAuthenticationFailureHandler implements AuthenticationFailureHandler {
     private final OAuth2ErrorHttpMessageConverter errorHttpResponseConverter;
 
-    public AccessTokenAuthenticationFailureHandler() {
+    public DefaultAuthenticationFailureHandler() {
         this.errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
         this.errorHttpResponseConverter.setErrorConverter(new IngotOAuth2ErrorConverter());
         this.errorHttpResponseConverter.setErrorParametersConverter(new IngotOAuth2ErrorParametersConverter());
@@ -41,7 +40,7 @@ public class AccessTokenAuthenticationFailureHandler implements AuthenticationFa
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
-        log.info("[AccessTokenAuthenticationFailureHandler] - onAuthenticationFailure", exception);
+        log.info("[DefaultAuthenticationFailureHandler] - onAuthenticationFailure", exception);
 
         SecurityContextHolder.clearContext();
         OAuth2Error error;
