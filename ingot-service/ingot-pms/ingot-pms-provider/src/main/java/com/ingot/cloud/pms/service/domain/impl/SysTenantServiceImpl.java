@@ -36,6 +36,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public void createTenant(SysTenant params) {
+        // todo 租户创建，默认初始化所有需要进行数据隔离的内容
         if (StrUtil.isNotEmpty(params.getCode())) {
             assertI18nService.checkOperation(count(Wrappers.<SysTenant>lambdaQuery()
                             .eq(SysTenant::getCode, params.getCode())) == 0,

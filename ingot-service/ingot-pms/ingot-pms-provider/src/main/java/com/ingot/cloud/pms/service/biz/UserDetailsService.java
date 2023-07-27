@@ -8,7 +8,7 @@ import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
  * <p>Date         : 2020/12/29.</p>
  * <p>Time         : 5:23 下午.</p>
  */
-public interface UserDetailService {
+public interface UserDetailsService {
 
     /**
      * 获取用户详情信息

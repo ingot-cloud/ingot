@@ -1,11 +1,5 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -14,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
-import com.ingot.cloud.pms.service.biz.UserDetailService;
+import com.ingot.cloud.pms.service.biz.UserDetailsService;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
@@ -27,6 +21,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * <p>Description  : UserDetailServiceImpl.</p>
  * <p>Author       : wangchao.</p>
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserDetailServiceImpl implements UserDetailService {
+public class UserDetailsServiceImpl implements UserDetailsService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;

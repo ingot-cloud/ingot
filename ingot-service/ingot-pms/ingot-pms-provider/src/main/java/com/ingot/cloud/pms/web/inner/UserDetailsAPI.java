@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.web.inner;
 
-import com.ingot.cloud.pms.service.biz.UserDetailService;
+import com.ingot.cloud.pms.service.biz.UserDetailsService;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
@@ -24,16 +24,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/user/details")
 @RequiredArgsConstructor
-public class UserDetailApi implements RShortcuts {
-    private final UserDetailService userDetailService;
+public class UserDetailsAPI implements RShortcuts {
+    private final UserDetailsService userDetailsService;
 
     @PostMapping("/{username}")
     public R<UserDetailsResponse> getUserAuthDetail(@PathVariable String username) {
-        return ok(userDetailService.getUserAuthDetails(username));
+        return ok(userDetailsService.getUserAuthDetails(username));
     }
 
     @PostMapping(value = "/social/{unique}")
     public R<UserDetailsResponse> getUserAuthDetailsSocial(@PathVariable String unique) {
-        return ok(userDetailService.getUserAuthDetailsSocial(unique));
+        return ok(userDetailsService.getUserAuthDetailsSocial(unique));
     }
 }
