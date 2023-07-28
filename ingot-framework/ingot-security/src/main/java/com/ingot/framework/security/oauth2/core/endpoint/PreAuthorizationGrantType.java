@@ -6,20 +6,20 @@ import org.springframework.util.Assert;
 import java.io.Serializable;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationType.</p>
+ * <p>Description  : PreAuthorizationGrantType.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 3:29 PM.</p>
  */
-public class OAuth2PreAuthorizationType implements Serializable {
+public class PreAuthorizationGrantType implements Serializable {
     private static final long serialVersionUID = SpringSecurityCoreVersion.SERIAL_VERSION_UID;
 
-    public static final OAuth2PreAuthorizationType PASSWORD_CODE = new OAuth2PreAuthorizationType("password_code");
-    public static final OAuth2PreAuthorizationType SOCIAL_CODE = new OAuth2PreAuthorizationType("social_code");
+    public static final PreAuthorizationGrantType PASSWORD = new PreAuthorizationGrantType("password");
+    public static final PreAuthorizationGrantType SOCIAL = new PreAuthorizationGrantType("social");
 
     private final String value;
 
-    public OAuth2PreAuthorizationType(String value) {
+    public PreAuthorizationGrantType(String value) {
         Assert.hasText(value, "value cannot be empty");
         this.value = value;
     }
@@ -36,7 +36,7 @@ public class OAuth2PreAuthorizationType implements Serializable {
         if (obj == null || this.getClass() != obj.getClass()) {
             return false;
         }
-        OAuth2PreAuthorizationType that = (OAuth2PreAuthorizationType) obj;
+        PreAuthorizationGrantType that = (PreAuthorizationGrantType) obj;
         return this.getValue().equals(that.getValue());
     }
 

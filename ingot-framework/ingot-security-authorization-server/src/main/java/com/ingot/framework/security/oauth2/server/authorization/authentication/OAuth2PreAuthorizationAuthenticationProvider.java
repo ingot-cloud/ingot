@@ -32,7 +32,7 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
                 (OAuth2PreAuthorizationAuthenticationToken) authentication;
 
         // 1.获取用户信息
-        Authentication userAuth = preAuthorizationAuthenticationToken.getUser();
+        Authentication userAuth = (Authentication) preAuthorizationAuthenticationToken.getPrincipal();
         IngotUser user = null;
         if (userAuth.getPrincipal() instanceof IngotUser) {
             user = (IngotUser) userAuth.getPrincipal();

@@ -3,7 +3,6 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import com.ingot.framework.core.model.dto.common.AllowTenantDTO;
 import lombok.Getter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -15,18 +14,14 @@ import java.util.List;
  */
 public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
-    private Object credentials;
-    private Authentication userPrincipal;
     @Getter
     private String preAuthorization;
     @Getter
     private List<AllowTenantDTO> allowList;
 
-    public static OAuth2PreAuthorizationAuthenticationToken unauthenticated(Object principal,
-                                                                            Object credentials,
-                                                                            String preAuthorization,
-                                                                            Authentication userPrincipal) {
-        return new OAuth2PreAuthorizationAuthenticationToken(principal, credentials, preAuthorization, userPrincipal);
+    public static OAuth2PreAuthorizationAuthenticationToken unauthenticated(Object userPrincipal,
+                                                                            String preAuthorization) {
+        return new OAuth2PreAuthorizationAuthenticationToken(userPrincipal, preAuthorization);
     }
 
     public static OAuth2PreAuthorizationAuthenticationToken authenticated(String authorizationCode,
@@ -35,14 +30,10 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
     }
 
     public OAuth2PreAuthorizationAuthenticationToken(Object principal,
-                                                     Object credentials,
-                                                     String preAuthorization,
-                                                     Authentication userPrincipal) {
+                                                     String preAuthorization) {
         super(null);
         this.principal = principal;
-        this.credentials = credentials;
         this.preAuthorization = preAuthorization;
-        this.userPrincipal = userPrincipal;
     }
 
     /**
@@ -59,13 +50,9 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
         super.setAuthenticated(true); // must use super, as we override
     }
 
-    public Authentication getUser() {
-        return this.userPrincipal;
-    }
-
     @Override
     public Object getCredentials() {
-        return this.credentials;
+        return "";
     }
 
     @Override
@@ -76,6 +63,5 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
     @Override
     public void eraseCredentials() {
         super.eraseCredentials();
-        this.credentials = null;
     }
 }

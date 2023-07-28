@@ -19,4 +19,9 @@ public interface UserDetailsAuthorizationGrantType {
      * 社交授权类型
      */
     AuthorizationGrantType SOCIAL = new AuthorizationGrantType(SecurityConstants.GrantType.SOCIAL);
+
+    /**
+     * 确认码类型
+     */
+    AuthorizationGrantType CONFIRM_CODE = new AuthorizationGrantType(SecurityConstants.GrantType.CONFIRM_CODE);
 }

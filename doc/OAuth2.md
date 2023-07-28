@@ -30,10 +30,10 @@ social_code: "code"
 
 1.通过访问`auth-service`中`/oauth2/pre_authorize`端点登录获取预授权code和租户列表
 ```
-pre_authorization: "password_code" // OAuth2PreAuthorizationType
-username: "类型为password_code时必填"
-password: "类型为password_code时必填"
-social_type: "类型为social_code时必填"
-social_code: "类型为social_code时必填"
+pre_grant_type: "password" // PreAuthorizationGrantType
+username: "类型为password时必填"
+password: "类型为password时必填"
+social_type: "类型为social时必填"
+social_code: "类型为social时必填"
 ```
 2.选择租户后，通过code进行自定义社交登录

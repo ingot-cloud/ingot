@@ -40,5 +40,6 @@ public interface SecurityConstants {
         String REFRESH_TOKEN = "refresh_token";
         String CLIENT_CREDENTIALS = "client_credentials";
         String SOCIAL = "social";
+        String CONFIRM_CODE = "confirm_code";
     }
 }

@@ -44,5 +44,10 @@ public interface IngotOAuth2ParameterNames extends OAuth2ParameterNames {
     /**
      * 预授权, 在请求中使用
      */
-    String PRE_AUTHORIZATION = "pre_authorization";
+    String PRE_GRANT_TYPE = "pre_grant_type";
+
+    /**
+     * 预授权码
+     */
+    String PRE_CODE = "code";
 }

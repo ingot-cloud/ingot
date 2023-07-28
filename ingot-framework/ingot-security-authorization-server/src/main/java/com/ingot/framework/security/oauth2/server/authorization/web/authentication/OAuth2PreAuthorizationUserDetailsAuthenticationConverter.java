@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
-import com.ingot.framework.security.oauth2.core.endpoint.OAuth2PreAuthorizationType;
+import com.ingot.framework.security.oauth2.core.endpoint.PreAuthorizationGrantType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationConverter;
@@ -28,13 +28,13 @@ public class OAuth2PreAuthorizationUserDetailsAuthenticationConverter implements
 
         Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
 
-        // preAuthorization (REQUIRED)
-        String preAuthorization = request.getParameter(IngotOAuth2ParameterNames.PRE_AUTHORIZATION);
-        if (StrUtil.equals(preAuthorization, OAuth2PreAuthorizationType.PASSWORD_CODE.getValue())) {
+        // pre_grant_type (REQUIRED)
+        String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
+        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.PASSWORD.getValue())) {
             return passwordConverter.createUnauthenticated(request, clientPrincipal);
         }
 
-        if (StrUtil.equals(preAuthorization, OAuth2PreAuthorizationType.SOCIAL_CODE.getValue())) {
+        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.SOCIAL.getValue())) {
             return socialConverter.createUnauthenticated(request, clientPrincipal);
         }
 
