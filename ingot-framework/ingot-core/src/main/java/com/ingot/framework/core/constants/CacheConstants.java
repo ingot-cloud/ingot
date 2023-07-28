@@ -26,7 +26,7 @@ public interface CacheConstants {
     /**
      * 所有权限
      */
-    String AUTHORITY_DETAILS= "authority_details";
+    String AUTHORITY_DETAILS = "authority_details";
 
     /**
      * 菜单
