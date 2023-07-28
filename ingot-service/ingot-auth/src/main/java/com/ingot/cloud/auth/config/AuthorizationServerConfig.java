@@ -1,9 +1,7 @@
 package com.ingot.cloud.auth.config;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
+import com.ingot.cloud.auth.service.DefaultPreAuthorizationCodeService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
@@ -13,6 +11,7 @@ import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -29,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -38,6 +38,9 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>Description  : AuthServerConfiguration.</p>
@@ -122,5 +125,10 @@ public class AuthorizationServerConfig {
                 IngotJwtValidators.createDefaultWithIssuer(
                         authorizationServerSettings.getIssuer(), properties));
         return jwtDecoder;
+    }
+
+    @Bean
+    public PreAuthorizationCodeService preAuthorizationCodeService(RedisTemplate<String, Object> redisTemplate) {
+        return new DefaultPreAuthorizationCodeService(redisTemplate);
     }
 }

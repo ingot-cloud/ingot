@@ -19,6 +19,11 @@ public interface CacheConstants {
     String CLIENT_DETAILS = IGNORE_TENANT_PREFIX + ":client_details";
 
     /**
+     * 预授权code
+     */
+    String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization_code";
+
+    /**
      * 所有权限
      */
     String AUTHORITY_DETAILS= "authority_details";
