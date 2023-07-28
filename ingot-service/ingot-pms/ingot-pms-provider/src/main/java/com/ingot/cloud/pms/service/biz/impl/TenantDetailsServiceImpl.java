@@ -7,6 +7,7 @@ import com.ingot.cloud.pms.service.biz.TenantDetailsService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.dto.common.AllowTenantDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +36,12 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
 
         List<SysUser> userList = TenantEnv.globalApply(() -> sysUserService.list(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getUsername, username)));
-        List<AllowTenantDTO> allows = sysTenantService.list(Wrappers.<SysTenant>lambdaQuery().in(SysTenant::getId,
-                        userList.stream()
-                                .map(SysUser::getTenantId)
-                                .collect(Collectors.toList())))
+        List<AllowTenantDTO> allows = sysTenantService.list(Wrappers.<SysTenant>lambdaQuery()
+                        .eq(SysTenant::getStatus, CommonStatusEnum.ENABLE)
+                        .in(SysTenant::getId,
+                                userList.stream()
+                                        .map(SysUser::getTenantId)
+                                        .collect(Collectors.toList())))
                 .stream()
                 .map(item -> {
                     AllowTenantDTO dto = new AllowTenantDTO();
