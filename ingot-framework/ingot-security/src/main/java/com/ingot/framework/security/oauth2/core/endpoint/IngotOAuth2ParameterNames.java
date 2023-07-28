@@ -32,17 +32,17 @@ public interface IngotOAuth2ParameterNames extends OAuth2ParameterNames {
     String REFRESH_TOKEN = "refreshToken";
 
     /**
-     * 社交类型 {@link SocialTypeEnums}
+     * 社交类型 {@link SocialTypeEnums}, 在请求中使用
      */
-    String SOCIAL_TYPE = "socialType";
+    String SOCIAL_TYPE = "social_type";
 
     /**
-     * 社交code
+     * 社交code, 在请求中使用，配合{@link #SOCIAL_TYPE}
      */
-    String SOCIAL_CODE = "socialCode";
+    String SOCIAL_CODE = "social_code";
 
     /**
-     * 预授权
+     * 预授权, 在请求中使用
      */
-    String PRE_AUTHORIZATION = "preAuthorization";
+    String PRE_AUTHORIZATION = "pre_authorization";
 }
