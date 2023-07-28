@@ -29,6 +29,11 @@ public final class OAuth2PreAuthorizationAuthenticationConverter implements Auth
             return null;
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof OAuth2UserDetailsAuthenticationToken)) {
+            return null;
+        }
+
         OAuth2UserDetailsAuthenticationToken userPrincipal =
                 (OAuth2UserDetailsAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 

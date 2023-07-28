@@ -1,10 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import cn.hutool.core.lang.UUID;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.tenantdetails.TenantDetails;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import lombok.Setter;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -21,14 +23,15 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
     private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
     @Setter
     private TenantDetailsService tenantDetailsService;
+    @Setter
+    private PreAuthorizationCodeService preAuthorizationCodeService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         OAuth2PreAuthorizationAuthenticationToken preAuthorizationAuthenticationToken =
                 (OAuth2PreAuthorizationAuthenticationToken) authentication;
 
-        // OAuth2ClientAuthenticationFilter 需要增加适配 /oauth2/pre_authorize，不然没有 client 信息
-        // 1.通过OAuth2UserDetailsAuthenticationProvider验证用户信息
+        // 1.获取用户信息
         Authentication userAuth = preAuthorizationAuthenticationToken.getUser();
         IngotUser user = null;
         if (userAuth.getPrincipal() instanceof IngotUser) {
@@ -44,8 +47,9 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
         TenantDetails tenant = tenantDetailsService.loadByUsername(user.getUsername());
 
         // 3.生成code
-
-        return OAuth2PreAuthorizationAuthenticationToken.authenticated("4123", tenant.getAllow());
+        String code = UUID.randomUUID().toString().replace("-", "");
+        preAuthorizationCodeService.saveUserInfo(user, code);
+        return OAuth2PreAuthorizationAuthenticationToken.authenticated(code, tenant.getAllow());
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationEndpointFilter;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationUserDetailsAuthenticationFilter;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
@@ -76,7 +77,10 @@ public class OAuth2PreAuthorizationEndpointConfigurer extends AbstractOAuth2Conf
         OAuth2PreAuthorizationAuthenticationProvider provider = new OAuth2PreAuthorizationAuthenticationProvider();
         TenantDetailsService tenantDetailsService = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, TenantDetailsService.class);
+        PreAuthorizationCodeService codeService = OAuth2ConfigurerUtils.getBean(
+                httpSecurity, PreAuthorizationCodeService.class);
         provider.setTenantDetailsService(tenantDetailsService);
+        provider.setPreAuthorizationCodeService(codeService);
 
         authenticationProviders.add(provider);
         return authenticationProviders;
