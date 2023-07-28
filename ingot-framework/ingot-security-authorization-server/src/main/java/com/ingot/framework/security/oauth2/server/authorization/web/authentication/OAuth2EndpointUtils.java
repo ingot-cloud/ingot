@@ -1,16 +1,17 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * Utility methods for the OAuth 2.0 Protocol Endpoints.
@@ -35,6 +36,16 @@ final class OAuth2EndpointUtils {
             }
         });
         return parameters;
+    }
+
+    static String getParameter(MultiValueMap<String, String> parameters, String key) {
+        String value = parameters.getFirst(key);
+        if (!StringUtils.hasText(value) || parameters.get(key).size() != 1) {
+            OAuth2EndpointUtils.throwError(
+                    OAuth2ErrorCodes.INVALID_REQUEST,
+                    key);
+        }
+        return value;
     }
 
     static boolean matchesPkceTokenRequest(HttpServletRequest request) {

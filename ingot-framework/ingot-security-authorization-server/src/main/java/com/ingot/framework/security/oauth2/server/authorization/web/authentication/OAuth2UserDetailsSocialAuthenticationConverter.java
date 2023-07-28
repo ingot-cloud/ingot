@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.ingot.framework.security.common.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
@@ -9,6 +7,8 @@ import com.ingot.framework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.util.MultiValueMap;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>Description  : OAuth2UserDetailsSocialAuthenticationConverter.</p>
@@ -26,8 +26,8 @@ public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDe
     protected Authentication createUnauthenticated(HttpServletRequest request, Authentication clientPrincipal) {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
-        String socialType = getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_TYPE);
-        String code = getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_CODE);
+        String socialType = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_TYPE);
+        String code = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_CODE);
 
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(SocialUtils.uniqueCode(socialType, code),

@@ -1,15 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
-import java.io.IOException;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsPasswordAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsSocialAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +21,12 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 /**
  * <p>Description  : 用户详情认证过滤器.</p>
  * <p>Author       : wangchao.</p>
@@ -35,12 +34,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p>Time         : 9:28 上午.</p>
  */
 @Slf4j
-public class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter {
+public final class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
     private AuthenticationConverter authenticationConverter;
     private AuthenticationSuccessHandler authenticationSuccessHandler = this::setSecurityContext;
-    private AuthenticationFailureHandler authenticationFailureHandler = new AccessTokenAuthenticationFailureHandler();
+    private AuthenticationFailureHandler authenticationFailureHandler = new DefaultAuthenticationFailureHandler();
 
     public OAuth2UserDetailsAuthenticationFilter(AuthenticationManager authenticationManager,
                                                  RequestMatcher requestMatcher) {

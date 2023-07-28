@@ -1,9 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
-import java.util.Arrays;
-
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AccessTokenAuthenticationSuccessHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2CustomAuthenticationConverter;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2TokenEndpointFilter;
@@ -11,6 +9,8 @@ import org.springframework.security.oauth2.server.authorization.web.authenticati
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2ClientCredentialsAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2RefreshTokenAuthenticationConverter;
+
+import java.util.Arrays;
 
 /**
  * <p>Description  : OAuth2TokenEndpointFilterPostProcessor.</p>
@@ -35,7 +35,7 @@ public class OAuth2TokenEndpointFilterPostProcessor implements ObjectPostProcess
         filter.setAuthenticationSuccessHandler(
                 new AccessTokenAuthenticationSuccessHandler());
         filter.setAuthenticationFailureHandler(
-                new AccessTokenAuthenticationFailureHandler());
+                new DefaultAuthenticationFailureHandler());
         return filter;
     }
 }

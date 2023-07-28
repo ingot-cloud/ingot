@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
@@ -31,7 +32,7 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
-        RequestMatcher endpointsMatcher = authorizationServerConfigurer
+        RequestMatcher defaultMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
 
         // 设置 ObjectPostProcessor
@@ -39,8 +40,13 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                 .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
                 .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());
 
+        // 增强配置
         OAuth2AuthorizationServerEnhanceConfigurer enhanceConfigurer =
                 new OAuth2AuthorizationServerEnhanceConfigurer();
+        RequestMatcher enhanceMatcher = enhanceConfigurer.getEndpointsMatcher();
+
+        // 合并
+        RequestMatcher endpointsMatcher = new OrRequestMatcher(defaultMatcher, enhanceMatcher);
 
         http
                 .requestMatcher(endpointsMatcher)
