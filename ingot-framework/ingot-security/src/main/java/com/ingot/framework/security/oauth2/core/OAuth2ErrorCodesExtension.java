@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
 public enum OAuth2ErrorCodesExtension implements ErrorCode {
     USER_STATUS("user_status", "Illegal user status"),
     SIGN_OUT("user_sign_out", "User has been signed out"),
-    NOT_ALLOW_CLIENT("not_allow_client", "The user is not allowed to access the client");
+    NOT_ALLOW_CLIENT("not_allow_client", "The user is not allowed to access the client"),
+    PRE_AUTHORIZATION_CODE_EXPIRED("pre_code_expired", "The pre authorization code was expired");
 
     private final String code;
     private final String text;

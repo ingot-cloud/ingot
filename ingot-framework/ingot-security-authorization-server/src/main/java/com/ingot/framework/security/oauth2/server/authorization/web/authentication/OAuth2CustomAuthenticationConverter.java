@@ -1,10 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationToken;
@@ -15,6 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : 自定义OAuth2认证转换器.</p>
@@ -51,7 +50,8 @@ public final class OAuth2CustomAuthenticationConverter implements Authentication
     private boolean filter(String grantType) {
         return !ListUtil.list(false,
                         UserDetailsAuthorizationGrantType.PASSWORD.getValue(),
-                        UserDetailsAuthorizationGrantType.SOCIAL.getValue())
+                        UserDetailsAuthorizationGrantType.SOCIAL.getValue(),
+                        UserDetailsAuthorizationGrantType.CONFIRM_CODE.getValue())
                 .contains(grantType);
     }
 }

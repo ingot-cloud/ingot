@@ -94,4 +94,8 @@ public final class OAuth2ErrorUtils {
     public static void throwNotAllowClient(String desc) {
         throwAuthenticationException(OAuth2ErrorCodesExtension.NOT_ALLOW_CLIENT.getCode(), desc);
     }
+
+    public static void throwPreAuthorizationCodeExpired(String desc) {
+        throwAuthenticationException(OAuth2ErrorCodesExtension.PRE_AUTHORIZATION_CODE_EXPIRED.getCode(), desc);
+    }
 }

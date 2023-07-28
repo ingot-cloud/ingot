@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import java.util.Set;
-
 import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
@@ -13,6 +11,7 @@ import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,6 +32,8 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.util.Assert;
+
+import java.util.Set;
 
 import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
@@ -62,6 +63,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     private OAuth2UserDetailsServiceManager userDetailsServiceManager;
     private UserDetailsPasswordService userDetailsPasswordService;
     private PasswordEncoder passwordEncoder;
+    private PreAuthorizationCodeService preAuthorizationCodeService;
     private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
     private RegisteredClientChecker clientChecker = new DefaultRegisteredClientChecker();
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
@@ -83,6 +85,19 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         if (registeredClient == null ||
                 !registeredClient.getAuthorizationGrantTypes().contains(unauthenticatedToken.getGrantType())) {
             throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
+        }
+
+        // confirm_code 模式，需要转换token，设置username
+        if (unauthenticatedToken.getGrantType() == UserDetailsAuthorizationGrantType.CONFIRM_CODE) {
+            IngotUser user = preAuthorizationCodeService.getUserInfo(unauthenticatedToken.getPrincipal().toString());
+            if (user == null) {
+                OAuth2ErrorUtils.throwPreAuthorizationCodeExpired(this.messages
+                        .getMessage("OAuth2UserDetailsAuthenticationProvider.preAuthorizationCodeExpired",
+                                "登录超时"));
+            }
+            unauthenticatedToken = OAuth2UserDetailsAuthenticationToken.unauthenticated(
+                    user.getUsername(), null,
+                    unauthenticatedToken.getGrantType(), unauthenticatedToken.getClient());
         }
 
         this.clientChecker.check(registeredClient);
@@ -135,8 +150,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
                 .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
                         "不允许访问客户端")));
 
-        // 如果是社交登录不需要校验密码
-        if (token.getGrantType() == UserDetailsAuthorizationGrantType.SOCIAL) {
+        // 只有密码模式才需要进行密码验证
+        if (token.getGrantType() != UserDetailsAuthorizationGrantType.PASSWORD) {
             return;
         }
 
@@ -243,6 +258,10 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     protected UserDetailsChecker getAuthenticationChecks() {
         return authenticationChecks;
+    }
+
+    public void setPreAuthorizationCodeService(PreAuthorizationCodeService preAuthorizationCodeService) {
+        this.preAuthorizationCodeService = preAuthorizationCodeService;
     }
 
     public void setAuthoritiesMapper(GrantedAuthoritiesMapper authoritiesMapper) {

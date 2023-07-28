@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsConfirmCodeAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsPasswordAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsSocialAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,8 @@ public final class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestF
         this.authenticationConverter = new DelegatingAuthenticationConverter(
                 ListUtil.of(
                         new OAuth2UserDetailsPasswordAuthenticationConverter(),
-                        new OAuth2UserDetailsSocialAuthenticationConverter()));
+                        new OAuth2UserDetailsSocialAuthenticationConverter(),
+                        new OAuth2UserDetailsConfirmCodeAuthenticationConverter()));
     }
 
     @Override

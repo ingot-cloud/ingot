@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
 import org.springframework.http.HttpMethod;
@@ -91,6 +92,8 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
                 httpSecurity, UserDetailsChecker.class);
         OAuth2UserDetailsServiceManager userDetailsServiceManager = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, OAuth2UserDetailsServiceManager.class);
+        PreAuthorizationCodeService preAuthorizationCodeService = OAuth2ConfigurerUtils.getBean(
+                httpSecurity, PreAuthorizationCodeService.class);
 
         OAuth2UserDetailsAuthenticationProvider userDetailsAuthenticationProvider =
                 new OAuth2UserDetailsAuthenticationProvider();
@@ -104,6 +107,7 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         if (userDetailsChecker != null) {
             userDetailsAuthenticationProvider.setAuthenticationChecks(userDetailsChecker);
         }
+        userDetailsAuthenticationProvider.setPreAuthorizationCodeService(preAuthorizationCodeService);
         authenticationProviders.add(userDetailsAuthenticationProvider);
 
         OAuth2CustomAuthenticationProvider passwordAuthProvider =
