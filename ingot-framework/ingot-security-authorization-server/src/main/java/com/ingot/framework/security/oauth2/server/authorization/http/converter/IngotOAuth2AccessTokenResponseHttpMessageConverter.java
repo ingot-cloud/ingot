@@ -1,10 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpInputMessage;
@@ -14,8 +9,15 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.core.endpoint.MapOAuth2AccessTokenResponseConverter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : IngotOAuth2AccessTokenResponseHttpMessageConverter.</p>
@@ -42,24 +44,25 @@ public class IngotOAuth2AccessTokenResponseHttpMessageConverter
     }
 
     @Override
-    protected boolean supports(Class<?> clazz) {
+    protected boolean supports(@NonNull Class<?> clazz) {
         return OAuth2AccessTokenResponse.class.isAssignableFrom(clazz);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected OAuth2AccessTokenResponse readInternal(Class<? extends OAuth2AccessTokenResponse> clazz,
-                                                     HttpInputMessage inputMessage) throws HttpMessageNotReadableException {
+    @NonNull
+    protected OAuth2AccessTokenResponse readInternal(@NonNull Class<? extends OAuth2AccessTokenResponse> clazz,
+                                                     @NonNull HttpInputMessage inputMessage) throws HttpMessageNotReadableException {
         try {
             // gh-6463: Parse parameter values as Object in order to handle potential JSON
             // Object and then convert values to String
             Map<String, Object> tokenResponseParameters = (Map<String, Object>) this.jsonMessageConverter
                     .read(STRING_OBJECT_MAP.getType(), null, inputMessage);
             // @formatter:off
-            return this.tokenResponseConverter.convert(tokenResponseParameters
+            return Objects.requireNonNull(this.tokenResponseConverter.convert(tokenResponseParameters
                     .entrySet()
                     .stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, (entry) -> String.valueOf(entry.getValue()))));
+                    .collect(Collectors.toMap(Map.Entry::getKey, (entry) -> String.valueOf(entry.getValue())))));
             // @formatter:on
         } catch (Exception ex) {
             throw new HttpMessageNotReadableException(
@@ -69,10 +72,12 @@ public class IngotOAuth2AccessTokenResponseHttpMessageConverter
     }
 
     @Override
-    protected void writeInternal(OAuth2AccessTokenResponse tokenResponse, HttpOutputMessage outputMessage)
+    protected void writeInternal(@NonNull OAuth2AccessTokenResponse tokenResponse,
+                                 @NonNull HttpOutputMessage outputMessage)
             throws HttpMessageNotWritableException {
         try {
             Map<String, Object> tokenResponseParameters = this.tokenResponseParametersConverter.convert(tokenResponse);
+            assert tokenResponseParameters != null;
             this.jsonMessageConverter.write(tokenResponseParameters, STRING_OBJECT_MAP.getType(),
                     MediaType.APPLICATION_JSON, outputMessage);
         } catch (Exception ex) {

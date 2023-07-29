@@ -1,9 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2PreAuthHttpMessageConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthorizationAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -38,6 +41,9 @@ public final class OAuth2PreAuthorizationEndpointFilter extends OncePerRequestFi
     private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendResponse;
     private final AuthenticationFailureHandler authenticationFailureHandler
             = new DefaultAuthenticationFailureHandler();
+
+    private final HttpMessageConverter<OAuth2PreAuthorizationAuthenticationToken> responseConverter =
+            new OAuth2PreAuthHttpMessageConverter();
 
     public OAuth2PreAuthorizationEndpointFilter(AuthenticationManager authenticationManager,
                                                 RequestMatcher requestMatcher) {
@@ -79,7 +85,7 @@ public final class OAuth2PreAuthorizationEndpointFilter extends OncePerRequestFi
                               Authentication authentication) throws IOException {
         OAuth2PreAuthorizationAuthenticationToken token = (OAuth2PreAuthorizationAuthenticationToken) authentication;
 
-        response.getWriter().write(token.getPrincipal().toString());
-        response.flushBuffer();
+        ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
+        this.responseConverter.write(token, null, httpResponse);
     }
 }

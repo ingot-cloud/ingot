@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.code;
 
-import com.ingot.framework.security.core.userdetails.IngotUser;
-
 /**
  * <p>Description  : PreAuthorizationCodeService.</p>
  * <p>Author       : wangchao.</p>
@@ -11,17 +9,17 @@ import com.ingot.framework.security.core.userdetails.IngotUser;
 public interface PreAuthorizationCodeService {
 
     /**
-     * 保存用户信息
+     * 保存授权信息
      *
-     * @param user 用户信息
-     * @param code 预授权code
+     * @param authorization 授权信息
+     * @param code          预授权code
      */
-    void saveUserInfo(IngotUser user, String code);
+    void save(PreAuthorization authorization, String code);
 
     /**
-     * 获取用户信息
+     * 获取用户授权信息
      *
      * @param code 授权码
      */
-    IngotUser getUserInfo(String code);
+    PreAuthorization get(String code);
 }

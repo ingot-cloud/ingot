@@ -1,7 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.code;
 
 import cn.hutool.core.map.MapUtil;
-import com.ingot.framework.security.core.userdetails.IngotUser;
 
 import java.util.Map;
 
@@ -12,15 +11,15 @@ import java.util.Map;
  * <p>Time         : 3:14 PM.</p>
  */
 public class DefaultPreAuthorizationCodeService implements PreAuthorizationCodeService {
-    private final Map<String, IngotUser> cache = MapUtil.newConcurrentHashMap();
+    private final Map<String, PreAuthorization> cache = MapUtil.newConcurrentHashMap();
 
     @Override
-    public void saveUserInfo(IngotUser user, String code) {
-        cache.put(code, user);
+    public void save(PreAuthorization authorization, String code) {
+        cache.put(code, authorization);
     }
 
     @Override
-    public IngotUser getUserInfo(String code) {
+    public PreAuthorization get(String code) {
         return cache.remove(code);
     }
 }

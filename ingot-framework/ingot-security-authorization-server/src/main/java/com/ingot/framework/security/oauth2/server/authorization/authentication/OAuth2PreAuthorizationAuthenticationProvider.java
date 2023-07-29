@@ -6,6 +6,7 @@ import com.ingot.framework.security.core.tenantdetails.TenantDetails;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorization;
 import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import lombok.Setter;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -48,7 +49,7 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
 
         // 3.生成code
         String code = UUID.randomUUID().toString().replace("-", "");
-        preAuthorizationCodeService.saveUserInfo(user, code);
+        preAuthorizationCodeService.save(PreAuthorization.create(user), code);
         return OAuth2PreAuthorizationAuthenticationToken.authenticated(code, tenant.getAllow());
     }
 

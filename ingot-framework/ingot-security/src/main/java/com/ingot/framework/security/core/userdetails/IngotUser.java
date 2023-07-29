@@ -1,13 +1,14 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <p>Description  : IngotUser.</p>
@@ -44,6 +45,7 @@ public class IngotUser extends User {
     @Getter
     private final String tokenAuthType;
 
+    @JsonCreator
     public IngotUser(Long id,
                      Long deptId,
                      Long tenantId,

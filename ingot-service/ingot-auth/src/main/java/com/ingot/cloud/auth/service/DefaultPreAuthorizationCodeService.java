@@ -2,7 +2,7 @@ package com.ingot.cloud.auth.service;
 
 import cn.hutool.core.util.RandomUtil;
 import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorization;
 import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,17 +25,17 @@ public class DefaultPreAuthorizationCodeService implements PreAuthorizationCodeS
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public void saveUserInfo(IngotUser user, String code) {
-        redisTemplate.opsForValue().set(key(code), user,
+    public void save(PreAuthorization authorization, String code) {
+        redisTemplate.opsForValue().set(key(code), authorization,
                 EXPIRED_TIME + RandomUtil.randomInt(10), TimeUnit.SECONDS);
     }
 
     @Override
-    public IngotUser getUserInfo(String code) {
+    public PreAuthorization get(String code) {
         String key = key(code);
         Object value = redisTemplate.opsForValue().get(key);
         redisTemplate.delete(key);
-        return value != null ? (IngotUser) value : null;
+        return value != null ? (PreAuthorization) value : null;
     }
 
     private String key(String code) {
