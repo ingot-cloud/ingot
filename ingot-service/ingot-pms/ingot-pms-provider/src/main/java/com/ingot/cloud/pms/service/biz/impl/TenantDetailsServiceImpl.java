@@ -46,7 +46,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 .map(item -> {
                     AllowTenantDTO dto = new AllowTenantDTO();
                     dto.setId(item.getId());
-                    dto.setName(dto.getName());
+                    dto.setName(item.getName());
                     return dto;
                 }).collect(Collectors.toList());
 
