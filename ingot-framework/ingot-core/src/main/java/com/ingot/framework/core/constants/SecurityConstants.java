@@ -19,6 +19,11 @@ public interface SecurityConstants {
     String TOKEN_ENDPOINT_URI = "/oauth2/token";
 
     /**
+     * Then endpoint URI for pre authorize
+     */
+    String PRE_AUTHORIZE_URI = "/oauth2/pre_authorize";
+
+    /**
      * Renew token
      */
     String HEADER_RENEW_TOKEN = "Renew-Header";

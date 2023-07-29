@@ -1,16 +1,12 @@
 package com.ingot.cloud.gateway.filter;
 
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.core.utils.crypto.IngotCryptoProperties;
 import com.ingot.framework.core.utils.AESUtils;
+import com.ingot.framework.core.utils.crypto.IngotCryptoProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -32,6 +28,11 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
 /**
  * <p>Description  : TokenPasswordDecoderFilter.</p>
  * <p>Author       : wangchao.</p>
@@ -47,6 +48,10 @@ public class TokenPasswordDecoderFilter extends AbstractGatewayFilterFactory {
     private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
     private final IngotCryptoProperties ingotCryptoProperties;
 
+    private final List<String> DecoderURIs = ListUtil.list(false,
+            SecurityConstants.TOKEN_ENDPOINT_URI,
+            SecurityConstants.PRE_AUTHORIZE_URI);
+
     @Override
     public GatewayFilter apply(Object config) {
         return (exchange, chain) -> {
@@ -58,8 +63,8 @@ public class TokenPasswordDecoderFilter extends AbstractGatewayFilterFactory {
                 return chain.filter(exchange);
             }
 
-            // 只拦截Token端点
-            if (!StrUtil.containsAnyIgnoreCase(path, SecurityConstants.TOKEN_ENDPOINT_URI)) {
+            // 只拦截Token端点和预授权端点
+            if (DecoderURIs.stream().noneMatch(item -> StrUtil.containsAnyIgnoreCase(path, item))) {
                 return chain.filter(exchange);
             }
 

@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
+import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
@@ -25,7 +26,7 @@ import java.util.List;
  * <p>Time         : 3:34 PM.</p>
  */
 public class OAuth2PreAuthorizationEndpointConfigurer extends AbstractOAuth2Configurer {
-    private static final String DEFAULT_PRE_AUTHORIZATION_ENDPOINT_URI = "/oauth2/pre_authorize";
+    private static final String DEFAULT_PRE_AUTHORIZATION_ENDPOINT_URI = SecurityConstants.PRE_AUTHORIZE_URI;
 
     private RequestMatcher requestMatcher;
 
