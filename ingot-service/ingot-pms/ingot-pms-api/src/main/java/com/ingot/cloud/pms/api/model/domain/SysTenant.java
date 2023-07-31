@@ -1,10 +1,5 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import javax.validation.constraints.NotNull;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -14,6 +9,10 @@ import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -48,6 +47,11 @@ public class SysTenant extends BaseModel<SysTenant> {
      */
     @NotNull(message = "{SysTenant.code}", groups = Group.Create.class)
     private String code;
+
+    /**
+     * 头像
+     */
+    private String avatar;
 
     /**
      * 开始日期
