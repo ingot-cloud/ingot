@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.utils.DateUtils;
@@ -14,6 +15,7 @@ import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
     private final AssertionChecker assertI18nService;
     private final TenantProperties tenantProperties;
+    private final TenantEngine tenantEngine;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -35,8 +38,8 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void createTenant(SysTenant params) {
-        // todo 租户创建，默认初始化所有需要进行数据隔离的内容
         if (StrUtil.isNotEmpty(params.getCode())) {
             assertI18nService.checkOperation(count(Wrappers.<SysTenant>lambdaQuery()
                             .eq(SysTenant::getCode, params.getCode())) == 0,
@@ -47,15 +50,20 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
         params.setStatus(CommonStatusEnum.ENABLE);
         assertI18nService.checkOperation(save(params),
                 "SysTenantServiceImpl.CreateFailed");
+
+        tenantEngine.initDefault(params.getId());
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeTenantById(long id) {
         assertI18nService.checkOperation(id != tenantProperties.getDefaultId(),
                 "SysTenantServiceImpl.DefaultTenantRemoveFailed");
 
         assertI18nService.checkOperation(removeById(id),
                 "SysTenantServiceImpl.RemoveFailed");
+
+        tenantEngine.remove(id);
     }
 
     @Override
