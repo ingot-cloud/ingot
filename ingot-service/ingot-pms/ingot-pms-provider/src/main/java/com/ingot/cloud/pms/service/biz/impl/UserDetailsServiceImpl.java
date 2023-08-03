@@ -3,18 +3,14 @@ package com.ingot.cloud.pms.service.biz.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.service.biz.UserDetailsService;
-import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
-import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysUserService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessor;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +36,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
+    private final SysTenantService sysTenantService;
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
     private final Map<String, SocialProcessor> socialProcessorMap;
     private final UserTrans userTrans;
@@ -73,6 +70,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserDetailsResponse map(SysUser user) {
         return Optional.ofNullable(user)
                 .map(value -> {
+                    // 获取当前登录用户租户信息，如果该租户已经被禁用，那么用户也被禁用
+                    SysTenant tenant = sysTenantService.getById(value.getTenantId());
+                    UserStatusEnum userStatus = UserStatusEnum.LOCK;
+                    if (tenant != null) {
+                        userStatus = tenant.getStatus() == CommonStatusEnum.ENABLE ?
+                                UserStatusEnum.ENABLE : UserStatusEnum.LOCK;
+                    }
+                    value.setStatus(value.getStatus() == UserStatusEnum.ENABLE
+                            && userStatus == UserStatusEnum.ENABLE ?
+                            UserStatusEnum.ENABLE : UserStatusEnum.LOCK);
+
                     UserDetailsResponse result = userTrans.toUserDetails(value);
                     // 查询拥有的角色
                     List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
