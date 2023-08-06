@@ -4,7 +4,6 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class TenantEngine {
-    private final SysTenantService sysTenantService;
     private final SysRoleService sysRoleService;
 
     private static final List<String> DEFAULT_ROLES = ListUtil.list(false,
