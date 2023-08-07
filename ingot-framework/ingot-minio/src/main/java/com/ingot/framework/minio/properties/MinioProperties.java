@@ -26,7 +26,6 @@ public class MinioProperties {
      * 用户名
      */
     private String accessKey;
-
     /**
      * 密码
      */
