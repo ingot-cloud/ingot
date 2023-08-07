@@ -1,6 +1,6 @@
 package com.ingot.framework.core.model.event;
 
-import com.ingot.framework.core.model.dto.common.AuthSuccessDTO;
+import com.ingot.framework.core.model.common.AuthSuccessDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

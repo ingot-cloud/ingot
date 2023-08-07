@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
-import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**

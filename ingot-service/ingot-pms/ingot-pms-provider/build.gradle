@@ -10,6 +10,7 @@ dependencies {
     // 为了引入 ClientSettings TokenSettings, 并且使用Setting扩展类
     implementation project(ingot.framework_security_auth_server)
     implementation project(ingot.framework_tenant)
+    implementation project(ingot.framework_minio)
     implementation project(ingot.framework_id)
 }
 

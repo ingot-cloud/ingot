@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

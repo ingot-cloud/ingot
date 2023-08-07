@@ -1,4 +1,4 @@
-package com.ingot.framework.core.model.dto.common;
+package com.ingot.framework.core.model.common;
 
 import lombok.Data;
 

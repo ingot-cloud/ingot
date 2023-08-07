@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.biz.TenantDetailsService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.framework.core.model.dto.common.AllowTenantDTO;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
 import com.ingot.framework.tenant.TenantEnv;

@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import cn.hutool.extra.servlet.ServletUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.model.dto.common.AuthSuccessDTO;
+import com.ingot.framework.core.model.common.AuthSuccessDTO;
 import com.ingot.framework.core.model.event.LoginEvent;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;

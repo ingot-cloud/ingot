@@ -18,7 +18,10 @@ public class MinioProperties {
      * minio 服务地址 http://ip:port
      */
     private String url;
-
+    /**
+     * 公网API地址
+     */
+    private String publicUrl;
     /**
      * 用户名
      */

@@ -15,7 +15,7 @@ import com.ingot.cloud.pms.mapper.SysRoleOauthClientMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.model.common.RelationDTO;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

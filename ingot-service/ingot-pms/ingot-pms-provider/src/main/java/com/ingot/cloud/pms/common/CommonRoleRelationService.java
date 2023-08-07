@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.common;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;

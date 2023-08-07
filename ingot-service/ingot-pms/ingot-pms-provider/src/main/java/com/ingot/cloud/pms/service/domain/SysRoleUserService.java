@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.framework.core.model.dto.common.RelationDTO;
+import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.ingot.framework.minio.service.MinioService;
-import com.ingot.framework.minio.vo.MinioItem;
+import com.ingot.framework.minio.common.MinioItem;
 import io.minio.StatObjectResponse;
 import io.minio.messages.Bucket;
 import lombok.AllArgsConstructor;

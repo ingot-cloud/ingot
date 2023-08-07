@@ -1,6 +1,6 @@
 package com.ingot.framework.security.core.tenantdetails;
 
-import com.ingot.framework.core.model.dto.common.AllowTenantDTO;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import lombok.Data;
 
 import java.io.Serializable;

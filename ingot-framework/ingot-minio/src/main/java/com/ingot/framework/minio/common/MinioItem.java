@@ -1,11 +1,11 @@
-package com.ingot.framework.minio.vo;
-
-import java.time.ZonedDateTime;
+package com.ingot.framework.minio.common;
 
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.time.ZonedDateTime;
 
 /**
  * <p>Description  : MinioItem.桶中的对象信息</p>
