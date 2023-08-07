@@ -1,7 +1,7 @@
 package com.ingot.framework.minio.service;
 
 import cn.hutool.core.io.IoUtil;
-import com.ingot.framework.core.model.common.OSSResult;
+import com.ingot.framework.core.oss.OSSResult;
 import com.ingot.framework.core.oss.OSSService;
 import com.ingot.framework.minio.properties.MinioProperties;
 import lombok.RequiredArgsConstructor;

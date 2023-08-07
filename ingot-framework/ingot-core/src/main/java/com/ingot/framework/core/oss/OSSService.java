@@ -1,7 +1,5 @@
 package com.ingot.framework.core.oss;
 
-import com.ingot.framework.core.model.common.OSSResult;
-
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 

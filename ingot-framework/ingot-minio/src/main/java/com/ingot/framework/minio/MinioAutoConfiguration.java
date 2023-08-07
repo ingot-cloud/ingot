@@ -33,6 +33,7 @@ public class MinioAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(OSSService.class)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public OSSService minioOSSService(MinioService minioService,
                                       MinioProperties properties) {

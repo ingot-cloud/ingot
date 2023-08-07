@@ -1,4 +1,4 @@
-package com.ingot.framework.core.model.common;
+package com.ingot.framework.core.oss;
 
 import lombok.Data;
 
