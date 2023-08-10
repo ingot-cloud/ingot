@@ -47,6 +47,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                     AllowTenantDTO dto = new AllowTenantDTO();
                     dto.setId(item.getId());
                     dto.setName(item.getName());
+                    dto.setAvatar(item.getAvatar());
                     return dto;
                 }).collect(Collectors.toList());
 
