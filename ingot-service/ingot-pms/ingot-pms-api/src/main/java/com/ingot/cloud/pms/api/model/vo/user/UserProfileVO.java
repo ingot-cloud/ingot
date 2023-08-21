@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>Description  : UserProfileVO.</p>
@@ -48,6 +48,11 @@ public class UserProfileVO implements Serializable {
      */
     @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
+
+    /**
+     * 头像
+     */
+    private String avatar;
 
     /**
      * 状态, 0:正常，9:禁用
