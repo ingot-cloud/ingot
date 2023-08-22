@@ -1,17 +1,18 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Description  : IngotOAuth2AccessTokenResponseMapConverter.</p>
@@ -29,7 +30,7 @@ public class IngotOAuth2AccessTokenResponseMapConverter
         parameters.put(IngotOAuth2ParameterNames.TOKEN_TYPE, tokenResponse.getAccessToken().getTokenType().getValue());
         parameters.put(IngotOAuth2ParameterNames.EXPIRES_IN, String.valueOf(getExpiresIn(tokenResponse)));
         if (!CollectionUtils.isEmpty(tokenResponse.getAccessToken().getScopes())) {
-            parameters.put(IngotOAuth2ParameterNames.SCOPE,
+            parameters.put(OAuth2ParameterNames.SCOPE,
                     StringUtils.collectionToDelimitedString(tokenResponse.getAccessToken().getScopes(), " "));
         }
         if (tokenResponse.getRefreshToken() != null) {

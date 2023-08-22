@@ -56,14 +56,13 @@ public class IngotOAuth2ResourceServerConfiguration {
         if (httpConfigurersAdapter != null) {
             httpConfigurersAdapter.apply(http);
         }
-        http.authorizeRequests(authorizeRequests -> {
+        http.authorizeHttpRequests(authorizeRequests -> {
                     permitResolver.permitAllPublic(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })
-                .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()))
-                .and()
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
-                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver));
+                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver))
+                .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()));
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -90,8 +89,8 @@ public class IngotOAuth2ResourceServerConfiguration {
         RequestMatcher endpointsMatcher = innerResourceConfigurer
                 .getRequestMatcher();
 
-        http.requestMatcher(endpointsMatcher)
-                .authorizeRequests(authorizeRequests -> {
+        http.securityMatcher(endpointsMatcher)
+                .authorizeHttpRequests(authorizeRequests -> {
                     permitResolver.permitAllInner(authorizeRequests);
                     authorizeRequests.anyRequest().authenticated();
                 })

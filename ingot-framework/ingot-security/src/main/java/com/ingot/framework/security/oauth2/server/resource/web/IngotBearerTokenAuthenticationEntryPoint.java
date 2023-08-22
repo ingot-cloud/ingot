@@ -1,16 +1,11 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +16,10 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.resource.BearerTokenError;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * <p>Description  : IngotBearerTokenAuthenticationEntryPoint.</p>
@@ -68,8 +67,7 @@ public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationE
             if (StringUtils.hasText(error.getUri())) {
                 parameters.put("error_uri", error.getUri());
             }
-            if (error instanceof BearerTokenError) {
-                BearerTokenError bearerTokenError = (BearerTokenError) error;
+            if (error instanceof BearerTokenError bearerTokenError) {
                 if (StringUtils.hasText(bearerTokenError.getScope())) {
                     parameters.put("scope", bearerTokenError.getScope());
                 }

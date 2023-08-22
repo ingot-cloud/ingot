@@ -1,17 +1,13 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import java.lang.annotation.*;
 
 /**
  * <p>Description  : EnableIngotWebSecurity.</p>
@@ -27,6 +23,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @Import({IngotOAuth2ResourceServerConfiguration.class,
         IngotOAuth2ResourceServerJwtConfiguration.class,
         PasswordEncoderConfiguration.class})
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public @interface EnableIngotWebSecurity {
 }

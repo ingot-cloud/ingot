@@ -1,18 +1,17 @@
 package com.ingot.framework.security.common.utils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Optional;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * <p>Description  : CookieUtils.</p>
@@ -61,11 +60,7 @@ public final class CookieUtils {
     public static void setCookie(String name, String value, Integer maxAge, String domain, String path, HttpServletResponse response) {
         log.info(">>> CookieUtils setCookie - 设置cookie. name={}, value={}. maxAge={}, domain={}, path={}", name, value, maxAge, domain, path);
         Cookie cookie;
-        try {
-            cookie = new Cookie(name, URLEncoder.encode(value, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException("Cookie转码异常");
-        }
+        cookie = new Cookie(name, URLEncoder.encode(value, StandardCharsets.UTF_8));
 
         Optional.ofNullable(domain).orElse(DEFAULT_COOKIE_DOMAIN);
 

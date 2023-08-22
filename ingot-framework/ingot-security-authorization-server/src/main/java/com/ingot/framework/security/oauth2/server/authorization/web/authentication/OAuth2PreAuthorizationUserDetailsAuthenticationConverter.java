@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationUserDetailsAuthenticationConverter.</p>
@@ -30,11 +30,11 @@ public class OAuth2PreAuthorizationUserDetailsAuthenticationConverter implements
 
         // pre_grant_type (REQUIRED)
         String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
-        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.PASSWORD.getValue())) {
+        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.PASSWORD.value())) {
             return passwordConverter.createUnauthenticated(request, clientPrincipal);
         }
 
-        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.SOCIAL.getValue())) {
+        if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.SOCIAL.value())) {
             return socialConverter.createUnauthenticated(request, clientPrincipal);
         }
 

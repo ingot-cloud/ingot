@@ -53,7 +53,6 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     protected void additionalAuthenticationChecks(UserDetails userDetails,
                                                   UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         if (authentication.getCredentials() == null) {

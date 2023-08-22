@@ -31,6 +31,7 @@ public class IngotOAuth2AuthorizationServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "authorizationServerSecurityFilterChain";
 
+    // @formatter:off
     public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
@@ -50,16 +51,15 @@ public class IngotOAuth2AuthorizationServerConfiguration {
         // 合并
         RequestMatcher endpointsMatcher = new OrRequestMatcher(defaultMatcher, enhanceMatcher);
 
-        http
-                .requestMatcher(endpointsMatcher)
-                .authorizeRequests(authorizeRequests ->
+        http.securityMatcher(endpointsMatcher)
+                .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(authorizationServerConfigurer)
-                .and()
-                .apply(enhanceConfigurer);
+                .apply(authorizationServerConfigurer);
+        http.apply(enhanceConfigurer);
     }
+    // @formatter:on
 
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @Order(Ordered.HIGHEST_PRECEDENCE)

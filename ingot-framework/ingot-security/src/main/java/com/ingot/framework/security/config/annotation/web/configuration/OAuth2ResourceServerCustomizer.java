@@ -23,7 +23,6 @@ public class OAuth2ResourceServerCustomizer implements Customizer<OAuth2Resource
     public void customize(OAuth2ResourceServerConfigurer<HttpSecurity> configurer) {
         configurer.authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
                 .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
-                .jwt()
-                .jwtAuthenticationConverter(new IngotJwtAuthenticationConverter());
+                .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(new IngotJwtAuthenticationConverter()));
     }
 }

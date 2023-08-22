@@ -20,7 +20,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
     @Override
     public boolean supports(AuthorizationGrantType grantType) {
         // 密码模式，或者确认模式
-        return AuthorizationGrantType.PASSWORD.equals(grantType)
+        return UserDetailsAuthorizationGrantType.PASSWORD.equals(grantType)
                 || UserDetailsAuthorizationGrantType.CONFIRM_CODE.equals(grantType);
     }
 

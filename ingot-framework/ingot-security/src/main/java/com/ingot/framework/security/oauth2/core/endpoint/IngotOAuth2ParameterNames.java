@@ -1,7 +1,6 @@
 package com.ingot.framework.security.oauth2.core.endpoint;
 
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
 /**
  * <p>Description  : IngotOAuth2ParameterNames.</p>
@@ -9,7 +8,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
  * <p>Date         : 2021/10/14.</p>
  * <p>Time         : 2:50 下午.</p>
  */
-public interface IngotOAuth2ParameterNames extends OAuth2ParameterNames {
+public interface IngotOAuth2ParameterNames {
 
     /**
      * {@code access_token} - used in Authorization Response and Access Token Response.

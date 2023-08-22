@@ -1,3 +1,5 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
 dependencies {
     api(deps.spring.security_oauth2_authorization_server)
     api project(ingot.framework_security)
@@ -6,5 +8,5 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.framework_jdbc)
 
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
 }

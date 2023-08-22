@@ -1,11 +1,14 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import cn.hutool.extra.servlet.ServletUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.common.AuthSuccessDTO;
 import com.ingot.framework.core.model.event.LoginEvent;
 import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -19,9 +22,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -81,9 +81,11 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
         AuthSuccessDTO payload = new AuthSuccessDTO();
         payload.setGrantType(grantType);
-        payload.setIp(ServletUtil.getClientIP(request));
+        payload.setIp(WebUtils.getClientIP(request));
         payload.setUsername(parameters.getFirst(OAuth2ParameterNames.USERNAME));
         payload.setTime(DateUtils.now());
         SpringContextHolder.publishEvent(new LoginEvent(payload));
     }
+
+
 }

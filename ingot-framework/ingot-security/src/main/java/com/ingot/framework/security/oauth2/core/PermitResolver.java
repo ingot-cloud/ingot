@@ -1,14 +1,5 @@
 package com.ingot.framework.security.oauth2.core;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReUtil;
@@ -21,7 +12,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,6 +20,11 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : PermitResolver.</p>
@@ -48,7 +44,7 @@ public class PermitResolver implements InitializingBean {
     /**
      * permit all public url
      */
-    public void permitAllPublic(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+    public void permitAllPublic(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         List<String> urls = properties.getPublicUrls();
         permitAll(urls, registry);
     }
@@ -56,7 +52,7 @@ public class PermitResolver implements InitializingBean {
     /**
      * permit all inner url
      */
-    public void permitAllInner(ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+    public void permitAllInner(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         List<String> urls = properties.getInnerUrls();
         permitAll(urls, registry);
     }
@@ -93,8 +89,8 @@ public class PermitResolver implements InitializingBean {
         /*
         - requestMappingHandlerMapping: defined by method 'requestMappingHandlerMapping' in class path resource
          [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]
-	    - controllerEndpointHandlerMapping: defined by method 'controllerEndpointHandlerMapping' in class path resource
-	     [org/springframework/boot/actuate/autoconfigure/endpoint/web/servlet/WebMvcEndpointManagementContextConfiguration.class]
+        - controllerEndpointHandlerMapping: defined by method 'controllerEndpointHandlerMapping' in class path resource
+         [org/springframework/boot/actuate/autoconfigure/endpoint/web/servlet/WebMvcEndpointManagementContextConfiguration.class]
          */
         RequestMappingHandlerMapping mapping = applicationContext.getBean("requestMappingHandlerMapping",
                 RequestMappingHandlerMapping.class);
@@ -141,19 +137,15 @@ public class PermitResolver implements InitializingBean {
         String method = CollUtil.isEmpty(methodList) ?
                 "*" : CollUtil.join(methodList, VERTICAL_LINE);
         switch (mode) {
-            case PUBLIC:
-                properties.addPublic(String.format("%s%s%s",
-                        resultUrl, StrUtil.COMMA, method));
-                break;
-            case INNER:
-                properties.addInner(String.format("%s%s%s",
-                        resultUrl, StrUtil.COMMA, method));
-                break;
+            case PUBLIC -> properties.addPublic(String.format("%s%s%s",
+                    resultUrl, StrUtil.COMMA, method));
+            case INNER -> properties.addInner(String.format("%s%s%s",
+                    resultUrl, StrUtil.COMMA, method));
         }
     }
 
     private void permitAll(List<String> urls,
-                           ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry) {
+                           AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         for (String url : urls) {
             List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
 
@@ -163,14 +155,15 @@ public class PermitResolver implements InitializingBean {
             }
 
             if (StrUtil.equals(urlAndMethod.get(1), "*")) {
-                registry.antMatchers(urlAndMethod.get(0)).permitAll();
+                registry.requestMatchers(urlAndMethod.get(0))
+                        .permitAll();
                 continue;
             }
 
             List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
             for (String method : methods) {
-                registry.antMatchers(
-                        HttpMethod.valueOf(method.toUpperCase()), urlAndMethod.get(0)).permitAll();
+                registry.requestMatchers(HttpMethod.valueOf(method.toUpperCase()), urlAndMethod.get(0))
+                        .permitAll();
             }
         }
     }
@@ -191,7 +184,7 @@ public class PermitResolver implements InitializingBean {
                     List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
                     return Arrays.stream(methods.stream()
                             .map(method -> new AntPathRequestMatcher(urlAndMethod.get(0), method))
-                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
+                            .toList().toArray(new AntPathRequestMatcher[methods.size()]));
                 }).collect(Collectors.toList());
     }
 }
