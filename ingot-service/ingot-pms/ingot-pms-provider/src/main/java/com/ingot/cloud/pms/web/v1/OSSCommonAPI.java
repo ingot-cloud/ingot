@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.web.v1;
 import com.ingot.framework.core.error.exception.IllegalOperationException;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
-import com.ingot.framework.core.oss.OSSService;
+import com.ingot.framework.core.oss.OssService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +23,7 @@ import java.io.IOException;
 @RequestMapping(value = "/v1/oss")
 @RequiredArgsConstructor
 public class OSSCommonAPI implements RShortcuts {
-    private final OSSService ossService;
+    private final OssService ossService;
 
     @PostMapping("/upload")
     public R<?> upload(@RequestParam("file") MultipartFile file,

@@ -1,19 +1,19 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.NotBlank;
-
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+
+import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 @TableName(value = "oauth2_registered_client", autoResultMap = true)
 public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -78,6 +79,11 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
      * 重定向URL
      */
     private String redirectUris;
+
+    /**
+     * logout重定向url
+     */
+    private String postLogoutRedirectUris;
 
     /**
      * 客户端的访问范围

@@ -1,13 +1,14 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import java.sql.Blob;
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+import java.sql.Blob;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -22,6 +23,7 @@ import lombok.EqualsAndHashCode;
 @TableName("oauth2_authorization")
 public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId
@@ -33,7 +35,9 @@ public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
     private String authorizationGrantType;
 
-    private String attributes;
+    private String authorizedScopes;
+
+    private Blob attributes;
 
     private String state;
 
@@ -43,7 +47,7 @@ public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
     private LocalDateTime authorizationCodeExpiresAt;
 
-    private String authorizationCodeMetadata;
+    private Blob authorizationCodeMetadata;
 
     private Blob accessTokenValue;
 
@@ -51,7 +55,7 @@ public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
     private LocalDateTime accessTokenExpiresAt;
 
-    private String accessTokenMetadata;
+    private Blob accessTokenMetadata;
 
     private String accessTokenType;
 
@@ -63,7 +67,7 @@ public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
     private LocalDateTime oidcIdTokenExpiresAt;
 
-    private String oidcIdTokenMetadata;
+    private Blob oidcIdTokenMetadata;
 
     private Blob refreshTokenValue;
 
@@ -71,7 +75,21 @@ public class Oauth2Authorization extends BaseModel<Oauth2Authorization> {
 
     private LocalDateTime refreshTokenExpiresAt;
 
-    private String refreshTokenMetadata;
+    private Blob refreshTokenMetadata;
 
+    private Blob userCodeValue;
 
+    private LocalDateTime userCodeIssuedAt;
+
+    private LocalDateTime userCodeExpiresAt;
+
+    private Blob userCodeMetadata;
+
+    private Blob deviceCodeValue;
+
+    private LocalDateTime deviceCodeIssuedAt;
+
+    private LocalDateTime deviceCodeExpiresAt;
+
+    private Blob deviceCodeMetadata;
 }

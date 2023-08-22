@@ -1,8 +1,8 @@
 package com.ingot.framework.minio;
 
-import com.ingot.framework.core.oss.OSSService;
+import com.ingot.framework.core.oss.OssService;
 import com.ingot.framework.minio.properties.MinioProperties;
-import com.ingot.framework.minio.service.MinioOSSService;
+import com.ingot.framework.minio.service.MinioOssService;
 import com.ingot.framework.minio.service.MinioService;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,10 +33,10 @@ public class MinioAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(OSSService.class)
+    @ConditionalOnMissingBean(OssService.class)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public OSSService minioOSSService(MinioService minioService,
+    public OssService minioOSSService(MinioService minioService,
                                       MinioProperties properties) {
-        return new MinioOSSService(minioService, properties);
+        return new MinioOssService(minioService, properties);
     }
 }

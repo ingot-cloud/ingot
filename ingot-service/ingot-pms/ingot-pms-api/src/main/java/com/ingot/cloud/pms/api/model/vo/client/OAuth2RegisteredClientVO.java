@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.api.model.vo.client;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>Description  : OAuth2RegisteredClientVO.</p>
@@ -53,6 +53,11 @@ public class OAuth2RegisteredClientVO implements Serializable {
      * 重定向URL
      */
     private String redirectUris;
+
+    /**
+     * logout重定向url
+     */
+    private String postLogoutRedirectUris;
 
     /**
      * 客户端的访问范围

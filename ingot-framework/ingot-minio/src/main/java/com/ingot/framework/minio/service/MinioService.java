@@ -1,30 +1,18 @@
 package com.ingot.framework.minio.service;
 
+import com.ingot.framework.minio.common.MinioItem;
+import io.minio.*;
+import io.minio.messages.Bucket;
+import io.minio.messages.Item;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import com.ingot.framework.minio.common.MinioItem;
-import io.minio.BucketExistsArgs;
-import io.minio.GetObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.ListObjectsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveBucketArgs;
-import io.minio.RemoveObjectArgs;
-import io.minio.Result;
-import io.minio.StatObjectArgs;
-import io.minio.StatObjectResponse;
-import io.minio.messages.Bucket;
-import io.minio.messages.Item;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 /**
  * <p>Description  : MinioService.</p>
@@ -44,37 +32,49 @@ public class MinioService implements InitializingBean {
      *
      * @param bucketName bucket名称
      */
-    @SneakyThrows
     public void createBucket(String bucketName) {
-        if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
-            client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        try {
+            if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
+                client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     /**
      * 获取全部bucket
      * <p>
-     * https://docs.minio.io/cn/java-client-api-reference.html#listBuckets
+     * <a href="https://docs.minio.io/cn/java-client-api-reference.html#listBuckets">listBuckets</a>
      */
-    @SneakyThrows
     public List<Bucket> getAllBuckets() {
-        return client.listBuckets();
+        try {
+            return client.listBuckets();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * @param bucketName bucket名称
      */
-    @SneakyThrows
     public Optional<Bucket> getBucket(String bucketName) {
-        return client.listBuckets().stream().filter(b -> b.name().equals(bucketName)).findFirst();
+        try {
+            return client.listBuckets().stream().filter(b -> b.name().equals(bucketName)).findFirst();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * @param bucketName bucket名称
      */
-    @SneakyThrows
     public void removeBucket(String bucketName) {
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        try {
+            client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -85,7 +85,6 @@ public class MinioService implements InitializingBean {
      * @param recursive  是否递归查询
      * @return MinioItem 列表
      */
-    @SneakyThrows
     public List<MinioItem> getAllObjectsByPrefix(String bucketName, String prefix, boolean recursive) {
         List<MinioItem> objectList = new ArrayList<>();
         Iterable<Result<Item>> objectsIterator = client
@@ -93,7 +92,11 @@ public class MinioService implements InitializingBean {
                         .bucket(bucketName).prefix(prefix).recursive(recursive).build());
 
         while (objectsIterator.iterator().hasNext()) {
-            objectList.add(new MinioItem(objectsIterator.iterator().next().get()));
+            try {
+                objectList.add(new MinioItem(objectsIterator.iterator().next().get()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return objectList;
     }
@@ -107,11 +110,14 @@ public class MinioService implements InitializingBean {
      * @param unit       单位
      * @return url
      */
-    @SneakyThrows
     public String getObjectURL(String bucketName, String objectName, int duration, TimeUnit unit) {
-        return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                .bucket(bucketName)
-                .object(objectName).expiry(duration, unit).build());
+        try {
+            return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName).expiry(duration, unit).build());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -121,10 +127,13 @@ public class MinioService implements InitializingBean {
      * @param objectName 文件名称
      * @return 二进制流
      */
-    @SneakyThrows
     public InputStream getObject(String bucketName, String objectName) {
-        return client.getObject(GetObjectArgs.builder()
-                .bucket(bucketName).object(objectName).build());
+        try {
+            return client.getObject(GetObjectArgs.builder()
+                    .bucket(bucketName).object(objectName).build());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -133,7 +142,7 @@ public class MinioService implements InitializingBean {
      * @param bucketName bucket名称
      * @param objectName 文件名称
      * @param stream     文件流
-     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#putObject
+     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#putObject">putObject</a>
      */
     public void putObject(String bucketName, String objectName, InputStream stream) throws Exception {
         client.putObject(PutObjectArgs.builder()
@@ -151,7 +160,7 @@ public class MinioService implements InitializingBean {
      * @param stream      文件流
      * @param size        大小
      * @param contextType 类型
-     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#putObject
+     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#putObject">putObject</a>
      */
     public void putObject(String bucketName, String objectName, InputStream stream, long size, String contextType) throws Exception {
         client.putObject(PutObjectArgs.builder()
@@ -166,7 +175,7 @@ public class MinioService implements InitializingBean {
      *
      * @param bucketName bucket名称
      * @param objectName 文件名称
-     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#statObject
+     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#statObject">statObject</a>
      */
     public StatObjectResponse getObjectInfo(String bucketName, String objectName) throws Exception {
         return client.statObject(StatObjectArgs.builder()
@@ -178,7 +187,7 @@ public class MinioService implements InitializingBean {
      *
      * @param bucketName bucket名称
      * @param objectName 文件名称
-     * @throws Exception https://docs.minio.io/cn/java-client-api-reference.html#removeObject
+     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#removeObject">removeObject</a>
      */
     public void removeObject(String bucketName, String objectName) throws Exception {
         client.removeObject(RemoveObjectArgs.builder()

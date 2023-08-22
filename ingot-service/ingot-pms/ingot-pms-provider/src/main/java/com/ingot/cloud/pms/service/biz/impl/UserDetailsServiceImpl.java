@@ -1,6 +1,5 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
@@ -99,7 +98,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                             .map(clients -> clients.stream()
                                     .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
                             .map(ListUtil::toList)
-                            .orElse(CollUtil.empty(List.class));
+                            .orElse(ListUtil.toList());
                     result.setClients(clientIds);
                     return result;
                 }).orElse(null);

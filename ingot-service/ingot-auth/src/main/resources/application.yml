@@ -7,8 +7,9 @@ spring:
   datasource:
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:123456}
-  redis:
-    password: ${REDIS_PASSWORD:ingotredis}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:ingotredis}
   cloud:
     nacos:
       discovery:

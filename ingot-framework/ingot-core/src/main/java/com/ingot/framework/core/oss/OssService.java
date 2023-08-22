@@ -4,12 +4,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 
 /**
- * <p>Description  : OSSService.</p>
+ * <p>Description  : OssService.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/8/6.</p>
  * <p>Time         : 1:25 PM.</p>
  */
-public interface OSSService {
+public interface OssService {
 
     /**
      * 上传文件

@@ -1,0 +1,6 @@
+
+# 日志等级
+logging:
+  level:
+    org.springframework.web: trace
+    com.alibaba.nacos.client.naming: debug

@@ -5,6 +5,7 @@ import com.ingot.framework.tenant.interceptor.TenantRequestInterceptor;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import feign.RequestInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -30,6 +31,7 @@ public class TenantConfig {
     }
 
     @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public TenantHttpConfigurer tenantHttpConfigurer(TenantProperties tenantProperties) {
         return new TenantHttpConfigurer(tenantProperties);
     }

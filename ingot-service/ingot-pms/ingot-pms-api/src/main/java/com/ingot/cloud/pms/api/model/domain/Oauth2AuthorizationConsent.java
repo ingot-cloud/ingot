@@ -5,6 +5,8 @@ import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serial;
+
 /**
  * <p>
  * 
@@ -18,6 +20,7 @@ import lombok.EqualsAndHashCode;
 @TableName("oauth2_authorization_consent")
 public class Oauth2AuthorizationConsent extends BaseModel<Oauth2AuthorizationConsent> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private String registeredClientId;

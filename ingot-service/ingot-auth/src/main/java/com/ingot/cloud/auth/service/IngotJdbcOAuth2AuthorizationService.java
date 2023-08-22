@@ -1,14 +1,5 @@
 package com.ingot.cloud.auth.service;
 
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fasterxml.jackson.databind.Module;
@@ -30,6 +21,15 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : IngotJdbcOAuth2AuthorizationService.</p>
@@ -65,7 +65,15 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
             + "auth.refresh_token_value,"
             + "auth.refresh_token_issued_at,"
             + "auth.refresh_token_expires_at,"
-            + "auth.refresh_token_metadata";
+            + "auth.refresh_token_metadata,"
+            + "auth.user_code_value,"
+            + "auth.user_code_issued_at,"
+            + "auth.user_code_expires_at,"
+            + "auth.user_code_metadata,"
+            + "auth.device_code_value,"
+            + "auth.device_code_issued_at,"
+            + "auth.device_code_expires_at,"
+            + "auth.device_code_metadata";
     // @formatter:on
 
     private static final String TABLE_NAME = "oauth2_authorization";

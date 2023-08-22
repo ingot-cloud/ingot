@@ -11,6 +11,7 @@ import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.NonNull;
@@ -47,9 +48,9 @@ public class GatewayErrorWebExceptionHandler implements ErrorWebExceptionHandler
         if (ex instanceof BizException) {
             r = R.error(((BizException) ex).getCode(), ex.getMessage());
         } else if (ex instanceof ResponseStatusException) {
-            HttpStatus httpStatus = ((ResponseStatusException) ex).getStatus();
-            response.setStatusCode(httpStatus);
-            if (httpStatus == HttpStatus.SERVICE_UNAVAILABLE) {
+            HttpStatusCode statusCode = ((ResponseStatusException) ex).getStatusCode();
+            response.setStatusCode(statusCode);
+            if (statusCode == HttpStatus.SERVICE_UNAVAILABLE) {
                 r = R.error(
                         BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getMessage());
             }

@@ -2,7 +2,7 @@ package com.ingot.framework.minio.service;
 
 import cn.hutool.core.io.IoUtil;
 import com.ingot.framework.core.oss.OSSResult;
-import com.ingot.framework.core.oss.OSSService;
+import com.ingot.framework.core.oss.OssService;
 import com.ingot.framework.minio.properties.MinioProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.io.InputStream;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class MinioOSSService implements OSSService {
+public class MinioOssService implements OssService {
     private final MinioService minioService;
     private final MinioProperties minioProperties;
 
