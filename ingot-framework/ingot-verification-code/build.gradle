@@ -1,3 +1,5 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
 dependencies {
     implementation project(ingot.framework_core)
     api(deps.aj_captcha)
@@ -8,5 +10,5 @@ dependencies {
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
 }

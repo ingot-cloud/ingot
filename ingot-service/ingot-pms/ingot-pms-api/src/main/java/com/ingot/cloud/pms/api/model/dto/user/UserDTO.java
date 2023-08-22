@@ -1,13 +1,12 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
-import java.util.List;
-
-import javax.validation.constraints.NotBlank;
-
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.framework.core.utils.validation.Group;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * <p>Description  : UserDto.</p>

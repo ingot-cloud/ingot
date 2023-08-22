@@ -1,3 +1,8 @@
+apply from: "${project.getRootDir().path}/config/database.gradle"
+apply from: "${project.getRootDir().path}/config/service-base.gradle"
+apply from: 'ingot-mybatis.gradle'
+apply from: 'ingot-assemble.gradle'
+
 dependencies {
     implementation(deps.spring.spring_boot.web_starter)
     implementation(deps.spring.spring_boot.actuator_starter)
@@ -14,7 +19,3 @@ dependencies {
     implementation project(ingot.framework_id)
 }
 
-apply from: 'ingot-mybatis.gradle'
-apply from: 'ingot-assemble.gradle'
-apply from: "${project.getRootDir().path}/config/database.gradle"
-apply from: "${project.getRootDir().path}/config/service-base.gradle"

@@ -5,7 +5,6 @@ buildscript {
 
     dependencies {
         classpath(deps.spring.spring_boot.plugin)
-        classpath(deps.transmode_gradle_docker)
         classpath(deps.plugins.ingot_mybatis)
         classpath(deps.plugins.ingot_assemble)
     }
@@ -13,27 +12,18 @@ buildscript {
 
 allprojects  {
     apply plugin: 'maven-publish'
-    apply plugin: 'java-library'
 
     group = MODULE_GROUP
     version = MODULE_VERSION
 
     addRepos(repositories)
 
-    sourceCompatibility = sourceCompatibilityVersion
-    targetCompatibility = targetCompatibilityVersion
-
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
-    }
-
-    jar {
-        enabled = true
     }
 }
 
 subprojects {
-    apply from: "${project.getRootDir().path}/config/lombok.gradle"
     apply plugin: 'io.spring.dependency-management'
 
     dependencyManagement {

@@ -1,23 +1,24 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "2.7.12"
-versions.spring_cloud = "2021.0.7"
-versions.spring_cloud_alibaba = "2021.0.5.0"
-versions.spring_authorization_server = "0.4.3"
+versions.spring_boot = "3.1.2"
+versions.spring_cloud = "2022.0.4"
+versions.spring_cloud_alibaba = "2022.0.0.0"
+versions.spring_authorization_server = "1.1.1"
 
-versions.alibaba_druid = "1.2.9"
-versions.alibaba_transmittable_thread_local = "2.11.5"
+versions.hutool = "5.8.21"
+versions.mybatis_plus = "3.5.3.2"
+versions.mysql_connector = "8.0.31"
+versions.alibaba_druid = "1.2.16"
+versions.alibaba_transmittable_thread_local = "2.14.3"
 versions.swagger = "3.0.0"
 versions.commons_lang = "3.3.2"
 versions.commons_io = "2.4"
-versions.mapstruct = "1.4.1.Final"
-versions.jackson = "2.13.4"
-versions.mybatis_plus = "3.5.3.1"
-versions.mysql_connector = "8.0.31"
-versions.hutool = "5.8.20"
+versions.mapstruct = "1.5.5.Final"
+versions.jackson = "2.15.2"
 versions.redisson = "3.18.1"
 versions.minio = "8.4.6"
 versions.aj_captcha = "1.3.0"
+versions.junit = "5.7.0"
 
 def spring = [:]
 def spring_boot = [:]
@@ -103,7 +104,7 @@ def apache = [:]
 apache.commons_collections4 = "org.apache.commons:commons-collections4:4.2"
 apache.commons_lang3 = "org.apache.commons:commons-lang3:${versions.commons_lang}"
 apache.commons_io = "commons-io:commons-io:${versions.commons_io}"
-apache.common_codec = "commons-codec:commons-codec:1.11"
+apache.common_codec = "commons-codec:commons-codec:1.15"
 apache.commons_exec = "org.apache.commons:commons-exec:1.3"
 apache.curator_recipes = "org.apache.curator:curator-recipes:4.2.0"
 apache.zookeeper = "org.apache.zookeeper:zookeeper:3.4.13"
@@ -153,13 +154,18 @@ def aspectj = [:]
 aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
 deps.aspectj = aspectj
 
+def junit = [:]
+junit.api = "org.junit.jupiter:junit-jupiter-api:${versions.junit}"
+junit.engine = "org.junit.jupiter:junit-jupiter-engine:${versions.junit}"
+deps.junit = junit
+
+deps.feign_okhttp = "io.github.openfeign:feign-okhttp:12.4"
 deps.perf4j = "org.perf4j:perf4j:0.9.16"
 deps.redisson = "org.redisson:redisson:${versions.redisson}"
 deps.minio = "io.minio:minio:${versions.minio}"
 deps.hutool = "cn.hutool:hutool-all:${versions.hutool}"
 deps.aj_captcha = "com.anji-plus:captcha:${versions.aj_captcha}"
 deps.aj_captcha_starter = "com.anji-plus:spring-boot-starter-captcha:${versions.aj_captcha}"
-deps.feign_okhttp = "io.github.openfeign:feign-okhttp:10.10.1"
 deps.lombok = "org.projectlombok:lombok:1.18.16"
 deps.jasypt = "com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.1"
 deps.xxl_rpc_core = "com.xuxueli:xxl-rpc-core:1.4.1"
@@ -168,12 +174,11 @@ deps.quartz = "org.quartz-scheduler:quartz:2.3.0"
 deps.hazelcast = "com.hazelcast:hazelcast:3.7.8"
 deps.jolokia_core = "org.jolokia:jolokia-core:1.5.0"
 deps.freemarker = "org.freemarker:freemarker:2.3.31"
-deps.javax_servlet_api = "javax.servlet:javax.servlet-api:4.0.1"
-deps.java_validation_api = "javax.validation:validation-api:2.0.1.Final"
+deps.jakarta_servlet_api = "jakarta.servlet:jakarta.servlet-api:6.0.0"
+deps.jakarta_validation_api = "jakarta.validation:jakarta.validation-api:3.0.2"
 deps.user_agent_utils = "eu.bitwalker:UserAgentUtils:1.20"
 deps.rx_java = "io.reactivex.rxjava3:rxjava:3.0.7"
 deps.ltgt_apt_plugin = "net.ltgt.gradle:gradle-apt-plugin:0.21"
-deps.transmode_gradle_docker = "se.transmode.gradle:gradle-docker:1.2"
 deps.groovy = "org.codehaus.groovy:groovy:2.5.7"
 deps.netty = "io.netty:netty-all:4.1.55.Final"
 
@@ -183,9 +188,7 @@ plugins.ingot_assemble = "com.ingot:ingot-assemble-plugin:0.3.0"
 deps.plugins = plugins
 
 ext.deps = deps
-
-ext.sourceCompatibilityVersion = JavaVersion.VERSION_1_8
-ext.targetCompatibilityVersion = JavaVersion.VERSION_1_8
+ext.versions = versions
 
 def static addRepos(RepositoryHandler handler) {
     handler.mavenCentral()

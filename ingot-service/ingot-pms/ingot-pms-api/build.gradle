@@ -1,4 +1,4 @@
-//apply plugin: 'net.ltgt.apt-idea'
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     // 为了使用 OAuth2AuthorizationServerJackson2Module

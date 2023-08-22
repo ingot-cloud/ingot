@@ -1,19 +1,19 @@
 package com.ingot.framework.tenant.filter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
 
 /**
  * <p>Description  : TenantFilter.</p>
@@ -23,17 +23,13 @@ import org.springframework.web.filter.GenericFilterBean;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class TenantFilter extends GenericFilterBean {
+public class TenantFilter extends OncePerRequestFilter {
     private final TenantProperties tenantProperties;
 
     @Override
-    @SneakyThrows
-    public void doFilter(ServletRequest servletRequest,
-                         ServletResponse servletResponse,
-                         FilterChain filterChain) {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
-
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String url = request.getRequestURI();
         log.info("[TenantFilter] do filter url = {}", url);
 

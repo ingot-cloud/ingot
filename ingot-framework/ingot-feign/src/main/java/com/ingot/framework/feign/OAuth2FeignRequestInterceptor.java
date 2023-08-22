@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.constants.SecurityConstants;

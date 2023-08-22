@@ -1,3 +1,4 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     api(deps.spring.spring_cloud.openfeign_starter)
@@ -6,6 +7,6 @@ dependencies {
     implementation(deps.feign_okhttp)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
 
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
     compileOnly project(ingot.framework_core)
 }

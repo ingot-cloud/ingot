@@ -1,3 +1,5 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
 dependencies {
 
     api project(ingot.framework_core)
@@ -10,5 +12,5 @@ dependencies {
     implementation(deps.spring.framework_webmvc)
     implementation(deps.spring.spring_boot.data_redis_starter)
 
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
 }

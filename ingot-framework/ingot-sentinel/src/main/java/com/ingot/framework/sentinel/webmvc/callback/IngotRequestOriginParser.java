@@ -1,6 +1,6 @@
 package com.ingot.framework.sentinel.webmvc.callback;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginParser;
 

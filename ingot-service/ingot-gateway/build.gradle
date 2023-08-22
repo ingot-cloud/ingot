@@ -1,3 +1,5 @@
+apply from: "${project.getRootDir().path}/config/service-base.gradle"
+apply from: 'ingot-assemble.gradle'
 
 dependencies {
 //    implementation(deps.spring.spring_boot.actuator_starter)
@@ -14,6 +16,3 @@ dependencies {
     implementation project(ingot.framework_vc)
     implementation project(ingot.framework_data_redis)
 }
-
-apply from: 'ingot-assemble.gradle'
-apply from: "${project.getRootDir().path}/config/service-base.gradle"

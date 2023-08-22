@@ -1,12 +1,5 @@
 package com.ingot.framework.sentinel.feign;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
@@ -18,11 +11,18 @@ import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.feign.exception.IngotFeignException;
 import feign.Feign;
-import feign.InvocationHandlerFactory.MethodHandler;
+import feign.InvocationHandlerFactory;
 import feign.MethodMetadata;
 import feign.Target;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static feign.Util.checkNotNull;
 
@@ -35,103 +35,111 @@ import static feign.Util.checkNotNull;
 @Slf4j
 @SuppressWarnings({"rawtypes"})
 public class IngotSentinelInvocationHandler implements InvocationHandler {
+    public static final String EQUALS = "equals";
+
+    public static final String HASH_CODE = "hashCode";
+
+    public static final String TO_STRING = "toString";
 
     private final Target<?> target;
 
-    private final Map<Method, MethodHandler> dispatch;
+    private final Map<Method, InvocationHandlerFactory.MethodHandler> dispatch;
 
-    private FallbackFactory fallbackFactory;
+    private FallbackFactory<?> fallbackFactory;
 
     private Map<Method, Method> fallbackMethodMap;
 
-    IngotSentinelInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
-                                   FallbackFactory fallbackFactory) {
+    IngotSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
+                                 FallbackFactory<?> fallbackFactory) {
         this.target = checkNotNull(target, "target");
         this.dispatch = checkNotNull(dispatch, "dispatch");
         this.fallbackFactory = fallbackFactory;
         this.fallbackMethodMap = toFallbackMethod(dispatch);
     }
 
-    IngotSentinelInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch) {
+    IngotSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
         this.target = checkNotNull(target, "target");
         this.dispatch = checkNotNull(dispatch, "dispatch");
     }
 
     @Override
-    public Object invoke(final Object proxy, final Method method, final Object[] args)
-            throws Throwable {
-        switch (method.getName()) {
-            case "equals":
-                try {
-                    Object otherHandler = args.length > 0 && args[0] != null
-                            ? Proxy.getInvocationHandler(args[0]) : null;
-                    return equals(otherHandler);
-                } catch (IllegalArgumentException e) {
-                    return false;
-                }
-            case "hashCode":
-                return hashCode();
-            case "toString":
-                return toString();
+    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+        if (EQUALS.equals(method.getName())) {
+            try {
+                Object otherHandler = args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+                return equals(otherHandler);
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+        }
+        else if (HASH_CODE.equals(method.getName())) {
+            return hashCode();
+        }
+        else if (TO_STRING.equals(method.getName())) {
+            return toString();
         }
 
         Object result;
-        MethodHandler methodHandler = this.dispatch.get(method);
+        InvocationHandlerFactory.MethodHandler methodHandler = this.dispatch.get(method);
         // only handle by HardCodedTarget
         if (target instanceof Target.HardCodedTarget) {
-            Target.HardCodedTarget hardCodedTarget = (Target.HardCodedTarget) target;
+            Target.HardCodedTarget<?> hardCodedTarget = (Target.HardCodedTarget) target;
             MethodMetadata methodMetadata = SentinelContractHolder.METADATA_MAP
-                    .get(hardCodedTarget.type().getName()
-                            + Feign.configKey(hardCodedTarget.type(), method));
+                    .get(hardCodedTarget.type().getName() + Feign.configKey(hardCodedTarget.type(), method));
             // resource default is HttpMethod:protocol://url
             if (methodMetadata == null) {
                 result = methodHandler.invoke(args);
-            } else {
-                String resourceName = methodMetadata.template().method().toUpperCase()
-                        + ":" + hardCodedTarget.url() + methodMetadata.template().path();
+            }
+            else {
+                String resourceName = methodMetadata.template().method().toUpperCase() + ':' + hardCodedTarget.url()
+                        + methodMetadata.template().path();
                 Entry entry = null;
                 try {
                     ContextUtil.enter(resourceName);
                     entry = SphU.entry(resourceName, EntryType.OUT, 1, args);
                     result = methodHandler.invoke(args);
-                } catch (Throwable ex) {
+                }
+                catch (Throwable ex) {
                     // fallback handle
                     if (!BlockException.isBlockException(ex)) {
                         Tracer.trace(ex);
                     }
                     if (fallbackFactory != null) {
                         try {
-                            Object fallbackResult = fallbackMethodMap.get(method)
-                                    .invoke(fallbackFactory.create(ex), args);
-                            return fallbackResult;
-                        } catch (IllegalAccessException e) {
+                            return fallbackMethodMap.get(method).invoke(fallbackFactory.create(ex), args);
+                        }
+                        catch (IllegalAccessException e) {
                             // shouldn't happen as method is public due to being an
                             // interface
                             throw new AssertionError(e);
-                        } catch (InvocationTargetException e) {
+                        }
+                        catch (InvocationTargetException e) {
                             throw new AssertionError(e.getCause());
                         }
-                    } else {
-                        // 增加判断返回类型，如果是IngotResponse，那么返回缺省降级结果
-                        Class<?> returnType = method.getReturnType();
-                        if (returnType == R.class) {
+                    }
+                    else {
+                        // 若是R类型 执行自动降级返回R
+                        if (R.class == method.getReturnType()) {
                             if (ex instanceof IngotFeignException) {
                                 return R.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }
                             return R.error(BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getLocalizedMessage());
-                        } else {
-                            // throw exception if fallbackFactory is null
+                        }
+                        else {
                             throw ex;
                         }
                     }
-                } finally {
+                }
+                finally {
                     if (entry != null) {
                         entry.exit(1, args);
                     }
                     ContextUtil.exit();
                 }
             }
-        } else {
+        }
+        else {
             // other target type using default strategy
             result = methodHandler.invoke(args);
         }
@@ -141,8 +149,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof IngotSentinelInvocationHandler) {
-            IngotSentinelInvocationHandler other = (IngotSentinelInvocationHandler) obj;
+        if (obj instanceof IngotSentinelInvocationHandler other) {
             return target.equals(other.target);
         }
         return false;
@@ -158,7 +165,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
         return target.toString();
     }
 
-    static Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
+    static Map<Method, Method> toFallbackMethod(Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
         Map<Method, Method> result = new LinkedHashMap<>();
         for (Method method : dispatch.keySet()) {
             method.setAccessible(true);

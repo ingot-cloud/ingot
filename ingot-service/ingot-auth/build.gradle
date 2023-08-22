@@ -1,3 +1,7 @@
+apply from: "${project.getRootDir().path}/config/service-base.gradle"
+apply from: "${project.getRootDir().path}/config/database.gradle"
+apply from: 'ingot-assemble.gradle'
+
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_boot.web_starter)
@@ -10,6 +14,4 @@ dependencies {
     implementation project(ingot.pms_api)
 }
 
-apply from: 'ingot-assemble.gradle'
-apply from: "${project.getRootDir().path}/config/database.gradle"
-apply from: "${project.getRootDir().path}/config/service-base.gradle"
+

@@ -1,20 +1,19 @@
 package com.ingot.framework.id.leaf;
 
-import java.sql.SQLException;
-
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
-
+import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.id.BizGenerator;
 import com.ingot.framework.id.leaf.common.Result;
 import com.ingot.framework.id.leaf.common.Status;
 import com.ingot.framework.id.leaf.segment.SegmentIDGenImpl;
 import com.ingot.framework.id.leaf.segment.dao.IDAllocDao;
 import com.ingot.framework.id.leaf.segment.dao.impl.IDAllocDaoImpl;
-import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseErrorCode;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.sql.DataSource;
+import java.sql.SQLException;
 
 /**
  * <p>Description  : BizGeneratorImpl.</p>

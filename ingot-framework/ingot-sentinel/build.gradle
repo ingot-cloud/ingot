@@ -1,3 +1,4 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     api(deps.alibaba.sentinel_starter)
@@ -5,7 +6,7 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.framework_spring_web)
 
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
     compileOnly project(ingot.framework_feign)
     compileOnly project(ingot.framework_core)
 }

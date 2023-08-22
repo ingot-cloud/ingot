@@ -1,3 +1,4 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
