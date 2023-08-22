@@ -1,17 +1,16 @@
 package com.ingot.framework.core.utils;
 
-import java.util.Arrays;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * <p>Description  : RequestLogAop.</p>

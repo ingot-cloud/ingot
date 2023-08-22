@@ -1,10 +1,11 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
 
     api(deps.rx_java)
     api(deps.aspectj.aspectjweaver)
     api(deps.alibaba.transmittable_thread_local)
-    api(deps.java_validation_api)
+    api(deps.jakarta_validation_api)
     // swagger cloud
     api(deps.swagger.springfox_swagger2)
     // jackson
@@ -24,7 +25,7 @@ dependencies {
     implementation(deps.spring.spring_cloud.context)
     implementation(deps.mybatis.plus_extension)
 
-    compileOnly(deps.javax_servlet_api)
+    compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
 }

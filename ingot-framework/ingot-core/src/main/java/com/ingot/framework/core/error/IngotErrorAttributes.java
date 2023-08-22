@@ -4,17 +4,16 @@ import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.core.error.exception.BizException;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
+import jakarta.servlet.ServletException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
-import javax.servlet.ServletException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
@@ -68,7 +67,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
     public Throwable getError(WebRequest webRequest) {
         Throwable exception = getAttribute(webRequest, ERROR_ATTRIBUTE);
         if (exception == null) {
-            exception = getAttribute(webRequest, "javax.servlet.error.exception");
+            exception = getAttribute(webRequest, "jakarta.servlet.error.exception");
         }
         return exception;
     }
@@ -81,7 +80,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
     private void addStatus(Map<String, Object> errorAttributes,
                            RequestAttributes requestAttributes) {
         Integer status = getAttribute(requestAttributes,
-                "javax.servlet.error.status_code");
+                "jakarta.servlet.error.status_code");
         if (status == null) {
             errorAttributes.put("status", 999);
             errorAttributes.put("error", "None");
@@ -108,7 +107,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
                 addStackTrace(errorAttributes, error);
             }
         }
-        Object message = getAttribute(webRequest, "javax.servlet.error.message");
+        Object message = getAttribute(webRequest, "jakarta.servlet.error.message");
         if ((!ObjectUtil.isEmpty(message) || errorAttributes.get("message") == null)
                 && !(error instanceof BindingResult)) {
             errorAttributes.put("message",
@@ -136,9 +135,6 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
         if (error instanceof BindingResult) {
             return (BindingResult) error;
         }
-        if (error instanceof MethodArgumentNotValidException) {
-            return ((MethodArgumentNotValidException) error).getBindingResult();
-        }
         return null;
     }
 
@@ -151,7 +147,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
 
     private void addPath(Map<String, Object> errorAttributes,
                          RequestAttributes requestAttributes) {
-        String path = getAttribute(requestAttributes, "javax.servlet.error.request_uri");
+        String path = getAttribute(requestAttributes, "jakarta.servlet.error.request_uri");
         if (path != null) {
             errorAttributes.put("path", path);
         }
