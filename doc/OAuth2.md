@@ -52,3 +52,6 @@ Tenant: 选择的租户ID
 grant_type: "confirm_code"
 code: "返回的code"
 ```
+
+### 授权码模式改造
+/oauth2/authorize端点
