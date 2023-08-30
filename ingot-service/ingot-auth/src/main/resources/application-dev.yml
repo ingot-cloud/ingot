@@ -4,5 +4,5 @@ logging:
   level:
     org.springframework.web: trace
     org.springframework.security: trace
-    org.springframework.security.oauth2: debug
+    org.springframework.security.oauth2: trace
     com.alibaba.nacos.client.naming: info
