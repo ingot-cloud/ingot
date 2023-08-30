@@ -37,7 +37,7 @@ public class OAuth2PreAuthHttpMessageConverter extends AbstractHttpMessageConver
     protected OAuth2PreAuthorizationAuthenticationToken readInternal(@NonNull Class<? extends OAuth2PreAuthorizationAuthenticationToken> clazz,
                                                                      @NonNull HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
         // 不使用该方法
-        return OAuth2PreAuthorizationAuthenticationToken.unauthenticated("", "");
+        return OAuth2PreAuthorizationAuthenticationToken.unauthenticated();
     }
 
     @Override

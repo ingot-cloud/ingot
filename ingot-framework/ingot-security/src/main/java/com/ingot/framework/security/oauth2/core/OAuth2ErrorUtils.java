@@ -49,7 +49,18 @@ public final class OAuth2ErrorUtils {
      * @param desc error description
      */
     public static void throwAuthenticationException(String code, String desc) {
-        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null));
+        throwAuthenticationException(code, desc, null);
+    }
+
+    /**
+     * OAuth2 认证异常
+     *
+     * @param code     error code
+     * @param desc     error description
+     * @param errorUri uri
+     */
+    public static void throwAuthenticationException(String code, String desc, String errorUri) {
+        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, errorUri));
     }
 
     /**
@@ -59,8 +70,8 @@ public final class OAuth2ErrorUtils {
      * @param desc  error description
      * @param cause the root cause
      */
-    public static void throwAuthenticationException(String code, String desc, Throwable cause) {
-        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, null), cause);
+    public static void throwAuthenticationException(String code, String desc, String errorUri, Throwable cause) {
+        throw new OAuth2AuthenticationException(new OAuth2Error(code, desc, errorUri), cause);
     }
 
     /**
@@ -86,6 +97,11 @@ public final class OAuth2ErrorUtils {
 
     public static void throwInvalidRequest(String desc) {
         throwAuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST, desc);
+    }
+
+    public static void throwInvalidRequestParameter(String parameterName, String errorUri) {
+        throwAuthenticationException(
+                OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, errorUri);
     }
 
     /**

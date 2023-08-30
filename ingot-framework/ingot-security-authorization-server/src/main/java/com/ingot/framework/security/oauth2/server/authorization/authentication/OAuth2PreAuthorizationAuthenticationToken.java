@@ -3,8 +3,12 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import lombok.Getter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationToken.</p>
@@ -15,13 +19,25 @@ import java.util.List;
 public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
     @Getter
-    private String preAuthorization;
+    private final Map<String, Object> additionalParameters;
     @Getter
-    private List<AllowTenantDTO> allowList;
+    private final RegisteredClient registeredClient;
+    @Getter
+    private final String preAuthorization;
+    @Getter
+    private final List<AllowTenantDTO> allowList;
+
+    public static OAuth2PreAuthorizationAuthenticationToken unauthenticated() {
+        return new OAuth2PreAuthorizationAuthenticationToken(
+                "", "", null, null);
+    }
 
     public static OAuth2PreAuthorizationAuthenticationToken unauthenticated(Object userPrincipal,
-                                                                            String preAuthorization) {
-        return new OAuth2PreAuthorizationAuthenticationToken(userPrincipal, preAuthorization);
+                                                                            String preAuthorization,
+                                                                            RegisteredClient registeredClient,
+                                                                            Map<String, Object> additionalParameters) {
+        return new OAuth2PreAuthorizationAuthenticationToken(
+                userPrincipal, preAuthorization, registeredClient, additionalParameters);
     }
 
     public static OAuth2PreAuthorizationAuthenticationToken authenticated(String authorizationCode,
@@ -30,10 +46,18 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
     }
 
     public OAuth2PreAuthorizationAuthenticationToken(Object principal,
-                                                     String preAuthorization) {
+                                                     String preAuthorization,
+                                                     RegisteredClient registeredClient,
+                                                     Map<String, Object> additionalParameters) {
         super(null);
         this.principal = principal;
+        this.additionalParameters = Collections.unmodifiableMap(
+                additionalParameters != null ?
+                        new HashMap<>(additionalParameters) :
+                        Collections.emptyMap());
+        this.registeredClient = registeredClient;
         this.preAuthorization = preAuthorization;
+        this.allowList = Collections.emptyList();
     }
 
     /**
@@ -46,6 +70,9 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
                                                      List<AllowTenantDTO> allowList) {
         super(null);
         this.principal = authorizationCode;
+        this.additionalParameters = Collections.emptyMap();
+        this.registeredClient = null;
+        this.preAuthorization = null;
         this.allowList = allowList;
         super.setAuthenticated(true); // must use super, as we override
     }

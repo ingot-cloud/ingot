@@ -29,7 +29,6 @@ import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -86,7 +85,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
         if (registeredClient == null ||
                 !registeredClient.getAuthorizationGrantTypes().contains(unauthenticatedToken.getGrantType())) {
-            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
+            OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
         // confirm_code 模式，需要转换token，设置username
