@@ -1,15 +1,15 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.ingot.framework.security.oauth2.core.OAuth2Authentication;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * <p>Description  : DefaultOAuth2UserDetailsServiceManager.</p>
@@ -31,7 +31,7 @@ public final class DefaultOAuth2UserDetailsServiceManager implements OAuth2UserD
         UserDetails userDetails = null;
         for (UserDetailsService service : userDetailsServices) {
             // 如果不是OAuth2UserDetailsService，那么直接使用loadUserByUsername加载用户
-            if (!(service instanceof OAuth2UserDetailsService)) {
+            if (!(service instanceof OAuth2UserDetailsService userDetailsService)) {
                 try {
                     userDetails = service.loadUserByUsername(authentication.getName());
                     if (userDetails == null) {
@@ -46,7 +46,7 @@ public final class DefaultOAuth2UserDetailsServiceManager implements OAuth2UserD
             }
 
             // 判断 GrantType
-            if (!((OAuth2UserDetailsService) service).supports(authentication.getGrantType())) {
+            if (!userDetailsService.supports(authentication.getGrantType())) {
                 continue;
             }
             userDetails = service.loadUserByUsername(authentication.getName());
