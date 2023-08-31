@@ -21,7 +21,7 @@ public interface CacheConstants {
     /**
      * 预授权code
      */
-    String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization_code";
+    String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization";
 
     /**
      * 所有权限

@@ -1,7 +1,7 @@
 package com.ingot.cloud.auth.config;
 
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
-import com.ingot.cloud.auth.service.DefaultPreAuthorizationCodeService;
+import com.ingot.cloud.auth.service.DefaultPreAuthorizationService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
@@ -11,7 +11,7 @@ import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -128,7 +128,7 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public PreAuthorizationCodeService preAuthorizationCodeService(RedisTemplate<String, Object> redisTemplate) {
-        return new DefaultPreAuthorizationCodeService(redisTemplate);
+    public PreAuthorizationService preAuthorizationCodeService(RedisTemplate<String, Object> redisTemplate) {
+        return new DefaultPreAuthorizationService(redisTemplate);
     }
 }

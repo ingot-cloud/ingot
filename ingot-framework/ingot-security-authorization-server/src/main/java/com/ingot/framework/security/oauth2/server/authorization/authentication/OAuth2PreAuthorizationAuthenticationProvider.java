@@ -1,6 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.tenantdetails.TenantDetails;
@@ -8,17 +7,26 @@ import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorization;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationCode;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
 import lombok.Setter;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.token.DefaultOAuth2TokenContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.StringUtils;
+
+import java.security.Principal;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationAuthenticationProvider.</p>
@@ -28,10 +36,11 @@ import org.springframework.util.StringUtils;
  */
 public class OAuth2PreAuthorizationAuthenticationProvider implements AuthenticationProvider {
     private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
+    private OAuth2TokenGenerator<OAuth2PreAuthorizationCode> authorizationCodeGenerator = new OAuth2PreAuthorizationCodeGenerator();
     @Setter
     private TenantDetailsService tenantDetailsService;
     @Setter
-    private PreAuthorizationCodeService preAuthorizationCodeService;
+    private PreAuthorizationService preAuthorizationService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -70,16 +79,48 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
         }
 
         // 2.通过用户信息获取可以访问的租户列表
-        TenantDetails tenant = tenantDetailsService.loadByUsername(user.getUsername());
+        TenantDetails tenant = this.tenantDetailsService.loadByUsername(user.getUsername());
 
         // 3.生成code
-        String code = UUID.randomUUID().toString().replace("-", "");
-        preAuthorizationCodeService.save(PreAuthorization.create(user), code);
-        return OAuth2PreAuthorizationAuthenticationToken.authenticated(code, tenant.getAllow());
+        OAuth2TokenContext tokenContext = createAuthorizationCodeTokenContext(
+                preAuthorizationAuthenticationToken, registeredClient);
+        OAuth2PreAuthorizationCode authorizationCode = this.authorizationCodeGenerator.generate(tokenContext);
+
+        OAuth2PreAuthorization authorization = OAuth2PreAuthorization.withRegisteredClient(registeredClient)
+                .principalName(user.getUsername())
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .attribute(Principal.class.getName(), userAuth)
+                .token(authorizationCode)
+                .build();
+
+        this.preAuthorizationService.save(authorization);
+
+        return OAuth2PreAuthorizationAuthenticationToken
+                .authenticated(authorization.getToken().getTokenValue(), tenant.getAllow());
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
         return (OAuth2PreAuthorizationAuthenticationToken.class.isAssignableFrom(authentication));
+    }
+
+    private static OAuth2TokenContext createAuthorizationCodeTokenContext(
+            OAuth2PreAuthorizationAuthenticationToken preAuthorizationAuthenticationToken,
+            RegisteredClient registeredClient) {
+
+        // @formatter:off
+        DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
+                .registeredClient(registeredClient)
+                .principal((Authentication) preAuthorizationAuthenticationToken.getPrincipal())
+                .tokenType(new OAuth2TokenType(IngotOAuth2ParameterNames.PRE_CODE))
+                .authorizationGrantType(UserDetailsAuthorizationGrantType.CONFIRM_CODE)
+                .authorizationGrant(preAuthorizationAuthenticationToken);
+        // @formatter:on
+
+        return tokenContextBuilder.build();
+    }
+
+    public void setAuthorizationCodeGenerator(OAuth2TokenGenerator<OAuth2PreAuthorizationCode> authorizationCodeGenerator) {
+        this.authorizationCodeGenerator = authorizationCodeGenerator;
     }
 }

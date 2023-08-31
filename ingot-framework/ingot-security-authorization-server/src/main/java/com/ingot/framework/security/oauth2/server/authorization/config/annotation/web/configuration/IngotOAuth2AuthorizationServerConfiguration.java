@@ -4,8 +4,8 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.DelegateUserDetailsTokenProcessor;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.UserDetailsTokenConfirmCodeProcessor;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.UserDetailsTokenProcessor;
-import com.ingot.framework.security.oauth2.server.authorization.code.DefaultPreAuthorizationCodeService;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
+import com.ingot.framework.security.oauth2.server.authorization.code.DefaultPreAuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
@@ -80,15 +80,15 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(PreAuthorizationCodeService.class)
-    public PreAuthorizationCodeService preAuthorizationCodeService() {
-        return new DefaultPreAuthorizationCodeService();
+    @ConditionalOnMissingBean(PreAuthorizationService.class)
+    public PreAuthorizationService preAuthorizationCodeService() {
+        return new DefaultPreAuthorizationService();
     }
 
     @Bean
     @ConditionalOnMissingBean(UserDetailsTokenProcessor.class)
-    public UserDetailsTokenProcessor userDetailsTokenProcessor(PreAuthorizationCodeService preAuthorizationCodeService) {
+    public UserDetailsTokenProcessor userDetailsTokenProcessor(PreAuthorizationService preAuthorizationService) {
         return new DelegateUserDetailsTokenProcessor(ListUtil.list(false,
-                new UserDetailsTokenConfirmCodeProcessor(preAuthorizationCodeService)));
+                new UserDetailsTokenConfirmCodeProcessor(preAuthorizationService)));
     }
 }

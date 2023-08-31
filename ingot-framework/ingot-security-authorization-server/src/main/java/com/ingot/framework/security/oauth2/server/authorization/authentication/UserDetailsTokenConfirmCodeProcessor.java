@@ -3,8 +3,8 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorization;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
+import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.core.SpringSecurityMessageSource;
@@ -22,7 +22,7 @@ import static com.ingot.framework.security.oauth2.server.authorization.authentic
  */
 @RequiredArgsConstructor
 public class UserDetailsTokenConfirmCodeProcessor implements UserDetailsTokenProcessor {
-    private final PreAuthorizationCodeService preAuthorizationCodeService;
+    private final PreAuthorizationService preAuthorizationService;
     private final MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
     @Override
@@ -41,21 +41,21 @@ public class UserDetailsTokenConfirmCodeProcessor implements UserDetailsTokenPro
             OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        PreAuthorization authorization = preAuthorizationCodeService.get(in.getPrincipal().toString());
+        OAuth2PreAuthorization authorization = preAuthorizationService.get(in.getPrincipal().toString());
         if (authorization == null) {
             OAuth2ErrorUtils.throwPreAuthorizationCodeExpired(this.messages
                     .getMessage("OAuth2UserDetailsAuthenticationProvider.preAuthorizationCodeExpired",
                             "登录超时"));
         }
         // 判断是否登录的同一个client
-        if (!StrUtil.equals(authorization.getClientId(), registeredClient.getClientId())) {
+        if (!StrUtil.equals(authorization.getRegisteredClientId(), registeredClient.getClientId())) {
             OAuth2ErrorUtils.throwNotAllowClient(this.messages
                     .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
                             "不允许访问客户端"));
         }
 
         return OAuth2UserDetailsAuthenticationToken.unauthenticated(
-                authorization.getUsername(), null,
+                authorization.getPrincipalName(), null,
                 in.getGrantType(), in.getClient());
     }
 }
