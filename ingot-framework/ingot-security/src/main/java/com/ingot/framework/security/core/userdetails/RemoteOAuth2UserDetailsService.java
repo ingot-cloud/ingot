@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,8 +21,8 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
     @Override
     public boolean supports(AuthorizationGrantType grantType) {
         // 密码模式，或者确认模式
-        return UserDetailsAuthorizationGrantType.PASSWORD.equals(grantType)
-                || UserDetailsAuthorizationGrantType.CONFIRM_CODE.equals(grantType);
+        return IngotAuthorizationGrantType.PASSWORD.equals(grantType)
+                || IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE.equals(grantType);
     }
 
     /**

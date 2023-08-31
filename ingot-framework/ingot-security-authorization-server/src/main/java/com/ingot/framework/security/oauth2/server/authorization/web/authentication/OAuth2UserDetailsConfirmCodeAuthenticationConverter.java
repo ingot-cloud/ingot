@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class OAuth2UserDetailsConfirmCodeAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
     @Override
     protected AuthorizationGrantType getGrantType() {
-        return UserDetailsAuthorizationGrantType.CONFIRM_CODE;
+        return IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE;
     }
 
     @Override

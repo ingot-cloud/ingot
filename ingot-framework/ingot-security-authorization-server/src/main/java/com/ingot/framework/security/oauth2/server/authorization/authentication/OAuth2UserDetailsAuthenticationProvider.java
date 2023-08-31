@@ -6,7 +6,7 @@ import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
@@ -139,7 +139,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
                         "不允许访问客户端")));
 
         // 只有密码模式才需要进行密码验证
-        if (token.getGrantType() != UserDetailsAuthorizationGrantType.PASSWORD) {
+        if (token.getGrantType() != IngotAuthorizationGrantType.PASSWORD) {
             return;
         }
 

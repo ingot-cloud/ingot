@@ -5,7 +5,7 @@ import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.tenantdetails.TenantDetails;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
@@ -48,7 +48,7 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
                 (OAuth2PreAuthorizationRequestAuthenticationToken) authentication;
 
         RegisteredClient registeredClient = preAuthorizationAuthenticationToken.getRegisteredClient();
-        if (!registeredClient.getAuthorizationGrantTypes().contains(UserDetailsAuthorizationGrantType.CONFIRM_CODE)) {
+        if (!registeredClient.getAuthorizationGrantTypes().contains(IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE)) {
             OAuth2ErrorUtils.throwAuthenticationException(
                     OAuth2ErrorCodes.UNAUTHORIZED_CLIENT, this.messages
                             .getMessage("OAuth2PreAuthorizationAuthenticationProvider.unauthorizedClient",
@@ -113,7 +113,7 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
                 .registeredClient(registeredClient)
                 .principal((Authentication) preAuthorizationAuthenticationToken.getPrincipal())
                 .tokenType(new OAuth2TokenType(IngotOAuth2ParameterNames.PRE_CODE))
-                .authorizationGrantType(UserDetailsAuthorizationGrantType.CONFIRM_CODE)
+                .authorizationGrantType(IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE)
                 .authorizationGrant(preAuthorizationAuthenticationToken);
         // @formatter:on
 

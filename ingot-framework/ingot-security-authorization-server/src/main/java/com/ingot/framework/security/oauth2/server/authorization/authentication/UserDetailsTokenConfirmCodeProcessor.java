@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
@@ -28,7 +28,7 @@ public class UserDetailsTokenConfirmCodeProcessor implements UserDetailsTokenPro
     @Override
     public OAuth2UserDetailsAuthenticationToken process(OAuth2UserDetailsAuthenticationToken in) {
         // confirm_code 模式，需要转换token，设置username
-        if (in.getGrantType() != UserDetailsAuthorizationGrantType.CONFIRM_CODE) {
+        if (in.getGrantType() != IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE) {
             return null;
         }
 
