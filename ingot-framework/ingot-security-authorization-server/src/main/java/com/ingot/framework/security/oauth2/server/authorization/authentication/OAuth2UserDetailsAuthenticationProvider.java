@@ -60,7 +60,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     private OAuth2UserDetailsServiceManager userDetailsServiceManager;
     private UserDetailsPasswordService userDetailsPasswordService;
-    private UserDetailsTokenProcessor userDetailsTokenProcessor;
     private PasswordEncoder passwordEncoder;
     private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
     private RegisteredClientChecker clientChecker = new DefaultRegisteredClientChecker();
@@ -84,9 +83,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
                 !registeredClient.getAuthorizationGrantTypes().contains(unauthenticatedToken.getGrantType())) {
             OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
-
-        // 加工token，处理不同模式下的token
-        userDetailsTokenProcessor.process(unauthenticatedToken);
 
         this.clientChecker.check(registeredClient);
         UserDetails user = retrieveUser(registeredClient, unauthenticatedToken);
@@ -246,10 +242,6 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     protected UserDetailsChecker getAuthenticationChecks() {
         return authenticationChecks;
-    }
-
-    public void setUserDetailsTokenProcessor(UserDetailsTokenProcessor userDetailsTokenProcessor) {
-        this.userDetailsTokenProcessor = userDetailsTokenProcessor;
     }
 
     public void setAuthoritiesMapper(GrantedAuthoritiesMapper authoritiesMapper) {
