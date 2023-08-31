@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.core.SpringSecurityMessageSource;
@@ -22,7 +22,7 @@ import static com.ingot.framework.security.oauth2.server.authorization.authentic
  */
 @RequiredArgsConstructor
 public class UserDetailsTokenConfirmCodeProcessor implements UserDetailsTokenProcessor {
-    private final PreAuthorizationService preAuthorizationService;
+    private final OAuth2PreAuthorizationService OAuth2PreAuthorizationService;
     private final MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
     @Override
@@ -41,7 +41,7 @@ public class UserDetailsTokenConfirmCodeProcessor implements UserDetailsTokenPro
             OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        OAuth2PreAuthorization authorization = preAuthorizationService.get(in.getPrincipal().toString());
+        OAuth2PreAuthorization authorization = OAuth2PreAuthorizationService.get(in.getPrincipal().toString());
         if (authorization == null) {
             OAuth2ErrorUtils.throwPreAuthorizationCodeExpired(this.messages
                     .getMessage("OAuth2UserDetailsAuthenticationProvider.preAuthorizationCodeExpired",

@@ -10,7 +10,7 @@ import java.util.Map;
  * <p>Date         : 2023/7/28.</p>
  * <p>Time         : 3:14 PM.</p>
  */
-public class DefaultPreAuthorizationService implements PreAuthorizationService {
+public class DefaultOAuth2PreAuthorizationService implements OAuth2PreAuthorizationService {
     private final Map<String, OAuth2PreAuthorization> cache = MapUtil.newConcurrentHashMap();
 
     @Override

@@ -10,7 +10,7 @@ import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationCode;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import lombok.Setter;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -40,7 +40,7 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
     @Setter
     private TenantDetailsService tenantDetailsService;
     @Setter
-    private PreAuthorizationService preAuthorizationService;
+    private OAuth2PreAuthorizationService OAuth2PreAuthorizationService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -93,7 +93,7 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
                 .token(authorizationCode)
                 .build();
 
-        this.preAuthorizationService.save(authorization);
+        this.OAuth2PreAuthorizationService.save(authorization);
 
         return OAuth2PreAuthorizationRequestAuthenticationToken
                 .authenticated(authorization.getToken().getTokenValue(), tenant.getAllow());

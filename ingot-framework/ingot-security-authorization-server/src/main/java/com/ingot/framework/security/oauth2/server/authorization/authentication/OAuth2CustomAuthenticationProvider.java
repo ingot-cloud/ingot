@@ -1,6 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -52,11 +51,11 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2CustomAuthenticationToken passwordAuthentication =
+        OAuth2CustomAuthenticationToken customAuthenticationToken =
                 (OAuth2CustomAuthenticationToken) authentication;
 
         OAuth2ClientAuthenticationToken clientPrincipal =
-                getAuthenticatedClientElseThrowInvalidClient(passwordAuthentication);
+                getAuthenticatedClientElseThrowInvalidClient(customAuthenticationToken);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
         if (registeredClient == null) {
             OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);
@@ -65,7 +64,7 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         // Default to configured scopes
         Set<String> authorizedScopes = registeredClient.getScopes();
         // OAuth2UsernamePasswordAuthenticationToken
-        Authentication principal = passwordAuthentication.getUserPrincipal();
+        Authentication principal = customAuthenticationToken.getUserPrincipal();
 
         // @formatter:off
         DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
@@ -74,8 +73,8 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
                 .authorizationServerContext(AuthorizationServerContextHolder.getContext())
                 .authorizedScopes(authorizedScopes)
                 .tokenType(OAuth2TokenType.ACCESS_TOKEN)
-                .authorizationGrantType(UserDetailsAuthorizationGrantType.PASSWORD)
-                .authorizationGrant(passwordAuthentication);
+                .authorizationGrantType(customAuthenticationToken.getGrantType())
+                .authorizationGrant(customAuthenticationToken);
         // @formatter:on
 
         // ----- Access token -----
@@ -109,7 +108,7 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         // @formatter:off
         OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(registeredClient)
                 .principalName(principal.getName())
-                .authorizationGrantType(UserDetailsAuthorizationGrantType.PASSWORD)
+                .authorizationGrantType(customAuthenticationToken.getGrantType())
                 .authorizedScopes(authorizedScopes)
                 .attribute(Principal.class.getName(), principal);
         if (generatedAccessToken instanceof ClaimAccessor) {

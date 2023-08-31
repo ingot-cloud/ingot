@@ -3,7 +3,7 @@ package com.ingot.cloud.auth.service;
 import cn.hutool.core.util.RandomUtil;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorization;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * <p>Time         : 4:53 PM.</p>
  */
 @RequiredArgsConstructor
-public class DefaultPreAuthorizationService implements PreAuthorizationService {
+public class DefaultOAuth2PreAuthorizationService implements OAuth2PreAuthorizationService {
     /**
      * 2分钟超时
      */

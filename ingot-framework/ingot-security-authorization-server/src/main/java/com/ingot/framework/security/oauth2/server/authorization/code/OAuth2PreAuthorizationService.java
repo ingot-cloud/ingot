@@ -1,12 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.code;
 
 /**
- * <p>Description  : PreAuthorizationService.</p>
+ * <p>Description  : OAuth2PreAuthorizationService.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/28.</p>
  * <p>Time         : 2:56 PM.</p>
  */
-public interface PreAuthorizationService {
+public interface OAuth2PreAuthorizationService {
 
     /**
      * 保存授权信息

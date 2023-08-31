@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationRequestAuthenticationProvider;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationRequestEndpointFilter;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
@@ -78,10 +78,10 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
         OAuth2PreAuthorizationRequestAuthenticationProvider provider = new OAuth2PreAuthorizationRequestAuthenticationProvider();
         TenantDetailsService tenantDetailsService = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, TenantDetailsService.class);
-        PreAuthorizationService codeService = OAuth2ConfigurerUtils.getBean(
-                httpSecurity, PreAuthorizationService.class);
+        OAuth2PreAuthorizationService codeService = OAuth2ConfigurerUtils.getBean(
+                httpSecurity, OAuth2PreAuthorizationService.class);
         provider.setTenantDetailsService(tenantDetailsService);
-        provider.setPreAuthorizationService(codeService);
+        provider.setOAuth2PreAuthorizationService(codeService);
 
         authenticationProviders.add(provider);
         return authenticationProviders;
