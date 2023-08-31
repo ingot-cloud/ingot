@@ -2,10 +2,10 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 
 import com.ingot.framework.core.constants.SecurityConstants;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationRequestAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
-import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationRequestEndpointFilter;
-import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter;
+import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationCodeRequestEndpointFilter;
+import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,15 +56,15 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
                 postProcess(clientFilter), OAuth2UserDetailsAuthenticationFilter.class);
 
         // user details
-        OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter userDetailsFilter =
-                new OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter(authenticationManager, this.requestMatcher);
+        OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter userDetailsFilter =
+                new OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter(authenticationManager, this.requestMatcher);
         httpSecurity.addFilterAfter(
                 postProcess(userDetailsFilter), OAuth2PreAuthorizationClientAuthenticationFilter.class);
 
-        OAuth2PreAuthorizationRequestEndpointFilter preAuthorizationEndpointFilter =
-                new OAuth2PreAuthorizationRequestEndpointFilter(authenticationManager, this.requestMatcher);
+        OAuth2PreAuthorizationCodeRequestEndpointFilter preAuthorizationEndpointFilter =
+                new OAuth2PreAuthorizationCodeRequestEndpointFilter(authenticationManager, this.requestMatcher);
         httpSecurity.addFilterAfter(
-                postProcess(preAuthorizationEndpointFilter), OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter.class);
+                postProcess(preAuthorizationEndpointFilter), OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter.class);
 
     }
 
@@ -75,7 +75,7 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
 
     private List<AuthenticationProvider> createProviders(HttpSecurity httpSecurity) {
         List<AuthenticationProvider> authenticationProviders = new ArrayList<>();
-        OAuth2PreAuthorizationRequestAuthenticationProvider provider = new OAuth2PreAuthorizationRequestAuthenticationProvider();
+        OAuth2PreAuthorizationCodeRequestAuthenticationProvider provider = new OAuth2PreAuthorizationCodeRequestAuthenticationProvider();
         TenantDetailsService tenantDetailsService = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, TenantDetailsService.class);
         OAuth2PreAuthorizationService codeService = OAuth2ConfigurerUtils.getBean(

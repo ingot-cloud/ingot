@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationToken.</p>
+ * <p>Description  : OAuth2PreAuthorizationCodeRequestAuthenticationToken.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:49 PM.</p>
  */
-public class OAuth2PreAuthorizationRequestAuthenticationToken extends AbstractAuthenticationToken {
+public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
     @Getter
     private final Map<String, Object> additionalParameters;
@@ -27,28 +27,28 @@ public class OAuth2PreAuthorizationRequestAuthenticationToken extends AbstractAu
     @Getter
     private final List<AllowTenantDTO> allowList;
 
-    public static OAuth2PreAuthorizationRequestAuthenticationToken unauthenticated() {
-        return new OAuth2PreAuthorizationRequestAuthenticationToken(
+    public static OAuth2PreAuthorizationCodeRequestAuthenticationToken unauthenticated() {
+        return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(
                 "", "", null, null);
     }
 
-    public static OAuth2PreAuthorizationRequestAuthenticationToken unauthenticated(Object userPrincipal,
-                                                                                   String preAuthorization,
-                                                                                   RegisteredClient registeredClient,
-                                                                                   Map<String, Object> additionalParameters) {
-        return new OAuth2PreAuthorizationRequestAuthenticationToken(
+    public static OAuth2PreAuthorizationCodeRequestAuthenticationToken unauthenticated(Object userPrincipal,
+                                                                                       String preAuthorization,
+                                                                                       RegisteredClient registeredClient,
+                                                                                       Map<String, Object> additionalParameters) {
+        return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(
                 userPrincipal, preAuthorization, registeredClient, additionalParameters);
     }
 
-    public static OAuth2PreAuthorizationRequestAuthenticationToken authenticated(String authorizationCode,
-                                                                                 List<AllowTenantDTO> allowList) {
-        return new OAuth2PreAuthorizationRequestAuthenticationToken(authorizationCode, allowList);
+    public static OAuth2PreAuthorizationCodeRequestAuthenticationToken authenticated(String authorizationCode,
+                                                                                     List<AllowTenantDTO> allowList) {
+        return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(authorizationCode, allowList);
     }
 
-    public OAuth2PreAuthorizationRequestAuthenticationToken(Object principal,
-                                                            String preAuthorization,
-                                                            RegisteredClient registeredClient,
-                                                            Map<String, Object> additionalParameters) {
+    public OAuth2PreAuthorizationCodeRequestAuthenticationToken(Object principal,
+                                                                String preAuthorization,
+                                                                RegisteredClient registeredClient,
+                                                                Map<String, Object> additionalParameters) {
         super(null);
         this.principal = principal;
         this.additionalParameters = Collections.unmodifiableMap(
@@ -66,8 +66,8 @@ public class OAuth2PreAuthorizationRequestAuthenticationToken extends AbstractAu
      * @param authorities the collection of <tt>GrantedAuthority</tt>s for the principal
      *                    represented by this authentication object.
      */
-    public OAuth2PreAuthorizationRequestAuthenticationToken(String authorizationCode,
-                                                            List<AllowTenantDTO> allowList) {
+    public OAuth2PreAuthorizationCodeRequestAuthenticationToken(String authorizationCode,
+                                                                List<AllowTenantDTO> allowList) {
         super(null);
         this.principal = authorizationCode;
         this.additionalParameters = Collections.emptyMap();

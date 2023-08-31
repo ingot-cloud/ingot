@@ -10,12 +10,12 @@ import org.springframework.security.web.authentication.AuthenticationConverter;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationUserDetailsAuthenticationConverter.</p>
+ * <p>Description  : 预授权模式，用户信息认证转换器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/28.</p>
  * <p>Time         : 2:17 PM.</p>
  */
-public class OAuth2PreAuthorizationRequestUserDetailsAuthenticationConverter implements AuthenticationConverter {
+public class OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationConverter implements AuthenticationConverter {
     private final OAuth2UserDetailsPasswordAuthenticationConverter passwordConverter = new OAuth2UserDetailsPasswordAuthenticationConverter();
     private final OAuth2UserDetailsSocialAuthenticationConverter socialConverter = new OAuth2UserDetailsSocialAuthenticationConverter();
 

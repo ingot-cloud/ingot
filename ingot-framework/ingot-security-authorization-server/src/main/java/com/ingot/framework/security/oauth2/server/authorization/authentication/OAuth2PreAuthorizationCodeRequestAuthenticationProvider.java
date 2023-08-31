@@ -29,12 +29,12 @@ import org.springframework.util.StringUtils;
 import java.security.Principal;
 
 /**
- * <p>Description  : OAuth2PreAuthorizationAuthenticationProvider.</p>
+ * <p>Description  : {@link IngotAuthorizationGrantType#PRE_AUTHORIZATION_CODE} request authentication provider.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:51 PM.</p>
  */
-public class OAuth2PreAuthorizationRequestAuthenticationProvider implements AuthenticationProvider {
+public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements AuthenticationProvider {
     private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
     private OAuth2TokenGenerator<OAuth2PreAuthorizationCode> authorizationCodeGenerator = new OAuth2PreAuthorizationCodeGenerator();
     @Setter
@@ -44,8 +44,8 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2PreAuthorizationRequestAuthenticationToken preAuthorizationAuthenticationToken =
-                (OAuth2PreAuthorizationRequestAuthenticationToken) authentication;
+        OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthorizationAuthenticationToken =
+                (OAuth2PreAuthorizationCodeRequestAuthenticationToken) authentication;
 
         RegisteredClient registeredClient = preAuthorizationAuthenticationToken.getRegisteredClient();
         if (!registeredClient.getAuthorizationGrantTypes().contains(IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE)) {
@@ -95,17 +95,17 @@ public class OAuth2PreAuthorizationRequestAuthenticationProvider implements Auth
 
         this.OAuth2PreAuthorizationService.save(authorization);
 
-        return OAuth2PreAuthorizationRequestAuthenticationToken
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken
                 .authenticated(authorization.getToken().getTokenValue(), tenant.getAllow());
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return (OAuth2PreAuthorizationRequestAuthenticationToken.class.isAssignableFrom(authentication));
+        return (OAuth2PreAuthorizationCodeRequestAuthenticationToken.class.isAssignableFrom(authentication));
     }
 
     private static OAuth2TokenContext createAuthorizationCodeTokenContext(
-            OAuth2PreAuthorizationRequestAuthenticationToken preAuthorizationAuthenticationToken,
+            OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthorizationAuthenticationToken,
             RegisteredClient registeredClient) {
 
         // @formatter:off

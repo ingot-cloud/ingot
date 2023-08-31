@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationRequestAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpInputMessage;
@@ -21,27 +21,27 @@ import java.util.Map;
  * <p>Date         : 2023/7/29.</p>
  * <p>Time         : 10:57 AM.</p>
  */
-public class OAuth2PreAuthHttpMessageConverter extends AbstractHttpMessageConverter<OAuth2PreAuthorizationRequestAuthenticationToken> {
+public class OAuth2PreAuthHttpMessageConverter extends AbstractHttpMessageConverter<OAuth2PreAuthorizationCodeRequestAuthenticationToken> {
     private static final ParameterizedTypeReference<Map<String, Object>> STRING_OBJECT_MAP = new ParameterizedTypeReference<Map<String, Object>>() {
     };
     private final GenericHttpMessageConverter<Object> jsonMessageConverter = HttpMessageConverters.getJsonMessageConverter();
-    private final Converter<OAuth2PreAuthorizationRequestAuthenticationToken, Map<String, Object>> tokenConverter = new OAuth2PreAuthorizationAuthenticationTokenConverter();
+    private final Converter<OAuth2PreAuthorizationCodeRequestAuthenticationToken, Map<String, Object>> tokenConverter = new OAuth2PreAuthorizationAuthenticationTokenConverter();
 
     @Override
     protected boolean supports(@NonNull Class<?> clazz) {
-        return OAuth2PreAuthorizationRequestAuthenticationToken.class.isAssignableFrom(clazz);
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.class.isAssignableFrom(clazz);
     }
 
     @Override
     @NonNull
-    protected OAuth2PreAuthorizationRequestAuthenticationToken readInternal(@NonNull Class<? extends OAuth2PreAuthorizationRequestAuthenticationToken> clazz,
-                                                                            @NonNull HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+    protected OAuth2PreAuthorizationCodeRequestAuthenticationToken readInternal(@NonNull Class<? extends OAuth2PreAuthorizationCodeRequestAuthenticationToken> clazz,
+                                                                                @NonNull HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
         // 不使用该方法
-        return OAuth2PreAuthorizationRequestAuthenticationToken.unauthenticated();
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.unauthenticated();
     }
 
     @Override
-    protected void writeInternal(@NonNull OAuth2PreAuthorizationRequestAuthenticationToken token,
+    protected void writeInternal(@NonNull OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
                                  @NonNull HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         try {
             Map<String, Object> parameters = this.tokenConverter.convert(token);
