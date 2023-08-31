@@ -34,7 +34,7 @@ import java.security.Principal;
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:51 PM.</p>
  */
-public class OAuth2PreAuthorizationAuthenticationProvider implements AuthenticationProvider {
+public class OAuth2PreAuthorizationRequestAuthenticationProvider implements AuthenticationProvider {
     private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
     private OAuth2TokenGenerator<OAuth2PreAuthorizationCode> authorizationCodeGenerator = new OAuth2PreAuthorizationCodeGenerator();
     @Setter
@@ -44,8 +44,8 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2PreAuthorizationAuthenticationToken preAuthorizationAuthenticationToken =
-                (OAuth2PreAuthorizationAuthenticationToken) authentication;
+        OAuth2PreAuthorizationRequestAuthenticationToken preAuthorizationAuthenticationToken =
+                (OAuth2PreAuthorizationRequestAuthenticationToken) authentication;
 
         RegisteredClient registeredClient = preAuthorizationAuthenticationToken.getRegisteredClient();
         if (!registeredClient.getAuthorizationGrantTypes().contains(UserDetailsAuthorizationGrantType.CONFIRM_CODE)) {
@@ -95,17 +95,17 @@ public class OAuth2PreAuthorizationAuthenticationProvider implements Authenticat
 
         this.preAuthorizationService.save(authorization);
 
-        return OAuth2PreAuthorizationAuthenticationToken
+        return OAuth2PreAuthorizationRequestAuthenticationToken
                 .authenticated(authorization.getToken().getTokenValue(), tenant.getAllow());
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return (OAuth2PreAuthorizationAuthenticationToken.class.isAssignableFrom(authentication));
+        return (OAuth2PreAuthorizationRequestAuthenticationToken.class.isAssignableFrom(authentication));
     }
 
     private static OAuth2TokenContext createAuthorizationCodeTokenContext(
-            OAuth2PreAuthorizationAuthenticationToken preAuthorizationAuthenticationToken,
+            OAuth2PreAuthorizationRequestAuthenticationToken preAuthorizationAuthenticationToken,
             RegisteredClient registeredClient) {
 
         // @formatter:off

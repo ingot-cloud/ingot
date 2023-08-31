@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthorizationUserDetailsAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthorizationRequestUserDetailsAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,13 +20,13 @@ import java.io.IOException;
  * <p>Time         : 2:04 PM.</p>
  */
 @Slf4j
-public final class OAuth2PreAuthorizationUserDetailsAuthenticationFilter extends OncePerRequestFilter {
+public final class OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter extends OncePerRequestFilter {
     private final OAuth2UserDetailsAuthenticationFilter proxy;
 
-    public OAuth2PreAuthorizationUserDetailsAuthenticationFilter(AuthenticationManager authenticationManager,
-                                                                 RequestMatcher requestMatcher) {
+    public OAuth2PreAuthorizationRequestUserDetailsAuthenticationFilter(AuthenticationManager authenticationManager,
+                                                                        RequestMatcher requestMatcher) {
         this.proxy = new OAuth2UserDetailsAuthenticationFilter(authenticationManager, requestMatcher);
-        this.proxy.setAuthenticationConverter(new OAuth2PreAuthorizationUserDetailsAuthenticationConverter());
+        this.proxy.setAuthenticationConverter(new OAuth2PreAuthorizationRequestUserDetailsAuthenticationConverter());
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -23,7 +23,7 @@ import java.util.Map;
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 11:50 AM.</p>
  */
-public final class OAuth2PreAuthorizationAuthenticationConverter implements AuthenticationConverter {
+public final class OAuth2PreAuthorizationRequestAuthenticationConverter implements AuthenticationConverter {
     private static final String PKCE_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1";
 
     @Override
@@ -72,7 +72,7 @@ public final class OAuth2PreAuthorizationAuthenticationConverter implements Auth
         RegisteredClient client =
                 ((OAuth2ClientAuthenticationToken) ((OAuth2UserDetailsAuthenticationToken) authentication)
                         .getClient()).getRegisteredClient();
-        return OAuth2PreAuthorizationAuthenticationToken.unauthenticated(
+        return OAuth2PreAuthorizationRequestAuthenticationToken.unauthenticated(
                 authentication, preGrantType, client, additionalParameters);
     }
 }

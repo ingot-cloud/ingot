@@ -16,7 +16,7 @@ import java.util.Map;
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:49 PM.</p>
  */
-public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthenticationToken {
+public class OAuth2PreAuthorizationRequestAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
     @Getter
     private final Map<String, Object> additionalParameters;
@@ -27,28 +27,28 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
     @Getter
     private final List<AllowTenantDTO> allowList;
 
-    public static OAuth2PreAuthorizationAuthenticationToken unauthenticated() {
-        return new OAuth2PreAuthorizationAuthenticationToken(
+    public static OAuth2PreAuthorizationRequestAuthenticationToken unauthenticated() {
+        return new OAuth2PreAuthorizationRequestAuthenticationToken(
                 "", "", null, null);
     }
 
-    public static OAuth2PreAuthorizationAuthenticationToken unauthenticated(Object userPrincipal,
-                                                                            String preAuthorization,
-                                                                            RegisteredClient registeredClient,
-                                                                            Map<String, Object> additionalParameters) {
-        return new OAuth2PreAuthorizationAuthenticationToken(
+    public static OAuth2PreAuthorizationRequestAuthenticationToken unauthenticated(Object userPrincipal,
+                                                                                   String preAuthorization,
+                                                                                   RegisteredClient registeredClient,
+                                                                                   Map<String, Object> additionalParameters) {
+        return new OAuth2PreAuthorizationRequestAuthenticationToken(
                 userPrincipal, preAuthorization, registeredClient, additionalParameters);
     }
 
-    public static OAuth2PreAuthorizationAuthenticationToken authenticated(String authorizationCode,
-                                                                          List<AllowTenantDTO> allowList) {
-        return new OAuth2PreAuthorizationAuthenticationToken(authorizationCode, allowList);
+    public static OAuth2PreAuthorizationRequestAuthenticationToken authenticated(String authorizationCode,
+                                                                                 List<AllowTenantDTO> allowList) {
+        return new OAuth2PreAuthorizationRequestAuthenticationToken(authorizationCode, allowList);
     }
 
-    public OAuth2PreAuthorizationAuthenticationToken(Object principal,
-                                                     String preAuthorization,
-                                                     RegisteredClient registeredClient,
-                                                     Map<String, Object> additionalParameters) {
+    public OAuth2PreAuthorizationRequestAuthenticationToken(Object principal,
+                                                            String preAuthorization,
+                                                            RegisteredClient registeredClient,
+                                                            Map<String, Object> additionalParameters) {
         super(null);
         this.principal = principal;
         this.additionalParameters = Collections.unmodifiableMap(
@@ -66,8 +66,8 @@ public class OAuth2PreAuthorizationAuthenticationToken extends AbstractAuthentic
      * @param authorities the collection of <tt>GrantedAuthority</tt>s for the principal
      *                    represented by this authentication object.
      */
-    public OAuth2PreAuthorizationAuthenticationToken(String authorizationCode,
-                                                     List<AllowTenantDTO> allowList) {
+    public OAuth2PreAuthorizationRequestAuthenticationToken(String authorizationCode,
+                                                            List<AllowTenantDTO> allowList) {
         super(null);
         this.principal = authorizationCode;
         this.additionalParameters = Collections.emptyMap();

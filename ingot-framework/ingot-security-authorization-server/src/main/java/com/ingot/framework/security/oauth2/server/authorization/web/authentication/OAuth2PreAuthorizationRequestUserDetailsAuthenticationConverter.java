@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>Date         : 2023/7/28.</p>
  * <p>Time         : 2:17 PM.</p>
  */
-public class OAuth2PreAuthorizationUserDetailsAuthenticationConverter implements AuthenticationConverter {
+public class OAuth2PreAuthorizationRequestUserDetailsAuthenticationConverter implements AuthenticationConverter {
     private final OAuth2UserDetailsPasswordAuthenticationConverter passwordConverter = new OAuth2UserDetailsPasswordAuthenticationConverter();
     private final OAuth2UserDetailsSocialAuthenticationConverter socialConverter = new OAuth2UserDetailsSocialAuthenticationConverter();
 

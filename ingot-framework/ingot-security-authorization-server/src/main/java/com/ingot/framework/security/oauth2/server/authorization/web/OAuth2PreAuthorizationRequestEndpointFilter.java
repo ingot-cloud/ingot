@@ -1,9 +1,9 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2PreAuthHttpMessageConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthorizationAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthorizationRequestAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -34,7 +34,7 @@ import java.util.Collections;
  * <p>Time         : 11:09 AM.</p>
  */
 @Slf4j
-public final class OAuth2PreAuthorizationEndpointFilter extends OncePerRequestFilter {
+public final class OAuth2PreAuthorizationRequestEndpointFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
     private final AuthenticationConverter authenticationConverter;
@@ -42,18 +42,18 @@ public final class OAuth2PreAuthorizationEndpointFilter extends OncePerRequestFi
     private final AuthenticationFailureHandler authenticationFailureHandler
             = new DefaultAuthenticationFailureHandler();
 
-    private final HttpMessageConverter<OAuth2PreAuthorizationAuthenticationToken> responseConverter =
+    private final HttpMessageConverter<OAuth2PreAuthorizationRequestAuthenticationToken> responseConverter =
             new OAuth2PreAuthHttpMessageConverter();
 
-    public OAuth2PreAuthorizationEndpointFilter(AuthenticationManager authenticationManager,
-                                                RequestMatcher requestMatcher) {
+    public OAuth2PreAuthorizationRequestEndpointFilter(AuthenticationManager authenticationManager,
+                                                       RequestMatcher requestMatcher) {
         Assert.notNull(authenticationManager, "authenticationManager cannot be null");
         Assert.notNull(requestMatcher, "requestMatcher cannot be null");
         this.authenticationManager = authenticationManager;
         this.requestMatcher = requestMatcher;
         this.authenticationConverter = new DelegatingAuthenticationConverter(
                 Collections.singletonList(
-                        new OAuth2PreAuthorizationAuthenticationConverter()));
+                        new OAuth2PreAuthorizationRequestAuthenticationConverter()));
     }
 
     @Override
@@ -83,7 +83,7 @@ public final class OAuth2PreAuthorizationEndpointFilter extends OncePerRequestFi
     private void sendResponse(HttpServletRequest request,
                               HttpServletResponse response,
                               Authentication authentication) throws IOException {
-        OAuth2PreAuthorizationAuthenticationToken token = (OAuth2PreAuthorizationAuthenticationToken) authentication;
+        OAuth2PreAuthorizationRequestAuthenticationToken token = (OAuth2PreAuthorizationRequestAuthenticationToken) authentication;
 
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
         this.responseConverter.write(token, null, httpResponse);
