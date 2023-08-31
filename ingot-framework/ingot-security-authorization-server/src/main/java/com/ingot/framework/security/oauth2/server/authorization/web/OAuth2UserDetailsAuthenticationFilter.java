@@ -3,9 +3,12 @@ package com.ingot.framework.security.oauth2.server.authorization.web;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsConfirmCodeAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsPasswordAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.OAuth2UserDetailsSocialAuthenticationConverter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,10 +25,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -51,8 +50,7 @@ public final class OAuth2UserDetailsAuthenticationFilter extends OncePerRequestF
         this.authenticationConverter = new DelegatingAuthenticationConverter(
                 ListUtil.of(
                         new OAuth2UserDetailsPasswordAuthenticationConverter(),
-                        new OAuth2UserDetailsSocialAuthenticationConverter(),
-                        new OAuth2UserDetailsConfirmCodeAuthenticationConverter()));
+                        new OAuth2UserDetailsSocialAuthenticationConverter()));
     }
 
     @Override

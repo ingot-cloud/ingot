@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public final class OAuth2CustomAuthenticationConverter implements Authentication
     public Authentication convert(HttpServletRequest request) {
         // grant_type (REQUIRED)
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        if (filter(grantType)) {
+        if (!filter(grantType)) {
             return null;
         }
 
@@ -48,10 +49,9 @@ public final class OAuth2CustomAuthenticationConverter implements Authentication
     }
 
     private boolean filter(String grantType) {
-        return !ListUtil.list(false,
+        return ListUtil.list(false,
                         IngotAuthorizationGrantType.PASSWORD.getValue(),
-                        IngotAuthorizationGrantType.SOCIAL.getValue(),
-                        IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE.getValue())
+                        IngotAuthorizationGrantType.SOCIAL.getValue())
                 .contains(grantType);
     }
 }
