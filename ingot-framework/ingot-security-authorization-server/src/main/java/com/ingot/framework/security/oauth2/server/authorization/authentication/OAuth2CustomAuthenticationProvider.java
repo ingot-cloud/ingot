@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.core.userdetails.UserDetailsAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -58,7 +59,7 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
                 getAuthenticatedClientElseThrowInvalidClient(passwordAuthentication);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
         if (registeredClient == null) {
-            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);
+            OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);
         }
 
         // Default to configured scopes

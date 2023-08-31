@@ -48,8 +48,7 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         this.requestMatcher = new AntPathRequestMatcher(
                 providerSettings.getTokenEndpoint(), HttpMethod.POST.name());
 
-        List<AuthenticationProvider> authenticationProviders =
-                createPasswordAuthenticationProviders(httpSecurity);
+        List<AuthenticationProvider> authenticationProviders = createAuthenticationProviders(httpSecurity);
         authenticationProviders.forEach(authenticationProvider ->
                 httpSecurity.authenticationProvider(postProcess(authenticationProvider)));
     }
@@ -77,7 +76,7 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         return this.requestMatcher;
     }
 
-    private List<AuthenticationProvider> createPasswordAuthenticationProviders(HttpSecurity httpSecurity) {
+    private List<AuthenticationProvider> createAuthenticationProviders(HttpSecurity httpSecurity) {
         List<AuthenticationProvider> authenticationProviders = new ArrayList<>();
 
         OAuth2AuthorizationService authorizationService =
@@ -95,6 +94,7 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         UserDetailsTokenProcessor userDetailsTokenProcessor = OAuth2ConfigurerUtils.getBean(
                 httpSecurity, UserDetailsTokenProcessor.class);
 
+        // OAuth2UserDetailsAuthenticationProvider
         OAuth2UserDetailsAuthenticationProvider userDetailsAuthenticationProvider =
                 new OAuth2UserDetailsAuthenticationProvider();
         userDetailsAuthenticationProvider.setUserDetailsServiceManager(userDetailsServiceManager);
@@ -110,9 +110,10 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         userDetailsAuthenticationProvider.setUserDetailsTokenProcessor(userDetailsTokenProcessor);
         authenticationProviders.add(userDetailsAuthenticationProvider);
 
-        OAuth2CustomAuthenticationProvider passwordAuthProvider =
+        // OAuth2CustomAuthenticationProvider
+        OAuth2CustomAuthenticationProvider customAuthenticationProvider =
                 new OAuth2CustomAuthenticationProvider(authorizationService, tokenGenerator);
-        authenticationProviders.add(passwordAuthProvider);
+        authenticationProviders.add(customAuthenticationProvider);
 
         return authenticationProviders;
     }
