@@ -63,7 +63,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                 OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ErrorCodes.INVALID_REQUEST, PkceParameterNames.CODE_CHALLENGE_METHOD);
             }
         } else if (registeredClient.getClientSettings().isRequireProofKey()) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ErrorCodes.INVALID_REQUEST, PkceParameterNames.CODE_CHALLENGE);
+//            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ErrorCodes.INVALID_REQUEST, PkceParameterNames.CODE_CHALLENGE);
         }
 
         // 1.获取用户信息
@@ -90,6 +90,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                 .principalName(user.getUsername())
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .attribute(Principal.class.getName(), userAuth)
+                .attribute(OAuth2PreAuthorizationCodeRequestAuthenticationToken.class.getName(), preAuthorizationAuthenticationToken)
                 .token(authorizationCode)
                 .build();
 
