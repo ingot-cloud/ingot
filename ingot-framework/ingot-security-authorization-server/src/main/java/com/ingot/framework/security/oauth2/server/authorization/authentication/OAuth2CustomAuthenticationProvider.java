@@ -63,7 +63,7 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
 
         // Default to configured scopes
         Set<String> authorizedScopes = registeredClient.getScopes();
-        // OAuth2UsernamePasswordAuthenticationToken
+        // OAuth2UserDetailsAuthenticationToken
         Authentication principal = customAuthenticationToken.getUserPrincipal();
 
         // @formatter:off
