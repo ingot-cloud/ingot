@@ -36,11 +36,11 @@ public final class OAuth2PreAuthorizationRequestAuthenticationConverter implemen
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof OAuth2UserDetailsAuthenticationToken)) {
+        if (!(authentication instanceof OAuth2UserDetailsAuthenticationToken userDetailsAuthentication)) {
             return null;
         }
 
-        if (!(((OAuth2UserDetailsAuthenticationToken) authentication).getClient() instanceof OAuth2ClientAuthenticationToken)) {
+        if (!((userDetailsAuthentication).getClient() instanceof OAuth2ClientAuthenticationToken clientAuthentication)) {
             return null;
         }
 
@@ -69,9 +69,7 @@ public final class OAuth2PreAuthorizationRequestAuthenticationConverter implemen
             OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE, null);
         }
 
-        RegisteredClient client =
-                ((OAuth2ClientAuthenticationToken) ((OAuth2UserDetailsAuthenticationToken) authentication)
-                        .getClient()).getRegisteredClient();
+        RegisteredClient client = clientAuthentication.getRegisteredClient();
         return OAuth2PreAuthorizationRequestAuthenticationToken.unauthenticated(
                 authentication, preGrantType, client, additionalParameters);
     }
