@@ -1,6 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
@@ -12,8 +11,6 @@ import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorization;
-import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -63,8 +60,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
 
     private OAuth2UserDetailsServiceManager userDetailsServiceManager;
     private UserDetailsPasswordService userDetailsPasswordService;
+    private UserDetailsTokenProcessor userDetailsTokenProcessor;
     private PasswordEncoder passwordEncoder;
-    private PreAuthorizationCodeService preAuthorizationCodeService;
     private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
     private RegisteredClientChecker clientChecker = new DefaultRegisteredClientChecker();
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
@@ -88,25 +85,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             OAuth2ErrorUtils.throwAuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
         }
 
-        // confirm_code 模式，需要转换token，设置username
-        if (unauthenticatedToken.getGrantType() == UserDetailsAuthorizationGrantType.CONFIRM_CODE) {
-            PreAuthorization authorization = preAuthorizationCodeService.get(unauthenticatedToken.getPrincipal().toString());
-            if (authorization == null) {
-                OAuth2ErrorUtils.throwPreAuthorizationCodeExpired(this.messages
-                        .getMessage("OAuth2UserDetailsAuthenticationProvider.preAuthorizationCodeExpired",
-                                "登录超时"));
-            }
-            // 判断是否登录的同一个client
-            if (!StrUtil.equals(authorization.getClientId(), registeredClient.getClientId())) {
-                OAuth2ErrorUtils.throwNotAllowClient(this.messages
-                        .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
-                                "不允许访问客户端"));
-            }
-
-            unauthenticatedToken = OAuth2UserDetailsAuthenticationToken.unauthenticated(
-                    authorization.getUsername(), null,
-                    unauthenticatedToken.getGrantType(), unauthenticatedToken.getClient());
-        }
+        // 加工token，处理不同模式下的token
+        userDetailsTokenProcessor.process(unauthenticatedToken);
 
         this.clientChecker.check(registeredClient);
         UserDetails user = retrieveUser(registeredClient, unauthenticatedToken);
@@ -268,8 +248,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         return authenticationChecks;
     }
 
-    public void setPreAuthorizationCodeService(PreAuthorizationCodeService preAuthorizationCodeService) {
-        this.preAuthorizationCodeService = preAuthorizationCodeService;
+    public void setUserDetailsTokenProcessor(UserDetailsTokenProcessor userDetailsTokenProcessor) {
+        this.userDetailsTokenProcessor = userDetailsTokenProcessor;
     }
 
     public void setAuthoritiesMapper(GrantedAuthoritiesMapper authoritiesMapper) {

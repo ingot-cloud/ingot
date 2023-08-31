@@ -1,5 +1,9 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
+import cn.hutool.core.collection.ListUtil;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.DelegateUserDetailsTokenProcessor;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.UserDetailsTokenConfirmCodeProcessor;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.UserDetailsTokenProcessor;
 import com.ingot.framework.security.oauth2.server.authorization.code.DefaultPreAuthorizationCodeService;
 import com.ingot.framework.security.oauth2.server.authorization.code.PreAuthorizationCodeService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
@@ -79,5 +83,12 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     @ConditionalOnMissingBean(PreAuthorizationCodeService.class)
     public PreAuthorizationCodeService preAuthorizationCodeService() {
         return new DefaultPreAuthorizationCodeService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserDetailsTokenProcessor.class)
+    public UserDetailsTokenProcessor userDetailsTokenProcessor(PreAuthorizationCodeService preAuthorizationCodeService) {
+        return new DelegateUserDetailsTokenProcessor(ListUtil.list(false,
+                new UserDetailsTokenConfirmCodeProcessor(preAuthorizationCodeService)));
     }
 }
