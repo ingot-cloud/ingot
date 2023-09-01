@@ -19,7 +19,7 @@ ingotMybatis {
     /**
      * 连接池连接密码
      */
-    jdbcPassword = "Wc.1331588182"
+    jdbcPassword = "123456"
 
     mybatisPlus {
         /**
