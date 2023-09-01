@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["sys_user_social"]
+        tables = ["sys_user_tenant"]
 
         /**
          * 包名
