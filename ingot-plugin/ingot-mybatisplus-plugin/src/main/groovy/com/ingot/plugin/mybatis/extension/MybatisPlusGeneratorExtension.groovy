@@ -15,7 +15,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * 注释作者
      */
-    String author = "Jy.mot"
+    String author = "jymot"
 
     /**
      * 需要生成的表
@@ -35,7 +35,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * 保存 controller 的相对包名
      */
-    String controllerPackage = "rest"
+    String controllerPackage = "web"
 
     /**
      * 保存 mapper 的相对包名
@@ -85,27 +85,27 @@ class MybatisPlusGeneratorExtension {
     /**
      * entity 父类
      */
-    String superEntityClass = "com.ingot.framework.store.mybatis.model.BaseModel"
+    String superEntityClass = "com.ingot.framework.data.mybatis.model"
 
     /**
      * controller 父类
      */
-    String superControllerClass = "com.ingot.framework.core.wrapper.BaseController"
+    String superControllerClass = "com.ingot.framework.core.model.support.RShortcuts"
 
     /**
      * service 父类
      */
-    String superServiceClass = "com.ingot.framework.store.mybatis.service.BaseService"
+    String superServiceClass = "com.ingot.framework.data.mybatis.service.BaseService"
 
     /**
      * serviceImpl 父类
      */
-    String superServiceImplClass = "com.ingot.framework.store.mybatis.service.BaseServiceImpl"
+    String superServiceImplClass = "com.ingot.framework.data.mybatis.service.BaseServiceImpl"
 
     /**
      * mapper 父类
      */
-    String superMapperClass = "com.ingot.framework.store.mybatis.mapper.BaseMapper"
+    String superMapperClass = "com.ingot.framework.data.mybatis.mapper.BaseMapper"
 
     MybatisPlusGeneratorExtension() {
 
