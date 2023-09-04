@@ -1,10 +1,11 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.io.Serializable;
-import java.util.List;
-
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>Description  : UserDetailsResponse.</p>
@@ -46,4 +47,8 @@ public class UserDetailsResponse implements Serializable {
      * 客户端列表，clientId
      */
     private List<String> clients;
+    /**
+     * 可以访问的租户列表
+     */
+    private List<AllowTenantDTO> allows;
 }
