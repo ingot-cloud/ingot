@@ -7,6 +7,8 @@ import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 /**
  * <p>
  *
@@ -37,4 +39,9 @@ public class SysUserTenant extends BaseModel<SysUserTenant> {
      * 租户ID
      */
     private Long tenantId;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createdAt;
 }
