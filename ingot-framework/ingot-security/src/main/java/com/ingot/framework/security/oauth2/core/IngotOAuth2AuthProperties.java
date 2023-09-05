@@ -10,9 +10,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Date         : 2021/10/8.</p>
  * <p>Time         : 2:59 下午.</p>
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "ingot.security.oauth2.auth")
 public class IngotOAuth2AuthProperties {
-    @Getter
-    @Setter
+    /**
+     * 表单登录URL
+     */
+    private String loginFormUrl;
     private String issuer;
 }
