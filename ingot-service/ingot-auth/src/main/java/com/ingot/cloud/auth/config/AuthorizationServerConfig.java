@@ -22,6 +22,7 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +51,10 @@ import java.util.Set;
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
+@RequiredArgsConstructor
 public class AuthorizationServerConfig {
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final IngotOAuth2AuthProperties properties;
 
     @Bean(IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -58,7 +62,8 @@ public class AuthorizationServerConfig {
                                                                       TenantHttpConfigurer tenantHttpConfigurer) throws Exception {
         IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         tenantHttpConfigurer.configure(http);
-        http.exceptionHandling(new ExceptionHandlingCustomizer());
+        http.securityContext(new SecurityContextCustomizer(this.redisTemplate))
+                .exceptionHandling(new ExceptionHandlingCustomizer(this.properties));
         return http.build();
     }
 

@@ -1,9 +1,12 @@
 package com.ingot.cloud.auth.config;
 
+import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.web.authentication.IngotLoginUrlAuthenticationEntryPoint;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 /**
  * <p>Description  : ExceptionHandlingCustomizer.</p>
@@ -11,11 +14,14 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
  * <p>Date         : 2022/11/25.</p>
  * <p>Time         : 10:33 PM.</p>
  */
+@Slf4j
+@RequiredArgsConstructor
 public class ExceptionHandlingCustomizer implements Customizer<ExceptionHandlingConfigurer<HttpSecurity>> {
+    private final IngotOAuth2AuthProperties properties;
 
     @Override
     public void customize(ExceptionHandlingConfigurer<HttpSecurity> configurer) {
         configurer.authenticationEntryPoint(
-                new LoginUrlAuthenticationEntryPoint(FormLoginCustomizer.LOGIN_PAGE_URL));
+                new IngotLoginUrlAuthenticationEntryPoint(properties.getLoginFormUrl()));
     }
 }

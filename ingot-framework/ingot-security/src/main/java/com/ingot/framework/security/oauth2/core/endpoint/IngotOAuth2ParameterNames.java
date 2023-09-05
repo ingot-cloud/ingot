@@ -54,4 +54,9 @@ public interface IngotOAuth2ParameterNames {
      * tenant授权允许列表，用于响应
      */
     String PRE_ALLOW_LIST = "allows";
+
+    /**
+     * 传递sessionId字段
+     */
+    String SESSION_ID = "s_token";
 }
