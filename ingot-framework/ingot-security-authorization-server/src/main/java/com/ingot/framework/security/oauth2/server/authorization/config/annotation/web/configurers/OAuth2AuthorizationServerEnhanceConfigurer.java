@@ -49,8 +49,7 @@ public class OAuth2AuthorizationServerEnhanceConfigurer
         Map<Class<? extends AbstractOAuth2Configurer>, AbstractOAuth2Configurer> configurers = new LinkedHashMap<>();
         configurers.put(OAuth2TokenEndpointEnhanceConfigurer.class,
                 new OAuth2TokenEndpointEnhanceConfigurer(this::postProcess));
-        configurers.put(OAuth2PreAuthorizationRequestEndpointConfigurer.class,
-                new OAuth2PreAuthorizationRequestEndpointConfigurer(this::postProcess));
+
         return configurers;
     }
 
