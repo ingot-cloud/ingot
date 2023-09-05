@@ -24,4 +24,8 @@ public class AllowTenantDTO implements Serializable {
      * logo
      */
     private String avatar;
+    /**
+     * 是否为主要租户
+     */
+    private Boolean main;
 }

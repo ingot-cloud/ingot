@@ -110,8 +110,12 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
             UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
             // 填充客户端信息
             TokenAuthType tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
-            loadedUser = IngotUser.fillClientInfo((IngotUser) loadedUser,
-                    registeredClient.getClientId(), tokenAuthType.getValue());
+            if (loadedUser instanceof IngotUser ingotUser) {
+                loadedUser = ingotUser.toBuilder()
+                        .clientId(registeredClient.getClientId())
+                        .tokenAuthType(tokenAuthType.getValue())
+                        .build();
+            }
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);

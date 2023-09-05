@@ -86,9 +86,12 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
                         "UserDetailsService returned null, which is an interface contract violation");
             }
             // 填充客户端信息，使用默认TokenAuthType
-            TokenAuthType tokenAuthType = TokenAuthType.STANDARD;
-            loadedUser = IngotUser.fillClientInfo((IngotUser) loadedUser,
-                    ClientContextHolder.get(), tokenAuthType.getValue());
+            if (loadedUser instanceof IngotUser ingotUser) {
+                loadedUser = ingotUser.toBuilder()
+                        .clientId(ClientContextHolder.get())
+                        .tokenAuthType(TokenAuthType.STANDARD.getValue())
+                        .build();
+            }
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);

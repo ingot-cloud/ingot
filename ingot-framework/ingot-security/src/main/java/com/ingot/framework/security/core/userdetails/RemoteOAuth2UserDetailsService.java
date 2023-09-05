@@ -33,7 +33,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
      *                                   GrantedAuthority
      */
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public IngotUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("[RemoteOAuth2UserDetailsService] - loadUserByUsername: username={}", username);
         UserDetailsRequest params = new UserDetailsRequest();
         params.setUsername(username);

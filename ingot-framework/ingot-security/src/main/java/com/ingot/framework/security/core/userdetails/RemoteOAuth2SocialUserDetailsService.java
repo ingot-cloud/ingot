@@ -3,7 +3,6 @@ package com.ingot.framework.security.core.userdetails;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
@@ -24,7 +23,7 @@ public class RemoteOAuth2SocialUserDetailsService implements OAuth2UserDetailsSe
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public IngotUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("[RemoteOAuth2SocialUserDetailsService] - loadUserByUsername: username={}", username);
         UserDetailsRequest params = new UserDetailsRequest();
         params.setUsername(username);

@@ -1,9 +1,5 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
@@ -16,6 +12,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * <p>Description  : OAuth2扩展UserDetailsService.</p>
@@ -41,7 +41,7 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
      * @param response 响应结果
      * @return {@link UserDetails}
      */
-    default UserDetails parse(R<UserDetailsResponse> response) {
+    default IngotUserDetails parse(R<UserDetailsResponse> response) {
         return Optional.ofNullable(response)
                 .map(r -> {
                     OAuth2ErrorUtils.checkResponse(response);
@@ -56,8 +56,8 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-                    return IngotUser.noClientInfo(data.getId(), data.getDeptId(), data.getTenantId(),
-                            data.getUsername(), data.getPassword(),
+                    return IngotUser.userDetails(data.getId(), data.getDeptId(),
+                            data.getUsername(), data.getPassword(), data.getAllows(),
                             enabled, true, true, nonLocked, authorities);
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));

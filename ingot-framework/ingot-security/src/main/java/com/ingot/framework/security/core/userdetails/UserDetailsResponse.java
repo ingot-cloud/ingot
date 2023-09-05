@@ -20,10 +20,6 @@ public class UserDetailsResponse implements Serializable {
      */
     private Long id;
     /**
-     * 租户ID
-     */
-    private Long tenantId;
-    /**
      * 部门ID
      */
     private Long deptId;
