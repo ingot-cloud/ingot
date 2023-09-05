@@ -18,10 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -110,6 +107,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     dto.setId(item.getId());
                     dto.setName(item.getName());
                     dto.setAvatar(item.getAvatar());
+                    dto.setMain(userTenantList.stream()
+                            .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain()));
                     return dto;
                 })
                 .toList();

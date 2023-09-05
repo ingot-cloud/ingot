@@ -41,6 +41,11 @@ public class SysUserTenant extends BaseModel<SysUserTenant> {
     private Long tenantId;
 
     /**
+     * 是否为主要租户
+     */
+    private Boolean main;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;
