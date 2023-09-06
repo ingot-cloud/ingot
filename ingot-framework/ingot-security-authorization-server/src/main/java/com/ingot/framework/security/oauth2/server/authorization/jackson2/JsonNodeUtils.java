@@ -15,15 +15,15 @@
  */
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO
@@ -64,6 +64,14 @@ public class JsonNodeUtils {
         }
         JsonNode value = jsonNode.findValue(fieldName);
         return (value != null && value.isNumber()) ? value.numberValue() : null;
+    }
+
+    static Boolean findBooleanValue(JsonNode jsonNode, String fieldName) {
+        if (jsonNode == null) {
+            return null;
+        }
+        JsonNode value = jsonNode.findValue(fieldName);
+        return (value != null && value.booleanValue()) ? value.booleanValue() : null;
     }
 
     static <T> T findValue(JsonNode jsonNode, String fieldName, TypeReference<T> valueTypeReference,

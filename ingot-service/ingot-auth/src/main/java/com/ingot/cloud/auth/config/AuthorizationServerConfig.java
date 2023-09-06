@@ -1,7 +1,6 @@
 package com.ingot.cloud.auth.config;
 
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
-import com.ingot.cloud.auth.service.DefaultOAuth2PreAuthorizationService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
@@ -11,7 +10,6 @@ import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
-import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -39,6 +37,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.RedisSecurityContextRepository;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -133,7 +132,7 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public OAuth2PreAuthorizationService preAuthorizationCodeService(RedisTemplate<String, Object> redisTemplate) {
-        return new DefaultOAuth2PreAuthorizationService(redisTemplate);
+    public RedisSecurityContextRepository redisSecurityContextRepository() {
+        return new RedisSecurityContextRepository(this.redisTemplate);
     }
 }

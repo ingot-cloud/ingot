@@ -1,11 +1,12 @@
 package com.ingot.cloud.auth.utils;
 
+import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+
 import java.security.Principal;
 import java.util.Optional;
-
-import com.ingot.framework.security.core.userdetails.IngotUser;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 
 /**
  * <p>Description  : OAuth2AuthorizationUtils.</p>
@@ -26,8 +27,14 @@ public class OAuth2AuthorizationUtils {
             return Optional.empty();
         }
         Object principal = authorization.getAttribute(Principal.class.getName());
-        if (principal instanceof Authentication) {
-            return Optional.of((IngotUser) ((Authentication) principal).getPrincipal());
+        if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthToken) {
+            principal = preAuthToken.getPrincipal();
+        }
+        if (principal instanceof OAuth2UserDetailsAuthenticationToken userDetailsToken) {
+            principal = userDetailsToken.getPrincipal();
+        }
+        if (principal instanceof IngotUser user) {
+            return Optional.of(user);
         }
         return Optional.empty();
     }

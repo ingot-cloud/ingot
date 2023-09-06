@@ -46,11 +46,6 @@ public interface IngotOAuth2ParameterNames {
     String PRE_GRANT_TYPE = "pre_grant_type";
 
     /**
-     * 预授权码，confirm_code 模式中使用
-     */
-    String PRE_CODE = "code";
-
-    /**
      * tenant授权允许列表，用于响应
      */
     String PRE_ALLOW_LIST = "allows";

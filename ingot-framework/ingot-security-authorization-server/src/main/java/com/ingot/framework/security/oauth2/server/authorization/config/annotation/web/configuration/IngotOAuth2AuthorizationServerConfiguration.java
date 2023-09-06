@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
-import com.ingot.framework.security.oauth2.server.authorization.code.DefaultOAuth2PreAuthorizationService;
-import com.ingot.framework.security.oauth2.server.authorization.code.OAuth2PreAuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
@@ -73,11 +71,5 @@ public class IngotOAuth2AuthorizationServerConfiguration {
     @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
     public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
         return new JwtOAuth2TokenCustomizer();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(OAuth2PreAuthorizationService.class)
-    public OAuth2PreAuthorizationService preAuthorizationCodeService() {
-        return new DefaultOAuth2PreAuthorizationService();
     }
 }

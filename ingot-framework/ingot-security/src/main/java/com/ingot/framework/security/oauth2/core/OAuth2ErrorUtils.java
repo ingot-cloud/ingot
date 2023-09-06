@@ -12,6 +12,8 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
  * <p>Time         : 4:44 下午.</p>
  */
 public final class OAuth2ErrorUtils {
+    public static final String CLIENT_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-3.2.1";
+
 
     /**
      * 检测 Response，如果失败则 throw 认证异常
@@ -102,6 +104,15 @@ public final class OAuth2ErrorUtils {
     public static void throwInvalidRequestParameter(String parameterName, String errorUri) {
         throwAuthenticationException(
                 OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, errorUri);
+    }
+
+    public static void throwInvalidClient(String desc) {
+        throwAuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT, desc);
+    }
+
+    public static void throwInvalidClientParameter(String parameterName) {
+        throwAuthenticationException(
+                OAuth2ErrorCodes.INVALID_CLIENT, "Client authentication failed: " + parameterName, CLIENT_ERROR_URI);
     }
 
     /**
