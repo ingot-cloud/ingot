@@ -203,7 +203,7 @@ def static addRepos(RepositoryHandler handler) {
         allowInsecureProtocol = true
     }
     handler.maven {
-        url "https://nexus.wangchao.im/repository/maven-public/"
+        url "https://nexus.ingotcloud.top/repository/maven-public/"
         credentials {
             username = "pub"
             password = "pub"
