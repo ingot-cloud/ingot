@@ -3,6 +3,7 @@ package com.ingot.framework.data.redis.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -44,12 +45,14 @@ public class RedisTemplateConfig {
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
 
-        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper om = new ObjectMapper();
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         om.activateDefaultTyping(om.getPolymorphicTypeValidator(),
                 ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_ARRAY);
-        jackson2JsonRedisSerializer.setObjectMapper(om);
+        om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
+                new Jackson2JsonRedisSerializer<>(om, Object.class);
 
         template.setKeySerializer(stringRedisSerializer());
         template.setHashKeySerializer(stringRedisSerializer());
