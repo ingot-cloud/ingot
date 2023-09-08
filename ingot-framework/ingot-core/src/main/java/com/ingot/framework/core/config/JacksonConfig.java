@@ -1,8 +1,5 @@
 package com.ingot.framework.core.config;
 
-import java.util.Locale;
-import java.util.TimeZone;
-
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,6 +13,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * <p>Description  : JacksonConfig.</p>
@@ -40,6 +40,7 @@ public class JacksonConfig {
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
             // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
             builder.modules(new IngotModule(), new JavaTimeModule(), new IngotJavaTimeModule());
+            builder.failOnUnknownProperties(false);
         };
     }
 }
