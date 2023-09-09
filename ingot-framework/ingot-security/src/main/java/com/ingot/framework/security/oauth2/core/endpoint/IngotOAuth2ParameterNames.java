@@ -53,7 +53,7 @@ public interface IngotOAuth2ParameterNames {
     /**
      * 登录的tenant id
      */
-    String TENANT = "tenant";
+    String TENANT = "org";
 
     /**
      * 传递sessionId字段

@@ -32,6 +32,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
     private static final String PKCE_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1";
 
     private static final List<String> requiredParameters = ListUtil.list(false,
+            IngotOAuth2ParameterNames.PRE_GRANT_TYPE,
             PkceParameterNames.CODE_CHALLENGE,
             OAuth2ParameterNames.CLIENT_ID,
             OAuth2ParameterNames.RESPONSE_TYPE,
@@ -39,6 +40,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
             OAuth2ParameterNames.SCOPE
     );
     private static final List<String> savedParameters = ListUtil.list(false,
+            IngotOAuth2ParameterNames.PRE_GRANT_TYPE,
             PkceParameterNames.CODE_CHALLENGE,
             OAuth2ParameterNames.CLIENT_ID,
             OAuth2ParameterNames.RESPONSE_TYPE,

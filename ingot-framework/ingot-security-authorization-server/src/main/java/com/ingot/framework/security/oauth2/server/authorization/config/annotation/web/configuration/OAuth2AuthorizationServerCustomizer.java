@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AuthorizationCodeAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotOAuth2AuthorizationCodeRequestAuthenticationConverter;
 import org.springframework.security.config.Customizer;
@@ -23,6 +24,7 @@ public class OAuth2AuthorizationServerCustomizer implements Customizer<OAuth2Aut
             converters.removeIf(converter -> converter instanceof OAuth2AuthorizationCodeRequestAuthenticationConverter);
             converters.add(new IngotOAuth2AuthorizationCodeRequestAuthenticationConverter());
         });
+        configurer.authorizationResponseHandler(new AuthorizationCodeAuthenticationSuccessHandler());
         configurer.errorResponseHandler(new DefaultAuthenticationFailureHandler());
     }
 }
