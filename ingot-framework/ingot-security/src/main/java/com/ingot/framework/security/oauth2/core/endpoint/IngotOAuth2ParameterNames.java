@@ -51,6 +51,11 @@ public interface IngotOAuth2ParameterNames {
     String PRE_ALLOW_LIST = "allows";
 
     /**
+     * 登录的tenant id
+     */
+    String TENANT = "tenant";
+
+    /**
      * 传递sessionId字段
      */
     String SESSION_ID = "s_token";

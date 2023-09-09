@@ -104,7 +104,6 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
         String key = key(sessionId);
         Object value = redisTemplate.opsForValue().get(key);
-        redisTemplate.delete(key);
         if (value == null) {
             return null;
         }

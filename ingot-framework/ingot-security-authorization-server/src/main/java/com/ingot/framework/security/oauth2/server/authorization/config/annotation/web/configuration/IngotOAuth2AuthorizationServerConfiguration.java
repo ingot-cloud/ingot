@@ -36,10 +36,10 @@ public class IngotOAuth2AuthorizationServerConfiguration {
         RequestMatcher defaultMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
 
-        // 设置 ObjectPostProcessor
-        authorizationServerConfigurer
-                .withObjectPostProcessor(new OAuth2TokenEndpointFilterPostProcessor())
-                .withObjectPostProcessor(new OAuth2ClientAuthenticationFilterPostProcessor());
+        // 自定义配置
+        authorizationServerConfigurer.tokenEndpoint(new OAuth2TokenEndpointCustomizer())
+                .clientAuthentication(new OAuth2ClientAuthenticationCustomizer())
+                .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer());
 
         // 增强配置
         OAuth2AuthorizationServerEnhanceConfigurer enhanceConfigurer =

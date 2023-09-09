@@ -36,7 +36,16 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
             OAuth2ParameterNames.CLIENT_ID,
             OAuth2ParameterNames.RESPONSE_TYPE,
             OAuth2ParameterNames.REDIRECT_URI,
-            OAuth2ParameterNames.SCOPE);
+            OAuth2ParameterNames.SCOPE
+    );
+    private static final List<String> savedParameters = ListUtil.list(false,
+            PkceParameterNames.CODE_CHALLENGE,
+            OAuth2ParameterNames.CLIENT_ID,
+            OAuth2ParameterNames.RESPONSE_TYPE,
+            OAuth2ParameterNames.REDIRECT_URI,
+            OAuth2ParameterNames.SCOPE,
+            OAuth2ParameterNames.STATE
+    );
 
     @Override
     public Authentication convert(HttpServletRequest request) {
@@ -78,7 +87,9 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
 
         Map<String, Object> additionalParameters = new HashMap<>();
         parameters.forEach((key, value) -> {
-            additionalParameters.put(key, (value.size() == 1) ? value.get(0) : value.toArray(new String[0]));
+            if (savedParameters.contains(key)) {
+                additionalParameters.put(key, (value.size() == 1) ? value.get(0) : value.toArray(new String[0]));
+            }
         });
 
         RegisteredClient client = clientAuthentication.getRegisteredClient();
