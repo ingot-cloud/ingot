@@ -41,9 +41,10 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
     }
 
     public static OAuth2PreAuthorizationCodeRequestAuthenticationToken authenticated(Object userPrincipal,
-                                                                                     List<AllowTenantDTO> allowList) {
+                                                                                     List<AllowTenantDTO> allowList,
+                                                                                     Map<String, Object> additionalParameters) {
         return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(userPrincipal,
-                null, null, null, allowList);
+                null, null, additionalParameters, allowList);
     }
 
     public OAuth2PreAuthorizationCodeRequestAuthenticationToken(Object principal,

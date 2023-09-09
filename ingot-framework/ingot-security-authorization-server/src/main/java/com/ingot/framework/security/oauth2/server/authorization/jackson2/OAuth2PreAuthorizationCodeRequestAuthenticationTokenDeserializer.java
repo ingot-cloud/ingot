@@ -9,12 +9,13 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer.</p>
@@ -36,13 +37,16 @@ final class OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer
 
     private OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        OAuth2UserDetailsAuthenticationToken principal = JsonNodeUtils.findValue(root, "principal",
+        IngotUser principal = JsonNodeUtils.findValue(root, "principal",
                 new TypeReference<>() {
                 }, mapper);
         List<AllowTenantDTO> allows = JsonNodeUtils.findValue(
                 root, "allowList", new TypeReference<>() {
                 }, mapper);
+        Map<String, Object> additionalParameters = JsonNodeUtils.findValue(
+                root, "additionalParameters", new TypeReference<>() {
+                }, mapper);
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(principal, allows);
+                .authenticated(principal, allows, additionalParameters);
     }
 }

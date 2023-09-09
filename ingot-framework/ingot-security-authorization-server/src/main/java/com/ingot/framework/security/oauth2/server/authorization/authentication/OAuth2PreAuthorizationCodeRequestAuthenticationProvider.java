@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
+import java.util.Map;
+
 /**
  * <p>Description  : {@link IngotAuthorizationGrantType#PRE_AUTHORIZATION_CODE} request authentication provider.</p>
  * <p>Author       : wangchao.</p>
@@ -35,9 +37,10 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                                     "客户端未授权"));
         }
 
+        Map<String, Object> additionalParameters = preAuthorizationAuthenticationToken.getAdditionalParameters();
+
         // code_challenge (REQUIRED for public clients) - RFC 7636 (PKCE)
-        String codeChallenge = (String) preAuthorizationAuthenticationToken
-                .getAdditionalParameters().get(PkceParameterNames.CODE_CHALLENGE);
+        String codeChallenge = (String) additionalParameters.get(PkceParameterNames.CODE_CHALLENGE);
         if (StrUtil.isEmpty(codeChallenge) && registeredClient.getClientSettings().isRequireProofKey()) {
             OAuth2ErrorUtils.throwInvalidRequestParameter(PkceParameterNames.CODE_CHALLENGE, null);
         }
@@ -55,7 +58,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
         }
 
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(userAuth, user.getAllows());
+                .authenticated(user, user.getAllows(), additionalParameters);
     }
 
     @Override
