@@ -57,8 +57,9 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                             "用户无法访问"));
         }
 
+        long timeToLive = registeredClient.getTokenSettings().getAccessTokenTimeToLive().getSeconds();
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(user, user.getAllows(), additionalParameters);
+                .authenticated(user, user.getAllows(), additionalParameters, timeToLive);
     }
 
     @Override

@@ -47,6 +47,6 @@ final class OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer
                 root, "additionalParameters", new TypeReference<>() {
                 }, mapper);
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(principal, allows, additionalParameters);
+                .authenticated(principal, allows, additionalParameters, 0L);
     }
 }

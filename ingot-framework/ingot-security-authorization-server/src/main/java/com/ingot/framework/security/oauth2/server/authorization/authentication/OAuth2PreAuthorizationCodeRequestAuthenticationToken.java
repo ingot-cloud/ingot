@@ -26,6 +26,8 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
     private final String preAuthorization;
     @Getter
     private final List<AllowTenantDTO> allowList;
+    @Getter
+    private final long timeToLive;
 
     public static OAuth2PreAuthorizationCodeRequestAuthenticationToken unauthenticated() {
         return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(
@@ -42,9 +44,10 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
 
     public static OAuth2PreAuthorizationCodeRequestAuthenticationToken authenticated(Object userPrincipal,
                                                                                      List<AllowTenantDTO> allowList,
-                                                                                     Map<String, Object> additionalParameters) {
+                                                                                     Map<String, Object> additionalParameters,
+                                                                                     long timeToLive) {
         return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(userPrincipal,
-                null, null, additionalParameters, allowList);
+                additionalParameters, allowList, timeToLive);
     }
 
     public OAuth2PreAuthorizationCodeRequestAuthenticationToken(Object principal,
@@ -60,6 +63,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
         this.registeredClient = registeredClient;
         this.preAuthorization = preAuthorization;
         this.allowList = Collections.emptyList();
+        this.timeToLive = 0L;
     }
 
     /**
@@ -69,19 +73,19 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
      *                    represented by this authentication object.
      */
     public OAuth2PreAuthorizationCodeRequestAuthenticationToken(Object userPrincipal,
-                                                                String preAuthorization,
-                                                                RegisteredClient registeredClient,
                                                                 Map<String, Object> additionalParameters,
-                                                                List<AllowTenantDTO> allowList) {
+                                                                List<AllowTenantDTO> allowList,
+                                                                long timeToLive) {
         super(null);
         this.principal = userPrincipal;
         this.additionalParameters = Collections.unmodifiableMap(
                 additionalParameters != null ?
                         new HashMap<>(additionalParameters) :
                         Collections.emptyMap());
-        this.registeredClient = registeredClient;
-        this.preAuthorization = preAuthorization;
+        this.registeredClient = null;
+        this.preAuthorization = null;
         this.allowList = allowList;
+        this.timeToLive = timeToLive;
         super.setAuthenticated(true); // must use super, as we override
     }
 

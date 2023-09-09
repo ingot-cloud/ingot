@@ -1,17 +1,23 @@
 package org.springframework.security.web.context;
 
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -22,12 +28,20 @@ import java.util.function.Supplier;
  * <p>Date         : 2023/9/5.</p>
  * <p>Time         : 4:13 PM.</p>
  */
-@RequiredArgsConstructor
+@Slf4j
 public class RedisSecurityContextRepository implements SecurityContextRepository {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
             .getContextHolderStrategy();
+
+    public RedisSecurityContextRepository(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = new ObjectMapper();
+        ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
+        IngotSecurityJackson2Modules.registerModules(objectMapper, classLoader);
+    }
 
     @Override
     @Deprecated
@@ -53,7 +67,18 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         if (emptyContext.equals(context)) {
             redisTemplate.delete(key);
         } else {
-            redisTemplate.opsForValue().set(key, context, 3600, TimeUnit.SECONDS);
+            try {
+                // 默认半小时过期
+                long timeout = 1800;
+                Authentication authentication = context.getAuthentication();
+                if (authentication instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+                    timeout = token.getTimeToLive();
+                }
+                String value = this.objectMapper.writeValueAsString(context);
+                redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+            } catch (JsonProcessingException e) {
+                log.warn("[RedisSecurityContextRepository] 保存 SecurityContext 失败", e);
+            }
         }
     }
 
@@ -77,7 +102,18 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
             return null;
         }
 
-        return (SecurityContext) redisTemplate.opsForValue().get(key(sessionId));
+        String key = key(sessionId);
+        Object value = redisTemplate.opsForValue().get(key);
+        redisTemplate.delete(key);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return this.objectMapper.readValue((String) value, SecurityContext.class);
+        } catch (JsonProcessingException e) {
+            log.warn("[RedisSecurityContextRepository] 读取 SecurityContext 失败", e);
+            return null;
+        }
     }
 
     private String getSessionId(HttpServletRequest request) {
