@@ -21,7 +21,9 @@ public class ExceptionHandlingCustomizer implements Customizer<ExceptionHandling
 
     @Override
     public void customize(ExceptionHandlingConfigurer<HttpSecurity> configurer) {
+        // 默认 authorize code 模式，暂时不做特殊处理
+//        properties.getLoginFormUrl()
         configurer.authenticationEntryPoint(
-                new IngotLoginUrlAuthenticationEntryPoint(properties.getLoginFormUrl()));
+                new IngotLoginUrlAuthenticationEntryPoint(FormLoginCustomizer.LOGIN_PAGE_URL));
     }
 }
