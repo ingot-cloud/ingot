@@ -1,16 +1,19 @@
 package com.ingot.framework.security.oauth2.server.authorization.token;
 
-import java.util.Set;
-
+import cn.hutool.core.util.NumberUtil;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+
+import java.util.Set;
 
 /**
  * <p>Description  : JwtOAuth2TokenCustomizer.</p>
@@ -24,14 +27,21 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
     @Override
     public void customize(JwtEncodingContext context) {
         Object principal = context.getPrincipal();
-        if (principal instanceof OAuth2UserDetailsAuthenticationToken) {
-            UserDetails user =
-                    (UserDetails) ((OAuth2UserDetailsAuthenticationToken) principal).getPrincipal();
+        if (principal instanceof OAuth2UserDetailsAuthenticationToken userDetailsAuthenticationToken) {
+            UserDetails user = (UserDetails) userDetailsAuthenticationToken.getPrincipal();
             customizeWithUser(context, user);
-        } else if (principal instanceof UsernamePasswordAuthenticationToken) {
-            UserDetails user =
-                    (UserDetails) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        } else if (principal instanceof UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken) {
+            UserDetails user = (UserDetails) usernamePasswordAuthenticationToken.getPrincipal();
             customizeWithUser(context, user);
+        } else if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthToken) {
+            IngotUser user = (IngotUser) preAuthToken.getPrincipal();
+            Long tenant = NumberUtil.parseLong(
+                    String.valueOf(preAuthToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT)),
+                    user.getTenantId());
+            customizeWithUser(context,
+                    user.toBuilder()
+                            .tenantId(tenant)
+                            .build());
         }
     }
 

@@ -35,7 +35,7 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
     public Authentication convert(HttpServletRequest request) {
         Authentication principal = SecurityContextHolder.getContext().getAuthentication();
         if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
-            requiredCheck(request, token);
+            principal = requiredCheck(request, token);
         }
 
         OAuth2AuthorizationCodeRequestAuthenticationToken token =
@@ -50,10 +50,15 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
                 token.getRedirectUri(), token.getState(), token.getScopes(), additionalParameters);
     }
 
-    private void requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+    private Authentication requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
         // tenant (REQUIRED)
         String tenant = request.getParameter(IngotOAuth2ParameterNames.TENANT);
         if (StrUtil.isEmpty(tenant)) {
+            throwError(IngotOAuth2ParameterNames.TENANT);
+        }
+
+        // tenant必须在allow list中
+        if (token.getAllowList().stream().noneMatch(item -> item.getId() == Long.parseLong(tenant))) {
             throwError(IngotOAuth2ParameterNames.TENANT);
         }
 
@@ -71,6 +76,11 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
                 throwError(key);
             }
         });
+
+        Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
+        newAdditionalParameters.put(IngotOAuth2ParameterNames.TENANT, tenant);
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
+                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
     }
 
     private static void throwError(String parameterName) {
