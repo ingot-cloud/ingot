@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
@@ -38,6 +39,12 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
         }
 
         Map<String, Object> additionalParameters = preAuthorizationAuthenticationToken.getAdditionalParameters();
+
+        // check redirect_uri
+        String redirectUri = (String) additionalParameters.get(OAuth2ParameterNames.REDIRECT_URI);
+        if (!registeredClient.getRedirectUris().contains(redirectUri)) {
+            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ParameterNames.REDIRECT_URI, null);
+        }
 
         // code_challenge (REQUIRED for public clients) - RFC 7636 (PKCE)
         String codeChallenge = (String) additionalParameters.get(PkceParameterNames.CODE_CHALLENGE);
