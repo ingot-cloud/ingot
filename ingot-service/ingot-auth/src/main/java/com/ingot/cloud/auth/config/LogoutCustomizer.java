@@ -15,6 +15,7 @@ public class LogoutCustomizer implements Customizer<LogoutConfigurer<HttpSecurit
     @Override
     public void customize(LogoutConfigurer<HttpSecurity> configurer) {
         configurer.deleteCookies("JSESSIONID")
-                .invalidateHttpSession(true);
+                .invalidateHttpSession(true)
+                .permitAll();
     }
 }
