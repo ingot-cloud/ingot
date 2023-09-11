@@ -4,10 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.dto.OAuth2AuthorizationDTO;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
-import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -15,12 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.context.RedisSecurityContextRepository;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : TokenEndpoint.</p>
@@ -35,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TokenEndpoint implements RShortcuts {
     private final OAuth2AuthorizationService oAuth2AuthorizationService;
     private final AuthorizationCacheService authorizationCacheService;
+    private final RedisSecurityContextRepository redisSecurityContextRepository;
 
     /**
      * 退出登录，清空当前用户授权信息
@@ -43,13 +41,16 @@ public class TokenEndpoint implements RShortcuts {
      * @return {@link R}
      */
     @DeleteMapping
-    public R<?> revoke(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+    public R<?> revoke(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+                       HttpServletRequest request) {
         String token = SecurityUtils.getBearerTokenValue(authorization);
         OAuth2Authorization record =
                 oAuth2AuthorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
         if (record != null) {
             oAuth2AuthorizationService.remove(record);
         }
+
+        redisSecurityContextRepository.deleteContext(request);
         return ok();
     }
 

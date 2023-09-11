@@ -92,6 +92,14 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         return result != null ? result : false;
     }
 
+    public void deleteContext(HttpServletRequest request) {
+        String sessionId = getSessionId(request);
+        if (StrUtil.isEmpty(sessionId)) {
+            return;
+        }
+        redisTemplate.delete(key(sessionId));
+    }
+
     private SecurityContext loadContext(HttpServletRequest request) {
         if (request == null) {
             return null;
