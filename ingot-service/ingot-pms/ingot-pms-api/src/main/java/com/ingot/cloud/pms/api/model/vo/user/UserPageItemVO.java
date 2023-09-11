@@ -21,10 +21,6 @@ public class UserPageItemVO implements Serializable {
      */
     private Long userId;
     /**
-     * 租户名称
-     */
-    private String tenantName;
-    /**
      * 部门名称
      */
     private String deptName;
