@@ -110,7 +110,7 @@ public class IngotOAuth2ResourceServerConfiguration {
     }
 
     /**
-     * 由于注入了多个 {@link UserDetailsService}，{@link InitializeUserDetailsBeanManagerConfigurer}
+     * 如果注入多个 {@link UserDetailsService}，{@link InitializeUserDetailsBeanManagerConfigurer}
      * 默认使用该 {@link UserDetailsService}
      */
     @Primary
@@ -119,15 +119,6 @@ public class IngotOAuth2ResourceServerConfiguration {
     @ConditionalOnMissingBean(UserDetailsService.class)
     public OAuth2UserDetailsService passwordUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
         return new RemoteOAuth2UserDetailsService(remoteUserDetailsService);
-    }
-
-    /**
-     * 社交登录{@link UserDetailsService}
-     */
-    @Bean
-    @ConditionalOnBean({RemoteUserDetailsService.class, OAuth2UserDetailsService.class})
-    public OAuth2UserDetailsService socialUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
-        return new RemoteOAuth2SocialUserDetailsService(remoteUserDetailsService);
     }
 
     @Bean

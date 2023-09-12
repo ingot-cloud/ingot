@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
@@ -13,7 +14,9 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.utils.SocialUtils;
+import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,14 +44,26 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserTrans userTrans;
 
     @Override
-    public UserDetailsResponse getUserAuthDetails(String username) {
-        SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
-                .eq(SysUser::getUsername, username));
-        return map(user);
+    public UserDetailsResponse getUserDetails(UserDetailsRequest params) {
+        String grantType = params.getGrantType();
+        if (StrUtil.equals(IngotAuthorizationGrantType.PASSWORD.getValue(), grantType)) {
+            return getUserAuthDetails(params);
+        }
+        if (StrUtil.equals(IngotAuthorizationGrantType.SOCIAL.getValue(), grantType)) {
+            return getUserAuthDetailsSocial(params);
+        }
+        return null;
     }
 
-    @Override
-    public UserDetailsResponse getUserAuthDetailsSocial(String unique) {
+    public UserDetailsResponse getUserAuthDetails(UserDetailsRequest params) {
+        String username = params.getUsername();
+        SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
+                .eq(SysUser::getUsername, username));
+        return map(user, params.getUserType());
+    }
+
+    public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest params) {
+        String unique = params.getUsername();
         String[] extract = SocialUtils.extract(unique);
         SocialTypeEnums socialType = SocialTypeEnums.get(extract[0]);
         if (socialType == null) {
@@ -63,10 +78,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         String uniqueID = processor.uniqueID(extract[1]);
-        return map(processor.info(uniqueID));
+        return map(processor.info(uniqueID), params.getUserType());
     }
 
-    private UserDetailsResponse map(SysUser user) {
+    private UserDetailsResponse map(SysUser user, String userType) {
         return Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
@@ -78,6 +93,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                             UserStatusEnum.ENABLE : UserStatusEnum.LOCK);
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
+                    result.setUserType(userType);
                     result.setAllows(allows);
 
                     // 查询拥有的角色

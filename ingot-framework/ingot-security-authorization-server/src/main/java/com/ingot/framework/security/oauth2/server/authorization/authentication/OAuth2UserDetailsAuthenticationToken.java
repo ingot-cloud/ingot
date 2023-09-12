@@ -1,7 +1,5 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import java.util.Collection;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.security.oauth2.core.OAuth2Authentication;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -9,6 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.util.Assert;
+
+import java.util.Collection;
 
 /**
  * <p>Description  : OAuth2用户详情认证Token.</p>

@@ -31,6 +31,11 @@ public interface IngotOAuth2ParameterNames {
     String REFRESH_TOKEN = "refreshToken";
 
     /**
+     * {@code user_type} - used in request
+     */
+    String USER_TYPE = "user_type";
+
+    /**
      * 社交类型 {@link SocialTypeEnums}, 在请求中使用
      */
     String SOCIAL_TYPE = "social_type";

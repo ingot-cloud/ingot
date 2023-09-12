@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.biz;
 
+import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 
 /**
@@ -11,17 +12,10 @@ import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 public interface UserDetailsService {
 
     /**
-     * 获取用户详情信息
+     * 获取用户详情
      *
-     * @param username 用户名
+     * @param params {@link UserDetailsRequest}
      * @return {@link UserDetailsResponse}
      */
-    UserDetailsResponse getUserAuthDetails(String username);
-
-    /**
-     * 社交获取用户详情
-     * @param unique 唯一码
-     * @return {@link UserDetailsResponse}
-     */
-    UserDetailsResponse getUserAuthDetailsSocial(String unique);
+    UserDetailsResponse getUserDetails(UserDetailsRequest params);
 }

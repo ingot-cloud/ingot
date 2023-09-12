@@ -106,6 +106,10 @@ public final class OAuth2ErrorUtils {
                 OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, errorUri);
     }
 
+    public static void throwInvalidRequestParameter(String parameterName) {
+        throwInvalidRequestParameter(parameterName, null);
+    }
+
     public static void throwInvalidClient(String desc) {
         throwAuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT, desc);
     }

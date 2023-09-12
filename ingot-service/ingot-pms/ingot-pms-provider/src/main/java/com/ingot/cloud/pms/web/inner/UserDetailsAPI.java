@@ -1,15 +1,16 @@
 package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.service.biz.UserDetailsService;
-import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
+import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,13 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserDetailsAPI implements RShortcuts {
     private final UserDetailsService userDetailsService;
 
-    @PostMapping("/{username}")
-    public R<UserDetailsResponse> getUserAuthDetail(@PathVariable String username) {
-        return ok(userDetailsService.getUserAuthDetails(username));
-    }
-
-    @PostMapping(value = "/social/{unique}")
-    public R<UserDetailsResponse> getUserAuthDetailsSocial(@PathVariable String unique) {
-        return ok(userDetailsService.getUserAuthDetailsSocial(unique));
+    @PostMapping
+    public R<UserDetailsResponse> getUserAuthDetail(@RequestBody UserDetailsRequest params) {
+        return ok(userDetailsService.getUserDetails(params));
     }
 }

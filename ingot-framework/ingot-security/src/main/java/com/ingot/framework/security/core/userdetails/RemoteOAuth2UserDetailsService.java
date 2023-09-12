@@ -20,8 +20,8 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
 
     @Override
     public boolean supports(AuthorizationGrantType grantType) {
-        // 密码模式
-        return IngotAuthorizationGrantType.PASSWORD.equals(grantType);
+        return IngotAuthorizationGrantType.PASSWORD.equals(grantType)
+                || IngotAuthorizationGrantType.SOCIAL.equals(grantType);
     }
 
     /**
@@ -35,8 +35,11 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
     @Override
     public IngotUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("[RemoteOAuth2UserDetailsService] - loadUserByUsername: username={}", username);
+        UsernameUri uri = UsernameUri.of(username);
         UserDetailsRequest params = new UserDetailsRequest();
-        params.setUsername(username);
+        params.setUsername(uri.getPrincipal());
+        params.setGrantType(uri.getGrantType());
+        params.setUserType(uri.getUserType().getValue());
         return parse(remoteUserDetailsService.fetchUserDetails(params));
     }
 }

@@ -19,11 +19,6 @@ public class DefaultRemoteUserDetailsService implements RemoteUserDetailsService
 
     @Override
     public R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params) {
-        return pmsApi.getUserAuthDetails(params.getUsername());
-    }
-
-    @Override
-    public R<UserDetailsResponse> fetchUserDetailsSocial(UserDetailsRequest params) {
-        return pmsApi.getUserAuthDetailsSocial(params.getUsername());
+        return pmsApi.getUserAuthDetails(params);
     }
 }

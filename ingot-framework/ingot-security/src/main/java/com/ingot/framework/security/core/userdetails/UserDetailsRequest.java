@@ -1,8 +1,8 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.io.Serializable;
-
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * <p>Description  : UserDetailsRequest.</p>
@@ -16,4 +16,12 @@ public class UserDetailsRequest implements Serializable {
      * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId等
      */
     private String username;
+    /**
+     * 授权类型
+     */
+    private String grantType;
+    /**
+     * 用户类型
+     */
+    private String userType;
 }
