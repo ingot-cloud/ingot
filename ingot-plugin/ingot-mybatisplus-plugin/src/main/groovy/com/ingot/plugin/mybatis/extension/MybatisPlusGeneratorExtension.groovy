@@ -85,7 +85,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * entity 父类
      */
-    String superEntityClass = "com.ingot.framework.data.mybatis.model"
+    String superEntityClass = "com.ingot.framework.data.mybatis.model.BaseModel"
 
     /**
      * controller 父类
