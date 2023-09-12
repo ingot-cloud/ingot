@@ -29,7 +29,7 @@ import java.util.function.Supplier;
  * <p>Time         : 4:13 PM.</p>
  */
 @Slf4j
-public class RedisSecurityContextRepository implements SecurityContextRepository {
+public class RedisSecurityContextRepository implements SecurityContextRepository, SecurityContextRevokeRepository {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -92,7 +92,8 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         return result != null ? result : false;
     }
 
-    public void deleteContext(HttpServletRequest request) {
+    @Override
+    public void revokeContext(HttpServletRequest request) {
         String sessionId = getSessionId(request);
         if (StrUtil.isEmpty(sessionId)) {
             return;

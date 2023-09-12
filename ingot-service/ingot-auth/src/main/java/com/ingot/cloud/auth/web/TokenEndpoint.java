@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.web.context.RedisSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRevokeRepository;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class TokenEndpoint implements RShortcuts {
     private final OAuth2AuthorizationService oAuth2AuthorizationService;
     private final AuthorizationCacheService authorizationCacheService;
-    private final RedisSecurityContextRepository redisSecurityContextRepository;
+    private final SecurityContextRevokeRepository securityContextRevokeRepository;
 
     /**
      * 退出登录，清空当前用户授权信息
@@ -50,7 +50,7 @@ public class TokenEndpoint implements RShortcuts {
             oAuth2AuthorizationService.remove(record);
         }
 
-        redisSecurityContextRepository.deleteContext(request);
+        securityContextRevokeRepository.revokeContext(request);
         return ok();
     }
 

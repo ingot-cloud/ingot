@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth.config;
 
+import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
@@ -37,7 +38,9 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.DelegatingSecurityContextRevokeRepository;
 import org.springframework.security.web.context.RedisSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRevokeRepository;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -134,5 +137,11 @@ public class AuthorizationServerConfig {
     @Bean
     public RedisSecurityContextRepository redisSecurityContextRepository() {
         return new RedisSecurityContextRepository(this.redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(SecurityContextRevokeRepository.class)
+    public SecurityContextRevokeRepository securityContextRevokeRepository(RedisSecurityContextRepository redisSecurityContextRepository) {
+        return new DelegatingSecurityContextRevokeRepository(ListUtil.list(false, redisSecurityContextRepository));
     }
 }
