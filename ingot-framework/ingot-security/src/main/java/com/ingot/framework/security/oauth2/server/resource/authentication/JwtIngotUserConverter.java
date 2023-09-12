@@ -21,7 +21,8 @@ public class JwtIngotUserConverter implements Converter<Jwt, IngotUser> {
         Long deptId = JwtClaimNamesExtension.getDept(source);
         Long tenantId = JwtClaimNamesExtension.getTenantId(source);
         String authType = JwtClaimNamesExtension.getAuthType(source);
+        String userType = JwtClaimNamesExtension.getUserType(source);
         String clientId = JwtClaimNamesExtension.getAud(source);
-        return IngotUser.simple(id, deptId, tenantId, clientId, authType, username);
+        return IngotUser.simple(id, deptId, tenantId, clientId, authType, userType, username);
     }
 }

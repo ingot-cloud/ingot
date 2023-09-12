@@ -16,6 +16,10 @@ import java.util.List;
 @Data
 public class UserDetailsResponse implements Serializable {
     /**
+     * 用户类型 {@link com.ingot.framework.security.common.constants.UserType}
+     */
+    private String userType;
+    /**
      * 用户ID
      */
     private Long id;

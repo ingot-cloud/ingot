@@ -61,6 +61,7 @@ public interface JwtClaimNamesExtension {
     String TENANT = "tenant";
     String DEPT = "dept";
     String AUTH_TYPE = "tat";
+    String USER_TYPE = "ut";
     String SCOPE = OAuth2ParameterNames.SCOPE;
 
     static String getUsername(Jwt source) {
@@ -81,6 +82,10 @@ public interface JwtClaimNamesExtension {
 
     static String getAuthType(Jwt source) {
         return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.AUTH_TYPE, String.class);
+    }
+
+    static String getUserType(Jwt source) {
+        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.USER_TYPE, String.class);
     }
 
     @SuppressWarnings("unchecked")

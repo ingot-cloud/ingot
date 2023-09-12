@@ -45,6 +45,10 @@ public class IngotUser extends User implements IngotUserDetails {
      */
     private final String tokenAuthType;
     /**
+     * 用户类型 {@link com.ingot.framework.security.common.constants.UserType}
+     */
+    private final String userType;
+    /**
      * 可以访问的租户
      */
     private final List<AllowTenantDTO> allows;
@@ -55,6 +59,7 @@ public class IngotUser extends User implements IngotUserDetails {
                      Long tenantId,
                      String clientId,
                      String tokenAuthType,
+                     String userType,
                      String username,
                      String password,
                      List<AllowTenantDTO> allows,
@@ -70,6 +75,7 @@ public class IngotUser extends User implements IngotUserDetails {
         this.tenantId = tenantId;
         this.tokenAuthType = tokenAuthType;
         this.clientId = clientId;
+        this.userType = userType;
         this.allows = Collections.unmodifiableList(
                 allows != null ? allows : ListUtil.empty());
     }
@@ -80,9 +86,9 @@ public class IngotUser extends User implements IngotUserDetails {
      * @return {@link IngotUser}
      */
     public static IngotUser simple(Long id, Long deptId, Long tenantId, String clientId,
-                                   String tokenAuthType, String username) {
+                                   String tokenAuthType, String userType, String username) {
         return stateless(id, deptId, tenantId, clientId,
-                tokenAuthType, username, Collections.emptyList());
+                tokenAuthType, userType, username, Collections.emptyList());
     }
 
     /**
@@ -91,9 +97,9 @@ public class IngotUser extends User implements IngotUserDetails {
      * @return {@link IngotUser}
      */
     public static IngotUser stateless(Long id, Long deptId, Long tenantId, String clientId,
-                                      String tokenAuthType, String username,
+                                      String tokenAuthType, String userType, String username,
                                       Collection<? extends GrantedAuthority> authorities) {
-        return standard(id, deptId, tenantId, clientId, tokenAuthType, username, N_A, null,
+        return standard(id, deptId, tenantId, clientId, tokenAuthType, username, N_A, userType, null,
                 true, true, true, true,
                 authorities);
     }
@@ -104,7 +110,7 @@ public class IngotUser extends User implements IngotUserDetails {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser userDetails(Long id, Long deptId,
+    public static IngotUser userDetails(Long id, Long deptId, String userType,
                                         String username, String password,
                                         List<AllowTenantDTO> allows,
                                         boolean enabled, boolean accountNonExpired,
@@ -116,7 +122,7 @@ public class IngotUser extends User implements IngotUserDetails {
                 .map(AllowTenantDTO::getId)
                 .findFirst()
                 .orElse(null);
-        return standard(id, deptId, tenantId, N_A, N_A, username, password, allows,
+        return standard(id, deptId, tenantId, N_A, N_A, userType, username, password, allows,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
                 authorities);
     }
@@ -127,12 +133,14 @@ public class IngotUser extends User implements IngotUserDetails {
      * @return {@link IngotUser}
      */
     public static IngotUser standard(Long id, Long deptId, Long tenantId, String clientId,
-                                     String tokenAuthType, String username, String password,
+                                     String tokenAuthType, String userType,
+                                     String username, String password,
                                      List<AllowTenantDTO> allows,
                                      boolean enabled, boolean accountNonExpired,
                                      boolean credentialsNonExpired, boolean accountNonLocked,
                                      Collection<? extends GrantedAuthority> authorities) {
-        return new IngotUser(id, deptId, tenantId, clientId, tokenAuthType, username, password, allows,
+        return new IngotUser(id, deptId, tenantId, clientId, tokenAuthType, userType,
+                username, password, allows,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
                 authorities);
     }
@@ -185,6 +193,7 @@ public class IngotUser extends User implements IngotUserDetails {
         private Long tenantId;
         private String clientId;
         private String tokenAuthType;
+        private String userType;
         private List<AllowTenantDTO> allows;
 
         private Builder(IngotUser user) {
@@ -201,6 +210,7 @@ public class IngotUser extends User implements IngotUserDetails {
             this.tenantId = user.getTenantId();
             this.clientId = user.getClientId();
             this.tokenAuthType = user.getTokenAuthType();
+            this.userType = user.getUserType();
             this.allows = user.getAllows();
         }
 
@@ -224,6 +234,11 @@ public class IngotUser extends User implements IngotUserDetails {
             return this;
         }
 
+        public Builder userType(String userType) {
+            this.userType = userType;
+            return this;
+        }
+
         public Builder allows(List<AllowTenantDTO> allows) {
             this.allows = allows;
             return this;
@@ -231,6 +246,7 @@ public class IngotUser extends User implements IngotUserDetails {
 
         public IngotUser build() {
             return IngotUser.standard(this.id, this.deptId, this.tenantId, this.clientId, this.tokenAuthType,
+                    this.userType,
                     this.username, this.password, this.allows,
                     this.enabled, this.accountNonExpired, this.credentialsNonExpired, this.accountNonLocked,
                     this.authorities);
