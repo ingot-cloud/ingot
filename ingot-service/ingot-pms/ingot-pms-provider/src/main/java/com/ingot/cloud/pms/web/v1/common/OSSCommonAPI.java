@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.common;
 
 import com.ingot.framework.core.error.exception.IllegalOperationException;
 import com.ingot.framework.core.model.support.R;

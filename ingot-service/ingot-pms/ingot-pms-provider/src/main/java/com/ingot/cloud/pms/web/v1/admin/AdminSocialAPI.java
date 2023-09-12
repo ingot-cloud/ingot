@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/social")
+@RequestMapping(value = "/v1/admin/social")
 @RequiredArgsConstructor
-public class SocialAPI implements RShortcuts {
+public class AdminSocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write', 'basic.social.read')")

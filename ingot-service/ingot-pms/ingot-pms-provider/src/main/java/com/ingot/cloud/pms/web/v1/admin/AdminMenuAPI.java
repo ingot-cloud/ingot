@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.service.biz.BizUserService;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Time         : 10:12 下午.</p>
  */
 @RestController
-@RequestMapping(value = "/v1/menu")
+@RequestMapping(value = "/v1/admin/menu")
 @RequiredArgsConstructor
-public class MenuAPI implements RShortcuts {
+public class AdminMenuAPI implements RShortcuts {
     private final SysMenuService sysMenuService;
     private final BizUserService bizUserService;
 

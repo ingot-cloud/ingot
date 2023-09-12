@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -33,9 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/user")
+@RequestMapping(value = "/v1/admin/user")
 @RequiredArgsConstructor
-public class UserAPI implements RShortcuts {
+public class AdminUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
     private final UserOpsChecker userOpsChecker;

@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Time         : 10:12 下午.</p>
  */
 @RestController
-@RequestMapping(value = "/v1/client")
+@RequestMapping(value = "/v1/admin/client")
 @RequiredArgsConstructor
-public class ClientAPI implements RShortcuts {
+public class AdminClientAPI implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write', 'basic.client.read')")

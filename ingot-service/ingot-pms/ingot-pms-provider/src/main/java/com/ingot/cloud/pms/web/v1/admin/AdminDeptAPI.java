@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/dept")
+@RequestMapping(value = "/v1/admin/dept")
 @RequiredArgsConstructor
-public class DeptAPI implements RShortcuts {
+public class AdminDeptAPI implements RShortcuts {
     private final SysDeptService sysDeptService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.dept.write', 'basic.dept.read')")

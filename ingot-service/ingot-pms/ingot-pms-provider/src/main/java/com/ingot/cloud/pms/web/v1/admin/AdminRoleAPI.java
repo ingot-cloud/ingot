@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
@@ -38,9 +38,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/role")
+@RequestMapping(value = "/v1/admin/role")
 @RequiredArgsConstructor
-public class RoleAPI implements RShortcuts {
+public class AdminRoleAPI implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;

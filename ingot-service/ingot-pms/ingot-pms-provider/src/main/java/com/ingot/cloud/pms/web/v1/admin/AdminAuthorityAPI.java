@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1;
+package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Time         : 10:12 下午.</p>
  */
 @RestController
-@RequestMapping(value = "/v1/authority")
+@RequestMapping(value = "/v1/admin/authority")
 @RequiredArgsConstructor
-public class AuthorityAPI implements RShortcuts {
+public class AdminAuthorityAPI implements RShortcuts {
     private final SysAuthorityService sysAuthorityService;
 
     @PreAuthorize("@ingot.requiredAdmin")
