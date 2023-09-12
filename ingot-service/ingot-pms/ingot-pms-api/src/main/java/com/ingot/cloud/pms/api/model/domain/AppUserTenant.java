@@ -1,0 +1,49 @@
+package com.ingot.cloud.pms.api.model.domain;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.data.mybatis.model.BaseModel;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author jymot
+ * @since 2023-09-12
+ */
+@Getter
+@Setter
+@TableName("app_user_tenant")
+public class AppUserTenant extends BaseModel<AppUserTenant> {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * ID
+     */
+    private Long id;
+
+    /**
+     * 用户ID
+     */
+    private Long userId;
+
+    /**
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
+     * 是否为主要租户
+     */
+    private Boolean main;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createdAt;
+}
