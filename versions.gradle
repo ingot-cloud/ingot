@@ -183,7 +183,7 @@ deps.groovy = "org.codehaus.groovy:groovy:2.5.7"
 deps.netty = "io.netty:netty-all:4.1.55.Final"
 
 def plugins = [:]
-plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:0.1.10.r"
+plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:0.2.1"
 plugins.ingot_assemble = "com.ingot:ingot-assemble-plugin:0.3.0"
 deps.plugins = plugins
 
