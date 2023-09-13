@@ -1,7 +1,5 @@
 package com.ingot.cloud.pms.common;
 
-import java.util.List;
-
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -9,6 +7,8 @@ import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  * <p>Description  : CommonRoleRelationService.</p>
@@ -21,7 +21,7 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
     protected AssertionChecker assertionChecker;
 
     @Autowired
-    public void setAssertI18nService(AssertionChecker assertionChecker) {
+    public void setAssertionChecker(AssertionChecker assertionChecker) {
         this.assertionChecker = assertionChecker;
     }
 

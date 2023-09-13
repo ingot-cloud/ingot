@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.common;
 
+import com.ingot.framework.core.context.IngotMessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
  * <p>Date         : 2023/9/13.</p>
  * <p>Time         : 4:20 PM.</p>
  */
-public class PmsMessageSource extends ReloadableResourceBundleMessageSource {
+public class PmsMessageSource extends ReloadableResourceBundleMessageSource implements IngotMessageSource {
     private static final MessageSourceAccessor accessor = new MessageSourceAccessor(new PmsMessageSource());
 
     public PmsMessageSource() {

@@ -1,41 +1,31 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
+import com.ingot.cloud.pms.mapper.SysRoleMapper;
+import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.model.support.Option;
+import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.common.PageUtils;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.security.common.utils.RoleUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
-import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
-import com.ingot.cloud.pms.api.model.transform.RoleTrans;
-import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
-import com.ingot.cloud.pms.mapper.SysRoleMapper;
-import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
-import com.ingot.framework.core.utils.DateUtils;
-import com.ingot.framework.core.model.support.Option;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.common.utils.RoleUtils;
-import com.ingot.framework.data.mybatis.common.PageUtils;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 /**
  * <p>
@@ -139,6 +129,10 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void createRole(SysRole params) {
+        long count = count(Wrappers.<SysRole>lambdaQuery()
+                .eq(SysRole::getCode, params.getCode()));
+        assertI18nService.checkOperation(count == 0, "SysRoleServiceImpl.RoleCodeExisted");
+
         params.setStatus(CommonStatusEnum.ENABLE);
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
