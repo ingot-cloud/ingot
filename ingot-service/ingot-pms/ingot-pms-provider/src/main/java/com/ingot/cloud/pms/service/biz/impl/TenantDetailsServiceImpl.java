@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -42,10 +44,21 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        List<AllowTenantDTO> allows = sysTenantService.list(
+        List<AllowTenantDTO> allows = getAllows(sysTenantService,
+                userTenantList.stream()
+                        .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
+                (item) -> item.setMain(userTenantList.stream()
+                        .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
+        response.setAllows(allows);
+        return response;
+    }
+
+    public static List<AllowTenantDTO> getAllows(SysTenantService sysTenantService,
+                                                 Set<Long> userTenantList,
+                                                 Consumer<AllowTenantDTO> mainConsumer) {
+        return sysTenantService.list(
                         Wrappers.<SysTenant>lambdaQuery()
-                                .in(SysTenant::getId, userTenantList.stream()
-                                        .map(SysUserTenant::getTenantId).collect(Collectors.toSet())))
+                                .in(SysTenant::getId, userTenantList))
                 .stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
                 .map(item -> {
@@ -53,13 +66,9 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                     dto.setId(item.getId());
                     dto.setName(item.getName());
                     dto.setAvatar(item.getAvatar());
-                    dto.setMain(userTenantList.stream()
-                            .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain()));
+                    mainConsumer.accept(dto);
                     return dto;
                 })
                 .toList();
-
-        response.setAllows(allows);
-        return response;
     }
 }

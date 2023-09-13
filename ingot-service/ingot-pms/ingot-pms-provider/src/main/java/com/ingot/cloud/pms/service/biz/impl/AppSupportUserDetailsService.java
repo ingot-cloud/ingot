@@ -1,12 +1,33 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.AppRole;
+import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
+import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
+import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
+import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.social.SocialProcessorManager;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.constants.UserType;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
+import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : AppSupportUserDetailsService.</p>
@@ -18,6 +39,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AppSupportUserDetailsService implements SupportUserDetailsService {
+    private final SysTenantService sysTenantService;
+    private final AppUserService appUserService;
+    private final AppRoleService appRoleService;
+    private final AppUserTenantService appUserTenantService;
+
+    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
+    private final SocialProcessorManager socialProcessorManager;
+    private final UserTrans userTrans;
 
     @Override
     public boolean support(UserDetailsRequest request) {
@@ -25,8 +54,84 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
     }
 
     @Override
-    public UserDetailsResponse getUserDetails(UserDetailsRequest params) {
+    public UserDetailsResponse getUserDetails(UserDetailsRequest request) {
+        AuthorizationGrantType grantType = new AuthorizationGrantType(request.getGrantType());
+        if (ObjectUtil.equals(IngotAuthorizationGrantType.PASSWORD, grantType)) {
+            return getUserAuthDetails(request);
+        }
+        if (ObjectUtil.equals(IngotAuthorizationGrantType.SOCIAL, grantType)) {
+            return getUserAuthDetailsSocial(request);
+        }
         return null;
+    }
+
+    public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
+        String username = request.getUsername();
+        AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
+                .eq(AppUser::getUsername, username));
+        return map(user, request.getUserType());
+    }
+
+    public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
+        SocialTypeEnums socialType = request.getSocialType();
+        String socialCode = request.getSocialCode();
+        String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
+        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType());
+    }
+
+    private UserDetailsResponse map(AppUser user, UserType userType) {
+        return Optional.ofNullable(user)
+                .map(value -> {
+                    List<AllowTenantDTO> allows = getTenantList(user);
+
+                    UserStatusEnum userTenantStatus = CollUtil.isEmpty(allows)
+                            ? UserStatusEnum.LOCK : UserStatusEnum.ENABLE;
+                    value.setStatus(value.getStatus() == UserStatusEnum.ENABLE
+                            && userTenantStatus == UserStatusEnum.ENABLE ?
+                            UserStatusEnum.ENABLE : UserStatusEnum.LOCK);
+
+                    UserDetailsResponse result = userTrans.toUserDetails(value);
+                    result.setUserType(userType.getValue());
+                    result.setAllows(allows);
+
+                    // 查询拥有的角色
+                    List<AppRole> roles = appRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+
+                    setRoles(result, roles);
+
+                    setClients(result, roles.stream().map(AppRole::getId).collect(Collectors.toList()));
+                    return result;
+                }).orElse(null);
+    }
+
+    private List<AllowTenantDTO> getTenantList(AppUser user) {
+        // 1.获取可以访问的租户列表
+        List<AppUserTenant> userTenantList = appUserTenantService.list(
+                Wrappers.<AppUserTenant>lambdaQuery()
+                        .eq(AppUserTenant::getUserId, user.getId()));
+
+        return TenantDetailsServiceImpl.getAllows(sysTenantService,
+                userTenantList.stream()
+                        .map(AppUserTenant::getTenantId).collect(Collectors.toSet()),
+                (item) -> item.setMain(userTenantList.stream()
+                        .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
+    }
+
+    private void setRoles(UserDetailsResponse result, List<AppRole> roles) {
+        List<String> roleCodes = roles.stream()
+                .map(AppRole::getCode)
+                .collect(Collectors.toList());
+        result.setRoles(roleCodes);
+    }
+
+    private void setClients(UserDetailsResponse result, List<Long> roleIds) {
+        // 查询可访问的客户端
+        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByAppRoles(roleIds))
+                .map(clients -> clients.stream()
+                        .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
+                .map(ListUtil::toList)
+                .orElse(ListUtil.toList());
+        result.setClients(clientIds);
     }
 
 }

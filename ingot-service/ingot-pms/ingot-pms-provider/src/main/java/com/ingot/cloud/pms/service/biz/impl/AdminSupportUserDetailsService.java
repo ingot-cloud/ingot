@@ -10,7 +10,6 @@ import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.constants.UserType;
@@ -38,14 +37,15 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AdminSupportUserDetailsService implements SupportUserDetailsService {
+    private final SysTenantService sysTenantService;
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
-    private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
+
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
-    private final UserTrans userTrans;
     private final SocialProcessorManager socialProcessorManager;
+    private final UserTrans userTrans;
 
     @Override
     public boolean support(UserDetailsRequest request) {
@@ -109,22 +109,11 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        return sysTenantService.list(
-                        Wrappers.<SysTenant>lambdaQuery()
-                                .in(SysTenant::getId, userTenantList.stream()
-                                        .map(SysUserTenant::getTenantId).collect(Collectors.toSet())))
-                .stream()
-                .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
-                .map(item -> {
-                    AllowTenantDTO dto = new AllowTenantDTO();
-                    dto.setId(item.getId());
-                    dto.setName(item.getName());
-                    dto.setAvatar(item.getAvatar());
-                    dto.setMain(userTenantList.stream()
-                            .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain()));
-                    return dto;
-                })
-                .toList();
+        return TenantDetailsServiceImpl.getAllows(sysTenantService,
+                userTenantList.stream()
+                        .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
+                (item) -> item.setMain(userTenantList.stream()
+                        .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
     }
 
     private void setRoles(UserDetailsResponse result, List<SysRole> roles) {
@@ -140,7 +129,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     private void setClients(UserDetailsResponse result, List<Long> roleIds) {
         // 查询可访问的客户端
-        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByRoles(roleIds))
+        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByAdminRoles(roleIds))
                 .map(clients -> clients.stream()
                         .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
                 .map(ListUtil::toList)

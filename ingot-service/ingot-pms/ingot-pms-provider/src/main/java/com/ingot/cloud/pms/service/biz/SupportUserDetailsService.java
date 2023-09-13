@@ -22,8 +22,8 @@ public interface SupportUserDetailsService {
     /**
      * 获取用户详情
      *
-     * @param params {@link UserDetailsRequest}
+     * @param request {@link UserDetailsRequest}
      * @return {@link UserDetailsResponse}
      */
-    UserDetailsResponse getUserDetails(UserDetailsRequest params);
+    UserDetailsResponse getUserDetails(UserDetailsRequest request);
 }

@@ -1,14 +1,11 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.AppRoleOauthClient;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
@@ -17,16 +14,17 @@ import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
+import com.ingot.cloud.pms.service.domain.AppRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,6 +36,10 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -57,6 +59,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final ClientTrans clientTrans;
 
     private final SysRoleOauthClientService sysRoleOauthClientService;
+    private final AppRoleOauthClientService appRoleOauthClientService;
 
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
@@ -72,11 +75,30 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     @Override
-    public List<Oauth2RegisteredClient> getClientsByRoles(List<Long> roleIds) {
+    public List<Oauth2RegisteredClient> getClientsByAdminRoles(List<Long> roleIds) {
         List<String> clientIds = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
                         .in(SysRoleOauthClient::getRoleId, roleIds))
                 .stream()
                 .map(SysRoleOauthClient::getClientId)
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(clientIds)) {
+            return CollUtil.empty(List.class);
+        }
+        return list(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
+                .in(Oauth2RegisteredClient::getId, clientIds))
+                .stream()
+                .filter(client -> {
+                    String status = RegisteredClientOps.getClientStatus(client.getClientSettings());
+                    return CommonStatusEnum.getEnum(status) == CommonStatusEnum.ENABLE;
+                }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Oauth2RegisteredClient> getClientsByAppRoles(List<Long> roleIds) {
+        List<String> clientIds = appRoleOauthClientService.list(Wrappers.<AppRoleOauthClient>lambdaQuery()
+                        .in(AppRoleOauthClient::getRoleId, roleIds))
+                .stream()
+                .map(AppRoleOauthClient::getClientId)
                 .collect(Collectors.toList());
         if (CollUtil.isEmpty(clientIds)) {
             return CollUtil.empty(List.class);

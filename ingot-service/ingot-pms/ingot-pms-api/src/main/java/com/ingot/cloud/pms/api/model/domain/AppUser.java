@@ -1,10 +1,13 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.utils.sensitive.Sensitive;
+import com.ingot.framework.core.utils.sensitive.SensitiveMode;
+import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,12 +42,14 @@ public class AppUser extends BaseModel<AppUser> {
     /**
      * 用户名
      */
+    @NotBlank(message = "{SysUser.username}", groups = Group.Create.class)
     private String username;
 
     /**
      * 密码
      */
     @TableField("`password`")
+    @JsonIgnore
     private String password;
 
     /**
@@ -60,11 +65,13 @@ public class AppUser extends BaseModel<AppUser> {
     /**
      * 手机号
      */
+    @Sensitive(mode = SensitiveMode.MOBILE_PHONE)
     private String phone;
 
     /**
      * 邮件地址
      */
+    @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
 
     /**
@@ -76,7 +83,7 @@ public class AppUser extends BaseModel<AppUser> {
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
-    private String status;
+    private UserStatusEnum status;
 
     /**
      * 创建日期
@@ -91,5 +98,6 @@ public class AppUser extends BaseModel<AppUser> {
     /**
      * 删除日期
      */
+    @TableLogic
     private LocalDateTime deletedAt;
 }

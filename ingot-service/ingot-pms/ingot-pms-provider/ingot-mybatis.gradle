@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["app_role_user"]
+        tables = ["app_role_oauth_client"]
 
         /**
          * 包名
