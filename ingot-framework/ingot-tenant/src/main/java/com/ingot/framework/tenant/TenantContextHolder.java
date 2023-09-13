@@ -1,5 +1,6 @@
 package com.ingot.framework.tenant;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 /**
@@ -46,7 +47,7 @@ public class TenantContextHolder {
      * @return Boolean
      */
     public static Boolean isUseDefault() {
-        return THREAD_CONTEXT_FLAG.get();
+        return BooleanUtil.isTrue(THREAD_CONTEXT_FLAG.get());
     }
 
     /**

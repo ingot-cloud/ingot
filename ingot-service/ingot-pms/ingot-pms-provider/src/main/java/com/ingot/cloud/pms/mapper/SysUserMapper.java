@@ -27,4 +27,16 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      */
     IPage<UserPageItemVO> conditionPage(Page<SysUser> page,
                                         @Param("condition") UserDTO condition);
+
+    /**
+     * 条件查询用户分页信息
+     *
+     * @param page      分页条件
+     * @param condition 筛选条件
+     * @param tenantId  租户信息
+     * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
+     */
+    IPage<UserPageItemVO> conditionPageWithTenant(Page<SysUser> page,
+                                                  @Param("condition") UserDTO condition,
+                                                  @Param("tenantId") Long tenantId);
 }

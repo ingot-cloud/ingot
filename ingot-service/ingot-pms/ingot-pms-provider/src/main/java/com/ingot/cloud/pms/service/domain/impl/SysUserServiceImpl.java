@@ -1,18 +1,11 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
-import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.domain.SysUserSocial;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
@@ -20,21 +13,23 @@ import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
-import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.cloud.pms.service.domain.SysUserSocialService;
-import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -50,6 +45,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysRoleService sysRoleService;
     private final SysRoleUserService sysRoleUserService;
     private final SysUserSocialService sysUserSocialService;
+    private final SysUserTenantService sysUserTenantService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
@@ -91,7 +87,12 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             }
         }
 
-        return baseMapper.conditionPage(page, condition);
+        Long tenantId = TenantContextHolder.get();
+        // 如果使用默认tenant，那么不进行tenant过滤
+        if (TenantContextHolder.isUseDefault()) {
+            return baseMapper.conditionPage(page, condition);
+        }
+        return baseMapper.conditionPageWithTenant(page, condition, tenantId);
     }
 
     @Override
@@ -108,6 +109,14 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
+
+        // 第一次创建为主要租户
+        SysUserTenant userTenant = new SysUserTenant();
+        userTenant.setUserId(user.getId());
+        userTenant.setTenantId(TenantContextHolder.get());
+        userTenant.setMain(Boolean.TRUE);
+        userTenant.setCreatedAt(DateUtils.now());
+        sysUserTenantService.save(userTenant);
 
         List<Long> roles = params.getRoleIds();
         if (CollUtil.isNotEmpty(roles)) {
