@@ -4,11 +4,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.core.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import static com.ingot.framework.core.constants.SocialConstants.BEAN_PHONE;
 
 /**
  * <p>Description  : PhoneSocialProcessor.</p>
@@ -16,18 +15,23 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_PHONE;
  * <p>Date         : 2021/1/4.</p>
  * <p>Time         : 9:55 上午.</p>
  */
-@Component(BEAN_PHONE)
+@Component
 @RequiredArgsConstructor
-public class PhoneSocialProcessor implements SocialProcessor {
+public class PhoneSocialProcessor implements SocialProcessor<SysUser> {
     private final SysUserService sysUserService;
 
     @Override
-    public String uniqueID(String code) {
+    public boolean support(SocialTypeEnums socialType) {
+        return false;
+    }
+
+    @Override
+    public String getUniqueID(String code) {
         return code;
     }
 
     @Override
-    public SysUser info(String uniqueID) {
+    public SysUser getUserInfo(String uniqueID) {
         return sysUserService.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getPhone, uniqueID));
     }
 

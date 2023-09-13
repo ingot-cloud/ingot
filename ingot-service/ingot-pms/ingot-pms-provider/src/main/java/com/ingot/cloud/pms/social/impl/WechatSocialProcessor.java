@@ -2,9 +2,8 @@ package com.ingot.cloud.pms.social.impl;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.social.SocialProcessor;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import org.springframework.stereotype.Component;
-
-import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
 
 /**
  * <p>Description  : WechatSocialProcessor.</p>
@@ -12,16 +11,21 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_WECHAT;
  * <p>Date         : 2021/1/4.</p>
  * <p>Time         : 9:58 上午.</p>
  */
-@Component(BEAN_WECHAT)
-public class WechatSocialProcessor implements SocialProcessor {
+@Component
+public class WechatSocialProcessor implements SocialProcessor<SysUser> {
 
     @Override
-    public String uniqueID(String code) {
+    public boolean support(SocialTypeEnums socialType) {
+        return false;
+    }
+
+    @Override
+    public String getUniqueID(String code) {
         return null;
     }
 
     @Override
-    public SysUser info(String uniqueID) {
+    public SysUser getUserInfo(String uniqueID) {
         return null;
     }
 

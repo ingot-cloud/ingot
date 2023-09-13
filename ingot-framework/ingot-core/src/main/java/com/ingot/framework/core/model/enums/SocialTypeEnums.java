@@ -1,14 +1,13 @@
 package com.ingot.framework.core.model.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.ingot.framework.core.constants.SocialConstants;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Description  : SocialTypeEnum.</p>
@@ -19,14 +18,17 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum SocialTypeEnums {
-    SMS("sms", SocialConstants.BEAN_PHONE, "短信登录"),
-    WECHAT("wechat", SocialConstants.BEAN_WECHAT, "微信登录"),
-    MINI_PROGRAM("miniprogram", SocialConstants.BEAN_MINI_PROGRAM, "微信小程序");
+    ADMIN_SMS("admin_sms", "短信登录"),
+    ADMIN_WECHAT("admin_wechat", "微信登录"),
+    ADMIN_MINI_PROGRAM("admin_miniprogram", "微信小程序"),
+
+    APP_SMS("app_sms", "短信登录"),
+    APP_WECHAT("app_wechat", "微信登录"),
+    APP_MINI_PROGRAM("app_miniprogram", "微信小程序");
 
     @JsonValue
     @EnumValue
     private final String value;
-    private final String beanName;
     private final String text;
 
     private static final Map<String, SocialTypeEnums> valueMap = new HashMap<>();

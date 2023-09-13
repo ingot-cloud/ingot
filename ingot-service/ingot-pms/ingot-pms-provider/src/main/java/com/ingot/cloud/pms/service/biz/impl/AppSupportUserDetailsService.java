@@ -1,34 +1,32 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
-import com.ingot.cloud.pms.service.biz.UserDetailsService;
+import com.ingot.framework.security.common.constants.UserType;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
- * <p>Description  : UserDetailServiceImpl.</p>
+ * <p>Description  : AppSupportUserDetailsService.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/12/29.</p>
- * <p>Time         : 5:27 下午.</p>
+ * <p>Date         : 2023/9/13.</p>
+ * <p>Time         : 10:31 AM.</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserDetailsServiceImpl implements UserDetailsService {
-    private final List<SupportUserDetailsService> supportUserDetailsServices;
+public class AppSupportUserDetailsService implements SupportUserDetailsService {
+
+    @Override
+    public boolean support(UserDetailsRequest request) {
+        return request.getUserType() == UserType.APP;
+    }
 
     @Override
     public UserDetailsResponse getUserDetails(UserDetailsRequest params) {
-        for (SupportUserDetailsService service : supportUserDetailsServices) {
-            if (service.support(params)) {
-                return service.getUserDetails(params);
-            }
-        }
         return null;
     }
+
 }

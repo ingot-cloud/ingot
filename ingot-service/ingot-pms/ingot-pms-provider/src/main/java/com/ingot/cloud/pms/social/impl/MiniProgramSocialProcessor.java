@@ -10,14 +10,12 @@ import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserSocialService;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.SocialConstants;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import static com.ingot.framework.core.constants.SocialConstants.BEAN_MINI_PROGRAM;
 
 /**
  * <p>Description  : MiniProgramSocialProcessor.</p>
@@ -26,18 +24,23 @@ import static com.ingot.framework.core.constants.SocialConstants.BEAN_MINI_PROGR
  * <p>Time         : 10:15 AM.</p>
  */
 @Slf4j
-@Component(BEAN_MINI_PROGRAM)
+@Component
 @RequiredArgsConstructor
-public class MiniProgramSocialProcessor implements SocialProcessor {
+public class MiniProgramSocialProcessor implements SocialProcessor<SysUser> {
     private final SysUserService sysUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @Override
-    public String uniqueID(String code) {
+    public boolean support(SocialTypeEnums socialType) {
+        return socialType == SocialTypeEnums.ADMIN_MINI_PROGRAM;
+    }
+
+    @Override
+    public String getUniqueID(String code) {
         SysSocialDetails socialDetails = sysSocialDetailsService.getOne(
                 Wrappers.<SysSocialDetails>lambdaQuery()
-                        .eq(SysSocialDetails::getType, SocialTypeEnums.MINI_PROGRAM));
+                        .eq(SysSocialDetails::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM));
         if (socialDetails == null) {
             log.debug("未设置微信小程序appId，appSecret等信息");
             return null;
@@ -53,9 +56,9 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
     }
 
     @Override
-    public SysUser info(String uniqueID) {
+    public SysUser getUserInfo(String uniqueID) {
         SysUserSocial userSocial = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnums.MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID));
         if (userSocial == null) {
             log.debug("微信小程序未绑定openId={}", uniqueID);
@@ -68,7 +71,7 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
     @Override
     public void bind(SysUser user, String uniqueID) {
         long count = sysUserSocialService.count(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnums.MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID)
                 .eq(SysUserSocial::getUserId, user.getId()));
         if (count > 0) {
@@ -77,7 +80,7 @@ public class MiniProgramSocialProcessor implements SocialProcessor {
 
         SysUserSocial userSocial = new SysUserSocial();
         userSocial.setUserId(user.getId());
-        userSocial.setType(SocialTypeEnums.MINI_PROGRAM);
+        userSocial.setType(SocialTypeEnums.ADMIN_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
         userSocial.setBindAt(DateUtils.now());
         sysUserSocialService.save(userSocial);

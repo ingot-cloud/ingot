@@ -8,10 +8,6 @@ package com.ingot.framework.core.constants;
  */
 public interface SocialConstants {
 
-    String BEAN_PHONE = "phoneSocialProcessor";
-    String BEAN_WECHAT = "wechatSocialProcessor";
-    String BEAN_MINI_PROGRAM = "miniProgramSocialProcessor";
-
     /**
      * QQ获取token
      */
