@@ -65,21 +65,21 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
         String username = request.getUsername();
         AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
                 .eq(AppUser::getUsername, username));
-        return map(user, request.getUserType());
+        return map(user, request.getUserType(), request.getTenant());
     }
 
     public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
         SocialTypeEnums socialType = request.getSocialType();
         String socialCode = request.getSocialCode();
         String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType());
+        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
     }
 
-    private UserDetailsResponse map(AppUser user, UserType userType) {
+    private UserDetailsResponse map(AppUser user, UserType userType, Long tenant) {
         return Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
-                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus()));
+                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
                     result.setUserType(userType.getValue());

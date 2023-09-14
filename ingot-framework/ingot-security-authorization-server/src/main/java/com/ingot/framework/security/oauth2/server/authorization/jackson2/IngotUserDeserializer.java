@@ -35,7 +35,8 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
     private IngotUser deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
         Long id = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.ID).longValue();
-        Long tenantId = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.TENANT_ID).longValue();
+        Number tenantIdNumber = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.TENANT_ID);
+        Long tenantId = tenantIdNumber != null ? tenantIdNumber.longValue() : null;
         String clientId = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.CLIENT_ID);
         String tokenAuthType = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.TOKEN_AUTH_TYPE);
         String userType = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.USER_TYPE);

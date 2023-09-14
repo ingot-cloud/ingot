@@ -42,6 +42,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleUserService sysRoleUserService;
+    private final SysUserDeptService sysUserDeptService;
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
@@ -69,6 +70,19 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(SysRole::getId, baseRoleIds));
+    }
+
+    @Override
+    public List<SysRole> getRolesOfDept(long deptId) {
+        Set<Long> deptRoleIds = new HashSet<>();
+        SysDept dept = sysDeptService.getById(deptId);
+        deptRoleIds(dept, deptRoleIds);
+        if (CollUtil.isEmpty(deptRoleIds)) {
+            return CollUtil.empty(List.class);
+        }
+        return list(Wrappers.<SysRole>lambdaQuery()
+                .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
+                .in(SysRole::getId, deptRoleIds));
     }
 
     @Override

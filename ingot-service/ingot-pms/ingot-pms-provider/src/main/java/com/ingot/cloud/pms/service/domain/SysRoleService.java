@@ -29,6 +29,14 @@ public interface SysRoleService extends BaseService<SysRole> {
     List<SysRole> getAllRolesOfUser(long userId, long deptId);
 
     /**
+     * 获取部门权限
+     *
+     * @param deptId 部门权限
+     * @return 角色列表
+     */
+    List<SysRole> getRolesOfDept(long deptId);
+
+    /**
      * 获取用户所有可用角色
      *
      * @param userId 用户ID

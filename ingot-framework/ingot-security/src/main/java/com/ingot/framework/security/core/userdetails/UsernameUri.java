@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.userdetails;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.common.constants.UserType;
 import org.springframework.web.util.UriComponents;
@@ -16,24 +17,26 @@ public class UsernameUri {
     private static final String HOST = "username";
     private static final String PRINCIPAL = "principal";
     private static final String USER_TYPE = "userType";
+    private static final String TENANT = "tenant";
 
     private final UriComponents uri;
 
-    public static UsernameUri of(String value, String userType, String grantType) {
-        return new UsernameUri(value, userType, grantType);
+    public static UsernameUri of(String value, String userType, String grantType, String tenant) {
+        return new UsernameUri(value, userType, grantType, tenant);
     }
 
     public static UsernameUri of(String uriValue) {
         return new UsernameUri(uriValue);
     }
 
-    private UsernameUri(String value, String userType, String grantType) {
+    private UsernameUri(String value, String userType, String grantType, String tenant) {
         this.uri = UriComponentsBuilder.newInstance()
                 .scheme(SCHEME)
                 .host(HOST)
                 .path(grantType)
                 .queryParam(PRINCIPAL, value)
                 .queryParam(USER_TYPE, userType)
+                .queryParam(TENANT, tenant)
                 .build();
     }
 
@@ -61,5 +64,10 @@ public class UsernameUri {
     public UserType getUserType() {
         UserType userType = UserType.getEnum(this.uri.getQueryParams().getFirst(USER_TYPE));
         return userType == null ? UserType.ADMIN : userType;
+    }
+
+    public long getTenant() {
+        String tenant = this.uri.getQueryParams().getFirst(TENANT);
+        return StrUtil.isEmpty(tenant) ? 0 : NumberUtil.parseLong(tenant, 0L);
     }
 }

@@ -45,7 +45,11 @@ public class BizUtils {
     /**
      * 根据当前用户状态和可访问租户列表，返回用户最终状态
      */
-    public static UserStatusEnum getUserStatus(List<AllowTenantDTO> allows, UserStatusEnum userStatus) {
+    public static UserStatusEnum getUserStatus(List<AllowTenantDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
+        // 如果允许访问的tenant中不存在当前登录的tenant，那么直接返回不可用
+        if (loginTenant != null && allows.stream().noneMatch(item -> item.getId() == loginTenant)) {
+            return UserStatusEnum.LOCK;
+        }
         UserStatusEnum userTenantStatus = CollUtil.isEmpty(allows)
                 ? UserStatusEnum.LOCK : UserStatusEnum.ENABLE;
         return userStatus == UserStatusEnum.ENABLE

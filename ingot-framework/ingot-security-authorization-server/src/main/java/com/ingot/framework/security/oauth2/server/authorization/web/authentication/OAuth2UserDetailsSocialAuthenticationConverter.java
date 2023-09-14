@@ -35,8 +35,10 @@ public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDe
         if (userType == null) {
             OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.USER_TYPE);
         }
+
+        String tenant = parameters.getFirst(IngotOAuth2ParameterNames.TENANT);
         String principal = UsernameUri.of(
-                SocialUtils.uniqueCode(socialType, code), userTypeValue, getGrantType().getValue()).getValue();
+                SocialUtils.uniqueCode(socialType, code), userTypeValue, getGrantType().getValue(), tenant).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         null, getGrantType(), clientPrincipal);

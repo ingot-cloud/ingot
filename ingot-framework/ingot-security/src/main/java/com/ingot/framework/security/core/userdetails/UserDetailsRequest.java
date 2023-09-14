@@ -28,6 +28,10 @@ public class UserDetailsRequest implements Serializable {
      */
     private UserType userType;
     /**
+     * 登录的tenant，可以为空
+     */
+    private Long tenant;
+    /**
      * 社交类型, {@code grantType} 为 {@link IngotAuthorizationGrantType#SOCIAL}时，不为空
      */
     private SocialTypeEnums socialType;

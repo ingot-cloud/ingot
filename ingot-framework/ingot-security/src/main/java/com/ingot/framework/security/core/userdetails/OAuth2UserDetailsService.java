@@ -55,16 +55,9 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                     authorities.addAll(AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0])));
                     authorities.addAll(IngotAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
 
-                    Long defaultTenantId = CollUtil.emptyIfNull(allowTenants)
-                            .stream()
-                            .filter(AllowTenantDTO::getMain)
-                            .map(AllowTenantDTO::getId)
-                            .findFirst()
-                            .orElse(null);
-
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-                    return IngotUser.userDetails(data.getId(), data.getUserType(), defaultTenantId,
+                    return IngotUser.userDetails(data.getId(), data.getUserType(), data.getTenant(),
                             data.getUsername(), data.getPassword(),
                             enabled, true, true, nonLocked, authorities);
                 })

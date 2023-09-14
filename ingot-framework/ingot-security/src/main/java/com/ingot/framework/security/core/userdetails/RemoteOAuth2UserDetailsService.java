@@ -41,11 +41,15 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
         UsernameUri uri = UsernameUri.of(username);
         String grantType = uri.getGrantType();
         UserType userType = uri.getUserType();
+        long tenant = uri.getTenant();
 
         UserDetailsRequest params = new UserDetailsRequest();
         params.setUsername(uri.getPrincipal());
         params.setGrantType(grantType);
         params.setUserType(userType);
+        if (tenant > 0) {
+            params.setTenant(tenant);
+        }
 
         if (grantType.equals(IngotAuthorizationGrantType.SOCIAL.getValue())) {
             String unique = params.getUsername();

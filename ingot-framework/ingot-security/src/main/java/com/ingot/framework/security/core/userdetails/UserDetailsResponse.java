@@ -24,9 +24,9 @@ public class UserDetailsResponse implements Serializable {
      */
     private Long id;
     /**
-     * 部门ID
+     * 默认登录tenant
      */
-    private Long deptId;
+    private Long tenant;
     /**
      * 用户名
      */

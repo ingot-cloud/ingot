@@ -46,7 +46,9 @@ public abstract class OAuth2UserDetailsAuthenticationConverter implements Authen
         if (userType == null) {
             OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.USER_TYPE);
         }
-        String principal = UsernameUri.of(username, userTypeValue, getGrantType().getValue()).getValue();
+
+        String tenant = parameters.getFirst(IngotOAuth2ParameterNames.TENANT);
+        String principal = UsernameUri.of(username, userTypeValue, getGrantType().getValue(), tenant).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         password, getGrantType(), clientPrincipal);

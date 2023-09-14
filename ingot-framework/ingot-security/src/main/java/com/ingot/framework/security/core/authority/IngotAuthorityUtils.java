@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.authority;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
@@ -83,11 +84,32 @@ public final class IngotAuthorityUtils {
      * @return a Set of the Strings obtained from each call to
      * GrantedAuthority.getAuthority()
      */
-    public static Set<String> authorityListToSet(Collection<? extends GrantedAuthority> userAuthorities) {
+    public static Set<String> authorityListToSet(Collection<? extends GrantedAuthority> userAuthorities, long tenantId) {
         Assert.notNull(userAuthorities, "userAuthorities cannot be null");
         return userAuthorities.stream()
                 .filter(authority -> !(authority instanceof AllowTenantGrantedAuthority) && !(authority instanceof ClientGrantedAuthority))
-                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> {
+                    String value = authority.getAuthority();
+                    // 如果存在可选权限，那么过滤为当前租户权限
+                    if (StrUtil.contains(value, "@")) {
+                        return StrUtil.startWith(value, tenantId + "@");
+                    }
+                    return true;
+                })
+                .map(authority -> {
+                    String value = authority.getAuthority();
+                    if (StrUtil.contains(value, "@")) {
+                        return StrUtil.subAfter(value, "@", false);
+                    }
+                    return value;
+                })
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * 租户权限
+     */
+    public static String authorityWithTenant(String authority, long tenant) {
+        return tenant + "@" + authority;
     }
 }

@@ -12,18 +12,17 @@ import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.security.common.constants.UserType;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -67,45 +66,43 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         String username = request.getUsername();
         SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getUsername, username));
-        return map(user, request.getUserType());
+        return map(user, request.getUserType(), request.getTenant());
     }
 
     public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
         SocialTypeEnums socialType = request.getSocialType();
         String socialCode = request.getSocialCode();
         String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType());
+        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
     }
 
-    private UserDetailsResponse map(SysUser user, UserType userType) {
-        return Optional.ofNullable(user)
+    private UserDetailsResponse map(SysUser user, UserType userType, Long tenant) {
+        return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
-                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus()));
+                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
+                    result.setTenant(tenant);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
-                    Long defaultTenantId = CollUtil.emptyIfNull(allows)
-                            .stream()
-                            .filter(AllowTenantDTO::getMain)
-                            .map(AllowTenantDTO::getId)
-                            .findFirst()
-                            .orElse(null);
-                    long deptId = 0;
-                    if (defaultTenantId != null) {
-                        SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(user.getId(), defaultTenantId);
-                        if (userDept != null) {
-                            deptId = userDept.getDeptId();
-                        }
-                    }
                     // 查询拥有的角色
-                    List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), deptId);
-
-                    setRoles(result, roles);
+                    List<SysRole> roles = new ArrayList<>();
+                    if (tenant != null) {
+                        SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(user.getId(), tenant);
+                        if (userDept != null) {
+                            roles.addAll(sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId()));
+                        }
+                    } else {
+                        List<Long> deptIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
+                                        .eq(SysUserDept::getUserId, user.getId())))
+                                .stream().map(SysUserDept::getDeptId).toList();
+                        deptIds.forEach(deptId -> roles.addAll(sysRoleService.getRolesOfDept(deptId)));
+                    }
+                    setRoles(result, roles, tenant);
                     return result;
-                }).orElse(null);
+                }).orElse(null));
     }
 
     private List<AllowTenantDTO> getTenantList(SysUser user) {
@@ -121,13 +118,27 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                         .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
     }
 
-    private void setRoles(UserDetailsResponse result, List<SysRole> roles) {
+    private void setRoles(UserDetailsResponse result, List<SysRole> roles, Long loginTenant) {
+        if (CollUtil.isEmpty(roles)) {
+            return;
+        }
         List<String> roleCodes = roles.stream()
-                .map(SysRole::getCode)
+                .map(item -> {
+                    if (loginTenant != null) {
+                        return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
+                    }
+                    return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
+                })
                 .collect(Collectors.toList());
         // 拥有的权限
         Set<String> authorities = sysAuthorityService.getAuthorityByRoles(roles)
-                .stream().map(SysAuthority::getCode).collect(Collectors.toSet());
+                .stream()
+                .map(item -> {
+                    if (loginTenant != null) {
+                        return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
+                    }
+                    return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
+                }).collect(Collectors.toSet());
         roleCodes.addAll(authorities);
         result.setRoles(roleCodes);
     }
