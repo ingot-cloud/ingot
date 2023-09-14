@@ -50,7 +50,7 @@
             AND u.status = #{condition.status}
         </if>
         <if test="condition.deptId != null and condition.deptId != 0">
-            AND u.dept_id = #{condition.deptId}
+            AND ud.dept_id = #{condition.deptId}
         </if>
         <if test="condition.roleIds != null and condition.roleIds.size > 0">
             AND ru.role_id IN

@@ -22,6 +22,10 @@ public class UserDTO extends SysUser {
      */
     private List<Long> roleIds;
     /**
+     * 部门ID
+     */
+    private Long deptId;
+    /**
      * 密码
      */
     @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)
