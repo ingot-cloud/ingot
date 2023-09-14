@@ -1,17 +1,10 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
-import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -20,15 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : RoleApi.</p>
@@ -46,7 +31,6 @@ public class AdminRoleAPI implements RShortcuts {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysDeptService sysDeptService;
     private final SysRoleDeptService sysRoleDeptService;
-    private final SysRoleOauthClientService sysRoleOauthClientService;
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
@@ -116,23 +100,5 @@ public class AdminRoleAPI implements RShortcuts {
             return ok(sysRoleDeptService.getRoleDepts(id, condition));
         }
         return ok(sysDeptService.treeList(condition));
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
-    @PutMapping("/bindClient")
-    public R<?> bindClient(@RequestBody @Validated RelationDTO<Long, String> params) {
-        sysRoleOauthClientService.roleBindClients(params);
-        return ok();
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
-    @GetMapping("/bindClient/{id}")
-    public R<?> getBindClients(@PathVariable Long id,
-                               @RequestParam("isBind") boolean isBind,
-                               Oauth2RegisteredClient condition) {
-        if (isBind) {
-            return ok(sysRoleOauthClientService.getRoleClients(id, condition));
-        }
-        return ok(oauth2RegisteredClientService.list(condition));
     }
 }

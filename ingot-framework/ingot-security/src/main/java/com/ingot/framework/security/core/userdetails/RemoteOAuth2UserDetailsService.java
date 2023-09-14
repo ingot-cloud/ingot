@@ -47,7 +47,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
         params.setGrantType(grantType);
         params.setUserType(userType);
 
-        if (grantType.equals(IngotAuthorizationGrantType.SOCIAL)) {
+        if (grantType.equals(IngotAuthorizationGrantType.SOCIAL.getValue())) {
             String unique = params.getUsername();
             String[] extract = SocialUtils.extract(unique);
             SocialTypeEnums socialType = SocialTypeEnums.get(extract[0]);

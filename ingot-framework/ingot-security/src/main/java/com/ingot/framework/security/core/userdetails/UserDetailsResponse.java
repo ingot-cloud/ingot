@@ -44,10 +44,6 @@ public class UserDetailsResponse implements Serializable {
      */
     private List<String> roles;
     /**
-     * 客户端列表，clientId
-     */
-    private List<String> clients;
-    /**
      * 可以访问的租户列表
      */
     private List<AllowTenantDTO> allows;

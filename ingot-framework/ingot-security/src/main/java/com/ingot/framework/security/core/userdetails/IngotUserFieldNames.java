@@ -9,7 +9,6 @@ package com.ingot.framework.security.core.userdetails;
 public interface IngotUserFieldNames {
 
     String ID = "id";
-    String DEPT_ID = "deptId";
     String TENANT_ID = "tenantId";
     String CLIENT_ID = "clientId";
     String TOKEN_AUTH_TYPE = "tokenAuthType";

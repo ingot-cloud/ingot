@@ -1,7 +1,5 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -9,8 +7,8 @@ import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.data.mybatis.service.BaseService;
+import com.ingot.framework.security.core.userdetails.IngotUser;
 
 /**
  * <p>
@@ -69,19 +67,4 @@ public interface SysUserService extends BaseService<SysUser> {
      */
     void fixPassword(long id, UserPasswordDTO params);
 
-    /**
-     * 是否有用户关联了指定部门
-     *
-     * @param deptId 部门ID
-     * @return Boolean 是否关联
-     */
-    boolean matchDept(long deptId);
-
-    /**
-     * 是否有用户关联了指定部门中的任意一个
-     *
-     * @param deptIds 部门ID列表
-     * @return 是否存在，只要有用户关联任一部门即返回ture
-     */
-    boolean anyMatchDept(List<Long> deptIds);
 }

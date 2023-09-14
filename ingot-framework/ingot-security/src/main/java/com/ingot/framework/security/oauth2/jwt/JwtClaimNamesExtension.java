@@ -59,7 +59,6 @@ public interface JwtClaimNamesExtension {
      */
     String ID = "i";
     String TENANT = "tenant";
-    String DEPT = "dept";
     String AUTH_TYPE = "tat";
     String USER_TYPE = "ut";
     String SCOPE = OAuth2ParameterNames.SCOPE;
@@ -70,10 +69,6 @@ public interface JwtClaimNamesExtension {
 
     static Long getId(Jwt source) {
         return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.ID, Long.class);
-    }
-
-    static Long getDept(Jwt source) {
-        return MapUtil.get(source.getClaims(), JwtClaimNamesExtension.DEPT, Long.class);
     }
 
     static Long getTenantId(Jwt source) {

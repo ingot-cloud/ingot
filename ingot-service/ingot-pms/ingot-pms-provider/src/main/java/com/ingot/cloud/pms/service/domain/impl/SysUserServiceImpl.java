@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +45,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysRoleUserService sysRoleUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysUserTenantService sysUserTenantService;
+    private final SysUserDeptService sysUserDeptService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
@@ -60,7 +60,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 OAuth2ErrorUtils.throwInvalidRequest("用户异常");
             }
 
-            List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+            SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(userInfo.getId(), user.getTenantId());
+            List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId());
             List<String> roleCodes = roles.stream()
                     .map(SysRole::getCode).collect(Collectors.toList());
 
@@ -73,25 +74,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserDTO condition) {
-        List<String> clientIds = condition.getClientIds();
-        // 如果客户端ID不为空，那么查询客户端拥有的所有角色，和condition中的角色列表合并
-        if (CollUtil.isNotEmpty(clientIds)) {
-            Set<Long> roleIds = sysRoleService.getAllRolesOfClients(clientIds)
-                    .stream().map(SysRole::getId).collect(Collectors.toSet());
-            if (CollUtil.isNotEmpty(roleIds)) {
-                List<Long> currentRoleIds = condition.getRoleIds();
-                if (CollUtil.isNotEmpty(currentRoleIds)) {
-                    roleIds.addAll(currentRoleIds);
-                }
-                condition.setRoleIds(CollUtil.newArrayList(roleIds));
-            }
-        }
-
         Long tenantId = TenantContextHolder.get();
-        // 如果使用默认tenant，那么不进行tenant过滤
-        if (TenantContextHolder.isUseDefault()) {
-            return baseMapper.conditionPage(page, condition);
-        }
         return baseMapper.conditionPageWithTenant(page, condition, tenantId);
     }
 
@@ -217,18 +200,4 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 "SysUserServiceImpl.UpdatePasswordFailed");
     }
 
-    @Override
-    public boolean matchDept(long deptId) {
-        long count = count(lambdaQuery().eq(SysUser::getDeptId, deptId));
-        return count > 0;
-    }
-
-    @Override
-    public boolean anyMatchDept(List<Long> deptIds) {
-        if (CollUtil.isEmpty(deptIds)) {
-            return false;
-        }
-        long count = count(lambdaQuery().in(SysUser::getDeptId, deptIds));
-        return count > 0;
-    }
 }

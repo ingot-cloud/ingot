@@ -1,11 +1,11 @@
 package com.ingot.framework.security.core.userdetails;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -29,10 +29,6 @@ public class IngotUser extends User implements IngotUserDetails {
      */
     private final Long id;
     /**
-     * 部门ID
-     */
-    private final Long deptId;
-    /**
      * 租户ID
      */
     private final Long tenantId;
@@ -48,21 +44,15 @@ public class IngotUser extends User implements IngotUserDetails {
      * 用户类型 {@link com.ingot.framework.security.common.constants.UserType}
      */
     private final String userType;
-    /**
-     * 可以访问的租户
-     */
-    private final List<AllowTenantDTO> allows;
 
     @JsonCreator
     public IngotUser(Long id,
-                     Long deptId,
                      Long tenantId,
                      String clientId,
                      String tokenAuthType,
                      String userType,
                      String username,
                      String password,
-                     List<AllowTenantDTO> allows,
                      boolean enabled,
                      boolean accountNonExpired,
                      boolean credentialsNonExpired,
@@ -71,13 +61,10 @@ public class IngotUser extends User implements IngotUserDetails {
         super(username, password, enabled,
                 accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
-        this.deptId = deptId;
         this.tenantId = tenantId;
         this.tokenAuthType = tokenAuthType;
         this.clientId = clientId;
         this.userType = userType;
-        this.allows = Collections.unmodifiableList(
-                allows != null ? allows : ListUtil.empty());
     }
 
     /**
@@ -85,9 +72,9 @@ public class IngotUser extends User implements IngotUserDetails {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser simple(Long id, Long deptId, Long tenantId, String clientId,
+    public static IngotUser simple(Long id, Long tenantId, String clientId,
                                    String tokenAuthType, String userType, String username) {
-        return stateless(id, deptId, tenantId, clientId,
+        return stateless(id, tenantId, clientId,
                 tokenAuthType, userType, username, Collections.emptyList());
     }
 
@@ -96,10 +83,10 @@ public class IngotUser extends User implements IngotUserDetails {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser stateless(Long id, Long deptId, Long tenantId, String clientId,
+    public static IngotUser stateless(Long id, Long tenantId, String clientId,
                                       String tokenAuthType, String userType, String username,
                                       Collection<? extends GrantedAuthority> authorities) {
-        return standard(id, deptId, tenantId, clientId, tokenAuthType, username, N_A, userType, null,
+        return standard(id, tenantId, clientId, tokenAuthType, userType, username, N_A,
                 true, true, true, true,
                 authorities);
     }
@@ -110,19 +97,12 @@ public class IngotUser extends User implements IngotUserDetails {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser userDetails(Long id, Long deptId, String userType,
+    public static IngotUser userDetails(Long id, String userType, Long defaultTenant,
                                         String username, String password,
-                                        List<AllowTenantDTO> allows,
                                         boolean enabled, boolean accountNonExpired,
                                         boolean credentialsNonExpired, boolean accountNonLocked,
                                         Collection<? extends GrantedAuthority> authorities) {
-        Long tenantId = CollUtil.emptyIfNull(allows)
-                .stream()
-                .filter(AllowTenantDTO::getMain)
-                .map(AllowTenantDTO::getId)
-                .findFirst()
-                .orElse(null);
-        return standard(id, deptId, tenantId, N_A, N_A, userType, username, password, allows,
+        return standard(id, defaultTenant, N_A, N_A, userType, username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
                 authorities);
     }
@@ -132,15 +112,14 @@ public class IngotUser extends User implements IngotUserDetails {
      *
      * @return {@link IngotUser}
      */
-    public static IngotUser standard(Long id, Long deptId, Long tenantId, String clientId,
+    public static IngotUser standard(Long id, Long tenantId, String clientId,
                                      String tokenAuthType, String userType,
                                      String username, String password,
-                                     List<AllowTenantDTO> allows,
                                      boolean enabled, boolean accountNonExpired,
                                      boolean credentialsNonExpired, boolean accountNonLocked,
                                      Collection<? extends GrantedAuthority> authorities) {
-        return new IngotUser(id, deptId, tenantId, clientId, tokenAuthType, userType,
-                username, password, allows,
+        return new IngotUser(id, tenantId, clientId, tokenAuthType, userType,
+                username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
                 authorities);
     }
@@ -179,6 +158,11 @@ public class IngotUser extends User implements IngotUserDetails {
         return super.isEnabled();
     }
 
+    @Override
+    public List<AllowTenantDTO> getAllows() {
+        return ListUtil.list(false, IngotAuthorityUtils.extractAllowTenants(getAuthorities()));
+    }
+
     public static class Builder {
         private final String password;
         private final String username;
@@ -189,12 +173,10 @@ public class IngotUser extends User implements IngotUserDetails {
         private final boolean enabled;
 
         private final Long id;
-        private Long deptId;
         private Long tenantId;
         private String clientId;
         private String tokenAuthType;
         private String userType;
-        private List<AllowTenantDTO> allows;
 
         private Builder(IngotUser user) {
             this.password = user.getPassword();
@@ -206,17 +188,10 @@ public class IngotUser extends User implements IngotUserDetails {
             this.enabled = user.isEnabled();
 
             this.id = user.getId();
-            this.deptId = user.getDeptId();
             this.tenantId = user.getTenantId();
             this.clientId = user.getClientId();
             this.tokenAuthType = user.getTokenAuthType();
             this.userType = user.getUserType();
-            this.allows = user.getAllows();
-        }
-
-        public Builder deptId(Long id) {
-            this.deptId = id;
-            return this;
         }
 
         public Builder tenantId(Long id) {
@@ -239,15 +214,10 @@ public class IngotUser extends User implements IngotUserDetails {
             return this;
         }
 
-        public Builder allows(List<AllowTenantDTO> allows) {
-            this.allows = allows;
-            return this;
-        }
-
         public IngotUser build() {
-            return IngotUser.standard(this.id, this.deptId, this.tenantId, this.clientId, this.tokenAuthType,
+            return IngotUser.standard(this.id, this.tenantId, this.clientId, this.tokenAuthType,
                     this.userType,
-                    this.username, this.password, this.allows,
+                    this.username, this.password,
                     this.enabled, this.accountNonExpired, this.credentialsNonExpired, this.accountNonLocked,
                     this.authorities);
         }

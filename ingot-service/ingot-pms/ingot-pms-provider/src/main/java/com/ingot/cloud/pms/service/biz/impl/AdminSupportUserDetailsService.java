@@ -1,17 +1,16 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.constants.UserType;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
@@ -42,8 +41,8 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysUserTenantService sysUserTenantService;
+    private final SysUserDeptService sysUserDeptService;
 
-    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
     private final SocialProcessorManager socialProcessorManager;
     private final UserTrans userTrans;
 
@@ -82,23 +81,29 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         return Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
-
-                    UserStatusEnum userTenantStatus = CollUtil.isEmpty(allows)
-                            ? UserStatusEnum.LOCK : UserStatusEnum.ENABLE;
-                    value.setStatus(value.getStatus() == UserStatusEnum.ENABLE
-                            && userTenantStatus == UserStatusEnum.ENABLE ?
-                            UserStatusEnum.ENABLE : UserStatusEnum.LOCK);
+                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus()));
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
+                    Long defaultTenantId = CollUtil.emptyIfNull(allows)
+                            .stream()
+                            .filter(AllowTenantDTO::getMain)
+                            .map(AllowTenantDTO::getId)
+                            .findFirst()
+                            .orElse(null);
+                    long deptId = 0;
+                    if (defaultTenantId != null) {
+                        SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(user.getId(), defaultTenantId);
+                        if (userDept != null) {
+                            deptId = userDept.getDeptId();
+                        }
+                    }
                     // 查询拥有的角色
-                    List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+                    List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), deptId);
 
                     setRoles(result, roles);
-
-                    setClients(result, roles.stream().map(SysRole::getId).collect(Collectors.toList()));
                     return result;
                 }).orElse(null);
     }
@@ -109,7 +114,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        return TenantDetailsServiceImpl.getAllows(sysTenantService,
+        return BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
@@ -125,15 +130,5 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                 .stream().map(SysAuthority::getCode).collect(Collectors.toSet());
         roleCodes.addAll(authorities);
         result.setRoles(roleCodes);
-    }
-
-    private void setClients(UserDetailsResponse result, List<Long> roleIds) {
-        // 查询可访问的客户端
-        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByAdminRoles(roleIds))
-                .map(clients -> clients.stream()
-                        .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
-                .map(ListUtil::toList)
-                .orElse(ListUtil.toList());
-        result.setClients(clientIds);
     }
 }

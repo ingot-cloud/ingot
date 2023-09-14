@@ -22,10 +22,6 @@ public class UserDTO extends SysUser {
      */
     private List<Long> roleIds;
     /**
-     * 用于查询条件，可以登录的客户端ID
-     */
-    private List<String> clientIds;
-    /**
      * 密码
      */
     @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)

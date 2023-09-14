@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -29,14 +29,6 @@ public interface SysRoleService extends BaseService<SysRole> {
     List<SysRole> getAllRolesOfUser(long userId, long deptId);
 
     /**
-     * 根据clientId获取对应所有的角色
-     *
-     * @param clientIds 客户端ID列表
-     * @return 角色列表
-     */
-    List<SysRole> getAllRolesOfClients(List<String> clientIds);
-
-    /**
      * 获取用户所有可用角色
      *
      * @param userId 用户ID
@@ -49,7 +41,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      *
      * @return {@link List< Option >}
      */
-    List<Option> options();
+    List<Option<Long>> options();
 
     /**
      * 条件查询用户分页信息

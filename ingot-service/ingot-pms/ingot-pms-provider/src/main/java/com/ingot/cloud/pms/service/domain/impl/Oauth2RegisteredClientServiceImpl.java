@@ -1,22 +1,17 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.AppRoleOauthClient;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.domain.SysRoleOauthClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
-import com.ingot.cloud.pms.service.domain.AppRoleOauthClientService;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
-import com.ingot.cloud.pms.service.domain.SysRoleOauthClientService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -58,9 +53,6 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final PasswordEncoder passwordEncoder;
     private final ClientTrans clientTrans;
 
-    private final SysRoleOauthClientService sysRoleOauthClientService;
-    private final AppRoleOauthClientService appRoleOauthClientService;
-
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
     public List<Oauth2RegisteredClient> list() {
@@ -72,44 +64,6 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         return SpringContextHolder.getBean(Oauth2RegisteredClientService.class)
                 .list().stream()
                 .filter(BizFilter.clientFilter(condition)).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Oauth2RegisteredClient> getClientsByAdminRoles(List<Long> roleIds) {
-        List<String> clientIds = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                        .in(SysRoleOauthClient::getRoleId, roleIds))
-                .stream()
-                .map(SysRoleOauthClient::getClientId)
-                .collect(Collectors.toList());
-        if (CollUtil.isEmpty(clientIds)) {
-            return CollUtil.empty(List.class);
-        }
-        return list(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
-                .in(Oauth2RegisteredClient::getId, clientIds))
-                .stream()
-                .filter(client -> {
-                    String status = RegisteredClientOps.getClientStatus(client.getClientSettings());
-                    return CommonStatusEnum.getEnum(status) == CommonStatusEnum.ENABLE;
-                }).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Oauth2RegisteredClient> getClientsByAppRoles(List<Long> roleIds) {
-        List<String> clientIds = appRoleOauthClientService.list(Wrappers.<AppRoleOauthClient>lambdaQuery()
-                        .in(AppRoleOauthClient::getRoleId, roleIds))
-                .stream()
-                .map(AppRoleOauthClient::getClientId)
-                .collect(Collectors.toList());
-        if (CollUtil.isEmpty(clientIds)) {
-            return CollUtil.empty(List.class);
-        }
-        return list(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
-                .in(Oauth2RegisteredClient::getId, clientIds))
-                .stream()
-                .filter(client -> {
-                    String status = RegisteredClientOps.getClientStatus(client.getClientSettings());
-                    return CommonStatusEnum.getEnum(status) == CommonStatusEnum.ENABLE;
-                }).collect(Collectors.toList());
     }
 
     @Override
@@ -197,10 +151,6 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
             @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
     })
     public void removeClientByClientId(String id) {
-        // 取消关联
-        sysRoleOauthClientService.remove(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                .eq(SysRoleOauthClient::getClientId, id));
-
         assertI18nService.checkOperation(removeById(id),
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
     }

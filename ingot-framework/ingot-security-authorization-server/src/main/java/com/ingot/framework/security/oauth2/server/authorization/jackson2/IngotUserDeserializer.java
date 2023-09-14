@@ -35,7 +35,6 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
     private IngotUser deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
         Long id = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.ID).longValue();
-        Long deptId = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.DEPT_ID).longValue();
         Long tenantId = JsonNodeUtils.findNumberValue(root, IngotUserFieldNames.TENANT_ID).longValue();
         String clientId = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.CLIENT_ID);
         String tokenAuthType = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.TOKEN_AUTH_TYPE);
@@ -43,6 +42,6 @@ final class IngotUserDeserializer extends JsonDeserializer<IngotUser> {
         String username = JsonNodeUtils.findStringValue(root, IngotUserFieldNames.USERNAME);
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, IngotUserFieldNames.AUTHORITIES, GRANTED_AUTH_COLL, mapper);
-        return IngotUser.stateless(id, deptId, tenantId, clientId, tokenAuthType, username, userType, authorities);
+        return IngotUser.stateless(id, tenantId, clientId, tokenAuthType, username, userType, authorities);
     }
 }

@@ -18,8 +18,7 @@ public interface AppRoleService extends BaseService<AppRole> {
      * 获取用户所有可用角色，包括用户基本角色和部门角色
      *
      * @param userId 用户ID
-     * @param deptId 部门ID
      * @return 角色列表
      */
-    List<AppRole> getAllRolesOfUser(long userId, long deptId);
+    List<AppRole> getAllRolesOfUser(long userId);
 }

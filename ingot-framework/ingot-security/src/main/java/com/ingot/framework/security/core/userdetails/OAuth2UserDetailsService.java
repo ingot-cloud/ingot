@@ -2,6 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
@@ -49,15 +50,22 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                 })
                 .map(data -> {
                     List<String> userAuthorities = Optional.ofNullable(data.getRoles()).orElse(ListUtil.empty());
-                    List<String> clients = Optional.ofNullable(data.getClients()).orElse(ListUtil.empty());
-                    List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(userAuthorities) + CollUtil.size(clients));
+                    List<AllowTenantDTO> allowTenants = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
+                    List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(userAuthorities) + CollUtil.size(allowTenants));
                     authorities.addAll(AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0])));
-                    authorities.addAll(IngotAuthorityUtils.createClientAuthorityList(clients.toArray(new String[0])));
+                    authorities.addAll(IngotAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
+
+                    Long defaultTenantId = CollUtil.emptyIfNull(allowTenants)
+                            .stream()
+                            .filter(AllowTenantDTO::getMain)
+                            .map(AllowTenantDTO::getId)
+                            .findFirst()
+                            .orElse(null);
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-                    return IngotUser.userDetails(data.getId(), data.getDeptId(), data.getUserType(),
-                            data.getUsername(), data.getPassword(), data.getAllows(),
+                    return IngotUser.userDetails(data.getId(), data.getUserType(), defaultTenantId,
+                            data.getUsername(), data.getPassword(),
                             enabled, true, true, nonLocked, authorities);
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));

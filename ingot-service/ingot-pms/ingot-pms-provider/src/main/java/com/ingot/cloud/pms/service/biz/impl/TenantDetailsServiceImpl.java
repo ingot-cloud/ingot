@@ -1,15 +1,14 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.TenantDetailsService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -44,31 +41,12 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        List<AllowTenantDTO> allows = getAllows(sysTenantService,
+        List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
                         .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
         response.setAllows(allows);
         return response;
-    }
-
-    public static List<AllowTenantDTO> getAllows(SysTenantService sysTenantService,
-                                                 Set<Long> userTenantList,
-                                                 Consumer<AllowTenantDTO> mainConsumer) {
-        return sysTenantService.list(
-                        Wrappers.<SysTenant>lambdaQuery()
-                                .in(SysTenant::getId, userTenantList))
-                .stream()
-                .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
-                .map(item -> {
-                    AllowTenantDTO dto = new AllowTenantDTO();
-                    dto.setId(item.getId());
-                    dto.setName(item.getName());
-                    dto.setAvatar(item.getAvatar());
-                    mainConsumer.accept(dto);
-                    return dto;
-                })
-                .toList();
     }
 }

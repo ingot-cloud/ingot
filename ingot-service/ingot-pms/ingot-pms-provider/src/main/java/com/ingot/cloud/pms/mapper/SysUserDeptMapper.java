@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.mapper;
 
-import com.ingot.cloud.pms.api.model.domain.AppRoleOauthClient;
+import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.ingot.framework.data.mybatis.mapper.BaseMapper;
  * @author jymot
  * @since 2023-09-13
  */
-public interface AppRoleOauthClientMapper extends BaseMapper<AppRoleOauthClient> {
+public interface SysUserDeptMapper extends BaseMapper<SysUserDept> {
 
 }

@@ -40,11 +40,6 @@ public class SysUser extends BaseModel<SysUser> {
     private Long id;
 
     /**
-     * 部门ID
-     */
-    private Long deptId;
-
-    /**
      * 用户名
      */
     @NotBlank(message = "{SysUser.username}", groups = Group.Create.class)

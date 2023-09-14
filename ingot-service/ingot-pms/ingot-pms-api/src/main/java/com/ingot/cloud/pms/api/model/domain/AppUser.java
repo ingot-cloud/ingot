@@ -35,11 +35,6 @@ public class AppUser extends BaseModel<AppUser> {
     private Long id;
 
     /**
-     * 部门ID
-     */
-    private Long deptId;
-
-    /**
      * 用户名
      */
     @NotBlank(message = "{SysUser.username}", groups = Group.Create.class)

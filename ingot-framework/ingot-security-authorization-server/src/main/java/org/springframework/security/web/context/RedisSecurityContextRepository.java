@@ -7,6 +7,7 @@ import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -135,6 +137,13 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
             if (session != null) {
                 sessionId = session.getId();
             }
+        }
+
+        if (StrUtil.isEmpty(sessionId)) {
+            sessionId = Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals("JSESSIONID"))
+                    .map(Cookie::getValue)
+                    .findFirst().orElse(null);
         }
 
         return sessionId;

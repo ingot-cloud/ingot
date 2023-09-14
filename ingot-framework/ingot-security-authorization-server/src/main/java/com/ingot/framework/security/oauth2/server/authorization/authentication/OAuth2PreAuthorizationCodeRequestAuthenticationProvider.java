@@ -1,7 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
@@ -14,6 +17,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,8 +69,9 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
         }
 
         long timeToLive = registeredClient.getTokenSettings().getAccessTokenTimeToLive().getSeconds();
+        List<AllowTenantDTO> allows = ListUtil.list(false, IngotAuthorityUtils.extractAllowTenants(user.getAuthorities()));
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
-                .authenticated(user, user.getAllows(), additionalParameters, timeToLive);
+                .authenticated(user, allows, additionalParameters, timeToLive);
     }
 
     @Override

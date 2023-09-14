@@ -41,7 +41,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysDeptService sysDeptService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
-    private final SysRoleOauthClientService sysRoleOauthClientService;
     private final SysRoleUserService sysRoleUserService;
 
     private final AssertionChecker assertI18nService;
@@ -57,10 +56,12 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                         .eq(SysRoleUser::getUserId, userId))
                 .stream().map(SysRoleUser::getRoleId).collect(Collectors.toSet());
 
-        // 获取部门角色ID
-        SysDept dept = sysDeptService.getById(deptId);
         Set<Long> deptRoleIds = new HashSet<>();
-        deptRoleIds(dept, deptRoleIds);
+        // 获取部门角色ID
+        if (deptId > 0) {
+            SysDept dept = sysDeptService.getById(deptId);
+            deptRoleIds(dept, deptRoleIds);
+        }
 
         // 合并去重
         baseRoleIds.addAll(deptRoleIds);
@@ -68,16 +69,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(SysRole::getId, baseRoleIds));
-    }
-
-    @Override
-    public List<SysRole> getAllRolesOfClients(List<String> clientIds) {
-        Set<Long> roleIdSet = sysRoleOauthClientService.list(Wrappers.<SysRoleOauthClient>lambdaQuery()
-                        .in(SysRoleOauthClient::getClientId, clientIds))
-                .stream()
-                .map(SysRoleOauthClient::getRoleId)
-                .collect(Collectors.toSet());
-        return list(Wrappers.<SysRole>lambdaQuery().in(SysRole::getId, roleIdSet));
     }
 
     @Override
@@ -96,7 +87,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public List<Option> options() {
+    public List<Option<Long>> options() {
         return list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
@@ -157,11 +148,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(sysRoleDeptService.count(
                         Wrappers.<SysRoleDept>lambdaQuery()
                                 .eq(SysRoleDept::getRoleId, id)) == 0,
-                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
-        // 是否关联客户端
-        assertI18nService.checkOperation(sysRoleOauthClientService.count(
-                        Wrappers.<SysRoleOauthClient>lambdaQuery()
-                                .eq(SysRoleOauthClient::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
         // 是否关联用户
         assertI18nService.checkOperation(sysRoleUserService.count(

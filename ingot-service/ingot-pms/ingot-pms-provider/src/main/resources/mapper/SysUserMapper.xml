@@ -15,48 +15,6 @@
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
 
-    <select id="conditionPage" resultMap="UserPageItemVo">
-        SELECT u.id AS user_id,
-               u.username,
-               u.nickname,
-               u.phone,
-               u.email,
-               u.avatar,
-               u.status,
-               u.created_at,
-               u.deleted_at,
-               d.name AS dept_name
-        FROM sys_user AS u
-                 LEFT JOIN sys_dept AS d ON d.id = u.dept_id
-                 <if test="condition.roleIds != null and condition.roleIds.size > 0">
-                     LEFT JOIN sys_role_user AS ru ON ru.user_id = u.id
-                 </if>
-        WHERE
-            u.deleted_at IS NULL
-            <if test="condition.username != null and condition.username != ''">
-                AND u.username LIKE CONCAT('%', #{condition.username}, '%')
-            </if>
-            <if test="condition.nickname != null and condition.nickname != ''">
-                AND u.nickname LIKE CONCAT('%', #{condition.nickname}, '%')
-            </if>
-            <if test="condition.phone != null and condition.phone != ''">
-                AND u.phone LIKE CONCAT('%', #{condition.phone}, '%')
-            </if>
-            <if test="condition.status != null and condition.status != ''">
-                AND u.status = #{condition.status}
-            </if>
-            <if test="condition.deptId != null and condition.deptId != 0">
-                AND u.dept_id = #{condition.deptId}
-            </if>
-            <if test="condition.roleIds != null and condition.roleIds.size > 0">
-                AND ru.role_id IN
-                <foreach open="(" separator="," close=")"
-                         collection="condition.roleIds" index="index" item="item">
-                    #{item}
-                </foreach>
-            </if>
-    </select>
-
     <select id="conditionPageWithTenant" resultMap="UserPageItemVo">
         SELECT u.id AS user_id,
                u.username,
@@ -70,12 +28,15 @@
                d.name AS dept_name
         FROM sys_user_tenant AS ut
                  LEFT JOIN sys_user AS u ON u.id = ut.user_id
-                 LEFT JOIN sys_dept AS d ON d.id = u.dept_id
+                 LEFT JOIN sys_user_dept AS ud ON ud.user_id = u.id
+                 LEFT JOIN sys_dept AS d ON d.id = ud.dept_id
                  <if test="condition.roleIds != null and condition.roleIds.size > 0">
                      LEFT JOIN sys_role_user AS ru ON ru.user_id = u.id
                  </if>
         WHERE
-            ut.tenant_id = #{tenantId} AND u.deleted_at IS NULL
+            ut.tenant_id = #{tenantId}
+            AND ud.tenant_id = #{tenantId}
+            AND u.deleted_at IS NULL
         <if test="condition.username != null and condition.username != ''">
             AND u.username LIKE CONCAT('%', #{condition.username}, '%')
         </if>

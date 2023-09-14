@@ -1,20 +1,17 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.security.common.constants.UserType;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
@@ -44,7 +41,6 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
     private final AppRoleService appRoleService;
     private final AppUserTenantService appUserTenantService;
 
-    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
     private final SocialProcessorManager socialProcessorManager;
     private final UserTrans userTrans;
 
@@ -83,23 +79,16 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
         return Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
-
-                    UserStatusEnum userTenantStatus = CollUtil.isEmpty(allows)
-                            ? UserStatusEnum.LOCK : UserStatusEnum.ENABLE;
-                    value.setStatus(value.getStatus() == UserStatusEnum.ENABLE
-                            && userTenantStatus == UserStatusEnum.ENABLE ?
-                            UserStatusEnum.ENABLE : UserStatusEnum.LOCK);
+                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus()));
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
                     // 查询拥有的角色
-                    List<AppRole> roles = appRoleService.getAllRolesOfUser(user.getId(), user.getDeptId());
+                    List<AppRole> roles = appRoleService.getAllRolesOfUser(user.getId());
 
                     setRoles(result, roles);
-
-                    setClients(result, roles.stream().map(AppRole::getId).collect(Collectors.toList()));
                     return result;
                 }).orElse(null);
     }
@@ -110,7 +99,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                 Wrappers.<AppUserTenant>lambdaQuery()
                         .eq(AppUserTenant::getUserId, user.getId()));
 
-        return TenantDetailsServiceImpl.getAllows(sysTenantService,
+        return BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()
                         .map(AppUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
@@ -122,16 +111,6 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                 .map(AppRole::getCode)
                 .collect(Collectors.toList());
         result.setRoles(roleCodes);
-    }
-
-    private void setClients(UserDetailsResponse result, List<Long> roleIds) {
-        // 查询可访问的客户端
-        List<String> clientIds = Optional.ofNullable(oauth2RegisteredClientService.getClientsByAppRoles(roleIds))
-                .map(clients -> clients.stream()
-                        .map(Oauth2RegisteredClient::getClientId).collect(Collectors.toSet()))
-                .map(ListUtil::toList)
-                .orElse(ListUtil.toList());
-        result.setClients(clientIds);
     }
 
 }

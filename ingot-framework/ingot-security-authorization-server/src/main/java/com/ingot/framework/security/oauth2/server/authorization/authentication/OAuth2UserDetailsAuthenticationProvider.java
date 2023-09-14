@@ -1,9 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.core.utils.AssertionUtils;
 import com.ingot.framework.security.common.constants.TokenAuthType;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
@@ -30,8 +28,6 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.util.Assert;
-
-import java.util.Set;
 
 import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
@@ -87,7 +83,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         this.clientChecker.check(registeredClient);
         UserDetails user = retrieveUser(registeredClient, unauthenticatedToken);
         this.authenticationChecks.check(user);
-        this.additionalAuthenticationChecks(registeredClient, user, unauthenticatedToken);
+        this.additionalAuthenticationChecks(user, unauthenticatedToken);
         return createSuccessAuthentication(user, unauthenticatedToken);
     }
 
@@ -128,16 +124,8 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         }
     }
 
-    protected void additionalAuthenticationChecks(RegisteredClient registeredClient,
-                                                  UserDetails user,
+    protected void additionalAuthenticationChecks(UserDetails user,
                                                   OAuth2UserDetailsAuthenticationToken token) {
-        // 判断是否可以登陆该客户端
-        Set<String> grantClients = IngotAuthorityUtils.extractClientIds(user.getAuthorities());
-        boolean grant = grantClients.contains(registeredClient.getClientId());
-        AssertionUtils.check(grant, () -> OAuth2ErrorUtils.throwNotAllowClient(this.messages
-                .getMessage("OAuth2UserDetailsAuthenticationProvider.notAllowClient",
-                        "不允许访问客户端")));
-
         // 只有密码模式才需要进行密码验证
         if (token.getGrantType() != IngotAuthorizationGrantType.PASSWORD) {
             return;

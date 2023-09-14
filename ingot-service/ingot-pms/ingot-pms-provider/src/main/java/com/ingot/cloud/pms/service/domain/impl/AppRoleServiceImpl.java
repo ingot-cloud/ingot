@@ -29,7 +29,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
     private final AppRoleUserService appRoleUserService;
 
     @Override
-    public List<AppRole> getAllRolesOfUser(long userId, long deptId) {
+    public List<AppRole> getAllRolesOfUser(long userId) {
         // 基础角色ID
         Set<Long> baseRoleIds = appRoleUserService.list(Wrappers.<AppRoleUser>lambdaQuery()
                         .eq(AppRoleUser::getUserId, userId))

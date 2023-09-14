@@ -6,7 +6,6 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -26,22 +25,6 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
      * @return {@link Oauth2RegisteredClient} List
      */
     List<Oauth2RegisteredClient> list(Oauth2RegisteredClient condition);
-
-    /**
-     * 根据admin角色id获取对应可用的client
-     *
-     * @param roleIds 角色ID
-     * @return Oauth2RegisteredClient 列表
-     */
-    List<Oauth2RegisteredClient> getClientsByAdminRoles(@Param("list") List<Long> roleIds);
-
-    /**
-     * 根据app角色id获取对应可用的client
-     *
-     * @param roleIds 角色ID
-     * @return Oauth2RegisteredClient 列表
-     */
-    List<Oauth2RegisteredClient> getClientsByAppRoles(@Param("list") List<Long> roleIds);
 
     /**
      * 条件查询
