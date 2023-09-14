@@ -135,6 +135,16 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                         Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id)),
                 "SysUserServiceImpl.RemoveFailed");
 
+        // 取消关联租户
+        assertI18nService.checkOperation(sysUserTenantService.remove(
+                        Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id)),
+                "SysUserServiceImpl.RemoveFailed");
+
+        // 取消关联部门
+        assertI18nService.checkOperation(sysUserDeptService.remove(
+                        Wrappers.<SysUserDept>lambdaQuery().eq(SysUserDept::getUserId, id)),
+                "SysUserServiceImpl.RemoveFailed");
+
         assertI18nService.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
     }
