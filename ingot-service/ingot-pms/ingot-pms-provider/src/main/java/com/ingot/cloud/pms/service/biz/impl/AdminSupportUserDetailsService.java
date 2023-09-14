@@ -64,7 +64,14 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
         String username = request.getUsername();
+        // 1.作为手机号查询
         SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
+                .eq(SysUser::getPhone, username));
+        if (user != null) {
+            return map(user, request.getUserType(), request.getTenant());
+        }
+        // 2.作为用户名查询
+        user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getUsername, username));
         return map(user, request.getUserType(), request.getTenant());
     }
