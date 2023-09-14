@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
@@ -13,9 +14,11 @@ import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.security.common.constants.UserType;
+import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -63,7 +66,14 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
 
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
         String username = request.getUsername();
+        // 1.作为手机号查询
         AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
+                .eq(AppUser::getPhone, username));
+        if (user != null) {
+            return map(user, request.getUserType(), request.getTenant());
+        }
+        // 2.作为用户名
+        user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
                 .eq(AppUser::getUsername, username));
         return map(user, request.getUserType(), request.getTenant());
     }
@@ -76,7 +86,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
     }
 
     private UserDetailsResponse map(AppUser user, UserType userType, Long tenant) {
-        return Optional.ofNullable(user)
+        return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);
                     value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
@@ -88,9 +98,9 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                     // 查询拥有的角色
                     List<AppRole> roles = appRoleService.getAllRolesOfUser(user.getId());
 
-                    setRoles(result, roles);
+                    setRoles(result, roles, tenant);
                     return result;
-                }).orElse(null);
+                }).orElse(null));
     }
 
     private List<AllowTenantDTO> getTenantList(AppUser user) {
@@ -106,9 +116,17 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                         .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
     }
 
-    private void setRoles(UserDetailsResponse result, List<AppRole> roles) {
+    private void setRoles(UserDetailsResponse result, List<AppRole> roles, Long loginTenant) {
+        if (CollUtil.isEmpty(roles)) {
+            return;
+        }
         List<String> roleCodes = roles.stream()
-                .map(AppRole::getCode)
+                .map(item -> {
+                    if (loginTenant != null) {
+                        return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
+                    }
+                    return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
+                })
                 .collect(Collectors.toList());
         result.setRoles(roleCodes);
     }
