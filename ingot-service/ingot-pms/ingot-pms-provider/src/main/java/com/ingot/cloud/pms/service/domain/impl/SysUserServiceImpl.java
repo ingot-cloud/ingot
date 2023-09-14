@@ -101,6 +101,13 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         userTenant.setCreatedAt(DateUtils.now());
         sysUserTenantService.save(userTenant);
 
+        // 保存部门
+        SysUserDept userDept = new SysUserDept();
+        userDept.setUserId(user.getId());
+        userDept.setTenantId(TenantContextHolder.get());
+        userDept.setDeptId(params.getDeptId());
+        sysUserDeptService.save(userDept);
+
         List<Long> roles = params.getRoleIds();
         if (CollUtil.isNotEmpty(roles)) {
             boolean result = roles.stream().allMatch(roleId -> {
