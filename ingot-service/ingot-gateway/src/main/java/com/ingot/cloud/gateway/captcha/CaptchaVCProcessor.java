@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
 @Component(VCConstants.BEAN_NAME_PROCESSOR_IMAGE)
 public class CaptchaVCProcessor implements VCProcessor {
     private static final String TOKEN_ENDPOINT = "/auth" + SecurityConstants.TOKEN_ENDPOINT_URI;
+    private static final String TOKEN_PRE_AUTHORIZE = "/auth" + SecurityConstants.PRE_AUTHORIZE_URI;
     private final DefaultCaptchaVCProcessor defaultCaptchaVCProcessor;
 
     public CaptchaVCProcessor(CaptchaService captchaService) {
@@ -46,6 +47,14 @@ public class CaptchaVCProcessor implements VCProcessor {
         if (StrUtil.equals(TOKEN_ENDPOINT, path)) {
             String grantType = request.getQueryParams().getFirst("grant_type");
             if (!StrUtil.equals(grantType, SecurityConstants.GrantType.PASSWORD)) {
+                return chain.filter(exchange);
+            }
+        }
+
+        // pre_authorize模式，如果pre_grant_type是session，那么跳过
+        if (StrUtil.equals(TOKEN_PRE_AUTHORIZE, path)) {
+            String preGrantType = request.getQueryParams().getFirst("pre_grant_type");
+            if (StrUtil.equals(preGrantType, SecurityConstants.PreAuthorizationGrantType.SESSION)) {
                 return chain.filter(exchange);
             }
         }

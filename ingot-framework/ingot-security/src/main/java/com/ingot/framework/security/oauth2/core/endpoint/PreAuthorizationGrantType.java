@@ -1,5 +1,6 @@
 package com.ingot.framework.security.oauth2.core.endpoint;
 
+import com.ingot.framework.core.constants.SecurityConstants;
 import org.springframework.security.core.SpringSecurityCoreVersion;
 import org.springframework.util.Assert;
 
@@ -16,9 +17,9 @@ public record PreAuthorizationGrantType(String value) implements Serializable {
     @Serial
     private static final long serialVersionUID = SpringSecurityCoreVersion.SERIAL_VERSION_UID;
 
-    public static final PreAuthorizationGrantType PASSWORD = new PreAuthorizationGrantType("password");
-    public static final PreAuthorizationGrantType SOCIAL = new PreAuthorizationGrantType("social");
-    public static final PreAuthorizationGrantType SESSION = new PreAuthorizationGrantType("session");
+    public static final PreAuthorizationGrantType PASSWORD = new PreAuthorizationGrantType(SecurityConstants.PreAuthorizationGrantType.PASSWORD);
+    public static final PreAuthorizationGrantType SOCIAL = new PreAuthorizationGrantType(SecurityConstants.PreAuthorizationGrantType.SOCIAL);
+    public static final PreAuthorizationGrantType SESSION = new PreAuthorizationGrantType(SecurityConstants.PreAuthorizationGrantType.SESSION);
 
     public PreAuthorizationGrantType {
         Assert.hasText(value, "value cannot be empty");

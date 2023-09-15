@@ -47,4 +47,9 @@ public interface SecurityConstants {
         String SOCIAL = "social";
         String PRE_AUTHORIZATION_CODE = "pre_authorization_code";
     }
+    interface PreAuthorizationGrantType {
+        String PASSWORD = "password";
+        String SOCIAL = "social";
+        String SESSION = "session";
+    }
 }
