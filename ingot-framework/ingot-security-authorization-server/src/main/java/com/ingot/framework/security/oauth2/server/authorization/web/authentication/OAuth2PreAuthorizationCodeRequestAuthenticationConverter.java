@@ -114,7 +114,8 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
         additionalParameters.forEach((key, value) -> {
             // challenge和state过滤，不校验
             if (StrUtil.equals(key, PkceParameterNames.CODE_CHALLENGE)
-                    || StrUtil.equals(key, OAuth2ParameterNames.STATE)) {
+                    || StrUtil.equals(key, OAuth2ParameterNames.STATE)
+                    || StrUtil.equals(key, IngotOAuth2ParameterNames.PRE_GRANT_TYPE)) {
                 return;
             }
 
