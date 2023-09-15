@@ -1,6 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
@@ -10,8 +12,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationException;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.web.authentication.AuthenticationConverter;
@@ -58,26 +63,10 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
 
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof OAuth2UserDetailsAuthenticationToken userDetailsAuthentication)) {
-            return null;
-        }
-
-        if (!((userDetailsAuthentication).getClient() instanceof OAuth2ClientAuthenticationToken clientAuthentication)) {
-            return null;
-        }
-
         // pre_grant_type (REQUIRED)
         String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
         if (StrUtil.isEmpty(preGrantType)) {
             OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE, null);
-        }
-
-        // state (RECOMMENDED)
-        String state = parameters.getFirst(OAuth2ParameterNames.STATE);
-        if (StrUtil.isNotEmpty(state) &&
-                parameters.get(OAuth2ParameterNames.STATE).size() != 1) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ParameterNames.STATE, null);
         }
 
         // REQUIRED parameters
@@ -86,6 +75,26 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
                 OAuth2ErrorUtils.throwInvalidRequestParameter(field, null);
             }
         });
+
+        // state (RECOMMENDED)
+        String state = parameters.getFirst(OAuth2ParameterNames.STATE);
+        if (StrUtil.isNotEmpty(state) &&
+                parameters.get(OAuth2ParameterNames.STATE).size() != 1) {
+            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ParameterNames.STATE, null);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+            return changeChallengeAndCheck(token, parameters);
+        }
+
+        if (!(authentication instanceof OAuth2UserDetailsAuthenticationToken userDetailsAuthentication)) {
+            return null;
+        }
+
+        if (!((userDetailsAuthentication).getClient() instanceof OAuth2ClientAuthenticationToken clientAuthentication)) {
+            return null;
+        }
 
         Map<String, Object> additionalParameters = new HashMap<>();
         parameters.forEach((key, value) -> {
@@ -97,5 +106,43 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
         RegisteredClient client = clientAuthentication.getRegisteredClient();
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken.unauthenticated(
                 authentication, preGrantType, client, additionalParameters);
+    }
+
+    private OAuth2PreAuthorizationCodeRequestAuthenticationToken changeChallengeAndCheck(OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
+                                                                                         MultiValueMap<String, String> parameters) {
+        Map<String, Object> additionalParameters = token.getAdditionalParameters();
+        additionalParameters.forEach((key, value) -> {
+            // challenge和state过滤，不校验
+            if (StrUtil.equals(key, PkceParameterNames.CODE_CHALLENGE)
+                    || StrUtil.equals(key, OAuth2ParameterNames.STATE)) {
+                return;
+            }
+
+            List<String> requestValues = parameters.get(key);
+            if (CollUtil.isEmpty(requestValues)) {
+                throwError(key);
+            }
+            if (value.getClass().isArray() && !ArrayUtil.equals(ArrayUtil.toArray(requestValues, String.class), value)) {
+                throwError(key);
+            }
+            if (!StrUtil.equals(requestValues.get(0), String.valueOf(value))) {
+                throwError(key);
+            }
+        });
+
+        Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
+        newAdditionalParameters.put(PkceParameterNames.CODE_CHALLENGE, parameters.getFirst(PkceParameterNames.CODE_CHALLENGE));
+        String state = parameters.getFirst(OAuth2ParameterNames.STATE);
+        if (StrUtil.isNotEmpty(state)) {
+            newAdditionalParameters.put(OAuth2ParameterNames.STATE, state);
+        }
+
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
+                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, 0L);
+    }
+
+    private static void throwError(String parameterName) {
+        OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, null);
+        throw new OAuth2AuthorizationCodeRequestAuthenticationException(error, null);
     }
 }

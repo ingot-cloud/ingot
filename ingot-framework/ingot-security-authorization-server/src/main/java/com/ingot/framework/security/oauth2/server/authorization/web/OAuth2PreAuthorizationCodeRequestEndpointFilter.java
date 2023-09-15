@@ -41,7 +41,8 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher requestMatcher;
     private final AuthenticationConverter authenticationConverter;
-    private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendResponse;
+    private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendResponseWithNewSession;
+    private final AuthenticationSuccessHandler authenticatedSuccessHandler = this::sendResponse;
     private final AuthenticationFailureHandler authenticationFailureHandler
             = new DefaultAuthenticationFailureHandler();
 
@@ -81,6 +82,10 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
                 return;
             }
 
+            if (authenticationRequest.isAuthenticated()) {
+                this.authenticatedSuccessHandler.onAuthenticationSuccess(request, response, authenticationRequest);
+                return;
+            }
             Authentication authenticationResult = this.authenticationManager.authenticate(authenticationRequest);
             this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, authenticationResult);
         } catch (AuthenticationException ex) {
@@ -94,10 +99,8 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
                               Authentication authentication) throws IOException {
         OAuth2PreAuthorizationCodeRequestAuthenticationToken token =
                 (OAuth2PreAuthorizationCodeRequestAuthenticationToken) authentication;
-
-        // create session
-        String sessionId = request.getSession(true).getId();
-        log.debug("[OAuth2PreAuthorizationCodeRequestEndpointFilter] create new session = {}", sessionId);
+        log.debug("[OAuth2PreAuthorizationCodeRequestEndpointFilter] - sendResponse - session = {}",
+                request.getSession(false));
 
         SecurityContext context = this.securityContextHolderStrategy.createEmptyContext();
         context.setAuthentication(authentication);
@@ -106,5 +109,15 @@ public final class OAuth2PreAuthorizationCodeRequestEndpointFilter extends OnceP
 
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
         this.responseConverter.write(token, null, httpResponse);
+    }
+
+    private void sendResponseWithNewSession(HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            Authentication authentication) throws IOException {
+        // create session
+        String sessionId = request.getSession(true).getId();
+        log.debug("[OAuth2PreAuthorizationCodeRequestEndpointFilter] - sendResponseWithNewSession - create new session = {}", sessionId);
+
+        sendResponse(request, response, authentication);
     }
 }

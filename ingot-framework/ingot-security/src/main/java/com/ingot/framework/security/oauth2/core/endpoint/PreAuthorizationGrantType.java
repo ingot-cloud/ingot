@@ -18,6 +18,7 @@ public record PreAuthorizationGrantType(String value) implements Serializable {
 
     public static final PreAuthorizationGrantType PASSWORD = new PreAuthorizationGrantType("password");
     public static final PreAuthorizationGrantType SOCIAL = new PreAuthorizationGrantType("social");
+    public static final PreAuthorizationGrantType SESSION = new PreAuthorizationGrantType("session");
 
     public PreAuthorizationGrantType {
         Assert.hasText(value, "value cannot be empty");

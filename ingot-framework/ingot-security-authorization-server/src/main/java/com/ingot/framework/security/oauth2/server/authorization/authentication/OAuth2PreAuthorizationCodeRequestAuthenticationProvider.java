@@ -68,7 +68,8 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                             "用户无法访问"));
         }
 
-        long timeToLive = registeredClient.getTokenSettings().getAccessTokenTimeToLive().getSeconds();
+        // 保存会话时长，使用刷新token持续时间
+        long timeToLive = registeredClient.getTokenSettings().getRefreshTokenTimeToLive().getSeconds();
         List<AllowTenantDTO> allows = ListUtil.list(false, IngotAuthorityUtils.extractAllowTenants(user.getAuthorities()));
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
                 .authenticated(user, allows, additionalParameters, timeToLive);

@@ -7,6 +7,7 @@ import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNam
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -32,6 +33,12 @@ public class PreAuthClientAuthenticationConverter implements AuthenticationConve
     public Authentication convert(HttpServletRequest request) {
         // Must post
         if (!"POST".equals(request.getMethod())) {
+            return null;
+        }
+
+        // 如果持有已经认证的OAuth2PreAuthorizationCodeRequestAuthenticationToken, 那么不进行client认证
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (OAuth2PreAuthorizationUtils.hadOAuth2PreAuthorizationCodeRequestAuthenticationToken(authentication, request)) {
             return null;
         }
 

@@ -1,5 +1,6 @@
 package org.springframework.security.web.context;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,8 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class RedisSecurityContextRepository implements SecurityContextRepository, SecurityContextRevokeRepository {
+    // 默认12小时过期
+    private static final long DEFAULT_TIMEOUT_SECONDS = 3600 * 12;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -68,19 +71,30 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         SecurityContext emptyContext = this.securityContextHolderStrategy.createEmptyContext();
         if (emptyContext.equals(context)) {
             redisTemplate.delete(key);
-        } else {
-            try {
-                // 默认半小时过期
-                long timeout = 1800;
-                Authentication authentication = context.getAuthentication();
-                if (authentication instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
-                    timeout = token.getTimeToLive();
-                }
+            return;
+        }
+        try {
+            // 1. 如果该session已经保存过，那么执行更新流程
+            Boolean has = redisTemplate.hasKey(key);
+            if (BooleanUtil.isTrue(has)) {
                 String value = this.objectMapper.writeValueAsString(context);
-                redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
-            } catch (JsonProcessingException e) {
-                log.warn("[RedisSecurityContextRepository] 保存 SecurityContext 失败", e);
+                Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+                if (expire != null) {
+                    redisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
+                    return;
+                }
             }
+
+            // 2. 没保存过，则进行保存
+            long timeout = DEFAULT_TIMEOUT_SECONDS;
+            Authentication authentication = context.getAuthentication();
+            if (authentication instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+                timeout = token.getTimeToLive();
+            }
+            String value = this.objectMapper.writeValueAsString(context);
+            redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            log.warn("[RedisSecurityContextRepository] 保存 SecurityContext 失败", e);
         }
     }
 
@@ -139,7 +153,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
             }
         }
 
-        if (StrUtil.isEmpty(sessionId)) {
+        if (StrUtil.isEmpty(sessionId) && request.getCookies() != null) {
             sessionId = Arrays.stream(request.getCookies())
                     .filter(cookie -> cookie.getName().equals("JSESSIONID"))
                     .map(Cookie::getValue)
