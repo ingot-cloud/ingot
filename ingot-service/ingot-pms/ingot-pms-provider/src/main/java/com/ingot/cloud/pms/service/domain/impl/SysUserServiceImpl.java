@@ -12,8 +12,10 @@ import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -45,6 +47,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysRoleUserService sysRoleUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysUserTenantService sysUserTenantService;
+    private final SysTenantService sysTenantService;
     private final SysUserDeptService sysUserDeptService;
 
     private final PasswordEncoder passwordEncoder;
@@ -65,9 +68,22 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             List<String> roleCodes = roles.stream()
                     .map(SysRole::getCode).collect(Collectors.toList());
 
+            // 获取可以访问的租户列表
+            List<SysUserTenant> userTenantList = sysUserTenantService.list(
+                    Wrappers.<SysUserTenant>lambdaQuery()
+                            .eq(SysUserTenant::getUserId, user.getId()));
+            List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService,
+                    userTenantList.stream()
+                            .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
+                    (item) -> {
+                        // main=true，为当前登录的租户
+                        item.setMain(item.getId() == user.getTenantId());
+                    });
+
             UserInfoDTO result = new UserInfoDTO();
             result.setUser(userTrans.toUserBaseInfo(userInfo));
             result.setRoles(roleCodes);
+            result.setAllows(allows);
             return result;
         });
     }

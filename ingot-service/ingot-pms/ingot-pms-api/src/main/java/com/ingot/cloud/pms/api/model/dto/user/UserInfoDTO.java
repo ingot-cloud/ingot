@@ -1,9 +1,10 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
+import com.ingot.framework.core.model.common.AllowTenantDTO;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.List;
-
-import lombok.Data;
 
 /**
  * <p>Description  : UserInfoDTO.</p>
@@ -21,4 +22,8 @@ public class UserInfoDTO implements Serializable {
      * 拥有角色
      */
     private List<String> roles;
+    /**
+     * 可以访问的租户
+     */
+    private List<AllowTenantDTO> allows;
 }
