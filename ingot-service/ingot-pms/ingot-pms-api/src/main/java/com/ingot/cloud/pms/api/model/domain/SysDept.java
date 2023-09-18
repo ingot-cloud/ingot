@@ -1,9 +1,5 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.NotNull;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -12,8 +8,11 @@ import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -56,6 +55,11 @@ public class SysDept extends BaseModel<SysDept> {
      * 排序
      */
     private Integer sort;
+
+    /**
+     * 主部门标识
+     */
+    private Boolean mainFlag;
 
     /**
      * 状态, 0:正常，9:禁用

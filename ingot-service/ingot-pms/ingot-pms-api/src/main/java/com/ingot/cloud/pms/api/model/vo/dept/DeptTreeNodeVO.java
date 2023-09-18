@@ -32,6 +32,11 @@ public class DeptTreeNodeVO extends TreeNode<Long> {
     private Integer sort;
 
     /**
+     * 主部门标识
+     */
+    private Boolean mainFlag;
+
+    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
