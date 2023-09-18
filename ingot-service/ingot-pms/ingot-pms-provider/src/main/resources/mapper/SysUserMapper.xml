@@ -47,11 +47,12 @@
         <if test="condition.status != null and condition.status != ''">
             AND u.status = #{condition.status}
         </if>
-        <if test="condition.deptId != null and condition.deptId != 0">
+        <if test="condition.deptId != null and condition.deptId > 0">
             AND ud.tenant_id = #{tenantId}
             AND ud.dept_id = #{condition.deptId}
         </if>
         <if test="condition.roleId != null and condition.roleId > 0">
+            AND ru.tenant_id = #{tenantId}
             AND ru.role_id = #{condition.roleId}
         </if>
     </select>

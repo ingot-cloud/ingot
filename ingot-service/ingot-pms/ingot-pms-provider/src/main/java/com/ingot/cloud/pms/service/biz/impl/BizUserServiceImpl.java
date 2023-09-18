@@ -56,6 +56,10 @@ public class BizUserServiceImpl implements BizUserService {
                     .map(SysRole::getId).collect(Collectors.toList()));
         }
 
+        SysUserDept userDept = sysUserDeptService.getOne(Wrappers.<SysUserDept>lambdaQuery()
+                .eq(SysUserDept::getUserId, id));
+        profile.setDeptId(userDept.getDeptId());
+
         return profile;
     }
 
