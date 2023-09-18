@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
@@ -89,7 +90,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserDTO condition) {
+    public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition) {
         Long tenantId = TenantContextHolder.get();
         return baseMapper.conditionPageWithTenant(page, condition, tenantId);
     }

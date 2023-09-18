@@ -6,6 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -35,7 +36,7 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param condition 筛选条件
      * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
      */
-    IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserDTO condition);
+    IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition);
 
     /**
      * 创建用户

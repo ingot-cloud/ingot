@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.mapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
@@ -27,6 +27,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
      */
     IPage<UserPageItemVO> conditionPageWithTenant(Page<SysUser> page,
-                                                  @Param("condition") UserDTO condition,
+                                                  @Param("condition") UserQueryDTO condition,
                                                   @Param("tenantId") Long tenantId);
 }
