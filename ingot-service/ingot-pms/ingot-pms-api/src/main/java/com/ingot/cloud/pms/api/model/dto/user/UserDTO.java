@@ -24,7 +24,7 @@ public class UserDTO extends SysUser {
     /**
      * 部门ID
      */
-    private Long deptId;
+    private List<Long> deptIds;
     /**
      * 密码
      */

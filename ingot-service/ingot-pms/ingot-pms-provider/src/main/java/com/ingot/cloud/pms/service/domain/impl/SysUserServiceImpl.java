@@ -15,6 +15,7 @@ import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
+import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
@@ -49,7 +50,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysUserSocialService sysUserSocialService;
     private final SysUserTenantService sysUserTenantService;
     private final SysTenantService sysTenantService;
-    private final SysUserDeptService sysUserDeptService;
+    private final SysDeptService sysDeptService;
+    private final BizDeptService bizDeptService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
@@ -64,7 +66,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 OAuth2ErrorUtils.throwInvalidRequest("用户异常");
             }
 
-            SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(userInfo.getId(), user.getTenantId());
+            SysUserDept userDept = sysDeptService.getByUserIdAndTenant(userInfo.getId(), user.getTenantId());
             List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId());
             List<String> roleCodes = roles.stream()
                     .map(SysRole::getCode).collect(Collectors.toList());
@@ -110,33 +112,12 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
 
-        // 第一次创建为主要租户
-        SysUserTenant userTenant = new SysUserTenant();
-        userTenant.setUserId(user.getId());
-        userTenant.setTenantId(TenantContextHolder.get());
-        userTenant.setMain(Boolean.TRUE);
-        userTenant.setCreatedAt(DateUtils.now());
-        sysUserTenantService.save(userTenant);
-
-        // 保存部门
-        SysUserDept userDept = new SysUserDept();
-        userDept.setUserId(user.getId());
-        userDept.setTenantId(TenantContextHolder.get());
-        userDept.setDeptId(params.getDeptId());
-        sysUserDeptService.save(userDept);
-
-        List<Long> roles = params.getRoleIds();
-        if (CollUtil.isNotEmpty(roles)) {
-            boolean result = roles.stream().allMatch(roleId -> {
-                SysRoleUser entity = new SysRoleUser();
-                entity.setUserId(user.getId());
-                entity.setRoleId(roleId);
-                return entity.insert();
-            });
-            assertI18nService.checkOperation(result,
-                    "SysUserServiceImpl.CreateFailed");
-        }
-
+        // 加入租户
+        sysUserTenantService.joinTenant(user.getId());
+        // 设置部门
+        bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
+        // 设置角色
+        sysRoleUserService.setUserRoles(user.getId(), params.getRoleIds());
         return user;
     }
 
@@ -148,9 +129,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 "SysUserServiceImpl.RemoveFailed");
 
         // 取消关联社交信息
-        assertI18nService.checkOperation(sysUserSocialService.remove(
-                        Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id)),
-                "SysUserServiceImpl.RemoveFailed");
+        sysUserSocialService.remove(
+                Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id));
 
         // 取消关联租户
         assertI18nService.checkOperation(sysUserTenantService.remove(
@@ -158,9 +138,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 "SysUserServiceImpl.RemoveFailed");
 
         // 取消关联部门
-        assertI18nService.checkOperation(sysUserDeptService.remove(
-                        Wrappers.<SysUserDept>lambdaQuery().eq(SysUserDept::getUserId, id)),
-                "SysUserServiceImpl.RemoveFailed");
+        sysDeptService.setDepts(id, null);
 
         assertI18nService.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
@@ -185,7 +163,11 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         if (CollUtil.isNotEmpty(params.getRoleIds())) {
             // 更新角色
-            sysRoleUserService.updateUserRole(userId, params.getRoleIds());
+            sysRoleUserService.setUserRoles(userId, params.getRoleIds());
+        }
+        if (CollUtil.isNotEmpty(params.getDeptIds())) {
+            // 更新部门
+            bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
         }
     }
 

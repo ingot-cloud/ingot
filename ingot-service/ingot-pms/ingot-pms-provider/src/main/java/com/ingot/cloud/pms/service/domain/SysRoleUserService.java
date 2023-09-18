@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -33,7 +33,7 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
      * @param userId 用户ID
      * @param roles  待设置的角色
      */
-    void updateUserRole(long userId, List<Long> roles);
+    void setUserRoles(long userId, List<Long> roles);
 
     /**
      * 用户绑定角色

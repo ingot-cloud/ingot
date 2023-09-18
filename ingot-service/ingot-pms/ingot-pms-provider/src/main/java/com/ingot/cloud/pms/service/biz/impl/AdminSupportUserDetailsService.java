@@ -40,7 +40,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysUserTenantService sysUserTenantService;
-    private final SysUserDeptService sysUserDeptService;
+    private final SysDeptService sysDeptService;
 
     private final SocialProcessorManager socialProcessorManager;
     private final UserTrans userTrans;
@@ -97,13 +97,12 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                     // 查询拥有的角色
                     List<SysRole> roles = new ArrayList<>();
                     if (tenant != null) {
-                        SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(user.getId(), tenant);
+                        SysUserDept userDept = sysDeptService.getByUserIdAndTenant(user.getId(), tenant);
                         if (userDept != null) {
                             roles.addAll(sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId()));
                         }
                     } else {
-                        List<Long> deptIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
-                                        .eq(SysUserDept::getUserId, user.getId())))
+                        List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(user.getId()))
                                 .stream().map(SysUserDept::getDeptId).toList();
                         deptIds.forEach(deptId -> roles.addAll(sysRoleService.getRolesOfDept(deptId)));
                     }

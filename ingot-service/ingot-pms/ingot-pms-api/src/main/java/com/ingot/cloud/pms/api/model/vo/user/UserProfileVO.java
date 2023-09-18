@@ -20,7 +20,7 @@ public class UserProfileVO implements Serializable {
     /**
      * 部门ID
      */
-    private Long deptId;
+    private List<Long> deptIds;
 
     /**
      * 角色ID

@@ -1,10 +1,11 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -51,4 +52,36 @@ public interface SysDeptService extends BaseService<SysDept> {
      * @param params 参数
      */
     void updateDept(SysDept params);
+
+    /**
+     * 获取主要部门
+     *
+     * @return {@link SysDept}
+     */
+    SysDept getMainDept();
+
+    /**
+     * 根据用户ID和租户ID获取{@link SysUserDept}
+     *
+     * @param userId   用户ID
+     * @param tenantId 租户ID
+     * @return {@link SysUserDept}
+     */
+    SysUserDept getByUserIdAndTenant(long userId, long tenantId);
+
+    /**
+     * 设置部门
+     *
+     * @param userId  用户ID
+     * @param deptIds 部门ID列表
+     */
+    void setDepts(long userId, List<Long> deptIds);
+
+    /**
+     * 获取用户部门ID列表
+     *
+     * @param userId 用户ID
+     * @return List
+     */
+    List<SysUserDept> getUserDepts(long userId);
 }

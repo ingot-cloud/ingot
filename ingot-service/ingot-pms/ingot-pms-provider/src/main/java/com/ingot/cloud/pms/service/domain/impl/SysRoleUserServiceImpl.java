@@ -1,7 +1,5 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.List;
-
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -14,6 +12,8 @@ import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * <p>
@@ -42,7 +42,7 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUserRole(long userId, List<Long> roles) {
+    public void setUserRoles(long userId, List<Long> roles) {
         long userCount = count(Wrappers.<SysRoleUser>lambdaQuery().eq(SysRoleUser::getUserId, userId));
         if (userCount != 0) {
             assertionChecker.checkOperation(removeByUserId(userId),
@@ -52,13 +52,24 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
         if (CollUtil.isEmpty(roles)) {
             return;
         }
-        boolean result = roles.stream().allMatch(roleId -> {
+
+        if (CollUtil.size(roles) == 1) {
             SysRoleUser entity = new SysRoleUser();
             entity.setUserId(userId);
-            entity.setRoleId(roleId);
-            return entity.insert();
-        });
-        assertionChecker.checkOperation(result,
+            entity.setRoleId(roles.get(0));
+            save(entity);
+            return;
+        }
+
+        List<SysRoleUser> roleUsers = roles.stream()
+                .map(roleId -> {
+                    SysRoleUser entity = new SysRoleUser();
+                    entity.setUserId(userId);
+                    entity.setRoleId(roleId);
+                    return entity;
+                }).toList();
+
+        assertionChecker.checkOperation(saveBatch(roleUsers),
                 "SysRoleUserServiceImpl.UpdateRoleFailed");
     }
 

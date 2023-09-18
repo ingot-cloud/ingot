@@ -3,10 +3,7 @@ package com.ingot.cloud.pms.service.biz.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.domain.SysUserDept;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
@@ -36,7 +33,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
-    private final SysUserDeptService sysUserDeptService;
+    private final SysDeptService sysDeptService;
     private final SysMenuService sysMenuService;
     private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
@@ -56,9 +53,9 @@ public class BizUserServiceImpl implements BizUserService {
                     .map(SysRole::getId).collect(Collectors.toList()));
         }
 
-        SysUserDept userDept = sysUserDeptService.getOne(Wrappers.<SysUserDept>lambdaQuery()
-                .eq(SysUserDept::getUserId, id));
-        profile.setDeptId(userDept.getDeptId());
+        List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(id))
+                .stream().map(SysUserDept::getDeptId).toList();
+        profile.setDeptIds(deptIds);
 
         return profile;
     }
@@ -92,7 +89,7 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public List<MenuTreeNodeVO> getUserMenus(IngotUser user) {
-        SysUserDept userDept = sysUserDeptService.getByUserIdAndTenant(user.getId(), user.getTenantId());
+        SysUserDept userDept = sysDeptService.getByUserIdAndTenant(user.getId(), user.getTenantId());
         List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId());
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
         return sysMenuService.getMenuByAuthorities(authorities);

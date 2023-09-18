@@ -10,4 +10,10 @@ import com.ingot.framework.data.mybatis.service.BaseService;
  * <p>Time         : 11:44 AM.</p>
  */
 public interface SysUserTenantService extends BaseService<SysUserTenant> {
+
+    /**
+     * 加入租户
+     * @param userId 用户ID
+     */
+    void joinTenant(long userId);
 }

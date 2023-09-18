@@ -1,14 +1,17 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
+import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
+import com.ingot.cloud.pms.service.domain.SysUserDeptService;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
@@ -35,6 +38,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
     private final SysRoleDeptService sysRoleDeptService;
+    private final SysUserDeptService sysUserDeptService;
 
     private final DeptTrans deptTrans;
     private final AssertionChecker assertI18nService;
@@ -98,5 +102,56 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysDeptServiceImpl.UpdateFailed");
+    }
+
+    @Override
+    public SysDept getMainDept() {
+        return getOne(Wrappers.<SysDept>lambdaQuery()
+                .eq(SysDept::getMainFlag, Boolean.TRUE));
+    }
+
+    @Override
+    public SysUserDept getByUserIdAndTenant(long userId, long tenantId) {
+        return sysUserDeptService.getOne(Wrappers.<SysUserDept>lambdaQuery()
+                .eq(SysUserDept::getUserId, userId)
+                .eq(SysUserDept::getTenantId, tenantId));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void setDepts(long userId, List<Long> deptIds) {
+        // 先清空部门
+        long userCount = sysUserDeptService.count(Wrappers.<SysUserDept>lambdaQuery().eq(SysUserDept::getUserId, userId));
+        if (userCount != 0) {
+            sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
+                    .eq(SysUserDept::getUserId, userId));
+        }
+
+        if (CollUtil.isEmpty(deptIds)) {
+            return;
+        }
+
+        if (CollUtil.size(deptIds) == 1) {
+            SysUserDept item = new SysUserDept();
+            item.setUserId(userId);
+            item.setDeptId(deptIds.get(0));
+            sysUserDeptService.save(item);
+            return;
+        }
+
+        List<SysUserDept> list = deptIds.stream().map(deptId -> {
+            SysUserDept item = new SysUserDept();
+            item.setUserId(userId);
+            item.setDeptId(deptId);
+            return item;
+        }).toList();
+
+        sysUserDeptService.saveBatch(list);
+    }
+
+    @Override
+    public List<SysUserDept> getUserDepts(long userId) {
+        return sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
+                .eq(SysUserDept::getUserId, userId));
     }
 }

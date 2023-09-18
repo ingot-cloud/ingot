@@ -5,7 +5,6 @@ import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.mapper.SysUserDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysUserDeptService;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
-import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.stereotype.Service;
 
 /**
