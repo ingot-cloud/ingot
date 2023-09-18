@@ -1,27 +1,27 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
-import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -74,6 +74,9 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeDeptById(long id) {
+        SysDept dept = getById(id);
+        assertI18nService.checkOperation(dept != null, "SysDeptServiceImpl.NonExist");
+
         boolean success = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id)) == 0;
         assertI18nService.checkOperation(success, "SysDeptServiceImpl.ExistLeaf");
 
