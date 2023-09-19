@@ -42,7 +42,6 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleUserService sysRoleUserService;
-    private final SysUserDeptService sysUserDeptService;
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
