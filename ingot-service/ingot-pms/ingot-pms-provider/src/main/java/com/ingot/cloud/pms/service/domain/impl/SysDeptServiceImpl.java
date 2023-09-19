@@ -110,13 +110,6 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
                 .eq(SysDept::getMainFlag, Boolean.TRUE));
     }
 
-    @Override
-    public SysUserDept getByUserIdAndTenant(long userId, long tenantId) {
-        return sysUserDeptService.getOne(Wrappers.<SysUserDept>lambdaQuery()
-                .eq(SysUserDept::getUserId, userId)
-                .eq(SysUserDept::getTenantId, tenantId));
-    }
-
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void setDepts(long userId, List<Long> deptIds) {

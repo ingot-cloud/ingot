@@ -66,8 +66,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 OAuth2ErrorUtils.throwInvalidRequest("用户异常");
             }
 
-            SysUserDept userDept = sysDeptService.getByUserIdAndTenant(userInfo.getId(), user.getTenantId());
-            List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId());
+            List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
             List<String> roleCodes = roles.stream()
                     .map(SysRole::getCode).collect(Collectors.toList());
 

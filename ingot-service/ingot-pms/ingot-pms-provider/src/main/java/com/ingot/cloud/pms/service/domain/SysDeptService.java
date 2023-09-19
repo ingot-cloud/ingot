@@ -61,15 +61,6 @@ public interface SysDeptService extends BaseService<SysDept> {
     SysDept getMainDept();
 
     /**
-     * 根据用户ID和租户ID获取{@link SysUserDept}
-     *
-     * @param userId   用户ID
-     * @param tenantId 租户ID
-     * @return {@link SysUserDept}
-     */
-    SysUserDept getByUserIdAndTenant(long userId, long tenantId);
-
-    /**
      * 设置部门
      *
      * @param userId  用户ID

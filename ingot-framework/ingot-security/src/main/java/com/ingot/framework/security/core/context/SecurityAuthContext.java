@@ -1,6 +1,9 @@
 package com.ingot.framework.security.core.context;
 
+import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,6 +53,25 @@ public final class SecurityAuthContext {
      */
     public static IngotUser getUser() {
         return getUser(getAuthentication());
+    }
+
+    /**
+     * 是否为管理员
+     *
+     * @return Boolean
+     */
+    public static boolean isAdmin() {
+        Authentication authentication = getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+
+        String adminAuthority = (IngotJwtAuthenticationConverter.AUTHORITY_PREFIX + RoleConstants.ROLE_ADMIN_CODE)
+                .toUpperCase();
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(StrUtil::isNotEmpty)
+                .map(String::toUpperCase).anyMatch(scope -> StrUtil.equals(scope, adminAuthority));
     }
 
     /**

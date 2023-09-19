@@ -95,17 +95,8 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                     result.setAllows(allows);
 
                     // 查询拥有的角色
-                    List<SysRole> roles = new ArrayList<>();
-                    if (tenant != null) {
-                        SysUserDept userDept = sysDeptService.getByUserIdAndTenant(user.getId(), tenant);
-                        if (userDept != null) {
-                            roles.addAll(sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId()));
-                        }
-                    } else {
-                        List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(user.getId()))
-                                .stream().map(SysUserDept::getDeptId).toList();
-                        deptIds.forEach(deptId -> roles.addAll(sysRoleService.getRolesOfDept(deptId)));
-                    }
+                    List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
+
                     setRoles(result, roles, tenant);
                     return result;
                 }).orElse(null));

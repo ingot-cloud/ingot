@@ -9,6 +9,7 @@ import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,27 +43,28 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/page")
     public R<?> page(Page<SysRole> page, SysRole condition) {
-        return ok(sysRoleService.conditionPage(page, condition));
+        log.info("aaa={}", SecurityAuthContext.isAdmin());
+        return ok(sysRoleService.conditionPage(page, condition, SecurityAuthContext.isAdmin()));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
-        sysRoleService.createRole(params);
+        sysRoleService.createRole(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
-        sysRoleService.updateRoleById(params);
+        sysRoleService.updateRoleById(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        sysRoleService.removeRoleById(id);
+        sysRoleService.removeRoleById(id, SecurityAuthContext.isAdmin());
         return ok();
     }
 

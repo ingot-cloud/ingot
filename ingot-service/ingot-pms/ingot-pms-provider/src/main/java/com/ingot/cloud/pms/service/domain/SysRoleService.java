@@ -20,23 +20,6 @@ import java.util.List;
 public interface SysRoleService extends BaseService<SysRole> {
 
     /**
-     * 获取用户所有可用角色，包括用户基本角色和部门角色
-     *
-     * @param userId 用户ID
-     * @param deptId 部门ID
-     * @return 角色列表
-     */
-    List<SysRole> getAllRolesOfUser(long userId, long deptId);
-
-    /**
-     * 获取部门权限
-     *
-     * @param deptId 部门权限
-     * @return 角色列表
-     */
-    List<SysRole> getRolesOfDept(long deptId);
-
-    /**
      * 获取用户所有可用角色
      *
      * @param userId 用户ID
@@ -56,9 +39,10 @@ public interface SysRoleService extends BaseService<SysRole> {
      *
      * @param page      分页条件
      * @param condition 筛选条件
+     * @param isAdmin   是否为超级管理员
      * @return {@link IPage}，数据项结构 {@link RolePageItemVO}
      */
-    IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition);
+    IPage<RolePageItemVO> conditionPage(Page<SysRole> page, SysRole condition, boolean isAdmin);
 
     /**
      * 根据角色编码获取角色
@@ -71,21 +55,24 @@ public interface SysRoleService extends BaseService<SysRole> {
     /**
      * 创建角色
      *
-     * @param params 创建参数
+     * @param params  创建参数
+     * @param isAdmin 是否为超级管理员
      */
-    void createRole(SysRole params);
+    void createRole(SysRole params, boolean isAdmin);
 
     /**
      * 根据ID删除角色
      *
-     * @param id 角色ID
+     * @param id      角色ID
+     * @param isAdmin 是否为超级管理员
      */
-    void removeRoleById(long id);
+    void removeRoleById(long id, boolean isAdmin);
 
     /**
      * 根据ID更新角色
      *
-     * @param params 更新参数
+     * @param params  更新参数
+     * @param isAdmin 是否为超级管理员
      */
-    void updateRoleById(SysRole params);
+    void updateRoleById(SysRole params, boolean isAdmin);
 }

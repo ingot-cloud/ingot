@@ -89,8 +89,7 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public List<MenuTreeNodeVO> getUserMenus(IngotUser user) {
-        SysUserDept userDept = sysDeptService.getByUserIdAndTenant(user.getId(), user.getTenantId());
-        List<SysRole> roles = sysRoleService.getAllRolesOfUser(user.getId(), userDept.getDeptId());
+        List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
         return sysMenuService.getMenuByAuthorities(authorities);
     }
