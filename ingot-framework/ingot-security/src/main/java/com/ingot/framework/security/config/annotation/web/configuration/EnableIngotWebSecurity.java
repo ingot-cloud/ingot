@@ -4,8 +4,6 @@ import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 import java.lang.annotation.*;
 
@@ -18,11 +16,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@EnableWebSecurity(debug = true)
 @EnableConfigurationProperties({IngotSecurityProperties.class, IngotOAuth2ResourceProperties.class})
 @Import({IngotOAuth2ResourceServerConfiguration.class,
         IngotOAuth2ResourceServerJwtConfiguration.class,
         PasswordEncoderConfiguration.class})
-@EnableMethodSecurity
 public @interface EnableIngotWebSecurity {
 }
