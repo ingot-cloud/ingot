@@ -6,8 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
@@ -23,7 +24,6 @@ import com.ingot.framework.security.common.utils.RoleUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,9 +41,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
-    private final SysDeptService sysDeptService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysRoleDeptService sysRoleDeptService;
     private final SysRoleUserService sysRoleUserService;
 
     private final AssertionChecker assertI18nService;
@@ -140,11 +138,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                         Wrappers.<SysRoleAuthority>lambdaQuery()
                                 .eq(SysRoleAuthority::getRoleId, id)) == 0,
                 "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
-        // 是否关联部门
-        assertI18nService.checkOperation(sysRoleDeptService.count(
-                        Wrappers.<SysRoleDept>lambdaQuery()
-                                .eq(SysRoleDept::getRoleId, id)) == 0,
-                "SysRoleServiceImpl.RemoveFailedExistRelationInfo");
+
         // 是否关联用户
         assertI18nService.checkOperation(sysRoleUserService.count(
                         Wrappers.<SysRoleUser>lambdaQuery()
@@ -180,33 +174,5 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.UpdateFailed");
 
         roleCache.remove(role.getCode());
-    }
-
-    private void deptRoleIds(SysDept dept, Set<Long> deptRoleIds) {
-        if (dept == null) {
-            return;
-        }
-        DeptRoleScopeEnum scope = dept.getScope();
-        switch (scope) {
-            // 获取当前部门和子部门的角色ID
-            case CURRENT_CHILD:
-                // 获取可用的 children
-                List<SysDept> children = sysDeptService.list(Wrappers.<SysDept>lambdaQuery()
-                        .eq(SysDept::getPid, dept.getId())
-                        .eq(SysDept::getStatus, CommonStatusEnum.ENABLE));
-
-                if (!CollUtil.isEmpty(children)) {
-                    for (SysDept childDept : children) {
-                        deptRoleIds(childDept, deptRoleIds);
-                    }
-                }
-
-                // 获取当前部门角色ID
-            case CURRENT:
-                deptRoleIds.addAll(sysRoleDeptService.list(Wrappers.<SysRoleDept>lambdaQuery()
-                                .eq(SysRoleDept::getDeptId, dept))
-                        .stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet()));
-                break;
-        }
     }
 }

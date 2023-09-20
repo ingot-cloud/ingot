@@ -30,9 +30,6 @@ public class AdminRoleAPI implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysDeptService sysDeptService;
-    private final SysRoleDeptService sysRoleDeptService;
-    private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/options")
@@ -83,23 +80,5 @@ public class AdminRoleAPI implements RShortcuts {
             return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
         }
         return ok(sysAuthorityService.treeList(condition));
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
-    @PutMapping("/bindDept")
-    public R<?> bindDept(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleDeptService.roleBindDepts(params);
-        return ok();
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
-    @GetMapping("/bindDept/{id}")
-    public R<?> getBindDepts(@PathVariable Long id,
-                             @RequestParam("isBind") boolean isBind,
-                             SysDept condition) {
-        if (isBind) {
-            return ok(sysRoleDeptService.getRoleDepts(id, condition));
-        }
-        return ok(sysDeptService.treeList(condition));
     }
 }

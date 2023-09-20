@@ -3,14 +3,12 @@ package com.ingot.cloud.pms.service.domain.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRoleDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleDeptService;
 import com.ingot.cloud.pms.service.domain.SysUserDeptService;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -37,7 +35,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
-    private final SysRoleDeptService sysRoleDeptService;
     private final SysUserDeptService sysUserDeptService;
 
     private final DeptTrans deptTrans;
@@ -83,15 +80,6 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
 
         boolean success = count(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getPid, id)) == 0;
         assertI18nService.checkOperation(success, "SysDeptServiceImpl.ExistLeaf");
-
-        // 取消关联角色
-        long count = sysRoleDeptService.count(Wrappers.<SysRoleDept>lambdaQuery()
-                .eq(SysRoleDept::getDeptId, id));
-        if (count > 0) {
-            success = sysRoleDeptService.remove(Wrappers.<SysRoleDept>lambdaQuery()
-                    .eq(SysRoleDept::getDeptId, id));
-            assertI18nService.checkOperation(success, "SysDeptServiceImpl.RemoveFailed");
-        }
 
         success = removeById(id);
         assertI18nService.checkOperation(success, "SysDeptServiceImpl.RemoveFailed");
