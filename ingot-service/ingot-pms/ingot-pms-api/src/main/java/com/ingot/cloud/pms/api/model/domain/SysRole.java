@@ -65,11 +65,6 @@ public class SysRole extends BaseModel<SysRole> {
     private CommonStatusEnum status;
 
     /**
-     * 备注
-     */
-    private String remark;
-
-    /**
      * 创建日期
      */
     private LocalDateTime createdAt;
