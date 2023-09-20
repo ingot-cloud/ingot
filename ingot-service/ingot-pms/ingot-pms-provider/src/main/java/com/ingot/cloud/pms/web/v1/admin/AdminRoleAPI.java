@@ -2,9 +2,10 @@ package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -34,7 +35,13 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/options")
     public R<?> options() {
-        return ok(sysRoleService.options());
+        return ok(sysRoleService.options(SecurityAuthContext.isAdmin()));
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
+    @GetMapping("/list")
+    public R<?> list(SysRole condition) {
+        return ok(sysRoleService.conditionList(condition, SecurityAuthContext.isAdmin()));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")

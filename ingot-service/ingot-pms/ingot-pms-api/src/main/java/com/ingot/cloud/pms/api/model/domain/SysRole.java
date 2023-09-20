@@ -43,6 +43,11 @@ public class SysRole extends BaseModel<SysRole> {
     private Long tenantId;
 
     /**
+     * 组ID
+     */
+    private Long groupId;
+
+    /**
      * 角色名称
      */
     @NotBlank(message = "{SysRole.name}", groups = Group.Create.class)

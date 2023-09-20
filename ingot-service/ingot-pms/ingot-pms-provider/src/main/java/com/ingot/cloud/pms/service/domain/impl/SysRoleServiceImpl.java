@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
 public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleUserService sysRoleUserService;
+    private final SysRoleGroupService sysRoleGroupService;
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
@@ -65,11 +68,31 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public List<Option<Long>> options() {
+    public List<Option<Long>> options(boolean isAdmin) {
         return list(Wrappers.<SysRole>lambdaQuery()
+                .in(!isAdmin, SysRole::getType,
+                        ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom))
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
                 .map(roleTrans::option).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<RolePageItemVO> conditionList(SysRole condition, boolean isAdmin) {
+        LambdaQueryWrapper<SysRole> query = Wrappers.lambdaQuery(condition)
+                .in(!isAdmin, SysRole::getType,
+                        ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom));
+        List<SysRole> temp = list(query);
+        List<SysRoleGroup> groups = sysRoleGroupService.list();
+        return temp.stream().map(item -> {
+            RolePageItemVO v = roleTrans.to(item);
+            v.setGroupName(groups.stream()
+                    .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
+                    .findFirst()
+                    .map(SysRoleGroup::getName)
+                    .orElse(null));
+            return v;
+        }).toList();
     }
 
     @Override
@@ -80,10 +103,15 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 .in(!isAdmin, SysRole::getType,
                         ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom));
         IPage<SysRole> temp = page(page, query);
+
+        List<SysRoleGroup> groups = sysRoleGroupService.list();
         return PageUtils.map(temp, item -> {
             RolePageItemVO v = roleTrans.to(item);
-            // admin角色不可编辑
-            v.setCanAction(!RoleUtils.isAdmin(v.getCode()));
+            v.setGroupName(groups.stream()
+                    .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
+                    .findFirst()
+                    .map(SysRoleGroup::getName)
+                    .orElse(null));
             return v;
         });
     }

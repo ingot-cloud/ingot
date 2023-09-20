@@ -15,7 +15,12 @@ public interface RoleConstants {
     /**
      * 管理员角色编码
      */
-    String ROLE_MANAGER_CODE = "role_manager";
+    String ROLE_MANAGER_CODE = "role_org_admin";
+
+    /**
+     * 子管理员角色编码
+     */
+    String ROLE_ORG_SUB_ADMIN_CODE = "role_org_sub_admin";
 
     /**
      * 用户角色编码

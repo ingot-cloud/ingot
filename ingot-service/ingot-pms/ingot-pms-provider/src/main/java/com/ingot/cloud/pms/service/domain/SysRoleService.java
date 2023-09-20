@@ -32,10 +32,19 @@ public interface SysRoleService extends BaseService<SysRole> {
      *
      * @return {@link List< Option >}
      */
-    List<Option<Long>> options();
+    List<Option<Long>> options(boolean isAdmin);
 
     /**
-     * 条件查询用户分页信息
+     * 条件查询角色
+     *
+     * @param condition 筛选条件
+     * @param isAdmin   是否为超级管理员
+     * @return {@link List}，数据项结构 {@link RolePageItemVO}
+     */
+    List<RolePageItemVO> conditionList(SysRole condition, boolean isAdmin);
+
+    /**
+     * 条件查询角色分页信息
      *
      * @param page      分页条件
      * @param condition 筛选条件

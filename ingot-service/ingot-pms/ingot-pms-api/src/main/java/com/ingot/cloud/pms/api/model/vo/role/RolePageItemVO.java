@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>Description  : RolePageItemVO.</p>
@@ -24,6 +24,14 @@ public class RolePageItemVO implements Serializable {
      */
     private String name;
     /**
+     * 组ID
+     */
+    private Long groupId;
+    /**
+     * 组名称
+     */
+    private String groupName;
+    /**
      * 角色编码
      */
     private String code;
@@ -36,10 +44,6 @@ public class RolePageItemVO implements Serializable {
      */
     private CommonStatusEnum status;
     /**
-     * 备注
-     */
-    private String remark;
-    /**
      * 创建日期
      */
     private LocalDateTime createdAt;
@@ -47,8 +51,4 @@ public class RolePageItemVO implements Serializable {
      * 删除日期
      */
     private LocalDateTime deletedAt;
-    /**
-     * 是否可以操作
-     */
-    private boolean canAction = true;
 }
