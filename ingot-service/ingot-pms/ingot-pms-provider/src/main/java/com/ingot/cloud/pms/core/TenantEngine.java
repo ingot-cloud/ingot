@@ -26,8 +26,10 @@ import java.util.stream.Collectors;
 public class TenantEngine {
     private final SysRoleService sysRoleService;
 
+    // todo，初始化管理后台角色和app角色(默认租户的组织类型角色)，初始化部门，初始化管理员用户
+
     private static final List<String> DEFAULT_ROLES = ListUtil.list(false,
-            RoleConstants.ROLE_MANAGER_CODE, RoleConstants.ROLE_USER_CODE);
+            RoleConstants.ROLE_MANAGER_CODE, RoleConstants.ROLE_ORG_SUB_ADMIN_CODE);
 
     /**
      * 初始化租户默认数据

@@ -12,6 +12,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.domain.*;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +85,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 .in(!isAdmin, SysRole::getType,
                         ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom));
         List<SysRole> temp = list(query);
-        List<SysRoleGroup> groups = sysRoleGroupService.list();
+        List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
+                .in(!isAdmin, SysRoleGroup::getType,
+                        ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom)));
         return temp.stream().map(item -> {
             RolePageItemVO v = roleTrans.to(item);
             v.setGroupName(groups.stream()
@@ -93,6 +97,38 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                     .orElse(null));
             return v;
         }).toList();
+    }
+
+    @Override
+    public List<RoleGroupItemVO> groupRoleList(boolean isAdmin) {
+        List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
+                .orderByAsc(ListUtil.list(false, SysRoleGroup::getSort, SysRoleGroup::getId))
+                .in(!isAdmin, SysRoleGroup::getType,
+                        ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom)));
+
+        List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
+                .in(!isAdmin, SysRole::getType,
+                        ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom)));
+
+        return groups.stream()
+                .map(item -> {
+                    RoleGroupItemVO vo = new RoleGroupItemVO();
+                    vo.setIsGroup(Boolean.TRUE);
+                    vo.setId(item.getId());
+                    vo.setName(item.getName());
+                    vo.setType(item.getType());
+                    vo.setChildren(roles.stream()
+                            .filter(role -> Objects.equals(role.getGroupId(), item.getId()))
+                            .map(role -> {
+                                RoleGroupItemVO itemVo = new RoleGroupItemVO();
+                                itemVo.setIsGroup(Boolean.FALSE);
+                                itemVo.setId(role.getId());
+                                itemVo.setName(role.getName());
+                                itemVo.setType(role.getType());
+                                return itemVo;
+                            }).toList());
+                    return vo;
+                }).toList();
     }
 
     @Override
@@ -202,5 +238,64 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.UpdateFailed");
 
         roleCache.remove(role.getCode());
+    }
+
+    @Override
+    public void sortGroup(List<Long> list) {
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+
+        AtomicInteger index = new AtomicInteger(0);
+        List<SysRoleGroup> groups = list.stream().map(id -> {
+            SysRoleGroup group = new SysRoleGroup();
+            group.setId(id);
+            group.setSort(index.getAndIncrement());
+            return group;
+        }).toList();
+
+        sysRoleGroupService.updateBatchById(groups);
+    }
+
+    @Override
+    public void createGroup(SysRoleGroup params, boolean isAdmin) {
+        if (!isAdmin) {
+            params.setType(RoleTypeEnums.Custom);
+            params.setTenantId(null);
+            params.setSort(null);
+        }
+        sysRoleGroupService.save(params);
+    }
+
+    @Override
+    public void updateGroup(SysRoleGroup params, boolean isAdmin) {
+        SysRoleGroup group = sysRoleGroupService.getById(params.getId());
+        assertI18nService.checkOperation(group != null,
+                "SysRoleServiceImpl.GroupNotExisted");
+
+        if (!isAdmin) {
+            assertI18nService.checkOperation(group.getType() == RoleTypeEnums.Custom,
+                    "SysRoleServiceImpl.GroupUpdateFailed");
+        }
+
+        sysRoleGroupService.updateById(params);
+    }
+
+    @Override
+    public void deleteGroup(long id, boolean isAdmin) {
+        SysRoleGroup group = sysRoleGroupService.getById(id);
+        assertI18nService.checkOperation(group != null,
+                "SysRoleServiceImpl.GroupNotExisted");
+
+        long count = count(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getGroupId, id));
+        assertI18nService.checkOperation(count == 0,
+                "SysRoleServiceImpl.GroupHasChild");
+
+        if (!isAdmin) {
+            assertI18nService.checkOperation(group.getType() == RoleTypeEnums.Custom,
+                    "SysRoleServiceImpl.GroupOpsError");
+        }
+
+        sysRoleGroupService.removeById(id);
     }
 }

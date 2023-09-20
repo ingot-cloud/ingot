@@ -5,7 +5,7 @@ import com.ingot.framework.data.mybatis.service.BaseService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author jymot

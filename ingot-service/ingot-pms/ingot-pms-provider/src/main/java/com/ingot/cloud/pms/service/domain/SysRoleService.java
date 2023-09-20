@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.service.domain;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.data.mybatis.service.BaseService;
@@ -42,6 +44,14 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @return {@link List}，数据项结构 {@link RolePageItemVO}
      */
     List<RolePageItemVO> conditionList(SysRole condition, boolean isAdmin);
+
+    /**
+     * 角色组列表，包含子角色
+     *
+     * @param isAdmin 是否为管理员
+     * @return {@link RoleGroupItemVO}
+     */
+    List<RoleGroupItemVO> groupRoleList(boolean isAdmin);
 
     /**
      * 条件查询角色分页信息
@@ -84,4 +94,35 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @param isAdmin 是否为超级管理员
      */
     void updateRoleById(SysRole params, boolean isAdmin);
+
+    /**
+     * 排序角色组
+     *
+     * @param list 组id列表
+     */
+    void sortGroup(List<Long> list);
+
+    /**
+     * 创建角色组
+     *
+     * @param params  {@link SysRoleGroup}
+     * @param isAdmin 是否为管理员
+     */
+    void createGroup(SysRoleGroup params, boolean isAdmin);
+
+    /**
+     * 更新角色组
+     *
+     * @param params  {@link SysRoleGroup}
+     * @param isAdmin 是否为管理员
+     */
+    void updateGroup(SysRoleGroup params, boolean isAdmin);
+
+    /**
+     * 删除角色组
+     *
+     * @param id      ID
+     * @param isAdmin 是否为管理员
+     */
+    void deleteGroup(long id, boolean isAdmin);
 }

@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.web.v1.admin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
@@ -50,6 +52,12 @@ public class AdminRoleAPI implements RShortcuts {
         return ok(sysRoleService.conditionPage(page, condition, SecurityAuthContext.isAdmin()));
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
+    @GetMapping("/group/list")
+    public R<?> groupList() {
+        return ok(sysRoleService.groupRoleList(SecurityAuthContext.isAdmin()));
+    }
+
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
@@ -68,6 +76,34 @@ public class AdminRoleAPI implements RShortcuts {
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id, SecurityAuthContext.isAdmin());
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
+    @PostMapping("/group")
+    public R<?> createGroup(@RequestBody SysRoleGroup params) {
+        sysRoleService.createGroup(params, SecurityAuthContext.isAdmin());
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
+    @PutMapping("/group")
+    public R<?> updateGroup(@RequestBody SysRoleGroup params) {
+        sysRoleService.updateGroup(params, SecurityAuthContext.isAdmin());
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
+    @DeleteMapping("/group/{id}")
+    public R<?> removeGroupById(@PathVariable Long id) {
+        sysRoleService.deleteGroup(id, SecurityAuthContext.isAdmin());
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
+    @PutMapping("/group/sort")
+    public R<?> groupSort(@RequestBody RoleGroupSortDTO params) {
+        sysRoleService.sortGroup(params.getIds());
         return ok();
     }
 
