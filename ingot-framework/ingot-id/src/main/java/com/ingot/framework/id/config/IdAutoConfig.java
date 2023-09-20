@@ -1,7 +1,5 @@
 package com.ingot.framework.id.config;
 
-import javax.sql.DataSource;
-
 import com.baomidou.mybatisplus.autoconfigure.IdentifierGeneratorAutoConfiguration;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.ingot.framework.id.BizGenerator;
@@ -15,13 +13,17 @@ import com.ingot.framework.id.snowflake.worker.impl.MachineWorkerIdFactory;
 import com.ingot.framework.id.snowflake.worker.impl.RedisWorkerIdFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
+
+import javax.sql.DataSource;
 
 /**
  * <p>Description  : IdAutoConfig.</p>
@@ -31,6 +33,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 @AutoConfiguration
 @AutoConfigureBefore(IdentifierGeneratorAutoConfiguration.class)
+@AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @EnableConfigurationProperties(value = IdProperties.class)
 public class IdAutoConfig {
     @Value("${spring.application.name}")

@@ -27,6 +27,10 @@ public class RoleGroupItemVO implements Serializable {
      */
     private Boolean isGroup;
     /**
+     * 角色组ID，非角色组情况，不为空
+     */
+    private Long groupId;
+    /**
      * 类型
      */
     private RoleTypeEnums type;

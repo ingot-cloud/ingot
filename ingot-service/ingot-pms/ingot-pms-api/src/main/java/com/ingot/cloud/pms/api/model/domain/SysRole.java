@@ -56,7 +56,6 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 角色编码
      */
-    @NotBlank(message = "{SysRole.code}", groups = Group.Create.class)
     private String code;
 
     /**

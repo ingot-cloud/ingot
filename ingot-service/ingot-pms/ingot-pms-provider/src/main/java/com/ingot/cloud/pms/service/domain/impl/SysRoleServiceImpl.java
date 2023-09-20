@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -14,6 +15,7 @@ import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
+import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -51,6 +53,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
+    private final BizIdGen bizIdGen;
 
     private final Map<String, SysRole> roleCache = new ConcurrentHashMap<>();
 
@@ -125,6 +128,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                                 itemVo.setId(role.getId());
                                 itemVo.setName(role.getName());
                                 itemVo.setType(role.getType());
+                                itemVo.setGroupId(item.getId());
                                 return itemVo;
                             }).toList());
                     return vo;
@@ -172,8 +176,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(count == 0, "SysRoleServiceImpl.RoleCodeExisted");
 
         // 非超管只能创建自定义角色
-        if (!isAdmin) {
+        if (!isAdmin || params.getType() == null) {
             params.setType(RoleTypeEnums.Custom);
+        }
+        if (!isAdmin || StrUtil.isEmpty(params.getCode())) {
+            params.setCode(bizIdGen.genOrgRoleCode());
         }
 
         params.setStatus(CommonStatusEnum.ENABLE);
@@ -259,6 +266,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public void createGroup(SysRoleGroup params, boolean isAdmin) {
+        if (params.getType() == null) {
+            params.setType(RoleTypeEnums.Custom);
+        }
         if (!isAdmin) {
             params.setType(RoleTypeEnums.Custom);
             params.setTenantId(null);
