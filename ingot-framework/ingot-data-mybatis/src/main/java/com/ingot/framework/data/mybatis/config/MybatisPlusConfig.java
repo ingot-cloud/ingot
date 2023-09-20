@@ -11,7 +11,9 @@ import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
@@ -25,6 +27,7 @@ import javax.sql.DataSource;
  */
 @Slf4j
 @AutoConfiguration
+@AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @ConditionalOnBean(DataSource.class)
 @MapperScan("com.ingot.**.mapper")
 @EnableConfigurationProperties(MybatisProperties.class)
