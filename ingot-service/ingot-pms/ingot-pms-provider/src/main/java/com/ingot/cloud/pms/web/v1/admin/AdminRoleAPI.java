@@ -43,7 +43,6 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/page")
     public R<?> page(Page<SysRole> page, SysRole condition) {
-        log.info("aaa={}", SecurityAuthContext.isAdmin());
         return ok(sysRoleService.conditionPage(page, condition, SecurityAuthContext.isAdmin()));
     }
 
