@@ -5,11 +5,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.tenant.properties.TenantProperties;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTenant> implements SysTenantService {
     private final AssertionChecker assertI18nService;
     private final TenantProperties tenantProperties;
-    private final TenantEngine tenantEngine;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -50,8 +48,6 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
         params.setStatus(CommonStatusEnum.ENABLE);
         assertI18nService.checkOperation(save(params),
                 "SysTenantServiceImpl.CreateFailed");
-
-        tenantEngine.initDefault(params.getId());
     }
 
     @Override
@@ -62,8 +58,6 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
         assertI18nService.checkOperation(removeById(id),
                 "SysTenantServiceImpl.RemoveFailed");
-
-        tenantEngine.remove(id);
     }
 
     @Override

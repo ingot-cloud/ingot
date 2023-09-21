@@ -22,12 +22,22 @@ public class BizIdGen {
     private final BizGenerator bizGenerator;
 
     /**
+     * 组织编码
+     *
+     * @return 组织编码
+     */
+    public String genOrgCode() {
+        long id = bizGenerator.getId("org_role_code");
+        return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
+    }
+
+    /**
      * 组织角色编码
      *
      * @return 角色编码
      */
     public String genOrgRoleCode() {
         long id = bizGenerator.getId("org_role_code");
-        return String.format("org_%d", (id << 6 | RANDOM.nextInt(64)));
+        return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
     }
 }
