@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.authority;
 
+import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnums;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
@@ -24,6 +25,11 @@ public class AuthorityTreeNodeVO extends TreeNode<Long> {
      * 权限编码
      */
     private String code;
+
+    /**
+     * 权限类型
+     */
+    private AuthorityTypeEnums type;
 
     /**
      * 状态, 0:正常，9:禁用

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
@@ -62,6 +63,11 @@ public class SysAuthority extends BaseModel<SysAuthority> {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
+
+    /**
+     * 权限类型
+     */
+    private AuthorityTypeEnums type;
 
     /**
      * 备注
