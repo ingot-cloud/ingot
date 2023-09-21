@@ -1,20 +1,23 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.utils.tree.TreeUtils;
@@ -24,7 +27,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>Description  : TenantEngine.</p>
@@ -46,9 +51,14 @@ public class TenantEngine {
     private final SysUserDeptService sysUserDeptService;
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
+    private final SysMenuService sysMenuService;
     private final BizIdGen bizIdGen;
     private final AuthorityTrans authorityTrans;
+    private final MenuTrans menuTrans;
 
+    /**
+     * 创建租户
+     */
     public SysTenant createTenant(CreateOrgDTO params) {
         String orgCode = bizIdGen.genOrgCode();
         SysTenant tenant = new SysTenant();
@@ -59,7 +69,10 @@ public class TenantEngine {
         return tenant;
     }
 
-    public SysDept createDept(SysTenant tenant) {
+    /**
+     * 创建租户部门
+     */
+    public SysDept createTenantDept(SysTenant tenant) {
         return TenantEnv.applyAs(tenant.getId(), () -> {
             SysDept dept = new SysDept();
             dept.setName(tenant.getName());
@@ -70,7 +83,10 @@ public class TenantEngine {
         });
     }
 
-    public List<SysRole> createRoles(SysTenant tenant) {
+    /**
+     * 创建租户角色
+     */
+    public List<SysRole> createTenantRoles(SysTenant tenant) {
         List<SysRole> templateRoles = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getType, RoleTypeEnums.Tenant));
         List<SysRoleGroup> templateRoleGroups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
@@ -104,21 +120,83 @@ public class TenantEngine {
         });
     }
 
-    public List<SysAuthority> createAuthority(SysTenant tenant) {
-        List<AuthorityTreeNodeVO> templateAuthorities = sysAuthorityService.list(Wrappers.<SysAuthority>lambdaQuery()
-                        .eq(SysAuthority::getType, AuthorityTypeEnums.Tenant))
-                .stream().map(authorityTrans::to).toList();
+    /**
+     * 创建组合权限和菜单
+     */
+    public List<SysAuthority> createTenantAuthorityAndMenu(SysTenant tenant) {
+        List<SysAuthority> authorities = sysAuthorityService.list(Wrappers.<SysAuthority>lambdaQuery()
+                .eq(SysAuthority::getType, AuthorityTypeEnums.Tenant));
+        List<AuthorityTreeNodeVO> templateAuthorities = authorities.stream()
+                .map(authorityTrans::to).toList();
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(templateAuthorities);
+
+        // 获取菜单
+        List<MenuTreeNodeVO> templateMenus = filterMenus(sysMenuService.nodeList(), authorities);
 
         return TenantEnv.applyAs(tenant.getId(), () -> {
             List<SysAuthority> orgAuthorities = new ArrayList<>();
-            createAuthorityFn(orgAuthorities, tree, IDConstants.ROOT_TREE_ID);
+            createAuthorityFn(orgAuthorities, tree, IDConstants.ROOT_TREE_ID, templateMenus);
+
+            // 创建菜单
+            List<MenuTreeNodeVO> menuTree = TreeUtils.build(templateMenus);
+            createMenuFn(menuTree, IDConstants.ROOT_TREE_ID);
+
             return orgAuthorities;
         });
     }
 
+    private List<MenuTreeNodeVO> filterMenus(List<MenuTreeNodeVO> allMenuNodeList, List<SysAuthority> authorities) {
+        List<MenuTreeNodeVO> nodeList = allMenuNodeList.stream()
+                .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
+                        authorities.stream()
+                                .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
+                .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
+                .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
+                .toList();
+
+        // 如果过滤后的列表中存在父节点，并且不在当前列表中，那么需要增加
+        List<MenuTreeNodeVO> copy = new ArrayList<>(nodeList);
+        copy.stream()
+                .filter(node -> node.getPid() != IDConstants.ROOT_TREE_ID)
+                .forEach(node -> {
+                    if (nodeList.stream().noneMatch(item -> ObjectUtil.equals(item.getId(), node.getPid()))) {
+                        allMenuNodeList.stream()
+                                .filter(item -> ObjectUtil.equals(item.getId(), node.getPid()))
+                                .findFirst()
+                                .ifPresent(nodeList::add);
+                    }
+                });
+
+        nodeList.stream()
+                .filter(item -> authorities.stream()
+                        .noneMatch(authority -> item.getAuthorityId().equals(authority.getId())))
+                .forEach(item -> item.setAuthorityId(null));
+
+        return nodeList;
+    }
+
+    private void createMenuFn(List<? extends TreeNode<Long>> tree, long pid) {
+
+        for (TreeNode<Long> node : tree) {
+            if (node instanceof MenuTreeNodeVO menuNode) {
+                SysMenu item = menuTrans.to(menuNode);
+                item.setId(null);
+                item.setPid(pid);
+                item.setUpdatedAt(null);
+                item.setDeletedAt(null);
+                sysMenuService.save(item);
+
+                if (CollUtil.isNotEmpty(node.getChildren())) {
+                    createMenuFn(node.getChildren(), item.getId());
+                }
+            }
+        }
+    }
+
     private void createAuthorityFn(List<SysAuthority> collect,
-                                   List<? extends TreeNode<Long>> tree, long pid) {
+                                   List<? extends TreeNode<Long>> tree,
+                                   long pid,
+                                   List<MenuTreeNodeVO> replaceAuthorityIdMenus) {
 
         for (TreeNode<Long> node : tree) {
             if (node instanceof AuthorityTreeNodeVO authNode) {
@@ -133,14 +211,22 @@ public class TenantEngine {
                 sysAuthorityService.save(item);
                 collect.add(item);
 
+                // 替换权限ID
+                replaceAuthorityIdMenus.stream()
+                        .filter(menu -> Objects.equals(menu.getAuthorityId(), node.getId()))
+                        .forEach(menu -> menu.setAuthorityId(item.getId()));
+
                 if (CollUtil.isNotEmpty(node.getChildren())) {
-                    createAuthorityFn(collect, node.getChildren(), item.getId());
+                    createAuthorityFn(collect, node.getChildren(), item.getId(), replaceAuthorityIdMenus);
                 }
             }
         }
     }
 
-    public void createUser(CreateOrgDTO params, SysTenant tenant, List<SysRole> roles, SysDept dept) {
+    /**
+     * 创建租户管理员
+     */
+    public void createTenantUser(CreateOrgDTO params, SysTenant tenant, List<SysRole> roles, SysDept dept) {
         TenantEnv.runAs(tenant.getId(), () -> {
             SysRole role = roles.stream()
                     .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
@@ -148,29 +234,29 @@ public class TenantEngine {
 
             // 如果已经存在注册用户，那么直接关联新组织信息
             SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getPhone, params.getPhone()));
-            if (user != null) {
-                // 加入租户
-                sysUserTenantService.joinTenant(user.getId());
-                // 设置部门
-                bizDeptService.setUserDeptsEnsureMainDept(user.getId(), List.of(dept.getId()));
-                // 设置角色
-                sysRoleUserService.setUserRoles(user.getId(), List.of(role.getId()));
-                return;
+            if (user == null) {
+                user = new SysUser();
+                user.setInitPwd(Boolean.TRUE);
+                user.setUsername(params.getPhone());
+                user.setPhone(params.getPhone());
+                user.setPassword(params.getPhone());
+                user.setNickname(params.getNickname());
+                sysUserService.createUser(user);
             }
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setDeptIds(List.of(dept.getId()));
-            userDTO.setRoleIds(List.of(role.getId()));
-            userDTO.setInitPwd(Boolean.TRUE);
-            userDTO.setUsername(params.getPhone());
-            userDTO.setPhone(params.getPhone());
-            userDTO.setNewPassword(params.getPhone());
-            userDTO.setNickname(params.getNickname());
-            sysUserService.createUser(userDTO);
+            // 加入租户
+            sysUserTenantService.joinTenant(user.getId());
+            // 设置部门
+            sysDeptService.setDepts(user.getId(), List.of(dept.getId()));
+            // 设置角色
+            sysRoleUserService.setUserRoles(user.getId(), List.of(role.getId()));
         });
     }
 
-    public void roleBindAuthorities(List<SysRole> roles, List<SysAuthority> authorities) {
+    /**
+     * 租户默认角色关联权限
+     */
+    public void tenantRoleBindAuthorities(List<SysRole> roles, List<SysAuthority> authorities) {
         // 默认直给管理员角色绑定组织最高权限
         SysRole role = roles.stream()
                 .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
@@ -191,7 +277,7 @@ public class TenantEngine {
      *
      * @param id 组织ID
      */
-    public void removeUserRelation(long id) {
+    public void removeTenantUserRelation(long id) {
         List<Long> userIdList = sysUserTenantService.list(
                         Wrappers.<SysUserTenant>lambdaQuery()
                                 .eq(SysUserTenant::getTenantId, id))
@@ -215,7 +301,7 @@ public class TenantEngine {
         sysDeptService.remove(Wrappers.lambdaQuery());
     }
 
-    public void removeAuthorityAndRole(long id) {
+    public void removeTenantAuthorityAndRole(long id) {
         List<Long> roleIds = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
                 .eq(SysRole::getTenantId, id)).stream().map(SysRole::getId).toList();
 

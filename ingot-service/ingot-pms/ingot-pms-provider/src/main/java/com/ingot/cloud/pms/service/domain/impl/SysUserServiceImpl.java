@@ -98,9 +98,23 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SysUser createUser(UserDTO params) {
+    public SysUser createUserAndSetRelation(UserDTO params) {
         SysUser user = userTrans.to(params);
-        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+        user.setPassword(params.getNewPassword());
+        createUser(user);
+
+        // 加入租户
+        sysUserTenantService.joinTenant(user.getId());
+        // 设置部门
+        bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
+        // 设置角色
+        sysRoleUserService.setUserRoles(user.getId(), params.getRoleIds());
+        return user;
+    }
+
+    @Override
+    public void createUser(SysUser user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreatedAt(DateUtils.now());
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.ENABLE);
@@ -110,14 +124,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         assertI18nService.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
-
-        // 加入租户
-        sysUserTenantService.joinTenant(user.getId());
-        // 设置部门
-        bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
-        // 设置角色
-        sysRoleUserService.setUserRoles(user.getId(), params.getRoleIds());
-        return user;
     }
 
     @Override

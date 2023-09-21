@@ -28,11 +28,12 @@ public class BizDeptServiceImpl implements BizDeptService {
     @Transactional(rollbackFor = Exception.class)
     public void setUserDeptsEnsureMainDept(long userId, List<Long> deptIds) {
         SysDept main = sysDeptService.getMainDept();
-
-        if (CollUtil.isEmpty(deptIds)) {
-            deptIds = ListUtil.list(false, main.getId());
-        } else {
-            deptIds.add(main.getId());
+        if (main != null) {
+            if (CollUtil.isEmpty(deptIds)) {
+                deptIds = ListUtil.list(false, main.getId());
+            } else {
+                deptIds.add(main.getId());
+            }
         }
 
         Set<Long> temp = new HashSet<>(deptIds);

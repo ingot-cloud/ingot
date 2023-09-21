@@ -31,31 +31,31 @@ public class BizOrgServiceImpl implements BizOrgService {
         SysTenant tenant = tenantEngine.createTenant(params);
 
         // 2. 创建部门
-        SysDept dept = tenantEngine.createDept(tenant);
+        SysDept dept = tenantEngine.createTenantDept(tenant);
 
         // 3. 创建角色，角色组
-        List<SysRole> roles = tenantEngine.createRoles(tenant);
+        List<SysRole> roles = tenantEngine.createTenantRoles(tenant);
 
         // 4. 创建权限
-        List<SysAuthority> authorities = tenantEngine.createAuthority(tenant);
+        List<SysAuthority> authorities = tenantEngine.createTenantAuthorityAndMenu(tenant);
 
         // 5. 创建默认用户, 设置部门，设置角色
-        tenantEngine.createUser(params, tenant, roles, dept);
+        tenantEngine.createTenantUser(params, tenant, roles, dept);
 
         // 6. 角色绑定权限
-        tenantEngine.roleBindAuthorities(roles, authorities);
+        tenantEngine.tenantRoleBindAuthorities(roles, authorities);
     }
 
     @Override
     public void removeOrg(long id) {
         // 1. 用户取消关联组织，部门，角色
-        tenantEngine.removeUserRelation(id);
+        tenantEngine.removeTenantUserRelation(id);
 
         // 2. 移除组织，移除部门
         tenantEngine.removeTenantAndDept(id);
 
         // 3. 移除权限，移除角色
-        tenantEngine.removeAuthorityAndRole(id);
+        tenantEngine.removeTenantAuthorityAndRole(id);
     }
 
 }

@@ -44,7 +44,14 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param params 参数
      * @return {@link SysUser}
      */
-    SysUser createUser(UserDTO params);
+    SysUser createUserAndSetRelation(UserDTO params);
+
+    /**
+     * 创建用户
+     *
+     * @param user {@link SysUser}
+     */
+    void createUser(SysUser user);
 
     /**
      * 根据ID删除用户

@@ -15,4 +15,6 @@ import org.mapstruct.Mapper;
 public interface MenuTrans {
 
     MenuTreeNodeVO to(SysMenu params);
+
+    SysMenu to(MenuTreeNodeVO in);
 }
