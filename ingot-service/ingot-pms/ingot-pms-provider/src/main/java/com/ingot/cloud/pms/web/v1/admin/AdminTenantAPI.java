@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.web.v1.admin;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
+import com.ingot.cloud.pms.service.biz.BizOrgService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.support.Option;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
+    private final BizOrgService bizOrgService;
 
     @Permit
     @GetMapping("/options")
@@ -47,24 +50,24 @@ public class AdminTenantAPI implements RShortcuts {
         return ok(sysTenantService.conditionPage(page, params));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
+    @PreAuthorize("@ingot.requiredAdmin")
     @PostMapping
-    public R<?> create(@Valid @RequestBody SysTenant params) {
-        sysTenantService.createTenant(params);
+    public R<?> create(@Valid @RequestBody CreateOrgDTO params) {
+        bizOrgService.createOrg(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
+    @PreAuthorize("@ingot.requiredAdmin")
     @PutMapping
     public R<?> update(@Valid @RequestBody SysTenant params) {
         sysTenantService.updateTenantById(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write')")
+    @PreAuthorize("@ingot.requiredAdmin")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        sysTenantService.removeTenantById(id);
+        bizOrgService.removeOrg(id);
         return ok();
     }
 }

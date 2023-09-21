@@ -1,18 +1,17 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
-import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
-import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * <p>Description  : BizOrgServiceImpl.</p>
@@ -23,60 +22,40 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BizOrgServiceImpl implements BizOrgService {
-    private final SysTenantService sysTenantService;
-    private final SysDeptService sysDeptService;
-    private final BizIdGen bizIdGen;
     private final TenantEngine tenantEngine;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createOrg(CreateOrgDTO params) {
         // 1. 创建tenant
-        SysTenant tenant = createTenant(params);
+        SysTenant tenant = tenantEngine.createTenant(params);
 
         // 2. 创建部门
-        SysDept dept = createDept(tenant);
+        SysDept dept = tenantEngine.createDept(tenant);
 
         // 3. 创建角色，角色组
-        createRoles(tenant);
+        List<SysRole> roles = tenantEngine.createRoles(tenant);
 
         // 4. 创建权限
+        List<SysAuthority> authorities = tenantEngine.createAuthority(tenant);
 
-        // 5. 创建默认用户
+        // 5. 创建默认用户, 设置部门，设置角色
+        tenantEngine.createUser(params, tenant, roles, dept);
 
         // 6. 角色绑定权限
-
-        // 7. 用户绑定部门，用户绑定角色
-        // todo
+        tenantEngine.roleBindAuthorities(roles, authorities);
     }
 
     @Override
     public void removeOrg(long id) {
+        // 1. 用户取消关联组织，部门，角色
+        tenantEngine.removeUserRelation(id);
 
+        // 2. 移除组织，移除部门
+        tenantEngine.removeTenantAndDept(id);
+
+        // 3. 移除权限，移除角色
+        tenantEngine.removeAuthorityAndRole(id);
     }
 
-    private SysTenant createTenant(CreateOrgDTO params) {
-        String orgCode = bizIdGen.genOrgCode();
-        SysTenant tenant = new SysTenant();
-        tenant.setName(params.getName());
-        tenant.setAvatar(params.getAvatar());
-        tenant.setCode(orgCode);
-        sysTenantService.createTenant(tenant);
-        return tenant;
-    }
-
-    private SysDept createDept(SysTenant tenant) {
-        return TenantEnv.applyAs(tenant.getId(), () -> {
-            SysDept dept = new SysDept();
-            dept.setName(tenant.getName());
-            dept.setScope(DeptRoleScopeEnum.CURRENT_CHILD);
-            dept.setMainFlag(Boolean.TRUE);
-            sysDeptService.createDept(dept);
-            return dept;
-        });
-    }
-
-    private void createRoles(SysTenant tenant) {
-
-    }
 }
