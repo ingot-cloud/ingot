@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
+import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -33,6 +34,7 @@ public class AdminRoleAPI implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
+    private final SysRoleUserService sysRoleUserService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/options")
@@ -123,5 +125,12 @@ public class AdminRoleAPI implements RShortcuts {
             return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
         }
         return ok(sysAuthorityService.treeList(condition));
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write')")
+    @PutMapping("/bindUser")
+    public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
+        sysRoleUserService.roleBindUsers(params);
+        return ok();
     }
 }
