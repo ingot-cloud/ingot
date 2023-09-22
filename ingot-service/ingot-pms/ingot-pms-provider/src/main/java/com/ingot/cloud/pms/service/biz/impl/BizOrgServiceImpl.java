@@ -47,6 +47,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeOrg(long id) {
         // 1. 用户取消关联组织，部门，角色
         tenantEngine.removeTenantUserRelation(id);
