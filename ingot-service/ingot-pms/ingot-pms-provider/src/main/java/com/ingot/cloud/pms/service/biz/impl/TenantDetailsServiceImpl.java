@@ -45,7 +45,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
-                        .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
+                        .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
         response.setAllows(allows);
         return response;
     }

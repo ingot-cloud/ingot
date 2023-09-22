@@ -33,7 +33,7 @@ public class BizUtils {
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
                 .map(item -> {
                     AllowTenantDTO dto = new AllowTenantDTO();
-                    dto.setId(item.getId());
+                    dto.setId(String.valueOf(item.getId()));
                     dto.setName(item.getName());
                     dto.setAvatar(item.getAvatar());
                     mainConsumer.accept(dto);
@@ -47,7 +47,7 @@ public class BizUtils {
      */
     public static UserStatusEnum getUserStatus(List<AllowTenantDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
         // 如果允许访问的tenant中不存在当前登录的tenant，那么直接返回不可用
-        if (loginTenant != null && allows.stream().noneMatch(item -> item.getId() == loginTenant)) {
+        if (loginTenant != null && allows.stream().noneMatch(item -> Long.parseLong(item.getId()) == loginTenant)) {
             return UserStatusEnum.LOCK;
         }
         UserStatusEnum userTenantStatus = CollUtil.isEmpty(allows)

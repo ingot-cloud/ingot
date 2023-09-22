@@ -15,7 +15,7 @@ public class AllowTenantDTO implements Serializable {
     /**
      * 租户ID
      */
-    private long id;
+    private String id;
     /**
      * 租户名称
      */

@@ -29,7 +29,7 @@ final class AllowTenantDTODeserializer extends JsonDeserializer<AllowTenantDTO> 
 
     private AllowTenantDTO deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        long id = JsonNodeUtils.findNumberValue(root, "id").longValue();
+        String id = JsonNodeUtils.findStringValue(root, "id");
         String name = JsonNodeUtils.findStringValue(root, "name");
         String avatar = JsonNodeUtils.findStringValue(root, "avatar");
         Boolean main = JsonNodeUtils.findBooleanValue(root, "main");

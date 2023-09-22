@@ -113,7 +113,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                 userTenantList.stream()
                         .map(AppUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
-                        .anyMatch(t -> Objects.equals(t.getTenantId(), item.getId()) && t.getMain())));
+                        .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
     }
 
     private void setRoles(UserDetailsResponse result, List<AppRole> roles, Long loginTenant) {

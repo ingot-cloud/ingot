@@ -58,7 +58,7 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
         }
 
         // tenant必须在allow list中
-        if (token.getAllowList().stream().noneMatch(item -> item.getId() == Long.parseLong(tenant))) {
+        if (token.getAllowList().stream().noneMatch(item -> StrUtil.equals(item.getId(), tenant))) {
             throwError(IngotOAuth2ParameterNames.TENANT);
         }
 

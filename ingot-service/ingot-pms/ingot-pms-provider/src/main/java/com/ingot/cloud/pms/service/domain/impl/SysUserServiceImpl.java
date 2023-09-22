@@ -79,7 +79,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                             .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                     (item) -> {
                         // main=true，为当前登录的租户
-                        item.setMain(item.getId() == user.getTenantId());
+                        item.setMain(Long.parseLong(item.getId()) == user.getTenantId());
                     });
 
             UserInfoDTO result = new UserInfoDTO();

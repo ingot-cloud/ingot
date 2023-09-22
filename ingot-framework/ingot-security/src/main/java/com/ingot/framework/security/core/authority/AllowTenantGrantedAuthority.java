@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.authority;
 
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
@@ -42,14 +43,14 @@ public class AllowTenantGrantedAuthority implements IngotGrantedAuthority<AllowT
             return true;
         }
         if (obj instanceof AllowTenantGrantedAuthority allowGrantedAuthority) {
-            return this.allow.getId() == allowGrantedAuthority.allow.getId();
+            return StrUtil.equals(this.allow.getId(), allowGrantedAuthority.allow.getId());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Long.hashCode(this.allow.getId());
+        return this.allow.getId().hashCode();
     }
 
     @Override
