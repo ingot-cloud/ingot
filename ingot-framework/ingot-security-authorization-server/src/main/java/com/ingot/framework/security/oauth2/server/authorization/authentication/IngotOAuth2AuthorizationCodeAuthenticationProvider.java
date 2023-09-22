@@ -1,0 +1,80 @@
+package com.ingot.framework.security.oauth2.server.authorization.authentication;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.OAuth2Token;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationProvider;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
+import org.springframework.util.Assert;
+
+import java.security.Principal;
+import java.util.Map;
+
+/**
+ * <p>Description  : IngotOAuth2AuthorizationCodeAuthenticationProvider.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2023/9/22.</p>
+ * <p>Time         : 8:53 AM.</p>
+ */
+public final class IngotOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
+    private static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE =
+            new OAuth2TokenType(OAuth2ParameterNames.CODE);
+    private final OAuth2AuthorizationService authorizationService;
+    private final OAuth2AuthorizationCodeAuthenticationProvider provider;
+
+    public IngotOAuth2AuthorizationCodeAuthenticationProvider(OAuth2AuthorizationService authorizationService,
+                                                              OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
+        Assert.notNull(authorizationService, "authorizationService cannot be null");
+        Assert.notNull(tokenGenerator, "tokenGenerator cannot be null");
+        this.authorizationService = authorizationService;
+        this.provider = new OAuth2AuthorizationCodeAuthenticationProvider(authorizationService, tokenGenerator);
+    }
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        OAuth2AuthorizationCodeAuthenticationToken authorizationCodeAuthentication =
+                (OAuth2AuthorizationCodeAuthenticationToken) authentication;
+        OAuth2Authorization authorization = this.authorizationService.findByToken(
+                authorizationCodeAuthentication.getCode(), AUTHORIZATION_CODE_TOKEN_TYPE);
+        if (authorization == null) {
+            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);
+        }
+
+        OAuth2AccessTokenAuthenticationToken token = (OAuth2AccessTokenAuthenticationToken) provider.authenticate(authentication);
+        Map<String, Object> additionalParameters = token.getAdditionalParameters();
+        if (CollUtil.isEmpty(additionalParameters)) {
+            additionalParameters = MapUtil.newHashMap();
+        }
+
+        // 如果是OAuth2PreAuthorizationCodeRequestAuthenticationToken，那么添加 tenant
+        Authentication principal = authorization.getAttribute(Principal.class.getName());
+        if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preToken) {
+            preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT);
+            additionalParameters.put(IngotOAuth2ParameterNames.TENANT,
+                    preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT));
+        }
+
+        return new OAuth2AccessTokenAuthenticationToken(
+                token.getRegisteredClient(),
+                (Authentication) token.getPrincipal(),
+                token.getAccessToken(),
+                token.getRefreshToken(), additionalParameters);
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return OAuth2AuthorizationCodeAuthenticationToken.class.isAssignableFrom(authentication);
+    }
+}

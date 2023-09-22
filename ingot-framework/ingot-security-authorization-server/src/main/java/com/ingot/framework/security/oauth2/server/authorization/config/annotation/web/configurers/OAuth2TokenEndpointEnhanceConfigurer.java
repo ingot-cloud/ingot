@@ -1,20 +1,25 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.IngotOAuth2AuthorizationCodeAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationProvider;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
@@ -30,6 +35,7 @@ import java.util.List;
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 10:05 AM.</p>
  */
+@Slf4j
 public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Configurer {
     private RequestMatcher requestMatcher;
 
@@ -50,6 +56,19 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         List<AuthenticationProvider> authenticationProviders = createAuthenticationProviders(httpSecurity);
         authenticationProviders.forEach(authenticationProvider ->
                 httpSecurity.authenticationProvider(postProcess(authenticationProvider)));
+
+        // 使用IngotOAuth2AuthorizationCodeAuthenticationProvider替换默认OAuth2AuthorizationCodeAuthenticationProvider
+        AuthenticationManagerBuilder builder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.objectPostProcessor(new ObjectPostProcessor<>() {
+            @Override
+            public <O> O postProcess(O object) {
+                if (object instanceof ProviderManager providerManager) {
+                    providerManager.getProviders()
+                            .removeIf((item) -> (item instanceof OAuth2AuthorizationCodeAuthenticationProvider));
+                }
+                return object;
+            }
+        });
     }
 
     @Override
@@ -110,6 +129,11 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         OAuth2CustomAuthenticationProvider customAuthenticationProvider =
                 new OAuth2CustomAuthenticationProvider(authorizationService, tokenGenerator);
         authenticationProviders.add(customAuthenticationProvider);
+
+        // 增强 OAuth2AuthorizationCodeAuthenticationProvider
+        IngotOAuth2AuthorizationCodeAuthenticationProvider ingotCodeAuthProvider =
+                new IngotOAuth2AuthorizationCodeAuthenticationProvider(authorizationService, tokenGenerator);
+        authenticationProviders.add(ingotCodeAuthProvider);
 
         return authenticationProviders;
     }

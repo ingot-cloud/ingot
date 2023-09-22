@@ -53,8 +53,8 @@ public class IngotOAuth2AuthorizationServerConfiguration {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(authorizationServerConfigurer);
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
+        http.apply(authorizationServerConfigurer);
         http.apply(enhanceConfigurer);
     }
     // @formatter:on

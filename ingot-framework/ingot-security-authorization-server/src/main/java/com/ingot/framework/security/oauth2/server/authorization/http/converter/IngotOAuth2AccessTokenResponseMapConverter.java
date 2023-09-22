@@ -29,6 +29,10 @@ public class IngotOAuth2AccessTokenResponseMapConverter
         parameters.put(IngotOAuth2ParameterNames.ACCESS_TOKEN, tokenResponse.getAccessToken().getTokenValue());
         parameters.put(IngotOAuth2ParameterNames.TOKEN_TYPE, tokenResponse.getAccessToken().getTokenType().getValue());
         parameters.put(IngotOAuth2ParameterNames.EXPIRES_IN, String.valueOf(getExpiresIn(tokenResponse)));
+        Object tenant = tokenResponse.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT);
+        if (tenant != null) {
+            parameters.put(IngotOAuth2ParameterNames.TENANT, (String) tenant);
+        }
         if (!CollectionUtils.isEmpty(tokenResponse.getAccessToken().getScopes())) {
             parameters.put(OAuth2ParameterNames.SCOPE,
                     StringUtils.collectionToDelimitedString(tokenResponse.getAccessToken().getScopes(), " "));
