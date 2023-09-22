@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.pms.web.v1.org;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -20,16 +20,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * <p>Description  : UserApi.</p>
+ * <p>Description  : OrgUserAPI.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/11/11.</p>
- * <p>Time         : 6:48 下午.</p>
+ * <p>Date         : 2023/9/22.</p>
+ * <p>Time         : 1:55 PM.</p>
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/admin/user")
+@RequestMapping(value = "/v1/org/user")
 @RequiredArgsConstructor
-public class AdminUserAPI implements RShortcuts {
+public class OrgUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
     private final UserOpsChecker userOpsChecker;
@@ -39,31 +39,36 @@ public class AdminUserAPI implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w', 'constants.member.r')")
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserQueryDTO condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
-        params.setInitPwd(null);
+        // 密码默认为手机号
+        params.setInitPwd(Boolean.TRUE);
+        params.setPassword(params.getPhone());
+        params.setNewPassword(params.getPhone());
         sysUserService.createUserAndSetRelation(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         if (params.getStatus() == UserStatusEnum.LOCK) {
             userOpsChecker.disableUser(params.getId());
         }
+        // 不可更新密码
+        params.setNewPassword(null);
         sysUserService.updateUser(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         userOpsChecker.removeUser(id);
@@ -71,7 +76,7 @@ public class AdminUserAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.r')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));
