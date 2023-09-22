@@ -11,6 +11,8 @@ import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 
+import java.util.List;
+
 /**
  * <p>
  * 服务类
@@ -28,6 +30,12 @@ public interface SysUserService extends BaseService<SysUser> {
      * @return {@link UserInfoDTO}
      */
     UserInfoDTO getUserInfo(IngotUser user);
+
+    /**
+     * 获取平台超级管理员ID列表
+     * @return id列表
+     */
+    List<Long> getAdminIdList();
 
     /**
      * 条件查询用户分页信息

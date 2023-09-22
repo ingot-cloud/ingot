@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -22,10 +23,12 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,6 +59,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
+    private final TenantProperties tenantProperties;
 
     @Override
     public UserInfoDTO getUserInfo(IngotUser user) {
@@ -87,6 +91,21 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
             result.setRoles(roleCodes);
             result.setAllows(allows);
             return result;
+        });
+    }
+
+    @Override
+    public List<Long> getAdminIdList() {
+        return TenantEnv.applyAs(tenantProperties.getDefaultId(), () -> {
+            SysRole admin = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
+                    .eq(SysRole::getCode, RoleConstants.ROLE_ADMIN_CODE));
+            if (admin == null) {
+                return ListUtil.empty();
+            }
+
+            return sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
+                            .eq(SysRoleUser::getRoleId, admin.getId()))
+                    .stream().map(SysRoleUser::getUserId).toList();
         });
     }
 

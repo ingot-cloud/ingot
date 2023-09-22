@@ -39,13 +39,13 @@ public class OrgUserAPI implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w', 'constants.member.r')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w', 'constants.member.r')")
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserQueryDTO condition) {
         return ok(sysUserService.conditionPage(page, condition));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         // 密码默认为手机号
@@ -56,7 +56,7 @@ public class OrgUserAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         if (params.getStatus() == UserStatusEnum.LOCK) {
@@ -68,7 +68,7 @@ public class OrgUserAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         userOpsChecker.removeUser(id);
@@ -76,7 +76,7 @@ public class OrgUserAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('constants.member.r')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.r')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));

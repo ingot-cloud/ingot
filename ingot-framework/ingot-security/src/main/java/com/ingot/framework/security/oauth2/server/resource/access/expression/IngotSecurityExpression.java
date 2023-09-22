@@ -1,9 +1,5 @@
 package com.ingot.framework.security.oauth2.server.resource.access.expression;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.common.constants.RoleConstants;
@@ -11,6 +7,10 @@ import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : IngotSecurityExpression.</p>
@@ -69,7 +69,22 @@ public class IngotSecurityExpression {
         return hasAuthority(RoleConstants.ROLE_ADMIN_CODE);
     }
 
+    /**
+     * 管理员或指定权限
+     * @param authorities 指定权限
+     * @return {boolean}
+     */
+    public boolean adminOrHasAnyAuthority(String... authorities) {
+        Set<String> authSet = CollUtil.newHashSet(authorities);
+        authSet.add(RoleConstants.ROLE_ADMIN_CODE);
+        return hasAnyAuthorityName(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX, authSet);
+    }
+
     private boolean hasAnyAuthorityName(String prefix, String... authorities) {
+        return hasAnyAuthorityName(prefix, CollUtil.newHashSet(authorities));
+    }
+
+    private boolean hasAnyAuthorityName(String prefix, Set<String> authorities) {
         Authentication authentication = SecurityAuthContext.getAuthentication();
         if (authentication == null) {
             return false;
@@ -80,8 +95,8 @@ public class IngotSecurityExpression {
                 .map(GrantedAuthority::getAuthority)
                 .filter(StrUtil::isNotEmpty)
                 .map(String::toUpperCase).collect(Collectors.toSet());
-        Set<String> requiredAuth = CollUtil.newHashSet(authorities)
-                .stream().map(String::toUpperCase).collect(Collectors.toSet());
+        Set<String> requiredAuth = authorities.stream()
+                .map(String::toUpperCase).collect(Collectors.toSet());
 
         return requiredAuth.stream()
                 .anyMatch(req -> {

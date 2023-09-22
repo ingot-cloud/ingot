@@ -278,43 +278,95 @@ public class TenantEngine {
      * @param id 组织ID
      */
     public void removeTenantUserRelation(long id) {
-        List<Long> userIdList = sysUserTenantService.list(
-                        Wrappers.<SysUserTenant>lambdaQuery()
-                                .eq(SysUserTenant::getTenantId, id))
-                .stream().map(SysUserTenant::getUserId).toList();
+        TenantEnv.runAs(id, () -> {
+            List<Long> userIdList = sysUserTenantService.list(
+                            Wrappers.<SysUserTenant>lambdaQuery()
+                                    .eq(SysUserTenant::getTenantId, id))
+                    .stream().map(SysUserTenant::getUserId).toList();
 
-        // 取消关联组织
-        sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
-                .eq(SysUserTenant::getTenantId, id));
+            // 取消关联组织
+            sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
+                    .eq(SysUserTenant::getTenantId, id));
 
-        // 取消关联部门
-        sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
-                .in(SysUserDept::getUserId, userIdList));
+            // 取消关联部门
+            sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
+                    .in(SysUserDept::getUserId, userIdList));
 
-        // 取消关联角色
-        sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
-                .in(SysRoleUser::getUserId, userIdList));
+            // 取消关联角色
+            sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
+                    .in(SysRoleUser::getUserId, userIdList));
+        });
     }
 
+    /**
+     * 移除租户和部门
+     *
+     * @param id 租户ID
+     */
     public void removeTenantAndDept(long id) {
-        sysTenantService.removeTenantById(id);
-        sysDeptService.remove(Wrappers.lambdaQuery());
+        TenantEnv.runAs(id, () -> {
+            sysTenantService.removeTenantById(id);
+            sysDeptService.remove(Wrappers.lambdaQuery());
+        });
     }
 
+    /**
+     * 移除租户权限和角色
+     *
+     * @param id 租户ID
+     */
     public void removeTenantAuthorityAndRole(long id) {
-        List<Long> roleIds = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
-                .eq(SysRole::getTenantId, id)).stream().map(SysRole::getId).toList();
+        TenantEnv.runAs(id, () -> {
+            List<Long> roleIds = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
+                    .eq(SysRole::getTenantId, id)).stream().map(SysRole::getId).toList();
 
-        sysRoleService.remove(Wrappers.<SysRole>lambdaQuery()
-                .eq(SysRole::getTenantId, id));
+            sysRoleService.remove(Wrappers.<SysRole>lambdaQuery()
+                    .eq(SysRole::getTenantId, id));
 
-        sysRoleGroupService.remove(Wrappers.<SysRoleGroup>lambdaQuery()
-                .eq(SysRoleGroup::getTenantId, id));
+            sysRoleGroupService.remove(Wrappers.<SysRoleGroup>lambdaQuery()
+                    .eq(SysRoleGroup::getTenantId, id));
 
-        sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
-                .in(SysRoleAuthority::getRoleId, roleIds));
+            sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                    .in(SysRoleAuthority::getRoleId, roleIds));
 
-        sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
-                .eq(SysAuthority::getTenantId, id));
+            sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
+                    .eq(SysAuthority::getTenantId, id));
+        });
+    }
+
+    /**
+     * 管理员加入租户
+     *
+     * @param id 租户ID
+     */
+    public void adminJoinTenant(long id) {
+        List<Long> ids = sysUserService.getAdminIdList();
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+        List<SysUserTenant> list = ids.stream().map(userId -> {
+            SysUserTenant userTenant = new SysUserTenant();
+            userTenant.setUserId(userId);
+            userTenant.setTenantId(id);
+            userTenant.setMain(Boolean.FALSE);
+            userTenant.setCreatedAt(DateUtils.now());
+            return userTenant;
+        }).toList();
+        sysUserTenantService.saveBatch(list);
+    }
+
+    /**
+     * 管理员离开租户
+     *
+     * @param id 租户ID
+     */
+    public void adminLeaveTenant(long id) {
+        List<Long> ids = sysUserService.getAdminIdList();
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+        sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
+                .eq(SysUserTenant::getTenantId, id)
+                .in(SysUserTenant::getUserId, ids));
     }
 }
