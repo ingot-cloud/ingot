@@ -49,7 +49,7 @@ public class BizDeptServiceImpl implements BizDeptService {
 
     @Override
     public void orgCreateDept(SysDept params) {
-        assertionChecker.checkOperation(params.getPid() == null,
+        assertionChecker.checkOperation(params.getPid() != null,
                 "BizDeptServiceImpl.createError");
         sysDeptService.createDept(params);
     }
