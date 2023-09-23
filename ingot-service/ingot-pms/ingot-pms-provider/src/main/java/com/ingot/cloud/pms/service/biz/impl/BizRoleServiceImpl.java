@@ -28,7 +28,7 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public void orgRoleBindUsers(RelationDTO<Long, Long> params) {
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_SUB_ADMIN_CODE);
+        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
         long roleId = params.getId();
         assertionChecker.checkOperation(roleId != managerRole.getId(),
                 "BizRoleServiceImpl.CantBindAndRemoveManager");
@@ -38,8 +38,6 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public void setOrgUserRoles(long userId, List<Long> roles) {
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_SUB_ADMIN_CODE);
-
-        // todo
+        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
     }
 }
