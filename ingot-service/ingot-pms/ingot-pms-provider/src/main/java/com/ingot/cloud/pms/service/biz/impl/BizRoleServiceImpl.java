@@ -1,6 +1,8 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -39,5 +41,14 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Override
     public void setOrgUserRoles(long userId, List<Long> roles) {
         SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
+        long count = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
+                .eq(SysRoleUser::getUserId, userId)
+                .eq(SysRoleUser::getRoleId, managerRole.getId()));
+        // 如果操作用户之前就是管理员角色，那么需要保证管理员角色不被删除
+        if (count > 0) {
+            roles.add(managerRole.getId());
+        }
+
+        sysRoleUserService.setUserRoles(userId, roles);
     }
 }
