@@ -3,18 +3,17 @@ package com.ingot.cloud.pms.service.biz.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p>Description  : BizDeptServiceImpl.</p>
@@ -27,10 +26,25 @@ import java.util.Set;
 public class BizDeptServiceImpl implements BizDeptService {
     private final SysDeptService sysDeptService;
     private final AssertionChecker assertionChecker;
+    private final DeptTrans deptTrans;
 
     @Override
     public List<DeptTreeNodeVO> orgList() {
-        return sysDeptService.treeList();
+        List<SysDept> all = sysDeptService.list();
+        List<DeptTreeNodeVO> allNode = all.stream()
+                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .map(deptTrans::to).toList();
+
+        List<DeptTreeNodeVO> childNode = allNode.stream().filter(item -> !item.getMainFlag()).toList();
+        DeptTreeNodeVO mainNode = allNode.stream().filter(DeptTreeNodeVO::getMainFlag).findFirst().orElse(null);
+        if (mainNode == null) {
+            return ListUtil.empty();
+        }
+        List<DeptTreeNodeVO> childTree = TreeUtils.build(childNode, mainNode.getId());
+        List<DeptTreeNodeVO> result = new ArrayList<>(childTree.size() + 1);
+        result.add(mainNode);
+        result.addAll(childTree);
+        return result;
     }
 
     @Override
@@ -43,8 +57,11 @@ public class BizDeptServiceImpl implements BizDeptService {
     @Override
     public void orgUpdateDept(SysDept params) {
         SysDept main = sysDeptService.getMainDept();
+        // 不能更新主部门
         assertionChecker.checkOperation(!Objects.equals(params.getId(), main.getId()),
                 "BizDeptServiceImpl.updateError");
+        params.setMainFlag(null);
+        params.setPid(null);
 
         sysDeptService.updateDept(params);
     }
@@ -52,6 +69,7 @@ public class BizDeptServiceImpl implements BizDeptService {
     @Override
     public void orgDeleteDept(long id) {
         SysDept main = sysDeptService.getMainDept();
+        // 不能删除主部门
         assertionChecker.checkOperation(id != main.getId(),
                 "BizDeptServiceImpl.deleteError");
         sysDeptService.removeDeptById(id);

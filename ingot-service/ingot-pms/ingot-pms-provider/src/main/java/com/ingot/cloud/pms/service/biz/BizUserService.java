@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.service.biz;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
+
+import java.util.List;
 
 /**
  * <p>Description  : 业务用户service.</p>
@@ -36,4 +37,30 @@ public interface BizUserService {
      * @return {@link MenuTreeNodeVO} List
      */
     List<MenuTreeNodeVO> getUserMenus(IngotUser user);
+
+    /**
+     * 获取用户简介信息
+     *
+     * @param id 用户ID
+     * @return {@link UserProfileVO}
+     */
+    UserProfileVO getOrgUserProfile(long id);
+
+    /**
+     * 组织创建用户
+     * @param params {@link UserDTO}
+     */
+    void orgCreateUser(UserDTO params);
+
+    /**
+     * 组织更新用户
+     * @param params {@link UserDTO}
+     */
+    void orgUpdateUser(UserDTO params);
+
+    /**
+     * 组织删除用户
+     * @param id ID
+     */
+    void orgDeleteUser(long id);
 }

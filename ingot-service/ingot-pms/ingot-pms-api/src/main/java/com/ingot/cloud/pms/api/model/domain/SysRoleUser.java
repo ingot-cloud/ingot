@@ -42,5 +42,4 @@ public class SysRoleUser extends BaseModel<SysRoleAuthority> {
      * 租户ID
      */
     private Long tenantId;
-
 }

@@ -30,8 +30,8 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
     /**
      * 更新用户角色，将用户角色更新为指定角色
      *
-     * @param userId 用户ID
-     * @param roles  待设置的角色
+     * @param userId          用户ID
+     * @param roles           待设置的角色
      */
     void setUserRoles(long userId, List<Long> roles);
 

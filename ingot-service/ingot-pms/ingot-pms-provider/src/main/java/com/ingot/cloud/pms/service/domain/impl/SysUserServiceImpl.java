@@ -17,6 +17,7 @@ import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
@@ -55,6 +56,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysTenantService sysTenantService;
     private final SysDeptService sysDeptService;
     private final BizDeptService bizDeptService;
+    private final BizRoleService bizRoleService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
@@ -127,7 +129,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         // 设置部门
         bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
         // 设置角色
-        sysRoleUserService.setUserRoles(user.getId(), params.getRoleIds());
+        bizRoleService.setOrgUserRoles(user.getId(), params.getRoleIds());
         return user;
     }
 
@@ -170,12 +172,28 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUser(UserDTO params) {
+    public void updateUserAndUpdateRelation(UserDTO params) {
         long userId = params.getId();
-        SysUser current = getById(userId);
         SysUser user = userTrans.to(params);
-        if (StrUtil.isNotEmpty(params.getNewPassword())) {
-            user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+
+        updateUser(user);
+
+        if (CollUtil.isNotEmpty(params.getRoleIds())) {
+            // 更新角色
+            bizRoleService.setOrgUserRoles(userId, params.getRoleIds());
+        }
+        if (CollUtil.isNotEmpty(params.getDeptIds())) {
+            // 更新部门
+            bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
+        }
+    }
+
+    @Override
+    public void updateUser(SysUser user) {
+        SysUser current = getById(user.getId());
+
+        if (StrUtil.isNotEmpty(user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setInitPwd(false);
         }
 
@@ -184,15 +202,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         user.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
-
-        if (CollUtil.isNotEmpty(params.getRoleIds())) {
-            // 更新角色
-            sysRoleUserService.setUserRoles(userId, params.getRoleIds());
-        }
-        if (CollUtil.isNotEmpty(params.getDeptIds())) {
-            // 更新部门
-            bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
-        }
     }
 
     private void checkUserUniqueField(SysUser update, SysUser current) {

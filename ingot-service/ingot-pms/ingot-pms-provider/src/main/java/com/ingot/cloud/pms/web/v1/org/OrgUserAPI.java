@@ -8,7 +8,6 @@ import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
@@ -48,38 +47,28 @@ public class OrgUserAPI implements RShortcuts {
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
-        // 密码默认为手机号
-        params.setInitPwd(Boolean.TRUE);
-        params.setPassword(params.getPhone());
-        params.setNewPassword(params.getPhone());
-        sysUserService.createUserAndSetRelation(params);
+        bizUserService.orgCreateUser(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
-        if (params.getStatus() == UserStatusEnum.LOCK) {
-            userOpsChecker.disableUser(params.getId());
-        }
-        // 不可更新密码
-        params.setNewPassword(null);
-        sysUserService.updateUser(params);
+        bizUserService.orgUpdateUser(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        userOpsChecker.removeUser(id);
-        sysUserService.removeUserById(id);
+        bizUserService.orgDeleteUser(id);
         return ok();
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.r')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
-        return ok(bizUserService.getUserProfile(id));
+        return ok(bizUserService.getOrgUserProfile(id));
     }
 
     @PutMapping("/edit")

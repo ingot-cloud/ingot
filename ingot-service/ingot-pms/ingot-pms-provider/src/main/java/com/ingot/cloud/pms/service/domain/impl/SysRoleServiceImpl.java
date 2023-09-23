@@ -25,6 +25,7 @@ import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.PageUtils;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.utils.RoleUtils;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -158,11 +159,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public SysRole getRoleByCode(String code) {
-        SysRole role = roleCache.get(code);
+        SysRole role = roleCache.get(TenantContextHolder.get() + code);
         if (role == null) {
             role = getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getCode, code));
             if (role != null) {
-                roleCache.put(code, role);
+                roleCache.put(TenantContextHolder.get() + code, role);
             }
         }
 
@@ -219,7 +220,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(removeById(id),
                 "SysRoleServiceImpl.RemoveFailed");
 
-        roleCache.remove(role.getCode());
+        roleCache.remove(TenantContextHolder.get() + role.getCode());
     }
 
     @Override
@@ -244,7 +245,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
 
-        roleCache.remove(role.getCode());
+        roleCache.remove(TenantContextHolder.get() + role.getCode());
     }
 
     @Override

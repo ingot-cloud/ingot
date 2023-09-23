@@ -16,4 +16,10 @@ public interface SysUserTenantService extends BaseService<SysUserTenant> {
      * @param userId 用户ID
      */
     void joinTenant(long userId);
+
+    /**
+     * 离开租户
+     * @param userId 用户ID
+     */
+    void leaveTenant(long userId);
 }

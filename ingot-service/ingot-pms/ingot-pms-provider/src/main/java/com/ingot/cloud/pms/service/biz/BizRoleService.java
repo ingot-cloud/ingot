@@ -2,6 +2,8 @@ package com.ingot.cloud.pms.service.biz;
 
 import com.ingot.framework.core.model.common.RelationDTO;
 
+import java.util.List;
+
 /**
  * <p>Description  : BizRoleService.</p>
  * <p>Author       : wangchao.</p>
@@ -11,8 +13,15 @@ import com.ingot.framework.core.model.common.RelationDTO;
 public interface BizRoleService {
 
     /**
-     * 角色绑定用户
+     * 组织角色绑定用户
      * @param params {@link RelationDTO}
      */
-    void roleBindUsers(RelationDTO<Long, Long> params);
+    void orgRoleBindUsers(RelationDTO<Long, Long> params);
+
+    /**
+     * 设置用户角色
+     * @param userId 用户ID
+     * @param roles 角色
+     */
+    void setOrgUserRoles(long userId, List<Long> roles);
 }

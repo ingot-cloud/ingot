@@ -5,10 +5,10 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -33,7 +33,7 @@ public class OrgRoleAPI implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysRoleUserService sysRoleUserService;
+    private final BizRoleService bizRoleService;
     
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.role.r', 'constants.role.w')")
     @GetMapping("/options")
@@ -129,7 +129,7 @@ public class OrgRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.role.w')")
     @PutMapping("/bindUser")
     public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleUserService.roleBindUsers(params);
+        bizRoleService.orgRoleBindUsers(params);
         return ok();
     }
 }

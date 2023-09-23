@@ -44,9 +44,6 @@ public class BizOrgServiceImpl implements BizOrgService {
 
         // 6. 角色绑定权限
         tenantEngine.tenantRoleBindAuthorities(roles, authorities);
-
-        // 7. 平台超级管理员加入租户
-        tenantEngine.adminJoinTenant(tenant.getId());
     }
 
     @Override
@@ -60,9 +57,6 @@ public class BizOrgServiceImpl implements BizOrgService {
 
         // 3. 移除权限，移除角色
         tenantEngine.removeTenantAuthorityAndRole(id);
-
-        // 4. 平台超级管理员移除租户
-        tenantEngine.adminLeaveTenant(id);
     }
 
 }

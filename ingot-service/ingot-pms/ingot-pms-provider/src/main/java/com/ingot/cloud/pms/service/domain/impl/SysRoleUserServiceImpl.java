@@ -53,15 +53,8 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
             return;
         }
 
-        if (CollUtil.size(roles) == 1) {
-            SysRoleUser entity = new SysRoleUser();
-            entity.setUserId(userId);
-            entity.setRoleId(roles.get(0));
-            save(entity);
-            return;
-        }
-
-        List<SysRoleUser> roleUsers = roles.stream()
+        List<SysRoleUser> roleUsers = CollUtil.newHashSet(roles)
+                .stream()
                 .map(roleId -> {
                     SysRoleUser entity = new SysRoleUser();
                     entity.setUserId(userId);

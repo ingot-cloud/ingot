@@ -59,7 +59,7 @@ public class AdminUserAPI implements RShortcuts {
         if (params.getStatus() == UserStatusEnum.LOCK) {
             userOpsChecker.disableUser(params.getId());
         }
-        sysUserService.updateUser(params);
+        sysUserService.updateUserAndUpdateRelation(params);
         return ok();
     }
 

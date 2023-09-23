@@ -33,6 +33,7 @@ public interface SysUserService extends BaseService<SysUser> {
 
     /**
      * 获取平台超级管理员ID列表
+     *
      * @return id列表
      */
     List<Long> getAdminIdList();
@@ -73,7 +74,14 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param params 参数
      */
-    void updateUser(UserDTO params);
+    void updateUserAndUpdateRelation(UserDTO params);
+
+    /**
+     * 更新用户
+     *
+     * @param user {@link SysUser}
+     */
+    void updateUser(SysUser user);
 
     /**
      * 用户修改密码
