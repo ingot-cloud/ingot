@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
@@ -75,6 +76,18 @@ public class OrgUserAPI implements RShortcuts {
     public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
         long userId = SecurityAuthContext.getUser().getId();
         bizUserService.updateUserBaseInfo(userId, params);
+        return ok();
+    }
+
+    @PutMapping("/initFixPwd")
+    public R<?> initFixPwd(@RequestBody UserPasswordDTO params) {
+        bizUserService.orgPasswordInit(params);
+        return ok();
+    }
+
+    @PutMapping("/fixPwd")
+    public R<?> fixPwd(@RequestBody UserPasswordDTO params) {
+        bizUserService.fixPassword(params);
         return ok();
     }
 }

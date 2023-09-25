@@ -1,11 +1,13 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
@@ -19,6 +21,7 @@ import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,6 +47,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysRoleUserService sysRoleUserService;
     private final BizDeptService bizDeptService;
 
+    private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
     private final UserTrans userTrans;
 
@@ -173,5 +177,28 @@ public class BizUserServiceImpl implements BizUserService {
         // 取消关联角色
         sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getUserId, id));
+    }
+
+    @Override
+    public void orgPasswordInit(UserPasswordDTO params) {
+        long id = SecurityAuthContext.getUser().getId();
+        SysUser current = sysUserService.getById(id);
+        assertI18nService.checkOperation(current != null,
+                "SysUserServiceImpl.UserNonExist");
+        if (!BooleanUtil.isTrue(current.getInitPwd())) {
+            return;
+        }
+
+        SysUser user = new SysUser();
+        user.setId(id);
+        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
+        user.setInitPwd(false);
+        assertI18nService.checkOperation(user.updateById(),
+                "SysUserServiceImpl.UpdatePasswordFailed");
+    }
+
+    @Override
+    public void fixPassword(UserPasswordDTO params) {
+        sysUserService.fixPassword(SecurityAuthContext.getUser().getId(), params);
     }
 }

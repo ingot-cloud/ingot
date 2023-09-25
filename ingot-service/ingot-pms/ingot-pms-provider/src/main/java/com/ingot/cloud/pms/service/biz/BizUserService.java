@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.biz;
 
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -33,6 +34,7 @@ public interface BizUserService {
 
     /**
      * 获取用户可用菜单
+     *
      * @param user {@link IngotUser}
      * @return {@link MenuTreeNodeVO} List
      */
@@ -48,19 +50,36 @@ public interface BizUserService {
 
     /**
      * 组织创建用户
+     *
      * @param params {@link UserDTO}
      */
     void orgCreateUser(UserDTO params);
 
     /**
      * 组织更新用户
+     *
      * @param params {@link UserDTO}
      */
     void orgUpdateUser(UserDTO params);
 
     /**
      * 组织删除用户
+     *
      * @param id ID
      */
     void orgDeleteUser(long id);
+
+    /**
+     * 密码初始化
+     *
+     * @param params {@link UserPasswordDTO}
+     */
+    void orgPasswordInit(UserPasswordDTO params);
+
+    /**
+     * 修改密码
+     *
+     * @param params {@link UserPasswordDTO}
+     */
+    void fixPassword(UserPasswordDTO params);
 }
