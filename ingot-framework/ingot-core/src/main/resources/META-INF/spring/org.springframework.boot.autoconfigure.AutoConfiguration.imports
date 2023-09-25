@@ -4,5 +4,4 @@ com.ingot.framework.core.config.CoreConfig
 com.ingot.framework.core.config.ErrorConfig
 com.ingot.framework.core.config.MessageSourceConfig
 com.ingot.framework.core.config.WebConfig
-com.ingot.framework.core.config.CryptConfig
 com.ingot.framework.core.error.GlobalExceptionHandlerResolver

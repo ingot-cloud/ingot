@@ -1,5 +1,6 @@
 package com.ingot.framework.crypto.utils;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.Mode;
 import cn.hutool.crypto.Padding;
@@ -8,7 +9,6 @@ import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.symmetric.AES;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.crypto.annotation.IngotDecrypt;
 import com.ingot.framework.crypto.annotation.IngotEncrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;
@@ -32,7 +32,7 @@ import java.util.Objects;
  * <p>Time         : 11:02 AM.</p>
  */
 @Slf4j
-public class Utils {
+public class CryptoUtils {
 
     @Nullable
     public static CryptoInfoRecord getEncryptInfo(MethodParameter methodParameter) {
@@ -103,7 +103,7 @@ public class Utils {
                 AES aes = new AES(Mode.CBC, Padding.NoPadding,
                         new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES"),
                         new IvParameterSpec(secretKey.getBytes(StandardCharsets.UTF_8)));
-                return aes.decrypt(StrUtil.str(cryptoData, StandardCharsets.UTF_8));
+                return aes.decrypt(Base64.decode(cryptoData));
             }
             case RSA -> {
                 return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
@@ -115,11 +115,21 @@ public class Utils {
         return cryptoData;
     }
 
+    /**
+     * AES解密
+     */
+    public static String decryptAES(String key, String crypto) {
+        return StrUtil.str(
+                decrypt(crypto.getBytes(StandardCharsets.UTF_8), new CryptoInfoRecord(CryptoType.AES, key)),
+                StandardCharsets.UTF_8
+        ).trim();
+    }
+
     public static String getSecretKey(CryptoInfoRecord record) {
         String secretKey = record.secretKey();
         if (StrUtil.isEmpty(secretKey)) {
             secretKey = SpringContextHolder.getBean(SecretKeyResolver.class)
-                    .get(WebUtils.getRequest(), record.type());
+                    .get(record.type());
         }
 
         if (StrUtil.isEmpty(secretKey)) {

@@ -1,7 +1,4 @@
-package com.ingot.framework.core.utils.crypto;
-
-import java.io.IOException;
-import java.util.Objects;
+package com.ingot.framework.crypto.jackson;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JacksonException;
@@ -11,17 +8,23 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.utils.AESUtils;
+import com.ingot.framework.crypto.annotation.IngotDecrypt;
+import com.ingot.framework.crypto.model.CryptoInfoRecord;
+import com.ingot.framework.crypto.model.CryptoType;
+import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
 /**
  * <p>Description  : CryptoDeserializer.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2022/12/30.</p>
- * <p>Time         : 5:55 PM.</p>
+ * <p>Date         : 2023/9/25.</p>
+ * <p>Time         : 3:10 PM.</p>
  */
 @Slf4j
 @NoArgsConstructor
@@ -35,31 +38,25 @@ public class CryptoDeserializer extends JsonDeserializer<String> implements Cont
         if (p == null || StrUtil.isEmpty(p.getText())) {
             return null;
         }
-        switch (type) {
-            case AES:
-                if (StrUtil.isEmpty(key)) {
-                    key = SpringContextHolder.getBean(IngotCryptoProperties.class).getAesKey();
-                }
-                if (StrUtil.isEmpty(key)) {
-                    log.warn("[CryptoDeserializer] 请配置ingot.crypto.aesKey");
-                    return p.getText();
-                }
-                return AESUtils.decryptAES(key, p.getText());
-            default:
-                return p.getText();
-        }
+
+        CryptoInfoRecord record = new CryptoInfoRecord(type, key);
+        return switch (type) {
+            case AES, RSA -> StrUtil.str(
+                    CryptoUtils.decrypt(p.getBinaryValue(), record),
+                    StandardCharsets.UTF_8);
+        };
     }
 
     @Override
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty beanProperty) throws JsonMappingException {
         if (beanProperty != null) {
             if (Objects.equals(beanProperty.getType().getRawClass(), String.class)) {
-                IngotCrypto crypto = beanProperty.getAnnotation(IngotCrypto.class);
+                IngotDecrypt crypto = beanProperty.getAnnotation(IngotDecrypt.class);
                 if (crypto == null) {
-                    crypto = beanProperty.getContextAnnotation(IngotCrypto.class);
+                    crypto = beanProperty.getContextAnnotation(IngotDecrypt.class);
                 }
                 if (crypto != null) {
-                    return new CryptoDeserializer(crypto.type(), crypto.key());
+                    return new CryptoDeserializer(crypto.value(), crypto.secretKey());
                 }
             }
             return ctxt.findContextualValueDeserializer(beanProperty.getType(), beanProperty);

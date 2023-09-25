@@ -15,4 +15,5 @@ dependencies {
 
     implementation project(ingot.framework_vc)
     implementation project(ingot.framework_data_redis)
+    implementation project(ingot.framework_crypto)
 }

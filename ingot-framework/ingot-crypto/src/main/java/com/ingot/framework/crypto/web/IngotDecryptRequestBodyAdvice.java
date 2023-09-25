@@ -8,7 +8,7 @@ import com.ingot.framework.crypto.annotation.IngotDecrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;
 import com.ingot.framework.crypto.model.CryptoHttpInputMessage;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
-import com.ingot.framework.crypto.utils.Utils;
+import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -61,9 +61,9 @@ public class IngotDecryptRequestBodyAdvice implements RequestBodyAdvice {
             return inputMessage;
         }
 
-        CryptoInfoRecord record = Utils.getDecryptInfo(methodParameter);
+        CryptoInfoRecord record = CryptoUtils.getDecryptInfo(methodParameter);
         if (record == null) {
-            Utils.throwError(CryptoErrorCode.CRYPTO_CONFIG);
+            CryptoUtils.throwError(CryptoErrorCode.CRYPTO_CONFIG);
         }
 
         byte[] bodyByteArray = StreamUtils.copyToByteArray(messageBody);
@@ -73,17 +73,17 @@ public class IngotDecryptRequestBodyAdvice implements RequestBodyAdvice {
         byte[] decryptedBody = null;
         // 如果不存在，表示请求体整体加密
         if (StrUtil.isBlank(bodyCryptoKey)) {
-            decryptedBody = Utils.decrypt(bodyByteArray, record);
+            decryptedBody = CryptoUtils.decrypt(bodyByteArray, record);
         } else {
             Map<String, Object> data = objectMapper.readValue(bodyByteArray, Map.class);
             String cryptoContent = (String) data.get(bodyCryptoKey);
             if (cryptoContent != null) {
-                decryptedBody = Utils.decrypt(cryptoContent.getBytes(StandardCharsets.UTF_8), record);
+                decryptedBody = CryptoUtils.decrypt(cryptoContent.getBytes(StandardCharsets.UTF_8), record);
             }
         }
         if (decryptedBody == null) {
             log.error("[IngotDecryptRequestBodyAdvice] 解密异常，检查相关配置");
-            Utils.throwError(CryptoErrorCode.DECRYPT_ERROR);
+            CryptoUtils.throwError(CryptoErrorCode.DECRYPT_ERROR);
         }
         InputStream inputStream = new ByteArrayInputStream(decryptedBody);
         return new CryptoHttpInputMessage(inputStream, inputMessage.getHeaders());

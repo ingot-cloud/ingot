@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.crypto.IngotCryptoProperties;
 import com.ingot.framework.crypto.annotation.IngotDecrypt;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
-import com.ingot.framework.crypto.utils.Utils;
+import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -46,7 +46,7 @@ public class IngotDecryptParamResolver implements HandlerMethodArgumentResolver 
             return null;
         }
         byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
-        byte[] decryptData = Utils.decrypt(textBytes, new CryptoInfoRecord(decrypt.value(), decrypt.secretKey()));
+        byte[] decryptData = CryptoUtils.decrypt(textBytes, new CryptoInfoRecord(decrypt.value(), decrypt.secretKey()));
 
         return objectMapper.readValue(decryptData, parameter.getType());
     }

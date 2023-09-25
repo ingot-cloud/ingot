@@ -8,7 +8,7 @@ import com.ingot.framework.crypto.IngotCryptoProperties;
 import com.ingot.framework.crypto.annotation.IngotEncrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
-import com.ingot.framework.crypto.utils.Utils;
+import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -53,9 +53,9 @@ public class IngotEncryptResponseBodyAdvice implements ResponseBodyAdvice<Object
                                   @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   @NonNull ServerHttpRequest request,
                                   @NonNull ServerHttpResponse response) {
-        CryptoInfoRecord record = Utils.getDecryptInfo(returnType);
+        CryptoInfoRecord record = CryptoUtils.getDecryptInfo(returnType);
         if (record == null) {
-            Utils.throwError(CryptoErrorCode.CRYPTO_CONFIG);
+            CryptoUtils.throwError(CryptoErrorCode.CRYPTO_CONFIG);
         }
 
         byte[] bodyJsonBytes;
@@ -69,11 +69,11 @@ public class IngotEncryptResponseBodyAdvice implements ResponseBodyAdvice<Object
         String bodyJsonKey = properties.getBodyKey();
         // 如果key不存在，那么直接返回对body进行加密的结果
         if (StrUtil.isBlank(bodyJsonKey)) {
-            return Utils.encrypt(bodyJsonBytes, record);
+            return CryptoUtils.encrypt(bodyJsonBytes, record);
         }
         // 包装返回对象，使用指定key映射加密数据
         Map<String, Object> data = new HashMap<>(2);
-        data.put(bodyJsonKey, Utils.encrypt(bodyJsonBytes, record));
+        data.put(bodyJsonKey, CryptoUtils.encrypt(bodyJsonBytes, record));
         return data;
     }
 }
