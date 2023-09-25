@@ -1,0 +1,7 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation project(ingot.framework_core)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.spring_boot.web_starter)
+}

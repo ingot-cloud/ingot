@@ -21,6 +21,8 @@ include 'ingot-framework:ingot-tenant'
 findProject(':ingot-framework:ingot-tenant')?.name = 'ingot-tenant'
 include 'ingot-framework:ingot-id'
 findProject(':ingot-framework:ingot-id')?.name = 'ingot-id'
+include 'ingot-framework:ingot-crypto'
+findProject(':ingot-framework:ingot-crypto')?.name = 'ingot-crypto'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'
