@@ -5,17 +5,16 @@ import com.ingot.framework.crypto.model.CryptoType;
 import java.lang.annotation.*;
 
 /**
- * <p>Description  : IngotDecrypt.</p>
+ * <p>Description  : IngotFieldDecrypt.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/25.</p>
- * <p>Time         : 10:50 AM.</p>
+ * <p>Time         : 4:55 PM.</p>
  */
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface IngotDecrypt {
-
+public @interface IngotFieldDecrypt {
     /**
      * 加解密类型
      */

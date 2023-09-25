@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.ingot.framework.crypto.annotation.IngotDecrypt;
+import com.ingot.framework.crypto.annotation.IngotFieldDecrypt;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
 import com.ingot.framework.crypto.model.CryptoType;
 import com.ingot.framework.crypto.utils.CryptoUtils;
@@ -40,20 +40,26 @@ public class CryptoDeserializer extends JsonDeserializer<String> implements Cont
         }
 
         CryptoInfoRecord record = new CryptoInfoRecord(type, key);
-        return switch (type) {
-            case AES, RSA -> StrUtil.str(
-                    CryptoUtils.decrypt(p.getBinaryValue(), record),
-                    StandardCharsets.UTF_8);
-        };
+        try {
+            return switch (type) {
+                case AES, RSA -> StrUtil.str(
+                        CryptoUtils.decrypt(p.getText().getBytes(StandardCharsets.UTF_8), record),
+                        StandardCharsets.UTF_8
+                ).trim();
+            };
+        } catch (Exception e) {
+            log.error("[CryptoDeserializer] - 解密失败", e);
+            return null;
+        }
     }
 
     @Override
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty beanProperty) throws JsonMappingException {
         if (beanProperty != null) {
             if (Objects.equals(beanProperty.getType().getRawClass(), String.class)) {
-                IngotDecrypt crypto = beanProperty.getAnnotation(IngotDecrypt.class);
+                IngotFieldDecrypt crypto = beanProperty.getAnnotation(IngotFieldDecrypt.class);
                 if (crypto == null) {
-                    crypto = beanProperty.getContextAnnotation(IngotDecrypt.class);
+                    crypto = beanProperty.getContextAnnotation(IngotFieldDecrypt.class);
                 }
                 if (crypto != null) {
                     return new CryptoDeserializer(crypto.value(), crypto.secretKey());

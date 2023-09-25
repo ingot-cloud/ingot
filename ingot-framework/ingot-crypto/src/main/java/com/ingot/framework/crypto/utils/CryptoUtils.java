@@ -133,7 +133,7 @@ public class CryptoUtils {
         }
 
         if (StrUtil.isEmpty(secretKey)) {
-            log.error(logMsg("秘钥未配置 - 秘钥类型={}"), record.secretKey());
+            log.error(logMsg("秘钥未配置 - 秘钥类型={}"), record.type().getText());
             throwError(CryptoErrorCode.CRYPTO_SECRET_KEY);
         }
 

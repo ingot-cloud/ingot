@@ -17,7 +17,9 @@ public class DefaultSecretKeyResolver implements SecretKeyResolver {
     @Override
     public String get(CryptoType type) {
         switch (type) {
-            case AES, RSA -> properties.getSecretKeys().get(type.getValue());
+            case AES, RSA -> {
+                return properties.getSecretKeys().get(type.getValue());
+            }
         }
         return null;
     }

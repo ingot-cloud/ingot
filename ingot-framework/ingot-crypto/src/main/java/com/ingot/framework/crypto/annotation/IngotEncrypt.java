@@ -10,7 +10,7 @@ import java.lang.annotation.*;
  * <p>Date         : 2023/9/25.</p>
  * <p>Time         : 10:51 AM.</p>
  */
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
