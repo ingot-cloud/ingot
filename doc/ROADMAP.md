@@ -16,4 +16,27 @@
 ## 其他
  - [x] 接口拆分，组织类接口和非组织类
  - [ ] 字段加解密插件
+ - [ ] 授权服务器，oauth2_authorization 和 oauth2_authorization_consent 使用redis存储
 
+## 功能点
+* [ ] RBAC
+* [X] 多租户
+* [ ] dubbo
+* [ ] grpc
+* [ ] Seata
+* [ ] Sentinel
+* [ ] Token管理
+   * [ ] Token信息缓存优化
+   * [ ] 增加签退逻辑，签退某个Token的时候，需要将其缓存在Redis中，Token正常认证流程中，如果发现Redis存在该Token，那么代表需要签退
+   * [ ] 需要考虑唯一用户情况如何判断
+* [x] 验证码模块
+   * [x] 图形验证码
+   * [x] 邮箱验证码
+   * [x] 短信验证码
+* [x] 优化拆分store模块
+* [x] 分离账号体系，前端用户独立表
+* [ ] 登录成功，异步日志通知
+
+### 授权
+* [x] 默认使用Authorization Code + PKCE
+* [x] 自有APP登录默认使用Password或Social登录模式，注意Client Secret不暴露
