@@ -7,7 +7,6 @@ import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
-import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 public class OrgUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
-    private final UserOpsChecker userOpsChecker;
 
     @GetMapping
     public R<?> user() {
