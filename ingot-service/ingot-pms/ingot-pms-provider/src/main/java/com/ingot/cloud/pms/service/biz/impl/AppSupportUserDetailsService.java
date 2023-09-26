@@ -96,7 +96,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                     result.setAllows(allows);
 
                     // 查询拥有的角色
-                    List<AppRole> roles = appRoleService.getAllRolesOfUser(user.getId());
+                    List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
 
                     setRoles(result, roles, tenant);
                     return result;

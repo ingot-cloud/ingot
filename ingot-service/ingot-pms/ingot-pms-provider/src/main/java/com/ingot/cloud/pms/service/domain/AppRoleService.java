@@ -20,5 +20,5 @@ public interface AppRoleService extends BaseService<AppRole> {
      * @param userId 用户ID
      * @return 角色列表
      */
-    List<AppRole> getAllRolesOfUser(long userId);
+    List<AppRole> getRolesOfUser(long userId);
 }

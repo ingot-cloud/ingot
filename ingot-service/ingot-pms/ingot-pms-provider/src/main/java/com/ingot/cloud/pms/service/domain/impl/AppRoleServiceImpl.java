@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
@@ -29,11 +30,15 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
     private final AppRoleUserService appRoleUserService;
 
     @Override
-    public List<AppRole> getAllRolesOfUser(long userId) {
+    public List<AppRole> getRolesOfUser(long userId) {
         // 基础角色ID
         Set<Long> baseRoleIds = appRoleUserService.list(Wrappers.<AppRoleUser>lambdaQuery()
                         .eq(AppRoleUser::getUserId, userId))
                 .stream().map(AppRoleUser::getRoleId).collect(Collectors.toSet());
+
+        if (CollUtil.isEmpty(baseRoleIds)) {
+            return CollUtil.newArrayList();
+        }
 
         return list(Wrappers.<AppRole>lambdaQuery()
                 .eq(AppRole::getStatus, CommonStatusEnum.ENABLE)
