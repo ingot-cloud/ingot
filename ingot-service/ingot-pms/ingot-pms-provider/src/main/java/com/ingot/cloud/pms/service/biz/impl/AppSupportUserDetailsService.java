@@ -92,6 +92,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
                     value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
 
                     UserDetailsResponse result = userTrans.toUserDetails(value);
+                    result.setTenant(tenant);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
