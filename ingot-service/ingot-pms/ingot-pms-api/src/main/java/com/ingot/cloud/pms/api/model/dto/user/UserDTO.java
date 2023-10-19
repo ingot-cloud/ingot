@@ -1,8 +1,6 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.framework.core.utils.validation.Group;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -28,6 +26,5 @@ public class UserDTO extends SysUser {
     /**
      * 密码
      */
-    @NotBlank(message = "{SysUser.password}", groups = Group.Create.class)
     private String newPassword;
 }

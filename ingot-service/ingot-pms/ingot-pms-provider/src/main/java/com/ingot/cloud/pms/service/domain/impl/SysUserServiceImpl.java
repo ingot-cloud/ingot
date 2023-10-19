@@ -7,10 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
+import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
@@ -27,7 +24,6 @@ import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -112,9 +108,19 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition) {
-        Long tenantId = TenantContextHolder.get();
-        return baseMapper.conditionPageWithTenant(page, condition, tenantId);
+    public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId) {
+        return baseMapper.conditionPageWithTenant(page, condition, orgId);
+    }
+
+    @Override
+    public IPage<SysUser> allOrgUserPage(Page<SysUser> page, AllOrgUserFilterDTO filter) {
+        // 查询系统所有组织用户，不进行数据隔离
+        return TenantEnv.applyAs(null, () ->
+                page(page, Wrappers.<SysUser>lambdaQuery()
+                        .like(StrUtil.isNotEmpty(filter.getPhone()), SysUser::getPhone, filter.getPhone())
+                        .like(StrUtil.isNotEmpty(filter.getNickname()), SysUser::getNickname, filter.getNickname())
+                        .like(StrUtil.isNotEmpty(filter.getEmail()), SysUser::getEmail, filter.getEmail()))
+        );
     }
 
     @Override

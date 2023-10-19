@@ -2,20 +2,19 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
-import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -40,19 +39,20 @@ public class OrgUserAPI implements RShortcuts {
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w', 'constants.member.r')")
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserQueryDTO condition) {
-        return ok(sysUserService.conditionPage(page, condition));
+        Long tenantId = TenantContextHolder.get();
+        return ok(sysUserService.conditionPage(page, condition, tenantId));
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PostMapping
-    public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
+    public R<?> create(@RequestBody OrgUserDTO params) {
         bizUserService.orgCreateUser(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.w')")
     @PutMapping
-    public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
+    public R<?> update(@RequestBody OrgUserDTO params) {
         bizUserService.orgUpdateUser(params);
         return ok();
     }

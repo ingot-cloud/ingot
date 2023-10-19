@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
@@ -18,6 +19,8 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface UserTrans {
     SysUser to(UserDTO in);
+
+    SysUser to(OrgUserDTO in);
 
     SysUser to(UserBaseInfoDTO in);
 

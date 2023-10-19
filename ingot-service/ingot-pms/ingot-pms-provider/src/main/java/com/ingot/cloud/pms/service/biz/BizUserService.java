@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.service.biz;
 
+import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
@@ -51,16 +51,16 @@ public interface BizUserService {
     /**
      * 组织创建用户
      *
-     * @param params {@link UserDTO}
+     * @param params {@link OrgUserDTO}
      */
-    void orgCreateUser(UserDTO params);
+    void orgCreateUser(OrgUserDTO params);
 
     /**
      * 组织更新用户
      *
-     * @param params {@link UserDTO}
+     * @param params {@link OrgUserDTO}
      */
-    void orgUpdateUser(UserDTO params);
+    void orgUpdateUser(OrgUserDTO params);
 
     /**
      * 组织删除用户

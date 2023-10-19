@@ -10,7 +10,6 @@ import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,7 +41,6 @@ public class SysUser extends BaseModel<SysUser> {
     /**
      * 用户名
      */
-    @NotBlank(message = "{SysUser.username}", groups = Group.Create.class)
     private String username;
 
     /**

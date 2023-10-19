@@ -3,10 +3,7 @@ package com.ingot.cloud.pms.service.domain;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
+import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -43,9 +40,19 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param page      分页条件
      * @param condition 筛选条件
+     * @param orgId     组织ID
      * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
      */
-    IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition);
+    IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId);
+
+    /**
+     * 条件查询所有系统用户分页数据
+     *
+     * @param page   分页参数
+     * @param filter 过滤条件{@link AllOrgUserFilterDTO}
+     * @return {@link SysUser}
+     */
+    IPage<SysUser> allOrgUserPage(Page<SysUser> page, AllOrgUserFilterDTO filter);
 
     /**
      * 创建用户

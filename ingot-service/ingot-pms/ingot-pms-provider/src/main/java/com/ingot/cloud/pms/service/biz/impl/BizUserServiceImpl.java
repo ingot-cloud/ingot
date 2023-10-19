@@ -5,8 +5,8 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
@@ -48,13 +48,13 @@ public class BizUserServiceImpl implements BizUserService {
     private final BizDeptService bizDeptService;
 
     private final PasswordEncoder passwordEncoder;
-    private final AssertionChecker assertI18nService;
+    private final AssertionChecker assertionChecker;
     private final UserTrans userTrans;
 
     @Override
     public UserProfileVO getUserProfile(long id) {
         SysUser user = sysUserService.getById(id);
-        assertI18nService.checkOperation(user != null,
+        assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
@@ -76,27 +76,27 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public void updateUserBaseInfo(long id, UserBaseInfoDTO params) {
         SysUser current = sysUserService.getById(id);
-        assertI18nService.checkOperation(current != null,
+        assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
         SysUser user = userTrans.to(params);
         if (StrUtil.isNotEmpty(user.getPhone())
                 && !StrUtil.equals(user.getPhone(), current.getPhone())) {
-            assertI18nService.checkOperation(sysUserService.count(Wrappers.<SysUser>lambdaQuery()
+            assertionChecker.checkOperation(sysUserService.count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getPhone, user.getPhone())) == 0,
                     "SysUserServiceImpl.PhoneExist");
         }
 
         if (StrUtil.isNotEmpty(user.getEmail())
                 && !StrUtil.equals(user.getEmail(), current.getEmail())) {
-            assertI18nService.checkOperation(sysUserService.count(Wrappers.<SysUser>lambdaQuery()
+            assertionChecker.checkOperation(sysUserService.count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getEmail, user.getEmail())) == 0,
                     "SysUserServiceImpl.EmailExist");
         }
 
         user.setUpdatedAt(DateUtils.now());
-        assertI18nService.checkOperation(sysUserService.updateById(user),
+        assertionChecker.checkOperation(sysUserService.updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }
 
@@ -110,7 +110,7 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public UserProfileVO getOrgUserProfile(long id) {
         SysUser user = sysUserService.getById(id);
-        assertI18nService.checkOperation(user != null,
+        assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
@@ -123,16 +123,21 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
-    public void orgCreateUser(UserDTO params) {
-        params.setUsername(params.getPhone());
+    public void orgCreateUser(OrgUserDTO params) {
+        // 手机号，部门，昵称不能为空
+        assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPhone()), "SysUser.phone");
+        assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getNickname()), "SysUser.nickname");
+        assertionChecker.checkOperation(CollUtil.isNotEmpty(params.getDeptIds()), "SysUser.deptId");
+
         // 如果已经存在注册用户，那么直接关联新组织信息
         SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery()
                 .eq(SysUser::getPhone, params.getPhone()));
         if (user == null) {
             // 密码默认为手机号
-            params.setInitPwd(Boolean.TRUE);
             user = userTrans.to(params);
+            user.setUsername(params.getPhone());
             user.setPassword(params.getPhone());
+            user.setInitPwd(Boolean.TRUE);
             sysUserService.createUser(user);
         }
 
@@ -143,10 +148,9 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
-    public void orgUpdateUser(UserDTO params) {
-        params.setNewPassword(null);
-        params.setPassword(null);
-        params.setRoleIds(null);
+    public void orgUpdateUser(OrgUserDTO params) {
+        assertionChecker.checkOperation(params.getId() != null, "Common.IDNonNull");
+
         SysUser user = userTrans.to(params);
         // 更新用户
         sysUserService.updateUser(user);
@@ -160,14 +164,14 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public void orgDeleteUser(long id) {
         long userId = SecurityAuthContext.getUser().getId();
-        assertI18nService.checkOperation(userId != id, "BizUserServiceImpl.RemoveSelfFailed");
+        assertionChecker.checkOperation(userId != id, "BizUserServiceImpl.RemoveSelfFailed");
 
         // 判断删除用户是否为除主管理员
         SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
         long deleteCount = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getRoleId, managerRole.getId())
                 .eq(SysRoleUser::getUserId, id));
-        assertI18nService.checkOperation(deleteCount == 0, "BizUserServiceImpl.CantRemoveManager");
+        assertionChecker.checkOperation(deleteCount == 0, "BizUserServiceImpl.CantRemoveManager");
 
         // 取消关联组织
         sysUserTenantService.leaveTenant(id);
@@ -183,7 +187,7 @@ public class BizUserServiceImpl implements BizUserService {
     public void orgPasswordInit(UserPasswordDTO params) {
         long id = SecurityAuthContext.getUser().getId();
         SysUser current = sysUserService.getById(id);
-        assertI18nService.checkOperation(current != null,
+        assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         if (!BooleanUtil.isTrue(current.getInitPwd())) {
             return;
@@ -193,7 +197,7 @@ public class BizUserServiceImpl implements BizUserService {
         user.setId(id);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setInitPwd(false);
-        assertI18nService.checkOperation(user.updateById(),
+        assertionChecker.checkOperation(user.updateById(),
                 "SysUserServiceImpl.UpdatePasswordFailed");
     }
 

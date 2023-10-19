@@ -11,7 +11,6 @@
         <result column="email" property="email"/>
         <result column="status" property="status"/>
         <result column="created_at" property="createdAt"/>
-        <result column="deleted_at" property="deletedAt"/>
     </resultMap>
 
     <select id="conditionPageWithTenant" resultMap="UserPageItemVo">
@@ -22,8 +21,7 @@
                u.email,
                u.avatar,
                u.status,
-               u.created_at,
-               u.deleted_at
+               u.created_at
         FROM sys_user_tenant AS ut
                  LEFT JOIN sys_user AS u ON u.id = ut.user_id
                  <if test="condition.deptId != null and condition.deptId != 0">
@@ -55,6 +53,7 @@
             AND ru.tenant_id = #{tenantId}
             AND ru.role_id = #{condition.roleId}
         </if>
+        ORDER BY ut.id
     </select>
 
 </mapper>

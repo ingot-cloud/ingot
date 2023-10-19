@@ -50,8 +50,4 @@ public class UserPageItemVO implements Serializable {
      * 创建日期
      */
     private LocalDateTime createdAt;
-    /**
-     * 删除日期
-     */
-    private LocalDateTime deletedAt;
 }
