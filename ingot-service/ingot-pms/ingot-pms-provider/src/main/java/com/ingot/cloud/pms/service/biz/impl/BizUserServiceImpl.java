@@ -10,6 +10,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
@@ -19,13 +20,13 @@ import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : BizUserServiceImpl.</p>
@@ -41,6 +42,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysDeptService sysDeptService;
+    private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
     private final SysMenuService sysMenuService;
     private final SysUserDeptService sysUserDeptService;
@@ -60,15 +62,6 @@ public class BizUserServiceImpl implements BizUserService {
 
         UserProfileVO profile = userTrans.toUserProfile(user);
 
-        List<SysRole> list = sysRoleService.getRolesOfUser(id);
-        if (CollUtil.isNotEmpty(list)) {
-            profile.setRoleIds(list.stream()
-                    .map(SysRole::getId).collect(Collectors.toList()));
-        }
-
-        List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(id))
-                .stream().map(SysUserDept::getDeptId).toList();
-        profile.setDeptIds(deptIds);
 
         return profile;
     }
@@ -108,13 +101,13 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
-    public UserProfileVO getOrgUserProfile(long id) {
+    public OrgUserProfileVO getOrgUserProfile(long id) {
         SysUser user = sysUserService.getById(id);
         assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        UserProfileVO profile = userTrans.toUserProfile(user);
+        OrgUserProfileVO profile = userTrans.toOrgUserProfile(user);
 
         List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(id))
                 .stream().map(SysUserDept::getDeptId).toList();
@@ -142,7 +135,7 @@ public class BizUserServiceImpl implements BizUserService {
         }
 
         // 加入租户
-        sysUserTenantService.joinTenant(user.getId());
+        sysUserTenantService.joinTenant(user.getId(), sysTenantService.getById(TenantContextHolder.get()));
         // 设置部门
         bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
     }

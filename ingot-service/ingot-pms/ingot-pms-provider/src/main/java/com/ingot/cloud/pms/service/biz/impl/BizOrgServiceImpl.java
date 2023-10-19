@@ -1,12 +1,13 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
+import com.ingot.cloud.pms.service.domain.AppUserTenantService;
+import com.ingot.cloud.pms.service.domain.SysTenantService;
+import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BizOrgServiceImpl implements BizOrgService {
     private final TenantEngine tenantEngine;
+    private final SysTenantService sysTenantService;
+    private final SysUserTenantService sysUserTenantService;
+    private final AppUserTenantService appUserTenantService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -44,6 +48,16 @@ public class BizOrgServiceImpl implements BizOrgService {
 
         // 6. 角色绑定权限
         tenantEngine.tenantRoleBindAuthorities(roles, authorities);
+    }
+
+    @Override
+    public void updateBase(SysTenant params) {
+        sysTenantService.updateTenantById(params);
+
+        if (StrUtil.isNotEmpty(params.getName())) {
+            sysUserTenantService.updateBase(params);
+            appUserTenantService.updateBase(params);
+        }
     }
 
     @Override

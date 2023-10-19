@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.biz;
 
+import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 
 /**
@@ -16,6 +17,13 @@ public interface BizOrgService {
      * @param params {@link CreateOrgDTO}
      */
     void createOrg(CreateOrgDTO params);
+
+    /**
+     * 更新组织基本信息
+     *
+     * @param params {@link SysTenant}
+     */
+    void updateBase(SysTenant params);
 
     /**
      * 删除组织

@@ -245,7 +245,7 @@ public class TenantEngine {
             }
 
             // 加入租户
-            sysUserTenantService.joinTenant(user.getId());
+            sysUserTenantService.joinTenant(user.getId(), tenant);
             // 设置部门
             sysDeptService.setDepts(user.getId(), List.of(dept.getId()));
             // 设置主角色

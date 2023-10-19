@@ -60,7 +60,7 @@ public class AdminTenantAPI implements RShortcuts {
     @PreAuthorize("@ingot.requiredAdmin")
     @PutMapping
     public R<?> update(@Valid @RequestBody SysTenant params) {
-        sysTenantService.updateTenantById(params);
+        bizOrgService.updateBase(params);
         return ok();
     }
 

@@ -1,6 +1,5 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
 
@@ -9,17 +8,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>Description  : 用户简介.</p>
+ * <p>Description  : 组织用户简介.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/6/24.</p>
- * <p>Time         : 10:59 上午.</p>
+ * <p>Date         : 2023/10/19.</p>
+ * <p>Time         : 11:48 AM.</p>
  */
 @Data
-public class UserProfileVO implements Serializable {
+public class OrgUserProfileVO implements Serializable {
     /**
-     * 所在组织
+     * 部门ID
      */
-    private List<SysTenant> orgList;
+    private List<Long> deptIds;
+
+    /**
+     * 角色ID
+     */
+    private List<Long> roleIds;
 
     /**
      * 用户名

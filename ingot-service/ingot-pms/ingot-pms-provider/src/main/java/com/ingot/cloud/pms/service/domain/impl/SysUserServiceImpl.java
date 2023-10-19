@@ -24,6 +24,7 @@ import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -131,7 +132,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         createUser(user);
 
         // 加入租户
-        sysUserTenantService.joinTenant(user.getId());
+        sysUserTenantService.joinTenant(user.getId(), sysTenantService.getById(TenantContextHolder.get()));
         // 设置部门
         bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
         // 设置角色

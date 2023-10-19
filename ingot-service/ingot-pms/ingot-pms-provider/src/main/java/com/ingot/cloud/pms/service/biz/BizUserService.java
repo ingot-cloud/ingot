@@ -4,6 +4,7 @@ import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 
@@ -46,7 +47,7 @@ public interface BizUserService {
      * @param id 用户ID
      * @return {@link UserProfileVO}
      */
-    UserProfileVO getOrgUserProfile(long id);
+    OrgUserProfileVO getOrgUserProfile(long id);
 
     /**
      * 组织创建用户

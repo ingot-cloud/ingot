@@ -46,6 +46,16 @@ public class SysUserTenant extends BaseModel<SysUserTenant> {
     private Boolean main;
 
     /**
+     * 租户名称
+     */
+    private String name;
+
+    /**
+     * 头像
+     */
+    private String avatar;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;
