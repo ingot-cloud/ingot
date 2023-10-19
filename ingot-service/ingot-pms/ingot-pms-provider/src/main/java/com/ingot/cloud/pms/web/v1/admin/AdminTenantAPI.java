@@ -1,13 +1,15 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import jakarta.validation.Valid;
@@ -17,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : TenantApi.</p>
@@ -33,13 +34,20 @@ public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
     private final BizOrgService bizOrgService;
 
-    @GetMapping("/options")
-    public R<?> options(SysTenant filter) {
-        List<SysTenant> list = CollUtil.emptyIfNull(sysTenantService.list());
+    @GetMapping("/search")
+    public R<?> search(SysTenant filter) {
+        String name = filter.getName();
+        if (StrUtil.isEmpty(name)) {
+            return ok(ListUtil.empty());
+        }
+
+        List<SysTenant> list = CollUtil.emptyIfNull(
+                sysTenantService.list(Wrappers.<SysTenant>lambdaQuery()
+                        .like(SysTenant::getName, name)));
+
         return ok(list.stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
-                .map(item -> Option.of(item.getId(), item.getName()))
-                .collect(Collectors.toList()));
+                .toList());
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write', 'basic.tenant.read')")
