@@ -61,7 +61,8 @@ public class BizUserServiceImpl implements BizUserService {
         assert user != null;
 
         UserProfileVO profile = userTrans.toUserProfile(user);
-
+        List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
+        profile.setOrgList(userTenantList);
 
         return profile;
     }

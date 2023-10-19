@@ -104,9 +104,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     private List<AllowTenantDTO> getTenantList(SysUser user) {
         // 1.获取可以访问的租户列表
-        List<SysUserTenant> userTenantList = sysUserTenantService.list(
-                Wrappers.<SysUserTenant>lambdaQuery()
-                        .eq(SysUserTenant::getUserId, user.getId()));
+        List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
 
         return BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()

@@ -10,7 +10,6 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
-import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +33,8 @@ public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
     private final BizOrgService bizOrgService;
 
-    @Permit
     @GetMapping("/options")
-    public R<?> options() {
+    public R<?> options(SysTenant filter) {
         List<SysTenant> list = CollUtil.emptyIfNull(sysTenantService.list());
         return ok(list.stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)

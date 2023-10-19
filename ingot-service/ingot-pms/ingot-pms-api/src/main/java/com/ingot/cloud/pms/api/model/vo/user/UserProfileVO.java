@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
 
@@ -19,7 +19,7 @@ public class UserProfileVO implements Serializable {
     /**
      * 所在组织
      */
-    private List<SysTenant> orgList;
+    private List<SysUserTenant> orgList;
 
     /**
      * 用户名
