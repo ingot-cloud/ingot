@@ -13,7 +13,6 @@ import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
@@ -47,11 +46,13 @@ public class TenantEngine {
     private final SysAuthorityService sysAuthorityService;
     private final SysUserService sysUserService;
     private final SysUserTenantService sysUserTenantService;
-    private final BizDeptService bizDeptService;
     private final SysUserDeptService sysUserDeptService;
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysMenuService sysMenuService;
+    private final AppUserTenantService appUserTenantService;
+    private final AppRoleService appRoleService;
+    private final AppRoleUserService appRoleUserService;
     private final BizIdGen bizIdGen;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
@@ -279,22 +280,35 @@ public class TenantEngine {
      */
     public void removeTenantUserRelation(long id) {
         TenantEnv.runAs(id, () -> {
-            List<Long> userIdList = sysUserTenantService.list(
-                            Wrappers.<SysUserTenant>lambdaQuery()
-                                    .eq(SysUserTenant::getTenantId, id))
-                    .stream().map(SysUserTenant::getUserId).toList();
 
-            // 取消关联组织
+
+            // 系统用户取消关联组织
             sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
                     .eq(SysUserTenant::getTenantId, id));
 
+            List<Long> sysUserIdList = sysUserTenantService.list(
+                            Wrappers.<SysUserTenant>lambdaQuery()
+                                    .eq(SysUserTenant::getTenantId, id))
+                    .stream().map(SysUserTenant::getUserId).toList();
             // 取消关联部门
             sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
-                    .in(SysUserDept::getUserId, userIdList));
-
+                    .in(SysUserDept::getUserId, sysUserIdList));
             // 取消关联角色
             sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
-                    .in(SysRoleUser::getUserId, userIdList));
+                    .in(SysRoleUser::getUserId, sysUserIdList));
+
+
+            // app用户取消关联组织信息
+            appUserTenantService.remove(Wrappers.<AppUserTenant>lambdaQuery()
+                    .eq(AppUserTenant::getTenantId, id));
+
+            List<Long> appUserIdList = appUserTenantService.list(
+                            Wrappers.<AppUserTenant>lambdaQuery()
+                                    .eq(AppUserTenant::getTenantId, id))
+                    .stream().map(AppUserTenant::getUserId).toList();
+            // 取消关联角色
+            appRoleUserService.remove(Wrappers.<AppRoleUser>lambdaQuery()
+                    .in(AppRoleUser::getUserId, appUserIdList));
         });
     }
 
@@ -331,6 +345,10 @@ public class TenantEngine {
 
             sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
                     .eq(SysAuthority::getTenantId, id));
+
+            appRoleService.remove(Wrappers.<AppRole>lambdaQuery()
+                    .eq(AppRole::getTenantId, id));
+
         });
     }
 }
