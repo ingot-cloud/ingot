@@ -14,6 +14,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +41,12 @@ public class AdminRoleAPI implements RShortcuts {
     @GetMapping("/options")
     public R<?> options() {
         return ok(sysRoleService.options(SecurityAuthContext.isAdmin()));
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
+    @GetMapping("/options/{orgId}")
+    public R<?> orgOptions(@PathVariable Long orgId) {
+        return TenantEnv.applyAs(orgId, () -> ok(sysRoleService.options(false)));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
