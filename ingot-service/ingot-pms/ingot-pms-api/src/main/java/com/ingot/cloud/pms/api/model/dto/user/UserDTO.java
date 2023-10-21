@@ -1,10 +1,9 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
-import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * <p>Description  : UserDto.</p>
@@ -12,19 +11,30 @@ import java.util.List;
  * <p>Date         : 2021/1/6.</p>
  * <p>Time         : 2:09 下午.</p>
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UserDTO extends SysUser {
+public class UserDTO implements Serializable {
     /**
-     * 拥有的角色ID
+     * 用户ID，如果是编辑则不能为空
      */
-    private List<Long> roleIds;
+    private Long id;
     /**
-     * 部门ID
+     * 手机号
      */
-    private List<Long> deptIds;
+    private String phone;
     /**
-     * 密码
+     * 昵称
      */
-    private String newPassword;
+    private String nickname;
+    /**
+     * 邮箱
+     */
+    private String email;
+    /**
+     * 头像
+     */
+    private String avatar;
+    /**
+     * 状态, 0:正常，9:禁用
+     */
+    private UserStatusEnum status;
 }
