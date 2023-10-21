@@ -1,13 +1,15 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.dto.user.*;
+import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
@@ -24,7 +26,6 @@ import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -125,23 +126,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public SysUser createUserAndSetRelation(UserDTO params) {
-        SysUser user = userTrans.to(params);
-        user.setPassword(params.getNewPassword());
-        createUser(user);
-
-        // 加入租户
-        sysUserTenantService.joinTenant(user.getId(), sysTenantService.getById(TenantContextHolder.get()));
-        // 设置部门
-        bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
-        // 设置角色
-        bizRoleService.setOrgUserRoles(user.getId(), params.getRoleIds());
-        return user;
-    }
-
-    @Override
     public void createUser(SysUser user) {
+        user.setInitPwd(Boolean.TRUE);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreatedAt(DateUtils.now());
         if (user.getStatus() == null) {
@@ -175,24 +161,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         assertI18nService.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateUserAndUpdateRelation(UserDTO params) {
-        long userId = params.getId();
-        SysUser user = userTrans.to(params);
-
-        updateUser(user);
-
-        if (CollUtil.isNotEmpty(params.getRoleIds())) {
-            // 更新角色
-            bizRoleService.setOrgUserRoles(userId, params.getRoleIds());
-        }
-        if (CollUtil.isNotEmpty(params.getDeptIds())) {
-            // 更新部门
-            bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
-        }
     }
 
     @Override
