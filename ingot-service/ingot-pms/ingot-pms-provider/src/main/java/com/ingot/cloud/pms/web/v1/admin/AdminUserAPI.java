@@ -2,13 +2,12 @@ package com.ingot.cloud.pms.web.v1.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
-import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 public class AdminUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
-    private final UserOpsChecker userOpsChecker;
 
     @GetMapping
     public R<?> user() {
@@ -48,26 +46,40 @@ public class AdminUserAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
-        params.setInitPwd(null);
-        sysUserService.createUserAndSetRelation(params);
-        return ok();
+        return ok(bizUserService.createUser(params));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
-        if (params.getStatus() == UserStatusEnum.LOCK) {
-            userOpsChecker.disableUser(params.getId());
-        }
-        sysUserService.updateUserAndUpdateRelation(params);
+        bizUserService.updateUser(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        userOpsChecker.removeUser(id);
-        sysUserService.removeUserById(id);
+        bizUserService.deleteUser(id);
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read')")
+    @GetMapping("/orgInfo/{id}")
+    public R<?> orgInfo(@PathVariable Long id) {
+        return ok(bizUserService.userOrgInfo(id));
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PutMapping("/org")
+    public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
+        bizUserService.userOrgEdit(params);
+        return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PutMapping("/org/leave")
+    public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
+        bizUserService.userOrgLeave(params);
         return ok();
     }
 

@@ -2,7 +2,11 @@ package com.ingot.cloud.pms.service.biz;
 
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
+import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
+import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
@@ -40,6 +44,57 @@ public interface BizUserService {
      * @return {@link MenuTreeNodeVO} List
      */
     List<MenuTreeNodeVO> getUserMenus(IngotUser user);
+
+    /**
+     * 创建用户
+     *
+     * @param params {@link UserDTO}
+     * @return {@link ResetPwdVO} 初始化密码
+     */
+    ResetPwdVO createUser(UserDTO params);
+
+    /**
+     * 更新用户
+     *
+     * @param params {@link UserDTO}
+     */
+    void updateUser(UserDTO params);
+
+    /**
+     * 删除用户
+     *
+     * @param id 用户ID
+     */
+    void deleteUser(long id);
+
+    /**
+     * 重置密码
+     *
+     * @param userId 用户ID
+     * @return {@link ResetPwdVO} 初始化密码
+     */
+    ResetPwdVO resetPwd(long userId);
+
+    /**
+     * 用户组织信息编辑，如果用户没加入该组织，那么直接加入组织
+     *
+     * @param params {@link UserOrgEditDTO}
+     */
+    void userOrgEdit(UserOrgEditDTO params);
+
+    /**
+     * 用户离开组织
+     *
+     * @param params {@link UserOrgEditDTO}
+     */
+    void userOrgLeave(UserOrgEditDTO params);
+
+    /**
+     * 用户组织信息
+     * @param userId 用户ID
+     * @return {@link UserOrgInfoVO}
+     */
+    List<UserOrgInfoVO> userOrgInfo(long userId);
 
     /**
      * 获取用户简介信息

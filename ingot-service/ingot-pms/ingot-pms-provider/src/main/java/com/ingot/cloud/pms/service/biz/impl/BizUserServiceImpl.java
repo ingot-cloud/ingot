@@ -2,19 +2,26 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
+import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
+import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
@@ -51,6 +58,7 @@ public class BizUserServiceImpl implements BizUserService {
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
+    private final UserOpsChecker userOpsChecker;
     private final UserTrans userTrans;
 
     @Override
@@ -99,6 +107,69 @@ public class BizUserServiceImpl implements BizUserService {
         List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
         return sysMenuService.getMenuByAuthorities(authorities);
+    }
+
+    @Override
+    public ResetPwdVO createUser(UserDTO params) {
+        SysUser user = userTrans.to(params);
+
+        // 默认初始化密码
+        String initPwd = RandomUtil.randomString(6);
+
+        user.setInitPwd(Boolean.TRUE);
+        user.setPassword(initPwd);
+        user.setStatus(UserStatusEnum.ENABLE);
+
+        ResetPwdVO result = new ResetPwdVO();
+        result.setRandom(initPwd);
+        return result;
+    }
+
+    @Override
+    public void updateUser(UserDTO params) {
+        if (params.getStatus() == UserStatusEnum.LOCK) {
+            userOpsChecker.disableUser(params.getId());
+        }
+
+        SysUser user = userTrans.to(params);
+        sysUserService.updateUser(user);
+    }
+
+    @Override
+    public void deleteUser(long id) {
+        userOpsChecker.removeUser(id);
+        sysUserService.removeUserById(id);
+    }
+
+    @Override
+    public ResetPwdVO resetPwd(long userId) {
+        SysUser user = sysUserService.getById(userId);
+        assertionChecker.checkOperation(user != null,
+                "SysUserServiceImpl.UserNonExist");
+        assert user != null;
+
+        // 默认初始化密码
+        String initPwd = RandomUtil.randomString(6);
+        user.setPassword(initPwd);
+
+        ResetPwdVO result = new ResetPwdVO();
+        result.setRandom(initPwd);
+        return result;
+    }
+
+    @Override
+    public void userOrgEdit(UserOrgEditDTO params) {
+
+    }
+
+    @Override
+    public void userOrgLeave(UserOrgEditDTO params) {
+
+    }
+
+    @Override
+    public List<UserOrgInfoVO> userOrgInfo(long userId) {
+        return null;
     }
 
     @Override
