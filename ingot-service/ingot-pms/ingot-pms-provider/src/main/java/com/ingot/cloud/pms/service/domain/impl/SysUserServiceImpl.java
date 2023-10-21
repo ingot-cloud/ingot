@@ -15,8 +15,6 @@ import com.ingot.cloud.pms.api.model.transform.UserTrans;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
-import com.ingot.cloud.pms.service.biz.BizDeptService;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
@@ -53,8 +51,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     private final SysUserTenantService sysUserTenantService;
     private final SysTenantService sysTenantService;
     private final SysDeptService sysDeptService;
-    private final BizDeptService bizDeptService;
-    private final BizRoleService bizRoleService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;

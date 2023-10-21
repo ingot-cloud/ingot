@@ -83,6 +83,12 @@ public class AdminUserAPI implements RShortcuts {
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PutMapping("/resetPwd/{userId}")
+    public R<?> resetPwd(@PathVariable Long userId) {
+        return ok(bizUserService.resetPwd(userId));
+    }
+
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
