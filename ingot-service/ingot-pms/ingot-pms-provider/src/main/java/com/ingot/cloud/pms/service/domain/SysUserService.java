@@ -57,14 +57,6 @@ public interface SysUserService extends BaseService<SysUser> {
     /**
      * 创建用户
      *
-     * @param params 参数
-     * @return {@link SysUser}
-     */
-    SysUser createUserAndSetRelation(UserDTO params);
-
-    /**
-     * 创建用户
-     *
      * @param user {@link SysUser}
      */
     void createUser(SysUser user);
@@ -75,13 +67,6 @@ public interface SysUserService extends BaseService<SysUser> {
      * @param id 用户ID
      */
     void removeUserById(long id);
-
-    /**
-     * 更新用户信息
-     *
-     * @param params 参数
-     */
-    void updateUserAndUpdateRelation(UserDTO params);
 
     /**
      * 更新用户
