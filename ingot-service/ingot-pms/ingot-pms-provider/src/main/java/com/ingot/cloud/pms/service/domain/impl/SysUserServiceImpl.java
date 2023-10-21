@@ -169,7 +169,10 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         if (StrUtil.isNotEmpty(user.getPassword())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user.setInitPwd(false);
+            // 如果没有传递init pwd，那么设置为false
+            if (user.getInitPwd() == null) {
+                user.setInitPwd(Boolean.FALSE);
+            }
         }
 
         checkUserUniqueField(user, current);
