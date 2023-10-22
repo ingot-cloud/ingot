@@ -6,18 +6,19 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
-import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
+import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
-import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
@@ -28,6 +29,7 @@ import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.tenant.TenantContextHolder;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,6 +57,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysUserDeptService sysUserDeptService;
     private final SysRoleUserService sysRoleUserService;
     private final BizDeptService bizDeptService;
+    private final BizRoleService bizRoleService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
@@ -159,17 +162,47 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public void userOrgEdit(UserOrgEditDTO params) {
+        TenantEnv.runAs(params.getOrgId(), () -> {
+            long userId = params.getId();
+            SysTenant tenant = sysTenantService.getById(params.getOrgId());
 
+            sysUserTenantService.joinTenant(userId, tenant);
+            bizDeptService.setUserDeptsEnsureMainDept(userId, params.getDeptIds());
+            bizRoleService.setOrgUserRoles(userId, params.getRoleIds());
+        });
     }
 
     @Override
     public void userOrgLeave(UserOrgEditDTO params) {
-
+        TenantEnv.runAs(params.getOrgId(), () -> {
+            long userId = params.getId();
+            sysUserTenantService.leaveTenant(userId);
+            // 取消关联部门
+            sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
+                    .eq(SysUserDept::getUserId, userId));
+            // 取消关联角色
+            sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
+                    .eq(SysRoleUser::getUserId, userId));
+        });
     }
 
     @Override
     public List<UserOrgInfoVO> userOrgInfo(long userId) {
-        return null;
+        List<SysUserTenant> list = CollUtil.emptyIfNull(sysUserTenantService.getUserOrgs(userId));
+        return list.stream().map(org ->
+                TenantEnv.applyAs(org.getTenantId(), () -> {
+                    UserOrgInfoVO item = new UserOrgInfoVO();
+                    item.setOrgId(org.getTenantId());
+
+                    List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(userId))
+                            .stream().map(SysUserDept::getDeptId).toList();
+                    item.setDeptIds(deptIds);
+
+                    List<Long> roleIds = CollUtil.emptyIfNull(sysRoleService.getRolesOfUser(userId))
+                            .stream().map(SysRole::getId).toList();
+                    item.setRoleIds(roleIds);
+                    return item;
+                })).toList();
     }
 
     @Override
