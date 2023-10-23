@@ -46,7 +46,7 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")
     @GetMapping("/options/{orgId}")
     public R<?> orgOptions(@PathVariable Long orgId) {
-        return TenantEnv.applyAs(orgId, () -> ok(sysRoleService.options(false)));
+        return TenantEnv.applyAs(orgId, () -> ok(sysRoleService.options(SecurityAuthContext.isAdmin())));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.write', 'basic.role.read')")

@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -40,15 +41,26 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public void setOrgUserRoles(long userId, List<Long> roles) {
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
-        long count = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
-                .eq(SysRoleUser::getUserId, userId)
-                .eq(SysRoleUser::getRoleId, managerRole.getId()));
-        // 如果操作用户之前就是管理员角色，那么需要保证管理员角色不被删除
-        if (count > 0) {
-            roles.add(managerRole.getId());
+        // 如果操作的自己，那么需要判断角色
+        long opsUserId = SecurityAuthContext.getUser().getId();
+        if (opsUserId == userId) {
+            ensureRoles(userId, roles, RoleConstants.ROLE_ADMIN_CODE);
+            ensureRoles(userId, roles, RoleConstants.ROLE_MANAGER_CODE);
         }
 
         sysRoleUserService.setUserRoles(userId, roles);
+    }
+
+    private void ensureRoles(long userId, List<Long> roles, String roleCode) {
+        // 如果当前组织包含指定角色，那么需要判断该用户是否有当前指定角色，如果有则确保该角色不被删除
+        SysRole ensureRole = sysRoleService.getRoleByCode(roleCode);
+        if (ensureRole != null) {
+            long count = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
+                    .eq(SysRoleUser::getUserId, userId)
+                    .eq(SysRoleUser::getRoleId, ensureRole.getId()));
+            if (count > 0) {
+                roles.add(ensureRole.getId());
+            }
+        }
     }
 }

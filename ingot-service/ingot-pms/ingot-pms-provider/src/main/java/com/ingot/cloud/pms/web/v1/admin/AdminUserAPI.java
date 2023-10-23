@@ -64,9 +64,9 @@ public class AdminUserAPI implements RShortcuts {
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read')")
-    @GetMapping("/orgInfo/{id}")
-    public R<?> orgInfo(@PathVariable Long id) {
-        return ok(bizUserService.userOrgInfo(id));
+    @GetMapping("/orgInfo/{userId}")
+    public R<?> orgInfo(@PathVariable Long userId) {
+        return ok(bizUserService.userOrgInfo(userId));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")

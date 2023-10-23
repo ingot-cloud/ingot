@@ -174,6 +174,14 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public void userOrgLeave(UserOrgEditDTO params) {
+        // 如果操作的是自己，那么不能离开当前组织
+        long opsUserId = SecurityAuthContext.getUser().getId();
+        if (opsUserId == params.getId()) {
+            long currentOrg = TenantContextHolder.get();
+            long leaveOrg = params.getOrgId();
+            assertionChecker.checkOperation(currentOrg != leaveOrg, "BizUserServiceImpl.CantLeaveCurrentOrg");
+        }
+
         TenantEnv.runAs(params.getOrgId(), () -> {
             long userId = params.getId();
             sysUserTenantService.leaveTenant(userId);

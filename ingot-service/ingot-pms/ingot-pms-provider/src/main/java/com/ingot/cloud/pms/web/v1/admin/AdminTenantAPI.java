@@ -34,6 +34,7 @@ public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
     private final BizOrgService bizOrgService;
 
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write', 'basic.tenant.read')")
     @GetMapping("/search")
     public R<?> search(SysTenant filter) {
         String name = filter.getName();
@@ -48,6 +49,12 @@ public class AdminTenantAPI implements RShortcuts {
         return ok(list.stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
                 .toList());
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write', 'basic.tenant.read')")
+    @GetMapping("/{id}")
+    public R<?> getTenantInfo(@PathVariable Long id) {
+        return ok(sysTenantService.getById(id));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.write', 'basic.tenant.read')")

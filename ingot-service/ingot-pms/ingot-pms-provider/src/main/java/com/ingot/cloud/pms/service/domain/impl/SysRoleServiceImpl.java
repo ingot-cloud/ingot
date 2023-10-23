@@ -159,11 +159,12 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public SysRole getRoleByCode(String code) {
-        SysRole role = roleCache.get(TenantContextHolder.get() + code);
+        Long orgId = TenantContextHolder.get();
+        SysRole role = roleCache.get(orgId + code);
         if (role == null) {
             role = getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getCode, code));
             if (role != null) {
-                roleCache.put(TenantContextHolder.get() + code, role);
+                roleCache.put(orgId + code, role);
             }
         }
 
