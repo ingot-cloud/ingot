@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["sys_role_group"]
+        tables = ["biz_leaf_alloc"]
 
         /**
          * 包名
