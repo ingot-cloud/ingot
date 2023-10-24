@@ -140,7 +140,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     public IPage<RolePageItemVO> conditionPage(Page<SysRole> page,
                                                SysRole condition,
                                                boolean isAdmin) {
-        LambdaQueryWrapper<SysRole> query = Wrappers.lambdaQuery(condition)
+        LambdaQueryWrapper<SysRole> query = Wrappers.<SysRole>lambdaQuery()
+                .like(StrUtil.isNotEmpty(condition.getName()), SysRole::getName, condition.getName())
+                .like(StrUtil.isNotEmpty(condition.getCode()), SysRole::getCode, condition.getCode())
                 .in(!isAdmin, SysRole::getType,
                         ListUtil.list(false, RoleTypeEnums.Tenant, RoleTypeEnums.Custom));
         IPage<SysRole> temp = page(page, query);

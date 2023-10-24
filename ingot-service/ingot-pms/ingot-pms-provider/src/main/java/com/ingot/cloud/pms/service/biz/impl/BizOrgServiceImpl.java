@@ -8,6 +8,9 @@ import com.ingot.cloud.pms.service.biz.BizOrgService;
 import com.ingot.cloud.pms.service.domain.AppUserTenantService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
+import com.ingot.framework.core.constants.OrgConstants;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
     private final AppUserTenantService appUserTenantService;
+    private final AssertionChecker assertionChecker;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -52,6 +56,16 @@ public class BizOrgServiceImpl implements BizOrgService {
 
     @Override
     public void updateBase(SysTenant params) {
+        if (params.getStatus() != null && params.getStatus() == CommonStatusEnum.LOCK) {
+            SysTenant org = sysTenantService.getById(params.getId());
+            String code = org.getCode();
+            // 平台默认组织不可更新状态
+            if (StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE)) {
+                assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE),
+                        "Platform.canNotDisableIngotOrg");
+            }
+        }
+
         sysTenantService.updateTenantById(params);
 
         if (StrUtil.isNotEmpty(params.getName())) {
@@ -63,6 +77,10 @@ public class BizOrgServiceImpl implements BizOrgService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeOrg(long id) {
+        SysTenant org = sysTenantService.getById(id);
+        String code = org.getCode();
+        assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE), "Platform.canNotRemoveIngotOrg");
+
         // 1. 用户取消关联组织，部门，角色
         tenantEngine.removeTenantUserRelation(id);
 
