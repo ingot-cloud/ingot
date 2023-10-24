@@ -37,27 +37,27 @@ public class AdminMenuAPI implements RShortcuts {
         return ok(bizUserService.getUserMenus(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.write', 'basic.menu.read')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w', 'basic.menu.r')")
     @GetMapping("/tree")
     public R<?> tree() {
         return ok(sysMenuService.treeList());
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysMenu params) {
         sysMenuService.createMenu(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysMenu params) {
         sysMenuService.updateMenu(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysMenuService.removeMenuById(id);

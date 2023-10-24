@@ -37,59 +37,59 @@ public class AdminUserAPI implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r', 'basic.user.w')")
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, AllOrgUserFilterDTO condition) {
         return ok(sysUserService.allOrgUserPage(page, condition));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         return ok(bizUserService.createUser(params));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         bizUserService.updateUser(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizUserService.deleteUser(id);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r')")
     @GetMapping("/orgInfo/{userId}")
     public R<?> orgInfo(@PathVariable Long userId) {
         return ok(bizUserService.userOrgInfo(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @PutMapping("/org")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgEdit(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @PutMapping("/org/leave")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgLeave(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
     @PutMapping("/resetPwd/{userId}")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizUserService.resetPwd(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.read', 'basic.user.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r', 'basic.user.w')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));

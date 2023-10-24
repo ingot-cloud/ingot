@@ -35,13 +35,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminSocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write', 'basic.social.read')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w', 'develop.social.r')")
     @GetMapping("/page")
     public R<?> page(Page<SysSocialDetails> page, SysSocialDetails condition) {
         return ok(sysSocialDetailsService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
         params.setTenantId(TenantContextHolder.get());
@@ -51,7 +51,7 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
     @PutMapping
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
         params.setUpdatedAt(DateUtils.now());
@@ -59,7 +59,7 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.social.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
     @DeleteMapping("/{id}")
     public R<?> remove(@PathVariable Long id) {
         sysSocialDetailsService.removeById(id);

@@ -31,32 +31,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminClientAPI implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write', 'basic.client.read')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w', 'develop.client.r')")
     @GetMapping("/page")
     public R<?> page(Page<Oauth2RegisteredClient> page, Oauth2RegisteredClient condition) {
         return ok(oauth2RegisteredClientService.conditionPage(page, condition));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
     @GetMapping("/{id}")
     public R<?> getOne(@PathVariable String id) {
         return ok(oauth2RegisteredClientService.getByClientId(id));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.createClient(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.client.write')")
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
     @PutMapping
     public R<?> update(@RequestBody @Validated(Group.Update.class) OAuth2RegisteredClientDTO params) {
         oauth2RegisteredClientService.updateClientByClientId(params);
         return ok();
     }
 
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
     @DeleteMapping("/{clientId}")
     public R<?> removeById(@PathVariable String clientId) {
         oauth2RegisteredClientService.removeClientByClientId(clientId);
