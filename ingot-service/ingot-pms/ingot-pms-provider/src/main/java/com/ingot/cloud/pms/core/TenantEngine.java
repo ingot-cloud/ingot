@@ -281,15 +281,15 @@ public class TenantEngine {
     public void removeTenantUserRelation(long id) {
         TenantEnv.runAs(id, () -> {
 
+            List<Long> sysUserIdList = sysUserTenantService.list(
+                            Wrappers.<SysUserTenant>lambdaQuery()
+                                    .eq(SysUserTenant::getTenantId, id))
+                    .stream().map(SysUserTenant::getUserId).toList();
 
             // 系统用户取消关联组织
             sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
                     .eq(SysUserTenant::getTenantId, id));
 
-            List<Long> sysUserIdList = sysUserTenantService.list(
-                            Wrappers.<SysUserTenant>lambdaQuery()
-                                    .eq(SysUserTenant::getTenantId, id))
-                    .stream().map(SysUserTenant::getUserId).toList();
             // 取消关联部门
             sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
                     .in(SysUserDept::getUserId, sysUserIdList));
