@@ -79,10 +79,12 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
     }
 
     public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
-        SocialTypeEnums socialType = request.getSocialType();
-        String socialCode = request.getSocialCode();
-        String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-        return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
+        return TenantEnv.applyAs(request.getTenant(), () -> {
+            SocialTypeEnums socialType = request.getSocialType();
+            String socialCode = request.getSocialCode();
+            String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
+            return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
+        });
     }
 
     private UserDetailsResponse map(AppUser user, UserType userType, Long tenant) {
