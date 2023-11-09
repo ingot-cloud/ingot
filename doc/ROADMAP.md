@@ -27,6 +27,7 @@
  - [ ] 权限相关，部门权限和角色权限单独处理
 
 ## 其他
+ - [ ] app_user_social 和 sys_user_social 需要增加 tenant_id，用于区分用户登录不同租户
  - [x] 接口拆分，组织类接口和非组织类
  - [x] 字段加解密插件
  - [ ] 授权服务器，oauth2_authorization 和 oauth2_authorization_consent 使用redis存储
