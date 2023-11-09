@@ -8,9 +8,12 @@ RUN sh -c 'touch ./app.jar'
 
 RUN mkdir -p /ingot-data
 
-# 时区
-RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo "Asia/Shanghai" > /etc/timezone \
-    && apk del tzdata
+ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms128m -Xmx512m -Djava.security.egd=file:/dev/./urandom"
 
-ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar app.jar
+# 时区
+#RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+#    && echo "Asia/Shanghai" > /etc/timezone \
+#    && apk del tzdata
+
+CMD sleep 60; java $JAVA_OPTS -jar app.jar
+#ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar app.jar
