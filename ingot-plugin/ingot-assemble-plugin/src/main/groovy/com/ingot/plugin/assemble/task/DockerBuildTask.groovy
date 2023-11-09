@@ -33,6 +33,9 @@ class DockerBuildTask extends DefaultTask {
     @Internal
     private String imageName
 
+    @Internal
+    private String platform
+
     DockerBuildTask() {
         setGroup("ingot")
     }
@@ -49,7 +52,7 @@ class DockerBuildTask extends DefaultTask {
 
         project.exec {
             workingDir buildDirPath
-            commandLine dockerCmd, 'build', '-t', tag, '.'
+            commandLine dockerCmd, 'buildx', 'build', '--platform', platform, '-t', tag, '.'
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
         }
@@ -88,5 +91,13 @@ class DockerBuildTask extends DefaultTask {
 
     void setImageName(String imageName) {
         this.imageName = imageName
+    }
+
+    String getPlatform() {
+        return platform
+    }
+
+    void setPlatform(String platform) {
+        this.platform = platform
     }
 }

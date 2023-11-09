@@ -76,6 +76,7 @@ class AssemblePlugin implements Plugin<Project> {
             outputDirPath = ext.getOutputDirPath()
             dockerCmd = dockerExtension.getDockerCmd()
             imageName = inputImageName
+            platform = dockerExtension.getPlatform()
         })
 
         project.tasks.create("dockerPush${finalSuffix}", DockerPushTask, {

@@ -1,7 +1,4 @@
 package com.ingot.plugin.assemble.extension
-
-import lombok.Data
-
 /**
  * <p>Description  : DockerExtension.</p>
  * <p>Author       : wangchao.</p>
@@ -14,6 +11,12 @@ class DockerExtension {
      * docker命令path
      */
     String dockerCmd = "docker"
+
+    /**
+     * 默认编译平台 linux/amd64
+     * linux/amd64,linux/arm64
+     */
+    String platform = "linux/amd64"
 
     /**
      * 注册中心地址
@@ -53,6 +56,14 @@ class DockerExtension {
 
     void setDockerCmd(String dockerCmd) {
         this.dockerCmd = dockerCmd
+    }
+
+    String getPlatform() {
+        return platform
+    }
+
+    void setPlatform(String platform) {
+        this.platform = platform
     }
 
     String getRegistry() {
