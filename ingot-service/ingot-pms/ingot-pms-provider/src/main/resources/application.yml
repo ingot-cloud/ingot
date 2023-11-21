@@ -5,7 +5,7 @@ spring:
   application:
     name: ingot-service-pms
   datasource:
-    username: ${MYSQL_USERNAME:root}
+    username: ${MYSQL_USERNAME:dev}
     password: ${MYSQL_PASSWORD:123456}
   data:
     redis:
