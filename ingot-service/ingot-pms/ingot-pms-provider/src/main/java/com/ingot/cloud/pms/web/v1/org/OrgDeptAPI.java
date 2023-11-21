@@ -24,27 +24,27 @@ import org.springframework.web.bind.annotation.*;
 public class OrgDeptAPI implements RShortcuts {
     private final BizDeptService bizDeptService;
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.member.r', 'constants.dept.w', 'constants.dept.r')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.r', 'contacts.dept.w', 'contacts.dept.r')")
     @GetMapping("/tree")
     public R<?> tree() {
         return ok(bizDeptService.orgList());
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.dept.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
         bizDeptService.orgCreateDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.dept.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
         bizDeptService.orgUpdateDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('constants.dept.w')")
+    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizDeptService.orgDeleteDept(id);
