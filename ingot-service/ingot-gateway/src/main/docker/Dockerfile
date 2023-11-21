@@ -1,4 +1,4 @@
-FROM anapsix/alpine-java:8_server-jre_unlimited
+FROM alibabadragonwell/dragonwell:17-anolis
 
 VOLUME ["/ingot-data"]
 
@@ -8,4 +8,6 @@ RUN sh -c 'touch ./app.jar'
 
 RUN mkdir -p /ingot-data
 
-ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar app.jar
+ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms128m -Xmx512m -Djava.security.egd=file:/dev/./urandom"
+
+CMD java $JAVA_OPTS -jar app.jar
