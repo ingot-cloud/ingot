@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -63,8 +64,8 @@ public class AdminRoleAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w', 'basic.role.r')")
     @GetMapping("/group/list")
-    public R<?> groupList() {
-        return ok(sysRoleService.groupRoleList(SecurityAuthContext.isAdmin()));
+    public R<?> groupList(RoleFilterDTO filter) {
+        return ok(sysRoleService.groupRoleList(SecurityAuthContext.isAdmin(), filter));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")

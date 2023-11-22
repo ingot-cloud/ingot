@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.core.model.support.Option;
@@ -49,9 +50,10 @@ public interface SysRoleService extends BaseService<SysRole> {
      * 角色组列表，包含子角色
      *
      * @param isAdmin 是否为管理员
+     * @param filter  {@link RoleFilterDTO}
      * @return {@link RoleGroupItemVO}
      */
-    List<RoleGroupItemVO> groupRoleList(boolean isAdmin);
+    List<RoleGroupItemVO> groupRoleList(boolean isAdmin, RoleFilterDTO filter);
 
     /**
      * 条件查询角色分页信息

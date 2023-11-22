@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
-import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -23,6 +24,10 @@ public class RoleGroupItemVO implements Serializable {
      */
     private String name;
     /**
+     * 角色编码
+     */
+    private String code;
+    /**
      * 是否为角色组
      */
     private Boolean isGroup;
@@ -33,7 +38,11 @@ public class RoleGroupItemVO implements Serializable {
     /**
      * 类型
      */
-    private RoleTypeEnums type;
+    private OrgTypeEnums type;
+    /**
+     * 状态, 0:正常，9:禁用
+     */
+    private CommonStatusEnum status;
     /**
      * 角色列表
      */

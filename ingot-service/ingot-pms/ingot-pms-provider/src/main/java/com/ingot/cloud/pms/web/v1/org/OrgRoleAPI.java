@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
@@ -55,8 +56,8 @@ public class OrgRoleAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.r', 'contacts.role.w')")
     @GetMapping("/group/list")
-    public R<?> groupList() {
-        return ok(sysRoleService.groupRoleList(false));
+    public R<?> groupList(RoleFilterDTO filter) {
+        return ok(sysRoleService.groupRoleList(false, filter));
     }
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")

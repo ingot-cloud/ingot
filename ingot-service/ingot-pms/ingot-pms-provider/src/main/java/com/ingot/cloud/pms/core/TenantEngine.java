@@ -6,9 +6,8 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
-import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
@@ -89,9 +88,9 @@ public class TenantEngine {
      */
     public List<SysRole> createTenantRoles(SysTenant tenant) {
         List<SysRole> templateRoles = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
-                .eq(SysRole::getType, RoleTypeEnums.Tenant));
+                .eq(SysRole::getType, OrgTypeEnums.Tenant));
         List<SysRoleGroup> templateRoleGroups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
-                .eq(SysRoleGroup::getType, RoleTypeEnums.Tenant));
+                .eq(SysRoleGroup::getType, OrgTypeEnums.Tenant));
 
         return TenantEnv.applyAs(tenant.getId(), () -> {
             List<Long> templateGroupIds = templateRoleGroups.stream().map(SysRoleGroup::getId).toList();
@@ -126,7 +125,7 @@ public class TenantEngine {
      */
     public List<SysAuthority> createTenantAuthorityAndMenu(SysTenant tenant) {
         List<SysAuthority> authorities = sysAuthorityService.list(Wrappers.<SysAuthority>lambdaQuery()
-                .eq(SysAuthority::getType, AuthorityTypeEnums.Tenant));
+                .eq(SysAuthority::getType, OrgTypeEnums.Tenant));
         List<AuthorityTreeNodeVO> templateAuthorities = authorities.stream()
                 .map(authorityTrans::to).toList();
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(templateAuthorities);

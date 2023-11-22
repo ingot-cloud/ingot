@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.model.enums.RoleTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,5 +47,5 @@ public class SysRoleGroup extends BaseModel<SysRoleGroup> {
     /**
      * 角色组类型
      */
-    private RoleTypeEnums type;
+    private OrgTypeEnums type;
 }
