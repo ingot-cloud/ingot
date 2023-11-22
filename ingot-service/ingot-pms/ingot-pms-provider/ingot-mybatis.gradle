@@ -14,7 +14,7 @@ ingotMybatis {
     /**
      * 连接池连接账号
      */
-    jdbcUser = "root"
+    jdbcUser = "dev"
 
     /**
      * 连接池连接密码
@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["biz_leaf_alloc"]
+        tables = ["org_authority_default"]
 
         /**
          * 包名

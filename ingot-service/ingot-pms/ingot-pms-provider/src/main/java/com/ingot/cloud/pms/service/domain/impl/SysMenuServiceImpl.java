@@ -1,10 +1,5 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -16,11 +11,11 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
@@ -30,6 +25,11 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -50,14 +50,19 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         List<MenuTreeNodeVO> allNodeList = SpringContextHolder
                 .getBean(SysMenuService.class).nodeList();
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
+                // 1.菜单未绑定权限，直接过滤通过
+                // 2.菜单绑定权限，并且绑定的权限可用
                 .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
                         authorities.stream()
-                                .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
+                                .anyMatch(authority ->
+                                        node.getAuthorityId().equals(authority.getId())
+                                                && authority.getStatus() == CommonStatusEnum.ENABLE))
                 .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
 
         // 如果过滤后的列表中存在父节点，并且不在当前列表中，那么需要增加
+        // 如果父节点被禁用，那么所有子节点都不可用
         List<MenuTreeNodeVO> copy = new ArrayList<>(nodeList);
         copy.stream()
                 .filter(node -> node.getPid() != IDConstants.ROOT_TREE_ID)
