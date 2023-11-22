@@ -115,7 +115,7 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PutMapping("/bindAuthority")
     public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleAuthorityService.roleBindAuthorities(params);
+        bizRoleService.roleBindAuthoritiesEffectOrg(params);
         return ok();
     }
 
@@ -128,12 +128,5 @@ public class AdminRoleAPI implements RShortcuts {
             return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
         }
         return ok(sysAuthorityService.treeList(condition));
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
-    @PutMapping("/bindUser")
-    public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleUserService.roleBindUsers(params);
-        return ok();
     }
 }

@@ -7,6 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.core.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleGroupService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
@@ -32,6 +33,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleService sysRoleService;
     private final SysRoleGroupService sysRoleGroupService;
+    private final SysRoleAuthorityService sysRoleAuthorityService;
     private final TenantOps tenantOps;
 
     private final AssertionChecker assertionChecker;
@@ -113,6 +115,15 @@ public class BizRoleServiceImpl implements BizRoleService {
         sysRoleService.deleteGroup(id, isAdmin);
         if (current.getType() == OrgTypeEnums.Tenant) {
             tenantOps.removeRoleGroup(current);
+        }
+    }
+
+    @Override
+    public void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params) {
+        sysRoleAuthorityService.roleBindAuthorities(params);
+        SysRole current = sysRoleService.getById(params.getId());
+        if (current.getType() == OrgTypeEnums.Tenant) {
+            tenantOps.roleBindAuthorities(params, current);
         }
     }
 

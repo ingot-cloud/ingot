@@ -76,4 +76,11 @@ public interface BizRoleService {
      * @param isAdmin 是否为超管
      */
     void removeRoleGroupEffectOrg(long id, boolean isAdmin);
+
+    /**
+     * 角色绑定权限
+     *
+     * @param params {@link RelationDTO}
+     */
+    void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params);
 }
