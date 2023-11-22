@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.mapper;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -16,14 +16,6 @@ import org.apache.ibatis.annotations.Param;
  * @since 2020-11-20
  */
 public interface SysRoleAuthorityMapper extends BaseMapper<SysRoleAuthority> {
-
-    /**
-     * 创建用户角色关系，如果已存在则忽略
-     *
-     * @param roleId      角色ID
-     * @param authorityId 权限ID
-     */
-    void insertIgnore(@Param("roleId") long roleId, @Param("authorityId") long authorityId);
 
     /**
      * 获取角色权限信息

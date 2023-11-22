@@ -1,8 +1,5 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
@@ -24,6 +21,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * <p>
  * 服务实现类
@@ -41,7 +41,10 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
             .eq(SysRoleAuthority::getRoleId, roleId)
             .eq(SysRoleAuthority::getAuthorityId, targetId));
     private final Do<Long> bind = (roleId, targetId) -> {
-        getBaseMapper().insertIgnore(roleId, targetId);
+        SysRoleAuthority params = new SysRoleAuthority();
+        params.setRoleId(roleId);
+        params.setAuthorityId(targetId);
+        params.insert();
         return true;
     };
 

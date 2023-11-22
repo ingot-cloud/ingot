@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
@@ -7,7 +9,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -21,6 +23,12 @@ public class SysRoleAuthority extends BaseModel<SysRoleAuthority> {
     private static final long serialVersionUID = 1L;
 
     /**
+     * ID
+     */
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+
+    /**
      * 角色ID
      */
     private Long roleId;
@@ -29,5 +37,10 @@ public class SysRoleAuthority extends BaseModel<SysRoleAuthority> {
      * 权限ID
      */
     private Long authorityId;
+
+    /**
+     * 租户ID
+     */
+    private Long tenantId;
 
 }

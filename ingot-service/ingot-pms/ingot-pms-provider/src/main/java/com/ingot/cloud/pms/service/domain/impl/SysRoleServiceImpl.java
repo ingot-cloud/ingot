@@ -31,6 +31,7 @@ import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.security.common.utils.RoleUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @author magician
  * @since 2020-11-20
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
@@ -258,6 +260,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         // 角色编码不可修改
         params.setCode(null);
+        // 角色类型不能修改
+        params.setType(null);
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
@@ -292,6 +296,10 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
             params.setTenantId(null);
             params.setSort(null);
         }
+        long count = sysRoleGroupService.count(
+                Wrappers.<SysRoleGroup>lambdaQuery()
+                        .eq(SysRoleGroup::getName, params.getName()));
+        assertI18nService.checkOperation(count == 0, "SysRoleServiceImpl.GroupNameExist");
         sysRoleGroupService.save(params);
     }
 
@@ -305,6 +313,8 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
             assertI18nService.checkOperation(group.getType() == OrgTypeEnums.Custom,
                     "SysRoleServiceImpl.GroupUpdateFailed");
         }
+
+        params.setType(null);
 
         sysRoleGroupService.updateById(params);
     }

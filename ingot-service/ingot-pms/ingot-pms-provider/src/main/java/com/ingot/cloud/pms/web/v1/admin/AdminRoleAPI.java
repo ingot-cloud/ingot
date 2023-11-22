@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
@@ -37,6 +37,7 @@ public class AdminRoleAPI implements RShortcuts {
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleUserService sysRoleUserService;
+    private final BizRoleService bizRoleService;
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w', 'basic.role.r')")
     @GetMapping("/options")
@@ -57,12 +58,6 @@ public class AdminRoleAPI implements RShortcuts {
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w', 'basic.role.r')")
-    @GetMapping("/page")
-    public R<?> page(Page<SysRole> page, SysRole condition) {
-        return ok(sysRoleService.conditionPage(page, condition, SecurityAuthContext.isAdmin()));
-    }
-
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w', 'basic.role.r')")
     @GetMapping("/group/list")
     public R<?> groupList(RoleFilterDTO filter) {
         return ok(sysRoleService.groupRoleList(SecurityAuthContext.isAdmin(), filter));
@@ -71,42 +66,42 @@ public class AdminRoleAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
-        sysRoleService.createRole(params, SecurityAuthContext.isAdmin());
+        bizRoleService.createRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
-        sysRoleService.updateRoleById(params, SecurityAuthContext.isAdmin());
+        bizRoleService.updateRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        sysRoleService.removeRoleById(id, SecurityAuthContext.isAdmin());
+        bizRoleService.removeRoleEffectOrg(id, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PostMapping("/group")
     public R<?> createGroup(@RequestBody SysRoleGroup params) {
-        sysRoleService.createGroup(params, SecurityAuthContext.isAdmin());
+        bizRoleService.createRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PutMapping("/group")
     public R<?> updateGroup(@RequestBody SysRoleGroup params) {
-        sysRoleService.updateGroup(params, SecurityAuthContext.isAdmin());
+        bizRoleService.updateRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @DeleteMapping("/group/{id}")
     public R<?> removeGroupById(@PathVariable Long id) {
-        sysRoleService.deleteGroup(id, SecurityAuthContext.isAdmin());
+        bizRoleService.removeRoleGroupEffectOrg(id, SecurityAuthContext.isAdmin());
         return ok();
     }
 
