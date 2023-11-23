@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["org_authority_default"]
+        tables = ["sys_application", "sys_application_tenant"]
 
         /**
          * 包名
