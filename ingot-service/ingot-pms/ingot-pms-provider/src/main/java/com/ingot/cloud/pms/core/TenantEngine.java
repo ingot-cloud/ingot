@@ -1,7 +1,6 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
@@ -15,9 +14,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
-import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
@@ -25,9 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * <p>Description  : TenantEngine.</p>
@@ -55,6 +50,7 @@ public class TenantEngine {
     private final BizIdGen bizIdGen;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
+    private final SysApplicationTenantService sysApplicationTenantService;
 
     /**
      * 创建租户
@@ -131,96 +127,18 @@ public class TenantEngine {
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(templateAuthorities);
 
         // 获取菜单
-        List<MenuTreeNodeVO> templateMenus = filterMenus(sysMenuService.nodeList(), authorities);
+        List<MenuTreeNodeVO> templateMenus = TenantUtils.filterMenus(sysMenuService.nodeList(), authorities);
 
         return TenantEnv.applyAs(tenant.getId(), () -> {
             List<SysAuthority> orgAuthorities = new ArrayList<>();
-            createAuthorityFn(orgAuthorities, tree, IDConstants.ROOT_TREE_ID, templateMenus);
+            TenantUtils.createAuthorityAndCollectFn(orgAuthorities, tree, IDConstants.ROOT_TREE_ID, templateMenus, sysAuthorityService);
 
             // 创建菜单
             List<MenuTreeNodeVO> menuTree = TreeUtils.build(templateMenus);
-            createMenuFn(menuTree, IDConstants.ROOT_TREE_ID);
+            TenantUtils.createMenuFn(menuTree, IDConstants.ROOT_TREE_ID, menuTrans, sysMenuService);
 
             return orgAuthorities;
         });
-    }
-
-    private List<MenuTreeNodeVO> filterMenus(List<MenuTreeNodeVO> allMenuNodeList, List<SysAuthority> authorities) {
-        List<MenuTreeNodeVO> nodeList = allMenuNodeList.stream()
-                .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
-                        authorities.stream()
-                                .anyMatch(authority -> node.getAuthorityId().equals(authority.getId())))
-                .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
-                .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
-                .toList();
-
-        // 如果过滤后的列表中存在父节点，并且不在当前列表中，那么需要增加
-        List<MenuTreeNodeVO> copy = new ArrayList<>(nodeList);
-        copy.stream()
-                .filter(node -> node.getPid() != IDConstants.ROOT_TREE_ID)
-                .forEach(node -> {
-                    if (nodeList.stream().noneMatch(item -> ObjectUtil.equals(item.getId(), node.getPid()))) {
-                        allMenuNodeList.stream()
-                                .filter(item -> ObjectUtil.equals(item.getId(), node.getPid()))
-                                .findFirst()
-                                .ifPresent(nodeList::add);
-                    }
-                });
-
-        nodeList.stream()
-                .filter(item -> authorities.stream()
-                        .noneMatch(authority -> item.getAuthorityId().equals(authority.getId())))
-                .forEach(item -> item.setAuthorityId(null));
-
-        return nodeList;
-    }
-
-    private void createMenuFn(List<? extends TreeNode<Long>> tree, long pid) {
-
-        for (TreeNode<Long> node : tree) {
-            if (node instanceof MenuTreeNodeVO menuNode) {
-                SysMenu item = menuTrans.to(menuNode);
-                item.setId(null);
-                item.setPid(pid);
-                item.setUpdatedAt(null);
-                item.setDeletedAt(null);
-                sysMenuService.save(item);
-
-                if (CollUtil.isNotEmpty(node.getChildren())) {
-                    createMenuFn(node.getChildren(), item.getId());
-                }
-            }
-        }
-    }
-
-    private void createAuthorityFn(List<SysAuthority> collect,
-                                   List<? extends TreeNode<Long>> tree,
-                                   long pid,
-                                   List<MenuTreeNodeVO> replaceAuthorityIdMenus) {
-
-        for (TreeNode<Long> node : tree) {
-            if (node instanceof AuthorityTreeNodeVO authNode) {
-                SysAuthority item = new SysAuthority();
-                item.setPid(pid);
-                item.setName(authNode.getName());
-                item.setCode(authNode.getCode());
-                item.setType(authNode.getType());
-                item.setStatus(authNode.getStatus());
-                item.setRemark(authNode.getRemark());
-                item.setCreatedAt(DateUtils.now());
-                sysAuthorityService.save(item);
-                collect.add(item);
-
-                // 替换权限ID
-                replaceAuthorityIdMenus.stream()
-                        .filter(menu -> Objects.equals(menu.getAuthorityId(), node.getId()))
-                        .forEach(menu -> menu.setAuthorityId(item.getId()));
-
-                if (CollUtil.isNotEmpty(node.getChildren())) {
-                    createAuthorityFn(collect, node.getChildren(), item.getId(), replaceAuthorityIdMenus);
-                }
-            }
-        }
     }
 
     /**
@@ -273,13 +191,13 @@ public class TenantEngine {
     }
 
     /**
-     * 移除用户关联该组织，以及组织下的部门和角色
+     * 销毁所有关联信息
      *
-     * @param id 组织ID
+     * @param id 租户ID
      */
-    public void removeTenantUserRelation(long id) {
+    public void destroy(long id) {
         TenantEnv.runAs(id, () -> {
-
+            // 系统用户id
             List<Long> sysUserIdList = sysUserTenantService.list(
                             Wrappers.<SysUserTenant>lambdaQuery()
                                     .eq(SysUserTenant::getTenantId, id))
@@ -299,6 +217,7 @@ public class TenantEngine {
             }
 
 
+            // app用户ID
             List<Long> appUserIdList = appUserTenantService.list(
                             Wrappers.<AppUserTenant>lambdaQuery()
                                     .eq(AppUserTenant::getTenantId, id))
@@ -313,28 +232,19 @@ public class TenantEngine {
                 appRoleUserService.remove(Wrappers.<AppRoleUser>lambdaQuery()
                         .in(AppRoleUser::getUserId, appUserIdList));
             }
-        });
-    }
 
-    /**
-     * 移除租户和部门
-     *
-     * @param id 租户ID
-     */
-    public void removeTenantAndDept(long id) {
-        TenantEnv.runAs(id, () -> {
+            // 移除组织
             sysTenantService.removeTenantById(id);
+            // 移除部门
             sysDeptService.remove(Wrappers.lambdaQuery());
-        });
-    }
+            // 移除菜单
+            sysMenuService.remove(Wrappers.lambdaQuery());
+            // 移除权限
+            sysAuthorityService.remove(Wrappers.lambdaQuery());
+            // 移除应用
+            sysApplicationTenantService.remove(Wrappers.lambdaQuery());
 
-    /**
-     * 移除租户权限和角色
-     *
-     * @param id 租户ID
-     */
-    public void removeTenantAuthorityAndRole(long id) {
-        TenantEnv.runAs(id, () -> {
+            // 移除角色相关
             List<Long> roleIds = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
                     .eq(SysRole::getTenantId, id)).stream().map(SysRole::getId).toList();
 
@@ -346,9 +256,6 @@ public class TenantEngine {
 
             sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
                     .in(SysRoleAuthority::getRoleId, roleIds));
-
-            sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
-                    .eq(SysAuthority::getTenantId, id));
 
             appRoleService.remove(Wrappers.<AppRole>lambdaQuery()
                     .eq(AppRole::getTenantId, id));
