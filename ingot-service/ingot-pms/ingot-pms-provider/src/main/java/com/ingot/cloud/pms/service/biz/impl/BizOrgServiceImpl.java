@@ -81,17 +81,8 @@ public class BizOrgServiceImpl implements BizOrgService {
         String code = org.getCode();
         assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE), "Platform.canNotRemoveIngotOrg");
 
-        // 1. 用户取消关联组织，部门，角色
-        tenantEngine.removeTenantUserRelation(id);
-
-        // 2. 移除组织，移除部门
-        tenantEngine.removeTenantAndDept(id);
-
-        // 3. 移除权限，移除角色
-        tenantEngine.removeTenantAuthorityAndRole(id);
-
-        // 4. 移除菜单
-        tenantEngine.removeTenantMenu(id);
+        // 销毁组织
+        tenantEngine.destroy(id);
     }
 
 }
