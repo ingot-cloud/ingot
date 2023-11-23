@@ -89,6 +89,9 @@ public class BizOrgServiceImpl implements BizOrgService {
 
         // 3. 移除权限，移除角色
         tenantEngine.removeTenantAuthorityAndRole(id);
+
+        // 4. 移除菜单
+        tenantEngine.removeTenantMenu(id);
     }
 
 }
