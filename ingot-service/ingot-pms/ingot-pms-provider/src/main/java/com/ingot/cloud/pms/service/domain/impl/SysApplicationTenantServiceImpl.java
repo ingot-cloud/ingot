@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import com.ingot.cloud.pms.model.domain.SysApplicationTenant;
+import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.mapper.SysApplicationTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;

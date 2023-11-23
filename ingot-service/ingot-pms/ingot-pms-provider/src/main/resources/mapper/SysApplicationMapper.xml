@@ -3,7 +3,7 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.SysApplicationMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.ingot.cloud.pms.model.domain.SysApplication">
+    <resultMap id="BaseResultMap" type="com.ingot.cloud.pms.api.model.domain.SysApplication">
         <id column="id" property="id" />
         <result column="menu_id" property="menuId" />
         <result column="authority_id" property="authorityId" />
