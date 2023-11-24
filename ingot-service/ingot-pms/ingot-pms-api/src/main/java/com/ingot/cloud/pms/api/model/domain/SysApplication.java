@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +51,7 @@ public class SysApplication extends BaseModel<SysApplication> {
      * 状态
      */
     @TableField("`status`")
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 创建时间
