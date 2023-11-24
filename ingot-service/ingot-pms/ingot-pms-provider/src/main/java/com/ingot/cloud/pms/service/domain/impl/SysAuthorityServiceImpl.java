@@ -3,15 +3,13 @@ package com.ingot.cloud.pms.service.domain.impl;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
+import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -51,6 +49,7 @@ import java.util.stream.Collectors;
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysMenuService sysMenuService;
+    private final SysApplicationService sysApplicationService;
     private final AssertionChecker assertI18nService;
     private final AuthorityTrans authorityTrans;
 
@@ -160,6 +159,11 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         // 叶子权限才可以删除
         boolean result = count(Wrappers.<SysAuthority>lambdaQuery().eq(SysAuthority::getPid, id)) == 0;
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailedMustLeaf");
+
+        // 判断是否为应用，如果是应用那么不可删除
+        assertI18nService.checkOperation(sysApplicationService.count(Wrappers.<SysApplication>lambdaQuery()
+                        .eq(SysApplication::getAuthorityId, id)) == 0,
+                "SysAuthorityServiceImpl.IsApplication");
 
         // 取消关联的角色
         sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()

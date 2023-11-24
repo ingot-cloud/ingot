@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,9 @@ public class TenantOps {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleUserService sysRoleUserService;
     private final SysAuthorityService sysAuthorityService;
+    private final SysApplicationTenantService sysApplicationTenantService;
+    private final SysMenuService sysMenuService;
+    private final TenantProperties tenantProperties;
 
     public void createRole(SysRole role) {
         getOrgs().forEach(org ->
@@ -142,6 +147,50 @@ public class TenantOps {
 
                             sysRoleAuthorityService.roleBindAuthorities(orgRelation);
                         }));
+    }
+
+    /**
+     * 创建应用
+     *
+     * @param application {@link SysApplication}
+     */
+    public void createApplication(SysApplication application) {
+        List<SysMenu> menuList = TenantUtils.getTargetMenus(
+                tenantProperties.getDefaultId(), application.getMenuId(), sysMenuService);
+        List<SysAuthority> authorityList = TenantUtils.getTargetAuthorities(
+                tenantProperties.getDefaultId(), application.getAuthorityId(), sysAuthorityService);
+
+        getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
+
+            // todo 和租户初始化一样，创建相关菜单和权限
+
+
+        }));
+    }
+
+    /**
+     * 更新应用状态
+     *
+     * @param application 当前应用
+     * @param status      {@link CommonStatusEnum} 需要更新的状态
+     */
+    public void updateApplication(SysApplication application, CommonStatusEnum status) {
+        TenantEnv.globalRun(() -> {
+            SysApplicationTenant params = new SysApplicationTenant();
+            params.setStatus(status);
+            sysApplicationTenantService.update(params,
+                    Wrappers.<SysApplicationTenant>lambdaUpdate()
+                            .eq(SysApplicationTenant::getAppId, application.getId()));
+        });
+    }
+
+    /**
+     * 移除应用，并且删除所有菜单相关信息
+     *
+     * @param id 应用ID
+     */
+    public void removeApplication(long id) {
+        // todo
     }
 
     private List<SysTenant> getOrgs() {

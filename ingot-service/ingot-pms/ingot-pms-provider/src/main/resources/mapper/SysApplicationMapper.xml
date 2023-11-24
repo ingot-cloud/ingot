@@ -4,18 +4,30 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.ingot.cloud.pms.api.model.domain.SysApplication">
-        <id column="id" property="id" />
-        <result column="menu_id" property="menuId" />
-        <result column="authority_id" property="authorityId" />
-        <result column="default_app" property="defaultApp" />
-        <result column="status" property="status" />
-        <result column="created_at" property="createdAt" />
-        <result column="updated_at" property="updatedAt" />
+        <id column="id" property="id"/>
+        <result column="menu_id" property="menuId"/>
+        <result column="authority_id" property="authorityId"/>
+        <result column="default_app" property="defaultApp"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, menu_id, authority_id, default_app, `status`, created_at, updated_at
+        id
+        , menu_id, authority_id, default_app, `status`, created_at, updated_at
     </sql>
 
+    <select id="page" resultType="com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO">
+        SELECT app.*
+        FROM sys_application AS app
+                 LEFT JOIN sys_menu AS menu ON menu.id = app.menu_id
+      <where>
+          <if test="filter.appName != null and filter.appName != ''">
+              menu.name LIKE CONCAT('%', #{filter.appName}, '%')
+          </if>
+      </where>
+        ORDER BY app.menu_id DESC
+    </select>
 </mapper>

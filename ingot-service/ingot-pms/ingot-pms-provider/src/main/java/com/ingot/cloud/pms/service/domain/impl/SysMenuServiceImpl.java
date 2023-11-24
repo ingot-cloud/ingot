@@ -2,19 +2,19 @@ package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
+import com.ingot.cloud.pms.core.MenuUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
+import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -26,7 +26,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,37 +43,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
     private final AssertionChecker assertI18nService;
+    private final SysApplicationService sysApplicationService;
 
     @Override
     public List<MenuTreeNodeVO> getMenuByAuthorities(List<SysAuthority> authorities) {
         List<MenuTreeNodeVO> allNodeList = SpringContextHolder
                 .getBean(SysMenuService.class).nodeList();
-        List<MenuTreeNodeVO> nodeList = allNodeList.stream()
-                // 1.菜单未绑定权限，直接过滤通过
-                // 2.菜单绑定权限，并且绑定的权限可用
-                .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
-                        authorities.stream()
-                                .anyMatch(authority ->
-                                        node.getAuthorityId().equals(authority.getId())
-                                                && authority.getStatus() == CommonStatusEnum.ENABLE))
-                .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
-                .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
-                .collect(Collectors.toList());
-
-        // 如果过滤后的列表中存在父节点，并且不在当前列表中，那么需要增加
-        // 如果父节点被禁用，那么所有子节点都不可用
-        List<MenuTreeNodeVO> copy = new ArrayList<>(nodeList);
-        copy.stream()
-                .filter(node -> node.getPid() != IDConstants.ROOT_TREE_ID)
-                .forEach(node -> {
-                    if (nodeList.stream().noneMatch(item -> ObjectUtil.equals(item.getId(), node.getPid()))) {
-                        allNodeList.stream()
-                                .filter(item -> ObjectUtil.equals(item.getId(), node.getPid()))
-                                .findFirst()
-                                .ifPresent(nodeList::add);
-                    }
-                });
-
+        List<MenuTreeNodeVO> nodeList = MenuUtils.filterMenus(allNodeList, authorities);
         List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList);
         log.debug("[SysMenuServiceImpl] - tree={}", tree);
         return tree;
@@ -172,6 +147,11 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
                         .eq(SysMenu::getPid, id)) == 0,
                 "SysMenuServiceImpl.ExistLeaf");
+
+        // 判断是否为应用，如果是应用那么不可删除
+        assertI18nService.checkOperation(sysApplicationService.count(Wrappers.<SysApplication>lambdaQuery()
+                        .eq(SysApplication::getMenuId, id)) == 0,
+                "SysMenuServiceImpl.IsApplication");
 
         assertI18nService.checkOperation(removeById(id), "SysMenuServiceImpl.RemoveFailed");
     }
