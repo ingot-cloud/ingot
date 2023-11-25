@@ -13,7 +13,6 @@ import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.IDConstants;
-import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
@@ -174,20 +173,13 @@ public class TenantEngine {
     /**
      * 租户默认角色关联权限
      */
-    public void tenantRoleBindAuthorities(List<SysRole> roles, List<SysAuthority> authorities) {
-        // 默认直给管理员角色绑定组织最高权限
-        SysRole role = roles.stream()
-                .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
-                .findFirst().orElseThrow();
-
-        List<Long> bindIds = authorities.stream()
-                .filter(item -> item.getPid() == IDConstants.ROOT_TREE_ID)
-                .map(SysAuthority::getId).toList();
-
-        RelationDTO<Long, Long> params = new RelationDTO<>();
-        params.setId(role.getId());
-        params.setBindIds(bindIds);
-        sysRoleAuthorityService.roleBindAuthorities(params);
+    public void tenantRoleBindAuthorities(SysTenant tenant, List<SysRole> roles, List<SysAuthority> authorities) {
+        TenantEnv.runAs(tenant.getId(), () -> {
+            SysRole role = roles.stream()
+                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
+                    .findFirst().orElseThrow();
+            TenantUtils.bindAuthorities(tenant.getId(), role.getId(), authorities, sysRoleAuthorityService);
+        });
     }
 
     /**

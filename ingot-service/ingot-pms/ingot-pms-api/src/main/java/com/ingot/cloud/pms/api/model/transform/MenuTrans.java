@@ -17,4 +17,6 @@ public interface MenuTrans {
     MenuTreeNodeVO to(SysMenu params);
 
     SysMenu to(MenuTreeNodeVO in);
+
+    SysMenu copy(SysMenu in);
 }

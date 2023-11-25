@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.type.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -27,7 +27,7 @@ public class MenuUtils {
      * @return {@link MenuTreeNodeVO}
      */
     public static List<MenuTreeNodeVO> filterMenus(List<MenuTreeNodeVO> allNodeList,
-                                                   List<SysAuthority> authorities) {
+                                                   List<? extends AuthorityType> authorities) {
 
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
                 // 1.菜单未绑定权限，直接过滤通过

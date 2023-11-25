@@ -51,7 +51,7 @@ public class BizOrgServiceImpl implements BizOrgService {
         tenantEngine.createTenantUser(params, tenant, roles, dept);
 
         // 6. 角色绑定权限
-        tenantEngine.tenantRoleBindAuthorities(roles, authorities);
+        tenantEngine.tenantRoleBindAuthorities(tenant, roles, authorities);
     }
 
     @Override

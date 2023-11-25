@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.authority;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.type.AuthorityType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import lombok.Data;
@@ -14,7 +15,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class AuthorityTreeNodeVO extends TreeNode<Long> {
+public class AuthorityTreeNodeVO extends TreeNode<Long> implements AuthorityType {
 
     /**
      * 权限名称

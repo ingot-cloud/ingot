@@ -3,15 +3,22 @@ package com.ingot.cloud.pms.core;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.tree.TreeUtils;
+import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +38,10 @@ public class TenantOps {
     private final SysAuthorityService sysAuthorityService;
     private final SysApplicationTenantService sysApplicationTenantService;
     private final SysMenuService sysMenuService;
+
     private final TenantProperties tenantProperties;
+    private final AuthorityTrans authorityTrans;
+    private final MenuTrans menuTrans;
 
     public void createRole(SysRole role) {
         getOrgs().forEach(org ->
@@ -150,21 +160,51 @@ public class TenantOps {
     }
 
     /**
-     * 创建应用
+     * 创建应用<br>
+     * 1.查询应用绑定的菜单和权限
+     * 2.给每个组织创建相应权限和菜单
+     * 3.给管理员同步权限
      *
      * @param application {@link SysApplication}
      */
     public void createApplication(SysApplication application) {
-        List<SysMenu> menuList = TenantUtils.getTargetMenus(
-                tenantProperties.getDefaultId(), application.getMenuId(), sysMenuService);
-        List<SysAuthority> authorityList = TenantUtils.getTargetAuthorities(
-                tenantProperties.getDefaultId(), application.getAuthorityId(), sysAuthorityService);
+        long rootMenu = application.getMenuId();
+        long rootAuthority = application.getAuthorityId();
+        List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
+                tenantProperties.getDefaultId(), rootMenu, sysMenuService, menuTrans);
+        List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
+                tenantProperties.getDefaultId(), rootAuthority, sysAuthorityService, authorityTrans);
+
+        long rootAuthorityParentId = authorityList.get(0).getPid();
+        long rootMenuParentId = menuList.get(0).getPid();
+        List<AuthorityTreeNodeVO> authorityTree = TreeUtils.build(authorityList, rootAuthorityParentId);
+        List<SysAuthority> authorityParentTemplateList = TenantUtils.getAuthorityParentList(
+                tenantProperties.getDefaultId(), rootAuthorityParentId, sysAuthorityService);
+        List<SysMenu> menuParentTemplateList = TenantUtils.getMenuParentList(
+                tenantProperties.getDefaultId(), rootMenuParentId, sysMenuService);
 
         getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
+            // 获取当前应用的父权限ID
+            long authorityParentId = TenantUtils.ensureAuthorityTargetOrgParent(
+                    org.getId(), authorityParentTemplateList, sysAuthorityService);
+            List<SysAuthority> appAuthorities = new ArrayList<>();
+            // 创建权限，并且替换待创建菜单中对应的权限ID
+            TenantUtils.createAuthorityAndCollectFn(appAuthorities, authorityTree,
+                    authorityParentId, menuList, sysAuthorityService);
 
-            // todo 和租户初始化一样，创建相关菜单和权限
+
+            // 获取当前应用的父菜单ID
+            long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
+                    org.getId(), menuParentTemplateList, menuTrans, sysMenuService);
+            // 创建菜单
+            List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
+            TenantUtils.createMenuFn(menuTree, menuParentId, menuTrans, sysMenuService);
 
 
+            // 管理员绑定第一个权限
+            SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
+                    .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
+            TenantUtils.bindAuthorities(org.getId(), role.getId(), appAuthorities, sysRoleAuthorityService);
         }));
     }
 

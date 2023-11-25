@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.type.AuthorityType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_authority")
-public class SysAuthority extends BaseModel<SysAuthority> {
+public class SysAuthority extends BaseModel<SysAuthority> implements AuthorityType {
 
     private static final long serialVersionUID = 1L;
 
