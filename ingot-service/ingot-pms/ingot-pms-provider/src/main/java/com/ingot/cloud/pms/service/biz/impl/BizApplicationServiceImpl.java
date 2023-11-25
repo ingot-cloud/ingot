@@ -132,8 +132,9 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeApplication(long id) {
+        SysApplication application = sysApplicationService.getById(id);
         sysApplicationService.removeById(id);
-        tenantOps.removeApplication(id);
+        tenantOps.removeApplication(application);
     }
 
     @Override

@@ -43,13 +43,17 @@ public class TenantUtils {
     /**
      * 根据当前菜单，遍历创建新菜单
      *
+     * @param collect        收集
      * @param tree           节点列表
      * @param pid            父ID
      * @param menuTrans      对象转换类
      * @param sysMenuService menu service
      */
-    public static void createMenuFn(List<? extends TreeNode<Long>> tree, long pid,
-                                    MenuTrans menuTrans, SysMenuService sysMenuService) {
+    public static void createMenuFn(List<SysMenu> collect,
+                                    List<? extends TreeNode<Long>> tree,
+                                    long pid,
+                                    MenuTrans menuTrans,
+                                    SysMenuService sysMenuService) {
 
         for (TreeNode<Long> node : tree) {
             if (node instanceof MenuTreeNodeVO menuNode) {
@@ -60,9 +64,12 @@ public class TenantUtils {
                 item.setDeletedAt(null);
                 item.setCreatedAt(DateUtils.now());
                 sysMenuService.save(item);
+                if (collect != null) {
+                    collect.add(item);
+                }
 
                 if (CollUtil.isNotEmpty(node.getChildren())) {
-                    createMenuFn(node.getChildren(), item.getId(), menuTrans, sysMenuService);
+                    createMenuFn(collect, node.getChildren(), item.getId(), menuTrans, sysMenuService);
                 }
             }
         }
@@ -86,7 +93,9 @@ public class TenantUtils {
         for (TreeNode<Long> node : templateTree) {
             if (node instanceof AuthorityTreeNodeVO authNode) {
                 SysAuthority item = createAuthority(pid, authNode, sysAuthorityService);
-                collect.add(item);
+                if (collect != null) {
+                    collect.add(item);
+                }
 
                 // 替换权限ID
                 replaceAuthorityIdMenus.stream()
@@ -350,6 +359,26 @@ public class TenantUtils {
             RelationDTO<Long, Long> params = new RelationDTO<>();
             params.setId(roleId);
             params.setBindIds(bindIds);
+            service.roleBindAuthorities(params);
+        });
+    }
+
+    /**
+     * 给指定角色解绑权限
+     *
+     * @param orgId       组织ID
+     * @param roleId      角色ID
+     * @param authorities 要删除的权限
+     * @param service     服务
+     */
+    public static void unbindAuthorities(long orgId,
+                                         long roleId,
+                                         List<? extends AuthorityType> authorities,
+                                         SysRoleAuthorityService service) {
+        TenantEnv.runAs(orgId, () -> {
+            RelationDTO<Long, Long> params = new RelationDTO<>();
+            params.setId(roleId);
+            params.setRemoveIds(authorities.stream().map(AuthorityType::getId).toList());
             service.roleBindAuthorities(params);
         });
     }

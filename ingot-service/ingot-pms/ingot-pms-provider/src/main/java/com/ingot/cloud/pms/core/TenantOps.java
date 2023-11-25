@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
@@ -10,6 +11,8 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
@@ -187,24 +190,32 @@ public class TenantOps {
             // 获取当前应用的父权限ID
             long authorityParentId = TenantUtils.ensureAuthorityTargetOrgParent(
                     org.getId(), authorityParentTemplateList, sysAuthorityService);
-            List<SysAuthority> appAuthorities = new ArrayList<>();
+            List<SysAuthority> authorityCollect = new ArrayList<>();
             // 创建权限，并且替换待创建菜单中对应的权限ID
-            TenantUtils.createAuthorityAndCollectFn(appAuthorities, authorityTree,
+            TenantUtils.createAuthorityAndCollectFn(authorityCollect, authorityTree,
                     authorityParentId, menuList, sysAuthorityService);
-
 
             // 获取当前应用的父菜单ID
             long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
                     org.getId(), menuParentTemplateList, menuTrans, sysMenuService);
             // 创建菜单
             List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
-            TenantUtils.createMenuFn(menuTree, menuParentId, menuTrans, sysMenuService);
-
+            List<SysMenu> menuCollect = new ArrayList<>();
+            TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuTrans, sysMenuService);
 
             // 管理员绑定第一个权限
             SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
                     .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
-            TenantUtils.bindAuthorities(org.getId(), role.getId(), appAuthorities, sysRoleAuthorityService);
+            TenantUtils.bindAuthorities(org.getId(), role.getId(), authorityCollect, sysRoleAuthorityService);
+
+
+            SysApplicationTenant applicationTenant = new SysApplicationTenant();
+            applicationTenant.setAppId(application.getId());
+            applicationTenant.setMenuId(menuCollect.get(0).getId());
+            applicationTenant.setAuthorityId(authorityCollect.get(0).getId());
+            applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp()) ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
+            applicationTenant.setCreatedAt(DateUtils.now());
+            sysApplicationTenantService.save(applicationTenant);
         }));
     }
 
@@ -225,12 +236,41 @@ public class TenantOps {
     }
 
     /**
-     * 移除应用，并且删除所有菜单相关信息
+     * 移除应用
+     * 1. 删除所有组织相关菜单
+     * 2. 删除所有组织相关权限
+     * 3. 取消管理员关联的该应用权限
+     * 3. 删除应用关联信息
      *
-     * @param id 应用ID
+     * @param application 应用
      */
-    public void removeApplication(long id) {
-        // todo
+    public void removeApplication(SysApplication application) {
+        getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
+            SysApplicationTenant applicationTenant = sysApplicationTenantService.getOne(
+                    Wrappers.<SysApplicationTenant>lambdaQuery().eq(SysApplicationTenant::getAppId, application.getId()));
+
+            long rootMenu = applicationTenant.getMenuId();
+            long rootAuthority = applicationTenant.getAuthorityId();
+            List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
+                    org.getId(), rootMenu, sysMenuService, menuTrans);
+            List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
+                    org.getId(), rootAuthority, sysAuthorityService, authorityTrans);
+
+            // 删除菜单
+            sysMenuService.remove(Wrappers.<SysMenu>lambdaQuery()
+                    .in(SysMenu::getId, menuList.stream().map(TreeNode::getId).toList()));
+
+            // 删除权限
+            sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
+                    .in(SysAuthority::getId, authorityList.stream().map(TreeNode::getId).toList()));
+
+            SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
+                    .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
+            TenantUtils.unbindAuthorities(org.getId(), role.getId(), authorityList, sysRoleAuthorityService);
+
+            // 删除app
+            sysApplicationTenantService.removeById(applicationTenant.getId());
+        }));
     }
 
     private List<SysTenant> getOrgs() {

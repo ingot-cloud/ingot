@@ -134,7 +134,7 @@ public class TenantEngine {
 
             // 创建菜单
             List<MenuTreeNodeVO> menuTree = TreeUtils.build(templateMenus);
-            TenantUtils.createMenuFn(menuTree, IDConstants.ROOT_TREE_ID, menuTrans, sysMenuService);
+            TenantUtils.createMenuFn(null, menuTree, IDConstants.ROOT_TREE_ID, menuTrans, sysMenuService);
 
             return orgAuthorities;
         });
