@@ -3,9 +3,9 @@ package com.ingot.cloud.pms.service.biz;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
+import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
-import com.ingot.framework.core.model.common.RelationDTO;
 
 import java.util.List;
 
@@ -65,8 +65,9 @@ public interface BizApplicationService {
     /**
      * 组织绑定应用
      *
-     * @param params {@link RelationDTO}
+     * @param orgId  组织ID
+     * @param params {@link SysApplicationTenant}
      */
-    void bindApplication(RelationDTO<Long, Long> params);
+    void updateStatusOfTargetOrg(long orgId, SysApplicationTenant params);
 
 }

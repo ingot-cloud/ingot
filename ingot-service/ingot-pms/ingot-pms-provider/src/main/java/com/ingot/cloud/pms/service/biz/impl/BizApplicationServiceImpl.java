@@ -10,13 +10,13 @@ import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
+import com.ingot.cloud.pms.api.model.transform.ApplicationTrans;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
 import com.ingot.cloud.pms.core.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizApplicationService;
 import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -43,6 +43,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
 
     private final TenantOps tenantOps;
     private final AssertionChecker assertionChecker;
+    private final ApplicationTrans applicationTrans;
 
     @Override
     public IPage<ApplicationPageItemVO> page(Page<SysApplication> page, ApplicationFilterDTO filter) {
@@ -61,7 +62,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
                     .in(SysMenu::getId, list.stream().map(SysApplicationTenant::getMenuId).toList()));
 
             return list.stream().map(item -> {
-                ApplicationPageItemVO pageItem = new ApplicationPageItemVO();
+                ApplicationPageItemVO pageItem = applicationTrans.to(item);
                 menuList.stream()
                         .filter(menuItem -> Objects.equals(menuItem.getId(), item.getMenuId()))
                         .findFirst()
@@ -69,9 +70,6 @@ public class BizApplicationServiceImpl implements BizApplicationService {
                             pageItem.setMenuIcon(menuItem.getIcon());
                             pageItem.setMenuName(menuItem.getName());
                         });
-                pageItem.setId(item.getAppId());
-                pageItem.setAuthorityId(item.getAuthorityId());
-                pageItem.setMenuId(item.getMenuId());
                 return pageItem;
             }).toList();
         });
@@ -138,7 +136,12 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     }
 
     @Override
-    public void bindApplication(RelationDTO<Long, Long> params) {
-
+    public void updateStatusOfTargetOrg(long orgId, SysApplicationTenant params) {
+        TenantEnv.runAs(orgId, () -> {
+            SysApplicationTenant entity = new SysApplicationTenant();
+            entity.setId(params.getId());
+            entity.setStatus(params.getStatus());
+            sysApplicationTenantService.updateById(entity);
+        });
     }
 }
