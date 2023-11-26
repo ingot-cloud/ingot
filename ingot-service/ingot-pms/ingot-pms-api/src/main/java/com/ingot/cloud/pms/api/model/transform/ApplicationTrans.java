@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
-import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
+import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 
@@ -14,5 +14,5 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface ApplicationTrans {
 
-    ApplicationPageItemVO to(SysApplicationTenant in);
+    ApplicationOrgPageItemVO to(SysApplicationTenant in);
 }

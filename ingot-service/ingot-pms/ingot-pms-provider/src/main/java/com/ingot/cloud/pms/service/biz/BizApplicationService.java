@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
+import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
 
 import java.util.List;
@@ -30,9 +31,9 @@ public interface BizApplicationService {
      * 获取组织当前开通的应用信息
      *
      * @param orgId 组织ID
-     * @return {@link ApplicationPageItemVO}
+     * @return {@link ApplicationOrgPageItemVO}
      */
-    List<ApplicationPageItemVO> orgApplicationList(long orgId);
+    List<ApplicationOrgPageItemVO> orgApplicationList(long orgId);
 
     /**
      * 创建应用，如果创建的时候默认应用，那么同步所有组织
@@ -63,7 +64,7 @@ public interface BizApplicationService {
     void removeApplication(long id);
 
     /**
-     * 组织绑定应用
+     * 更新组织应用状态
      *
      * @param orgId  组织ID
      * @param params {@link SysApplicationTenant}
