@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -32,7 +32,23 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
     void roleBindAuthorities(RelationDTO<Long, Long> params);
 
     /**
+     * 清空指定角色列表相应绑定数据
+     *
+     * @param roleIds 角色ID
+     */
+    void clearRole(List<Long> roleIds);
+
+    /**
+     * 清空指定角色的指定权限
+     *
+     * @param roleIds      角色ID
+     * @param authorityIds 权限ID
+     */
+    void clearRoleWithAuthorities(List<Long> roleIds, List<Long> authorityIds);
+
+    /**
      * 获取角色权限列表
+     *
      * @param roleId 角色ID
      * @return {@link SysAuthority} List
      */

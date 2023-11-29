@@ -3,7 +3,9 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.SysApplicationMapper">
 
     <select id="page" resultType="com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO">
-        SELECT app.*
+        SELECT app.*,
+               menu.name AS menuName,
+               menu.icon AS menuIcon
         FROM sys_application AS app
                  LEFT JOIN sys_menu AS menu ON menu.id = app.menu_id
       <where>
@@ -11,6 +13,6 @@
               menu.name LIKE CONCAT('%', #{filter.appName}, '%')
           </if>
       </where>
-        ORDER BY app.menu_id DESC
+        ORDER BY app.id DESC
     </select>
 </mapper>

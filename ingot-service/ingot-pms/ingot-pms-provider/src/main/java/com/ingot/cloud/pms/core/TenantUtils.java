@@ -17,6 +17,7 @@ import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.tenant.TenantEnv;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Objects;
  * <p>Date         : 2023/11/23.</p>
  * <p>Time         : 16:45.</p>
  */
+@Slf4j
 public class TenantUtils {
 
 
@@ -372,14 +374,9 @@ public class TenantUtils {
      * @param service     服务
      */
     public static void unbindAuthorities(long orgId,
-                                         long roleId,
+                                         List<Long> roleIds,
                                          List<? extends AuthorityType> authorities,
                                          SysRoleAuthorityService service) {
-        TenantEnv.runAs(orgId, () -> {
-            RelationDTO<Long, Long> params = new RelationDTO<>();
-            params.setId(roleId);
-            params.setRemoveIds(authorities.stream().map(AuthorityType::getId).toList());
-            service.roleBindAuthorities(params);
-        });
+        TenantEnv.runAs(orgId, () -> service.clearRoleWithAuthorities(roleIds, authorities.stream().map(AuthorityType::getId).toList()));
     }
 }

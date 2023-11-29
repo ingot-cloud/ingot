@@ -65,6 +65,33 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     }
 
     @Override
+    public void clearRole(List<Long> roleIds) {
+        int size = CollUtil.size(roleIds);
+        if (size == 0) {
+            return;
+        }
+        remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                .eq(size == 1, SysRoleAuthority::getRoleId, roleIds.get(0))
+                .in(size > 1, SysRoleAuthority::getRoleId, roleIds));
+    }
+
+    @Override
+    public void clearRoleWithAuthorities(List<Long> roleIds, List<Long> authorityIds) {
+        int roleSize = CollUtil.size(roleIds);
+        int authoritySize = CollUtil.size(authorityIds);
+        if (roleSize == 0 || authoritySize == 0) {
+            return;
+        }
+
+        remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                .eq(authoritySize == 1, SysRoleAuthority::getAuthorityId, authorityIds.get(0))
+                .in(authoritySize > 1, SysRoleAuthority::getAuthorityId, authorityIds)
+                .eq(roleSize == 1, SysRoleAuthority::getRoleId, roleIds.get(0))
+                .in(roleSize > 1, SysRoleAuthority::getRoleId, roleIds));
+
+    }
+
+    @Override
     @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleKey, unless = "#result.isEmpty()")
     public List<SysAuthority> getAuthoritiesByRole(long roleId) {
         return CollUtil.emptyIfNull(baseMapper.getAuthoritiesByRole(roleId));

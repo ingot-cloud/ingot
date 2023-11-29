@@ -264,9 +264,8 @@ public class TenantOps {
             sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
                     .in(SysAuthority::getId, authorityList.stream().map(TreeNode::getId).toList()));
 
-            SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
-                    .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
-            TenantUtils.unbindAuthorities(org.getId(), role.getId(), authorityList, sysRoleAuthorityService);
+            List<Long> roleIds = CollUtil.emptyIfNull(sysRoleService.list()).stream().map(SysRole::getId).toList();
+            TenantUtils.unbindAuthorities(org.getId(), roleIds, authorityList, sysRoleAuthorityService);
 
             // 删除app
             sysApplicationTenantService.removeById(applicationTenant.getId());
