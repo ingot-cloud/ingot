@@ -120,8 +120,8 @@ public class TenantEngine {
      * 创建组合权限和菜单
      */
     public List<SysAuthority> createTenantAuthorityAndMenu(SysTenant tenant) {
-        List<SysApplication> appList = sysApplicationService.list(Wrappers.<SysApplication>lambdaQuery()
-                .eq(SysApplication::getDefaultApp, Boolean.TRUE));
+        // 获取所有应用
+        List<SysApplication> appList = sysApplicationService.list();
         if (CollUtil.isEmpty(appList)) {
             return ListUtil.empty();
         }

@@ -463,7 +463,9 @@ public class TenantUtils {
         applicationTenant.setAppId(application.getId());
         applicationTenant.setMenuId(menuCollect.get(0).getId());
         applicationTenant.setAuthorityId(authorityCollect.get(0).getId());
-        applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp()) ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
+        // 模版应用是默认应用，并且是可用的情况，才给应用设置可用
+        applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp())
+                && application.getStatus() == CommonStatusEnum.ENABLE ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
         applicationTenant.setCreatedAt(DateUtils.now());
         sysApplicationTenantService.save(applicationTenant);
 
