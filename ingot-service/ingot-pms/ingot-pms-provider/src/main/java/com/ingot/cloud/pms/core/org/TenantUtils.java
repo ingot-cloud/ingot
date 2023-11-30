@@ -1,7 +1,10 @@
-package com.ingot.cloud.pms.core;
+package com.ingot.cloud.pms.core.org;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysApplication;
+import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
@@ -9,14 +12,19 @@ import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.type.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.core.MenuUtils;
+import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeNode;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -352,6 +360,10 @@ public class TenantUtils {
                                        List<SysAuthority> authorities,
                                        SysRoleAuthorityService service) {
         TenantEnv.runAs(orgId, () -> {
+            if (CollUtil.isEmpty(authorities)) {
+                return;
+            }
+
             // 减少绑定数据，只绑定列表中的最高权限
             // 比如列表中有 a.b, a, b.c 那么只会绑定a和b.c
             List<Long> bindIds = authorities.stream()
@@ -378,5 +390,83 @@ public class TenantUtils {
                                          List<? extends AuthorityType> authorities,
                                          SysRoleAuthorityService service) {
         TenantEnv.runAs(orgId, () -> service.clearRoleWithAuthorities(roleIds, authorities.stream().map(AuthorityType::getId).toList()));
+    }
+
+    /**
+     * 获取构建组织应用的相关数据
+     *
+     * @return {@link LoadAppInfo}
+     */
+    public static LoadAppInfo getLoadAppInfo(SysApplication application,
+                                             TenantProperties tenantProperties,
+                                             MenuTrans menuTrans,
+                                             AuthorityTrans authorityTrans,
+                                             SysAuthorityService sysAuthorityService,
+                                             SysMenuService sysMenuService) {
+        LoadAppInfo result = new LoadAppInfo();
+
+        long rootMenu = application.getMenuId();
+        long rootAuthority = application.getAuthorityId();
+        List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
+                tenantProperties.getDefaultId(), rootMenu, sysMenuService, menuTrans);
+        List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
+                tenantProperties.getDefaultId(), rootAuthority, sysAuthorityService, authorityTrans);
+
+        long rootAuthorityParentId = authorityList.get(0).getPid();
+        long rootMenuParentId = menuList.get(0).getPid();
+        List<AuthorityTreeNodeVO> authorityTree = TreeUtils.build(authorityList, rootAuthorityParentId);
+        List<SysAuthority> authorityParentTemplateList = TenantUtils.getAuthorityParentList(
+                tenantProperties.getDefaultId(), rootAuthorityParentId, sysAuthorityService);
+        List<SysMenu> menuParentTemplateList = TenantUtils.getMenuParentList(
+                tenantProperties.getDefaultId(), rootMenuParentId, sysMenuService);
+
+        result.setMenuList(menuList);
+        result.setAuthorityTree(authorityTree);
+        result.setRootAuthorityParentId(rootAuthorityParentId);
+        result.setRootMenuParentId(rootMenuParentId);
+        result.setAuthorityParentTemplateList(authorityParentTemplateList);
+        result.setMenuParentTemplateList(menuParentTemplateList);
+        return result;
+    }
+
+    public static List<SysAuthority> createAppAndReturnAuthority(long orgId,
+                                                                 SysApplication application,
+                                                                 LoadAppInfo loadAppInfo,
+                                                                 MenuTrans menuTrans,
+                                                                 SysAuthorityService sysAuthorityService,
+                                                                 SysMenuService sysMenuService,
+                                                                 SysApplicationTenantService sysApplicationTenantService) {
+        List<MenuTreeNodeVO> menuList = loadAppInfo.getMenuList();
+        List<AuthorityTreeNodeVO> authorityTree = loadAppInfo.getAuthorityTree();
+        long rootAuthorityParentId = loadAppInfo.getRootAuthorityParentId();
+        long rootMenuParentId = loadAppInfo.getRootMenuParentId();
+        List<SysAuthority> authorityParentTemplateList = loadAppInfo.getAuthorityParentTemplateList();
+        List<SysMenu> menuParentTemplateList = loadAppInfo.getMenuParentTemplateList();
+
+        // 获取当前应用的父权限ID
+        long authorityParentId = TenantUtils.ensureAuthorityTargetOrgParent(
+                orgId, authorityParentTemplateList, sysAuthorityService);
+        List<SysAuthority> authorityCollect = new ArrayList<>();
+        // 创建权限，并且替换待创建菜单中对应的权限ID
+        TenantUtils.createAuthorityAndCollectFn(authorityCollect, authorityTree,
+                authorityParentId, menuList, sysAuthorityService);
+
+        // 获取当前应用的父菜单ID
+        long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
+                orgId, menuParentTemplateList, menuTrans, sysMenuService);
+        // 创建菜单
+        List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
+        List<SysMenu> menuCollect = new ArrayList<>();
+        TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuTrans, sysMenuService);
+
+        SysApplicationTenant applicationTenant = new SysApplicationTenant();
+        applicationTenant.setAppId(application.getId());
+        applicationTenant.setMenuId(menuCollect.get(0).getId());
+        applicationTenant.setAuthorityId(authorityCollect.get(0).getId());
+        applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp()) ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
+        applicationTenant.setCreatedAt(DateUtils.now());
+        sysApplicationTenantService.save(applicationTenant);
+
+        return authorityCollect;
     }
 }

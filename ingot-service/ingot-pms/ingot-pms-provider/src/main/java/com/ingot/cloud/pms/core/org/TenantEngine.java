@@ -1,6 +1,7 @@
-package com.ingot.cloud.pms.core;
+package com.ingot.cloud.pms.core.org;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
@@ -9,18 +10,15 @@ import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
-import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.utils.DateUtils;
-import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,10 +44,13 @@ public class TenantEngine {
     private final AppUserTenantService appUserTenantService;
     private final AppRoleService appRoleService;
     private final AppRoleUserService appRoleUserService;
+    private final SysApplicationService sysApplicationService;
+    private final SysApplicationTenantService sysApplicationTenantService;
+
     private final BizIdGen bizIdGen;
+    private final TenantProperties tenantProperties;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
-    private final SysApplicationTenantService sysApplicationTenantService;
 
     /**
      * 创建租户
@@ -119,25 +120,24 @@ public class TenantEngine {
      * 创建组合权限和菜单
      */
     public List<SysAuthority> createTenantAuthorityAndMenu(SysTenant tenant) {
-        List<SysAuthority> authorities = sysAuthorityService.list(Wrappers.<SysAuthority>lambdaQuery()
-                .eq(SysAuthority::getType, OrgTypeEnums.Tenant));
-        List<AuthorityTreeNodeVO> templateAuthorities = authorities.stream()
-                .map(authorityTrans::to).toList();
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(templateAuthorities);
+        List<SysApplication> appList = sysApplicationService.list(Wrappers.<SysApplication>lambdaQuery()
+                .eq(SysApplication::getDefaultApp, Boolean.TRUE));
+        if (CollUtil.isEmpty(appList)) {
+            return ListUtil.empty();
+        }
 
-        // 获取菜单
-        List<MenuTreeNodeVO> templateMenus = TenantUtils.filterMenus(sysMenuService.nodeList(), authorities);
+        return TenantEnv.applyAs(tenant.getId(), () ->
+                appList.stream()
+                        .flatMap(application -> createApp(tenant, application).stream())
+                        .toList());
+    }
 
-        return TenantEnv.applyAs(tenant.getId(), () -> {
-            List<SysAuthority> orgAuthorities = new ArrayList<>();
-            TenantUtils.createAuthorityAndCollectFn(orgAuthorities, tree, IDConstants.ROOT_TREE_ID, templateMenus, sysAuthorityService);
-
-            // 创建菜单
-            List<MenuTreeNodeVO> menuTree = TreeUtils.build(templateMenus);
-            TenantUtils.createMenuFn(null, menuTree, IDConstants.ROOT_TREE_ID, menuTrans, sysMenuService);
-
-            return orgAuthorities;
-        });
+    private List<SysAuthority> createApp(SysTenant org, SysApplication application) {
+        LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
+                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
+        return TenantUtils.createAppAndReturnAuthority(
+                org.getId(), application, loadAppInfo,
+                menuTrans, sysAuthorityService, sysMenuService, sysApplicationTenantService);
     }
 
     /**

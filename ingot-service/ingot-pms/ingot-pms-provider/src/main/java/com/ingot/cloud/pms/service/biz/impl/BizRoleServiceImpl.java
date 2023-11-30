@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
-import com.ingot.cloud.pms.core.TenantOps;
+import com.ingot.cloud.pms.core.org.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleGroupService;

@@ -1,7 +1,6 @@
-package com.ingot.cloud.pms.core;
+package com.ingot.cloud.pms.core.org;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
@@ -11,9 +10,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeNode;
-import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
@@ -21,7 +18,6 @@ import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -171,51 +167,18 @@ public class TenantOps {
      * @param application {@link SysApplication}
      */
     public void createApplication(SysApplication application) {
-        long rootMenu = application.getMenuId();
-        long rootAuthority = application.getAuthorityId();
-        List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
-                tenantProperties.getDefaultId(), rootMenu, sysMenuService, menuTrans);
-        List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
-                tenantProperties.getDefaultId(), rootAuthority, sysAuthorityService, authorityTrans);
-
-        long rootAuthorityParentId = authorityList.get(0).getPid();
-        long rootMenuParentId = menuList.get(0).getPid();
-        List<AuthorityTreeNodeVO> authorityTree = TreeUtils.build(authorityList, rootAuthorityParentId);
-        List<SysAuthority> authorityParentTemplateList = TenantUtils.getAuthorityParentList(
-                tenantProperties.getDefaultId(), rootAuthorityParentId, sysAuthorityService);
-        List<SysMenu> menuParentTemplateList = TenantUtils.getMenuParentList(
-                tenantProperties.getDefaultId(), rootMenuParentId, sysMenuService);
+        LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
+                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
 
         getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
-            // 获取当前应用的父权限ID
-            long authorityParentId = TenantUtils.ensureAuthorityTargetOrgParent(
-                    org.getId(), authorityParentTemplateList, sysAuthorityService);
-            List<SysAuthority> authorityCollect = new ArrayList<>();
-            // 创建权限，并且替换待创建菜单中对应的权限ID
-            TenantUtils.createAuthorityAndCollectFn(authorityCollect, authorityTree,
-                    authorityParentId, menuList, sysAuthorityService);
-
-            // 获取当前应用的父菜单ID
-            long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
-                    org.getId(), menuParentTemplateList, menuTrans, sysMenuService);
-            // 创建菜单
-            List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
-            List<SysMenu> menuCollect = new ArrayList<>();
-            TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuTrans, sysMenuService);
+            List<SysAuthority> authorityCollect = TenantUtils.createAppAndReturnAuthority(
+                    org.getId(), application, loadAppInfo,
+                    menuTrans, sysAuthorityService, sysMenuService, sysApplicationTenantService);
 
             // 管理员绑定第一个权限
             SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
                     .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
             TenantUtils.bindAuthorities(org.getId(), role.getId(), authorityCollect, sysRoleAuthorityService);
-
-
-            SysApplicationTenant applicationTenant = new SysApplicationTenant();
-            applicationTenant.setAppId(application.getId());
-            applicationTenant.setMenuId(menuCollect.get(0).getId());
-            applicationTenant.setAuthorityId(authorityCollect.get(0).getId());
-            applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp()) ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
-            applicationTenant.setCreatedAt(DateUtils.now());
-            sysApplicationTenantService.save(applicationTenant);
         }));
     }
 
