@@ -1,20 +1,25 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.org.TenantOps;
+import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysRoleGroupService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,9 +39,30 @@ public class BizRoleServiceImpl implements BizRoleService {
     private final SysRoleService sysRoleService;
     private final SysRoleGroupService sysRoleGroupService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final TenantOps tenantOps;
+    private final SysApplicationTenantService sysApplicationTenantService;
+    private final SysAuthorityService sysAuthorityService;
 
+    private final TenantOps tenantOps;
     private final AssertionChecker assertionChecker;
+    private final AuthorityTrans authorityTrans;
+
+    @Override
+    public List<AuthorityTreeNodeVO> getOrgAuthority(long orgId) {
+        return TenantEnv.applyAs(orgId, () -> {
+            List<SysApplicationTenant> appList = sysApplicationTenantService.list(Wrappers.<SysApplicationTenant>lambdaQuery()
+                    .eq(SysApplicationTenant::getStatus, CommonStatusEnum.ENABLE));
+            if (CollUtil.isEmpty(appList)) {
+                return ListUtil.empty();
+            }
+
+            return appList.stream()
+                    .flatMap(app ->
+                            TenantUtils.getTargetAuthorities(
+                                            orgId, app.getAuthorityId(), sysAuthorityService, authorityTrans)
+                                    .stream())
+                    .toList();
+        });
+    }
 
     @Override
     public void orgRoleBindUsers(RelationDTO<Long, Long> params) {

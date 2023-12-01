@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.biz;
 
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.core.model.common.RelationDTO;
 
 import java.util.List;
@@ -13,6 +14,14 @@ import java.util.List;
  * <p>Time         : 8:56 AM.</p>
  */
 public interface BizRoleService {
+
+    /**
+     * 获取组织当前可以操作的权限
+     *
+     * @param orgId 组织ID
+     * @return {@link AuthorityTreeNodeVO}
+     */
+    List<AuthorityTreeNodeVO> getOrgAuthority(long orgId);
 
     /**
      * 组织角色绑定用户
