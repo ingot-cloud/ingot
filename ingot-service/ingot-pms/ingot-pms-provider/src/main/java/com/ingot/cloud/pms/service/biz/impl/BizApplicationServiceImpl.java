@@ -139,6 +139,11 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     @Override
     public void updateStatusOfTargetOrg(long orgId, SysApplicationTenant params) {
         TenantEnv.runAs(orgId, () -> {
+            SysApplicationTenant app = sysApplicationTenantService.getById(params.getId());
+            SysApplication templateApp = sysApplicationService.getById(app.getAppId());
+            assertionChecker.checkOperation(templateApp.getStatus() == CommonStatusEnum.ENABLE,
+                    "BizApplicationServiceImpl.AppDisabled");
+
             SysApplicationTenant entity = new SysApplicationTenant();
             entity.setId(params.getId());
             entity.setStatus(params.getStatus());

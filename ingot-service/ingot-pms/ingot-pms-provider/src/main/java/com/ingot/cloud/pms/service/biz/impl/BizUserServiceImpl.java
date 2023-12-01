@@ -22,6 +22,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -36,6 +37,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>Description  : BizUserServiceImpl.</p>
@@ -58,6 +60,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysRoleUserService sysRoleUserService;
     private final BizDeptService bizDeptService;
     private final BizRoleService bizRoleService;
+    private final SysApplicationTenantService sysApplicationTenantService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
@@ -109,7 +112,27 @@ public class BizUserServiceImpl implements BizUserService {
     public List<MenuTreeNodeVO> getUserMenus(IngotUser user) {
         List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
-        return sysMenuService.getMenuByAuthorities(authorities);
+        // 过滤租户应用权限, 把权限列表中匹配到不可以用应用的权限去掉。
+        // 比如authorities中包含a权限，a权限对应的应用在appList中，并且该应用不可用，那么把a权限从authorities中去掉
+        // 去掉的权限编码比如是a.c，那么a.c.**的权限都需要去掉
+        List<SysApplicationTenant> appList = CollUtil.emptyIfNull(sysApplicationTenantService.list(
+                Wrappers.<SysApplicationTenant>lambdaQuery().eq(SysApplicationTenant::getStatus, CommonStatusEnum.LOCK)));
+        List<SysAuthority> removeAuthorities = appList.stream()
+                .filter(app -> authorities.stream()
+                        .anyMatch(auth -> Objects.equals(auth.getId(), app.getAuthorityId())))
+                .map(app -> authorities.stream()
+                        .filter(auth -> Objects.equals(auth.getId(), app.getAuthorityId()))
+                        .findFirst().orElse(null))
+                .toList();
+
+        List<SysAuthority> finallyAuthorities = authorities.stream()
+                .filter(item -> removeAuthorities.stream()
+                        .noneMatch(remove ->
+                                Objects.equals(remove.getId(), item.getId())
+                                        || StrUtil.startWith(item.getCode(), remove.getCode())))
+                .toList();
+
+        return sysMenuService.getMenuByAuthorities(finallyAuthorities);
     }
 
     @Override
