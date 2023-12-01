@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
@@ -10,6 +11,7 @@ import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.security.common.constants.UserType;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
@@ -40,7 +42,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysUserTenantService sysUserTenantService;
-    private final SysDeptService sysDeptService;
+    private final SysApplicationTenantService sysApplicationTenantService;
 
     private final SocialProcessorManager socialProcessorManager;
     private final UserTrans userTrans;
@@ -99,7 +101,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                     // 查询拥有的角色
                     List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
 
-                    setRoles(result, roles, tenant);
+                    result.setRoles(loadRoles(roles, tenant));
                     return result;
                 }).orElse(null));
     }
@@ -115,9 +117,9 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                         .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
     }
 
-    private void setRoles(UserDetailsResponse result, List<SysRole> roles, Long loginTenant) {
+    private List<String> loadRoles(List<SysRole> roles, Long loginTenant) {
         if (CollUtil.isEmpty(roles)) {
-            return;
+            return CollUtil.empty(String.class);
         }
         List<String> roleCodes = roles.stream()
                 .map(item -> {
@@ -127,16 +129,41 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                     return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
                 })
                 .collect(Collectors.toList());
-        // 拥有的权限
-        Set<String> authorities = sysAuthorityService.getAuthorityByRoles(roles)
-                .stream()
+        // 角色拥有的权限
+        List<SysAuthority> authorities = sysAuthorityService.getAuthorityByRoles(roles);
+
+        // 查询所有组织的应用
+        List<SysApplicationTenant> appList = TenantEnv.globalApply(() ->
+                CollUtil.emptyIfNull(sysApplicationTenantService.list(
+                        Wrappers.<SysApplicationTenant>lambdaQuery()
+                                .eq(SysApplicationTenant::getStatus, CommonStatusEnum.LOCK))));
+        List<SysAuthority> removeAuthorities = appList.stream()
+                .filter(app -> authorities.stream()
+                        .anyMatch(auth -> Objects.equals(auth.getId(), app.getAuthorityId())))
+                .map(app -> authorities.stream()
+                        .filter(auth -> Objects.equals(auth.getId(), app.getAuthorityId()))
+                        .findFirst().orElse(null))
+                .toList();
+
+        // 过滤权限，去掉已经禁用应用的权限
+        Set<String> authorityCodeList = authorities.stream()
+                .filter(item -> removeAuthorities.stream()
+                        .noneMatch(remove -> {
+                            if (Objects.equals(remove.getId(), item.getId())) {
+                                return true;
+                            }
+
+                            long orgId = loginTenant != null ? loginTenant : item.getTenantId();
+                            return orgId == remove.getTenantId() && StrUtil.startWith(item.getCode(), remove.getCode());
+                        }))
                 .map(item -> {
                     if (loginTenant != null) {
                         return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
                     }
                     return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
                 }).collect(Collectors.toSet());
-        roleCodes.addAll(authorities);
-        result.setRoles(roleCodes);
+
+        roleCodes.addAll(authorityCodeList);
+        return roleCodes;
     }
 }
