@@ -18,11 +18,13 @@ import com.ingot.cloud.pms.service.biz.BizApplicationService;
 import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -130,6 +132,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.MENU_DETAILS, CacheConstants.AUTHORITY_DETAILS}, allEntries = true)
     public void removeApplication(long id) {
         SysApplication application = sysApplicationService.getById(id);
         sysApplicationService.removeById(id);

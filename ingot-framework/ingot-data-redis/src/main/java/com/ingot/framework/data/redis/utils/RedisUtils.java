@@ -1,8 +1,12 @@
 package com.ingot.framework.data.redis.utils;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.List;
 
 /**
  * <p>Description  : RedisUtils.</p>
@@ -24,5 +28,25 @@ public class RedisUtils {
         }
 
         return TenantContextHolder.get() + StrUtil.COLON + name;
+    }
+
+    /**
+     * 删除key
+     *
+     * @param redisTemplate {@link RedisTemplate}
+     * @param patterns      pattern
+     */
+    public static void deleteKeys(RedisTemplate<String, Object> redisTemplate, List<String> patterns) {
+        if (CollUtil.isEmpty(patterns)) {
+            return;
+        }
+
+        List<String> deleteKeys = patterns.stream()
+                .flatMap(pattern ->
+                        CollUtil.emptyIfNull(
+                                redisTemplate.keys(RedisUtils.getCacheName(pattern))).stream())
+                .toList();
+
+        redisTemplate.delete(deleteKeys);
     }
 }

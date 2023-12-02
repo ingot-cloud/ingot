@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.core.org;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
@@ -8,14 +9,17 @@ import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeNode;
+import com.ingot.framework.data.redis.utils.RedisUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -41,6 +45,7 @@ public class TenantOps {
     private final TenantProperties tenantProperties;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public void createRole(SysRole role) {
         getOrgs().forEach(org ->
@@ -160,9 +165,11 @@ public class TenantOps {
 
     /**
      * 创建应用<br>
-     * 1.查询应用绑定的菜单和权限
-     * 2.给每个组织创建相应权限和菜单
+     * 1.查询应用绑定的菜单和权限<br>
+     * 2.给每个组织创建相应权限和菜单<br>
      * 3.给管理员同步权限
+     * <p>
+     * 创建应用时需要进行 Cache Evict {@link CacheConstants#AUTHORITY_DETAILS} 和 {@link CacheConstants#MENU_DETAILS}
      *
      * @param application {@link SysApplication}
      */
@@ -179,6 +186,13 @@ public class TenantOps {
             SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
                     .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
             TenantUtils.bindAuthorities(org.getId(), role.getId(), authorityCollect, sysRoleAuthorityService);
+
+            // 删除缓存keys
+            RedisUtils.deleteKeys(redisTemplate,
+                    ListUtil.list(false,
+                            CacheConstants.AUTHORITY_DETAILS + "*",
+                            CacheConstants.MENU_DETAILS + "*"
+                    ));
         }));
     }
 
@@ -199,11 +213,13 @@ public class TenantOps {
     }
 
     /**
-     * 移除应用
-     * 1. 删除所有组织相关菜单
-     * 2. 删除所有组织相关权限
-     * 3. 取消管理员关联的该应用权限
+     * 移除应用<br>
+     * 1. 删除所有组织相关菜单<br>
+     * 2. 删除所有组织相关权限<br>
+     * 3. 取消管理员关联的该应用权限<br>
      * 3. 删除应用关联信息
+     * <p>
+     * 创建应用时需要进行 Cache Evict {@link CacheConstants#AUTHORITY_DETAILS} 和 {@link CacheConstants#MENU_DETAILS}
      *
      * @param application 应用
      */
@@ -232,6 +248,13 @@ public class TenantOps {
 
             // 删除app
             sysApplicationTenantService.removeById(applicationTenant.getId());
+
+            // 删除缓存keys
+            RedisUtils.deleteKeys(redisTemplate,
+                    ListUtil.list(false,
+                            CacheConstants.AUTHORITY_DETAILS + "*",
+                            CacheConstants.MENU_DETAILS + "*"
+                    ));
         }));
     }
 
