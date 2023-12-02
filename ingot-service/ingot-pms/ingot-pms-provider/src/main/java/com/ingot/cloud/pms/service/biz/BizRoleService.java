@@ -35,6 +35,13 @@ public interface BizRoleService {
                                                     SysAuthority condition);
 
     /**
+     * 组织角色绑定权限
+     *
+     * @param params {@link RelationDTO}
+     */
+    void orgRoleBindAuthorities(RelationDTO<Long, Long> params);
+
+    /**
      * 组织角色绑定用户
      *
      * @param params {@link RelationDTO}

@@ -1,28 +1,32 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.core.org.TenantOps;
-import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -48,18 +52,8 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Override
     public List<AuthorityTreeNodeVO> getOrgAuthority(long orgId) {
         return TenantEnv.applyAs(orgId, () -> {
-            List<SysApplicationTenant> appList = sysApplicationTenantService.list(Wrappers.<SysApplicationTenant>lambdaQuery()
-                    .eq(SysApplicationTenant::getStatus, CommonStatusEnum.ENABLE));
-            if (CollUtil.isEmpty(appList)) {
-                return ListUtil.empty();
-            }
-
-            List<AuthorityTreeNodeVO> authorities = appList.stream()
-                    .flatMap(app ->
-                            TenantUtils.getTargetAuthorities(
-                                            orgId, app.getAuthorityId(), sysAuthorityService, authorityTrans)
-                                    .stream())
-                    .toList();
+            List<AuthorityTreeNodeVO> authorities = AuthorityUtils.getOrgAuthorities(
+                    orgId, sysApplicationTenantService, sysAuthorityService, authorityTrans);
             return TreeUtils.build(authorities);
         });
     }
@@ -74,11 +68,37 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void orgRoleBindAuthorities(RelationDTO<Long, Long> params) {
+        long roleId = params.getId();
+        List<Long> bindList = params.getBindIds();
+        List<Long> removeList = params.getRemoveIds();
+        SysRole role = sysRoleService.getById(roleId);
+        assertionChecker.checkOperation(!StrUtil.equals(role.getCode(), RoleConstants.ROLE_MANAGER_CODE),
+                "BizRoleServiceImpl.CantOperateManager");
+
+        List<Long> authorities = CollUtil.emptyIfNull(AuthorityUtils.getOrgAuthorities(
+                        TenantContextHolder.get(), sysApplicationTenantService, sysAuthorityService, authorityTrans))
+                .stream().map(TreeNode::getId).toList();
+
+        if (CollUtil.isNotEmpty(bindList)) {
+            boolean canBind = new HashSet<>(authorities).containsAll(bindList);
+            assertionChecker.checkOperation(canBind, "BizRoleServiceImpl.CantBindAndUnBindAuth");
+        }
+        if (CollUtil.isNotEmpty(removeList)) {
+            boolean canRemove = new HashSet<>(authorities).containsAll(removeList);
+            assertionChecker.checkOperation(canRemove, "BizRoleServiceImpl.CantBindAndUnBindAuth");
+        }
+
+        sysRoleAuthorityService.roleBindAuthorities(params);
+    }
+
+    @Override
     public void orgRoleBindUsers(RelationDTO<Long, Long> params) {
         SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
         long roleId = params.getId();
         assertionChecker.checkOperation(roleId != managerRole.getId(),
-                "BizRoleServiceImpl.CantBindAndRemoveManager");
+                "BizRoleServiceImpl.CantOperateManager");
 
         sysRoleUserService.roleBindUsers(params);
     }

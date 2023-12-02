@@ -2,7 +2,6 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrgAuthAPI implements RShortcuts {
     private final BizRoleService bizRoleService;
-    private final SysRoleAuthorityService sysRoleAuthorityService;
 
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.auth')")
     @GetMapping("/list")
@@ -36,7 +34,7 @@ public class OrgAuthAPI implements RShortcuts {
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.auth')")
     @PutMapping("/bindAuthority")
     public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        sysRoleAuthorityService.roleBindAuthorities(params);
+        bizRoleService.orgRoleBindAuthorities(params);
         return ok();
     }
 

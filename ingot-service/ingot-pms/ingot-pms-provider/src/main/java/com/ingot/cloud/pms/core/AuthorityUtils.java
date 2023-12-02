@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
@@ -8,7 +9,9 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
+import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
+import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 
@@ -23,6 +26,33 @@ import java.util.stream.Collectors;
  * <p>Time         : 10:39.</p>
  */
 public class AuthorityUtils {
+
+    /**
+     * 获取指定组织权限
+     *
+     * @param orgId                       组织ID
+     * @param sysApplicationTenantService {@link SysApplicationTenantService}
+     * @param sysAuthorityService         {@link SysAuthorityService}
+     * @param authorityTrans              转换器
+     * @return {@link AuthorityTreeNodeVO}
+     */
+    public static List<AuthorityTreeNodeVO> getOrgAuthorities(long orgId,
+                                                              SysApplicationTenantService sysApplicationTenantService,
+                                                              SysAuthorityService sysAuthorityService,
+                                                              AuthorityTrans authorityTrans) {
+        List<SysApplicationTenant> appList = sysApplicationTenantService.list(Wrappers.<SysApplicationTenant>lambdaQuery()
+                .eq(SysApplicationTenant::getStatus, CommonStatusEnum.ENABLE));
+        if (CollUtil.isEmpty(appList)) {
+            return ListUtil.empty();
+        }
+
+        return appList.stream()
+                .flatMap(app ->
+                        TenantUtils.getTargetAuthorities(
+                                        orgId, app.getAuthorityId(), sysAuthorityService, authorityTrans)
+                                .stream())
+                .toList();
+    }
 
     /**
      * 过滤租户应用权限, 把权限列表中匹配到不可以用应用的权限去掉。<br>
