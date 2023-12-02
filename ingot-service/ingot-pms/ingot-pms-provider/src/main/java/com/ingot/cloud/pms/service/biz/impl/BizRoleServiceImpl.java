@@ -16,6 +16,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -55,12 +56,13 @@ public class BizRoleServiceImpl implements BizRoleService {
                 return ListUtil.empty();
             }
 
-            return appList.stream()
+            List<AuthorityTreeNodeVO> authorities = appList.stream()
                     .flatMap(app ->
                             TenantUtils.getTargetAuthorities(
                                             orgId, app.getAuthorityId(), sysAuthorityService, authorityTrans)
                                     .stream())
                     .toList();
+            return TreeUtils.build(authorities);
         });
     }
 
