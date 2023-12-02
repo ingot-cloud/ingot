@@ -1,8 +1,7 @@
 package com.ingot.framework.data.redis.cache;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.tenant.TenantContextHolder;
+import com.ingot.framework.data.redis.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.data.redis.cache.RedisCache;
@@ -59,10 +58,8 @@ public class IngotRedisCacheManager extends RedisCacheManager {
      */
     @Override
     public Cache getCache(@NonNull String name) {
-        log.info("IngotRedisCacheManager - getCache name={}", name);
-        if (StrUtil.startWith(name, CacheConstants.IGNORE_TENANT_PREFIX)) {
-            return super.getCache(name);
-        }
-        return super.getCache(TenantContextHolder.get() + StrUtil.COLON + name);
+        String finalCacheName = RedisUtils.getCacheName(name);
+        log.info("IngotRedisCacheManager - getCache name={}, finalCacheName={}", name, finalCacheName);
+        return super.getCache(finalCacheName);
     }
 }
