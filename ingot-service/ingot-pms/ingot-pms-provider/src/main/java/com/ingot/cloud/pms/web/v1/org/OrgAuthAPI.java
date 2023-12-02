@@ -44,6 +44,6 @@ public class OrgAuthAPI implements RShortcuts {
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,
                                    SysAuthority condition) {
-        return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
+        return ok(bizRoleService.getOrgRoleAuthorities(id, condition));
     }
 }

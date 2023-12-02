@@ -6,15 +6,14 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
+import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.common.RelationDTO;
-import com.ingot.framework.core.utils.tree.TreeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -102,12 +100,7 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
                                                         SysAuthority condition) {
         List<SysAuthority> authorities = SpringContextHolder.getBean(SysRoleAuthorityService.class)
                 .getAuthoritiesByRole(roleId);
-        List<AuthorityTreeNodeVO> nodeList = authorities.stream()
-                .filter(BizFilter.authorityFilter(condition))
-                .map(authorityTrans::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
-        TreeUtils.compensate(tree, nodeList);
-        return tree;
+        return AuthorityUtils.mapTree(authorities, condition, authorityTrans);
     }
 }

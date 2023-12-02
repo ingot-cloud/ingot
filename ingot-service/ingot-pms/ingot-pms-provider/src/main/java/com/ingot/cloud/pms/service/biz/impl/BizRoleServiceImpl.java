@@ -3,13 +3,11 @@ package com.ingot.cloud.pms.service.biz.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.core.org.TenantOps;
 import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
@@ -64,6 +62,15 @@ public class BizRoleServiceImpl implements BizRoleService {
                     .toList();
             return TreeUtils.build(authorities);
         });
+    }
+
+    @Override
+    public List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId, SysAuthority condition) {
+        List<SysAuthority> authorities = sysRoleAuthorityService.getAuthoritiesByRole(roleId);
+        List<SysAuthority> finallyAuthorities = AuthorityUtils.filterOrgLockAuthority(
+                authorities, sysApplicationTenantService);
+
+        return AuthorityUtils.mapTree(finallyAuthorities, condition, authorityTrans);
     }
 
     @Override
