@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 
@@ -32,6 +33,7 @@ public class OAuth2RegisteredClientVO implements Serializable {
     /**
      * 客户端秘钥
      */
+    @JsonIgnore
     private String clientSecret;
 
     /**
