@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.transform.ClientTrans;
+import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
+import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
 import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.framework.core.constants.CacheConstants;
@@ -52,6 +54,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final AssertionChecker assertI18nService;
     private final PasswordEncoder passwordEncoder;
     private final ClientTrans clientTrans;
+    private final BizIdGen bizIdGen;
 
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
@@ -92,16 +95,23 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
     @Override
     @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey)
-    public void createClient(OAuth2RegisteredClientDTO params) {
+    public AppSecretVO createClient(OAuth2RegisteredClientDTO params) {
         assertI18nService.checkOperation(count(Wrappers.<Oauth2RegisteredClient>lambdaQuery()
                         .eq(Oauth2RegisteredClient::getClientId, params.getClientId())) == 0,
                 "Oauth2RegisteredClientServiceImpl.ExistClientId");
 
         Oauth2RegisteredClient client = clientTrans.to(params);
         // id 和 clientId 保持一致
-        client.setId(client.getClientId());
+        String id = bizIdGen.genAppIdCode();
+        String secret = StrUtil.uuid().replaceAll("-", "");
+        AppSecretVO result = new AppSecretVO();
+        result.setAppId(id);
+        result.setAppSecret(secret);
+
+        client.setId(id);
+        client.setClientId(id);
         client.setClientIdIssuedAt(DateUtils.now());
-        client.setClientSecret(passwordEncoder.encode(client.getClientSecret()));
+        client.setClientSecret(passwordEncoder.encode(secret));
 
         ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
         TokenSettings.Builder tokenSettingsBuilder = TokenSettings.builder();
@@ -117,6 +127,8 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         assertI18nService.checkOperation(save(client),
                 "Oauth2RegisteredClientServiceImpl.CreateFailed");
+
+        return result;
     }
 
     @Override
@@ -153,6 +165,20 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     public void removeClientByClientId(String id) {
         assertI18nService.checkOperation(removeById(id),
                 "Oauth2RegisteredClientServiceImpl.RemoveFailed");
+    }
+
+    @Override
+    public AppSecretVO resetSecret(String id) {
+        Oauth2RegisteredClient current = getById(id);
+        String secret = StrUtil.uuid().replaceAll("-", "");
+        AppSecretVO result = new AppSecretVO();
+        result.setAppId(id);
+        result.setAppSecret(secret);
+
+        current.setClientSecret(passwordEncoder.encode(secret));
+        current.setUpdatedAt(DateUtils.now());
+        current.updateById();
+        return result;
     }
 
     private void fillSettings(OAuth2RegisteredClientDTO params,

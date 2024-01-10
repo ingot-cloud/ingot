@@ -46,8 +46,7 @@ public class AdminClientAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) OAuth2RegisteredClientDTO params) {
-        oauth2RegisteredClientService.createClient(params);
-        return ok();
+        return ok(oauth2RegisteredClientService.createClient(params));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
@@ -62,5 +61,11 @@ public class AdminClientAPI implements RShortcuts {
     public R<?> removeById(@PathVariable String clientId) {
         oauth2RegisteredClientService.removeClientByClientId(clientId);
         return ok();
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('develop.client.w')")
+    @PutMapping("/resetSecret/{clientId}")
+    public R<?> resetSecret(@PathVariable String clientId) {
+        return ok(oauth2RegisteredClientService.resetSecret(clientId));
     }
 }

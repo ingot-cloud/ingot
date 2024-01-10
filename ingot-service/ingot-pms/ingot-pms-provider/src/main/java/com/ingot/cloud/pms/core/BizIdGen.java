@@ -40,4 +40,14 @@ public class BizIdGen {
         long id = bizGenerator.getId("org_role_code");
         return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
     }
+
+    /**
+     * 生成APP ID
+     *
+     * @return APP ID
+     */
+    public String genAppIdCode() {
+        long id = bizGenerator.getId("org_role_code");
+        return String.format("in%d", (id << 6 | RANDOM.nextInt(64)));
+    }
 }

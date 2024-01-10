@@ -1,13 +1,12 @@
 package com.ingot.cloud.pms.api.model.dto.client;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.NotBlank;
-
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>Description  : OAuth2RegisteredClientDTO.</p>
@@ -25,13 +24,11 @@ public class OAuth2RegisteredClientDTO implements Serializable {
     /**
      * 客户端ID
      */
-    @NotBlank(message = "{Oauth2RegisteredClient.clientId}", groups = Group.Create.class)
     private String clientId;
 
     /**
      * 客户端秘钥
      */
-    @NotBlank(message = "{Oauth2RegisteredClient.clientSecret}", groups = Group.Create.class)
     private String clientSecret;
 
     /**

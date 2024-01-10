@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
+import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
@@ -21,6 +22,7 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
 
     /**
      * 条件list
+     *
      * @param condition 条件
      * @return {@link Oauth2RegisteredClient} List
      */
@@ -48,8 +50,9 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
      * 创建客户端
      *
      * @param params 参数
+     * @return {@link AppSecretVO}
      */
-    void createClient(OAuth2RegisteredClientDTO params);
+    AppSecretVO createClient(OAuth2RegisteredClientDTO params);
 
     /**
      * 更新客户端
@@ -64,4 +67,12 @@ public interface Oauth2RegisteredClientService extends BaseService<Oauth2Registe
      * @param id 客户端表ID，并非clientId
      */
     void removeClientByClientId(String id);
+
+    /**
+     * 根据客户端ID充值secret
+     *
+     * @param id app id
+     * @return {@link AppSecretVO}
+     */
+    AppSecretVO resetSecret(String id);
 }
