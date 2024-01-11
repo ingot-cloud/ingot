@@ -156,9 +156,10 @@ public class BizUserServiceImpl implements BizUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        // 默认初始化密码
+        // 重置密码
         String initPwd = RandomUtil.randomString(6);
-        user.setPassword(initPwd);
+        user.setPassword(passwordEncoder.encode(initPwd));
+        user.updateById();
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
