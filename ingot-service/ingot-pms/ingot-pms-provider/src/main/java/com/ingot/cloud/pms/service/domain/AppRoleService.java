@@ -21,4 +21,12 @@ public interface AppRoleService extends BaseService<AppRole> {
      * @return 角色列表
      */
     List<AppRole> getRolesOfUser(long userId);
+
+    /**
+     * 根据角色编码获取角色
+     *
+     * @param code 角色编码
+     * @return {@link AppRole}
+     */
+    AppRole getRoleByCode(String code);
 }

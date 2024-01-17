@@ -1,0 +1,36 @@
+package com.ingot.cloud.pms.api.model.dto.auth;
+
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import lombok.Data;
+
+import java.io.Serializable;
+
+/**
+ * <p>Description  : SocialRegisterDTO.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2024/1/17.</p>
+ * <p>Time         : 13:45.</p>
+ */
+@Data
+public class SocialRegisterDTO implements Serializable {
+    /**
+     * 社交类型
+     */
+    private SocialTypeEnums type;
+    /**
+     * 社交码，社交唯一标识
+     */
+    private String code;
+    /**
+     * 手机号
+     */
+    private String phone;
+    /**
+     * 头像
+     */
+    private String avatar;
+    /**
+     * 昵称
+     */
+    private String nickname;
+}

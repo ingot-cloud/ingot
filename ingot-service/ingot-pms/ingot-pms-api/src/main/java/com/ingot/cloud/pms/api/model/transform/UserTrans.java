@@ -27,6 +27,8 @@ public interface UserTrans {
 
     UserBaseInfoDTO toUserBaseInfo(SysUser in);
 
+    UserBaseInfoDTO toUserBaseInfo(AppUser in);
+
     UserProfileVO toUserProfile(SysUser in);
 
     OrgUserProfileVO toOrgUserProfile(SysUser in);

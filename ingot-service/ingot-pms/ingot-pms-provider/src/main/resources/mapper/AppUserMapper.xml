@@ -24,4 +24,32 @@
         id, dept_id, username, `password`, init_pwd, nickname, phone, email, avatar, `status`, created_at, updated_at, deleted_at
     </sql>
 
+    <select id="conditionPageWithTenant" resultMap="BaseResultMap">
+        SELECT u.id,
+               u.username,
+               u.nickname,
+               u.phone,
+               u.email,
+               u.avatar,
+               u.status,
+               u.created_at
+        FROM app_user_tenant AS ut
+                 LEFT JOIN app_user AS u ON u.id = ut.user_id
+        WHERE ut.tenant_id = #{tenantId}
+          AND u.deleted_at IS NULL
+        <if test="condition.username != null and condition.username != ''">
+            AND u.username LIKE CONCAT('%', #{condition.username}, '%')
+        </if>
+        <if test="condition.nickname != null and condition.nickname != ''">
+            AND u.nickname LIKE CONCAT('%', #{condition.nickname}, '%')
+        </if>
+        <if test="condition.phone != null and condition.phone != ''">
+            AND u.phone LIKE CONCAT('%', #{condition.phone}, '%')
+        </if>
+        <if test="condition.status != null and condition.status != ''">
+            AND u.status = #{condition.status}
+        </if>
+        ORDER BY ut.id
+    </select>
+
 </mapper>

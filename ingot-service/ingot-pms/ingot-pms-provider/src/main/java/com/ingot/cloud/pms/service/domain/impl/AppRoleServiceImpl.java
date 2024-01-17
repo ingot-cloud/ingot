@@ -9,11 +9,14 @@ import com.ingot.cloud.pms.service.domain.AppRoleService;
 import com.ingot.cloud.pms.service.domain.AppRoleUserService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> implements AppRoleService {
     private final AppRoleUserService appRoleUserService;
+    private final Map<String, AppRole> roleCache = new ConcurrentHashMap<>();
 
     @Override
     public List<AppRole> getRolesOfUser(long userId) {
@@ -43,5 +47,17 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
         return list(Wrappers.<AppRole>lambdaQuery()
                 .eq(AppRole::getStatus, CommonStatusEnum.ENABLE)
                 .in(AppRole::getId, baseRoleIds));
+    }
+
+    @Override
+    public AppRole getRoleByCode(String code) {
+        AppRole role = roleCache.get(TenantContextHolder.get() + code);
+        if (role == null) {
+            role = getOne(Wrappers.<AppRole>lambdaQuery().eq(AppRole::getCode, code));
+            if (role != null) {
+                roleCache.put(TenantContextHolder.get() + code, role);
+            }
+        }
+        return role;
     }
 }
