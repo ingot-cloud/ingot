@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.social.utils;
+package com.ingot.cloud.pms.core;
 
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
