@@ -160,6 +160,7 @@ junit.api = "org.junit.jupiter:junit-jupiter-api:${versions.junit}"
 junit.engine = "org.junit.jupiter:junit-jupiter-engine:${versions.junit}"
 deps.junit = junit
 
+deps.weixin_java_miniapp = "com.github.binarywang:weixin-java-miniapp:4.5.0"
 deps.feign_okhttp = "io.github.openfeign:feign-okhttp:12.4"
 deps.perf4j = "org.perf4j:perf4j:0.9.16"
 deps.redisson = "org.redisson:redisson:${versions.redisson}"
