@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +41,7 @@ public class AppUserSocial extends BaseModel<AppUserSocial> {
      * 渠道类型
      */
     @TableField("`type`")
-    private String type;
+    private SocialTypeEnums type;
 
     /**
      * 渠道唯一ID
