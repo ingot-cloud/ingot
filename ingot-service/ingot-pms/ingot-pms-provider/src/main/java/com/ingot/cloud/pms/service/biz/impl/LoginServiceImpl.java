@@ -58,11 +58,14 @@ public class LoginServiceImpl implements LoginService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void appMiniProgramRegister(MiniProgramRegisterDTO params) {
-        String appId = wechatProperties.getAppMiniProgramAppId();
-        assertionChecker.checkOperation(StrUtil.isNotEmpty(appId), "LoginServiceImpl.AppMiniProgramAppID");
+        // 如果存在phoneCode，那么需要进行数据填充
+        if (StrUtil.isNotEmpty(params.getPhoneCode())) {
+            String appId = wechatProperties.getAppMiniProgramAppId();
+            assertionChecker.checkOperation(StrUtil.isNotEmpty(appId), "LoginServiceImpl.AppMiniProgramAppID");
 
-        WxMaService service = wxMaService.switchoverTo(appId);
-        fillWechatData(service, params);
+            WxMaService service = wxMaService.switchoverTo(appId);
+            fillWechatData(service, params);
+        }
 
         params.setType(SocialTypeEnums.APP_MINI_PROGRAM);
         register(params);
@@ -71,11 +74,14 @@ public class LoginServiceImpl implements LoginService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adminMiniProgramRegister(MiniProgramRegisterDTO params) {
-        String appId = wechatProperties.getAdminMiniProgramAppId();
-        assertionChecker.checkOperation(StrUtil.isNotEmpty(appId), "LoginServiceImpl.AdminMiniProgramAppID");
+        // 如果存在phoneCode，那么需要进行数据填充
+        if (StrUtil.isNotEmpty(params.getPhoneCode())) {
+            String appId = wechatProperties.getAdminMiniProgramAppId();
+            assertionChecker.checkOperation(StrUtil.isNotEmpty(appId), "LoginServiceImpl.AdminMiniProgramAppID");
 
-        WxMaService service = wxMaService.switchoverTo(appId);
-        fillWechatData(service, params);
+            WxMaService service = wxMaService.switchoverTo(appId);
+            fillWechatData(service, params);
+        }
 
         params.setType(SocialTypeEnums.ADMIN_MINI_PROGRAM);
         register(params);
