@@ -13,6 +13,7 @@ import com.ingot.framework.core.model.enums.SocialTypeEnums;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,6 +28,7 @@ import java.util.List;
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(WechatProperties.class)
 @RequiredArgsConstructor
 public class WechatConfiguration implements InitializingBean {
     private final static List<WxMaConfig> wxConfigs = new ArrayList<>();
