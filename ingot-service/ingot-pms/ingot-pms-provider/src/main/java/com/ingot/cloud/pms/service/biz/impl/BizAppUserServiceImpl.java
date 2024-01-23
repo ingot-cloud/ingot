@@ -43,6 +43,11 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public IPage<AppUser> page(Page<AppUser> page, AppUser filter) {
+        return appUserService.page(page, Wrappers.lambdaQuery(filter));
+    }
+
+    @Override
+    public IPage<AppUser> pageTenant(Page<AppUser> page, AppUser filter) {
         return appUserService.conditionPageWithTenant(page, filter, TenantContextHolder.get());
     }
 

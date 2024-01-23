@@ -24,7 +24,7 @@ public class OrgAppUserAPI implements RShortcuts {
 
     @GetMapping("/page")
     public R<?> page(Page<AppUser> page, AppUser condition) {
-        return ok(bizAppUserService.page(page, condition));
+        return ok(bizAppUserService.pageTenant(page, condition));
     }
 
     @PutMapping

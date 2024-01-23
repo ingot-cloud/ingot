@@ -22,6 +22,15 @@ public interface BizAppUserService {
     IPage<AppUser> page(Page<AppUser> page, AppUser filter);
 
     /**
+     * 用户列表分页
+     *
+     * @param page   分页参数
+     * @param filter 条件参数
+     * @return {@link AppUser}
+     */
+    IPage<AppUser> pageTenant(Page<AppUser> page, AppUser filter);
+
+    /**
      * 创建用户, 如果手机号已经创建用户那么不处理
      *
      * @param params {@link AppUserCreateDTO}
