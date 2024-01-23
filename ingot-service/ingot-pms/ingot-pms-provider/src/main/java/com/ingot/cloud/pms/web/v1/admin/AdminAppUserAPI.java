@@ -8,9 +8,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : AdminAppUserAPI.</p>
@@ -29,5 +27,14 @@ public class AdminAppUserAPI implements RShortcuts {
     @GetMapping("/page")
     public R<?> userPage(Page<AppUser> page, AppUser filter) {
         return ok(bizAppUserService.page(page, filter));
+    }
+
+    @PreAuthorize("@ingot.hasAnyAuthority('app.user')")
+    @PutMapping
+    public R<?> update(@RequestBody AppUser params) {
+        params.setPassword(null);
+        params.setInitPwd(null);
+        bizAppUserService.updateUser(params);
+        return ok();
     }
 }
