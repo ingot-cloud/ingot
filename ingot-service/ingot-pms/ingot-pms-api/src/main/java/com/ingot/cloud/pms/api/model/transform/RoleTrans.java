@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.transform;
 
+import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.framework.core.model.support.Option;
@@ -18,7 +19,13 @@ public interface RoleTrans {
 
     RolePageItemVO to(SysRole role);
 
+    RolePageItemVO to(AppRole role);
+
     @Mapping(target = "value", source = "id")
     @Mapping(target = "label", source = "name")
     Option<Long> option(SysRole role);
+
+    @Mapping(target = "value", source = "id")
+    @Mapping(target = "label", source = "name")
+    Option<Long> option(AppRole role);
 }
