@@ -36,9 +36,19 @@ public class BizIdGen {
      *
      * @return 角色编码
      */
-    public String genOrgRoleCode() {
+    public String genOrgSysRoleCode() {
         long id = bizGenerator.getId("org_role_code");
         return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
+    }
+
+    /**
+     * 组织app角色编码
+     *
+     * @return 角色编码
+     */
+    public String genOrgAppRoleCode() {
+        long id = bizGenerator.getId("org_role_code");
+        return String.format("org_app_role_%d", (id << 6 | RANDOM.nextInt(64)));
     }
 
     /**

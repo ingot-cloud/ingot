@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +39,11 @@ public class AppRole extends BaseModel<AppRole> {
     private Long tenantId;
 
     /**
+     * 组ID
+     */
+    private Long groupId;
+
+    /**
      * 角色名称
      */
     @TableField("`name`")
@@ -52,18 +59,13 @@ public class AppRole extends BaseModel<AppRole> {
      * 角色类型
      */
     @TableField("`type`")
-    private String type;
+    private OrgTypeEnums type;
 
     /**
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
-    private String status;
-
-    /**
-     * 备注
-     */
-    private String remark;
+    private CommonStatusEnum status;
 
     /**
      * 创建日期

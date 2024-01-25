@@ -18,10 +18,7 @@ import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.mapper.SysRoleMapper;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysRoleGroupService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.support.Option;
 import com.ingot.framework.core.utils.DateUtils;
@@ -50,7 +47,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
+public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> implements SysRoleService, RoleService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleGroupService sysRoleGroupService;
@@ -95,61 +92,22 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
                 .in(!isAdmin, SysRoleGroup::getType,
                         ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom)));
-        return temp.stream().map(item -> {
-            RolePageItemVO v = roleTrans.to(item);
-            v.setGroupName(groups.stream()
-                    .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
-                    .findFirst()
-                    .map(SysRoleGroup::getName)
-                    .orElse(null));
-            return v;
-        }).toList();
+        return temp.stream().map(sysToRolePageItemMap(roleTrans, groups)).toList();
     }
 
     @Override
     public List<RoleGroupItemVO> groupRoleList(boolean isAdmin, RoleFilterDTO filter) {
-        boolean needFilterType = false;
-        List<OrgTypeEnums> roleTypeList = new ArrayList<>();
-        if (StrUtil.isNotEmpty(filter.getRoleType())) {
-            needFilterType = true;
-            roleTypeList.add(OrgTypeEnums.getEnum(filter.getRoleType()));
-        } else {
-            if (!isAdmin) {
-                needFilterType = true;
-                roleTypeList = ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom);
-            }
-        }
+        List<OrgTypeEnums> roleTypeList = filterOrgTypeEnums(isAdmin, filter);
 
         List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
                 .orderByAsc(ListUtil.list(false, SysRoleGroup::getSort, SysRoleGroup::getId))
-                .in(needFilterType, SysRoleGroup::getType, roleTypeList));
+                .in(CollUtil.isNotEmpty(roleTypeList), SysRoleGroup::getType, roleTypeList));
 
         List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
                 .like(StrUtil.isNotEmpty(filter.getRoleName()), SysRole::getName, filter.getRoleName())
-                .in(needFilterType, SysRole::getType, roleTypeList));
+                .in(CollUtil.isNotEmpty(roleTypeList), SysRole::getType, roleTypeList));
 
-        return groups.stream()
-                .map(item -> {
-                    RoleGroupItemVO vo = new RoleGroupItemVO();
-                    vo.setIsGroup(Boolean.TRUE);
-                    vo.setId(item.getId());
-                    vo.setName(item.getName());
-                    vo.setType(item.getType());
-                    vo.setChildren(roles.stream()
-                            .filter(role -> Objects.equals(role.getGroupId(), item.getId()))
-                            .map(role -> {
-                                RoleGroupItemVO itemVo = new RoleGroupItemVO();
-                                itemVo.setIsGroup(Boolean.FALSE);
-                                itemVo.setId(role.getId());
-                                itemVo.setName(role.getName());
-                                itemVo.setType(role.getType());
-                                itemVo.setGroupId(item.getId());
-                                itemVo.setStatus(role.getStatus());
-                                itemVo.setCode(role.getCode());
-                                return itemVo;
-                            }).toList());
-                    return vo;
-                }).toList();
+        return groups.stream().map(sysToRoleGroupItemVOMap(roles)).toList();
     }
 
     @Override
@@ -200,7 +158,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
             params.setType(OrgTypeEnums.Custom);
         }
         if (!isAdmin || StrUtil.isEmpty(params.getCode())) {
-            params.setCode(bizIdGen.genOrgRoleCode());
+            params.setCode(bizIdGen.genOrgSysRoleCode());
         }
 
         params.setStatus(CommonStatusEnum.ENABLE);
