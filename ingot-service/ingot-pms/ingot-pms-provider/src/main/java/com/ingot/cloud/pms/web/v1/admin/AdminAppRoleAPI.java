@@ -1,8 +1,7 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.AppRole;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.biz.BizAppRoleService;
@@ -52,14 +51,14 @@ public class AdminAppRoleAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.hasAnyAuthority('app.role.w')")
     @PostMapping
-    public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody AppRole params) {
         bizAppRoleService.createRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('app.role.w')")
     @PutMapping
-    public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody AppRole params) {
         bizAppRoleService.updateRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
@@ -73,14 +72,14 @@ public class AdminAppRoleAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PostMapping("/group")
-    public R<?> createGroup(@RequestBody SysRoleGroup params) {
+    public R<?> createGroup(@RequestBody AppRoleGroup params) {
         bizAppRoleService.createRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.role.w')")
     @PutMapping("/group")
-    public R<?> updateGroup(@RequestBody SysRoleGroup params) {
+    public R<?> updateGroup(@RequestBody AppRoleGroup params) {
         bizAppRoleService.updateRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }

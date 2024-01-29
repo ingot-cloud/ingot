@@ -41,6 +41,9 @@ public class TenantOps {
     private final SysAuthorityService sysAuthorityService;
     private final SysApplicationTenantService sysApplicationTenantService;
     private final SysMenuService sysMenuService;
+    private final AppRoleService appRoleService;
+    private final AppRoleGroupService appRoleGroupService;
+    private final AppRoleUserService appRoleUserService;
 
     private final TenantProperties tenantProperties;
     private final AuthorityTrans authorityTrans;
@@ -57,6 +60,16 @@ public class TenantOps {
                         }));
     }
 
+    public void createRole(AppRole role) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            role.setId(null);
+                            role.setTenantId(null);
+                            appRoleService.createRole(role, true);
+                        }));
+    }
+
     public void updateRole(SysRole role) {
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
@@ -67,6 +80,19 @@ public class TenantOps {
                             role.setId(orgRole.getId());
                             role.setTenantId(null);
                             sysRoleService.updateRoleById(role, true);
+                        }));
+    }
+
+    public void updateRole(AppRole role) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            AppRole orgRole = appRoleService.getOne(Wrappers.<AppRole>lambdaQuery()
+                                    .eq(AppRole::getCode, role.getCode()));
+
+                            role.setId(orgRole.getId());
+                            role.setTenantId(null);
+                            appRoleService.updateRoleById(role, true);
                         }));
     }
 
@@ -91,6 +117,22 @@ public class TenantOps {
                         }));
     }
 
+    public void removeRole(AppRole role) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            AppRole orgRole = appRoleService.getOne(Wrappers.<AppRole>lambdaQuery()
+                                    .eq(AppRole::getCode, role.getCode()));
+
+                            // 去掉关联用户
+                            appRoleUserService.remove(
+                                    Wrappers.<AppRoleUser>lambdaQuery()
+                                            .eq(AppRoleUser::getRoleId, orgRole.getId()));
+
+                            appRoleService.removeRoleById(orgRole.getId(), true);
+                        }));
+    }
+
     public void createRoleGroup(SysRoleGroup group) {
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
@@ -98,6 +140,16 @@ public class TenantOps {
                             group.setId(null);
                             group.setTenantId(null);
                             sysRoleService.createGroup(group, true);
+                        }));
+    }
+
+    public void createRoleGroup(AppRoleGroup group) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            group.setId(null);
+                            group.setTenantId(null);
+                            appRoleService.createGroup(group, true);
                         }));
     }
 
@@ -114,6 +166,19 @@ public class TenantOps {
                         }));
     }
 
+    public void updateRoleGroup(AppRoleGroup group) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            AppRoleGroup orgGroup = appRoleGroupService.getOne(Wrappers.<AppRoleGroup>lambdaQuery()
+                                    .eq(AppRoleGroup::getName, group.getName()));
+
+                            group.setId(orgGroup.getId());
+                            group.setTenantId(null);
+                            appRoleService.updateGroup(group, true);
+                        }));
+    }
+
     public void removeRoleGroup(SysRoleGroup group) {
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
@@ -122,6 +187,17 @@ public class TenantOps {
                                     .eq(SysRoleGroup::getName, group.getName()));
 
                             sysRoleService.deleteGroup(orgGroup.getId(), true);
+                        }));
+    }
+
+    public void removeRoleGroup(AppRoleGroup group) {
+        getOrgs().forEach(org ->
+                TenantEnv.runAs(org.getId(),
+                        () -> {
+                            AppRoleGroup orgGroup = appRoleGroupService.getOne(Wrappers.<AppRoleGroup>lambdaQuery()
+                                    .eq(AppRoleGroup::getName, group.getName()));
+
+                            appRoleService.deleteGroup(orgGroup.getId(), true);
                         }));
     }
 
