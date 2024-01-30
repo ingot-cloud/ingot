@@ -174,6 +174,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         SysRole current = sysRoleService.getById(params.getId());

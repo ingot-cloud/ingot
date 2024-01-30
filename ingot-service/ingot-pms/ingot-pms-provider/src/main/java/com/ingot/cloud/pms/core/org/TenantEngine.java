@@ -93,6 +93,7 @@ public class TenantEngine {
             List<SysRoleGroup> orgRoleGroups = templateRoleGroups.stream()
                     .map(item -> {
                         SysRoleGroup group = new SysRoleGroup();
+                        group.setModelId(item.getId());
                         group.setName(item.getName());
                         group.setType(item.getType());
                         group.setSort(item.getSort());
@@ -104,6 +105,7 @@ public class TenantEngine {
                     .map(item -> {
                         SysRole role = new SysRole();
                         role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
+                        role.setModelId(item.getId());
                         role.setName(item.getName());
                         role.setCode(item.getCode());
                         role.setType(item.getType());

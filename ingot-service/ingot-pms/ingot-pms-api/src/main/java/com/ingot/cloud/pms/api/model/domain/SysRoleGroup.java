@@ -35,6 +35,11 @@ public class SysRoleGroup extends BaseModel<SysRoleGroup> {
     private Long tenantId;
 
     /**
+     * 模型ID
+     */
+    private Long modelId;
+
+    /**
      * 角色组名称
      */
     private String name;

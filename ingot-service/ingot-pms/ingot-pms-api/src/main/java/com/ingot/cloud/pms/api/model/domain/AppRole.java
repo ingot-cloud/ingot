@@ -39,6 +39,11 @@ public class AppRole extends BaseModel<AppRole> {
     private Long tenantId;
 
     /**
+     * 模型ID
+     */
+    private Long modelId;
+
+    /**
      * 组ID
      */
     private Long groupId;

@@ -43,6 +43,11 @@ public class SysRole extends BaseModel<SysRole> {
     private Long tenantId;
 
     /**
+     * 模型ID
+     */
+    private Long modelId;
+
+    /**
      * 组ID
      */
     private Long groupId;

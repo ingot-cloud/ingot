@@ -51,6 +51,8 @@ public class TenantOps {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void createRole(SysRole role) {
+        long modelId = role.getId();
+        role.setModelId(modelId);
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
@@ -61,6 +63,8 @@ public class TenantOps {
     }
 
     public void createRole(AppRole role) {
+        long modelId = role.getId();
+        role.setModelId(modelId);
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
@@ -71,11 +75,12 @@ public class TenantOps {
     }
 
     public void updateRole(SysRole role) {
+        long modelId = role.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             SysRole orgRole = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
-                                    .eq(SysRole::getCode, role.getCode()));
+                                    .eq(SysRole::getModelId, modelId));
 
                             role.setId(orgRole.getId());
                             role.setTenantId(null);
@@ -84,11 +89,12 @@ public class TenantOps {
     }
 
     public void updateRole(AppRole role) {
+        long modelId = role.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             AppRole orgRole = appRoleService.getOne(Wrappers.<AppRole>lambdaQuery()
-                                    .eq(AppRole::getCode, role.getCode()));
+                                    .eq(AppRole::getModelId, modelId));
 
                             role.setId(orgRole.getId());
                             role.setTenantId(null);
@@ -97,11 +103,12 @@ public class TenantOps {
     }
 
     public void removeRole(SysRole role) {
+        long modelId = role.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             SysRole orgRole = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
-                                    .eq(SysRole::getCode, role.getCode()));
+                                    .eq(SysRole::getModelId, modelId));
 
                             // 去掉关联权限
                             sysRoleAuthorityService.remove(
@@ -118,11 +125,12 @@ public class TenantOps {
     }
 
     public void removeRole(AppRole role) {
+        long modelId = role.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             AppRole orgRole = appRoleService.getOne(Wrappers.<AppRole>lambdaQuery()
-                                    .eq(AppRole::getCode, role.getCode()));
+                                    .eq(AppRole::getModelId, modelId));
 
                             // 去掉关联用户
                             appRoleUserService.remove(
@@ -134,6 +142,7 @@ public class TenantOps {
     }
 
     public void createRoleGroup(SysRoleGroup group) {
+        group.setModelId(group.getId());
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
@@ -144,6 +153,7 @@ public class TenantOps {
     }
 
     public void createRoleGroup(AppRoleGroup group) {
+        group.setModelId(group.getId());
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
@@ -154,11 +164,12 @@ public class TenantOps {
     }
 
     public void updateRoleGroup(SysRoleGroup group) {
+        long modelId = group.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             SysRoleGroup orgGroup = sysRoleGroupService.getOne(Wrappers.<SysRoleGroup>lambdaQuery()
-                                    .eq(SysRoleGroup::getName, group.getName()));
+                                    .eq(SysRoleGroup::getModelId, modelId));
 
                             group.setId(orgGroup.getId());
                             group.setTenantId(null);
@@ -167,11 +178,12 @@ public class TenantOps {
     }
 
     public void updateRoleGroup(AppRoleGroup group) {
+        long modelId = group.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             AppRoleGroup orgGroup = appRoleGroupService.getOne(Wrappers.<AppRoleGroup>lambdaQuery()
-                                    .eq(AppRoleGroup::getName, group.getName()));
+                                    .eq(AppRoleGroup::getModelId, modelId));
 
                             group.setId(orgGroup.getId());
                             group.setTenantId(null);
@@ -180,22 +192,24 @@ public class TenantOps {
     }
 
     public void removeRoleGroup(SysRoleGroup group) {
+        long modelId = group.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             SysRoleGroup orgGroup = sysRoleGroupService.getOne(Wrappers.<SysRoleGroup>lambdaQuery()
-                                    .eq(SysRoleGroup::getName, group.getName()));
+                                    .eq(SysRoleGroup::getModelId, modelId));
 
                             sysRoleService.deleteGroup(orgGroup.getId(), true);
                         }));
     }
 
     public void removeRoleGroup(AppRoleGroup group) {
+        long modelId = group.getId();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
                             AppRoleGroup orgGroup = appRoleGroupService.getOne(Wrappers.<AppRoleGroup>lambdaQuery()
-                                    .eq(AppRoleGroup::getName, group.getName()));
+                                    .eq(AppRoleGroup::getModelId, modelId));
 
                             appRoleService.deleteGroup(orgGroup.getId(), true);
                         }));

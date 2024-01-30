@@ -10,6 +10,7 @@ import com.ingot.cloud.pms.service.domain.AppRoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>Description  : BizAppRoleServiceImpl.</p>
@@ -26,6 +27,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     private final TenantOps tenantOps;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void createRoleEffectOrg(AppRole role, boolean isAdmin) {
         appRoleService.createRole(role, isAdmin);
         if (role.getType() == OrgTypeEnums.Tenant) {
@@ -34,6 +36,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateRoleEffectOrg(AppRole role, boolean isAdmin) {
         appRoleService.updateRoleById(role, isAdmin);
         AppRole current = appRoleService.getById(role.getId());
@@ -43,6 +46,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeRoleEffectOrg(long id, boolean isAdmin) {
         AppRole current = appRoleService.getById(id);
         appRoleService.removeRoleById(id, isAdmin);
@@ -52,6 +56,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void createRoleGroupEffectOrg(AppRoleGroup group, boolean isAdmin) {
         appRoleService.createGroup(group, isAdmin);
         if (group.getType() == OrgTypeEnums.Tenant) {
@@ -60,6 +65,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateRoleGroupEffectOrg(AppRoleGroup group, boolean isAdmin) {
         appRoleService.updateGroup(group, isAdmin);
         AppRoleGroup current = appRoleGroupService.getById(group.getId());
@@ -69,6 +75,7 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void removeRoleGroupEffectOrg(long id, boolean isAdmin) {
         AppRoleGroup current = appRoleGroupService.getById(id);
         appRoleService.deleteGroup(id, isAdmin);

@@ -36,6 +36,11 @@ public class AppRoleGroup extends Model<AppRoleGroup> {
     private Long tenantId;
 
     /**
+     * 模型ID
+     */
+    private Long modelId;
+
+    /**
      * 角色组名称
      */
     @TableField("`name`")
