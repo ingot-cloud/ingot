@@ -127,6 +127,7 @@ public class BizUserServiceImpl implements BizUserService {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
         user.setStatus(UserStatusEnum.ENABLE);
+        sysUserService.createUser(user);
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
