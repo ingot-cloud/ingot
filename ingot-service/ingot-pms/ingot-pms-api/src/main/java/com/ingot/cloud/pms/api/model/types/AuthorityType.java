@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.type;
+package com.ingot.cloud.pms.api.model.types;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;

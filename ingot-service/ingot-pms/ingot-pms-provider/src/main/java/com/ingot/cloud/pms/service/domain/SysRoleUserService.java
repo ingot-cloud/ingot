@@ -27,6 +27,7 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
      */
     boolean removeByUserId(long userId);
 
+
     /**
      * 更新用户角色，将用户角色更新为指定角色
      *

@@ -205,7 +205,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         }
     }
 
-
     @Override
     public void fixPassword(long id, UserPasswordDTO params) {
         assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getPassword())

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
-import com.ingot.cloud.pms.api.model.type.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;

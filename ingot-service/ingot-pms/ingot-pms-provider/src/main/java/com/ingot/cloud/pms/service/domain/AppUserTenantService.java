@@ -4,6 +4,8 @@ import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -34,4 +36,12 @@ public interface AppUserTenantService extends BaseService<AppUserTenant> {
      * @param params {@link SysTenant}
      */
     void updateBase(SysTenant params);
+
+    /**
+     * 获取用户组织
+     *
+     * @param userId 用户ID
+     * @return {@link AppUserTenant}
+     */
+    List<AppUserTenant> getUserOrgs(long userId);
 }

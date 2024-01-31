@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.authority;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
-import com.ingot.cloud.pms.api.model.type.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import lombok.Data;

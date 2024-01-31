@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.types.UserTenantType;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @TableName("app_user_tenant")
-public class AppUserTenant extends BaseModel<AppUserTenant> {
+public class AppUserTenant extends BaseModel<AppUserTenant> implements UserTenantType {
 
     private static final long serialVersionUID = 1L;
 

@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.service.biz;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 
+import java.util.List;
+
 /**
  * <p>Description  : BizAppRoleService.</p>
  * <p>Author       : jy.</p>
@@ -10,6 +12,15 @@ import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
  * <p>Time         : 09:30.</p>
  */
 public interface BizAppRoleService {
+
+    /**
+     * 设置用户角色
+     *
+     * @param userId 用户ID
+     * @param roles  角色
+     */
+    void setOrgUserRoles(long userId, List<Long> roles);
+
     /**
      * 创建角色，如果创建的是组织类型角色，那么会影响所有组织
      *

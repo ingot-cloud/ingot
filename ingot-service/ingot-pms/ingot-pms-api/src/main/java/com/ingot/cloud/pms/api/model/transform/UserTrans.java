@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.AppUserCreateDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
@@ -23,7 +24,13 @@ public interface UserTrans {
 
     SysUser to(OrgUserDTO in);
 
+    AppUser toAppUser(OrgUserDTO in);
+
     SysUser to(UserBaseInfoDTO in);
+
+    AppUser toAppUser(UserBaseInfoDTO in);
+
+    AppUser to(AppUserCreateDTO in);
 
     UserBaseInfoDTO toUserBaseInfo(SysUser in);
 
@@ -31,7 +38,11 @@ public interface UserTrans {
 
     UserProfileVO toUserProfile(SysUser in);
 
+    UserProfileVO toUserProfile(AppUser in);
+
     OrgUserProfileVO toOrgUserProfile(SysUser in);
+
+    OrgUserProfileVO toOrgUserProfile(AppUser in);
 
     UserDetailsResponse toUserDetails(SysUser in);
 

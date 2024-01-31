@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.core;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.ingot.cloud.pms.api.model.type.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;

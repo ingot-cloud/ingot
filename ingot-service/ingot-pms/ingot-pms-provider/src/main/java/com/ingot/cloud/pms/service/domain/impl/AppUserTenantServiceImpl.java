@@ -75,4 +75,9 @@ public class AppUserTenantServiceImpl extends BaseServiceImpl<AppUserTenantMappe
         update(entity, Wrappers.<AppUserTenant>lambdaUpdate()
                 .eq(AppUserTenant::getTenantId, params.getId()));
     }
+
+    @Override
+    public List<AppUserTenant> getUserOrgs(long userId) {
+        return null;
+    }
 }

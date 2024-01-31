@@ -7,10 +7,13 @@ import com.ingot.cloud.pms.core.org.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizAppRoleService;
 import com.ingot.cloud.pms.service.domain.AppRoleGroupService;
 import com.ingot.cloud.pms.service.domain.AppRoleService;
+import com.ingot.cloud.pms.service.domain.AppRoleUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * <p>Description  : BizAppRoleServiceImpl.</p>
@@ -24,7 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class BizAppRoleServiceImpl implements BizAppRoleService {
     private final AppRoleService appRoleService;
     private final AppRoleGroupService appRoleGroupService;
+    private final AppRoleUserService appRoleUserService;
     private final TenantOps tenantOps;
+
+    @Override
+    public void setOrgUserRoles(long userId, List<Long> roles) {
+        appRoleUserService.setUserRoles(userId, roles);
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
