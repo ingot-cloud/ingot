@@ -63,27 +63,27 @@ public class AdminAppUserAPI implements RShortcuts {
         return ok(bizAppUserService.userOrgInfo(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @PreAuthorize("@ingot.hasAnyAuthority('app.user.w')")
     @PutMapping("/org")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
         bizAppUserService.userOrgEdit(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @PreAuthorize("@ingot.hasAnyAuthority('app.user.w')")
     @PutMapping("/org/leave")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizAppUserService.userOrgLeave(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @PreAuthorize("@ingot.hasAnyAuthority('app.user.w')")
     @PutMapping("/resetPwd/{userId}")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizAppUserService.resetPwd(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r', 'basic.user.w')")
+    @PreAuthorize("@ingot.hasAnyAuthority('app.user.r', 'app.user.w')")
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizAppUserService.getUserProfile(id));

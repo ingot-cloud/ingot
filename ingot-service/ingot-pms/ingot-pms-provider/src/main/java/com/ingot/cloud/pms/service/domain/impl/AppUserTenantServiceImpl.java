@@ -78,6 +78,7 @@ public class AppUserTenantServiceImpl extends BaseServiceImpl<AppUserTenantMappe
 
     @Override
     public List<AppUserTenant> getUserOrgs(long userId) {
-        return null;
+        return list(Wrappers.<AppUserTenant>lambdaQuery()
+                .eq(AppUserTenant::getUserId, userId));
     }
 }
