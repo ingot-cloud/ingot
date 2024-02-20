@@ -252,7 +252,6 @@ public class BizAppUserServiceImpl implements BizAppUserService {
         // 手机号，部门，昵称不能为空
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPhone()), "SysUser.phone");
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getNickname()), "SysUser.nickname");
-        assertionChecker.checkOperation(CollUtil.isNotEmpty(params.getDeptIds()), "SysUser.deptId");
 
         // 如果已经存在注册用户，那么直接关联新组织信息
         AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
