@@ -35,7 +35,7 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
 
     @Override
     public String getUniqueID(String code) {
-        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, code);
+        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnums.ADMIN_MINI_PROGRAM, code);
     }
 
     @Override

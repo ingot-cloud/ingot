@@ -35,7 +35,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
 
     @Override
     public String getUniqueID(String code) {
-        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, code);
+        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnums.APP_MINI_PROGRAM, code);
     }
 
     @Override

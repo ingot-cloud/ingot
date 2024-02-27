@@ -25,10 +25,10 @@ public class SocialUtils {
      * @param code    小程序登录码
      * @return OpenId
      */
-    public static String getMiniProgramOpenId(SysSocialDetailsService service, String code) {
+    public static String getMiniProgramOpenId(SysSocialDetailsService service, SocialTypeEnums type, String code) {
         SysSocialDetails socialDetails = service.getOne(
                 Wrappers.<SysSocialDetails>lambdaQuery()
-                        .eq(SysSocialDetails::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM));
+                        .eq(SysSocialDetails::getType, type));
         if (socialDetails == null) {
             log.debug("未设置微信小程序appId，appSecret等信息");
             return null;
