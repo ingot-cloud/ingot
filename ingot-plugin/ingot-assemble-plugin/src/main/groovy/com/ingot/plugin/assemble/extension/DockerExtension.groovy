@@ -1,4 +1,7 @@
 package com.ingot.plugin.assemble.extension
+
+import com.ingot.plugin.assemble.utils.DockerPlatformEnums
+
 /**
  * <p>Description  : DockerExtension.</p>
  * <p>Author       : wangchao.</p>
@@ -16,7 +19,7 @@ class DockerExtension {
      * 默认编译平台 linux/amd64
      * linux/amd64,linux/arm64
      */
-    String platform = "linux/amd64"
+    String platform = DockerPlatformEnums.LINUX_AMD64.value
 
     /**
      * 注册中心地址

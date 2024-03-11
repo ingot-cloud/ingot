@@ -50,6 +50,8 @@ class DockerBuildTask extends DefaultTask {
         String buildDirPath = Utils.projectOutputPath(outputDirPath, project)
         String tag = Utils.getTag(project, imageName, registry)
 
+        project.logger.lifecycle(dockerCmd + " buildx build --platform " + platform + " -t " + tag + " .")
+
         project.exec {
             workingDir buildDirPath
             commandLine dockerCmd, 'buildx', 'build', '--platform', platform, '-t', tag, '.'
