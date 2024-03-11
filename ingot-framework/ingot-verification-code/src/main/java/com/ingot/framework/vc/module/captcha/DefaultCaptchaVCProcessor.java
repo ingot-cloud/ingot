@@ -6,10 +6,7 @@ import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.common.InnerCheck;
-import com.ingot.framework.vc.common.VCConstants;
-import com.ingot.framework.vc.common.VCException;
-import com.ingot.framework.vc.common.VCType;
+import com.ingot.framework.vc.common.*;
 import com.ingot.framework.vc.module.reactive.ReactorUtils;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +28,14 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
 
     @Override
     public Mono<ServerResponse> handle(ServerRequest request, VCGenerator generator) {
-        CaptchaVO vo = new CaptchaVO();
-        vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-        ResponseModel responseModel = captchaService.get(vo);
         try {
-            InnerCheck.check(responseModel.isSuccess(), "vc.check.image.checkFailure");
+            CaptchaVO vo = new CaptchaVO();
+            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
+            ResponseModel responseModel = captchaService.get(vo);
+
+            InnerCheck.check(responseModel.isSuccess(), VCErrorCode.Illegal,
+                    "vc.check.image.fetchFailure",
+                    new String[]{responseModel.getRepCode(), responseModel.getRepMsg()});
             return ReactorUtils.successResponse(R.ok(responseModel));
         } catch (VCException e) {
             return Mono.error(e);

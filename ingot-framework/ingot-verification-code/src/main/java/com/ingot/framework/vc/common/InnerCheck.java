@@ -35,4 +35,19 @@ public class InnerCheck {
                     IngotVCMessageSource.getAccessor().getMessage(messageCode));
         });
     }
+
+    /**
+     * 检查包大师，并且抛出指定消息异常
+     *
+     * @param expression  表达式
+     * @param code        状态码
+     * @param messageCode 消息编码
+     * @param formatCode  格式化
+     */
+    public static void check(boolean expression, VCErrorCode code, String messageCode, String[] formatCode) {
+        AssertionUtils.check(expression, () -> {
+            throw new VCException(code,
+                    IngotVCMessageSource.getAccessor().getMessage(messageCode, formatCode));
+        });
+    }
 }
