@@ -34,7 +34,12 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
         CaptchaVO vo = new CaptchaVO();
         vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
         ResponseModel responseModel = captchaService.get(vo);
-        return ReactorUtils.successResponse(R.ok(responseModel));
+        try {
+            InnerCheck.check(responseModel.isSuccess(), "vc.check.image.checkFailure");
+            return ReactorUtils.successResponse(R.ok(responseModel));
+        } catch (VCException e) {
+            return Mono.error(e);
+        }
     }
 
     @Override
