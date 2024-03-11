@@ -10,5 +10,6 @@
 **/build
 **/out/
 **/generated/
+/output/
 
 .idea
