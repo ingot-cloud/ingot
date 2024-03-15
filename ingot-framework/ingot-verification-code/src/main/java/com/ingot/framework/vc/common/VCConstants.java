@@ -32,6 +32,11 @@ public interface VCConstants {
     String CACHE_EMAIL_CHECK = CACHE_KEY_PREFIX + ":email";
 
     /**
+     * 图形验证码检查参数前缀
+     */
+    String CACHE_CAPTCHA_CHECK = CACHE_KEY_PREFIX + ":captcha";
+
+    /**
      * 获取仓库KEY
      *
      * @param key  自定义key
@@ -67,6 +72,18 @@ public interface VCConstants {
     static String getEmailCheckKey(String receiver, String remoteIP) {
         String digest = DigestUtils.md5(receiver + remoteIP);
         return CACHE_EMAIL_CHECK + ":" + digest;
+    }
+
+    /**
+     * 获取图形检查Key
+     *
+     * @param receiver 接收者
+     * @param remoteIP IP
+     * @return cache key
+     */
+    static String getCaptchaCheckKey(String receiver, String remoteIP) {
+        String digest = DigestUtils.md5(receiver + remoteIP);
+        return CACHE_CAPTCHA_CHECK + ":" + digest;
     }
 
     /**

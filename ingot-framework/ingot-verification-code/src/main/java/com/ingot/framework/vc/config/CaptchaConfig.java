@@ -8,12 +8,12 @@ import com.anji.captcha.util.Base64Utils;
 import com.anji.captcha.util.ImageUtils;
 import com.anji.captcha.util.StringUtils;
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCGenerator;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProcessor;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProvider;
-import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCSendChecker;
+import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCPreChecker;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.properties.ImageCodeProperties;
@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.FileCopyUtils;
 
 import java.util.HashMap;
@@ -119,8 +120,9 @@ public class CaptchaConfig {
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_IMAGE)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_IMAGE})
-    public VCSendChecker imageSendChecker() {
-        return new DefaultCaptchaVCSendChecker();
+    public VCPreChecker imageSendChecker(RedisTemplate<String, Object> redisTemplate,
+                                         IngotVCProperties properties) {
+        return new DefaultCaptchaVCPreChecker(redisTemplate, properties.getImage());
     }
 
     @Bean(VCConstants.BEAN_NAME_PROVIDER_IMAGE)

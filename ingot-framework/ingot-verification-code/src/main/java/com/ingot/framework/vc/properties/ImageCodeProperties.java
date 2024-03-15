@@ -1,7 +1,8 @@
 package com.ingot.framework.vc.properties;
 
 import com.anji.captcha.model.common.CaptchaTypeEnum;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.awt.*;
 
@@ -11,8 +12,21 @@ import java.awt.*;
  * <p>Date         : 2023/3/23.</p>
  * <p>Time         : 7:41 PM.</p>
  */
-@Data
+@Getter
+@Setter
 public class ImageCodeProperties {
+    // 自定义配置
+    /**
+     * 每分钟获取次数限制，0表示无限制
+     */
+    private int opsLimitGetPerMinute = 0;
+    /**
+     * 每分钟检查次数限制，0表示无限制
+     */
+    private int opsLimitCheckPerMinute = 0;
+
+
+    // -------- anji-plus 默认配置
     public enum StorageType {
         /**
          * 内存.

@@ -2,7 +2,7 @@ package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.email.*;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
@@ -37,9 +37,9 @@ public class EmailConfig {
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_EMAIL)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_EMAIL})
-    public VCSendChecker smsSendChecker(RedisTemplate<String, Object> redisTemplate,
-                                        IngotVCProperties properties) {
-        return new DefaultEmailVCSendChecker(redisTemplate, properties.getEmail());
+    public VCPreChecker smsSendChecker(RedisTemplate<String, Object> redisTemplate,
+                                       IngotVCProperties properties) {
+        return new DefaultEmailVCPreChecker(redisTemplate, properties.getEmail());
     }
 
     @Bean(VCConstants.BEAN_NAME_PROVIDER_EMAIL)

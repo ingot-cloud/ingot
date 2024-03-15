@@ -1,6 +1,5 @@
 package com.ingot.framework.vc.properties;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,7 +13,8 @@ import java.util.List;
  * <p>Date         : 2023/3/23.</p>
  * <p>Time         : 7:40 PM.</p>
  */
-@Data
+@Setter
+@Getter
 @ConfigurationProperties("ingot.vc")
 public class IngotVCProperties {
     /**
@@ -32,7 +32,5 @@ public class IngotVCProperties {
     /**
      * 验证url列表
      */
-    @Getter
-    @Setter
     private List<String> verifyUrls = new ArrayList<>();
 }

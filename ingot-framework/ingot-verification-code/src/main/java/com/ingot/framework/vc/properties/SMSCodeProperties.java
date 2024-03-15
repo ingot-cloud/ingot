@@ -1,6 +1,7 @@
 package com.ingot.framework.vc.properties;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * <p>Description  : SMSCodeProperties.</p>
@@ -8,7 +9,8 @@ import lombok.Data;
  * <p>Date         : 2023/3/23.</p>
  * <p>Time         : 7:41 PM.</p>
  */
-@Data
+@Getter
+@Setter
 public class SMSCodeProperties {
     /**
      * 验证码长度
@@ -38,4 +40,8 @@ public class SMSCodeProperties {
      * 每天最大短信发送数量, 0表示无限制
      */
     private int limitCountOfDay = 0;
+    /**
+     * 每分钟检查次数限制，0表示无限制
+     */
+    private int opsLimitCheckPerMinute = 0;
 }

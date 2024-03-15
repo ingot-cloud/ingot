@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.reactive.*;
@@ -39,7 +39,7 @@ public class VCReactiveConfig {
     @ConditionalOnMissingBean(VCProcessorManager.class)
     public VCProcessorManager vcProcessorManager(Map<String, VCProcessor> processorMap,
                                                  Map<String, VCGenerator> generatorMap,
-                                                 Map<String, VCSendChecker> checkerMap) {
+                                                 Map<String, VCPreChecker> checkerMap) {
         return new DefaultVCProcessorManager(processorMap, generatorMap, checkerMap);
     }
 

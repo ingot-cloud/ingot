@@ -110,6 +110,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     @Override
     public void revokeContext(HttpServletRequest request) {
+
         log.info("调用 redis 中的 revokeContext");
         String sessionId = getSessionId(request);
         if (StrUtil.isEmpty(sessionId)) {

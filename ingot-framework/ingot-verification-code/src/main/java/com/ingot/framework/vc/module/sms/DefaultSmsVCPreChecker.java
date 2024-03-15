@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.module.sms;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.InnerCheck;
 import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCConstants;
@@ -21,12 +21,12 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class DefaultSmsVCSendChecker implements VCSendChecker {
+public class DefaultSmsVCPreChecker implements VCPreChecker {
     private final RedisTemplate<String, Object> redisTemplate;
     private final SMSCodeProperties properties;
 
     @Override
-    public void check(String receiver, String remoteIP) {
+    public void beforeSend(String receiver, String remoteIP) {
         InnerCheck.check(StrUtil.isNotEmpty(receiver),
                 VCErrorCode.Check, "vc.check.sms.receiverNotNull");
 
@@ -68,6 +68,29 @@ public class DefaultSmsVCSendChecker implements VCSendChecker {
                 "vc.check.sms.total", "短信发送数超限",
                 receiver, remoteIP);
 
+    }
+
+    @Override
+    public void beforeCheck(String remoteIP) {
+        int limitCount = properties.getOpsLimitCheckPerMinute();
+        if (limitCount <= 0) {
+            return;
+        }
+
+        String key = VCConstants.getSmsCheckKey("check", remoteIP, "check");
+        Integer count = (Integer) redisTemplate.opsForValue().get(key);
+        if (count != null) {
+            if (count > limitCount) {
+                log.error("[验证码] - 短信前置检查器 - 操作频率过快 (校验)  remoteIP={}", remoteIP);
+                Utils.throwCheckException("vc.check.sms.rate");
+            }
+            Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+            if (expire != null && expire > 0) {
+                redisTemplate.opsForValue().set(key, ++count, expire, TimeUnit.SECONDS);
+            }
+        } else {
+            redisTemplate.opsForValue().set(key, 1, 60, TimeUnit.SECONDS);
+        }
     }
 
     private void checkDayCount(String key, int limitCount,

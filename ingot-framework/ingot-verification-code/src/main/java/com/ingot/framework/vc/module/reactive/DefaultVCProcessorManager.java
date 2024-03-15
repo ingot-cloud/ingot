@@ -2,7 +2,7 @@ package com.ingot.framework.vc.module.reactive;
 
 import com.ingot.framework.core.utils.reactive.WebUtils;
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCType;
@@ -25,19 +25,19 @@ import java.util.Map;
 public class DefaultVCProcessorManager implements VCProcessorManager {
     private final Map<String, VCProcessor> processorMap;
     private final Map<String, VCGenerator> generatorMap;
-    private final Map<String, VCSendChecker> checkerMap;
+    private final Map<String, VCPreChecker> checkerMap;
 
     @Override
     public Mono<ServerResponse> handle(VCType type, ServerRequest request) {
         try {
             VCProcessor processor = Utils.getProcessor(type, processorMap);
             VCGenerator generator = Utils.getGenerator(type, generatorMap);
-            VCSendChecker checker = Utils.getSendChecker(type, checkerMap);
+            VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
             String receiver = ReactorUtils.getReceiver(request);
             String remoteIP = WebUtils.getRemoteIP(request);
 
-            checker.check(receiver, remoteIP);
+            checker.beforeSend(receiver, remoteIP);
             return processor.handle(request, generator);
         } catch (VCException e) {
             return Mono.error(e);
@@ -47,12 +47,20 @@ public class DefaultVCProcessorManager implements VCProcessorManager {
     @Override
     public Mono<Void> checkOnly(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
         VCProcessor processor = Utils.getProcessor(type, processorMap);
+        VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
+
+        String remoteIP = WebUtils.getRemoteIP(exchange.getRequest());
+        checker.beforeCheck(remoteIP);
         return processor.checkOnly(type, exchange, chain);
     }
 
     @Override
     public Mono<ServerResponse> check(VCType type, ServerRequest request) {
         VCProcessor processor = Utils.getProcessor(type, processorMap);
+        VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
+
+        String remoteIP = WebUtils.getRemoteIP(request);
+        checker.beforeCheck(remoteIP);
         return processor.check(type, request);
     }
 }

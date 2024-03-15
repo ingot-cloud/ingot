@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.module.servlet.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.*;
 import com.ingot.framework.vc.properties.IngotVCProperties;
@@ -41,7 +41,7 @@ public class VCServletConfig {
     @ConditionalOnMissingBean(VCProviderManager.class)
     public VCProviderManager vcProviderManager(Map<String, VCProvider> providerMap,
                                                Map<String, VCGenerator> generatorMap,
-                                               Map<String, VCSendChecker> checkerMap) {
+                                               Map<String, VCPreChecker> checkerMap) {
         return new DefaultVCProviderManager(providerMap, generatorMap, checkerMap);
     }
 

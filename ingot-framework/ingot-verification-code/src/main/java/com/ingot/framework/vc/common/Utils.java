@@ -2,7 +2,7 @@ package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCSendChecker;
+import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -65,13 +65,13 @@ public class Utils {
      *
      * @param type           {@link VCType}
      * @param sendCheckerMap checker映射表
-     * @return {@link VCSendChecker}
+     * @return {@link VCPreChecker}
      */
-    public static VCSendChecker getSendChecker(VCType type, Map<String, VCSendChecker> sendCheckerMap) {
+    public static VCPreChecker getSendChecker(VCType type, Map<String, VCPreChecker> sendCheckerMap) {
         String beanName = type.getSendCheckerBeanName();
-        VCSendChecker checker = sendCheckerMap.get(beanName);
+        VCPreChecker checker = sendCheckerMap.get(beanName);
         if (checker == null) {
-            return DefaultSendChecker.DEFAULT;
+            return DefaultPreChecker.DEFAULT;
         }
         return checker;
     }
