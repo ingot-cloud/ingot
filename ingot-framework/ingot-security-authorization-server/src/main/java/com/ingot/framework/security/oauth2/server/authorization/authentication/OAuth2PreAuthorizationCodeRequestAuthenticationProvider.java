@@ -8,6 +8,7 @@ import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,7 @@ import java.util.Map;
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:51 PM.</p>
  */
+@Slf4j
 public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements AuthenticationProvider {
     private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
 
