@@ -1,7 +1,10 @@
 package com.ingot.framework.security.common.utils;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -9,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.Optional;
@@ -117,5 +121,34 @@ public final class SecurityUtils {
             throw new BadCredentialsException("Invalid basic authentication token");
         }
         return new String[]{token.substring(0, delim), token.substring(delim + 1)};
+    }
+
+    /**
+     * 获取请求中的session id
+     *
+     * @param request {@link HttpServletRequest}
+     * @return sessionID
+     */
+    public static String getSessionId(HttpServletRequest request) {
+        String sessionId = request.getHeader(IngotOAuth2ParameterNames.SESSION_ID);
+        if (StrUtil.isEmpty(sessionId)) {
+            sessionId = request.getParameter(IngotOAuth2ParameterNames.SESSION_ID);
+        }
+
+        if (StrUtil.isEmpty(sessionId)) {
+            HttpSession session = request.getSession(Boolean.FALSE);
+            if (session != null) {
+                sessionId = session.getId();
+            }
+        }
+
+        if (StrUtil.isEmpty(sessionId) && request.getCookies() != null) {
+            sessionId = Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals(CookieUtils.SESSION_ID_NAME))
+                    .map(Cookie::getValue)
+                    .findFirst().orElse(null);
+        }
+
+        return sessionId;
     }
 }

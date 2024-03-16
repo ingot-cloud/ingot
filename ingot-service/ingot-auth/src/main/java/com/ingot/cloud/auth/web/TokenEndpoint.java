@@ -6,9 +6,11 @@ import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.security.common.utils.CookieUtils;
 import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -42,7 +44,8 @@ public class TokenEndpoint implements RShortcuts {
      */
     @DeleteMapping
     public R<?> revoke(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
-                       HttpServletRequest request) {
+                       HttpServletRequest request,
+                       HttpServletResponse response) {
         String token = SecurityUtils.getBearerTokenValue(authorization);
         OAuth2Authorization record =
                 oAuth2AuthorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
@@ -51,6 +54,8 @@ public class TokenEndpoint implements RShortcuts {
         }
 
         securityContextRevokeRepository.revokeContext(request);
+
+        CookieUtils.removeCookie(CookieUtils.SESSION_ID_NAME, null, null, response);
         return ok();
     }
 

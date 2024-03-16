@@ -1,10 +1,13 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.common.AuthSuccessDTO;
 import com.ingot.framework.core.model.event.LoginEvent;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.WebUtils;
+import com.ingot.framework.security.common.utils.CookieUtils;
+import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +28,7 @@ import org.springframework.util.MultiValueMap;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * <p>Description  : AccessTokenAuthenticationSuccessHandler.</p>
@@ -56,13 +60,22 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
         OAuth2RefreshToken refreshToken = accessTokenAuthentication.getRefreshToken();
         Map<String, Object> additionalParameters = accessTokenAuthentication.getAdditionalParameters();
 
+
+        String sessionId = Optional.ofNullable(additionalParameters.get(IngotOAuth2ParameterNames.SESSION_ID))
+                .map(String::valueOf)
+                .orElse("");
+        if (StrUtil.isNotEmpty(sessionId)) {
+            CookieUtils.setCookie(CookieUtils.SESSION_ID_NAME, sessionId, null, true, false, response);
+            additionalParameters.remove(IngotOAuth2ParameterNames.SESSION_ID);
+        }
+
+        long expiresIn = accessToken.getIssuedAt() != null && accessToken.getExpiresAt() != null ?
+                ChronoUnit.SECONDS.between(accessToken.getIssuedAt(), accessToken.getExpiresAt()) : -1;
         OAuth2AccessTokenResponse.Builder builder =
                 OAuth2AccessTokenResponse.withToken(accessToken.getTokenValue())
                         .tokenType(accessToken.getTokenType())
-                        .scopes(accessToken.getScopes());
-        if (accessToken.getIssuedAt() != null && accessToken.getExpiresAt() != null) {
-            builder.expiresIn(ChronoUnit.SECONDS.between(accessToken.getIssuedAt(), accessToken.getExpiresAt()));
-        }
+                        .scopes(accessToken.getScopes())
+                        .expiresIn(expiresIn);
         if (refreshToken != null) {
             builder.refreshToken(refreshToken.getTokenValue());
         }

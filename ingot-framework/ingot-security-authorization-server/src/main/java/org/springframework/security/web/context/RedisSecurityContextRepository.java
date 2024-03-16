@@ -5,13 +5,11 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
-import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
@@ -21,7 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -141,26 +138,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
     }
 
     private String getSessionId(HttpServletRequest request) {
-        String sessionId = request.getHeader(IngotOAuth2ParameterNames.SESSION_ID);
-        if (StrUtil.isEmpty(sessionId)) {
-            sessionId = request.getParameter(IngotOAuth2ParameterNames.SESSION_ID);
-        }
-
-        if (StrUtil.isEmpty(sessionId)) {
-            HttpSession session = request.getSession(Boolean.FALSE);
-            if (session != null) {
-                sessionId = session.getId();
-            }
-        }
-
-        if (StrUtil.isEmpty(sessionId) && request.getCookies() != null) {
-            sessionId = Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals("JSESSIONID"))
-                    .map(Cookie::getValue)
-                    .findFirst().orElse(null);
-        }
-
-        return sessionId;
+        return SecurityUtils.getSessionId(request);
     }
 
     private String key(String sessionId) {

@@ -11,7 +11,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 /**
  * <p>Description  : CookieUtils.</p>
@@ -21,19 +20,20 @@ import java.util.Optional;
  */
 @Slf4j
 public final class CookieUtils {
+    public static final String SESSION_ID_NAME = "JSESSIONID";
 
     /**
      * 设置cookie域，默认为：secingot.com
      */
-    private static final String DEFAULT_COOKIE_DOMAIN = ".ingot.com";
+    public static final String DEFAULT_COOKIE_DOMAIN = ".ingotcloud.top";
     /**
      * 设置默认路径：/，这个路径即该工程下都可以访问该cookie 如果不设置路径，那么只有设置该cookie路径及其子路径可以访问
      */
-    private static final String DEFAULT_COOKIE_PATH = "/";
+    public static final String DEFAULT_COOKIE_PATH = "/";
     /**
      * 设置cookie有效期，根据需要自定义[本系统设置为7天]
      */
-    private static final int DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+    public static final int DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
     /**
      * Sets cookie.
@@ -43,8 +43,8 @@ public final class CookieUtils {
      * @param maxAge   the max age
      * @param response the response
      */
-    public static void setCookie(String name, String value, Integer maxAge, HttpServletResponse response) {
-        setCookie(name, value, maxAge, null, null, response);
+    public static void setCookie(String name, String value, Integer maxAge, boolean httpOnly, boolean secure, HttpServletResponse response) {
+        setCookie(name, value, maxAge, null, DEFAULT_COOKIE_PATH, httpOnly, secure, response);
     }
 
     /**
@@ -57,16 +57,20 @@ public final class CookieUtils {
      * @param path     the path
      * @param response the response
      */
-    public static void setCookie(String name, String value, Integer maxAge, String domain, String path, HttpServletResponse response) {
+    public static void setCookie(String name, String value, Integer maxAge, String domain, String path,
+                                 boolean httpOnly, boolean secure, HttpServletResponse response) {
         log.info(">>> CookieUtils setCookie - 设置cookie. name={}, value={}. maxAge={}, domain={}, path={}", name, value, maxAge, domain, path);
-        Cookie cookie;
-        cookie = new Cookie(name, URLEncoder.encode(value, StandardCharsets.UTF_8));
+        Cookie cookie = new Cookie(name, URLEncoder.encode(value, StandardCharsets.UTF_8));
 
-        Optional.ofNullable(domain).orElse(DEFAULT_COOKIE_DOMAIN);
-
-        cookie.setDomain(ObjectUtil.defaultIfEmpty(domain, DEFAULT_COOKIE_DOMAIN));
+        cookie.setHttpOnly(httpOnly);
+        cookie.setSecure(secure);
+        if (StrUtil.isNotEmpty(domain)) {
+            cookie.setDomain(domain);
+        }
+        if (maxAge != null && maxAge > 0) {
+            cookie.setMaxAge(ObjectUtil.defaultIfNull(maxAge, DEFAULT_COOKIE_MAX_AGE));
+        }
         cookie.setPath(ObjectUtil.defaultIfEmpty(path, DEFAULT_COOKIE_PATH));
-        cookie.setMaxAge(ObjectUtil.defaultIfNull(maxAge, DEFAULT_COOKIE_MAX_AGE));
         response.addCookie(cookie);
         log.info(">>> CookieUtils setCookie - 设置cookie. [OK]");
     }
@@ -156,7 +160,9 @@ public final class CookieUtils {
     public static void removeCookie(String name, String domain, String path, HttpServletResponse response) {
         log.info(">>> CookieUtils removeCookie - 删除指定名称的Cookie. key={}", name);
         Cookie cookie = new Cookie(name, null);
-        cookie.setDomain(ObjectUtil.defaultIfEmpty(domain, DEFAULT_COOKIE_DOMAIN));
+        if (StrUtil.isNotEmpty(domain)) {
+            cookie.setDomain(domain);
+        }
         cookie.setPath(ObjectUtil.defaultIfEmpty(path, DEFAULT_COOKIE_PATH));
         cookie.setMaxAge(0);
         response.addCookie(cookie);

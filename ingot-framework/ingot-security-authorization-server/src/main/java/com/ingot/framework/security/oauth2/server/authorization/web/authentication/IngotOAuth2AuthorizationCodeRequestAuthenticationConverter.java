@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.security.common.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,6 +45,8 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
         Map<String, Object> additionalParameters = new HashMap<>(token.getAdditionalParameters());
         // 不用传递method，默认使用S256
         additionalParameters.put(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
+        // 添加sessionId
+        additionalParameters.put(IngotOAuth2ParameterNames.SESSION_ID, SecurityUtils.getSessionId(request));
 
         return new OAuth2AuthorizationCodeRequestAuthenticationToken(
                 token.getAuthorizationUri(), token.getClientId(), principal,

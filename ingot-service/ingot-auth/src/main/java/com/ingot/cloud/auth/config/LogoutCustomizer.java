@@ -1,5 +1,6 @@
 package com.ingot.cloud.auth.config;
 
+import com.ingot.framework.security.common.utils.CookieUtils;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
@@ -14,7 +15,7 @@ public class LogoutCustomizer implements Customizer<LogoutConfigurer<HttpSecurit
 
     @Override
     public void customize(LogoutConfigurer<HttpSecurity> configurer) {
-        configurer.deleteCookies("JSESSIONID")
+        configurer.deleteCookies(CookieUtils.SESSION_ID_NAME)
                 .invalidateHttpSession(true)
                 .permitAll();
     }

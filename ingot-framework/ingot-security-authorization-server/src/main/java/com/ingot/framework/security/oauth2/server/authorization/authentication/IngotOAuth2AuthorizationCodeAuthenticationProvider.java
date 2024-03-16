@@ -3,12 +3,14 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.OAuth2Token;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -21,6 +23,7 @@ import org.springframework.util.Assert;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * <p>Description  : IngotOAuth2AuthorizationCodeAuthenticationProvider.</p>
@@ -28,8 +31,9 @@ import java.util.Map;
  * <p>Date         : 2023/9/22.</p>
  * <p>Time         : 8:53 AM.</p>
  */
+@Slf4j
 public final class IngotOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
-    private static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE =
+    public static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE =
             new OAuth2TokenType(OAuth2ParameterNames.CODE);
     private final OAuth2AuthorizationService authorizationService;
     private final OAuth2AuthorizationCodeAuthenticationProvider provider;
@@ -64,6 +68,13 @@ public final class IngotOAuth2AuthorizationCodeAuthenticationProvider implements
             preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT);
             additionalParameters.put(IngotOAuth2ParameterNames.TENANT,
                     preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT));
+        }
+        OAuth2AuthorizationRequest request = authorization.getAttribute(OAuth2AuthorizationRequest.class.getName());
+        if (request != null) {
+            String sessionId = Optional.ofNullable(request.getAdditionalParameters().get(IngotOAuth2ParameterNames.SESSION_ID))
+                    .map(String::valueOf)
+                    .orElse("");
+            additionalParameters.put(IngotOAuth2ParameterNames.SESSION_ID, sessionId);
         }
 
         return new OAuth2AccessTokenAuthenticationToken(
