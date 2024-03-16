@@ -42,6 +42,7 @@
  - [x] 接口拆分，组织类接口和非组织类
  - [x] 字段加解密插件
  - [ ] 授权服务器，oauth2_authorization 和 oauth2_authorization_consent 使用redis存储
+ - [ ] 梳理所有登录逻辑，编写文档，梳理框架所有功能
 
 ## 功能点
 * [ ] RBAC
