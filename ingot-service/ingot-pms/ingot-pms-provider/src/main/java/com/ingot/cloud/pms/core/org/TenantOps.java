@@ -52,22 +52,51 @@ public class TenantOps {
 
     public void createRole(SysRole role) {
         long modelId = role.getId();
+        long groupModelId = role.getGroupId();
         role.setModelId(modelId);
+
+        SysRoleGroup group = sysRoleGroupService.getById(groupModelId);
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
+                            SysRoleGroup orgGroup = sysRoleGroupService.getOne(Wrappers.<SysRoleGroup>lambdaQuery()
+                                    .eq(SysRoleGroup::getModelId, groupModelId));
+                            if (orgGroup == null) {
+                                orgGroup = new SysRoleGroup();
+                                orgGroup.setModelId(groupModelId);
+                                orgGroup.setName(group.getName());
+                                orgGroup.setSort(group.getSort());
+                                orgGroup.setType(group.getType());
+                                sysRoleService.createGroup(orgGroup, true);
+                            }
+
                             role.setId(null);
                             role.setTenantId(null);
+                            role.setGroupId(orgGroup.getId());
                             sysRoleService.createRole(role, true);
                         }));
     }
 
     public void createRole(AppRole role) {
         long modelId = role.getId();
+        long groupModelId = role.getGroupId();
         role.setModelId(modelId);
+
+        AppRoleGroup group = appRoleGroupService.getById(groupModelId);
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
+                            AppRoleGroup orgGroup = appRoleGroupService.getOne(Wrappers.<AppRoleGroup>lambdaQuery()
+                                    .eq(AppRoleGroup::getModelId, groupModelId));
+                            if (orgGroup == null) {
+                                orgGroup = new AppRoleGroup();
+                                orgGroup.setModelId(groupModelId);
+                                orgGroup.setName(group.getName());
+                                orgGroup.setSort(group.getSort());
+                                orgGroup.setType(group.getType());
+                                appRoleService.createGroup(group, true);
+                            }
+
                             role.setId(null);
                             role.setTenantId(null);
                             appRoleService.createRole(role, true);
