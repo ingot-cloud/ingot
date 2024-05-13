@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
+import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.core.MenuUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
@@ -64,9 +66,10 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     }
 
     @Override
-    public List<MenuTreeNodeVO> treeList() {
+    public List<MenuTreeNodeVO> treeList(MenuFilterDTO filter) {
         List<MenuTreeNodeVO> allNode = SpringContextHolder.getBean(SysMenuService.class)
                 .nodeList().stream()
+                .filter(BizFilter.menuFilter(filter))
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
 

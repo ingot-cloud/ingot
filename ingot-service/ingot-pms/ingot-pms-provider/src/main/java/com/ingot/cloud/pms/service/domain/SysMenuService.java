@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
+import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -36,7 +37,7 @@ public interface SysMenuService extends BaseService<SysMenu> {
      *
      * @return {@link MenuTreeNodeVO} 节点
      */
-    List<MenuTreeNodeVO> treeList();
+    List<MenuTreeNodeVO> treeList(MenuFilterDTO filter);
 
     /**
      * 创建菜单

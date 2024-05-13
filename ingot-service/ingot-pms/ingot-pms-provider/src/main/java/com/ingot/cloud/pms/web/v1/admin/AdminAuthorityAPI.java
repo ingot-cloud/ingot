@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -31,8 +32,8 @@ public class AdminAuthorityAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.requiredAdmin")
     @GetMapping("/tree")
-    public R<?> tree() {
-        return ok(sysAuthorityService.treeList());
+    public R<?> tree(AuthorityFilterDTO filter) {
+        return ok(sysAuthorityService.treeList(filter));
     }
 
     @PreAuthorize("@ingot.requiredAdmin")

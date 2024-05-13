@@ -16,5 +16,5 @@ public class AuthorityFilterDTO extends SysAuthority {
     /**
      * 组织类型
      */
-    private String orgType;
+    private String orgTypeText;
 }

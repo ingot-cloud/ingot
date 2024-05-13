@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
+import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.model.support.R;
@@ -10,14 +11,7 @@ import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : MenuApi.</p>
@@ -39,8 +33,8 @@ public class AdminMenuAPI implements RShortcuts {
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w', 'basic.menu.r')")
     @GetMapping("/tree")
-    public R<?> tree() {
-        return ok(sysMenuService.treeList());
+    public R<?> tree(MenuFilterDTO filter) {
+        return ok(sysMenuService.treeList(filter));
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
