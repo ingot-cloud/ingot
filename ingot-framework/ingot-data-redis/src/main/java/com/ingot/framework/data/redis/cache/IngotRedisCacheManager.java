@@ -50,7 +50,7 @@ public class IngotRedisCacheManager extends RedisCacheManager {
             long cacheAge = Long.parseLong(cacheArray[1]);
             cacheConfig = cacheConfig.entryTtl(Duration.ofSeconds(cacheAge));
         }
-        return super.createRedisCache(name, cacheConfig);
+        return super.createRedisCache(cacheArray[0], cacheConfig);
     }
 
     /**
