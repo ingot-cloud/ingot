@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.service.biz;
 
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.core.model.common.RelationDTO;
 
@@ -32,7 +32,7 @@ public interface BizRoleService {
      * @return {@link AuthorityTreeNodeVO}
      */
     List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId,
-                                                    SysAuthority condition);
+                                                    AuthorityFilterDTO condition);
 
     /**
      * 组织角色绑定权限

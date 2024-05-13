@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.common;
 
-import java.util.function.Predicate;
-
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
+
+import java.util.function.Predicate;
 
 /**
  * <p>Description  : BizFilter.</p>
@@ -21,13 +22,16 @@ public final class BizFilter {
      * @param condition 条件
      * @return {@link Predicate}
      */
-    public static Predicate<SysAuthority> authorityFilter(SysAuthority condition) {
+    public static Predicate<SysAuthority> authorityFilter(AuthorityFilterDTO condition) {
         return (item) -> {
             if (condition == null) {
                 return true;
             }
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());
+            }
+            if (StrUtil.isNotEmpty(condition.getOrgType())) {
+                return StrUtil.equals(item.getType().getValue(), condition.getOrgType());
             }
             return true;
         };

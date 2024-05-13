@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.web.v1.org;
 
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
@@ -41,7 +41,7 @@ public class OrgAuthAPI implements RShortcuts {
     @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.auth')")
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,
-                                   SysAuthority condition) {
+                                   AuthorityFilterDTO condition) {
         return ok(bizRoleService.getOrgRoleAuthorities(id, condition));
     }
 }

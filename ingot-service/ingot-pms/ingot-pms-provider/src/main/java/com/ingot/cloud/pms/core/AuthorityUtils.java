@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -88,7 +89,7 @@ public class AuthorityUtils {
      * @return {@link AuthorityTreeNodeVO}
      */
     public static List<AuthorityTreeNodeVO> mapTree(List<SysAuthority> authorities,
-                                                    SysAuthority condition,
+                                                    AuthorityFilterDTO condition,
                                                     AuthorityTrans authorityTrans) {
         List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .filter(BizFilter.authorityFilter(condition))

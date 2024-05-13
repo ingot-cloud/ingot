@@ -1,11 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -42,10 +43,10 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
     /**
      * 条件树
      *
-     * @param condition 条件
-     * @return {@link AuthorityTreeNodeVO}
+     * @param filter 条件
+     * @return {@link AuthorityFilterDTO}
      */
-    List<AuthorityTreeNodeVO> treeList(SysAuthority condition);
+    List<AuthorityTreeNodeVO> treeList(AuthorityFilterDTO filter);
 
     /**
      * 创建权限

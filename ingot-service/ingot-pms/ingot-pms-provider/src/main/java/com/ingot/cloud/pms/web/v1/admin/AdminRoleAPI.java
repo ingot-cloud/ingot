@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
@@ -121,7 +121,7 @@ public class AdminRoleAPI implements RShortcuts {
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,
                                    @RequestParam("isBind") boolean isBind,
-                                   SysAuthority condition) {
+                                   AuthorityFilterDTO condition) {
         if (isBind) {
             return ok(sysRoleAuthorityService.getRoleAuthorities(id, condition));
         }

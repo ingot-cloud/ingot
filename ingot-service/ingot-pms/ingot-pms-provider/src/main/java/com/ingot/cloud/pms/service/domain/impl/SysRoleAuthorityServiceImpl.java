@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
@@ -97,7 +98,7 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     public List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
-                                                        SysAuthority condition) {
+                                                        AuthorityFilterDTO condition) {
         List<SysAuthority> authorities = SpringContextHolder.getBean(SysRoleAuthorityService.class)
                 .getAuthoritiesByRole(roleId);
 

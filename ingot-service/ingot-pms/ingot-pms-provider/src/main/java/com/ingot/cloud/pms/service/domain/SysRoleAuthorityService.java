@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
@@ -58,10 +59,9 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
      * 获取角色权限信息
      *
      * @param roleId    角色ID
-     * @param isBind    是否绑定
      * @param condition 条件
      * @return 分页信息
      */
     List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId,
-                                                 SysAuthority condition);
+                                                 AuthorityFilterDTO condition);
 }

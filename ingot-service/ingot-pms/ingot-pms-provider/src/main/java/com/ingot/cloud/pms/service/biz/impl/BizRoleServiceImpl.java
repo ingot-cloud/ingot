@@ -7,6 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
@@ -59,7 +60,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId, SysAuthority condition) {
+    public List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId, AuthorityFilterDTO condition) {
         List<SysAuthority> authorities = sysRoleAuthorityService.getAuthoritiesByRole(roleId);
         List<SysAuthority> finallyAuthorities = AuthorityUtils.filterOrgLockAuthority(
                 authorities, sysApplicationTenantService);

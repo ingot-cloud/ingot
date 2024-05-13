@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -102,12 +103,12 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> treeList(SysAuthority condition) {
+    public List<AuthorityTreeNodeVO> treeList(AuthorityFilterDTO filter) {
         List<AuthorityTreeNodeVO> nodeList = SpringContextHolder
                 .getBean(SysAuthorityService.class)
                 .list()
                 .stream()
-                .filter(BizFilter.authorityFilter(condition))
+                .filter(BizFilter.authorityFilter(filter))
                 .sorted(Comparator.comparing(SysAuthority::getId))
                 .map(authorityTrans::to).collect(Collectors.toList());
 
