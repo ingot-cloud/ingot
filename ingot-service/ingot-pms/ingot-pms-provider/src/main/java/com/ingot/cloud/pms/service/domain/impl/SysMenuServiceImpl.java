@@ -56,7 +56,9 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     }
 
     @Override
-    @Cacheable(value = CacheConstants.MENU_DETAILS, key = CacheKey.MenuListKey, unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.MENU_DETAILS + "#" + CacheKey.DefaultExpiredTimeSeconds,
+            key = CacheKey.MenuListKey,
+            unless = "#result.isEmpty()")
     public List<MenuTreeNodeVO> nodeList() {
         return CollUtil.emptyIfNull(baseMapper.getAll());
     }

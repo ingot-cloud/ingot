@@ -1,7 +1,10 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.core.org.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
@@ -11,6 +14,7 @@ import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.core.constants.OrgConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,7 +86,7 @@ public class BizOrgServiceImpl implements BizOrgService {
         assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE), "Platform.canNotRemoveIngotOrg");
 
         // 销毁组织
-        tenantEngine.destroy(id);
+        TenantEnv.runAs(id, () -> tenantEngine.destroy(id));
     }
 
 }

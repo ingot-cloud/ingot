@@ -1,10 +1,13 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
 
 /**
  * <p>Description  : MenuTreeNodeVO.</p>
@@ -15,6 +18,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class MenuTreeNodeVO extends TreeNode<Long> {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /**
      * 菜单名称
      */
@@ -79,4 +85,8 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
+    /**
+     * 菜单组织类型
+     */
+    private OrgTypeEnums orgType;
 }

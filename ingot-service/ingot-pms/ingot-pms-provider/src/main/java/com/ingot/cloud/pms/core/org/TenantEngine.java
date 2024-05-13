@@ -12,11 +12,13 @@ import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -189,6 +191,7 @@ public class TenantEngine {
      *
      * @param id 租户ID
      */
+    @CacheEvict(value = {CacheConstants.MENU_DETAILS, CacheConstants.AUTHORITY_DETAILS}, allEntries = true)
     public void destroy(long id) {
         TenantEnv.runAs(id, () -> {
             // 系统用户id

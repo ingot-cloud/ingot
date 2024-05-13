@@ -8,6 +8,11 @@ package com.ingot.cloud.pms.common;
  */
 public interface CacheKey {
 
+    /**
+     * 缓存默认过期时间,单位：秒, 默认缓存1周
+     */
+    String DefaultExpiredTimeSeconds = "604800";
+
     String AuthorityListKey = "'list'";
     String AuthorityRoleKey = "'role-' + #roleId";
     String AuthorityRoleAllKey = "'role-*'";
