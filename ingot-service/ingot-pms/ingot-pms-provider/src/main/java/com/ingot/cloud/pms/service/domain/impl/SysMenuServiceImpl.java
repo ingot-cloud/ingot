@@ -89,16 +89,20 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                         .eq(SysMenu::getPath, params.getPath())) == 0,
                 "SysMenuServiceImpl.ExistPath");
 
-        // 如果是自定义视图路径或链接类型为外部链接，则viewPath不能为空
-        if (BooleanUtil.isTrue(params.getCustomViewPath()) || params.getLinkType() == MenuLinkTypeEnums.IFrame) {
+        // 如果是自定义视图路径，则viewPath不能为空
+        if (BooleanUtil.isTrue(params.getCustomViewPath())) {
             assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                     "SysMenuServiceImpl.ViewPathNotNull");
         } else {
             setViewPathAccordingToPath(params);
         }
 
-        // 外部链接类型, 自动处理菜单路由
-        if (params.getLinkType() == MenuLinkTypeEnums.IFrame) {
+        if (params.getLinkType() == null) {
+            params.setLinkType(MenuLinkTypeEnums.Default);
+        }
+
+        // 链接类型不是默认, 自动处理菜单路由
+        if (params.getLinkType() != MenuLinkTypeEnums.Default) {
             setMenuOuterLinkPath(params, params.getPid());
         }
 
@@ -114,6 +118,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         SysMenu current = getById(params.getId());
         assertI18nService.checkOperation(current != null,
                 "SysMenuServiceImpl.NonExist");
+        assert current != null;
 
         // 路径不为空，需要判断是否重复
         if (StrUtil.isNotEmpty(params.getPath())) {
@@ -122,10 +127,10 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                     "SysMenuServiceImpl.ExistPath");
         }
 
-        // 如果修改了链接类型，并且修改为内嵌链接，那么需要自动处理path
-        if (params.getLinkType() != null && params.getLinkType() == MenuLinkTypeEnums.IFrame) {
+        // 如果修改了链接类型，并且修改的内容不是默认类型，那么需要自动处理path
+        if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnums.Default) {
             setMenuOuterLinkPath(params, current.getPid());
-            // 修改为外部链接，custome view path设置为false
+            // 修改为外部链接，customViewPath设置为false
             params.setCustomViewPath(Boolean.FALSE);
         }
 
@@ -138,7 +143,10 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
         // 非自定义视图
         if (BooleanUtil.isFalse(params.getCustomViewPath())) {
-            if (StrUtil.isNotEmpty(params.getPath()) && params.getLinkType() == MenuLinkTypeEnums.Default) {
+            // path不为空，并且链接类型是默认类型
+            if (StrUtil.isNotEmpty(params.getPath())
+                    && (params.getLinkType() == MenuLinkTypeEnums.Default
+                    || (params.getLinkType() == null && current.getLinkType() == MenuLinkTypeEnums.Default))) {
                 // 如果修改了路径，那么需要修改默认视图path
                 setViewPathAccordingToPath(params);
             }

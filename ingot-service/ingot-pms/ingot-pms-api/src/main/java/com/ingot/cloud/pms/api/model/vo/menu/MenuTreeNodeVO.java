@@ -94,4 +94,8 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      * 链接类型
      */
     private MenuLinkTypeEnums linkType;
+    /**
+     * 链接url
+     */
+    private String linkUrl;
 }

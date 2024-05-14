@@ -124,6 +124,11 @@ public class SysMenu extends BaseModel<SysMenu> {
     private MenuLinkTypeEnums linkType;
 
     /**
+     * 链接url
+     */
+    private String linkUrl;
+
+    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
