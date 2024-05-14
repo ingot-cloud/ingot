@@ -82,9 +82,9 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public void createMenu(SysMenu params) {
         // 外部链接，path可以为空
-        assertI18nService.checkOperation(params.getLinkType() == MenuLinkTypeEnums.IFrame
+        assertI18nService.checkOperation(params.getLinkType() != MenuLinkTypeEnums.Default
                 || StrUtil.isNotEmpty(params.getPath()), "SysMenu.path");
-        assertI18nService.checkOperation(params.getLinkType() == MenuLinkTypeEnums.IFrame
+        assertI18nService.checkOperation(params.getLinkType() != MenuLinkTypeEnums.Default
                         || count(Wrappers.<SysMenu>lambdaQuery()
                         .eq(SysMenu::getPath, params.getPath())) == 0,
                 "SysMenuServiceImpl.ExistPath");
