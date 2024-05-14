@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
+import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
@@ -89,4 +90,8 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      * 菜单组织类型
      */
     private OrgTypeEnums orgType;
+    /**
+     * 链接类型
+     */
+    private MenuLinkTypeEnums linkType;
 }

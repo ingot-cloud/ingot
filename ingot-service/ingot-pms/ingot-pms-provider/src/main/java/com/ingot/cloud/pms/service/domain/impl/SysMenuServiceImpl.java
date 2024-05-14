@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
+import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnums;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
@@ -18,6 +19,7 @@ import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.core.utils.UUIDUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
@@ -79,16 +81,27 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
     @Override
     @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public void createMenu(SysMenu params) {
-        assertI18nService.checkOperation(count(Wrappers.<SysMenu>lambdaQuery()
+        // 外部链接，path可以为空
+        assertI18nService.checkOperation(params.getLinkType() == MenuLinkTypeEnums.IFrame
+                || StrUtil.isNotEmpty(params.getPath()), "SysMenu.path");
+        assertI18nService.checkOperation(params.getLinkType() == MenuLinkTypeEnums.IFrame
+                        || count(Wrappers.<SysMenu>lambdaQuery()
                         .eq(SysMenu::getPath, params.getPath())) == 0,
                 "SysMenuServiceImpl.ExistPath");
 
-        if (BooleanUtil.isTrue(params.getCustomViewPath())) {
+        // 如果是自定义视图路径或链接类型为外部链接，则viewPath不能为空
+        if (BooleanUtil.isTrue(params.getCustomViewPath()) || params.getLinkType() == MenuLinkTypeEnums.IFrame) {
             assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                     "SysMenuServiceImpl.ViewPathNotNull");
         } else {
             setViewPathAccordingToPath(params);
         }
+
+        // 外部链接类型, 自动处理菜单路由
+        if (params.getLinkType() == MenuLinkTypeEnums.IFrame) {
+            setMenuOuterLinkPath(params, params.getPid());
+        }
+
         params.setCreatedAt(DateUtils.now());
 
         assertI18nService.checkOperation(save(params),
@@ -109,6 +122,13 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                     "SysMenuServiceImpl.ExistPath");
         }
 
+        // 如果修改了链接类型，并且修改为内嵌链接，那么需要自动处理path
+        if (params.getLinkType() != null && params.getLinkType() == MenuLinkTypeEnums.IFrame) {
+            setMenuOuterLinkPath(params, current.getPid());
+            // 修改为外部链接，custome view path设置为false
+            params.setCustomViewPath(Boolean.FALSE);
+        }
+
         if (params.getCustomViewPath() == null) {
             params.setCustomViewPath(current.getCustomViewPath());
         }
@@ -118,7 +138,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
 
         // 非自定义视图
         if (BooleanUtil.isFalse(params.getCustomViewPath())) {
-            if (StrUtil.isNotEmpty(params.getPath())) {
+            if (StrUtil.isNotEmpty(params.getPath()) && params.getLinkType() == MenuLinkTypeEnums.Default) {
                 // 如果修改了路径，那么需要修改默认视图path
                 setViewPathAccordingToPath(params);
             }
@@ -134,6 +154,18 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         params.setUpdatedAt(DateUtils.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysMenuServiceImpl.UpdateFailed");
+    }
+
+    private void setMenuOuterLinkPath(SysMenu params, Long pid) {
+        String pPath = "";
+        if (pid != null && pid > 0) {
+            SysMenu parent = getById(pid);
+            pPath = parent.getPath() + "/";
+        } else {
+            pPath = "/";
+        }
+        String path = pPath + UUIDUtils.generateShortUuid();
+        params.setPath(path);
     }
 
     private void setViewPathAccordingToPath(SysMenu menu) {

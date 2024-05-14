@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -56,7 +56,6 @@ public class SysMenu extends BaseModel<SysMenu> {
     /**
      * 菜单url
      */
-    @NotBlank(message = "{SysMenu.path}", groups = Group.Create.class)
     private String path;
 
     /**
@@ -118,6 +117,11 @@ public class SysMenu extends BaseModel<SysMenu> {
      * 菜单组织类型
      */
     private OrgTypeEnums orgType;
+
+    /**
+     * 链接类型
+     */
+    private MenuLinkTypeEnums linkType;
 
     /**
      * 状态, 0:正常，9:禁用
