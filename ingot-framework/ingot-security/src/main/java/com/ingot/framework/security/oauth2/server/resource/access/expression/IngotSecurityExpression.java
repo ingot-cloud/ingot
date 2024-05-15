@@ -131,7 +131,7 @@ public class IngotSecurityExpression {
         if (authority == null) {
             return null;
         }
-        if (prefix == null || prefix.length() == 0) {
+        if (prefix == null || prefix.isEmpty()) {
             return authority;
         }
         if (authority.startsWith(prefix)) {
