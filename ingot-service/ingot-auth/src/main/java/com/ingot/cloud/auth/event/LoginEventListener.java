@@ -23,6 +23,6 @@ public class LoginEventListener {
     @Order
     @EventListener(LoginEvent.class)
     public void saveSysLog(LoginEvent event) {
-        log.info("[LoginEventListener] - payload={}", event.getPayload());
+        log.info("[LoginEventListener] - payload={}", event.payload());
     }
 }
