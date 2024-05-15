@@ -26,6 +26,8 @@ docker run -d --name ${serviceName} --restart always \
     --add-host ingot-gateway:${INGOT_GATEWAY} \
     -e NACOS_HOST=${NACOS_HOST} \
     -e NACOS_PORT=${NACOS_PORT} \
+    -e NACOS_USERNAME=${NACOS_USERNAME} \
+    -e NACOS_PASSWORD=${NACOS_PASSWORD} \
     -e REDIS_HOST=${REDIS_HOST} \
     -e MYSQL_HOST=${MYSQL_HOST} \
     -e REDIS_PASSWORD=${REDIS_PASSWORD} \
