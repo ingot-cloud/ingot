@@ -79,8 +79,10 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void syncApplication(long appId) {
-
+        SysApplication application = sysApplicationService.getById(appId);
+        tenantOps.syncApplication(application);
     }
 
     @Override

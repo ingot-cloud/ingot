@@ -15,4 +15,6 @@ import org.mapstruct.Mapper;
 public interface AuthorityTrans {
 
     AuthorityTreeNodeVO to(SysAuthority params);
+
+    SysAuthority to(AuthorityTreeNodeVO params);
 }

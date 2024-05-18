@@ -2,11 +2,9 @@ package com.ingot.cloud.pms.core.org;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysApplication;
-import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysMenu;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
@@ -26,10 +24,9 @@ import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * <p>Description  : TenantUtils.</p>
@@ -414,6 +411,7 @@ public class TenantUtils {
 
         long rootAuthorityParentId = authorityList.get(0).getPid();
         long rootMenuParentId = menuList.get(0).getPid();
+        List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
         List<AuthorityTreeNodeVO> authorityTree = TreeUtils.build(authorityList, rootAuthorityParentId);
         List<SysAuthority> authorityParentTemplateList = TenantUtils.getAuthorityParentList(
                 tenantProperties.getDefaultId(), rootAuthorityParentId, sysAuthorityService);
@@ -421,9 +419,9 @@ public class TenantUtils {
                 tenantProperties.getDefaultId(), rootMenuParentId, sysMenuService);
 
         result.setMenuList(menuList);
+        result.setMenuTree(menuTree);
+        result.setAuthorityList(authorityList);
         result.setAuthorityTree(authorityTree);
-        result.setRootAuthorityParentId(rootAuthorityParentId);
-        result.setRootMenuParentId(rootMenuParentId);
         result.setAuthorityParentTemplateList(authorityParentTemplateList);
         result.setMenuParentTemplateList(menuParentTemplateList);
         return result;
@@ -437,9 +435,8 @@ public class TenantUtils {
                                                                  SysMenuService sysMenuService,
                                                                  SysApplicationTenantService sysApplicationTenantService) {
         List<MenuTreeNodeVO> menuList = loadAppInfo.getMenuList();
+        List<MenuTreeNodeVO> menuTree = loadAppInfo.getMenuTree();
         List<AuthorityTreeNodeVO> authorityTree = loadAppInfo.getAuthorityTree();
-        long rootAuthorityParentId = loadAppInfo.getRootAuthorityParentId();
-        long rootMenuParentId = loadAppInfo.getRootMenuParentId();
         List<SysAuthority> authorityParentTemplateList = loadAppInfo.getAuthorityParentTemplateList();
         List<SysMenu> menuParentTemplateList = loadAppInfo.getMenuParentTemplateList();
 
@@ -455,7 +452,6 @@ public class TenantUtils {
         long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
                 orgId, menuParentTemplateList, menuTrans, sysMenuService);
         // 创建菜单
-        List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
         List<SysMenu> menuCollect = new ArrayList<>();
         TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuTrans, sysMenuService);
 
@@ -471,4 +467,148 @@ public class TenantUtils {
 
         return authorityCollect;
     }
+
+    /**
+     * 同步模版权限，对于diff进行删除和创建，并且返回模版ID和当前ID映射表
+     *
+     * @param orgId               组织ID
+     * @param rootAuthorityId     当前跟权限ID
+     * @param loadAppInfo         加载的模版信息
+     * @param sysAuthorityService {@link SysAuthorityService}
+     * @param authorityTrans      {@link AuthorityTrans}
+     */
+    public static Map<Long, Long> syncTemplateAuthorityAndReturnMap(long orgId,
+                                                                    long rootAuthorityId,
+                                                                    LoadAppInfo loadAppInfo,
+                                                                    SysAuthorityService sysAuthorityService,
+                                                                    AuthorityTrans authorityTrans,
+                                                                    SysRoleAuthorityService sysRoleAuthorityService) {
+        List<AuthorityTreeNodeVO> currentAuthorities = TenantUtils.getTargetAuthorities(
+                orgId, rootAuthorityId, sysAuthorityService, authorityTrans);
+        List<AuthorityTreeNodeVO> templateAuthorities = loadAppInfo.getAuthorityList();
+        List<AuthorityTreeNodeVO> templateAuthorityTree = loadAppInfo.getAuthorityTree();
+
+        Map<Long, Long> collectIdMap = new HashMap<>();
+        authorityCreateDiffAndCollectIdMap(collectIdMap, templateAuthorityTree, currentAuthorities, rootAuthorityId, sysAuthorityService);
+
+        // 待删除列表
+        List<AuthorityTreeNodeVO> removeList = currentAuthorities.stream()
+                .filter(menu -> templateAuthorities.stream()
+                        .noneMatch(templateMenu -> StrUtil.equals(templateMenu.getCode(), menu.getCode())))
+                .toList();
+        if (CollUtil.isNotEmpty(removeList)) {
+            // 删除权限
+            List<Long> removeIds = removeList.stream().map(TreeNode::getId).toList();
+            sysAuthorityService.remove(Wrappers.<SysAuthority>lambdaQuery()
+                    .in(SysAuthority::getId, removeIds));
+
+            // 删除关联权限
+            sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                    .in(SysRoleAuthority::getAuthorityId, removeIds));
+        }
+
+        return collectIdMap;
+    }
+
+    public static void syncTemplateManu(long orgId,
+                                        long rootMenuId,
+                                        LoadAppInfo loadAppInfo,
+                                        Map<Long, Long> collectAuthorityIdMap,
+                                        SysMenuService sysMenuService,
+                                        MenuTrans menuTrans) {
+        List<MenuTreeNodeVO> currentMenus = TenantUtils.getTargetMenus(orgId, rootMenuId, sysMenuService, menuTrans);
+        List<MenuTreeNodeVO> templateMenuTree = loadAppInfo.getMenuTree();
+
+        menuCreateDiff(collectAuthorityIdMap, templateMenuTree, currentMenus, rootMenuId, sysMenuService, menuTrans);
+    }
+
+    /**
+     * 比对当前权限和模版权限，同步当前缺失的权限，并且收集模版权限和当前权限的ID映射表
+     *
+     * @param collectIdMap        ID映射表
+     * @param templateTree        模版tree
+     * @param currentList         当前权限列表
+     * @param pid                 当前权限PID
+     * @param sysAuthorityService {@link SysAuthorityService}
+     */
+    public static void authorityCreateDiffAndCollectIdMap(@NonNull Map<Long, Long> collectIdMap,
+                                                          List<? extends TreeNode<Long>> templateTree,
+                                                          List<AuthorityTreeNodeVO> currentList,
+                                                          long pid,
+                                                          SysAuthorityService sysAuthorityService) {
+        for (TreeNode<Long> node : templateTree) {
+            if (node instanceof AuthorityTreeNodeVO authNode) {
+                // 如果当前没有这个权限，则创建
+                if (currentList.stream().noneMatch(currentAuthority -> StrUtil.equals(currentAuthority.getCode(), authNode.getCode()))) {
+                    // 创建
+                    SysAuthority item = createAuthority(pid, authNode, sysAuthorityService);
+                    collectIdMap.put(authNode.getId(), item.getId());
+                } else {
+                    collectIdMap.put(authNode.getId(), currentList.stream()
+                            .filter(currentAuthority -> StrUtil.equals(currentAuthority.getCode(), authNode.getCode()))
+                            .map(TreeNode::getId).findFirst().orElse(0L));
+                }
+
+                if (CollUtil.isNotEmpty(authNode.getChildren())) {
+                    authorityCreateDiffAndCollectIdMap(collectIdMap, authNode.getChildren(), currentList,
+                            collectIdMap.get(authNode.getId()), sysAuthorityService);
+                }
+            }
+        }
+    }
+
+    public static void menuCreateDiff(@NonNull Map<Long, Long> collectAuthorityIdMap,
+                                      List<? extends TreeNode<Long>> templateTree,
+                                      List<MenuTreeNodeVO> currentList,
+                                      long pid,
+                                      SysMenuService sysMenuService,
+                                      MenuTrans menuTrans) {
+        for (TreeNode<Long> node : templateTree) {
+            if (node instanceof MenuTreeNodeVO menu) {
+                long nextPid = 0;
+                // 如果当前没有这个菜单，则创建
+                if (currentList.stream().noneMatch(menuItem -> StrUtil.equals(menuItem.getPath(), menu.getPath()))) {
+                    // 创建
+                    SysMenu item = menuTrans.to(menu);
+                    item.setId(null);
+                    item.setPid(pid);
+                    // 替换权限ID
+                    if (menu.getAuthorityId() != null) {
+                        item.setAuthorityId(collectAuthorityIdMap.get(menu.getAuthorityId()));
+                    }
+                    item.setUpdatedAt(null);
+                    item.setDeletedAt(null);
+                    item.setCreatedAt(DateUtils.now());
+                    sysMenuService.save(item);
+                    nextPid = item.getId();
+                } else {
+                    MenuTreeNodeVO currentMenu = currentList.stream()
+                            .filter(menuItem -> StrUtil.equals(menuItem.getPath(), menu.getPath()))
+                            .findFirst().orElse(null);
+                    if (currentMenu != null) {
+                        nextPid = currentMenu.getId();
+
+                        // 如果当前模版菜单权限不为空，那么需要判断权限是否一致，不一致则需要更新
+                        if (menu.getAuthorityId() != null) {
+                            Optional.ofNullable(collectAuthorityIdMap.get(menu.getAuthorityId()))
+                                    .ifPresent(authorityId -> {
+                                        if (!Objects.equals(currentMenu.getAuthorityId(), authorityId)) {
+                                            SysMenu sysMenu = new SysMenu();
+                                            sysMenu.setId(currentMenu.getId());
+                                            sysMenu.setAuthorityId(authorityId);
+                                            sysMenuService.updateById(sysMenu);
+                                        }
+                                    });
+                        }
+                    }
+                }
+
+                if (CollUtil.isNotEmpty(menu.getChildren())) {
+                    menuCreateDiff(collectAuthorityIdMap, menu.getChildren(), currentList,
+                            nextPid, sysMenuService, menuTrans);
+                }
+            }
+        }
+    }
+
 }

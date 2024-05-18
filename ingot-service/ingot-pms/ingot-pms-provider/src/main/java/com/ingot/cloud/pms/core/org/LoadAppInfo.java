@@ -21,17 +21,17 @@ public class LoadAppInfo {
      */
     private List<MenuTreeNodeVO> menuList;
     /**
-     * 默认租户应用对应的权限列表
+     * 默认租户应用对应的菜单树结构
+     */
+    private List<MenuTreeNodeVO> menuTree;
+    /**
+     * 默认租户应用对应的权限列表平级结构
+     */
+    private List<AuthorityTreeNodeVO> authorityList;
+    /**
+     * 默认租户应用对应的权限树结构
      */
     private List<AuthorityTreeNodeVO> authorityTree;
-    /**
-     * 默认租户应用对应权限的根权限ID
-     */
-    private long rootAuthorityParentId;
-    /**
-     * 默认租户应用对应菜单的根目录ID
-     */
-    private long rootMenuParentId;
     /**
      * 根权限ID的所有上级权限，包括自己
      */

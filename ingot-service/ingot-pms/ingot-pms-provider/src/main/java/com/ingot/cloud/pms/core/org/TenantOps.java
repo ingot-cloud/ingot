@@ -19,10 +19,12 @@ import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Description  : TenantOps.</p>
@@ -30,6 +32,7 @@ import java.util.List;
  * <p>Date         : 2023/11/22.</p>
  * <p>Time         : 11:49.</p>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TenantOps {
@@ -280,6 +283,43 @@ public class TenantOps {
 
                             sysRoleAuthorityService.roleBindAuthorities(orgRelation);
                         }));
+    }
+
+    /**
+     * 同步应用<br>
+     * 1.获取模版应用所有菜单信息和权限信息<br>
+     * 2.判断组织权限和模版权限信息是否一致，若不一致则更新，创建确实，删除多余，如果存在删除项，那么需要取消用户权限关联<br>
+     * 3.判断组织中的菜单和模版应用菜单是否一致，若不一致则更新<br>
+     *
+     * @param application {@link SysApplication}
+     */
+    public void syncApplication(SysApplication application) {
+        LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
+                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
+
+        getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
+            // 当前组织应用信息
+            SysApplicationTenant orgApplication = sysApplicationTenantService.getOne(
+                    Wrappers.<SysApplicationTenant>lambdaQuery()
+                            .eq(SysApplicationTenant::getAppId, application.getId()));
+
+            long rootAuthorityId = orgApplication.getAuthorityId();
+            long rootMenuId = orgApplication.getMenuId();
+
+            // 同步模版权限并且返回权限ID映射
+            Map<Long, Long> authorityIdMap = TenantUtils.syncTemplateAuthorityAndReturnMap(
+                    org.getId(), rootAuthorityId, loadAppInfo, sysAuthorityService, authorityTrans, sysRoleAuthorityService);
+
+            // 同步模版菜单
+            TenantUtils.syncTemplateManu(org.getId(), rootMenuId, loadAppInfo, authorityIdMap, sysMenuService, menuTrans);
+
+            // 删除缓存keys
+            RedisUtils.deleteKeys(redisTemplate,
+                    ListUtil.list(false,
+                            CacheConstants.AUTHORITY_DETAILS + "*",
+                            CacheConstants.MENU_DETAILS + "*"
+                    ));
+        }));
     }
 
     /**
