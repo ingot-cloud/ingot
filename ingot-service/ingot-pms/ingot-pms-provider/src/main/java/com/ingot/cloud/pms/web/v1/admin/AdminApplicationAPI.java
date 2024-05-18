@@ -37,6 +37,13 @@ public class AdminApplicationAPI implements RShortcuts {
         return ok(bizApplicationService.orgApplicationList(orgId));
     }
 
+    @PutMapping("/sync/{id}")
+    @PreAuthorize("@ingot.hasAnyAuthority('orgm.application')")
+    public R<?> syncApp(@PathVariable Long id) {
+        bizApplicationService.syncApplication(id);
+        return ok();
+    }
+
     @PostMapping
     @PreAuthorize("@ingot.hasAnyAuthority('orgm.application')")
     public R<?> createApp(@RequestBody SysApplication params) {

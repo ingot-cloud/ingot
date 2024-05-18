@@ -79,6 +79,11 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     }
 
     @Override
+    public void syncApplication(long appId) {
+
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void createApplication(SysApplication params) {
         assertionChecker.checkOperation(params.getMenuId() != null, "BizApplicationServiceImpl.MenuCantNull");

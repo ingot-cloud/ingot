@@ -36,6 +36,12 @@ public interface BizApplicationService {
     List<ApplicationOrgPageItemVO> orgApplicationList(long orgId);
 
     /**
+     * 同步应用信息
+     * @param appId 应用ID
+     */
+    void syncApplication(long appId);
+
+    /**
      * 创建应用，如果创建的时候默认应用，那么同步所有组织
      *
      * @param params {@link SysApplication}

@@ -109,7 +109,8 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                 .list()
                 .stream()
                 .filter(BizFilter.authorityFilter(filter))
-                .sorted(Comparator.comparing(SysAuthority::getId))
+                .sorted(Comparator.comparing(SysAuthority::getType)
+                        .thenComparing(SysAuthority::getId))
                 .map(authorityTrans::to).collect(Collectors.toList());
 
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);

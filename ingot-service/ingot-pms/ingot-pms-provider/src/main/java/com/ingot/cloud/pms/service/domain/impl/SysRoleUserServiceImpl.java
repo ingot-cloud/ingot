@@ -30,7 +30,10 @@ public class SysRoleUserServiceImpl extends CommonRoleRelationService<SysRoleUse
             .eq(SysRoleUser::getRoleId, roleId)
             .eq(SysRoleUser::getUserId, targetId));
     private final Do<Long> bind = (roleId, targetId) -> {
-        getBaseMapper().insertIgnore(roleId, targetId);
+        SysRoleUser roleUser = new SysRoleUser();
+        roleUser.setRoleId(roleId);
+        roleUser.setUserId(targetId);
+        getBaseMapper().insert(roleUser);
         return true;
     };
 

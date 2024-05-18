@@ -25,11 +25,11 @@ public class LoadAppInfo {
      */
     private List<AuthorityTreeNodeVO> authorityTree;
     /**
-     * 默认租户应用对应菜单的根目录ID
+     * 默认租户应用对应权限的根权限ID
      */
     private long rootAuthorityParentId;
     /**
-     * 默认租户应用对应权限的根权限ID
+     * 默认租户应用对应菜单的根目录ID
      */
     private long rootMenuParentId;
     /**

@@ -103,11 +103,16 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 .orderByAsc(ListUtil.list(false, SysRoleGroup::getSort, SysRoleGroup::getId))
                 .in(CollUtil.isNotEmpty(roleTypeList), SysRoleGroup::getType, roleTypeList));
 
-        List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
-                .like(StrUtil.isNotEmpty(filter.getRoleName()), SysRole::getName, filter.getRoleName())
-                .in(CollUtil.isNotEmpty(roleTypeList), SysRole::getType, roleTypeList));
+        List<SysRole> roles = CollUtil.emptyIfNull(list(Wrappers.<SysRole>lambdaQuery()
+                        .like(StrUtil.isNotEmpty(filter.getRoleName()), SysRole::getName, filter.getRoleName())
+                        .in(CollUtil.isNotEmpty(roleTypeList), SysRole::getType, roleTypeList)))
+                .stream()
+                .filter(item -> isAdmin || item.getStatus() == CommonStatusEnum.ENABLE)
+                .collect(Collectors.toList());
 
-        return groups.stream().map(sysToRoleGroupItemVOMap(roles)).toList();
+        return groups.stream().map(sysToRoleGroupItemVOMap(roles))
+                .sorted(Comparator.comparing(RoleGroupItemVO::getType))
+                .toList();
     }
 
     @Override
