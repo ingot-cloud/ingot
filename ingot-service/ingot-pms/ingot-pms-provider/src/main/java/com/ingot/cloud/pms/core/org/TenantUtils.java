@@ -489,7 +489,7 @@ public class TenantUtils {
         List<AuthorityTreeNodeVO> templateAuthorityTree = loadAppInfo.getAuthorityTree();
 
         Map<Long, Long> collectIdMap = new HashMap<>();
-        authorityCreateDiffAndCollectIdMap(collectIdMap, templateAuthorityTree, currentAuthorities, rootAuthorityId, sysAuthorityService);
+        authoritySyncDiffAndCollectIdMap(collectIdMap, templateAuthorityTree, currentAuthorities, rootAuthorityId, sysAuthorityService);
 
         // 待删除列表
         List<AuthorityTreeNodeVO> removeList = currentAuthorities.stream()
@@ -531,11 +531,11 @@ public class TenantUtils {
      * @param pid                 当前权限PID
      * @param sysAuthorityService {@link SysAuthorityService}
      */
-    public static void authorityCreateDiffAndCollectIdMap(@NonNull Map<Long, Long> collectIdMap,
-                                                          List<? extends TreeNode<Long>> templateTree,
-                                                          List<AuthorityTreeNodeVO> currentList,
-                                                          long pid,
-                                                          SysAuthorityService sysAuthorityService) {
+    public static void authoritySyncDiffAndCollectIdMap(@NonNull Map<Long, Long> collectIdMap,
+                                                        List<? extends TreeNode<Long>> templateTree,
+                                                        List<AuthorityTreeNodeVO> currentList,
+                                                        long pid,
+                                                        SysAuthorityService sysAuthorityService) {
         for (TreeNode<Long> node : templateTree) {
             if (node instanceof AuthorityTreeNodeVO authNode) {
                 // 如果当前没有这个权限，则创建
@@ -544,13 +544,26 @@ public class TenantUtils {
                     SysAuthority item = createAuthority(pid, authNode, sysAuthorityService);
                     collectIdMap.put(authNode.getId(), item.getId());
                 } else {
-                    collectIdMap.put(authNode.getId(), currentList.stream()
+                    currentList.stream()
                             .filter(currentAuthority -> StrUtil.equals(currentAuthority.getCode(), authNode.getCode()))
-                            .map(TreeNode::getId).findFirst().orElse(0L));
+                            .findFirst()
+                            .ifPresent(current -> {
+                                // 更新映射
+                                collectIdMap.put(authNode.getId(), current.getId());
+
+                                // 更新当前实体相关信息
+                                SysAuthority item = new SysAuthority();
+                                item.setId(current.getId());
+                                item.setName(authNode.getName());
+                                item.setStatus(authNode.getStatus());
+                                item.setRemark(authNode.getRemark());
+                                item.setUpdatedAt(DateUtils.now());
+                                sysAuthorityService.updateById(item);
+                            });
                 }
 
                 if (CollUtil.isNotEmpty(authNode.getChildren())) {
-                    authorityCreateDiffAndCollectIdMap(collectIdMap, authNode.getChildren(), currentList,
+                    authoritySyncDiffAndCollectIdMap(collectIdMap, authNode.getChildren(), currentList,
                             collectIdMap.get(authNode.getId()), sysAuthorityService);
                 }
             }
@@ -588,18 +601,22 @@ public class TenantUtils {
                     if (currentMenu != null) {
                         nextPid = currentMenu.getId();
 
+                        // 更新当前实体相关信息
+                        SysMenu sysMenu = menuTrans.to(menu);
+                        sysMenu.setId(currentMenu.getId());
+                        sysMenu.setPid(null);
+                        sysMenu.setAuthorityId(null);
                         // 如果当前模版菜单权限不为空，那么需要判断权限是否一致，不一致则需要更新
                         if (menu.getAuthorityId() != null) {
                             Optional.ofNullable(collectAuthorityIdMap.get(menu.getAuthorityId()))
                                     .ifPresent(authorityId -> {
                                         if (!Objects.equals(currentMenu.getAuthorityId(), authorityId)) {
-                                            SysMenu sysMenu = new SysMenu();
-                                            sysMenu.setId(currentMenu.getId());
                                             sysMenu.setAuthorityId(authorityId);
-                                            sysMenuService.updateById(sysMenu);
                                         }
                                     });
                         }
+                        sysMenu.setUpdatedAt(DateUtils.now());
+                        sysMenuService.updateById(sysMenu);
                     }
                 }
 
