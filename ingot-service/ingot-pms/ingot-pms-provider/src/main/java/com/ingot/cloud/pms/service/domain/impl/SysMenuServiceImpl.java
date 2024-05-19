@@ -41,7 +41,10 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         List<MenuTreeNodeVO> allNodeList = SpringContextHolder
                 .getBean(SysMenuService.class).nodeList();
         List<MenuTreeNodeVO> nodeList = MenuUtils.filterMenus(allNodeList, authorities);
-        List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList);
+        List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList)
+                .stream()
+                .sorted(Comparator.comparing(MenuTreeNodeVO::getSort))
+                .toList();
         log.debug("[SysMenuServiceImpl] - tree={}", tree);
         return tree;
     }

@@ -16,6 +16,7 @@ import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.common.RelationDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.List;
  * @author magician
  * @since 2020-11-20
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority, Long> implements SysRoleAuthorityService {

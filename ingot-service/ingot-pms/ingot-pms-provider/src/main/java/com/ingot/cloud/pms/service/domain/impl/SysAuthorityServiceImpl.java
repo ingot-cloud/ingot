@@ -22,6 +22,7 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -63,7 +64,8 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     @Override
     public List<SysAuthority> getAuthorityByRoles(List<SysRole> roles) {
         return roles.stream()
-                .flatMap(role -> sysRoleAuthorityService.getAuthoritiesByRole(role.getId()).stream())
+                .flatMap(role -> TenantEnv.applyAs(role.getTenantId(),
+                        () -> sysRoleAuthorityService.getAuthoritiesByRole(role.getId()).stream()))
                 .collect(Collectors.toList());
     }
 
