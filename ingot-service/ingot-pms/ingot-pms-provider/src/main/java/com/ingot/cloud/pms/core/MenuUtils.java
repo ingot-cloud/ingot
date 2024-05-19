@@ -1,10 +1,15 @@
 package com.ingot.cloud.pms.core;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.UUIDUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,9 +35,9 @@ public class MenuUtils {
                                                    List<? extends AuthorityType> authorities) {
 
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
-                // 1.菜单未绑定权限，直接过滤通过
-                // 2.菜单绑定权限，并且绑定的权限可用
-                .filter(node -> node.getAuthorityId() == null || node.getAuthorityId() == 0 ||
+                // 1.菜单未开启权限的内容
+                // 2.菜单开启权限并且拥有该权限，且权限可用
+                .filter(node -> node.getEnableAuthority() == null || BooleanUtil.isFalse(node.getEnableAuthority()) ||
                         authorities.stream()
                                 .anyMatch(authority ->
                                         node.getAuthorityId().equals(authority.getId())
@@ -56,5 +61,49 @@ public class MenuUtils {
                 });
 
         return nodeList;
+    }
+
+    /**
+     * 设置外部链接path
+     */
+    public static void setMenuOuterLinkPath(SysMenu params, Long pid, SysMenuService sysMenuService) {
+        String pPath = "";
+        if (pid != null && pid > 0) {
+            SysMenu parent = sysMenuService.getById(pid);
+            pPath = parent.getPath() + "/";
+        } else {
+            pPath = "/";
+        }
+        String path = pPath + UUIDUtils.generateShortUuid();
+        params.setPath(path);
+    }
+
+    /**
+     * 根据path生成视图路径
+     *
+     * @param menu {@link SysMenu}
+     */
+    public static void setViewPathAccordingToPath(SysMenu menu) {
+        String path = menu.getPath();
+        if (BooleanUtil.isTrue(menu.getProps())) {
+            path = StrUtil.subBefore(path, "/", true);
+        }
+        menu.setViewPath("@/pages" + path + "/IndexPage.vue");
+    }
+
+    /**
+     * 获取菜单权限code
+     *
+     * @param menu {@link SysMenu}
+     * @return code
+     */
+    public static String getMenuAuthorityCode(SysMenu menu) {
+        String path = menu.getPath();
+        String r = StrUtil.replace(path, "/", ".");
+        r = StrUtil.replace(r, ":", "");
+        if (StrUtil.startWith(r, ".")) {
+            return r.substring(1);
+        }
+        return r;
     }
 }

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author magician
@@ -57,6 +57,11 @@ public class SysMenu extends BaseModel<SysMenu> {
      * 菜单url
      */
     private String path;
+
+    /**
+     * 是否开启权限
+     */
+    private Boolean enableAuthority;
 
     /**
      * 权限ID

@@ -1,9 +1,11 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysApplication;
+import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
@@ -12,7 +14,6 @@ import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.SysAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.constants.IDConstants;
@@ -49,7 +50,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper, SysAuthority> implements SysAuthorityService {
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysMenuService sysMenuService;
     private final SysApplicationService sysApplicationService;
     private final AssertionChecker assertI18nService;
     private final AuthorityTrans authorityTrans;
@@ -170,16 +170,6 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         // 取消关联的角色
         sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
                 .eq(SysRoleAuthority::getAuthorityId, id));
-
-        // 取消关联菜单
-        sysMenuService.nodeList().forEach(menu -> {
-            if (ObjectUtil.equals(menu.getAuthorityId(), id)) {
-                SysMenu sysMenu = new SysMenu();
-                sysMenu.setId(menu.getId());
-                sysMenu.setAuthorityId(0L);
-                sysMenu.updateById();
-            }
-        });
 
         result = removeById(id);
         assertI18nService.checkOperation(result, "SysAuthorityServiceImpl.RemoveFailed");

@@ -38,25 +38,4 @@ public interface SysMenuService extends BaseService<SysMenu> {
      * @return {@link MenuTreeNodeVO} 节点
      */
     List<MenuTreeNodeVO> treeList(MenuFilterDTO filter);
-
-    /**
-     * 创建菜单
-     *
-     * @param params 参数
-     */
-    void createMenu(SysMenu params);
-
-    /**
-     * 更新菜单
-     *
-     * @param params 参数
-     */
-    void updateMenu(SysMenu params);
-
-    /**
-     * 根据id删除菜单
-     *
-     * @param id id
-     */
-    void removeMenuById(long id);
 }

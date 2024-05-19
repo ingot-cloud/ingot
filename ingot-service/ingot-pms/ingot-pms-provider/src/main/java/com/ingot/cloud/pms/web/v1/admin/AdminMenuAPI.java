@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.web.v1.admin;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
+import com.ingot.cloud.pms.service.biz.BizMenuService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.model.support.R;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AdminMenuAPI implements RShortcuts {
     private final SysMenuService sysMenuService;
+    private final BizMenuService bizMenuService;
     private final BizUserService bizUserService;
 
     @GetMapping("/userMenu")
@@ -40,21 +42,21 @@ public class AdminMenuAPI implements RShortcuts {
     @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysMenu params) {
-        sysMenuService.createMenu(params);
+        bizMenuService.createMenu(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysMenu params) {
-        sysMenuService.updateMenu(params);
+        bizMenuService.updateMenu(params);
         return ok();
     }
 
     @PreAuthorize("@ingot.hasAnyAuthority('basic.menu.w')")
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        sysMenuService.removeMenuById(id);
+        bizMenuService.removeMenuById(id);
         return ok();
     }
 }

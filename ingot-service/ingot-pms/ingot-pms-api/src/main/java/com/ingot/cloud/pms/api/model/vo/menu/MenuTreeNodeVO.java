@@ -35,6 +35,10 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
      */
     private String path;
     /**
+     * 是否开启权限
+     */
+    private Boolean enableAuthority;
+    /**
      * 权限ID
      */
     private Long authorityId;

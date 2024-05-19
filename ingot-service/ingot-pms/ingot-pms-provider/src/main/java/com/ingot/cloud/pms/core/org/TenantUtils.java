@@ -10,7 +10,6 @@ import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.core.MenuUtils;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
@@ -37,15 +36,6 @@ import java.util.*;
 @Slf4j
 public class TenantUtils {
 
-
-    public static List<MenuTreeNodeVO> filterMenus(List<MenuTreeNodeVO> allMenuNodeList, List<? extends AuthorityType> authorities) {
-        List<MenuTreeNodeVO> nodeList = MenuUtils.filterMenus(allMenuNodeList, authorities);
-        nodeList.stream()
-                .filter(item -> authorities.stream()
-                        .noneMatch(authority -> item.getAuthorityId().equals(authority.getId())))
-                .forEach(item -> item.setAuthorityId(null));
-        return nodeList;
-    }
 
     /**
      * 根据当前菜单，遍历创建新菜单
@@ -378,7 +368,7 @@ public class TenantUtils {
      * 给指定角色解绑权限
      *
      * @param orgId       组织ID
-     * @param roleId      角色ID
+     * @param roleIds     角色ID
      * @param authorities 要删除的权限
      * @param service     服务
      */
