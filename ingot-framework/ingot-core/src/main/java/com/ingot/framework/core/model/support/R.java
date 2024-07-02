@@ -3,8 +3,6 @@ package com.ingot.framework.core.model.support;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.status.ErrorCode;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.ToString;
 
 import java.io.Serializable;
@@ -16,7 +14,6 @@ import java.io.Serializable;
  * <p>Time         : 下午2:01.</p>
  */
 @ToString
-@ApiModel(description = "响应信息主体")
 public class R<T> implements Serializable {
     /**
      * 错误码字段
@@ -34,17 +31,14 @@ public class R<T> implements Serializable {
     /**
      * 响应码
      */
-    @ApiModelProperty(value = "错误码")
     private String code = BaseErrorCode.OK.getCode();
     /**
      * 消息
      */
-    @ApiModelProperty(value = "错误消息")
     private String message;
     /**
      * 响应体
      */
-    @ApiModelProperty(value = "数据")
     private T data;
 
     public R() {

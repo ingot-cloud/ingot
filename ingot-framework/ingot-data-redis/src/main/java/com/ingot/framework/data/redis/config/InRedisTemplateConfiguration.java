@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,15 +19,16 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import static com.ingot.framework.core.constants.BeanIds.REDIS_TEMPLATE;
 
 /**
- * <p>Description  : RedisConfig.</p>
+ * <p>Description  : RedisTemplate配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/10/19.</p>
  * <p>Time         : 5:47 下午.</p>
  */
 @EnableCaching
-@AutoConfiguration
-@AutoConfigureBefore(RedisAutoConfiguration.class)
-public class RedisTemplateConfig {
+@Configuration
+@AutoConfigureBefore(name = { "org.redisson.spring.starter.RedissonAutoConfigurationV2",
+        "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration" })
+public class InRedisTemplateConfiguration {
 
     @Bean
     public StringRedisSerializer stringRedisSerializer() {
@@ -42,6 +43,7 @@ public class RedisTemplateConfig {
     }
 
     @Bean(REDIS_TEMPLATE)
+    @Primary
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
 

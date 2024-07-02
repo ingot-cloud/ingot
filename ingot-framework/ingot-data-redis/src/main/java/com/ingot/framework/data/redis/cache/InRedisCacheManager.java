@@ -21,16 +21,15 @@ import java.util.Map;
  * <p>Time         : 6:18 下午.</p>
  */
 @Slf4j
-public class IngotRedisCacheManager extends RedisCacheManager {
+public class InRedisCacheManager extends RedisCacheManager {
     private static final String SPLIT_FLAG = "#";
     private static final int CACHE_LENGTH = 2;
 
-    public IngotRedisCacheManager(RedisCacheWriter cacheWriter,
-                                  RedisCacheConfiguration defaultCacheConfiguration,
-                                  Map<String, RedisCacheConfiguration> initialCacheConfigurations,
-                                  boolean allowInFlightCacheCreation) {
-        super(cacheWriter, defaultCacheConfiguration, initialCacheConfigurations,
-                allowInFlightCacheCreation);
+    public InRedisCacheManager(RedisCacheWriter cacheWriter,
+                               RedisCacheConfiguration defaultCacheConfiguration,
+                               boolean allowInFlightCacheCreation,
+                               Map<String, RedisCacheConfiguration> initialCacheConfigurations) {
+        super(cacheWriter, defaultCacheConfiguration, allowInFlightCacheCreation, initialCacheConfigurations);
     }
 
     @Override

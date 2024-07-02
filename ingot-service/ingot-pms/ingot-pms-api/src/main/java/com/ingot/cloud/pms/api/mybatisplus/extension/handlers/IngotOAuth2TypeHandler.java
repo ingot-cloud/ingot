@@ -1,9 +1,5 @@
 package com.ingot.cloud.pms.api.mybatisplus.extension.handlers;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.core.toolkit.Assert;
 import com.baomidou.mybatisplus.extension.handlers.AbstractJsonTypeHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,6 +15,10 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Description  : IngotOAuth2TypeHandler.</p>
@@ -41,6 +41,7 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
     }
 
     public IngotOAuth2TypeHandler(Class<?> type) {
+        super(type);
         if (log.isTraceEnabled()) {
             log.trace("IngotOAuth2TypeHandler(" + type + ")");
         }
@@ -49,7 +50,7 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
     }
 
     @Override
-    protected Object parse(String json) {
+    public Object parse(String json) {
         try {
             if (ClientSettings.class.isAssignableFrom(type)) {
                 Map<String, Object> clientSettingsMap = parseMap(json);
@@ -66,7 +67,7 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
     }
 
     @Override
-    protected String toJson(Object obj) {
+    public String toJson(Object obj) {
         try {
             if (obj instanceof ClientSettings) {
                 return objectMapper.writeValueAsString(((ClientSettings) obj).getSettings());

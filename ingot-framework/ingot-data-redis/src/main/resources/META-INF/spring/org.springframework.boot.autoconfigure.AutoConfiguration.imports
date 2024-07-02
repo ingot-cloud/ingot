@@ -1,3 +1,4 @@
-com.ingot.framework.data.redis.config.RedisTemplateConfig
-com.ingot.framework.data.redis.config.RedisCacheConfig
-com.ingot.framework.data.redis.config.RedisCacheManagerConfig
+com.ingot.framework.data.redis.config.InRedisAutoConfiguration
+com.ingot.framework.data.redis.config.InRedisCacheManagerConfiguration
+com.ingot.framework.data.redis.config.InRedisMessageConfiguration
+com.ingot.framework.data.redis.config.InRedisTemplateConfiguration

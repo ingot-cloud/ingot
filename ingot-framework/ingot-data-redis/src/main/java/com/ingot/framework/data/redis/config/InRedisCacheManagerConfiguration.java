@@ -10,14 +10,14 @@ import org.springframework.context.annotation.Bean;
 import java.util.List;
 
 /**
- * <p>Description  : RedisCacheConfig.</p>
+ * <p>Description  : CacheManagerCustomizers.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/10/21.</p>
  * <p>Time         : 6:00 下午.</p>
  */
 @AutoConfiguration
 @ConditionalOnMissingBean(CacheManagerCustomizers.class)
-public class RedisCacheConfig {
+public class InRedisCacheManagerConfiguration {
 
     @Bean
     public CacheManagerCustomizers cacheManagerCustomizers(ObjectProvider<List<CacheManagerCustomizer<?>>> customizers) {

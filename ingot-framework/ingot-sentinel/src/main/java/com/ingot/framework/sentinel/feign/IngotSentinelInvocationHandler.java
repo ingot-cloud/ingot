@@ -50,7 +50,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
     private Map<Method, Method> fallbackMethodMap;
 
     IngotSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
-                                 FallbackFactory<?> fallbackFactory) {
+                                   FallbackFactory<?> fallbackFactory) {
         this.target = checkNotNull(target, "target");
         this.dispatch = checkNotNull(dispatch, "dispatch");
         this.fallbackFactory = fallbackFactory;
@@ -68,15 +68,12 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
             try {
                 Object otherHandler = args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
                 return equals(otherHandler);
-            }
-            catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 return false;
             }
-        }
-        else if (HASH_CODE.equals(method.getName())) {
+        } else if (HASH_CODE.equals(method.getName())) {
             return hashCode();
-        }
-        else if (TO_STRING.equals(method.getName())) {
+        } else if (TO_STRING.equals(method.getName())) {
             return toString();
         }
 
@@ -90,17 +87,15 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
             // resource default is HttpMethod:protocol://url
             if (methodMetadata == null) {
                 result = methodHandler.invoke(args);
-            }
-            else {
-                String resourceName = methodMetadata.template().method().toUpperCase() + ':' + hardCodedTarget.url()
+            } else {
+                String resourceName = methodMetadata.template().method().toUpperCase() + ":" + hardCodedTarget.url()
                         + methodMetadata.template().path();
                 Entry entry = null;
                 try {
                     ContextUtil.enter(resourceName);
                     entry = SphU.entry(resourceName, EntryType.OUT, 1, args);
                     result = methodHandler.invoke(args);
-                }
-                catch (Throwable ex) {
+                } catch (Throwable ex) {
                     // fallback handle
                     if (!BlockException.isBlockException(ex)) {
                         Tracer.trace(ex);
@@ -108,38 +103,32 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                     if (fallbackFactory != null) {
                         try {
                             return fallbackMethodMap.get(method).invoke(fallbackFactory.create(ex), args);
-                        }
-                        catch (IllegalAccessException e) {
+                        } catch (IllegalAccessException e) {
                             // shouldn't happen as method is public due to being an
                             // interface
                             throw new AssertionError(e);
-                        }
-                        catch (InvocationTargetException e) {
+                        } catch (InvocationTargetException e) {
                             throw new AssertionError(e.getCause());
                         }
-                    }
-                    else {
+                    } else {
                         // 若是R类型 执行自动降级返回R
                         if (R.class == method.getReturnType()) {
                             if (ex instanceof IngotFeignException) {
                                 return R.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }
                             return R.error(BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getLocalizedMessage());
-                        }
-                        else {
+                        } else {
                             throw ex;
                         }
                     }
-                }
-                finally {
+                } finally {
                     if (entry != null) {
                         entry.exit(1, args);
                     }
                     ContextUtil.exit();
                 }
             }
-        }
-        else {
+        } else {
             // other target type using default strategy
             result = methodHandler.invoke(args);
         }

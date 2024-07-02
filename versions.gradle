@@ -1,14 +1,16 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "3.1.2"
-versions.spring_cloud = "2022.0.4"
-versions.spring_cloud_alibaba = "2022.0.0.0"
-versions.spring_authorization_server = "1.1.1"
+versions.spring_boot = "3.2.6"
+versions.spring_cloud = "2023.0.1"
+versions.spring_cloud_alibaba = "2023.0.1.0"
+versions.spring_authorization_server = "1.3.1"
 
-versions.hutool = "5.8.21"
-versions.mybatis_plus = "3.5.3.2"
-versions.mysql_connector = "8.0.31"
-versions.alibaba_druid = "1.2.16"
+versions.hutool = "5.8.27"
+versions.mybatis_plus = "3.5.6"
+versions.mybatis_spring_boot_starter = "3.0.3"
+versions.mybatis_spring = "3.0.3"
+versions.mysql_connector = "8.3.0"
+versions.alibaba_druid = "1.2.20"
 versions.alibaba_transmittable_thread_local = "2.14.3"
 versions.swagger = "3.0.0"
 versions.commons_lang = "3.3.2"
@@ -84,7 +86,7 @@ alibaba.nacos_config_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-n
 alibaba.nacos_discovery_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery"
 alibaba.sentinel_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel"
 alibaba.sentinel_gateway = "com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway"
-alibaba.druid_spring_boot_starter = "com.alibaba:druid-spring-boot-starter:${versions.alibaba_druid}"
+alibaba.druid_spring_boot_starter = "com.alibaba:druid-spring-boot-3-starter:${versions.alibaba_druid}"
 alibaba.druid = "com.alibaba:druid:${versions.alibaba_druid}"
 alibaba.transmittable_thread_local = "com.alibaba:transmittable-thread-local:${versions.alibaba_transmittable_thread_local}"
 deps.alibaba = alibaba
@@ -116,6 +118,8 @@ mybatis.plus_starter = "com.baomidou:mybatis-plus-boot-starter:${versions.mybati
 mybatis.plus_extension = "com.baomidou:mybatis-plus-extension:${versions.mybatis_plus}"
 mybatis.plus_core = "com.baomidou:mybatis-plus-core:${versions.mybatis_plus}"
 mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis_plus}"
+mybatis.spring_boot_starter = "org.mybatis.spring.boot:mybatis-spring-boot-starter:${versions.mybatis_spring_boot_starter}"
+mybatis.spring = "org.mybatis:mybatis-spring:${versions.mybatis_spring}"
 deps.mybatis = mybatis
 
 def mysql = [:]
@@ -152,7 +156,7 @@ jackson.jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${versi
 deps.jackson = jackson
 
 def aspectj = [:]
-aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.8.13"
+aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.9.22"
 deps.aspectj = aspectj
 
 def junit = [:]

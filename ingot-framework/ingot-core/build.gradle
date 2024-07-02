@@ -6,8 +6,6 @@ dependencies {
     api(deps.aspectj.aspectjweaver)
     api(deps.alibaba.transmittable_thread_local)
     api(deps.jakarta_validation_api)
-    // swagger cloud
-    api(deps.swagger.springfox_swagger2)
     // jackson
     api(deps.jackson.annotation)
     api(deps.jackson.data_bind)
