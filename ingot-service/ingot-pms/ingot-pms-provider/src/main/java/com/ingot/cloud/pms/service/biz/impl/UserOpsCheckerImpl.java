@@ -1,8 +1,5 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
@@ -14,6 +11,9 @@ import com.ingot.framework.security.common.utils.RoleUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * <p>Description  : UserOpsCheckerImpl.</p>
@@ -35,7 +35,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
         assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.RemoveSelfFailed");
 
         Optional<SysRole> admin = getAdmin(id);
-        if (!admin.isPresent()) {
+        if (admin.isEmpty()) {
             return;
         }
 
@@ -53,7 +53,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
         assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.DisableSelfFailed");
 
         Optional<SysRole> admin = getAdmin(id);
-        if (!admin.isPresent()) {
+        if (admin.isEmpty()) {
             return;
         }
 
