@@ -21,10 +21,6 @@ public class CreateOrgDTO implements Serializable {
      */
     private String name;
     /**
-     * 用户名称
-     */
-    private String nickname;
-    /**
      * 用户手机号
      */
     private String phone;

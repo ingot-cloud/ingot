@@ -161,7 +161,7 @@ public class TenantEngine {
                 user.setUsername(params.getPhone());
                 user.setPhone(params.getPhone());
                 user.setPassword(params.getPhone());
-                user.setNickname(params.getNickname());
+                user.setNickname(params.getPhone());
                 sysUserService.createUser(user);
             }
 
