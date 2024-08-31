@@ -2,7 +2,7 @@ package com.ingot.framework.sentinel.webmvc.callback;
 
 import cn.hutool.http.ContentType;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.ingot.framework.core.model.support.R;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,8 +22,11 @@ import java.io.PrintWriter;
 public class IngotBlockExceptionHandler implements BlockExceptionHandler {
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, BlockException e) throws Exception {
-        log.error("sentinel 限流资源名称：{}", e.getRule().getResource(), e);
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       String resourceName,
+                       BlockException e) throws Exception {
+        log.error("sentinel 限流资源名称：{}", resourceName, e);
 
         response.setContentType(ContentType.JSON.toString());
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());

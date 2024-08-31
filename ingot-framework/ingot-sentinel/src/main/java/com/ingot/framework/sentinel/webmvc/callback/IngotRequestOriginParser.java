@@ -1,8 +1,8 @@
 package com.ingot.framework.sentinel.webmvc.callback;
 
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.RequestOriginParser;
 import jakarta.servlet.http.HttpServletRequest;
 
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginParser;
 
 /**
  * <p>Description  : IngotRequestOriginParser.</p>
@@ -12,6 +12,8 @@ import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginPars
  */
 public class IngotRequestOriginParser implements RequestOriginParser {
 
+    private static final String ALLOW = "Allow";
+
     /**
      * 解析请求IP
      *
@@ -20,6 +22,6 @@ public class IngotRequestOriginParser implements RequestOriginParser {
      */
     @Override
     public String parseOrigin(HttpServletRequest request) {
-        return request.getRemoteAddr();
+        return request.getHeader(ALLOW);
     }
 }

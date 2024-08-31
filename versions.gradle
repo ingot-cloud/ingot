@@ -1,11 +1,11 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "3.2.6"
-versions.spring_cloud = "2023.0.1"
-versions.spring_cloud_alibaba = "2023.0.1.0"
+versions.spring_boot = "3.3.3"
+versions.spring_cloud = "2023.0.3"
+versions.spring_cloud_alibaba = "2023.0.1.2"
 versions.spring_authorization_server = "1.3.1"
 
-versions.hutool = "5.8.27"
+versions.hutool = "5.8.31"
 versions.mybatis_plus = "3.5.6"
 versions.mybatis_spring_boot_starter = "3.0.3"
 versions.mybatis_spring = "3.0.3"

@@ -1,8 +1,8 @@
 package com.ingot.framework.sentinel;
 
 import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.RequestOriginParser;
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.RequestOriginParser;
 import com.ingot.framework.sentinel.feign.SentinelFeignBuilder;
 import com.ingot.framework.sentinel.webmvc.callback.IngotBlockExceptionHandler;
 import com.ingot.framework.sentinel.webmvc.callback.IngotRequestOriginParser;
@@ -28,7 +28,7 @@ public class SentinelAutoConfiguration {
     @Bean
     @Scope("prototype")
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "feign.sentinel.enabled")
+    @ConditionalOnProperty(name = "spring.cloud.openfeign.sentinel.enabled", matchIfMissing = true)
     public Feign.Builder feignSentinelBuilder() {
         return new SentinelFeignBuilder();
     }
