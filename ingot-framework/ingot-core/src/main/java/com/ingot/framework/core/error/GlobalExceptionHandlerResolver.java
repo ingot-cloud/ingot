@@ -94,7 +94,7 @@ public class GlobalExceptionHandlerResolver {
                 e.getLocalizedMessage(), e);
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         String message = constraintViolations.stream()
-                .map(o -> o.getMessage())
+                .map(ConstraintViolation::getMessage)
                 .reduce((l, r) -> l + ";" + r)
                 .orElse("");
         return R.errorF(BaseErrorCode.ILLEGAL_REQUEST_PARAMS, message);
@@ -126,7 +126,7 @@ public class GlobalExceptionHandlerResolver {
      * <a href="https://github.com/spring-projects/spring-boot/issues/38733">[Spring Boot
      * 3.2.0] 404 Not Found behavior #38733</a>
      *
-     * @param exception
+     * @param exception {@link NoResourceFoundException}
      * @return R
      */
     @ExceptionHandler({NoResourceFoundException.class})
