@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * <p>Description  : IngotAuthApplication.</p>
+ * <p>Description  : 授权服务应用.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/3.</p>
  * <p>Time         : 4:55 下午.</p>
@@ -14,9 +14,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableIngotAuthorizationServer
-public class IngotAuthApplication {
+public class InAuthApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(IngotAuthApplication.class, args);
+        SpringApplication.run(InAuthApplication.class, args);
     }
 }
