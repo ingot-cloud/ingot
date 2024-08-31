@@ -5,7 +5,7 @@ source ./config.properties
 # 客户端版本信息配置
 version=0.1.0
 serviceName=ingot-pms-${version}
-imageName=docker-registry.wangchao.im/ingot/pms:${version}
+imageName=docker-registry.ingotcloud.top/ingot/pms:${version}
 
 # 停止运行当前容器
 docker ps -q --filter name="${serviceName}" | xargs -r docker rm -f

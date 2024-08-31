@@ -3,13 +3,13 @@
 source ./config.properties
 
 # 域名配置
-VIRTUAL_HOST=ingot-api.wangchao.im
+VIRTUAL_HOST=ingot-api.ingotcloud.top
 VIRTUAL_PORT=7980
 
 # 客户端版本信息配置
 version=0.1.0
 serviceName=ingot-gateway-${version}
-imageName=docker-registry.wangchao.im/ingot/gateway:${version}
+imageName=docker-registry.ingotcloud.top/ingot/gateway:${version}
 
 # 停止运行当前容器
 docker ps -q --filter name="${serviceName}" | xargs -r docker rm -f
