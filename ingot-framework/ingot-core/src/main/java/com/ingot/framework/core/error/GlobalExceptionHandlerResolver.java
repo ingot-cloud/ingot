@@ -13,10 +13,8 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.Set;
@@ -109,5 +107,32 @@ public class GlobalExceptionHandlerResolver {
         log.error("[GlobalExceptionHandlerResolver] - HttpRequestMethodNotSupportedException - message={}",
                 e.getLocalizedMessage(), e);
         return R.errorF(BaseErrorCode.METHOD_NOT_ALLOWED, e.getLocalizedMessage());
+    }
+
+    /**
+     * 避免 404 重定向到 /error 导致NPE ,ingot.security.oauth2.resource.publicUrls 需要配置对应端点
+     *
+     * @return R
+     */
+    @DeleteMapping("/error")
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public R<?> noHandlerFoundException() {
+        return R.error(BaseErrorCode.NOT_FOUND.getCode(), HttpStatus.NOT_FOUND.getReasonPhrase());
+    }
+
+    /**
+     * 保持和低版本请求路径不存在的行为一致
+     * <p>
+     * <a href="https://github.com/spring-projects/spring-boot/issues/38733">[Spring Boot
+     * 3.2.0] 404 Not Found behavior #38733</a>
+     *
+     * @param exception
+     * @return R
+     */
+    @ExceptionHandler({NoResourceFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public R<?> noResourceFoundException(NoResourceFoundException exception) {
+        log.error("[GlobalExceptionHandlerResolver] - noResourceFoundException 404 {}", exception.getLocalizedMessage());
+        return R.error(BaseErrorCode.NOT_FOUND.getCode(), exception.getLocalizedMessage());
     }
 }

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 public class PermitResolver implements InitializingBean {
     private static final Pattern PATTERN = Pattern.compile("\\{(.*?)\\}");
     private static final String VERTICAL_LINE = "|";
+    private static final String[] DEFAULT_IGNORE_URLS = new String[]{"/actuator/**", "/error", "/v3/api-docs"};
 
     private final WebApplicationContext applicationContext;
     private final IngotOAuth2ResourceProperties properties;
@@ -86,6 +87,8 @@ public class PermitResolver implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        properties.getPublicUrls().addAll(Arrays.asList(DEFAULT_IGNORE_URLS));
+
         /*
         - requestMappingHandlerMapping: defined by method 'requestMappingHandlerMapping' in class path resource
          [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$EnableWebMvcConfiguration.class]
