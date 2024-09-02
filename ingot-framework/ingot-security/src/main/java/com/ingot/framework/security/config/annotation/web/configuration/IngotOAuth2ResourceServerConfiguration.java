@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
+import org.springframework.security.authorization.method.PrePostTemplateDefaults;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -66,7 +68,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 })
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver))
-                .apply(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()));
+                .with(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()), Customizer.withDefaults());
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -99,7 +101,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                     authorizeRequests.anyRequest().authenticated();
                 })
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(innerResourceConfigurer);
+                .with(innerResourceConfigurer, Customizer.withDefaults());
         return http.build();
     }
 
@@ -145,15 +147,25 @@ public class IngotOAuth2ResourceServerConfiguration {
         return new DefaultAuthorizationCacheService();
     }
 
+    @Bean
+    public PermitResolver permitResolver(WebApplicationContext context,
+                                         IngotOAuth2ResourceProperties ingotOAuth2ResourceProperties) {
+        return new PermitResolver(context, ingotOAuth2ResourceProperties);
+    }
+
     @Bean("ingot")
     public IngotSecurityExpression ingotSecurityExpression() {
         return new IngotSecurityExpression();
     }
 
+    /**
+     * 支持自定义权限表达式
+     *
+     * @return {@link PrePostTemplateDefaults }
+     */
     @Bean
-    public PermitResolver permitResolver(WebApplicationContext context,
-                                         IngotOAuth2ResourceProperties ingotOAuth2ResourceProperties) {
-        return new PermitResolver(context, ingotOAuth2ResourceProperties);
+    public PrePostTemplateDefaults prePostTemplateDefaults() {
+        return new PrePostTemplateDefaults();
     }
 
 }

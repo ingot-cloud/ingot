@@ -27,7 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 @Slf4j
 @Order(InitializeUserDetailsBeanManagerConfigurer.DEFAULT_ORDER)
-class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthenticationConfigurerAdapter {
+public class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthenticationConfigurerAdapter {
 
     /**
      * 要在Spring的InitializeUserDetailsBeanManagerConfigurer之前生效

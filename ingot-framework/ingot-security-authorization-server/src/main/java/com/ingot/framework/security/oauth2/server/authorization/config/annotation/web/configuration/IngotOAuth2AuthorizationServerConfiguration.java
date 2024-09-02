@@ -36,26 +36,26 @@ public class IngotOAuth2AuthorizationServerConfiguration {
         RequestMatcher defaultMatcher = authorizationServerConfigurer
                 .getEndpointsMatcher();
 
-        // 自定义配置
-        authorizationServerConfigurer.tokenEndpoint(new OAuth2TokenEndpointCustomizer())
-                .clientAuthentication(new OAuth2ClientAuthenticationCustomizer())
-                .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer());
-
         // 增强配置
         OAuth2AuthorizationServerEnhanceConfigurer enhanceConfigurer =
                 new OAuth2AuthorizationServerEnhanceConfigurer();
         RequestMatcher enhanceMatcher = enhanceConfigurer.getEndpointsMatcher();
 
-        // 合并
+        // Request merge
         RequestMatcher endpointsMatcher = new OrRequestMatcher(defaultMatcher, enhanceMatcher);
 
         http.securityMatcher(endpointsMatcher)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests.anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
-        http.apply(authorizationServerConfigurer);
-        http.apply(enhanceConfigurer);
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+                .with(authorizationServerConfigurer, (configurer) -> {
+                    // 自定义配置
+                    configurer.tokenEndpoint(new OAuth2TokenEndpointCustomizer())
+                            .clientAuthentication(new OAuth2ClientAuthenticationCustomizer())
+                            .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer());
+                })
+                .with(enhanceConfigurer, Customizer.withDefaults());
     }
     // @formatter:on
 
