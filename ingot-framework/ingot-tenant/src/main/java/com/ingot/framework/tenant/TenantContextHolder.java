@@ -13,6 +13,7 @@ public class TenantContextHolder {
 
     private static final ThreadLocal<Long> THREAD_CONTEXT = new TransmittableThreadLocal<>();
     private static final ThreadLocal<Boolean> THREAD_CONTEXT_FLAG = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<Boolean> THREAD_SKIP_FLAG = new TransmittableThreadLocal<>();
 
     /**
      * 设置租户ID
@@ -51,10 +52,27 @@ public class TenantContextHolder {
     }
 
     /**
+     * 跳过租户处理
+     */
+    public static void skip() {
+        THREAD_SKIP_FLAG.set(Boolean.TRUE);
+    }
+
+    /**
+     * 是否跳过租户处理
+     *
+     * @return {@link Boolean}
+     */
+    public static Boolean isSkip() {
+        return BooleanUtil.isTrue(THREAD_SKIP_FLAG.get());
+    }
+
+    /**
      * 清空
      */
     public static void clear() {
         THREAD_CONTEXT.remove();
         THREAD_CONTEXT_FLAG.remove();
+        THREAD_SKIP_FLAG.remove();
     }
 }

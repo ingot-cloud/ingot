@@ -1,12 +1,18 @@
 package com.ingot.framework.data.mybatis.plugins;
 
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.ingot.framework.tenant.TenantContextHolder;
+import com.ingot.framework.tenant.TenantTable;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
+import org.springframework.core.annotation.AnnotationUtils;
+
+import java.util.Objects;
 
 /**
  * <p>Description  : IngotTenantLineHandler.</p>
@@ -48,6 +54,11 @@ public class IngotTenantLineHandler implements TenantLineHandler {
      */
     @Override
     public boolean ignoreTable(String tableName) {
+        // 是否跳过当前租户过滤，跳过则不进行数据隔离
+        if (TenantContextHolder.isSkip()) {
+            return Boolean.TRUE;
+        }
+
         Long tenantId = TenantContextHolder.get();
         // 如果当前租户为null那么不进行数据隔离
         if (tenantId == null) {
@@ -58,6 +69,13 @@ public class IngotTenantLineHandler implements TenantLineHandler {
             return Boolean.TRUE;
         }
 
-        return !tenantProperties.getTables().contains(tableName);
+        //  判断实体类是否标记为多租户隔离
+        TableInfo tableInfo = TableInfoHelper.getTableInfo(tableName);
+        TenantTable annotation = null;
+        if (Objects.nonNull(tableInfo)) {
+            annotation = AnnotationUtils.findAnnotation(tableInfo.getEntityType(), TenantTable.class);
+        }
+
+        return !tenantProperties.getTables().contains(tableName) && annotation == null;
     }
 }
