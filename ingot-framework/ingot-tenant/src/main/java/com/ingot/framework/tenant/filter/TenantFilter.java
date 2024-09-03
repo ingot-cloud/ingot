@@ -1,7 +1,7 @@
 package com.ingot.framework.tenant.filter;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.HeaderConstants;
+import com.ingot.framework.core.utils.RequestParamsUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import jakarta.servlet.FilterChain;
@@ -33,13 +33,10 @@ public class TenantFilter extends OncePerRequestFilter {
         final String url = request.getRequestURI();
         log.info("[TenantFilter] do filter url = {}", url);
 
-        String tenantId = request.getHeader(HeaderConstants.TENANT);
-        boolean hasHeaderTenantId = StrUtil.isNotBlank(tenantId);
-
+        String tenantId = RequestParamsUtils.getTenantId(request);
+        boolean hasTenantId = StrUtil.isNotBlank(tenantId);
         try {
-            log.info("[TenantFilter] Header 中{} key = {}",
-                    hasHeaderTenantId ? "存在" : "不存在", HeaderConstants.TENANT);
-            if (hasHeaderTenantId) {
+            if (hasTenantId) {
                 Long tenant = Long.parseLong(tenantId);
                 TenantContextHolder.set(tenant);
                 log.info("[TenantFilter] 设置 tenantId = {}", tenant);

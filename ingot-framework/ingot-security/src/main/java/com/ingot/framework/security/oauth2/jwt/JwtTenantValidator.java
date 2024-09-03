@@ -1,18 +1,12 @@
 package com.ingot.framework.security.oauth2.jwt;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.HeaderConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
+import com.ingot.framework.core.utils.RequestParamsUtils;
 import com.ingot.framework.security.core.IngotSecurityProperties;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,6 +16,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * <p>Description  : JwtTenantValidator.</p>
@@ -44,14 +45,18 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
                 .setAuthorityPrefix(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX);
 
         Predicate<Long> testClaimValue = (tenantId) -> {
+            log.info("token中的tenantId={}", tenantId);
             if (tenantId == null) {
                 return false;
             }
-            String headerValue = RequestContextHolder.getRequest()
-                    .map(request -> request.getHeader(HeaderConstants.TENANT))
-                    .orElse("");
-            return StrUtil.isEmpty(headerValue)
-                    || StrUtil.equals(headerValue, String.valueOf(tenantId));
+            HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
+            if (request == null) {
+                return false;
+            }
+
+            // 保证token中的tenantId和请求中的tenantId一致
+            String tenantValue = RequestParamsUtils.getTenantId(request);
+            return StrUtil.equals(tenantValue, String.valueOf(tenantId));
         };
         this.validator = new JwtClaimValidator<>(JwtClaimNamesExtension.TENANT, testClaimValue);
     }
