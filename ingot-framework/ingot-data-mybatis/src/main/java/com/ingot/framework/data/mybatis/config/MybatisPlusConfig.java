@@ -60,4 +60,9 @@ public class MybatisPlusConfig {
         }
         return new DruidSqlLogFilter(properties);
     }
+
+    @Bean
+    public TenantResolver tenantResolver(TenantProperties properties) {
+        return new TenantResolver(properties);
+    }
 }
