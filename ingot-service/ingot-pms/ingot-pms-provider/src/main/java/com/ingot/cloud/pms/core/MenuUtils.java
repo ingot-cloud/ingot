@@ -92,15 +92,16 @@ public class MenuUtils {
     }
 
     /**
-     * 获取菜单权限code
+     * 获取菜单权限code, 将菜单path替换为编码<br>
+     * path：/a/b/c => a:b:c
      *
      * @param menu {@link SysMenu}
      * @return code
      */
     public static String getMenuAuthorityCode(SysMenu menu) {
         String path = menu.getPath();
-        String r = StrUtil.replace(path, "/", ".");
-        r = StrUtil.replace(r, ":", "");
+        String r = StrUtil.replace(path, StrUtil.COLON, "");
+        r = StrUtil.replace(r, StrUtil.SLASH, StrUtil.COLON);
         if (StrUtil.startWith(r, ".")) {
             return r.substring(1);
         }

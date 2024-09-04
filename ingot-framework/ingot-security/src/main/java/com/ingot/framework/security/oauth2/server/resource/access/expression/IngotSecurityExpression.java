@@ -102,20 +102,20 @@ public class IngotSecurityExpression {
                 .anyMatch(req -> {
                     // 层级权限，拥有父级权限也可以通过
                     // req: a     - user: a   => true
-                    // req: a     - user: a.b => false
-                    // req: a.b.c - user: a.b => true
-                    // req: a.b   - user: a.b => true
-                    // req: a.b   - user: a.c => false
-                    // req: a.b   - user: a.b.c => false
+                    // req: a     - user: a:b => false
+                    // req: a:b:c - user: a:b => true
+                    // req: a:b   - user: a:b => true
+                    // req: a:b   - user: a:c => false
+                    // req: a:b   - user: a:b:c => false
                     String reqAuth = getAuthorityWithPrefix(prefix, req);
-                    List<String> scopes = StrUtil.split(reqAuth, StrUtil.DOT);
+                    List<String> scopes = StrUtil.split(reqAuth, StrUtil.COLON);
                     return userAuth.stream().anyMatch(user -> {
                         boolean start = StrUtil.startWith(reqAuth, user);
                         if (!start) {
                             return false;
                         }
 
-                        List<String> userScopes = StrUtil.split(user, StrUtil.DOT);
+                        List<String> userScopes = StrUtil.split(user, StrUtil.COLON);
                         int uLen = CollUtil.size(userScopes);
                         for (int i = 0; i < uLen; i++) {
                             if (!StrUtil.equals(userScopes.get(i), scopes.get(i))) {

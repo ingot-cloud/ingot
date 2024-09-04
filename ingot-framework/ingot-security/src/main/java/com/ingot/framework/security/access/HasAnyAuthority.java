@@ -21,7 +21,7 @@ public @interface HasAnyAuthority {
     /**
      * 权限
      *
-     * @return {@link String[] }
+     * @return Array {@link String }
      */
     String[] value();
 }

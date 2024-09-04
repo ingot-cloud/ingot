@@ -139,7 +139,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         return Optional.ofNullable(pid)
                 .filter(id -> id != IDConstants.ROOT_TREE_ID)
                 .map(this::getById)
-                .map(item -> item.getCode() + StrUtil.DOT + code)
+                .map(item -> item.getCode() + StrUtil.COLON + code)
                 .orElse(code);
     }
 
