@@ -91,6 +91,8 @@ public class BizRoleServiceImpl implements BizRoleService {
             assertionChecker.checkOperation(canRemove, "BizRoleServiceImpl.CantBindAndUnBindAuth");
         }
 
+        // 更新选取
+
         sysRoleAuthorityService.roleBindAuthorities(params);
     }
 

@@ -134,8 +134,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     @Override
     @Caching(evict = {
             @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#params.id"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey)
     })
     public void updateClientByClientId(OAuth2RegisteredClientDTO params) {
         Oauth2RegisteredClient current = getById(params.getId());
@@ -159,8 +158,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {
             @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = "#id"),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey),
-            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientRoleAllKey)
+            @CacheEvict(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey)
     })
     public void removeClientByClientId(String id) {
         assertI18nService.checkOperation(removeById(id),

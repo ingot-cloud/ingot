@@ -352,7 +352,7 @@ public class TenantUtils {
             }
 
             // 减少绑定数据，只绑定列表中的最高权限
-            // 比如列表中有 a.b, a, b.c 那么只会绑定a和b.c
+            // 比如列表中有 a:b, a, b:c 那么只会绑定a和b:c
             List<Long> bindIds = authorities.stream()
                     .filter(item -> authorities.stream().noneMatch(i -> Objects.equals(i.getId(), item.getPid())))
                     .map(SysAuthority::getId).toList();

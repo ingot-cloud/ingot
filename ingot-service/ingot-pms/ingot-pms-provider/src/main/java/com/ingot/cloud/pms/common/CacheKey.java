@@ -15,9 +15,16 @@ public interface CacheKey {
 
     String AuthorityListKey = "'list'";
     String AuthorityRoleKey = "'role-' + #roleId";
-    String AuthorityRoleAllKey = "'role-*'";
     String ClientListKey = "'list'";
-    String ClientRoleKey = "'role-' + #roleId";
-    String ClientRoleAllKey = "'role-*'";
     String MenuListKey = "'list'";
+
+    /**
+     * 获取指定角色绑定权限缓存key
+     *
+     * @param roleId 角色ID
+     * @return Key
+     */
+    static String getAuthorityRoleKey(long roleId) {
+        return "role-" + roleId;
+    }
 }

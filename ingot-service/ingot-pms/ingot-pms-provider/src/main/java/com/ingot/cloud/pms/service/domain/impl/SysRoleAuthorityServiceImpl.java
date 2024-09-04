@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
@@ -15,10 +16,11 @@ import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.data.redis.utils.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority, Long> implements SysRoleAuthorityService {
     private final AuthorityTrans authorityTrans;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
             .eq(SysRoleAuthority::getRoleId, roleId)
@@ -51,16 +54,25 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleAllKey)
     public void authorityBindRoles(RelationDTO<Long, Long> params) {
+        // 清空所有权限角色绑定缓存
+        RedisUtils.deleteKeys(redisTemplate,
+                ListUtil.list(false,
+                        CacheConstants.AUTHORITY_DETAILS + "*"
+                ));
         bindRoles(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityRoleAllKey)
     public void roleBindAuthorities(RelationDTO<Long, Long> params) {
+        // 清空指定权限角色绑定缓存
+        Long roleId = params.getId();
+        RedisUtils.deleteKeys(redisTemplate,
+                ListUtil.list(false,
+                        CacheConstants.AUTHORITY_DETAILS + "::" + CacheKey.getAuthorityRoleKey(roleId)
+                ));
         bindTargets(params, remove, bind,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
