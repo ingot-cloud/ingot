@@ -5,9 +5,9 @@ import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,27 +24,27 @@ import org.springframework.web.bind.annotation.*;
 public class OrgDeptAPI implements RShortcuts {
     private final BizDeptService bizDeptService;
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.r', 'contacts.dept.w', 'contacts.dept.r')")
+    @AdminOrHasAnyAuthority({"contacts:member:r", "contacts:dept:w", "contacts:dept:r"})
     @GetMapping("/tree")
     public R<?> tree() {
         return ok(bizDeptService.orgList());
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
+    @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
         bizDeptService.orgCreateDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
+    @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
         bizDeptService.orgUpdateDept(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.dept.w')")
+    @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizDeptService.orgDeleteDept(id);

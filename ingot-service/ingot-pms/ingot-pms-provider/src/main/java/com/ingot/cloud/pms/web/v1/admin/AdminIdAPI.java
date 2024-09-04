@@ -7,9 +7,9 @@ import com.ingot.cloud.pms.service.domain.BizLeafAllocService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -25,13 +25,13 @@ import org.springframework.web.bind.annotation.*;
 public class AdminIdAPI implements RShortcuts {
     private final BizLeafAllocService bizLeafAllocService;
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.id.w', 'develop.id.r')")
+    @HasAnyAuthority({"develop:id:w", "develop:id:r"})
     @GetMapping("/page")
     public R<?> page(Page<BizLeafAlloc> page, BizLeafAlloc condition) {
         return ok(bizLeafAllocService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.id.w')")
+    @HasAnyAuthority({"develop:id:w"})
     @PostMapping
     public R<?> create(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtils.now());
@@ -39,7 +39,7 @@ public class AdminIdAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.id.w')")
+    @HasAnyAuthority({"develop:id:w"})
     @PutMapping
     public R<?> update(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtils.now());
@@ -47,7 +47,7 @@ public class AdminIdAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.id.w')")
+    @HasAnyAuthority({"develop:id:w"})
     @DeleteMapping("/{id}")
     public R<?> remove(@PathVariable String id) {
         bizLeafAllocService.removeById(id);

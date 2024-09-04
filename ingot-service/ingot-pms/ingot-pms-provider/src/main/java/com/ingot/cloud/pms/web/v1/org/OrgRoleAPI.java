@@ -14,9 +14,9 @@ import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,88 +35,88 @@ public class OrgRoleAPI implements RShortcuts {
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final BizRoleService bizRoleService;
-    
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.r', 'contacts.role.w')")
+
+    @AdminOrHasAnyAuthority({"contacts:role:w", "contacts:role:r"})
     @GetMapping("/options")
     public R<?> options() {
         return ok(sysRoleService.options(false));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.r', 'contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w", "contacts:role:r"})
     @GetMapping("/list")
     public R<?> list(SysRole condition) {
         return ok(sysRoleService.conditionList(condition, false));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.r', 'contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w", "contacts:role:r"})
     @GetMapping("/page")
     public R<?> page(Page<SysRole> page, SysRole condition) {
         return ok(sysRoleService.conditionPage(page, condition, false));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.r', 'contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w", "contacts:role:r"})
     @GetMapping("/group/list")
     public R<?> groupList(RoleFilterDTO filter) {
         return ok(sysRoleService.groupRoleList(false, filter));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
         sysRoleService.createRole(params, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
         sysRoleService.updateRoleById(params, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysRoleService.removeRoleById(id, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PostMapping("/group")
     public R<?> createGroup(@RequestBody SysRoleGroup params) {
         sysRoleService.createGroup(params, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping("/group")
     public R<?> updateGroup(@RequestBody SysRoleGroup params) {
         sysRoleService.updateGroup(params, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @DeleteMapping("/group/{id}")
     public R<?> removeGroupById(@PathVariable Long id) {
         sysRoleService.deleteGroup(id, false);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping("/group/sort")
     public R<?> groupSort(@RequestBody RoleGroupSortDTO params) {
         sysRoleService.sortGroup(params.getIds());
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping("/bindAuthority")
     public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,
                                    @RequestParam("isBind") boolean isBind,
@@ -127,7 +127,7 @@ public class OrgRoleAPI implements RShortcuts {
         return ok(sysAuthorityService.treeList(condition));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.role.w')")
+    @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping("/bindUser")
     public R<?> bindUser(@RequestBody @Validated RelationDTO<Long, Long> params) {
         bizRoleService.orgRoleBindUsers(params);

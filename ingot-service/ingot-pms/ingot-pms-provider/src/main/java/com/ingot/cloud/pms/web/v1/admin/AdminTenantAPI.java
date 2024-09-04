@@ -12,10 +12,11 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.security.access.HasAnyAuthority;
+import com.ingot.framework.security.access.RequiredAdmin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
     private final BizOrgService bizOrgService;
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.w', 'basic.tenant.r')")
+    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
     @GetMapping("/search")
     public R<?> search(SysTenant filter) {
         String name = filter.getName();
@@ -51,33 +52,33 @@ public class AdminTenantAPI implements RShortcuts {
                 .toList());
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.w', 'basic.tenant.r')")
+    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
     @GetMapping("/{id}")
     public R<?> getTenantInfo(@PathVariable Long id) {
         return ok(sysTenantService.getById(id));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.tenant.w', 'basic.tenant.r')")
+    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
     @GetMapping("/page")
     public R<?> page(Page<SysTenant> page, SysTenant params) {
         return ok(sysTenantService.conditionPage(page, params));
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @PostMapping
     public R<?> create(@Valid @RequestBody CreateOrgDTO params) {
         bizOrgService.createOrg(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @PutMapping
     public R<?> update(@Valid @RequestBody SysTenant params) {
         bizOrgService.updateBase(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizOrgService.removeOrg(id);

@@ -11,10 +11,10 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,13 +33,13 @@ public class AdminSocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
     private final WxMaService wxMaService;
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w', 'develop.social.r')")
+    @HasAnyAuthority({"develop:social:w", "develop:social:r"})
     @GetMapping("/page")
     public R<?> page(Page<SysSocialDetails> page, SysSocialDetails condition) {
         return ok(sysSocialDetailsService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
+    @HasAnyAuthority({"develop:social:w"})
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
@@ -56,7 +56,7 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
+    @HasAnyAuthority({"develop:social:w"})
     @PutMapping
     @Transactional(rollbackFor = Exception.class)
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
@@ -75,7 +75,7 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('develop.social.w')")
+    @HasAnyAuthority({"develop:social:w"})
     @DeleteMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
     public R<?> remove(@PathVariable Long id) {

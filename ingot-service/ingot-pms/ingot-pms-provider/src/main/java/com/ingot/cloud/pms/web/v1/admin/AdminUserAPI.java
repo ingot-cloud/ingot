@@ -11,10 +11,10 @@ import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,59 +37,59 @@ public class AdminUserAPI implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r', 'basic.user.w')")
+    @HasAnyAuthority({"basic:user:r", "basic:user:w"})
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, AllOrgUserFilterDTO condition) {
         return ok(sysUserService.allOrgUserPage(page, condition));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         return ok(bizUserService.createUser(params));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         bizUserService.updateUser(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizUserService.deleteUser(id);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r')")
+    @HasAnyAuthority({"basic:user:w", "basic:user:r"})
     @GetMapping("/orgInfo/{userId}")
     public R<?> orgInfo(@PathVariable Long userId) {
         return ok(bizUserService.userOrgInfo(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/org")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgEdit(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/org/leave")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgLeave(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.w')")
+    @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/resetPwd/{userId}")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizUserService.resetPwd(userId));
     }
 
-    @PreAuthorize("@ingot.hasAnyAuthority('basic.user.r', 'basic.user.w')")
+    @HasAnyAuthority({"basic:user:w", "basic:user:r"})
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));

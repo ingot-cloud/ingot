@@ -6,17 +6,10 @@ import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.RequiredAdmin;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>Description  : AuthorityApi.</p>
@@ -30,27 +23,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminAuthorityAPI implements RShortcuts {
     private final SysAuthorityService sysAuthorityService;
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @GetMapping("/tree")
     public R<?> tree(AuthorityFilterDTO filter) {
         return ok(sysAuthorityService.treeList(filter));
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
         sysAuthorityService.createAuthority(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @PutMapping
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysAuthority params) {
         sysAuthorityService.updateAuthority(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.requiredAdmin")
+    @RequiredAdmin
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         sysAuthorityService.removeAuthorityById(id);

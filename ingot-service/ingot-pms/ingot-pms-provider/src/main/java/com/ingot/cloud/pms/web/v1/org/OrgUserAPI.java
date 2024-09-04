@@ -10,11 +10,11 @@ import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -36,35 +36,35 @@ public class OrgUserAPI implements RShortcuts {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.w', 'contacts.member.r')")
+    @AdminOrHasAnyAuthority({"contacts:member:w", "contacts:member:r"})
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserQueryDTO condition) {
         Long tenantId = TenantContextHolder.get();
         return ok(sysUserService.conditionPage(page, condition, tenantId));
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.w')")
+    @AdminOrHasAnyAuthority({"contacts:member:w"})
     @PostMapping
     public R<?> create(@RequestBody OrgUserDTO params) {
         bizUserService.orgCreateUser(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.w')")
+    @AdminOrHasAnyAuthority({"contacts:member:w"})
     @PutMapping
     public R<?> update(@RequestBody OrgUserDTO params) {
         bizUserService.orgUpdateUser(params);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.w')")
+    @AdminOrHasAnyAuthority({"contacts:member:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizUserService.orgDeleteUser(id);
         return ok();
     }
 
-    @PreAuthorize("@ingot.adminOrHasAnyAuthority('contacts.member.r')")
+    @AdminOrHasAnyAuthority({"contacts:member:w", "contacts:member:r"})
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getOrgUserProfile(id));
