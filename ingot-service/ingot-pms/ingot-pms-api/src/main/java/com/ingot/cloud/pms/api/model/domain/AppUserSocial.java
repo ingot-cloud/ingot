@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@TenantTable
 @TableName("app_user_social")
 public class AppUserSocial extends BaseModel<AppUserSocial> {
 

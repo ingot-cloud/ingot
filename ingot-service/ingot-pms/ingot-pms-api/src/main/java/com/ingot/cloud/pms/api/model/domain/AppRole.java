@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@TenantTable
 @TableName("app_role")
 public class AppRole extends BaseModel<AppRole> {
 

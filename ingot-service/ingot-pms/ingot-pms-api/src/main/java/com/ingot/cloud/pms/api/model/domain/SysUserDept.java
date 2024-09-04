@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@TenantTable
 @TableName("sys_user_dept")
 public class SysUserDept extends BaseModel<SysUserDept> {
 

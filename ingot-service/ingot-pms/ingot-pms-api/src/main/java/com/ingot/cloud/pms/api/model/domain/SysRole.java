@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TenantTable
 @TableName("sys_role")
 public class SysRole extends BaseModel<SysRole> {
 

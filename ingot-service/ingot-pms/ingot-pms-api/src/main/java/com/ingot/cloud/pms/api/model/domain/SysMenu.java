@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TenantTable
 @TableName("sys_menu")
 public class SysMenu extends BaseModel<SysMenu> {
 

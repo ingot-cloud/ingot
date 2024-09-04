@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@TenantTable
 @TableName("sys_application_tenant")
 public class SysApplicationTenant extends BaseModel<SysApplicationTenant> {
 

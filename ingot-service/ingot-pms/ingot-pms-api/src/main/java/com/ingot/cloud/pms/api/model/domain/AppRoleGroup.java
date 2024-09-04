@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.framework.data.mybatis.config.TenantTable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@TenantTable
 @TableName("app_role_group")
 public class AppRoleGroup extends Model<AppRoleGroup> {
 
