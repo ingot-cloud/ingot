@@ -1,9 +1,10 @@
 package com.ingot.framework.security.config.annotation.web.configurers;
 
-import java.util.List;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+
+import java.util.List;
 
 /**
  * <p>Description  : DefaultHttpConfigurersAdapter.</p>
@@ -18,7 +19,7 @@ public class DefaultHttpConfigurersAdapter implements IngotHttpConfigurersAdapte
     @Override
     public void apply(HttpSecurity http) throws Exception {
         for (IngotHttpConfigurer configurer : this.httpConfigurers) {
-            http.apply(configurer);
+            http.with(configurer, Customizer.withDefaults());
         }
     }
 }
