@@ -102,7 +102,7 @@ public class MenuUtils {
         String path = menu.getPath();
         String r = StrUtil.replace(path, StrUtil.COLON, "");
         r = StrUtil.replace(r, StrUtil.SLASH, StrUtil.COLON);
-        if (StrUtil.startWith(r, ".")) {
+        if (StrUtil.startWith(r, StrUtil.COLON)) {
             return r.substring(1);
         }
         return r;
