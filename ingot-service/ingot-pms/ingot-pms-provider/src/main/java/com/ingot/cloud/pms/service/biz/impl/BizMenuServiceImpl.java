@@ -93,7 +93,7 @@ public class BizMenuServiceImpl implements BizMenuService {
         authority.setStatus(params.getStatus());
         authority.setType(params.getOrgType());
 
-        sysAuthorityService.createAuthority(authority);
+        sysAuthorityService.createAuthority(authority, false);
         return authority.getId();
     }
 

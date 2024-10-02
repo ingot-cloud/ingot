@@ -122,14 +122,16 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
 
     @Override
     @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
-    public void createAuthority(SysAuthority params) {
+    public void createAuthority(SysAuthority params, boolean fillParentCode) {
         // code 不能重复
         assertI18nService.checkOperation(count(Wrappers.<SysAuthority>lambdaQuery()
                         .eq(SysAuthority::getCode, params.getCode())) == 0,
                 "SysAuthorityServiceImpl.ExistCode");
 
         // 检测父权限，填充编码
-        params.setCode(formatCode(params.getPid(), params.getCode()));
+        if (fillParentCode) {
+            params.setCode(formatCode(params.getPid(), params.getCode()));
+        }
         params.setCreatedAt(DateUtils.now());
         assertI18nService.checkOperation(save(params),
                 "SysAuthorityServiceImpl.CreateFailed");

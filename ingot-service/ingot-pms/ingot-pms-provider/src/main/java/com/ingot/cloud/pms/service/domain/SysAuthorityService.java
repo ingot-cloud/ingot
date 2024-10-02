@@ -52,8 +52,9 @@ public interface SysAuthorityService extends BaseService<SysAuthority> {
      * 创建权限
      *
      * @param params 参数
+     * @param fillParentCode 是否填充父级code
      */
-    void createAuthority(SysAuthority params);
+    void createAuthority(SysAuthority params, boolean fillParentCode);
 
     /**
      * 更新权限

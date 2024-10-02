@@ -32,7 +32,7 @@ public class AdminAuthorityAPI implements RShortcuts {
     @RequiredAdmin
     @PostMapping
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysAuthority params) {
-        sysAuthorityService.createAuthority(params);
+        sysAuthorityService.createAuthority(params, true);
         return ok();
     }
 
