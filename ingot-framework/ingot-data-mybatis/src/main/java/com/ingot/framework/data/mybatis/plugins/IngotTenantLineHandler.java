@@ -59,11 +59,6 @@ public class IngotTenantLineHandler implements TenantLineHandler {
             return Boolean.TRUE;
         }
 
-        // 如果使用了默认租户，那么不进行数据隔离
-        if (TenantContextHolder.isUseDefault()) {
-            return Boolean.TRUE;
-        }
-
         return !tenantProperties.getTables().contains(tableName);
     }
 }
