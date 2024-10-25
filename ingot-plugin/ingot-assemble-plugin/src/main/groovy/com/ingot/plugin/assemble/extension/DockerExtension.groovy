@@ -47,6 +47,11 @@ class DockerExtension {
     String name = ""
 
     /**
+     * 保存名称
+     */
+    String saveName = ""
+
+    /**
      * 多个Tag打包
      */
     Map<String, Tag> tags = new HashMap<>()

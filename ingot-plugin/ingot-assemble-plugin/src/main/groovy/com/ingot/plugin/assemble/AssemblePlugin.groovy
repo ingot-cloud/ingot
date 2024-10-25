@@ -3,14 +3,11 @@ package com.ingot.plugin.assemble
 import com.ingot.plugin.assemble.extension.AssembleExtension
 import com.ingot.plugin.assemble.extension.DockerExtension
 import com.ingot.plugin.assemble.extension.Tag
-import com.ingot.plugin.assemble.task.AssembleTask
-import com.ingot.plugin.assemble.task.CleanTask
-import com.ingot.plugin.assemble.task.DockerBuildTask
-import com.ingot.plugin.assemble.task.DockerPushTask
-import com.ingot.plugin.assemble.task.ShiftDockerfileTask
+import com.ingot.plugin.assemble.task.*
 import com.ingot.plugin.assemble.utils.Utils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+
 /**
  * <p>Description  : BulidPlugin.</p>
  * <p>Author       : wangchao.</p>
@@ -87,6 +84,16 @@ class AssemblePlugin implements Plugin<Project> {
             password = dockerExtension.getPassword()
             dockerCmd = dockerExtension.getDockerCmd()
             imageName = inputImageName
+        })
+
+        project.tasks.create("dockerSave${finalSuffix}", DockerSaveTask, {
+            dependsOn project.tasks.getByName("dockerBuild${finalSuffix}")
+            description = "Save the docker image named '${inputImageName}'"
+            registry = dockerExtension.getRegistry()
+            outputDirPath = ext.getOutputDirPath()
+            dockerCmd = dockerExtension.getDockerCmd()
+            imageName = inputImageName
+            saveName = dockerExtension.getSaveName()
         })
     }
 }
