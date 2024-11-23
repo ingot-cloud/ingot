@@ -14,9 +14,9 @@ versions.alibaba_druid = "1.2.20"
 versions.alibaba_transmittable_thread_local = "2.14.3"
 versions.alibaba_easyexcel = "3.1.5"
 versions.swagger = "3.0.0"
-versions.commons_lang = "3.14.0"
-versions.commons_io = "2.11.0"
-versions.mapstruct = "1.5.5.Final"
+versions.commons_lang = "3.3.2"
+versions.commons_io = "2.4"
+versions.mapstruct = "1.6.2"
 versions.jackson = "2.15.2"
 versions.redisson = "3.18.1"
 versions.minio = "8.4.6"
@@ -117,7 +117,7 @@ apache.zookeeper = "org.apache.zookeeper:zookeeper:3.4.13"
 deps.apache = apache
 
 def mybatis = [:]
-mybatis.plus_starter = "com.baomidou:mybatis-plus-spring-boot3-starter:${versions.mybatis_plus}"
+mybatis.plus_starter = "com.baomidou:mybatis-plus-boot-starter:${versions.mybatis_plus}"
 mybatis.plus_extension = "com.baomidou:mybatis-plus-extension:${versions.mybatis_plus}"
 mybatis.plus_core = "com.baomidou:mybatis-plus-core:${versions.mybatis_plus}"
 mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis_plus}"
@@ -193,7 +193,7 @@ deps.netty = "io.netty:netty-all:4.1.55.Final"
 
 def plugins = [:]
 plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:0.2.1"
-plugins.ingot_assemble = "com.ingot:ingot-assemble-plugin:0.4.1.1"
+plugins.ingot_assemble = "com.ingot:ingot-assemble-plugin:0.5.0.1"
 deps.plugins = plugins
 
 ext.deps = deps

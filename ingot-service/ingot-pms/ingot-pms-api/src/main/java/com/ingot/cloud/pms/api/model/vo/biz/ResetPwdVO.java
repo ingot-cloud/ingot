@@ -13,6 +13,10 @@ import java.io.Serializable;
 @Data
 public class ResetPwdVO implements Serializable {
     /**
+     * 用户ID
+     */
+    private long id;
+    /**
      * 初始化随机验证码
      */
     private String random;

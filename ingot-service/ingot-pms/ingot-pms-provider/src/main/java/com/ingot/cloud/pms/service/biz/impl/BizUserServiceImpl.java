@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -132,6 +133,7 @@ public class BizUserServiceImpl implements BizUserService {
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
+        result.setId(user.getId());
         return result;
     }
 
@@ -237,6 +239,7 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void orgCreateUser(OrgUserDTO params) {
         // 手机号，部门，昵称不能为空
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPhone()), "SysUser.phone");
@@ -256,12 +259,14 @@ public class BizUserServiceImpl implements BizUserService {
         }
 
         // 加入租户
-        sysUserTenantService.joinTenant(user.getId(), sysTenantService.getById(TenantContextHolder.get()));
+        SysTenant tenant = sysTenantService.getById(TenantContextHolder.get());
+        sysUserTenantService.joinTenant(user.getId(), tenant);
         // 设置部门
         bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void orgUpdateUser(OrgUserDTO params) {
         assertionChecker.checkOperation(params.getId() != null, "Common.IDNonNull");
 
@@ -276,6 +281,7 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void orgDeleteUser(long id) {
         long userId = SecurityAuthContext.getUser().getId();
         assertionChecker.checkOperation(userId != id, "BizUserServiceImpl.RemoveSelfFailed");
