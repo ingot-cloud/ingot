@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.common.wechat;
 
+import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.api.impl.WxMaServiceImpl;
 import cn.binarywang.wx.miniapp.config.WxMaConfig;
@@ -42,6 +43,11 @@ public class WechatConfiguration implements InitializingBean {
             service.addConfig(config.getAppid(), config);
         }
         return service;
+    }
+
+    @Bean
+    public WxMaQrcodeService wxMaQrcodeService(WxMaService service) {
+        return service.getQrcodeService();
     }
 
     @Override
