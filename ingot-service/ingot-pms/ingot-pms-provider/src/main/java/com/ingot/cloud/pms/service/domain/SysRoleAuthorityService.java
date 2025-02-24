@@ -26,8 +26,9 @@ public interface SysRoleAuthorityService extends BaseService<SysRoleAuthority> {
     void authorityBindRoles(RelationDTO<Long, Long> params);
 
     /**
-     * 角色绑定权限
-     *
+     * 角色绑定权限<br>
+     * 1. 清空当前角色权限<br>
+     * 2. 绑定新权限
      * @param params 关联参数
      */
     void roleBindAuthorities(RelationDTO<Long, Long> params);

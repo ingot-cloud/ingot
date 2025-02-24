@@ -67,14 +67,31 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindAuthorities(RelationDTO<Long, Long> params) {
-        // 清空指定权限角色绑定缓存
+        List<Long> bindIds = params.getBindIds();
         Long roleId = params.getId();
+
+        // 如果没有绑定权限，那么不处理
+        if (CollUtil.isEmpty(bindIds)) {
+            return;
+        }
+
+        // 清空指定权限角色绑定缓存
         RedisUtils.deleteKeys(redisTemplate,
                 ListUtil.list(false,
                         CacheConstants.AUTHORITY_DETAILS + "::" + CacheKey.getAuthorityRoleKey(roleId)
                 ));
-        bindTargets(params, remove, bind,
-                "SysRoleAuthorityServiceImpl.RemoveFailed");
+        // 清空当前权限
+        remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                .eq(SysRoleAuthority::getRoleId, roleId));
+
+        List<SysRoleAuthority> bindList = CollUtil.emptyIfNull(bindIds).stream()
+                .map(authorityId -> {
+                    SysRoleAuthority sysRoleAuthority = new SysRoleAuthority();
+                    sysRoleAuthority.setRoleId(roleId);
+                    sysRoleAuthority.setAuthorityId(authorityId);
+                    return sysRoleAuthority;
+                }).toList();
+        saveBatch(bindList);
     }
 
     @Override
