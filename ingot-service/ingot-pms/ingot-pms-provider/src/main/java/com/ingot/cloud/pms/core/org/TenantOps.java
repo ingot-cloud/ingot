@@ -247,17 +247,19 @@ public class TenantOps {
                         }));
     }
 
+    /**
+     * 角色绑定权限<br>
+     * 1. 清空当前角色权限<br>
+     * 2. 绑定新权限
+     * @param params 关联参数
+     */
     public void roleBindAuthorities(RelationDTO<Long, Long> params, SysRole role) {
         List<Long> bindIds = params.getBindIds();
-        List<Long> removeIds = params.getRemoveIds();
 
+        // 待绑定权限编码
         List<String> bindCodes = CollUtil.isEmpty(bindIds) ? null : sysAuthorityService.list(
                         Wrappers.<SysAuthority>lambdaQuery()
                                 .in(SysAuthority::getId, bindIds))
-                .stream().map(SysAuthority::getCode).toList();
-        List<String> removeCodes = CollUtil.isEmpty(removeIds) ? null : sysAuthorityService.list(
-                        Wrappers.<SysAuthority>lambdaQuery()
-                                .in(SysAuthority::getId, removeIds))
                 .stream().map(SysAuthority::getCode).toList();
 
         RelationDTO<Long, Long> orgRelation = new RelationDTO<>();
@@ -272,12 +274,6 @@ public class TenantOps {
                                 orgRelation.setBindIds(sysAuthorityService.list(
                                                 Wrappers.<SysAuthority>lambdaQuery()
                                                         .in(SysAuthority::getCode, bindCodes))
-                                        .stream().map(SysAuthority::getId).toList());
-                            }
-                            if (CollUtil.isNotEmpty(removeCodes)) {
-                                orgRelation.setRemoveIds(sysAuthorityService.list(
-                                                Wrappers.<SysAuthority>lambdaQuery()
-                                                        .in(SysAuthority::getCode, removeCodes))
                                         .stream().map(SysAuthority::getId).toList());
                             }
 

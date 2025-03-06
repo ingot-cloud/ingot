@@ -70,11 +70,6 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
         List<Long> bindIds = params.getBindIds();
         Long roleId = params.getId();
 
-        // 如果没有绑定权限，那么不处理
-        if (CollUtil.isEmpty(bindIds)) {
-            return;
-        }
-
         // 清空指定权限角色绑定缓存
         RedisUtils.deleteKeys(redisTemplate,
                 ListUtil.list(false,
@@ -91,7 +86,9 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
                     sysRoleAuthority.setAuthorityId(authorityId);
                     return sysRoleAuthority;
                 }).toList();
-        saveBatch(bindList);
+        if (CollUtil.isNotEmpty(bindList)) {
+            saveBatch(bindList);
+        }
     }
 
     @Override

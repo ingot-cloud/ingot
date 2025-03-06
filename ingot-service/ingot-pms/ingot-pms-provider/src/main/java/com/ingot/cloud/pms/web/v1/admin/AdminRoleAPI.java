@@ -110,6 +110,9 @@ public class AdminRoleAPI implements RShortcuts {
         return ok();
     }
 
+    /**
+     * 角色绑定权限，绑定关系会清除，重新绑定，只处理#params.getBindIds()中的值
+     */
     @HasAnyAuthority({"basic:role:w"})
     @PutMapping("/bindAuthority")
     public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
