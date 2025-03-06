@@ -111,6 +111,11 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
+    public IPage<UserPageItemVO> pageByDept(Page<SysUser> page, Long deptId, Long orgId) {
+        return baseMapper.pageByDept(page, deptId, orgId);
+    }
+
+    @Override
     public IPage<SysUser> allOrgUserPage(Page<SysUser> page, AllOrgUserFilterDTO filter) {
         // 查询系统所有组织用户，不进行数据隔离
         return TenantEnv.applyAs(null, () ->

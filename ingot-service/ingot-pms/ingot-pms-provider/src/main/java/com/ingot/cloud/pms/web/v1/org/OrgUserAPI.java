@@ -43,6 +43,14 @@ public class OrgUserAPI implements RShortcuts {
         return ok(sysUserService.conditionPage(page, condition, tenantId));
     }
 
+    @AdminOrHasAnyAuthority({"contacts:member:w", "contacts:member:r"})
+    @GetMapping("/pageByDept/{deptId}")
+    public R<?> pageByDept(Page<SysUser> page,
+                           @PathVariable Long deptId) {
+        Long tenantId = TenantContextHolder.get();
+        return ok(sysUserService.pageByDept(page, deptId, tenantId));
+    }
+
     @AdminOrHasAnyAuthority({"contacts:member:w"})
     @PostMapping
     public R<?> create(@RequestBody OrgUserDTO params) {

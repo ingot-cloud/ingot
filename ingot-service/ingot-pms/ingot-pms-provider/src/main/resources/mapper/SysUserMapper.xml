@@ -56,4 +56,20 @@
         ORDER BY ut.id
     </select>
 
+    <select id="pageByDept" resultMap="UserPageItemVo">
+        SELECT u.id AS user_id,
+               u.username,
+               u.nickname,
+               u.phone,
+               u.email,
+               u.avatar,
+               u.status,
+               u.created_at
+        FROM sys_user_dept AS ud
+                 LEFT JOIN sys_user AS u ON u.id = ud.user_id
+        WHERE ud.tenant_id = #{tenantId}
+          AND ud.dept_id = #{deptId}
+          AND u.deleted_at IS NULL
+    </select>
+
 </mapper>

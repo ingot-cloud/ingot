@@ -29,4 +29,17 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     IPage<UserPageItemVO> conditionPageWithTenant(Page<SysUser> page,
                                                   @Param("condition") UserQueryDTO condition,
                                                   @Param("tenantId") Long tenantId);
+
+    /**
+     * 获取指定组织指定部门用户信息
+     *
+     * @param page   分页参数
+     * @param deptId 部门ID
+     * @param orgId  组织ID
+     * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
+     */
+    IPage<UserPageItemVO> pageByDept(Page<SysUser> page,
+                                     @Param("deptId") Long deptId,
+                                     @Param("tenantId") Long orgId);
+
 }

@@ -46,6 +46,16 @@ public interface SysUserService extends BaseService<SysUser> {
     IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId);
 
     /**
+     * 获取指定组织指定部门用户信息
+     *
+     * @param page   分页参数
+     * @param deptId 部门ID
+     * @param orgId  组织ID
+     * @return {@link IPage}，数据项结构 {@link UserPageItemVO}
+     */
+    IPage<UserPageItemVO> pageByDept(Page<SysUser> page, Long deptId, Long orgId);
+
+    /**
      * 条件查询所有系统用户分页数据
      *
      * @param page   分页参数
