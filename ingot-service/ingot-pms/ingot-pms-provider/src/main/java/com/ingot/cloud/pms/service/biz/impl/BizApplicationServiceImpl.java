@@ -89,8 +89,11 @@ public class BizApplicationServiceImpl implements BizApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void createApplication(SysApplication params) {
         assertionChecker.checkOperation(params.getMenuId() != null, "BizApplicationServiceImpl.MenuCantNull");
-        assertionChecker.checkOperation(params.getAuthorityId() != null, "BizApplicationServiceImpl.AuthorityCantNull");
 
+        SysMenu menu = sysMenuService.getById(params.getMenuId());
+        assertionChecker.checkOperation(menu != null, "BizApplicationServiceImpl.MenuCantNull");
+
+        params.setAuthorityId(menu.getAuthorityId());
         params.setStatus(CommonStatusEnum.ENABLE);
         params.setCreatedAt(DateUtils.now());
         sysApplicationService.save(params);
