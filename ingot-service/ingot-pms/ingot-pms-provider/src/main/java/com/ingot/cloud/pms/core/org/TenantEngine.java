@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
@@ -74,7 +73,6 @@ public class TenantEngine {
         return TenantEnv.applyAs(tenant.getId(), () -> {
             SysDept dept = new SysDept();
             dept.setName(tenant.getName());
-            dept.setScope(DeptRoleScopeEnum.CURRENT_CHILD);
             dept.setMainFlag(Boolean.TRUE);
             sysDeptService.createDept(dept);
             return dept;

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.config.TenantTable;
@@ -47,11 +46,6 @@ public class SysDept extends BaseModel<SysDept> {
      * 部门名称
      */
     private String name;
-
-    /**
-     * 部门角色范围, 0:当前部门，1:当前部门和直接子部门
-     */
-    private DeptRoleScopeEnum scope;
 
     /**
      * 排序

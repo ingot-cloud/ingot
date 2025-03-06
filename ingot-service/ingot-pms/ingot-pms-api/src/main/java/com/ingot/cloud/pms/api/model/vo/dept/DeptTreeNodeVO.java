@@ -1,8 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
-import com.ingot.framework.core.utils.tree.TreeNode;
-import com.ingot.cloud.pms.api.model.enums.DeptRoleScopeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -20,11 +19,6 @@ public class DeptTreeNodeVO extends TreeNode<Long> {
      * 部门名称
      */
     private String name;
-
-    /**
-     * 部门角色范围, 0:当前部门，1:当前部门和直接子部门
-     */
-    private DeptRoleScopeEnum scope;
 
     /**
      * 排序
