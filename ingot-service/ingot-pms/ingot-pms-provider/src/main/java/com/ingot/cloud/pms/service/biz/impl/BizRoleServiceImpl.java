@@ -73,7 +73,6 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void orgRoleBindAuthorities(RelationDTO<Long, Long> params) {
         long roleId = params.getId();
         List<Long> bindList = params.getBindIds();
-        List<Long> removeList = params.getRemoveIds();
         SysRole role = sysRoleService.getById(roleId);
         assertionChecker.checkOperation(!StrUtil.equals(role.getCode(), RoleConstants.ROLE_MANAGER_CODE),
                 "BizRoleServiceImpl.CantOperateManager");
@@ -86,13 +85,8 @@ public class BizRoleServiceImpl implements BizRoleService {
             boolean canBind = new HashSet<>(authorities).containsAll(bindList);
             assertionChecker.checkOperation(canBind, "BizRoleServiceImpl.CantBindAndUnBindAuth");
         }
-        if (CollUtil.isNotEmpty(removeList)) {
-            boolean canRemove = new HashSet<>(authorities).containsAll(removeList);
-            assertionChecker.checkOperation(canRemove, "BizRoleServiceImpl.CantBindAndUnBindAuth");
-        }
 
         // 更新选取
-
         sysRoleAuthorityService.roleBindAuthorities(params);
     }
 
