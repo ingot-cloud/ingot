@@ -31,8 +31,8 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
     /**
      * 更新用户角色，将用户角色更新为指定角色
      *
-     * @param userId          用户ID
-     * @param roles           待设置的角色
+     * @param userId 用户ID
+     * @param roles  待设置的角色
      */
     void setUserRoles(long userId, List<Long> roles);
 
@@ -64,4 +64,11 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
                                 boolean isBind,
                                 SysUser condition);
 
+    /**
+     * 获取角色绑定的用户列表
+     *
+     * @param roleId 角色ID
+     * @return {@link SysUser}
+     */
+    List<SysUser> getRoleUsers(long roleId);
 }

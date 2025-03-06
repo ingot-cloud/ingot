@@ -287,7 +287,7 @@ public class BizUserServiceImpl implements BizUserService {
         assertionChecker.checkOperation(userId != id, "BizUserServiceImpl.RemoveSelfFailed");
 
         // 判断删除用户是否为除主管理员
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
+        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
         long deleteCount = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
                 .eq(SysRoleUser::getRoleId, managerRole.getId())
                 .eq(SysRoleUser::getUserId, id));

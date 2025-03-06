@@ -339,7 +339,7 @@ public class TenantOps {
 
             // 管理员绑定第一个权限
             SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
-                    .eq(SysRole::getCode, RoleConstants.ROLE_MANAGER_CODE));
+                    .eq(SysRole::getCode, RoleConstants.ROLE_ORG_ADMIN_CODE));
             TenantUtils.bindAuthorities(org.getId(), role.getId(), authorityCollect, sysRoleAuthorityService);
 
             // 删除缓存keys

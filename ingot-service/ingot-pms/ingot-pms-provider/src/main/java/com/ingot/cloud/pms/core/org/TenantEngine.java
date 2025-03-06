@@ -148,7 +148,7 @@ public class TenantEngine {
     public void createTenantUser(CreateOrgDTO params, SysTenant tenant, List<SysRole> roles, SysDept dept) {
         TenantEnv.runAs(tenant.getId(), () -> {
             SysRole role = roles.stream()
-                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
+                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
                     .findFirst().orElseThrow();
 
             // 如果已经存在注册用户，那么直接关联新组织信息
@@ -178,7 +178,7 @@ public class TenantEngine {
     public void tenantRoleBindAuthorities(SysTenant tenant, List<SysRole> roles, List<SysAuthority> authorities) {
         TenantEnv.runAs(tenant.getId(), () -> {
             SysRole role = roles.stream()
-                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_MANAGER_CODE))
+                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
                     .findFirst().orElseThrow();
             TenantUtils.bindAuthorities(tenant.getId(), role.getId(), authorities, sysRoleAuthorityService);
         });

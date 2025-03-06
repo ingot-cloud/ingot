@@ -1,9 +1,12 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
+import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * <p>Description  : DeptTreeNodeVO.</p>
@@ -34,4 +37,9 @@ public class DeptTreeNodeVO extends TreeNode<Long> {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
+
+    /**
+     * 部门主管
+     */
+    private List<SimpleUserVO> managerUsers;
 }

@@ -5,6 +5,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.framework.core.utils.tree.TreeUtils;
@@ -30,7 +31,7 @@ public class BizDeptServiceImpl implements BizDeptService {
 
     @Override
     public List<DeptTreeNodeVO> orgList() {
-        List<SysDept> all = sysDeptService.list();
+        List<DeptWithManagerVO> all = sysDeptService.listWithManager();
         List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptTrans::to).toList();

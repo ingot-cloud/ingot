@@ -7,6 +7,8 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * <p>
  * Mapper 接口
@@ -30,4 +32,11 @@ public interface SysRoleUserMapper extends BaseMapper<SysRoleUser> {
                                 @Param("isBind") boolean isBind,
                                 @Param("condition") SysUser condition);
 
+    /**
+     * 获取角色绑定的用户列表
+     *
+     * @param roleId 角色ID
+     * @return {@link SysUser}
+     */
+    List<SysUser> getRoleUserList(@Param("roleId") long roleId);
 }

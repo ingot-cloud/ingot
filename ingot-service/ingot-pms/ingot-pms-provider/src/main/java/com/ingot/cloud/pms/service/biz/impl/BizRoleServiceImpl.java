@@ -74,7 +74,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         long roleId = params.getId();
         List<Long> bindList = params.getBindIds();
         SysRole role = sysRoleService.getById(roleId);
-        assertionChecker.checkOperation(!StrUtil.equals(role.getCode(), RoleConstants.ROLE_MANAGER_CODE),
+        assertionChecker.checkOperation(!StrUtil.equals(role.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
                 "BizRoleServiceImpl.CantOperateManager");
 
         List<Long> authorities = CollUtil.emptyIfNull(AuthorityUtils.getOrgAuthorities(
@@ -92,7 +92,7 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public void orgRoleBindUsers(RelationDTO<Long, Long> params) {
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_MANAGER_CODE);
+        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
         long roleId = params.getId();
         assertionChecker.checkOperation(roleId != managerRole.getId(),
                 "BizRoleServiceImpl.CantOperateManager");
@@ -106,7 +106,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         long opsUserId = SecurityAuthContext.getUser().getId();
         if (opsUserId == userId) {
             ensureRoles(userId, roles, RoleConstants.ROLE_ADMIN_CODE);
-            ensureRoles(userId, roles, RoleConstants.ROLE_MANAGER_CODE);
+            ensureRoles(userId, roles, RoleConstants.ROLE_ORG_ADMIN_CODE);
         }
 
         sysRoleUserService.setUserRoles(userId, roles);

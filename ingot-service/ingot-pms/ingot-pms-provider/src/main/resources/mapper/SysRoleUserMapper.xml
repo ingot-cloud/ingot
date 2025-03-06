@@ -21,7 +21,13 @@
         <if test="condition.username != null and condition.username != ''">
             AND LOCATE(#{condition.username}, u.username) > 0
         </if>
-        ORDER BY u.created_at ASC
+        ORDER BY u.id ASC
     </select>
 
+    <select id="getRoleUserList" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
+        SELECT u.*
+        FROM sys_user AS u
+                 INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
+        WHERE ru.role_id = #{roleId}
+    </select>
 </mapper>

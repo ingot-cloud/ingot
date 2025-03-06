@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.transform;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 
@@ -15,4 +16,7 @@ import org.mapstruct.Mapper;
 public interface DeptTrans {
 
     DeptTreeNodeVO to(SysDept params);
+
+    DeptTreeNodeVO to(DeptWithManagerVO params);
+
 }

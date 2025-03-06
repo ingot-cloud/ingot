@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.domain;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
 import java.util.List;
@@ -16,6 +17,12 @@ import java.util.List;
  * @since 2020-11-20
  */
 public interface SysDeptService extends BaseService<SysDept> {
+
+    /**
+     * 获取部门列表，并且返回每个部门的管理员信息
+     * @return {@link DeptWithManagerVO}
+     */
+    List<DeptWithManagerVO> listWithManager();
 
     /**
      * 获取部门tree
