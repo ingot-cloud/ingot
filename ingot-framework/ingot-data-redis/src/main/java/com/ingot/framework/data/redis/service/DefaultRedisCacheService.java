@@ -33,7 +33,11 @@ public class DefaultRedisCacheService implements RedisCacheService {
         if (target == null) {
             return null;
         }
-        return (T) target;
+        try {
+            return (T) target;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
