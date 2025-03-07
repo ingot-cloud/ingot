@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.data.redis.service.DefaultRedisCacheService;
+import com.ingot.framework.data.redis.service.RedisCacheService;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -64,5 +66,10 @@ public class InRedisTemplateConfiguration {
         template.setConnectionFactory(factory);
         template.afterPropertiesSet();
         return template;
+    }
+
+    @Bean
+    public RedisCacheService redisCacheService(RedisTemplate<String, Object> redisTemplate) {
+        return new DefaultRedisCacheService(redisTemplate);
     }
 }
