@@ -19,17 +19,17 @@ public class DefaultRedisCacheService implements RedisCacheService {
 
     @Override
     public void cache(String key, Object value) {
-        redisTemplate.opsForValue().set(key, value);
+        redisTemplate.opsForValue().set(RedisUtils.getCacheName(key), value);
     }
 
     @Override
     public void cache(String key, Object value, long timeout, TimeUnit unit) {
-        redisTemplate.opsForValue().set(key, value, timeout, unit);
+        redisTemplate.opsForValue().set(RedisUtils.getCacheName(key), value, timeout, unit);
     }
 
     @Override
     public <T> T get(String key) {
-        Object target = redisTemplate.opsForValue().get(key);
+        Object target = redisTemplate.opsForValue().get(RedisUtils.getCacheName(key));
         if (target == null) {
             return null;
         }
@@ -38,7 +38,7 @@ public class DefaultRedisCacheService implements RedisCacheService {
 
     @Override
     public void delete(String key) {
-        redisTemplate.delete(key);
+        redisTemplate.delete(RedisUtils.getCacheName(key));
     }
 
     @Override
