@@ -74,6 +74,14 @@ public interface SysRoleService extends BaseService<SysRole> {
     SysRole getRoleByCode(String code);
 
     /**
+     * 根据角色编码获取角色
+     *
+     * @param codes 角色编码列表
+     * @return {@link SysRole}
+     */
+    List<SysRole> getRoleListByCodes(List<String> codes);
+
+    /**
      * 创建角色
      *
      * @param params  创建参数

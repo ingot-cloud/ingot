@@ -25,14 +25,13 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.PageUtils;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.redis.service.RedisCacheService;
 import com.ingot.framework.security.common.utils.RoleUtils;
-import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -51,12 +50,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysRoleUserService sysRoleUserService;
     private final SysRoleGroupService sysRoleGroupService;
+    private final RedisCacheService redisCacheService;
 
     private final AssertionChecker assertI18nService;
     private final RoleTrans roleTrans;
     private final BizIdGen bizIdGen;
-
-    private final Map<String, SysRole> roleCache = new ConcurrentHashMap<>();
 
     @Override
     public List<SysRole> getRolesOfUser(long userId) {
@@ -140,16 +138,37 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
     @Override
     public SysRole getRoleByCode(String code) {
-        Long orgId = TenantContextHolder.get();
-        SysRole role = roleCache.get(orgId + code);
+        SysRole role = redisCacheService.get(code);
         if (role == null) {
             role = getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getCode, code));
             if (role != null) {
-                roleCache.put(orgId + code, role);
+                redisCacheService.cache(code, role);
             }
         }
 
         return role;
+    }
+
+    @Override
+    public List<SysRole> getRoleListByCodes(List<String> codes) {
+        List<SysRole> result = new ArrayList<>();
+        List<String> notCachedCodes = new ArrayList<>();
+        for (String code : codes) {
+            SysRole role = redisCacheService.get(code);
+            if (role != null) {
+                result.add(role);
+            } else {
+                notCachedCodes.add(code);
+            }
+        }
+
+        if (CollUtil.isNotEmpty(notCachedCodes)) {
+            List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
+                    .in(SysRole::getCode, notCachedCodes));
+            result.addAll(roles);
+        }
+
+        return result;
     }
 
     @Override
@@ -202,7 +221,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(removeById(id),
                 "SysRoleServiceImpl.RemoveFailed");
 
-        roleCache.remove(TenantContextHolder.get() + role.getCode());
+        redisCacheService.delete(role.getCode());
     }
 
     @Override
@@ -229,7 +248,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
 
-        roleCache.remove(TenantContextHolder.get() + role.getCode());
+        redisCacheService.delete(role.getCode());
     }
 
     @Override
