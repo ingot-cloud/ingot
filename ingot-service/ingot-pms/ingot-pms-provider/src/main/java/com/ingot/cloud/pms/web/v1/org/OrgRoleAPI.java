@@ -63,6 +63,8 @@ public class OrgRoleAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
+        // 组织创建角色，角色不能为部门角色
+        params.setFilterDept(Boolean.FALSE);
         sysRoleService.createRole(params, false);
         return ok();
     }
@@ -70,6 +72,8 @@ public class OrgRoleAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"contacts:role:w"})
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
+        // 组织更新角色，角色不能更新为部门角色
+        params.setFilterDept(null);
         sysRoleService.updateRoleById(params, false);
         return ok();
     }
