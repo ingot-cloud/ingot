@@ -40,6 +40,10 @@ public class RolePageItemVO implements Serializable {
      */
     private OrgTypeEnums type;
     /**
+     * 是否过滤部门
+     */
+    private Boolean filterDept;
+    /**
      * 角色状态
      */
     private CommonStatusEnum status;

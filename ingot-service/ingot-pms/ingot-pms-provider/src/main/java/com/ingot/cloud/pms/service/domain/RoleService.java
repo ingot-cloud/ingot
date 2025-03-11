@@ -88,6 +88,7 @@ public interface RoleService {
                         itemVo.setId(role.getId());
                         itemVo.setName(role.getName());
                         itemVo.setType(role.getType());
+                        itemVo.setFilterDept(role.getFilterDept());
                         itemVo.setGroupId(item.getId());
                         itemVo.setStatus(role.getStatus());
                         itemVo.setCode(role.getCode());
