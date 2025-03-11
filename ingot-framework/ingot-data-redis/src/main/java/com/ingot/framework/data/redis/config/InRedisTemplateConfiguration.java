@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ingot.framework.core.jackson.IngotJavaTimeModule;
+import com.ingot.framework.core.jackson.IngotModule;
 import com.ingot.framework.data.redis.service.DefaultRedisCacheService;
 import com.ingot.framework.data.redis.service.RedisCacheService;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -54,6 +57,7 @@ public class InRedisTemplateConfiguration {
         om.activateDefaultTyping(om.getPolymorphicTypeValidator(),
                 ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_ARRAY);
         om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        om.registerModules(new IngotModule(), new JavaTimeModule(), new IngotJavaTimeModule());
 
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
                 new Jackson2JsonRedisSerializer<>(om, Object.class);
