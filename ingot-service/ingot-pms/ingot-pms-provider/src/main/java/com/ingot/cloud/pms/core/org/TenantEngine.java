@@ -13,11 +13,13 @@ import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.data.redis.utils.RedisUtils;
 import com.ingot.framework.security.common.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -52,6 +54,7 @@ public class TenantEngine {
     private final TenantProperties tenantProperties;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 创建租户
@@ -255,6 +258,8 @@ public class TenantEngine {
             appRoleService.remove(Wrappers.<AppRole>lambdaQuery()
                     .eq(AppRole::getTenantId, id));
 
+            // clear cache
+            RedisUtils.deleteKeys(redisTemplate, ListUtil.list(false, "*"));
         });
     }
 }
