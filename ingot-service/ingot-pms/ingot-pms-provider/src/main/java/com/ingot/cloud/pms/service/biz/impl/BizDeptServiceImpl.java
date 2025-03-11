@@ -258,12 +258,18 @@ public class BizDeptServiceImpl implements BizDeptService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void orgDeleteDept(long id) {
         SysDept main = sysDeptService.getMainDept();
         // 不能删除主部门
         assertionChecker.checkOperation(id != main.getId(),
                 "BizDeptServiceImpl.deleteError");
         sysDeptService.removeDeptById(id);
+
+        // 删除改部门关联数据
+        sysRoleUserDeptService.remove(Wrappers.<SysRoleUserDept>lambdaQuery()
+                .eq(SysRoleUserDept::getDeptId, id));
+
     }
 
     @Override

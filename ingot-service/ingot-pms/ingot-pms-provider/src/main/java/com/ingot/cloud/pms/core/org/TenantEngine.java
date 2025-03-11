@@ -42,6 +42,7 @@ public class TenantEngine {
     private final SysUserTenantService sysUserTenantService;
     private final SysUserDeptService sysUserDeptService;
     private final SysRoleUserService sysRoleUserService;
+    private final SysRoleUserDeptService sysRoleUserDeptService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysMenuService sysMenuService;
     private final AppUserTenantService appUserTenantService;
@@ -195,41 +196,22 @@ public class TenantEngine {
     @CacheEvict(value = {CacheConstants.MENU_DETAILS, CacheConstants.AUTHORITY_DETAILS}, allEntries = true)
     public void destroy(long id) {
         TenantEnv.runAs(id, () -> {
-            // 系统用户id
-            List<Long> sysUserIdList = sysUserTenantService.list(
-                            Wrappers.<SysUserTenant>lambdaQuery()
-                                    .eq(SysUserTenant::getTenantId, id))
-                    .stream().map(SysUserTenant::getUserId).toList();
-
             // 系统用户取消关联组织
             sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
                     .eq(SysUserTenant::getTenantId, id));
 
-            if (CollUtil.isNotEmpty(sysUserIdList)) {
-                // 取消关联部门
-                sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
-                        .in(SysUserDept::getUserId, sysUserIdList));
-                // 取消关联角色
-                sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
-                        .in(SysRoleUser::getUserId, sysUserIdList));
-            }
-
-
-            // app用户ID
-            List<Long> appUserIdList = appUserTenantService.list(
-                            Wrappers.<AppUserTenant>lambdaQuery()
-                                    .eq(AppUserTenant::getTenantId, id))
-                    .stream().map(AppUserTenant::getUserId).toList();
+            // 取消组织用户关联部门
+            sysUserDeptService.remove(Wrappers.lambdaQuery());
+            // 取消组织用户关联角色
+            sysRoleUserService.remove(Wrappers.lambdaQuery());
+            // 取消组织角色用户部门关联关系
+            sysRoleUserDeptService.remove(Wrappers.lambdaQuery());
 
             // app用户取消关联组织信息
             appUserTenantService.remove(Wrappers.<AppUserTenant>lambdaQuery()
                     .eq(AppUserTenant::getTenantId, id));
-
-            if (CollUtil.isNotEmpty(appUserIdList)) {
-                // 取消关联角色
-                appRoleUserService.remove(Wrappers.<AppRoleUser>lambdaQuery()
-                        .in(AppRoleUser::getUserId, appUserIdList));
-            }
+            // 取消关联角色
+            appRoleUserService.remove(Wrappers.lambdaQuery());
 
             // 移除组织
             sysTenantService.removeTenantById(id);
@@ -242,18 +224,13 @@ public class TenantEngine {
             // 移除应用
             sysApplicationTenantService.remove(Wrappers.lambdaQuery());
 
-            // 移除角色相关
-            List<Long> roleIds = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
-                    .eq(SysRole::getTenantId, id)).stream().map(SysRole::getId).toList();
-
             sysRoleService.remove(Wrappers.<SysRole>lambdaQuery()
                     .eq(SysRole::getTenantId, id));
 
             sysRoleGroupService.remove(Wrappers.<SysRoleGroup>lambdaQuery()
                     .eq(SysRoleGroup::getTenantId, id));
 
-            sysRoleAuthorityService.remove(Wrappers.<SysRoleAuthority>lambdaQuery()
-                    .in(SysRoleAuthority::getRoleId, roleIds));
+            sysRoleAuthorityService.remove(Wrappers.lambdaQuery());
 
             appRoleService.remove(Wrappers.<AppRole>lambdaQuery()
                     .eq(AppRole::getTenantId, id));
