@@ -26,11 +26,62 @@ import java.util.List;
 @Service
 public class AppRoleUserServiceImpl extends CommonRoleRelationService<AppRoleUserMapper, AppRoleUser, Long> implements AppRoleUserService {
 
-    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<AppRoleUser>lambdaQuery()
-            .eq(AppRoleUser::getRoleId, roleId)
-            .eq(AppRoleUser::getUserId, targetId));
-    private final Do<Long> bind = (roleId, targetId) -> {
-        getBaseMapper().insertIgnore(roleId, targetId);
+    private final RoleBindTargets<Long> removeRbt = (roleId, targetIds) -> {
+        if (CollUtil.size(targetIds) == 1) {
+            return remove(Wrappers.<AppRoleUser>lambdaQuery()
+                    .eq(AppRoleUser::getRoleId, roleId)
+                    .eq(AppRoleUser::getUserId, targetIds.get(0)));
+        }
+
+        return remove(Wrappers.<AppRoleUser>lambdaQuery()
+                .eq(AppRoleUser::getRoleId, roleId)
+                .in(AppRoleUser::getUserId, targetIds.get(0)));
+    };
+    private final RoleBindTargets<Long> bindRbt = (roleId, targetIds) -> {
+        if (CollUtil.size(targetIds) == 1) {
+            AppRoleUser roleUser = new AppRoleUser();
+            roleUser.setRoleId(roleId);
+            roleUser.setUserId(targetIds.get(0));
+            save(roleUser);
+            return true;
+        }
+
+        List<AppRoleUser> roleUsers = targetIds.stream().map(targetId -> {
+            AppRoleUser roleUser = new AppRoleUser();
+            roleUser.setRoleId(roleId);
+            roleUser.setUserId(targetId);
+            return roleUser;
+        }).toList();
+        saveBatch(roleUsers);
+        return true;
+    };
+    private final TargetBindRoles<Long> removeTbr = (targetId, roleIds) -> {
+        if (CollUtil.size(roleIds) == 1) {
+            return remove(Wrappers.<AppRoleUser>lambdaQuery()
+                    .eq(AppRoleUser::getRoleId, roleIds.get(0))
+                    .eq(AppRoleUser::getUserId, targetId));
+        }
+
+        return remove(Wrappers.<AppRoleUser>lambdaQuery()
+                .in(AppRoleUser::getRoleId, roleIds)
+                .eq(AppRoleUser::getUserId, targetId));
+    };
+    private final TargetBindRoles<Long> bindTbr = (targetId, roleIds) -> {
+        if (CollUtil.size(roleIds) == 1) {
+            AppRoleUser roleUser = new AppRoleUser();
+            roleUser.setRoleId(roleIds.get(0));
+            roleUser.setUserId(targetId);
+            save(roleUser);
+            return true;
+        }
+
+        List<AppRoleUser> roleUsers = roleIds.stream().map(roleId -> {
+            AppRoleUser roleUser = new AppRoleUser();
+            roleUser.setRoleId(roleId);
+            roleUser.setUserId(targetId);
+            return roleUser;
+        }).toList();
+        saveBatch(roleUsers);
         return true;
     };
 
@@ -69,14 +120,14 @@ public class AppRoleUserServiceImpl extends CommonRoleRelationService<AppRoleUse
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void userBindRoles(RelationDTO<Long, Long> params) {
-        bindRoles(params, remove, bind,
+        bindRoles(params, removeTbr, bindTbr,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindUsers(RelationDTO<Long, Long> params) {
-        bindTargets(params, remove, bind,
+        bindTargets(params, removeRbt, bindRbt,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 

@@ -30,4 +30,24 @@
                  INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
         WHERE ru.role_id = #{roleId}
     </select>
+
+    <select id="getRoleUserWithDeptList" resultType="com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO">
+        SELECT u.*,
+               rud.dept_id AS deptId
+        FROM sys_user AS u
+                 INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
+                 INNER JOIN sys_role_user_dept AS rud ON rud.role_user_id = ru.id
+        WHERE ru.role_id = #{roleId}
+    </select>
+
+    <select id="getRoleListUsers" resultType="com.ingot.cloud.pms.api.model.domain.SysUser">
+        SELECT u.*
+        FROM sys_user AS u
+                 INNER JOIN sys_role_user AS ru ON ru.user_id = u.id
+        WHERE ru.role_id IN
+        <foreach collection="roleIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
 </mapper>

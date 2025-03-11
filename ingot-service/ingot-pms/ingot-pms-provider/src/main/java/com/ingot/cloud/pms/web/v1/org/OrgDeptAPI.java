@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.web.v1.org;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -32,14 +32,14 @@ public class OrgDeptAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @PostMapping
-    public R<?> create(@Validated(Group.Create.class) @RequestBody SysDept params) {
+    public R<?> create(@Validated(Group.Create.class) @RequestBody DeptWithManagerDTO params) {
         bizDeptService.orgCreateDept(params);
         return ok();
     }
 
     @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @PutMapping
-    public R<?> update(@Validated(Group.Update.class) @RequestBody SysDept params) {
+    public R<?> update(@Validated(Group.Update.class) @RequestBody DeptWithManagerDTO params) {
         bizDeptService.orgUpdateDept(params);
         return ok();
     }

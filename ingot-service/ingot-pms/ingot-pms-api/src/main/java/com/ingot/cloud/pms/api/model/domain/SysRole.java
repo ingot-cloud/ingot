@@ -71,6 +71,11 @@ public class SysRole extends BaseModel<SysRole> {
     private OrgTypeEnums type;
 
     /**
+     * 是否过滤部门
+     */
+    private Boolean filterDept;
+
+    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;

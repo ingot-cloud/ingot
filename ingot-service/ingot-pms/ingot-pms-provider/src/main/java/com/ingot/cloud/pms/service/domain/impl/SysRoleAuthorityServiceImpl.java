@@ -41,14 +41,62 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
     private final AuthorityTrans authorityTrans;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private final Do<Long> remove = (roleId, targetId) -> remove(Wrappers.<SysRoleAuthority>lambdaQuery()
-            .eq(SysRoleAuthority::getRoleId, roleId)
-            .eq(SysRoleAuthority::getAuthorityId, targetId));
-    private final Do<Long> bind = (roleId, targetId) -> {
-        SysRoleAuthority params = new SysRoleAuthority();
-        params.setRoleId(roleId);
-        params.setAuthorityId(targetId);
-        params.insert();
+    private final RoleBindTargets<Long> removeRbt = (roleId, targetIds) -> {
+        if (CollUtil.size(targetIds) == 1) {
+            return remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                    .eq(SysRoleAuthority::getRoleId, roleId)
+                    .eq(SysRoleAuthority::getAuthorityId, targetIds.get(0)));
+        }
+
+        return remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                .eq(SysRoleAuthority::getRoleId, roleId)
+                .in(SysRoleAuthority::getAuthorityId, targetIds.get(0)));
+    };
+    private final RoleBindTargets<Long> bindRbt = (roleId, targetIds) -> {
+        if (CollUtil.size(targetIds) == 1) {
+            SysRoleAuthority roleUser = new SysRoleAuthority();
+            roleUser.setRoleId(roleId);
+            roleUser.setAuthorityId(targetIds.get(0));
+            save(roleUser);
+            return true;
+        }
+
+        List<SysRoleAuthority> roleUsers = targetIds.stream().map(targetId -> {
+            SysRoleAuthority roleUser = new SysRoleAuthority();
+            roleUser.setRoleId(roleId);
+            roleUser.setAuthorityId(targetId);
+            return roleUser;
+        }).toList();
+        saveBatch(roleUsers);
+        return true;
+    };
+    private final TargetBindRoles<Long> removeTbr = (targetId, roleIds) -> {
+        if (CollUtil.size(roleIds) == 1) {
+            return remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                    .eq(SysRoleAuthority::getRoleId, roleIds.get(0))
+                    .eq(SysRoleAuthority::getAuthorityId, targetId));
+        }
+
+        return remove(Wrappers.<SysRoleAuthority>lambdaQuery()
+                .in(SysRoleAuthority::getRoleId, roleIds)
+                .eq(SysRoleAuthority::getAuthorityId, targetId));
+    };
+    private final TargetBindRoles<Long> bindTbr = (targetId, roleIds) -> {
+        if (CollUtil.size(roleIds) == 1) {
+            SysRoleAuthority roleUser = new SysRoleAuthority();
+            roleUser.setRoleId(roleIds.get(0));
+            roleUser.setAuthorityId(targetId);
+            save(roleUser);
+            return true;
+        }
+
+        List<SysRoleAuthority> roleUsers = roleIds.stream().map(roleId -> {
+            SysRoleAuthority roleUser = new SysRoleAuthority();
+            roleUser.setRoleId(roleId);
+            roleUser.setAuthorityId(targetId);
+            return roleUser;
+        }).toList();
+        saveBatch(roleUsers);
         return true;
     };
 
@@ -60,7 +108,7 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
                 ListUtil.list(false,
                         CacheConstants.AUTHORITY_DETAILS + "*"
                 ));
-        bindRoles(params, remove, bind,
+        bindRoles(params, removeTbr, bindTbr,
                 "SysRoleAuthorityServiceImpl.RemoveFailed");
     }
 

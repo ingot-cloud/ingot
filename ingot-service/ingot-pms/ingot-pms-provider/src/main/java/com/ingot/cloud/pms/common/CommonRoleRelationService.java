@@ -29,8 +29,8 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
      * 目标类型关联角色
      */
     public void bindRoles(RelationDTO<TargetID, Long> params,
-                          Do<TargetID> remove,
-                          Do<TargetID> bind,
+                          TargetBindRoles<TargetID> remove,
+                          TargetBindRoles<TargetID> bind,
                           String removeErrorMsgCode) {
         TargetID id = params.getId();
         List<Long> removeIds = params.getRemoveIds();
@@ -38,13 +38,13 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
 
         if (CollUtil.isNotEmpty(removeIds)) {
             log.debug("[CommonRoleRelationService] - 目标[{}]绑定角色 取消关联[{}]", id, removeIds);
-            boolean removeRet = removeIds.stream().allMatch(roleId -> remove.exec(roleId, id));
+            boolean removeRet = remove.exec(id, removeIds);
             assertionChecker.checkOperation(removeRet, removeErrorMsgCode);
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {
             log.debug("[CommonRoleRelationService] - 目标[{}]绑定角色 关联[{}]", id, bindIds);
-            bindIds.forEach(roleId -> bind.exec(roleId, id));
+            bind.exec(id, bindIds);
         }
     }
 
@@ -52,8 +52,8 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
      * 角色关联目标
      */
     public void bindTargets(RelationDTO<Long, TargetID> params,
-                            Do<TargetID> remove,
-                            Do<TargetID> bind,
+                            RoleBindTargets<TargetID> remove,
+                            RoleBindTargets<TargetID> bind,
                             String removeErrorMsgCode) {
         Long id = params.getId();
         List<TargetID> removeIds = params.getRemoveIds();
@@ -61,18 +61,23 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
 
         if (CollUtil.isNotEmpty(removeIds)) {
             log.debug("[CommonRoleRelationService] - 角色[{}]绑定目标 取消关联[{}]", id, removeIds);
-            boolean removeRet = removeIds.stream().allMatch(targetId -> remove.exec(id, targetId));
+            boolean removeRet = remove.exec(id, removeIds);
             assertionChecker.checkOperation(removeRet, removeErrorMsgCode);
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {
             log.debug("[CommonRoleRelationService] - 角色[{}]绑定目标 关联[{}]", id, bindIds);
-            bindIds.forEach(targetId -> bind.exec(id, targetId));
+            bind.exec(id, bindIds);
         }
     }
 
     @FunctionalInterface
-    public interface Do<TargetID> {
-        boolean exec(Long roleId, TargetID targetId);
+    public interface RoleBindTargets<TargetID> {
+        boolean exec(Long roleId, List<TargetID> targetIds);
+    }
+
+    @FunctionalInterface
+    public interface TargetBindRoles<TargetID> {
+        boolean exec(TargetID targetId, List<Long> roleIds);
     }
 }

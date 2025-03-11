@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["app_role_group"]
+        tables = ["sys_role_user_dept"]
 
         /**
          * 包名

@@ -1,20 +1,14 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
-import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.cloud.pms.service.domain.SysUserDeptService;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -22,7 +16,6 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
-import com.ingot.framework.security.common.constants.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,42 +36,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
     private final SysUserDeptService sysUserDeptService;
-    private final SysRoleService sysRoleService;
-    private final SysRoleUserService sysRoleUserService;
 
     private final DeptTrans deptTrans;
     private final AssertionChecker assertI18nService;
-
-    @Override
-    public List<DeptWithManagerVO> listWithManager() {
-        // 获取主管角色
-        SysRole role = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_MANAGER);
-        // 获取当前组织所有主管
-        List<SimpleUserVO> managerUsers = CollUtil.emptyIfNull(sysRoleUserService.getRoleUsers(role.getId()))
-                .stream().map(user -> {
-                    SimpleUserVO item = new SimpleUserVO();
-                    BeanUtil.copyProperties(user, item);
-                    return item;
-                }).toList();
-
-        return list().stream()
-                .map(dept -> {
-                    DeptWithManagerVO item = new DeptWithManagerVO();
-                    BeanUtil.copyProperties(dept, item);
-                    // 获取当前部门的主管ID
-                    List<Long> userIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
-                                    .eq(SysUserDept::getDeptId, dept.getId())))
-                            .stream()
-                            .map(SysUserDept::getUserId)
-                            .toList();
-                    item.setManagerUsers(managerUsers.stream()
-                            .filter(user -> userIds.contains(user.getId()))
-                            .toList());
-
-                    return item;
-                })
-                .toList();
-    }
 
     @Override
     public List<DeptTreeNodeVO> treeList() {

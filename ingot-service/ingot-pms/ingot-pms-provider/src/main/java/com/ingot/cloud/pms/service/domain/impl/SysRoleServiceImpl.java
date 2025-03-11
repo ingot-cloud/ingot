@@ -163,9 +163,14 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         }
 
         if (CollUtil.isNotEmpty(notCachedCodes)) {
-            List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
-                    .in(SysRole::getCode, notCachedCodes));
-            result.addAll(roles);
+            if (CollUtil.size(notCachedCodes) == 1) {
+                result.add(getOne(Wrappers.<SysRole>lambdaQuery()
+                        .eq(SysRole::getCode, notCachedCodes.get(0))));
+            } else {
+                List<SysRole> roles = list(Wrappers.<SysRole>lambdaQuery()
+                        .in(SysRole::getCode, notCachedCodes));
+                result.addAll(roles);
+            }
         }
 
         return result;

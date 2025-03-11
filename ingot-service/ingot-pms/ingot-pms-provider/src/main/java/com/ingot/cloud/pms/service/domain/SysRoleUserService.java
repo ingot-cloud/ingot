@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.data.mybatis.service.BaseService;
 
@@ -71,4 +72,20 @@ public interface SysRoleUserService extends BaseService<SysRoleUser> {
      * @return {@link SysUser}
      */
     List<SysUser> getRoleUsers(long roleId);
+
+    /**
+     * 获取指定角色用户列表，并且过滤用户，只返回和部门关联角色相关的用户
+     *
+     * @param roleId 角色ID
+     * @return {@link UserWithDeptVO}
+     */
+    List<UserWithDeptVO> getRoleUserWithDeptList(long roleId);
+
+    /**
+     * 获取指定角色列表所有人员
+     *
+     * @param roleIds 角色ID列表
+     * @return {@link SysUser}
+     */
+    List<SysUser> getRoleListUsers(List<Long> roleIds);
 }
