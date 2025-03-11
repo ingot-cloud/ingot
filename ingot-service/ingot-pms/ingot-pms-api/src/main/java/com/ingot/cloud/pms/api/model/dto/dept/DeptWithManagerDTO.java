@@ -18,5 +18,5 @@ public class DeptWithManagerDTO extends SysDept {
     /**
      * 主管ID
      */
-    private List<Long> managerUsers;
+    private List<Long> managerUserIds;
 }

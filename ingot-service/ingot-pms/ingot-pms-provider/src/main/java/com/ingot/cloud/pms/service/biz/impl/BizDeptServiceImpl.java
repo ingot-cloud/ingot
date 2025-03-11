@@ -232,11 +232,11 @@ public class BizDeptServiceImpl implements BizDeptService {
                 "BizDeptServiceImpl.createError");
         sysDeptService.createDept(params);
 
-        if (CollUtil.isEmpty(params.getManagerUsers())) {
+        if (CollUtil.isEmpty(params.getManagerUserIds())) {
             return;
         }
 
-        setDeptManager(params.getId(), params.getManagerUsers());
+        setDeptManager(params.getId(), params.getManagerUserIds());
     }
 
     @Override
@@ -250,11 +250,11 @@ public class BizDeptServiceImpl implements BizDeptService {
 
         sysDeptService.updateDept(params);
 
-        if (CollUtil.isEmpty(params.getManagerUsers())) {
+        if (CollUtil.isEmpty(params.getManagerUserIds())) {
             return;
         }
 
-        setDeptManager(params.getId(), params.getManagerUsers());
+        setDeptManager(params.getId(), params.getManagerUserIds());
     }
 
     @Override

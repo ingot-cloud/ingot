@@ -6,7 +6,7 @@
         SELECT rud.id
         FROM sys_role_user_dept AS rud
             INNER JOIN sys_role_user AS rru ON rru.id = rud.role_user_id
-        WHERE rud.deptId = #{deptId} AND rru.roleId = #{roleId}
+        WHERE rud.dept_id = #{deptId} AND rru.role_id = #{roleId}
     </select>
 
 </mapper>
