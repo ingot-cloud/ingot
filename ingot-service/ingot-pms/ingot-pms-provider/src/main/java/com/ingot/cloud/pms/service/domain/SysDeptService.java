@@ -33,6 +33,14 @@ public interface SysDeptService extends BaseService<SysDept> {
     List<DeptTreeNodeVO> treeList(SysDept condition);
 
     /**
+     * 获取部门的所有后代部门列表
+     *
+     * @param deptId 部门ID
+     * @return 后代部门列表以及当前部门
+     */
+    List<SysDept> listDescendant(Long deptId);
+
+    /**
      * 创建部门
      *
      * @param params 参数

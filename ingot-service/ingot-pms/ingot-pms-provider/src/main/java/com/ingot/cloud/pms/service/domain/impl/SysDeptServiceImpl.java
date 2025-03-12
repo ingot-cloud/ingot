@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,6 +61,20 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
         TreeUtils.compensate(tree, nodeList);
         return tree;
+    }
+
+    @Override
+    public List<SysDept> listDescendant(Long deptId) {
+        // 查询全部部门
+        List<SysDept> allDeptList = list(Wrappers.emptyWrapper());
+
+        // 递归查询所有子节点
+        List<SysDept> resDeptList = new ArrayList<>();
+        recursiveDept(allDeptList, deptId, resDeptList);
+
+        // 添加当前节点
+        resDeptList.addAll(allDeptList.stream().filter(sysDept -> deptId.equals(sysDept.getId())).toList());
+        return resDeptList;
     }
 
     @Override
@@ -134,5 +149,20 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     public List<SysUserDept> getUserDepts(long userId) {
         return sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
                 .eq(SysUserDept::getUserId, userId));
+    }
+
+    /**
+     * 递归查询所有子节点。
+     *
+     * @param allDeptList 所有部门列表
+     * @param parentId    父部门ID
+     * @param resDeptList 结果集合
+     */
+    private void recursiveDept(List<SysDept> allDeptList, Long parentId, List<SysDept> resDeptList) {
+        // 使用 Stream API 进行筛选和遍历
+        allDeptList.stream().filter(sysDept -> sysDept.getPid().equals(parentId)).forEach(sysDept -> {
+            resDeptList.add(sysDept);
+            recursiveDept(allDeptList, sysDept.getId(), resDeptList);
+        });
     }
 }
