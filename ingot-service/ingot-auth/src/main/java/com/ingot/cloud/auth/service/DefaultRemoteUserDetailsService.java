@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.service;
 
-import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
+import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultRemoteUserDetailsService implements RemoteUserDetailsService {
-    private final PmsUserAuthFeignApi pmsApi;
+    private final PmsUserDetailsService pmsApi;
 
     @Override
     public R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params) {

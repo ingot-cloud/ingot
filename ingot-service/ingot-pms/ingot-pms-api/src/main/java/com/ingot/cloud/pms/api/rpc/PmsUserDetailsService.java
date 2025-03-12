@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
  * <p>Date         : 2018/9/14.</p>
  * <p>Time         : 上午10:04.</p>
  */
-@FeignClient(contextId = "pmsUserAuthFeignApi", value = ServiceNameConstants.PMS_SERVICE)
-public interface PmsUserAuthFeignApi {
+@FeignClient(contextId = "pmsUserDetailsService", value = ServiceNameConstants.PMS_SERVICE)
+public interface PmsUserDetailsService {
 
     @PostMapping(value = "/user/details")
     R<UserDetailsResponse> getUserAuthDetails(@RequestBody UserDetailsRequest params);

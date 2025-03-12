@@ -2,7 +2,7 @@ package com.ingot.cloud.auth.config;
 
 import com.ingot.cloud.auth.service.DefaultRemoteTenantDetailsService;
 import com.ingot.cloud.auth.service.DefaultRemoteUserDetailsService;
-import com.ingot.cloud.pms.api.rpc.PmsUserAuthFeignApi;
+import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -18,12 +18,12 @@ import org.springframework.context.annotation.Configuration;
 public class DefaultSecurityConfig {
 
     @Bean
-    public RemoteUserDetailsService remoteUserDetailsService(PmsUserAuthFeignApi pmsApi) {
+    public RemoteUserDetailsService remoteUserDetailsService(PmsUserDetailsService pmsApi) {
         return new DefaultRemoteUserDetailsService(pmsApi);
     }
 
     @Bean
-    public RemoteTenantDetailsService remoteTenantDetailsService(PmsUserAuthFeignApi pmsApi) {
+    public RemoteTenantDetailsService remoteTenantDetailsService(PmsUserDetailsService pmsApi) {
         return new DefaultRemoteTenantDetailsService(pmsApi);
     }
 }
