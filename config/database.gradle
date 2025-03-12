@@ -9,7 +9,6 @@ dependencies {
     implementation(deps.spring.spring_boot.jdbc_starter)
     runtimeOnly(deps.mysql.connector)
     implementation(deps.mybatis.plus_starter)
-    implementation(deps.mybatis.spring)
     // store
     implementation project(ingot.framework_data_mybatis)
     implementation project(ingot.framework_data_redis)

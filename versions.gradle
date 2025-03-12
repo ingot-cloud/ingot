@@ -1,12 +1,12 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "3.3.3"
-versions.spring_cloud = "2023.0.3"
-versions.spring_cloud_alibaba = "2023.0.1.2"
-versions.spring_authorization_server = "1.3.1"
+versions.spring_boot = "3.4.3"
+versions.spring_cloud = "2024.0.0"
+versions.spring_cloud_alibaba = "2023.0.3.2"
+versions.spring_authorization_server = "1.4.2"
 
-versions.hutool = "5.8.31"
-versions.mybatis_plus = "3.5.6"
+versions.hutool = "5.8.36"
+versions.mybatis_plus = "3.5.10.1"
 versions.mybatis_plus_join = "1.5.2"
 versions.mybatis_spring_boot_starter = "3.0.3"
 versions.mybatis_spring = "3.0.3"
@@ -18,12 +18,12 @@ versions.swagger = "3.0.0"
 versions.commons_lang = "3.3.2"
 versions.commons_io = "2.4"
 versions.mapstruct = "1.6.2"
-versions.jackson = "2.15.2"
+versions.jackson = "2.18.2"
 versions.redisson = "3.18.1"
 versions.minio = "8.4.6"
 versions.aj_captcha = "1.3.0"
 versions.junit = "5.7.0"
-versions.lombok = "1.18.30"
+versions.lombok = "1.18.36"
 
 def spring = [:]
 def spring_boot = [:]
@@ -118,12 +118,14 @@ apache.zookeeper = "org.apache.zookeeper:zookeeper:3.4.13"
 deps.apache = apache
 
 def mybatis = [:]
-mybatis.plus_starter = "com.baomidou:mybatis-plus-boot-starter:${versions.mybatis_plus}"
+mybatis.plus_starter = "com.baomidou:mybatis-plus-spring-boot3-starter:${versions.mybatis_plus}"
 mybatis.plus_extension = "com.baomidou:mybatis-plus-extension:${versions.mybatis_plus}"
+mybatis.plus_spring = "com.baomidou:mybatis-plus-spring:${versions.mybatis_plus}"
 mybatis.plus_core = "com.baomidou:mybatis-plus-core:${versions.mybatis_plus}"
+mybatis.plus_jsqlparser = "com.baomidou:mybatis-plus-jsqlparser:${versions.mybatis_plus}"
 mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis_plus}"
 mybatis.plus_join = "com.github.yulichang:mybatis-plus-join-boot-starter:${versions.mybatis_plus_join}"
-mybatis.spring_boot_starter = "org.mybatis.spring.boot:mybatis-spring-boot-starter:${versions.mybatis_spring_boot_starter}"
+mybatis.plus_join_annotation = "com.github.yulichang:mybatis-plus-join-annotation:${versions.mybatis_plus_join}"
 mybatis.spring = "org.mybatis:mybatis-spring:${versions.mybatis_spring}"
 deps.mybatis = mybatis
 
