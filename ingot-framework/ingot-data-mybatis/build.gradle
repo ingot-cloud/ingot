@@ -2,6 +2,7 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     api(deps.mybatis.plus_extension)
+    api(deps.mybatis.plus_join)
     api(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.mybatis.plus_starter)
