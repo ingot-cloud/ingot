@@ -1,4 +1,4 @@
-package com.ingot.framework.security.common.utils;
+package com.ingot.framework.core.utils;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;

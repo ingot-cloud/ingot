@@ -12,8 +12,8 @@ import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
-import com.ingot.framework.security.common.constants.UserType;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.UserDetailsRequest;
 import com.ingot.framework.security.core.userdetails.UserDetailsResponse;
@@ -49,7 +49,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
 
     @Override
     public boolean support(UserDetailsRequest request) {
-        return request.getUserType() == UserType.APP;
+        return request.getUserType() == UserTypeEnum.APP;
     }
 
     @Override
@@ -80,14 +80,14 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
 
     public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
         return TenantEnv.applyAs(request.getTenant(), () -> {
-            SocialTypeEnums socialType = request.getSocialType();
+            SocialTypeEnum socialType = request.getSocialType();
             String socialCode = request.getSocialCode();
             String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
             return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
         });
     }
 
-    private UserDetailsResponse map(AppUser user, UserType userType, Long tenant) {
+    private UserDetailsResponse map(AppUser user, UserTypeEnum userType, Long tenant) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getTenantList(user);

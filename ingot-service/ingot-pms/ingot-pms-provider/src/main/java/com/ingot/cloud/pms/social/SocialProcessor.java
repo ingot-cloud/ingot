@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.social;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 
 /**
  * <p>Description  : SocialProcessor.</p>
@@ -13,10 +13,10 @@ public interface SocialProcessor<T> {
     /**
      * 是否支持该流程
      *
-     * @param socialType {@link SocialTypeEnums}
+     * @param socialType {@link SocialTypeEnum}
      * @return Boolean
      */
-    boolean support(SocialTypeEnums socialType);
+    boolean support(SocialTypeEnum socialType);
 
     /**
      * 执行社交流程，获取用户信息

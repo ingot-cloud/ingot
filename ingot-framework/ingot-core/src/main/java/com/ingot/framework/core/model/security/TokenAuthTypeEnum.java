@@ -1,20 +1,20 @@
-package com.ingot.framework.security.common.constants;
-
-import java.util.HashMap;
-import java.util.Map;
+package com.ingot.framework.core.model.security;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * <p>Description  : TokenAuthMethod.</p>
+ * <p>Description  : TokenAuthType.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/22.</p>
  * <p>Time         : 10:15 上午.</p>
  */
 @Getter
 @RequiredArgsConstructor
-public enum TokenAuthType {
+public enum TokenAuthTypeEnum {
     /**
      * 登录类型，默认标准类型，单点登录不互踢
      */
@@ -26,15 +26,15 @@ public enum TokenAuthType {
 
     private final String value;
 
-    private static final Map<String, TokenAuthType> valueMap = new HashMap<>();
+    private static final Map<String, TokenAuthTypeEnum> valueMap = new HashMap<>();
 
     static {
-        for (TokenAuthType item : TokenAuthType.values()) {
+        for (TokenAuthTypeEnum item : TokenAuthTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
         }
     }
 
-    public static TokenAuthType getEnum(String value) {
+    public static TokenAuthTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

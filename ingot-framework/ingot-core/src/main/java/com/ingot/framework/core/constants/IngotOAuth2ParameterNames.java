@@ -1,6 +1,6 @@
-package com.ingot.framework.security.oauth2.core.endpoint;
+package com.ingot.framework.core.constants;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 
 /**
  * <p>Description  : IngotOAuth2ParameterNames.</p>
@@ -36,7 +36,7 @@ public interface IngotOAuth2ParameterNames {
     String USER_TYPE = "user_type";
 
     /**
-     * 社交类型 {@link SocialTypeEnums}, 在请求中使用
+     * 社交类型 {@link SocialTypeEnum}, 在请求中使用
      */
     String SOCIAL_TYPE = "social_type";
 

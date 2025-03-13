@@ -1,7 +1,7 @@
-package com.ingot.framework.security.common.utils;
+package com.ingot.framework.core.utils;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 
 /**
  * <p>Description  : RoleUtils.</p>

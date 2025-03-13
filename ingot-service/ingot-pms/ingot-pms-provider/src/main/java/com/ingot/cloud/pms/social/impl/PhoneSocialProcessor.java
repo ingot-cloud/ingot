@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class PhoneSocialProcessor implements SocialProcessor<SysUser> {
     private final SysUserService sysUserService;
 
     @Override
-    public boolean support(SocialTypeEnums socialType) {
+    public boolean support(SocialTypeEnum socialType) {
         return false;
     }
 

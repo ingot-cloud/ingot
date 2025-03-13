@@ -1,6 +1,6 @@
 package com.ingot.framework.security.authentication;
 
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.context.ClientContextHolder;
 import com.ingot.framework.security.core.userdetails.IngotUser;
@@ -89,7 +89,7 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
             if (loadedUser instanceof IngotUser ingotUser) {
                 loadedUser = ingotUser.toBuilder()
                         .clientId(ClientContextHolder.get())
-                        .tokenAuthType(TokenAuthType.STANDARD.getValue())
+                        .tokenAuthType(TokenAuthTypeEnum.STANDARD.getValue())
                         .build();
             }
             return loadedUser;

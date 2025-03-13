@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Getter
 @RequiredArgsConstructor
-public enum MenuLinkTypeEnums {
+public enum MenuLinkTypeEnum {
     Default("0", "正常链接"),
     IFrame("1", "内嵌链接"),
     External("2", "外部链接");
@@ -27,22 +27,22 @@ public enum MenuLinkTypeEnums {
     private final String value;
     private final String text;
 
-    private static final Map<String, MenuLinkTypeEnums> valueMap = new HashMap<>();
-    private static final Map<String, MenuLinkTypeEnums> textMap = new HashMap<>();
+    private static final Map<String, MenuLinkTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, MenuLinkTypeEnum> textMap = new HashMap<>();
 
     static {
-        for (MenuLinkTypeEnums item : MenuLinkTypeEnums.values()) {
+        for (MenuLinkTypeEnum item : MenuLinkTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static MenuLinkTypeEnums getEnumByText(String text) {
+    public static MenuLinkTypeEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static MenuLinkTypeEnums getEnum(String value) {
+    public static MenuLinkTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

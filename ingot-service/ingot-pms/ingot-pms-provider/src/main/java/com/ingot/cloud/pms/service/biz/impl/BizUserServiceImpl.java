@@ -26,7 +26,7 @@ import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.tenant.TenantContextHolder;

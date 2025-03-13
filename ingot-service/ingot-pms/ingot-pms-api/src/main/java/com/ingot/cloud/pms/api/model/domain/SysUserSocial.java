@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.data.mybatis.config.TenantTable;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
@@ -41,7 +41,7 @@ public class SysUserSocial extends BaseModel<SysUserSocial> {
     /**
      * 渠道类型
      */
-    private SocialTypeEnums type;
+    private SocialTypeEnum type;
 
     /**
      * 渠道唯一ID

@@ -25,7 +25,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.UUIDUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;

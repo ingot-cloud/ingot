@@ -1,7 +1,7 @@
-package com.ingot.framework.security.common.utils;
+package com.ingot.framework.core.utils;
 
 import com.ingot.framework.core.constants.GlobalConstants;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 
 /**
  * <p>Description  : SocialUtils.</p>
@@ -14,7 +14,7 @@ public final class SocialUtils {
     /**
      * 生成唯一码
      *
-     * @param socialType 社交类型 {@link SocialTypeEnums}
+     * @param socialType 社交类型 {@link SocialTypeEnum}
      * @param code       社交登录code
      * @return 唯一码
      */

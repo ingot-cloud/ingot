@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
-import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;

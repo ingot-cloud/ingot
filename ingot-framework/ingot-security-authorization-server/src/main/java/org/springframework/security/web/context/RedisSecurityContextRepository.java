@@ -5,7 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.security.common.utils.SecurityUtils;
+import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;

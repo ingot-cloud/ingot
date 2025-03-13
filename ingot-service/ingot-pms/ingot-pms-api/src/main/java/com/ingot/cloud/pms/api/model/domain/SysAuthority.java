@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
@@ -70,7 +70,7 @@ public class SysAuthority extends BaseModel<SysAuthority> implements AuthorityTy
     /**
      * 权限类型
      */
-    private OrgTypeEnums type;
+    private OrgTypeEnum type;
 
     /**
      * 备注

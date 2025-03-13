@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserSocialService;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.core.SocialUtils;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,19 +29,19 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @Override
-    public boolean support(SocialTypeEnums socialType) {
-        return socialType == SocialTypeEnums.ADMIN_MINI_PROGRAM;
+    public boolean support(SocialTypeEnum socialType) {
+        return socialType == SocialTypeEnum.ADMIN_MINI_PROGRAM;
     }
 
     @Override
     public String getUniqueID(String code) {
-        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnums.ADMIN_MINI_PROGRAM, code);
+        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.ADMIN_MINI_PROGRAM, code);
     }
 
     @Override
     public SysUser getUserInfo(String uniqueID) {
         SysUserSocial userSocial = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID));
         if (userSocial == null) {
             log.debug("微信小程序未绑定openId={}", uniqueID);
@@ -54,7 +54,7 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
     @Override
     public void bind(SysUser user, String uniqueID) {
         SysUserSocial current = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID)
                 .eq(SysUserSocial::getUserId, user.getId()));
         // 如果当前存在绑定关系，那么更新绑定关系
@@ -67,7 +67,7 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
 
         SysUserSocial userSocial = new SysUserSocial();
         userSocial.setUserId(user.getId());
-        userSocial.setType(SocialTypeEnums.ADMIN_MINI_PROGRAM);
+        userSocial.setType(SocialTypeEnum.ADMIN_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
         userSocial.setBindAt(DateUtils.now());
         sysUserSocialService.save(userSocial);

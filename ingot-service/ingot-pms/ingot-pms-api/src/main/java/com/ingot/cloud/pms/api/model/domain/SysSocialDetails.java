@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.model.BaseModel;
 import lombok.Data;
@@ -69,7 +69,7 @@ public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
      * 类型
      */
     @NotNull(message = "{SysSocialDetails.type}", groups = Group.Create.class)
-    private SocialTypeEnums type;
+    private SocialTypeEnum type;
 
     /**
      * 状态, 0:正常，9:禁用

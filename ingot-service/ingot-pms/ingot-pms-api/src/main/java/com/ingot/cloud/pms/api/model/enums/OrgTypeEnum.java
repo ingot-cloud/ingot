@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Getter
 @RequiredArgsConstructor
-public enum OrgTypeEnums {
+public enum OrgTypeEnum {
     System("0", "系统默认"),
     Tenant("1", "组织"),
     Custom("9", "自定义");
@@ -27,22 +27,22 @@ public enum OrgTypeEnums {
     private final String value;
     private final String text;
 
-    private static final Map<String, OrgTypeEnums> valueMap = new HashMap<>();
-    private static final Map<String, OrgTypeEnums> textMap = new HashMap<>();
+    private static final Map<String, OrgTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, OrgTypeEnum> textMap = new HashMap<>();
 
     static {
-        for (OrgTypeEnums item : OrgTypeEnums.values()) {
+        for (OrgTypeEnum item : OrgTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static OrgTypeEnums getEnumByText(String text) {
+    public static OrgTypeEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static OrgTypeEnums getEnum(String value) {
+    public static OrgTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

@@ -10,7 +10,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -54,7 +54,7 @@ public class WechatConfiguration implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         // 获取所有小程序配置
         List<SysSocialDetails> list = sysSocialDetailsService.list(Wrappers.<SysSocialDetails>lambdaQuery()
-                .in(SysSocialDetails::getType, SocialTypeEnums.ADMIN_MINI_PROGRAM, SocialTypeEnums.APP_MINI_PROGRAM));
+                .in(SysSocialDetails::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM, SocialTypeEnum.APP_MINI_PROGRAM));
         if (CollUtil.isEmpty(list)) {
             return;
         }

@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.social.impl;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.social.SocialProcessor;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class WechatSocialProcessor implements SocialProcessor<SysUser> {
 
     @Override
-    public boolean support(SocialTypeEnums socialType) {
+    public boolean support(SocialTypeEnum socialType) {
         return false;
     }
 

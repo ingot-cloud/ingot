@@ -1,7 +1,7 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
-import com.ingot.framework.security.common.constants.UserType;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.Data;
 
@@ -26,7 +26,7 @@ public class UserDetailsRequest implements Serializable {
     /**
      * 用户类型
      */
-    private UserType userType;
+    private UserTypeEnum userType;
     /**
      * 登录的tenant，可以为空
      */
@@ -34,7 +34,7 @@ public class UserDetailsRequest implements Serializable {
     /**
      * 社交类型, {@code grantType} 为 {@link IngotAuthorizationGrantType#SOCIAL}时，不为空
      */
-    private SocialTypeEnums socialType;
+    private SocialTypeEnum socialType;
     /**
      * 社交code, {@code grantType} 为 {@link IngotAuthorizationGrantType#SOCIAL}时，不为空
      */

@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.AuthorityUtils;
@@ -19,7 +19,7 @@ import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.utils.tree.TreeNode;
 import com.ingot.framework.core.utils.tree.TreeUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
@@ -116,7 +116,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Transactional(rollbackFor = Exception.class)
     public void createRoleEffectOrg(SysRole role, boolean isAdmin) {
         sysRoleService.createRole(role, isAdmin);
-        if (role.getType() == OrgTypeEnums.Tenant) {
+        if (role.getType() == OrgTypeEnum.Tenant) {
             tenantOps.createRole(role);
         }
     }
@@ -126,7 +126,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void updateRoleEffectOrg(SysRole role, boolean isAdmin) {
         sysRoleService.updateRoleById(role, isAdmin);
         SysRole current = sysRoleService.getById(role.getId());
-        if (current.getType() == OrgTypeEnums.Tenant) {
+        if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.updateRole(role);
         }
     }
@@ -136,7 +136,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void removeRoleEffectOrg(long id, boolean isAdmin) {
         SysRole current = sysRoleService.getById(id);
         sysRoleService.removeRoleById(id, isAdmin);
-        if (current.getType() == OrgTypeEnums.Tenant) {
+        if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.removeRole(current);
         }
     }
@@ -145,7 +145,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Transactional(rollbackFor = Exception.class)
     public void createRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin) {
         sysRoleService.createGroup(group, isAdmin);
-        if (group.getType() == OrgTypeEnums.Tenant) {
+        if (group.getType() == OrgTypeEnum.Tenant) {
             tenantOps.createRoleGroup(group);
         }
     }
@@ -155,7 +155,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void updateRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin) {
         sysRoleService.updateGroup(group, isAdmin);
         SysRoleGroup current = sysRoleGroupService.getById(group.getId());
-        if (current.getType() == OrgTypeEnums.Tenant) {
+        if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.updateRoleGroup(group);
         }
     }
@@ -165,7 +165,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void removeRoleGroupEffectOrg(long id, boolean isAdmin) {
         SysRoleGroup current = sysRoleGroupService.getById(id);
         sysRoleService.deleteGroup(id, isAdmin);
-        if (current.getType() == OrgTypeEnums.Tenant) {
+        if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.removeRoleGroup(current);
         }
     }
@@ -175,7 +175,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     public void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params) {
         sysRoleAuthorityService.roleBindAuthorities(params);
         SysRole current = sysRoleService.getById(params.getId());
-        if (current.getType() == OrgTypeEnums.Tenant) {
+        if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.roleBindAuthorities(params, current);
         }
     }

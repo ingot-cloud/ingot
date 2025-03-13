@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
-import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.core.MenuUtils;
 import com.ingot.cloud.pms.service.biz.BizMenuService;
 import com.ingot.cloud.pms.service.domain.SysApplicationService;
@@ -42,10 +42,10 @@ public class BizMenuServiceImpl implements BizMenuService {
     @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public void createMenu(SysMenu params) {
         if (params.getLinkType() == null) {
-            params.setLinkType(MenuLinkTypeEnums.Default);
+            params.setLinkType(MenuLinkTypeEnum.Default);
         }
         // 链接类型不是默认, 自动生成path
-        if (params.getLinkType() != MenuLinkTypeEnums.Default) {
+        if (params.getLinkType() != MenuLinkTypeEnum.Default) {
             MenuUtils.setMenuOuterLinkPath(params, params.getPid(), sysMenuService);
         }
 
@@ -118,7 +118,7 @@ public class BizMenuServiceImpl implements BizMenuService {
         }
 
         // 如果修改了链接类型，并且修改的内容不是默认类型，那么需要自动处理path
-        if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnums.Default) {
+        if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnum.Default) {
             MenuUtils.setMenuOuterLinkPath(params, current.getPid(), sysMenuService);
             // 修改为外部链接，customViewPath设置为false
             params.setCustomViewPath(Boolean.FALSE);
@@ -135,8 +135,8 @@ public class BizMenuServiceImpl implements BizMenuService {
         if (BooleanUtil.isFalse(params.getCustomViewPath())) {
             // path不为空，并且链接类型是默认类型
             if (StrUtil.isNotEmpty(params.getPath())
-                    && (params.getLinkType() == MenuLinkTypeEnums.Default
-                    || (params.getLinkType() == null && current.getLinkType() == MenuLinkTypeEnums.Default))) {
+                    && (params.getLinkType() == MenuLinkTypeEnum.Default
+                    || (params.getLinkType() == null && current.getLinkType() == MenuLinkTypeEnum.Default))) {
                 // 如果修改了路径，那么需要修改默认视图path
                 MenuUtils.setViewPathAccordingToPath(params);
             }

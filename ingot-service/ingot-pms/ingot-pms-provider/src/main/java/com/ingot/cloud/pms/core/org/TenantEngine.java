@@ -6,7 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.core.BizIdGen;
@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.data.redis.utils.RedisUtils;
-import com.ingot.framework.security.common.constants.RoleConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -88,9 +88,9 @@ public class TenantEngine {
      */
     public List<SysRole> createTenantRoles(SysTenant tenant) {
         List<SysRole> templateRoles = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
-                .eq(SysRole::getType, OrgTypeEnums.Tenant));
+                .eq(SysRole::getType, OrgTypeEnum.Tenant));
         List<SysRoleGroup> templateRoleGroups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
-                .eq(SysRoleGroup::getType, OrgTypeEnums.Tenant));
+                .eq(SysRoleGroup::getType, OrgTypeEnum.Tenant));
 
         return TenantEnv.applyAs(tenant.getId(), () -> {
             List<Long> templateGroupIds = templateRoleGroups.stream().map(SysRoleGroup::getId).toList();

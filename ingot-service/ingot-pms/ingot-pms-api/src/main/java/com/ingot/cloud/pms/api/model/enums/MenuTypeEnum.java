@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.api.model.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Description  : MenuTypeEnums.</p>
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum MenuTypeEnums {
+public enum MenuTypeEnum {
 
     Directory("0", "目录"),
     Menu("1", "菜单"),
@@ -28,16 +28,16 @@ public enum MenuTypeEnums {
     private final String value;
     private final String text;
 
-    private static final Map<String, MenuTypeEnums> valueMap = new HashMap<>();
+    private static final Map<String, MenuTypeEnum> valueMap = new HashMap<>();
 
     static {
-        for (MenuTypeEnums item : MenuTypeEnums.values()) {
+        for (MenuTypeEnum item : MenuTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
         }
     }
 
     @JsonCreator
-    public static MenuTypeEnums getEnum(String value) {
+    public static MenuTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

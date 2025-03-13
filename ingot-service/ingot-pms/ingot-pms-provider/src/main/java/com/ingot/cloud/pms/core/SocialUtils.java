@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.framework.core.constants.SocialConstants;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -25,7 +25,7 @@ public class SocialUtils {
      * @param code    小程序登录码
      * @return OpenId
      */
-    public static String getMiniProgramOpenId(SysSocialDetailsService service, SocialTypeEnums type, String code) {
+    public static String getMiniProgramOpenId(SysSocialDetailsService service, SocialTypeEnum type, String code) {
         SysSocialDetails socialDetails = service.getOne(
                 Wrappers.<SysSocialDetails>lambdaQuery()
                         .eq(SysSocialDetails::getType, type));

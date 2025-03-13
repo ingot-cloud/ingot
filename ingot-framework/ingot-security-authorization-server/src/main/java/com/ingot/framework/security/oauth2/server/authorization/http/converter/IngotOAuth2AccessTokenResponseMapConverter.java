@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;

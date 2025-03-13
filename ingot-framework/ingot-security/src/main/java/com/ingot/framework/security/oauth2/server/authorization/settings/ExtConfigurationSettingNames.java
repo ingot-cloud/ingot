@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.settings;
 
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 
 /**
  * <p>Description  : 扩展 ConfigurationSettingNames.</p>
@@ -18,7 +18,7 @@ public final class ExtConfigurationSettingNames {
      */
     public static final String CLIENT_STATUS = CLIENT_SETTINGS_NAMESPACE.concat("status");
     /**
-     * Token认证类型 {@link TokenAuthType}
+     * Token认证类型 {@link TokenAuthTypeEnum}
      */
     public static final String TOKEN_AUTH_TYPE = TOKEN_SETTINGS_NAMESPACE.concat("auth-type");
 }

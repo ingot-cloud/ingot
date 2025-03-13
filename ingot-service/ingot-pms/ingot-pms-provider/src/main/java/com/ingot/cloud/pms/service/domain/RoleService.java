@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
@@ -98,13 +98,13 @@ public interface RoleService {
         };
     }
 
-    default List<OrgTypeEnums> filterOrgTypeEnums(boolean isAdmin, RoleFilterDTO filter) {
-        List<OrgTypeEnums> roleTypeList = new ArrayList<>();
+    default List<OrgTypeEnum> filterOrgTypeEnums(boolean isAdmin, RoleFilterDTO filter) {
+        List<OrgTypeEnum> roleTypeList = new ArrayList<>();
         if (StrUtil.isNotEmpty(filter.getRoleType())) {
-            roleTypeList.add(OrgTypeEnums.getEnum(filter.getRoleType()));
+            roleTypeList.add(OrgTypeEnum.getEnum(filter.getRoleType()));
         } else {
             if (!isAdmin) {
-                roleTypeList = ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom);
+                roleTypeList = ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom);
             }
         }
         return roleTypeList;

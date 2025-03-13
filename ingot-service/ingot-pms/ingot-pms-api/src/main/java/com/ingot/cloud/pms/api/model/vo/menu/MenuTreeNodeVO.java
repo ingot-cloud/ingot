@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
-import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnums;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.core.utils.tree.TreeNode;
-import com.ingot.cloud.pms.api.model.enums.MenuTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +29,7 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
     /**
      * 菜单类型
      */
-    private MenuTypeEnums menuType;
+    private MenuTypeEnum menuType;
     /**
      * 菜单url
      */
@@ -93,11 +93,11 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
     /**
      * 菜单组织类型
      */
-    private OrgTypeEnums orgType;
+    private OrgTypeEnum orgType;
     /**
      * 链接类型
      */
-    private MenuLinkTypeEnums linkType;
+    private MenuLinkTypeEnum linkType;
     /**
      * 链接url
      */

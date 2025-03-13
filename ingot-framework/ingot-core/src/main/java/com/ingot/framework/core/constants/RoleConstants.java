@@ -1,4 +1,4 @@
-package com.ingot.framework.security.common.constants;
+package com.ingot.framework.core.constants;
 
 /**
  * <p>Description  : RoleConstants.</p>

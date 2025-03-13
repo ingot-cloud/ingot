@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.common.wechat.WechatProperties;
 import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.cloud.pms.service.biz.LoginService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -67,7 +67,7 @@ public class LoginServiceImpl implements LoginService {
             fillWechatData(service, params);
         }
 
-        params.setType(SocialTypeEnums.APP_MINI_PROGRAM);
+        params.setType(SocialTypeEnum.APP_MINI_PROGRAM);
         register(params);
     }
 
@@ -83,7 +83,7 @@ public class LoginServiceImpl implements LoginService {
             fillWechatData(service, params);
         }
 
-        params.setType(SocialTypeEnums.ADMIN_MINI_PROGRAM);
+        params.setType(SocialTypeEnum.ADMIN_MINI_PROGRAM);
         register(params);
     }
 

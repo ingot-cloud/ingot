@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
@@ -105,7 +105,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         try {
             UserDetails loadedUser = this.getUserDetailsServiceManager().loadUser(authentication);
             // 填充客户端信息
-            TokenAuthType tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
+            TokenAuthTypeEnum tokenAuthType = RegisteredClientOps.of(registeredClient).getTokenAuthType();
             if (loadedUser instanceof IngotUser ingotUser) {
                 loadedUser = ingotUser.toBuilder()
                         .clientId(registeredClient.getClientId())

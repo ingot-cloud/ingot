@@ -12,7 +12,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
@@ -26,7 +26,7 @@ import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.PageUtils;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
 import com.ingot.framework.data.redis.service.RedisCacheService;
-import com.ingot.framework.security.common.utils.RoleUtils;
+import com.ingot.framework.core.utils.RoleUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -75,7 +75,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     public List<Option<Long>> options(boolean isAdmin) {
         return list(Wrappers.<SysRole>lambdaQuery()
                 .in(!isAdmin, SysRole::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom))
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom))
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
                 .map(roleTrans::option).collect(Collectors.toList());
@@ -85,17 +85,17 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     public List<RolePageItemVO> conditionList(SysRole condition, boolean isAdmin) {
         LambdaQueryWrapper<SysRole> query = Wrappers.lambdaQuery(condition)
                 .in(!isAdmin, SysRole::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom));
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom));
         List<SysRole> temp = list(query);
         List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
                 .in(!isAdmin, SysRoleGroup::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom)));
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom)));
         return temp.stream().map(sysToRolePageItemMap(roleTrans, groups)).toList();
     }
 
     @Override
     public List<RoleGroupItemVO> groupRoleList(boolean isAdmin, RoleFilterDTO filter) {
-        List<OrgTypeEnums> roleTypeList = filterOrgTypeEnums(isAdmin, filter);
+        List<OrgTypeEnum> roleTypeList = filterOrgTypeEnums(isAdmin, filter);
 
         List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
                 .orderByAsc(ListUtil.list(false, SysRoleGroup::getSort, SysRoleGroup::getId))
@@ -121,7 +121,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 .like(StrUtil.isNotEmpty(condition.getName()), SysRole::getName, condition.getName())
                 .like(StrUtil.isNotEmpty(condition.getCode()), SysRole::getCode, condition.getCode())
                 .in(!isAdmin, SysRole::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom));
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom));
         IPage<SysRole> temp = page(page, query);
 
         List<SysRoleGroup> groups = sysRoleGroupService.list();
@@ -184,7 +184,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         // 非超管只能创建自定义角色
         if (!isAdmin || params.getType() == null) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
         }
         if (!isAdmin || StrUtil.isEmpty(params.getCode())) {
             params.setCode(bizIdGen.genOrgSysRoleCode());
@@ -207,7 +207,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         // 非超管只能删除自定义角色
         if (!isAdmin) {
-            assertI18nService.checkOperation(role.getType() == OrgTypeEnums.Custom,
+            assertI18nService.checkOperation(role.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.DefaultRemoveFailed");
         }
 
@@ -236,7 +236,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.NonExist");
 
         if (!isAdmin) {
-            assertI18nService.checkOperation(role.getType() == OrgTypeEnums.Custom,
+            assertI18nService.checkOperation(role.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.UpdateFailed");
         }
 
@@ -276,10 +276,10 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     @Override
     public void createGroup(SysRoleGroup params, boolean isAdmin) {
         if (params.getType() == null) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
         }
         if (!isAdmin) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
             params.setTenantId(null);
             params.setSort(null);
         }
@@ -297,7 +297,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.GroupNotExisted");
 
         if (!isAdmin) {
-            assertI18nService.checkOperation(group.getType() == OrgTypeEnums.Custom,
+            assertI18nService.checkOperation(group.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.GroupUpdateFailed");
         }
 
@@ -317,7 +317,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                 "SysRoleServiceImpl.GroupHasChild");
 
         if (!isAdmin) {
-            assertI18nService.checkOperation(group.getType() == OrgTypeEnums.Custom,
+            assertI18nService.checkOperation(group.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.GroupOpsError");
         }
 

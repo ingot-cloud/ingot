@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 import cn.hutool.core.util.NumberUtil;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.IngotUser;
-import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;

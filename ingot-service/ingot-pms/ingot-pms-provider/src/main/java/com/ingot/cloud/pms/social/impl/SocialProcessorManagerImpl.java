@@ -4,7 +4,7 @@ import com.ingot.cloud.pms.common.PmsMessageSource;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.error.exception.IllegalOperationException;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public class SocialProcessorManagerImpl implements SocialProcessorManager {
 
     @Override
     @SuppressWarnings({"rawtypes"})
-    public String getUniqueID(SocialTypeEnums socialType, String code) {
+    public String getUniqueID(SocialTypeEnum socialType, String code) {
         for (SocialProcessor processor : socialProcessorList) {
             if (processor.support(socialType)) {
                 return processor.getUniqueID(code);
@@ -35,7 +35,7 @@ public class SocialProcessorManagerImpl implements SocialProcessorManager {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> T getUserInfo(SocialTypeEnums socialType, String uniqueID) {
+    public <T> T getUserInfo(SocialTypeEnum socialType, String uniqueID) {
         for (SocialProcessor processor : socialProcessorList) {
             if (processor.support(socialType)) {
                 return (T) processor.getUserInfo(uniqueID);
@@ -47,7 +47,7 @@ public class SocialProcessorManagerImpl implements SocialProcessorManager {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> void bind(SocialTypeEnums socialType, T user, String uniqueID) {
+    public <T> void bind(SocialTypeEnum socialType, T user, String uniqueID) {
         for (SocialProcessor processor : socialProcessorList) {
             if (processor.support(socialType)) {
                 processor.bind(user, uniqueID);

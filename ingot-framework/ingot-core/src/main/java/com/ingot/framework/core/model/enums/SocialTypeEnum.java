@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Getter
 @RequiredArgsConstructor
-public enum SocialTypeEnums {
+public enum SocialTypeEnum {
     ADMIN_SMS("admin_sms", "短信登录"),
     ADMIN_WECHAT("admin_wechat", "微信登录"),
     ADMIN_MINI_PROGRAM("admin_miniprogram", "微信小程序"),
@@ -31,21 +31,21 @@ public enum SocialTypeEnums {
     private final String value;
     private final String text;
 
-    private static final Map<String, SocialTypeEnums> valueMap = new HashMap<>();
+    private static final Map<String, SocialTypeEnum> valueMap = new HashMap<>();
 
     static {
-        for (SocialTypeEnums item : SocialTypeEnums.values()) {
+        for (SocialTypeEnum item : SocialTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
         }
     }
 
     @JsonCreator
-    public static SocialTypeEnums get(String value) {
+    public static SocialTypeEnum get(String value) {
         return valueMap.get(value);
     }
 
     public static String getText(String value) {
-        SocialTypeEnums en = get(value);
+        SocialTypeEnum en = get(value);
         return en != null ? en.text : null;
     }
 }

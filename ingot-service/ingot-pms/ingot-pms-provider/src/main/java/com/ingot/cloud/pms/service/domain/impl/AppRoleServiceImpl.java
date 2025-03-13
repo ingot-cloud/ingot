@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.RoleTrans;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
@@ -85,7 +85,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
     public List<Option<Long>> options(boolean isAdmin) {
         return list(Wrappers.<AppRole>lambdaQuery()
                 .in(!isAdmin, AppRole::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom))
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom))
                 .eq(AppRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
                 .map(roleTrans::option).collect(Collectors.toList());
@@ -95,17 +95,17 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
     public List<RolePageItemVO> conditionList(AppRole condition, boolean isAdmin) {
         LambdaQueryWrapper<AppRole> query = Wrappers.lambdaQuery(condition)
                 .in(!isAdmin, AppRole::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom));
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom));
         List<AppRole> temp = list(query);
         List<AppRoleGroup> groups = appRoleGroupService.list(Wrappers.<AppRoleGroup>lambdaQuery()
                 .in(!isAdmin, AppRoleGroup::getType,
-                        ListUtil.list(false, OrgTypeEnums.Tenant, OrgTypeEnums.Custom)));
+                        ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom)));
         return temp.stream().map(appToRolePageItemMap(roleTrans, groups)).toList();
     }
 
     @Override
     public List<RoleGroupItemVO> groupRoleList(boolean isAdmin, RoleFilterDTO filter) {
-        List<OrgTypeEnums> roleTypeList = filterOrgTypeEnums(isAdmin, filter);
+        List<OrgTypeEnum> roleTypeList = filterOrgTypeEnums(isAdmin, filter);
 
         List<AppRoleGroup> groups = appRoleGroupService.list(Wrappers.<AppRoleGroup>lambdaQuery()
                 .orderByAsc(ListUtil.list(false, AppRoleGroup::getSort, AppRoleGroup::getId))
@@ -126,7 +126,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
 
         // 非超管只能创建自定义角色
         if (!isAdmin || params.getType() == null) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
         }
         if (!isAdmin || StrUtil.isEmpty(params.getCode())) {
             params.setCode(bizIdGen.genOrgAppRoleCode());
@@ -146,7 +146,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
 
         // 非超管只能删除自定义角色
         if (!isAdmin) {
-            assertionChecker.checkOperation(role.getType() == OrgTypeEnums.Custom,
+            assertionChecker.checkOperation(role.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.DefaultRemoveFailed");
         }
 
@@ -169,7 +169,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
                 "SysRoleServiceImpl.NonExist");
 
         if (!isAdmin) {
-            assertionChecker.checkOperation(role.getType() == OrgTypeEnums.Custom,
+            assertionChecker.checkOperation(role.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.UpdateFailed");
         }
 
@@ -204,10 +204,10 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
     @Override
     public void createGroup(AppRoleGroup params, boolean isAdmin) {
         if (params.getType() == null) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
         }
         if (!isAdmin) {
-            params.setType(OrgTypeEnums.Custom);
+            params.setType(OrgTypeEnum.Custom);
             params.setTenantId(null);
             params.setSort(null);
         }
@@ -225,7 +225,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
                 "SysRoleServiceImpl.GroupNotExisted");
 
         if (!isAdmin) {
-            assertionChecker.checkOperation(group.getType() == OrgTypeEnums.Custom,
+            assertionChecker.checkOperation(group.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.GroupUpdateFailed");
         }
 
@@ -245,7 +245,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
                 "SysRoleServiceImpl.GroupHasChild");
 
         if (!isAdmin) {
-            assertionChecker.checkOperation(group.getType() == OrgTypeEnums.Custom,
+            assertionChecker.checkOperation(group.getType() == OrgTypeEnum.Custom,
                     "SysRoleServiceImpl.GroupOpsError");
         }
 

@@ -1,4 +1,4 @@
-package com.ingot.framework.security.common.constants;
+package com.ingot.framework.core.model.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -16,7 +16,7 @@ import java.util.Map;
  */
 @Getter
 @RequiredArgsConstructor
-public enum UserType {
+public enum UserTypeEnum {
     ADMIN("0", "管理用户"),
     APP("1", "app用户");
 
@@ -24,22 +24,22 @@ public enum UserType {
     private final String value;
     private final String text;
 
-    private static final Map<String, UserType> valueMap = new HashMap<>();
-    private static final Map<String, UserType> textMap = new HashMap<>();
+    private static final Map<String, UserTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, UserTypeEnum> textMap = new HashMap<>();
 
     static {
-        for (UserType item : UserType.values()) {
+        for (UserTypeEnum item : UserTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static UserType getEnumByText(String text) {
+    public static UserTypeEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static UserType getEnum(String value) {
+    public static UserTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

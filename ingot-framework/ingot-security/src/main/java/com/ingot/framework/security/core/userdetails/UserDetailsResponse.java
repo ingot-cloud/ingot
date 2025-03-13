@@ -2,6 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.model.security.UserTypeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -16,7 +17,7 @@ import java.util.List;
 @Data
 public class UserDetailsResponse implements Serializable {
     /**
-     * 用户类型 {@link com.ingot.framework.security.common.constants.UserType}
+     * 用户类型 {@link UserTypeEnum}
      */
     private String userType;
     /**

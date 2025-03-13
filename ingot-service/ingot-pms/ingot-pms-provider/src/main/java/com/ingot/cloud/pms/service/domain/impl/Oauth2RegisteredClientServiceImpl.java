@@ -20,7 +20,7 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -117,7 +117,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         TokenSettings.Builder tokenSettingsBuilder = TokenSettings.builder();
         params.setStatus(CommonStatusEnum.ENABLE);
         if (StrUtil.isEmpty(params.getTokenAuthType())) {
-            params.setTokenAuthType(TokenAuthType.STANDARD.getValue());
+            params.setTokenAuthType(TokenAuthTypeEnum.STANDARD.getValue());
         }
         fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
 
@@ -212,7 +212,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                     SignatureAlgorithm.from(params.getIdTokenSignatureAlgorithm()));
         }
         if (StrUtil.isNotEmpty(params.getTokenAuthType())) {
-            TokenAuthType type = TokenAuthType.getEnum(params.getTokenAuthType());
+            TokenAuthTypeEnum type = TokenAuthTypeEnum.getEnum(params.getTokenAuthType());
             if (type != null) {
                 RegisteredClientOps.setTokenAuthType(tokenSettingsBuilder, type);
             }

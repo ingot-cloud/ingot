@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.types;
 
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 
 /**
@@ -30,9 +30,9 @@ public interface AuthorityType {
 
     void setStatus(CommonStatusEnum status);
 
-    OrgTypeEnums getType();
+    OrgTypeEnum getType();
 
-    void setType(OrgTypeEnums type);
+    void setType(OrgTypeEnum type);
 
     String getRemark();
 

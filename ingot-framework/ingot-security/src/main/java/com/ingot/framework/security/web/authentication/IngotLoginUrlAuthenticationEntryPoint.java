@@ -1,7 +1,7 @@
 package com.ingot.framework.security.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.oauth2.core.endpoint.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.service.domain.AppUserSocialService;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.core.SocialUtils;
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,19 +29,19 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
     private final AppUserSocialService appUserSocialService;
 
     @Override
-    public boolean support(SocialTypeEnums socialType) {
-        return socialType == SocialTypeEnums.APP_MINI_PROGRAM;
+    public boolean support(SocialTypeEnum socialType) {
+        return socialType == SocialTypeEnum.APP_MINI_PROGRAM;
     }
 
     @Override
     public String getUniqueID(String code) {
-        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnums.APP_MINI_PROGRAM, code);
+        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.APP_MINI_PROGRAM, code);
     }
 
     @Override
     public AppUser getUserInfo(String uniqueID) {
         AppUserSocial userSocial = appUserSocialService.getOne(Wrappers.<AppUserSocial>lambdaQuery()
-                .eq(AppUserSocial::getType, SocialTypeEnums.APP_MINI_PROGRAM)
+                .eq(AppUserSocial::getType, SocialTypeEnum.APP_MINI_PROGRAM)
                 .eq(AppUserSocial::getUniqueId, uniqueID));
         if (userSocial == null) {
             log.debug("微信小程序未绑定openId={}", uniqueID);
@@ -54,7 +54,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
     @Override
     public void bind(AppUser user, String uniqueID) {
         AppUserSocial current = appUserSocialService.getOne(Wrappers.<AppUserSocial>lambdaQuery()
-                .eq(AppUserSocial::getType, SocialTypeEnums.APP_MINI_PROGRAM)
+                .eq(AppUserSocial::getType, SocialTypeEnum.APP_MINI_PROGRAM)
                 .eq(AppUserSocial::getUniqueId, uniqueID)
                 .eq(AppUserSocial::getUserId, user.getId()));
         // 如果当前存在绑定关系，那么更新绑定关系
@@ -67,7 +67,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
 
         AppUserSocial userSocial = new AppUserSocial();
         userSocial.setUserId(user.getId());
-        userSocial.setType(SocialTypeEnums.APP_MINI_PROGRAM);
+        userSocial.setType(SocialTypeEnum.APP_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
         userSocial.setBindAt(DateUtils.now());
         appUserSocialService.save(userSocial);

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import lombok.Data;
 
@@ -38,7 +38,7 @@ public class RolePageItemVO implements Serializable {
     /**
      * 角色类型
      */
-    private OrgTypeEnums type;
+    private OrgTypeEnum type;
     /**
      * 是否过滤部门
      */

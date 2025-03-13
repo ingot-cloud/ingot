@@ -11,5 +11,5 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_tenant)
-    implementation project(ingot.pms_api)
+//    implementation project(ingot.pms_api)
 }

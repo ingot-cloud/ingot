@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnums;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.data.mybatis.config.TenantTable;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,5 +57,5 @@ public class AppRoleGroup extends Model<AppRoleGroup> {
      * 角色组类型
      */
     @TableField("`type`")
-    private OrgTypeEnums type;
+    private OrgTypeEnum type;
 }

@@ -4,7 +4,8 @@ import cn.hutool.core.collection.ListUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.UserTypeEnum;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,11 +38,11 @@ public class IngotUser extends User implements IngotUserDetails {
      */
     private final String clientId;
     /**
-     * Token认证类型 {@link TokenAuthType}
+     * Token认证类型 {@link TokenAuthTypeEnum}
      */
     private final String tokenAuthType;
     /**
-     * 用户类型 {@link com.ingot.framework.security.common.constants.UserType}
+     * 用户类型 {@link UserTypeEnum}
      */
     private final String userType;
 

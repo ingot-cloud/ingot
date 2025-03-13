@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.social;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnums;
+import com.ingot.framework.core.model.enums.SocialTypeEnum;
 
 /**
  * <p>Description  : SocialProcessorManager.</p>
@@ -16,7 +16,7 @@ public interface SocialProcessorManager {
      * @param code 获取用户信息详情数据
      * @return 渠道唯一ID
      */
-    String getUniqueID(SocialTypeEnums socialType, String code);
+    String getUniqueID(SocialTypeEnum socialType, String code);
 
     /**
      * 根据OpenId获取用户信息
@@ -24,7 +24,7 @@ public interface SocialProcessorManager {
      * @param uniqueID 渠道唯一ID
      * @return 返回用户信息
      */
-    <T> T getUserInfo(SocialTypeEnums socialType, String uniqueID);
+    <T> T getUserInfo(SocialTypeEnum socialType, String uniqueID);
 
     /**
      * 用户绑定uniqueID
@@ -32,5 +32,5 @@ public interface SocialProcessorManager {
      * @param user     用户信息
      * @param uniqueID 渠道唯一ID
      */
-    <T> void bind(SocialTypeEnums socialType, T user, String uniqueID);
+    <T> void bind(SocialTypeEnum socialType, T user, String uniqueID);
 }

@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.common.constants.UserType;
+import com.ingot.framework.core.model.security.UserTypeEnum;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -61,9 +61,9 @@ public class UsernameUri {
         return StrUtil.isEmpty(principal) ? this.getValue() : principal;
     }
 
-    public UserType getUserType() {
-        UserType userType = UserType.getEnum(this.uri.getQueryParams().getFirst(USER_TYPE));
-        return userType == null ? UserType.ADMIN : userType;
+    public UserTypeEnum getUserType() {
+        UserTypeEnum userType = UserTypeEnum.getEnum(this.uri.getQueryParams().getFirst(USER_TYPE));
+        return userType == null ? UserTypeEnum.ADMIN : userType;
     }
 
     public long getTenant() {

@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.client;
 import java.util.Map;
 import java.util.Optional;
 
-import com.ingot.framework.security.common.constants.TokenAuthType;
+import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.oauth2.server.authorization.settings.ExtConfigurationSettingNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
@@ -30,34 +30,34 @@ public final class RegisteredClientOps {
      * 获取自定义TokenSetting，TokenAuthType
      *
      * @param settings {@link TokenSettings}
-     * @return {@link TokenAuthType}
+     * @return {@link TokenAuthTypeEnum}
      */
-    public static TokenAuthType getTokenAuthType(TokenSettings settings) {
+    public static TokenAuthTypeEnum getTokenAuthType(TokenSettings settings) {
         return Optional.<String>ofNullable(settings.getSetting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE))
-                .map(TokenAuthType::getEnum)
-                .orElse(TokenAuthType.STANDARD);
+                .map(TokenAuthTypeEnum::getEnum)
+                .orElse(TokenAuthTypeEnum.STANDARD);
     }
 
     /**
-     * {@link TokenSettings.Builder} 设置 {@link TokenAuthType}
+     * {@link TokenSettings.Builder} 设置 {@link TokenAuthTypeEnum}
      *
      * @param builder       {@link TokenSettings.Builder}
-     * @param tokenAuthType {@link TokenAuthType}
+     * @param tokenAuthType {@link TokenAuthTypeEnum}
      * @return {@link TokenSettings.Builder}
      */
-    public static TokenSettings.Builder setTokenAuthType(TokenSettings.Builder builder, TokenAuthType tokenAuthType) {
+    public static TokenSettings.Builder setTokenAuthType(TokenSettings.Builder builder, TokenAuthTypeEnum tokenAuthType) {
         builder.setting(ExtConfigurationSettingNames.TOKEN_AUTH_TYPE, tokenAuthType.getValue());
         return builder;
     }
 
     /**
-     * 给 {@link TokenSettings} 设置 {@link TokenAuthType}
+     * 给 {@link TokenSettings} 设置 {@link TokenAuthTypeEnum}
      *
      * @param tokenSettings {@link TokenSettings}
-     * @param tokenAuthType {@link TokenAuthType}
+     * @param tokenAuthType {@link TokenAuthTypeEnum}
      * @return {@link TokenSettings}
      */
-    public static TokenSettings setTokenAuthType(TokenSettings tokenSettings, TokenAuthType tokenAuthType) {
+    public static TokenSettings setTokenAuthType(TokenSettings tokenSettings, TokenAuthTypeEnum tokenAuthType) {
         Map<String, Object> settings = tokenSettings.getSettings();
         return setTokenAuthType(TokenSettings.withSettings(settings), tokenAuthType).build();
     }
@@ -100,19 +100,19 @@ public final class RegisteredClientOps {
     /**
      * 获取自定义TokenSetting，TokenAuthType
      *
-     * @return {@link TokenAuthType}
+     * @return {@link TokenAuthTypeEnum}
      */
-    public TokenAuthType getTokenAuthType() {
+    public TokenAuthTypeEnum getTokenAuthType() {
         return getTokenAuthType(client.getTokenSettings());
     }
 
     /**
-     * 设置 {@link TokenAuthType} 并返回新的 {@link RegisteredClient}
+     * 设置 {@link TokenAuthTypeEnum} 并返回新的 {@link RegisteredClient}
      *
-     * @param tokenAuthType {@link TokenAuthType}
+     * @param tokenAuthType {@link TokenAuthTypeEnum}
      * @return {@link RegisteredClient}
      */
-    public RegisteredClient withTokenAuthType(TokenAuthType tokenAuthType) {
+    public RegisteredClient withTokenAuthType(TokenAuthTypeEnum tokenAuthType) {
         return RegisteredClient.from(client)
                 .tokenSettings(setTokenAuthType(client.getTokenSettings(), tokenAuthType))
                 .build();
