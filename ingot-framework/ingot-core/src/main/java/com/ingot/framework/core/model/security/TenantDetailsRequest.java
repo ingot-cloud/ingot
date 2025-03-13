@@ -1,4 +1,4 @@
-package com.ingot.framework.security.core.tenantdetails;
+package com.ingot.framework.core.model.security;
 
 import lombok.Data;
 

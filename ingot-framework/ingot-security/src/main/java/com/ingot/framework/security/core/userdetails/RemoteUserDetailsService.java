@@ -1,5 +1,7 @@
 package com.ingot.framework.security.core.userdetails;
 
+import com.ingot.framework.core.model.security.UserDetailsRequest;
+import com.ingot.framework.core.model.security.UserDetailsResponse;
 import com.ingot.framework.core.model.support.R;
 
 /**

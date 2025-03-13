@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.service.biz;
 
-import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
+import com.ingot.framework.core.model.security.TenantDetailsResponse;
 
 /**
  * <p>Description  : TenantDetailsService.</p>

@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
+import com.ingot.framework.core.model.security.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

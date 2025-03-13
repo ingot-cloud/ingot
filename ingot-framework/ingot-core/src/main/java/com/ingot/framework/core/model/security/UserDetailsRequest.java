@@ -1,8 +1,6 @@
-package com.ingot.framework.security.core.userdetails;
+package com.ingot.framework.core.model.security;
 
 import com.ingot.framework.core.model.enums.SocialTypeEnum;
-import com.ingot.framework.core.model.security.UserTypeEnum;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -32,11 +30,11 @@ public class UserDetailsRequest implements Serializable {
      */
     private Long tenant;
     /**
-     * 社交类型, {@code grantType} 为 {@link IngotAuthorizationGrantType#SOCIAL}时，不为空
+     * 社交类型, {@code grantType} 为 com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType#SOCIAL 时，不为空
      */
     private SocialTypeEnum socialType;
     /**
-     * 社交code, {@code grantType} 为 {@link IngotAuthorizationGrantType#SOCIAL}时，不为空
+     * 社交code, {@code grantType} 为 com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType#SOCIAL 时，不为空
      */
     private String socialCode;
 }

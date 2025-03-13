@@ -1,5 +1,7 @@
 package com.ingot.framework.security.core.tenantdetails;
 
+import com.ingot.framework.core.model.security.TenantDetailsRequest;
+import com.ingot.framework.core.model.security.TenantDetailsResponse;
 import com.ingot.framework.core.model.support.R;
 
 /**

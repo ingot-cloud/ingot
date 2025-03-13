@@ -3,8 +3,8 @@ package com.ingot.cloud.auth.service;
 import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
-import com.ingot.framework.security.core.tenantdetails.TenantDetailsRequest;
-import com.ingot.framework.security.core.tenantdetails.TenantDetailsResponse;
+import com.ingot.framework.core.model.security.TenantDetailsRequest;
+import com.ingot.framework.core.model.security.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 
 /**

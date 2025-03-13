@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.core.model.security.UserDetailsResponse;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;

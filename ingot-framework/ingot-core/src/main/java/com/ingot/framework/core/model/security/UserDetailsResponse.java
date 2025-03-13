@@ -1,8 +1,7 @@
-package com.ingot.framework.security.core.userdetails;
+package com.ingot.framework.core.model.security;
 
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
-import com.ingot.framework.core.model.security.UserTypeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
