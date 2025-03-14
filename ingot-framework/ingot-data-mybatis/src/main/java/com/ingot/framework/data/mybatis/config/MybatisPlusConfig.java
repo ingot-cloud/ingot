@@ -9,7 +9,6 @@ import com.ingot.framework.data.mybatis.plugins.IngotTenantLineHandler;
 import com.ingot.framework.data.mybatis.properties.MybatisProperties;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,7 +28,6 @@ import javax.sql.DataSource;
 @AutoConfiguration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @ConditionalOnBean(DataSource.class)
-@MapperScan("com.ingot.**.mapper")
 @EnableConfigurationProperties(MybatisProperties.class)
 public class MybatisPlusConfig {
 

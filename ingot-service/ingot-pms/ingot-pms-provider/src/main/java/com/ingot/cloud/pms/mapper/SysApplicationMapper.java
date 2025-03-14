@@ -7,6 +7,7 @@ import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -17,6 +18,7 @@ import org.apache.ibatis.annotations.Param;
  * @author jymot
  * @since 2023-11-23
  */
+@Mapper
 public interface SysApplicationMapper extends BaseMapper<SysApplication> {
 
     /**

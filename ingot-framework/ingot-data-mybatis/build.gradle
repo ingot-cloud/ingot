@@ -4,12 +4,12 @@ dependencies {
     api(deps.mybatis.plus_spring)
     api(deps.mybatis.plus_jsqlparser)
     api(deps.mybatis.plus_join)
-    api(deps.spring.spring_boot.data_redis_starter)
 
-    compileOnly(deps.mybatis.plus_starter)
-    compileOnly(deps.alibaba.druid_spring_boot_starter)
+    implementation(deps.mybatis.plus_annotation)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_tenant)
 //    implementation project(ingot.pms_api)
+
+    compileOnly(deps.alibaba.druid)
 }

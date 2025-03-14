@@ -122,6 +122,7 @@ mybatis.plus_starter = "com.baomidou:mybatis-plus-spring-boot3-starter:${version
 mybatis.plus_extension = "com.baomidou:mybatis-plus-extension:${versions.mybatis_plus}"
 mybatis.plus_spring = "com.baomidou:mybatis-plus-spring:${versions.mybatis_plus}"
 mybatis.plus_core = "com.baomidou:mybatis-plus-core:${versions.mybatis_plus}"
+mybatis.plus_annotation = "com.baomidou:mybatis-plus-annotation:${versions.mybatis_plus}"
 mybatis.plus_jsqlparser = "com.baomidou:mybatis-plus-jsqlparser:${versions.mybatis_plus}"
 mybatis.plus_generator = "com.baomidou:mybatis-plus-generator:${versions.mybatis_plus}"
 mybatis.plus_join = "com.github.yulichang:mybatis-plus-join-boot-starter:${versions.mybatis_plus_join}"

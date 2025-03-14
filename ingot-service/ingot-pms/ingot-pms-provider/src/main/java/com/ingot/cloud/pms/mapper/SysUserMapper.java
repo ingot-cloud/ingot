@@ -6,6 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -16,6 +17,7 @@ import org.apache.ibatis.annotations.Param;
  * @author magician
  * @since 2020-11-20
  */
+@Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
     /**

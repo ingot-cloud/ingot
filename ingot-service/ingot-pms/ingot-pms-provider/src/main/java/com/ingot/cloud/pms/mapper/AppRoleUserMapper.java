@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -15,6 +16,7 @@ import org.apache.ibatis.annotations.Param;
  * @author jymot
  * @since 2023-09-12
  */
+@Mapper
 public interface AppRoleUserMapper extends BaseMapper<AppRoleUser> {
 
     /**

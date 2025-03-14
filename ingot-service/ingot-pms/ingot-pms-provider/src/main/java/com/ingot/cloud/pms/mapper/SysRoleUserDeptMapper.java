@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.mapper;
 
 import com.ingot.cloud.pms.api.model.domain.SysRoleUserDept;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
  * @author jymot
  * @since 2025-03-08
  */
+@Mapper
 public interface SysRoleUserDeptMapper extends BaseMapper<SysRoleUserDept> {
     /**
      * 根据部门和角色获取角色用户关联ID

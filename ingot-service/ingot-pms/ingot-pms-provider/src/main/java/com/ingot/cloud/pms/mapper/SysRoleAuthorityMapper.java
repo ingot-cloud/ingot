@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.mapper;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  * @author magician
  * @since 2020-11-20
  */
+@Mapper
 public interface SysRoleAuthorityMapper extends BaseMapper<SysRoleAuthority> {
 
     /**

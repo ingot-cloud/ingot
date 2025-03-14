@@ -1,10 +1,11 @@
 package com.ingot.cloud.pms.mapper;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,6 +15,7 @@ import com.ingot.framework.data.mybatis.mapper.BaseMapper;
  * @author magician
  * @since 2020-11-20
  */
+@Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
     /**
