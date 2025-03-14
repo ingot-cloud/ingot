@@ -23,6 +23,12 @@ include 'ingot-framework:ingot-id'
 findProject(':ingot-framework:ingot-id')?.name = 'ingot-id'
 include 'ingot-framework:ingot-crypto'
 findProject(':ingot-framework:ingot-crypto')?.name = 'ingot-crypto'
+include 'ingot-framework:ingot-minio'
+findProject(':ingot-framework:ingot-minio')?.name = 'ingot-minio'
+include 'ingot-framework:ingot-verification-code'
+findProject(':ingot-framework:ingot-verification-code')?.name = 'ingot-verification-code'
+include 'ingot-framework:ingot-data-scope'
+findProject(':ingot-framework:ingot-data-scope')?.name = 'ingot-data-scope'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'
@@ -39,8 +45,5 @@ include 'ingot-plugin:ingot-mybatisplus-plugin'
 findProject(':ingot-plugin:ingot-mybatisplus-plugin')?.name = 'ingot-mybatisplus-plugin'
 include 'ingot-plugin:ingot-assemble-plugin'
 findProject(':ingot-plugin:ingot-assemble-plugin')?.name = 'ingot-assemble-plugin'
-include 'ingot-framework:ingot-minio'
-findProject(':ingot-framework:ingot-minio')?.name = 'ingot-minio'
-include 'ingot-framework:ingot-verification-code'
-findProject(':ingot-framework:ingot-verification-code')?.name = 'ingot-verification-code'
+
 

@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.datascope;
+package com.ingot.framework.data.scope;
 
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;

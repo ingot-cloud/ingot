@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.datascope;
+package com.ingot.framework.data.scope;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 
