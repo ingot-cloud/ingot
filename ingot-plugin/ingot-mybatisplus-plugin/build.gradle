@@ -8,7 +8,7 @@ dependencies {
     implementation localGroovy()
     implementation gradleApi()
     implementation(deps.mybatis.plus_generator)
-    implementation(deps.mybatis.plus_extension)
+    implementation(deps.mybatis.plus_spring)
     implementation(deps.freemarker)
     implementation(deps.mysql.connector)
     implementation "org.apache.velocity:velocity-engine-core:2.0"

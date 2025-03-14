@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy
 import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler
 import com.ingot.plugin.mybatis.extension.IngotMybatisExtension
 import com.ingot.plugin.mybatis.extension.MybatisPlusGeneratorExtension
+import org.apache.ibatis.annotations.Mapper
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
@@ -104,6 +105,7 @@ class MybatisPlusGeneratorTask extends DefaultTask {
                                 .build()
                         builder.mapperBuilder()
                                 .superClass(generatorExtension.superMapperClass)
+                                .mapperAnnotation(Mapper.class)
                                 .enableBaseResultMap()
                                 .enableBaseColumnList()
                                 .formatMapperFileName(generatorExtension.mapperName)
