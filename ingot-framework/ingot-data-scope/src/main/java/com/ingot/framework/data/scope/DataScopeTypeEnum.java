@@ -22,7 +22,7 @@ public enum DataScopeTypeEnum {
     CUSTOM(1, "自定义数据权限"),
     DEPT_AND_CHILD(2, "本部门及以下数据权限"),
     DEPT(3, "本部门数据权限"),
-    SELF(4, "仅本人数据权限");
+    SELF(9, "仅本人数据权限");
 
     @JsonValue
     @EnumValue
