@@ -17,6 +17,8 @@ dependencies {
     implementation project(ingot.framework_tenant)
     implementation project(ingot.framework_minio)
     implementation project(ingot.framework_id)
+    implementation project(ingot.framework_data_scope)
+    implementation project(ingot.framework_core)
 
     implementation(deps.weixin_java_miniapp)
 }

@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -74,6 +75,16 @@ public class SysRole extends BaseModel<SysRole> {
      * 是否过滤部门
      */
     private Boolean filterDept;
+
+    /**
+     * 数据权限类型
+     */
+    private Integer scopeType;
+
+    /**
+     * 数据权限范围
+     */
+    private List<Long> scopes;
 
     /**
      * 状态, 0:正常，9:禁用
