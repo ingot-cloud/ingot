@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import cn.hutool.core.util.NumberUtil;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
@@ -34,7 +34,7 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
             UserDetails user = (UserDetails) usernamePasswordAuthenticationToken.getPrincipal();
             customizeWithUser(context, user);
         } else if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthToken) {
-            IngotUser user = (IngotUser) preAuthToken.getPrincipal();
+            InUser user = (InUser) preAuthToken.getPrincipal();
             Long tenant = NumberUtil.parseLong(
                     String.valueOf(preAuthToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT)),
                     user.getTenantId());
@@ -46,18 +46,18 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
     }
 
     private void customizeWithUser(JwtEncodingContext context, UserDetails user) {
-        if (user instanceof IngotUser) {
+        if (user instanceof InUser) {
             context.getClaims().claim(JwtClaimNamesExtension.ID,
-                    ((IngotUser) user).getId());
+                    ((InUser) user).getId());
             context.getClaims().claim(JwtClaimNamesExtension.TENANT,
-                    ((IngotUser) user).getTenantId());
+                    ((InUser) user).getTenantId());
             context.getClaims().claim(JwtClaimNamesExtension.AUTH_TYPE,
-                    ((IngotUser) user).getTokenAuthType());
+                    ((InUser) user).getTokenAuthType());
             context.getClaims().claim(JwtClaimNamesExtension.USER_TYPE,
-                    ((IngotUser) user).getUserType());
+                    ((InUser) user).getUserType());
 
             Set<String> authorities = IngotAuthorityUtils.authorityListToSet(
-                    user.getAuthorities(), ((IngotUser) user).getTenantId());
+                    user.getAuthorities(), ((InUser) user).getTenantId());
             authorities.addAll(context.getAuthorizedScopes());
 
             context.getClaims().claim(JwtClaimNamesExtension.SCOPE, authorities);

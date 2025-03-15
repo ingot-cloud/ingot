@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 
 import java.util.List;
 
@@ -21,12 +21,12 @@ import java.util.List;
 public interface SysUserService extends BaseService<SysUser> {
 
     /**
-     * 通过 {@link IngotUser} 获取用户信息
+     * 通过 {@link InUser} 获取用户信息
      *
-     * @param user {@link IngotUser} 当前登录用户
+     * @param user {@link InUser} 当前登录用户
      * @return {@link UserInfoDTO}
      */
-    UserInfoDTO getUserInfo(IngotUser user);
+    UserInfoDTO getUserInfo(InUser user);
 
     /**
      * 获取平台超级管理员ID列表

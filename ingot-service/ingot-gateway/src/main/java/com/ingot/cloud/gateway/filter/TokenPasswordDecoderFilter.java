@@ -5,7 +5,7 @@ import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.ingot.framework.core.constants.SecurityConstants;
-import com.ingot.framework.crypto.IngotCryptoProperties;
+import com.ingot.framework.crypto.InCryptoProperties;
 import com.ingot.framework.crypto.model.CryptoType;
 import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ import java.util.function.Function;
 public class TokenPasswordDecoderFilter extends AbstractGatewayFilterFactory {
     private static final String PASSWORD = "password";
     private final List<HttpMessageReader<?>> messageReaders = HandlerStrategies.withDefaults().messageReaders();
-    private final IngotCryptoProperties properties;
+    private final InCryptoProperties properties;
 
     private final List<String> DecoderURIs = ListUtil.list(false,
             SecurityConstants.TOKEN_ENDPOINT_URI,

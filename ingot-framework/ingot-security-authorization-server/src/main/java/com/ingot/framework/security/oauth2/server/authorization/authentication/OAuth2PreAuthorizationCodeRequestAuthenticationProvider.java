@@ -5,7 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -60,9 +60,9 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
 
         // 1.获取用户信息
         Authentication userAuth = (Authentication) preAuthorizationAuthenticationToken.getPrincipal();
-        IngotUser user = null;
-        if (userAuth.getPrincipal() instanceof IngotUser) {
-            user = (IngotUser) userAuth.getPrincipal();
+        InUser user = null;
+        if (userAuth.getPrincipal() instanceof InUser) {
+            user = (InUser) userAuth.getPrincipal();
         }
         if (user == null) {
             OAuth2ErrorUtils.throwNotAllowClient(this.messages

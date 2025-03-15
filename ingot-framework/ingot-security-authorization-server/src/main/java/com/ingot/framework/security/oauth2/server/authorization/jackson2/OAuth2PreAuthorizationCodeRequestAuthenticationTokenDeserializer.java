@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,7 @@ final class OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer
 
     private OAuth2PreAuthorizationCodeRequestAuthenticationToken deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        IngotUser principal = JsonNodeUtils.findValue(root, "principal",
+        InUser principal = JsonNodeUtils.findValue(root, "principal",
                 new TypeReference<>() {
                 }, mapper);
         List<AllowTenantDTO> allows = JsonNodeUtils.findValue(

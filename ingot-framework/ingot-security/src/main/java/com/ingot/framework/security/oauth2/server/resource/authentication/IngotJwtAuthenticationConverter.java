@@ -1,8 +1,6 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
-import java.util.Collection;
-
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
@@ -11,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
+
+import java.util.Collection;
 
 /**
  * <p>Description  : IngotJwtAuthenticationConverter.</p>
@@ -22,7 +22,7 @@ public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractA
     public static final String AUTHORITY_PREFIX = "SCOPE_";
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
-    private final Converter<Jwt, IngotUser> jwtIngotUserConverter = new JwtIngotUserConverter();
+    private final Converter<Jwt, InUser> jwtIngotUserConverter = new JwtInUserConverter();
 
     private String principalClaimName;
 
@@ -37,7 +37,7 @@ public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractA
     @Override
     public final AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
         Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
-        IngotUser principal = this.jwtIngotUserConverter.convert(jwt);
+        InUser principal = this.jwtIngotUserConverter.convert(jwt);
         if (this.principalClaimName == null) {
             return new IngotJwtAuthenticationToken(jwt, principal, authorities);
         }

@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@IngotDecrypt(CryptoType.AES)
-@IngotEncrypt(CryptoType.AES)
-public @interface IngotCryptoAES {
+@InDecrypt(CryptoType.AES)
+@InEncrypt(CryptoType.AES)
+public @interface InCryptoAES {
 }

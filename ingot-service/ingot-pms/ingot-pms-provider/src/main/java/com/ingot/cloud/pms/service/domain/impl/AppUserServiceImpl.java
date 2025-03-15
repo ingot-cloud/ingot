@@ -17,7 +17,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     }
 
     @Override
-    public UserInfoDTO getUserInfo(IngotUser user) {
+    public UserInfoDTO getUserInfo(InUser user) {
         // 使用当前用户 tenant 进行操作
         return TenantEnv.applyAs(user.getTenantId(), () -> {
             AppUser userInfo = getById(user.getId());

@@ -9,8 +9,8 @@ import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.symmetric.AES;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.crypto.annotation.IngotDecrypt;
-import com.ingot.framework.crypto.annotation.IngotEncrypt;
+import com.ingot.framework.crypto.annotation.InDecrypt;
+import com.ingot.framework.crypto.annotation.InEncrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
 import com.ingot.framework.crypto.model.CryptoType;
@@ -36,8 +36,8 @@ public class CryptoUtils {
 
     @Nullable
     public static CryptoInfoRecord getEncryptInfo(MethodParameter methodParameter) {
-        IngotEncrypt encrypt = AnnotatedElementUtils.findMergedAnnotation(Objects.requireNonNull(methodParameter.getMethod()),
-                IngotEncrypt.class);
+        InEncrypt encrypt = AnnotatedElementUtils.findMergedAnnotation(Objects.requireNonNull(methodParameter.getMethod()),
+                InEncrypt.class);
         if (encrypt == null) {
             return null;
         }
@@ -46,8 +46,8 @@ public class CryptoUtils {
 
     @Nullable
     public static CryptoInfoRecord getDecryptInfo(MethodParameter methodParameter) {
-        IngotDecrypt decrypt = AnnotatedElementUtils.findMergedAnnotation(Objects.requireNonNull(methodParameter.getMethod()),
-                IngotDecrypt.class);
+        InDecrypt decrypt = AnnotatedElementUtils.findMergedAnnotation(Objects.requireNonNull(methodParameter.getMethod()),
+                InDecrypt.class);
         if (decrypt == null) {
             return null;
         }

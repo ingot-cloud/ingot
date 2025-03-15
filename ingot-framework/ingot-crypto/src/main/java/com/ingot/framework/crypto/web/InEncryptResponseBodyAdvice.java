@@ -4,8 +4,8 @@ import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.crypto.IngotCryptoProperties;
-import com.ingot.framework.crypto.annotation.IngotEncrypt;
+import com.ingot.framework.crypto.InCryptoProperties;
+import com.ingot.framework.crypto.annotation.InEncrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
 import com.ingot.framework.crypto.utils.CryptoUtils;
@@ -36,14 +36,14 @@ import java.util.Map;
 @ControllerAdvice
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @RequiredArgsConstructor
-public class IngotEncryptResponseBodyAdvice implements ResponseBodyAdvice<Object> {
-    private final IngotCryptoProperties properties;
+public class InEncryptResponseBodyAdvice implements ResponseBodyAdvice<Object> {
+    private final InCryptoProperties properties;
     private final ObjectMapper objectMapper;
 
     @Override
     public boolean supports(@NonNull MethodParameter returnType,
                             @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
-        return AnnotationUtil.hasAnnotation(returnType.getMethod(), IngotEncrypt.class);
+        return AnnotationUtil.hasAnnotation(returnType.getMethod(), InEncrypt.class);
     }
 
     @Override

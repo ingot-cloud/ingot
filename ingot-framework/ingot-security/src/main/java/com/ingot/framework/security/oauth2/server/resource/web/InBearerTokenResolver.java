@@ -8,16 +8,16 @@ import org.springframework.security.oauth2.server.resource.web.DefaultBearerToke
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
- * <p>Description  : IngotBearerTokenResolver.</p>
+ * <p>Description  : Bearer Token 解析器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/17.</p>
  * <p>Time         : 5:57 下午.</p>
  */
-public class IngotBearerTokenResolver implements BearerTokenResolver {
+public class InBearerTokenResolver implements BearerTokenResolver {
     private final DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
     private final RequestMatcher requestMatcher;
 
-    public IngotBearerTokenResolver(PermitResolver permitResolver) {
+    public InBearerTokenResolver(PermitResolver permitResolver) {
         this.requestMatcher = permitResolver.permitAllRequestMatcher();
     }
 

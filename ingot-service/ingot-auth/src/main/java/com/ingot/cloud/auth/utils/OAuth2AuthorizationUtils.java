@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.utils;
 
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
@@ -17,12 +17,12 @@ import java.util.Optional;
 public class OAuth2AuthorizationUtils {
 
     /**
-     * 获取{@link IngotUser}
+     * 获取{@link InUser}
      *
      * @param authorization {@link OAuth2Authorization}
-     * @return {@link IngotUser}
+     * @return {@link InUser}
      */
-    public static Optional<IngotUser> getUser(OAuth2Authorization authorization) {
+    public static Optional<InUser> getUser(OAuth2Authorization authorization) {
         if (authorization == null) {
             return Optional.empty();
         }
@@ -33,7 +33,7 @@ public class OAuth2AuthorizationUtils {
         if (principal instanceof OAuth2UserDetailsAuthenticationToken userDetailsToken) {
             principal = userDetailsToken.getPrincipal();
         }
-        if (principal instanceof IngotUser user) {
+        if (principal instanceof InUser user) {
             return Optional.of(user);
         }
         return Optional.empty();

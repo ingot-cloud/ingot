@@ -58,7 +58,7 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;
-                    return IngotUser.userDetails(data.getId(), data.getUserType(), data.getTenant(),
+                    return InUser.userDetails(data.getId(), data.getUserType(), data.getTenant(),
                             data.getUsername(), data.getPassword(),
                             enabled, true, true, nonLocked, authorities);
                 })

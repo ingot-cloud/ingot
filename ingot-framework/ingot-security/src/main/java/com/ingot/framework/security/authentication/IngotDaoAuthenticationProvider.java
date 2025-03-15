@@ -3,7 +3,7 @@ package com.ingot.framework.security.authentication;
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.IngotSecurityMessageSource;
 import com.ingot.framework.security.core.context.ClientContextHolder;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -86,8 +86,8 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
                         "UserDetailsService returned null, which is an interface contract violation");
             }
             // 填充客户端信息，使用默认TokenAuthType
-            if (loadedUser instanceof IngotUser ingotUser) {
-                loadedUser = ingotUser.toBuilder()
+            if (loadedUser instanceof InUser inUser) {
+                loadedUser = inUser.toBuilder()
                         .clientId(ClientContextHolder.get())
                         .tokenAuthType(TokenAuthTypeEnum.STANDARD.getValue())
                         .build();

@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.utils.DigestUtils;
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,7 +25,7 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public void save(IngotUser user, Instant expiresAt, AuthorizationCache value) {
+    public void save(InUser user, Instant expiresAt, AuthorizationCache value) {
         if (ignore(user)) {
             return;
         }
@@ -35,7 +35,7 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     }
 
     @Override
-    public void remove(IngotUser user, String tokenValue) {
+    public void remove(InUser user, String tokenValue) {
         if (ignore(user)) {
             return;
         }
@@ -48,7 +48,7 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     }
 
     @Override
-    public void remove(IngotUser user) {
+    public void remove(InUser user) {
         if (ignore(user)) {
             return;
         }
@@ -57,7 +57,7 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     }
 
     @Override
-    public AuthorizationCache get(IngotUser user) {
+    public AuthorizationCache get(InUser user) {
         String key = key(user);
         Object current = this.redisTemplate.opsForValue().get(key);
         return current == null ? null : (AuthorizationCache) current;
@@ -69,12 +69,12 @@ public class DefaultAuthorizationCacheService implements AuthorizationCacheServi
     }
 
     // 只处理唯一类型
-    private boolean ignore(IngotUser user) {
+    private boolean ignore(InUser user) {
         TokenAuthTypeEnum type = TokenAuthTypeEnum.getEnum(user.getTokenAuthType());
         return type != TokenAuthTypeEnum.UNIQUE;
     }
 
-    private String key(IngotUser user) {
+    private String key(InUser user) {
         return StrUtil.format("{}:{}:{}:{}",
                 user.getTenantId(),
                 AUTHORIZATION_DETAILS,

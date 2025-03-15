@@ -3,7 +3,7 @@ package com.ingot.framework.security.web;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.context.ClientContextHolder;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,8 +43,8 @@ public class ClientContextAwareFilter extends OncePerRequestFilter {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null) {
                     clientId = authentication.getName();
-                    if (authentication instanceof IngotUser) {
-                        clientId = ((IngotUser) authentication).getClientId();
+                    if (authentication instanceof InUser) {
+                        clientId = ((InUser) authentication).getClientId();
                     }
                 }
             } else {

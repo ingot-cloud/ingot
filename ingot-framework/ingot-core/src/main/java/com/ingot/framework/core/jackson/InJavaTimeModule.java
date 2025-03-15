@@ -1,10 +1,5 @@
 package com.ingot.framework.core.jackson;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.PackageVersion;
@@ -15,16 +10,21 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 /**
- * <p>Description  : IngotTimeModule.</p>
+ * <p>Description  : 自定义JavaTime序列化, 反序列化模块.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/11/17.</p>
  * <p>Time         : 8:11 下午.</p>
  */
-public class IngotJavaTimeModule extends SimpleModule {
+public class InJavaTimeModule extends SimpleModule {
 
-    public IngotJavaTimeModule() {
-        super(IngotJavaTimeModule.class.getName(), PackageVersion.VERSION);
+    public InJavaTimeModule() {
+        super(InJavaTimeModule.class.getName(), PackageVersion.VERSION);
 
         this.serializer();
         this.deserializer();

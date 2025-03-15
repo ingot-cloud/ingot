@@ -3,7 +3,7 @@ package com.ingot.framework.security.config.annotation.web.configuration;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenAuthenticationEntryPoint;
-import com.ingot.framework.security.oauth2.server.resource.web.IngotBearerTokenResolver;
+import com.ingot.framework.security.oauth2.server.resource.web.InBearerTokenResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +22,7 @@ public class OAuth2ResourceServerCustomizer implements Customizer<OAuth2Resource
     @Override
     public void customize(OAuth2ResourceServerConfigurer<HttpSecurity> configurer) {
         configurer.authenticationEntryPoint(new IngotBearerTokenAuthenticationEntryPoint())
-                .bearerTokenResolver(new IngotBearerTokenResolver(permitResolver))
+                .bearerTokenResolver(new InBearerTokenResolver(permitResolver))
                 .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(new IngotJwtAuthenticationConverter()));
     }
 }

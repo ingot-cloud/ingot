@@ -1,7 +1,7 @@
 package com.ingot.framework.crypto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.crypto.web.IngotDecryptParamResolver;
+import com.ingot.framework.crypto.web.InDecryptParamResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 /**
- * <p>Description  : IngotArgumentConfiguration.</p>
+ * <p>Description  : 参数配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/25.</p>
  * <p>Time         : 2:53 PM.</p>
@@ -19,11 +19,11 @@ import java.util.List;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @RequiredArgsConstructor
-public class IngotArgumentConfiguration implements WebMvcConfigurer {
-    private final IngotCryptoProperties properties;
+public class InArgumentConfiguration implements WebMvcConfigurer {
+    private final InCryptoProperties properties;
     private final ObjectMapper objectMapper;
 
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-        argumentResolvers.add(new IngotDecryptParamResolver(properties, objectMapper));
+        argumentResolvers.add(new InDecryptParamResolver(properties, objectMapper));
     }
 }

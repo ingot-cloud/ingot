@@ -2,8 +2,8 @@ package com.ingot.framework.crypto.web;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.crypto.IngotCryptoProperties;
-import com.ingot.framework.crypto.annotation.IngotDecrypt;
+import com.ingot.framework.crypto.InCryptoProperties;
+import com.ingot.framework.crypto.annotation.InDecrypt;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
 import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +25,13 @@ import java.nio.charset.StandardCharsets;
  * <p>Time         : 10:56 AM.</p>
  */
 @RequiredArgsConstructor
-public class IngotDecryptParamResolver implements HandlerMethodArgumentResolver {
-    private final IngotCryptoProperties properties;
+public class InDecryptParamResolver implements HandlerMethodArgumentResolver {
+    private final InCryptoProperties properties;
     private final ObjectMapper objectMapper;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return AnnotatedElementUtils.hasAnnotation(parameter.getParameter(), IngotDecrypt.class);
+        return AnnotatedElementUtils.hasAnnotation(parameter.getParameter(), InDecrypt.class);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class IngotDecryptParamResolver implements HandlerMethodArgumentResolver 
                                   @NonNull NativeWebRequest webRequest,
                                   WebDataBinderFactory binderFactory) throws Exception {
         Parameter parameter = methodParameter.getParameter();
-        IngotDecrypt decrypt = AnnotatedElementUtils.getMergedAnnotation(parameter, IngotDecrypt.class);
+        InDecrypt decrypt = AnnotatedElementUtils.getMergedAnnotation(parameter, InDecrypt.class);
         String text = webRequest.getParameter(properties.getParamKey());
         if (StrUtil.isEmpty(text)) {
             return null;

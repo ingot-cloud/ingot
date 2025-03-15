@@ -1,6 +1,6 @@
 package com.ingot.framework.crypto.web;
 
-import com.ingot.framework.crypto.IngotCryptoProperties;
+import com.ingot.framework.crypto.InCryptoProperties;
 import com.ingot.framework.crypto.model.CryptoType;
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultSecretKeyResolver implements SecretKeyResolver {
-    private final IngotCryptoProperties properties;
+    private final InCryptoProperties properties;
 
     @Override
     public String get(CryptoType type) {

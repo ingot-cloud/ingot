@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.context;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.RoleConstants;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,15 +33,15 @@ public final class SecurityAuthContext {
      * 获取指定{@link Authentication}中的用户信息
      *
      * @param authentication Target Authentication
-     * @return {@link IngotUser}
+     * @return {@link InUser}
      */
-    public static IngotUser getUser(Authentication authentication) {
+    public static InUser getUser(Authentication authentication) {
         if (authentication == null) {
             return null;
         }
         Object principal = authentication.getPrincipal();
-        if (principal instanceof IngotUser) {
-            return (IngotUser) principal;
+        if (principal instanceof InUser) {
+            return (InUser) principal;
         }
         return null;
     }
@@ -49,9 +49,9 @@ public final class SecurityAuthContext {
     /**
      * 获取用户
      *
-     * @return {@link IngotUser}
+     * @return {@link InUser}
      */
-    public static IngotUser getUser() {
+    public static InUser getUser() {
         return getUser(getAuthentication());
     }
 

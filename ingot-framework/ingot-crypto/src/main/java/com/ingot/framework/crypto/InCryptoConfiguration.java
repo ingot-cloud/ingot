@@ -8,18 +8,18 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * <p>Description  : IngotCryptoConfiguration.</p>
+ * <p>Description  : 加密配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/25.</p>
  * <p>Time         : 10:25 AM.</p>
  */
 @AutoConfiguration
-@EnableConfigurationProperties(IngotCryptoProperties.class)
-public class IngotCryptoConfiguration {
+@EnableConfigurationProperties(InCryptoProperties.class)
+public class InCryptoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(SecretKeyResolver.class)
-    public SecretKeyResolver defaultSecretKeyResolver(IngotCryptoProperties properties) {
+    public SecretKeyResolver defaultSecretKeyResolver(InCryptoProperties properties) {
         return new DefaultSecretKeyResolver(properties);
     }
 }

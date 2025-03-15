@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.ingot.framework.crypto.annotation.IngotFieldDecrypt;
+import com.ingot.framework.crypto.annotation.InFieldDecrypt;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
 import com.ingot.framework.crypto.model.CryptoType;
 import com.ingot.framework.crypto.utils.CryptoUtils;
@@ -57,9 +57,9 @@ public class CryptoDeserializer extends JsonDeserializer<String> implements Cont
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty beanProperty) throws JsonMappingException {
         if (beanProperty != null) {
             if (Objects.equals(beanProperty.getType().getRawClass(), String.class)) {
-                IngotFieldDecrypt crypto = beanProperty.getAnnotation(IngotFieldDecrypt.class);
+                InFieldDecrypt crypto = beanProperty.getAnnotation(InFieldDecrypt.class);
                 if (crypto == null) {
-                    crypto = beanProperty.getContextAnnotation(IngotFieldDecrypt.class);
+                    crypto = beanProperty.getContextAnnotation(InFieldDecrypt.class);
                 }
                 if (crypto != null) {
                     return new CryptoDeserializer(crypto.value(), crypto.secretKey());

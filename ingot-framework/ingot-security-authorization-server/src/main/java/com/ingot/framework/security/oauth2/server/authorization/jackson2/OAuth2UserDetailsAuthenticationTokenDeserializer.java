@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,7 +37,7 @@ final class OAuth2UserDetailsAuthenticationTokenDeserializer
 
     private OAuth2UserDetailsAuthenticationToken deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
-        IngotUser principal = JsonNodeUtils.findValue(root, "principal", INGOT_USER, mapper);
+        InUser principal = JsonNodeUtils.findValue(root, "principal", INGOT_USER, mapper);
         Object credentials = JsonNodeUtils.findObjectNode(root, "credentials");
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, "authorities", GRANTED_AUTH_COLL, mapper);

@@ -5,7 +5,7 @@ import com.ingot.framework.crypto.model.CryptoType;
 import java.lang.annotation.*;
 
 /**
- * <p>Description  : IngotDecrypt.</p>
+ * <p>Description  : 解密注解.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/25.</p>
  * <p>Time         : 10:50 AM.</p>
@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface IngotDecrypt {
+public @interface InDecrypt {
 
     /**
      * 加解密类型

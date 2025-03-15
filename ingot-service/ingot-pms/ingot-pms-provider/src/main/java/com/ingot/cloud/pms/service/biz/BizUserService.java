@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 
 import java.util.List;
 
@@ -40,10 +40,10 @@ public interface BizUserService {
     /**
      * 获取用户可用菜单
      *
-     * @param user {@link IngotUser}
+     * @param user {@link InUser}
      * @return {@link MenuTreeNodeVO} List
      */
-    List<MenuTreeNodeVO> getUserMenus(IngotUser user);
+    List<MenuTreeNodeVO> getUserMenus(InUser user);
 
     /**
      * 创建用户

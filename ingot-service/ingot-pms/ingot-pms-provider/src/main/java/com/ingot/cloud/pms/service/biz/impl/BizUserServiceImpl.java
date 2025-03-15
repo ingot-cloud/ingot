@@ -28,7 +28,7 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -109,7 +109,7 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
-    public List<MenuTreeNodeVO> getUserMenus(IngotUser user) {
+    public List<MenuTreeNodeVO> getUserMenus(InUser user) {
         List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
 

@@ -8,7 +8,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotCryptoProperties.</p>
+ * <p>Description  : 加密属性.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/25.</p>
  * <p>Time         : 10:30 AM.</p>
@@ -17,7 +17,7 @@ import java.util.Map;
 @Setter
 @RefreshScope
 @ConfigurationProperties(prefix = "ingot.crypto")
-public class IngotCryptoProperties {
+public class InCryptoProperties {
     /**
      * url参数加解密key
      */

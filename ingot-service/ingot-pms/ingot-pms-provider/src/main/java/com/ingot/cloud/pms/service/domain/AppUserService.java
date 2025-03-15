@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -31,12 +31,12 @@ public interface AppUserService extends BaseService<AppUser> {
                                            @Param("tenantId") Long tenantId);
 
     /**
-     * 通过 {@link IngotUser} 获取用户信息
+     * 通过 {@link InUser} 获取用户信息
      *
-     * @param user {@link IngotUser} 当前登录用户
+     * @param user {@link InUser} 当前登录用户
      * @return {@link UserInfoDTO}
      */
-    UserInfoDTO getUserInfo(IngotUser user);
+    UserInfoDTO getUserInfo(InUser user);
 
     /**
      * 创建用户

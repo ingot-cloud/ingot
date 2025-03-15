@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.core.userdetails.IngotUser;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCache;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
@@ -45,7 +45,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        IngotUser user = SecurityAuthContext.getUser();
+        InUser user = SecurityAuthContext.getUser();
         TokenAuthTypeEnum authType = TokenAuthTypeEnum.getEnum(user.getTokenAuthType());
         if (authType != TokenAuthTypeEnum.UNIQUE) {
             filterChain.doFilter(request, response);
