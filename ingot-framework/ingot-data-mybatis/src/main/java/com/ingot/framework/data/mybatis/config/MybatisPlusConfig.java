@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.ingot.framework.data.mybatis.plugins.DruidSqlLogFilter;
-import com.ingot.framework.data.mybatis.plugins.IngotOptimisticLockerInterceptor;
-import com.ingot.framework.data.mybatis.plugins.IngotTenantLineHandler;
+import com.ingot.framework.data.mybatis.plugins.InOptimisticLockerInterceptor;
+import com.ingot.framework.data.mybatis.plugins.InTenantLineHandler;
 import com.ingot.framework.data.mybatis.properties.MybatisProperties;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +37,10 @@ public class MybatisPlusConfig {
 
         // tenant
         TenantLineInnerInterceptor tenantLineInnerInterceptor = new TenantLineInnerInterceptor();
-        tenantLineInnerInterceptor.setTenantLineHandler(new IngotTenantLineHandler(tenantProperties));
+        tenantLineInnerInterceptor.setTenantLineHandler(new InTenantLineHandler(tenantProperties));
         mybatisPlusInterceptor.addInnerInterceptor(tenantLineInnerInterceptor);
         // version
-        mybatisPlusInterceptor.addInnerInterceptor(new IngotOptimisticLockerInterceptor());
+        mybatisPlusInterceptor.addInnerInterceptor(new InOptimisticLockerInterceptor());
         // page
         mybatisPlusInterceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         return mybatisPlusInterceptor;

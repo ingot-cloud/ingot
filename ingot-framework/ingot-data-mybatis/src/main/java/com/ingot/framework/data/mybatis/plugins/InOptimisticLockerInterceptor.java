@@ -8,13 +8,13 @@ import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Signature;
 
 /**
- * <p>Description  : IngotOptimisticLockerInterceptor.</p>
+ * <p>Description  : 乐观锁处理.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019-07-17.</p>
  * <p>Time         : 17:18.</p>
  */
 @Intercepts({@Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class})})
-public class IngotOptimisticLockerInterceptor extends OptimisticLockerInnerInterceptor {
+public class InOptimisticLockerInterceptor extends OptimisticLockerInnerInterceptor {
 
     @Override
     protected Object getUpdatedVersionVal(Class<?> clazz, Object originalVersionVal) {

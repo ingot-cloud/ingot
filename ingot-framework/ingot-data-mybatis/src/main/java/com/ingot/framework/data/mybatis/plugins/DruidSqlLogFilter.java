@@ -124,10 +124,13 @@ public class DruidSqlLogFilter extends FilterEventAdapter {
         // 打印 sql
         String sqlLogger = """
                 
+                =============================================
+                SQL Log
                 
-                ========= Sql Logger =========
                 {}
-                ========= Sql Execute Time: {}
+                
+                Sql Execute Time: {}
+                =============================================
                 """;
         log.info(sqlLogger, sql.trim(), format(statement.getLastExecuteTimeNano()));
     }

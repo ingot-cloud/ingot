@@ -9,13 +9,13 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
 
 /**
- * <p>Description  : IngotTenantLineHandler.</p>
+ * <p>Description  : 租户处理器.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/5/18.</p>
  * <p>Time         : 2:50 下午.</p>
  */
 @RequiredArgsConstructor
-public class IngotTenantLineHandler implements TenantLineHandler {
+public class InTenantLineHandler implements TenantLineHandler {
     private final TenantProperties tenantProperties;
 
     @Override
