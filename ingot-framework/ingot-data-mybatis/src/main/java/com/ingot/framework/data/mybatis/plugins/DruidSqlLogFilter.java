@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.filter;
+package com.ingot.framework.data.mybatis.plugins;
 
 import com.alibaba.druid.DbType;
 import com.alibaba.druid.filter.FilterChain;
@@ -122,8 +122,13 @@ public class DruidSqlLogFilter extends FilterEventAdapter {
 
     private static void printSql(String sql, StatementProxy statement) {
         // 打印 sql
-        String sqlLogger = "\n\n======= Sql Logger ======================" + "\n{}"
-                + "\n======= Sql Execute Time: {} =======\n";
+        String sqlLogger = """
+                
+                
+                ========= Sql Logger =========
+                {}
+                ========= Sql Execute Time: {}
+                """;
         log.info(sqlLogger, sql.trim(), format(statement.getLastExecuteTimeNano()));
     }
 
