@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.tree.TreeUtils;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;

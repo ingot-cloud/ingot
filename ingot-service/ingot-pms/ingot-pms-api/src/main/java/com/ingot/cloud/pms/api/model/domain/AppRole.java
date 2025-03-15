@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.data.mybatis.config.TenantTable;
-import com.ingot.framework.data.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
+import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
 

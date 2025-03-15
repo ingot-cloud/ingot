@@ -1,0 +1,7 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api(deps.mybatis.plus_spring)
+    implementation(deps.mybatis.plus_join)
+    implementation project(ingot.framework_core)
+}

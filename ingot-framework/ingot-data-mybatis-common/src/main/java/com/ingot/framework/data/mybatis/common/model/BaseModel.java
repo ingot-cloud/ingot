@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.model;
+package com.ingot.framework.data.mybatis.common.model;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;

@@ -3,8 +3,8 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.framework.data.mybatis.config.TenantTable;
-import com.ingot.framework.data.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
+import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

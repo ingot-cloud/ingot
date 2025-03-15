@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
 import com.ingot.cloud.pms.mapper.SysApplicationMapper;
 import com.ingot.cloud.pms.service.domain.SysApplicationService;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

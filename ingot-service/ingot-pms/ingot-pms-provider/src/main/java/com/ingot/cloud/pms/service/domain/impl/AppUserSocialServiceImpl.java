@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 import com.ingot.cloud.pms.api.model.domain.AppUserSocial;
 import com.ingot.cloud.pms.mapper.AppUserSocialMapper;
 import com.ingot.cloud.pms.service.domain.AppUserSocialService;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

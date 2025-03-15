@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.data.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.mapper;
+package com.ingot.framework.data.mybatis.common.mapper;
 
 import com.github.yulichang.base.MPJBaseMapper;
 

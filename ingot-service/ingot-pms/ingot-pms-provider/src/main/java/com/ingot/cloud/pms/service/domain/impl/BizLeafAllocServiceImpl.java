@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.domain.impl;
 import com.ingot.cloud.pms.api.model.domain.BizLeafAlloc;
 import com.ingot.cloud.pms.mapper.BizLeafAllocMapper;
 import com.ingot.cloud.pms.service.domain.BizLeafAllocService;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

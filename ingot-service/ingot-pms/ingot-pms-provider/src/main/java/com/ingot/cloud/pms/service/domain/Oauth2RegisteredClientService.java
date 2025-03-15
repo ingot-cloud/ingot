@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
-import com.ingot.framework.data.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 import java.util.List;
 

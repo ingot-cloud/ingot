@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.mapper.SysUserTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.core.utils.DateUtils;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.stereotype.Service;
 

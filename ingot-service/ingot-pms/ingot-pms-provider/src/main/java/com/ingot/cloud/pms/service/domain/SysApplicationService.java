@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
-import com.ingot.framework.data.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
  * <p>

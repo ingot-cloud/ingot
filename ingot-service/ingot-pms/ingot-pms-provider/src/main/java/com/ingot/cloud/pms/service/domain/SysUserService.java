@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.framework.data.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.common.service.BaseService;
 import com.ingot.framework.security.core.userdetails.IngotUser;
 
 import java.util.List;

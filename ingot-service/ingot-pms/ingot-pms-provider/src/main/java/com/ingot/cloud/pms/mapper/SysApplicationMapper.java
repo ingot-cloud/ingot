@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
-import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

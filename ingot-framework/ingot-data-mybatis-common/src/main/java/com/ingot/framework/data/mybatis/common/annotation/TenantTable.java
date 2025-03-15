@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.config;
+package com.ingot.framework.data.mybatis.common.annotation;
 
 import java.lang.annotation.*;
 

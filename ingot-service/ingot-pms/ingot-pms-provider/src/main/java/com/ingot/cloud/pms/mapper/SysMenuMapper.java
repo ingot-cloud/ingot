@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.mapper;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.framework.data.mybatis.mapper.BaseMapper;
+import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

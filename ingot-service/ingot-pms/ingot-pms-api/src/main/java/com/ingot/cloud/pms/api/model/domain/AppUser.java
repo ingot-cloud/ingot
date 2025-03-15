@@ -6,7 +6,7 @@ import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.data.mybatis.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;

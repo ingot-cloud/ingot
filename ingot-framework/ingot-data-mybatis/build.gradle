@@ -4,6 +4,7 @@ dependencies {
     api(deps.mybatis.plus_spring)
     api(deps.mybatis.plus_jsqlparser)
     api(deps.mybatis.plus_join)
+    api project(ingot.framework_data_mybatis_common)
 
     implementation(deps.mybatis.plus_annotation)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)

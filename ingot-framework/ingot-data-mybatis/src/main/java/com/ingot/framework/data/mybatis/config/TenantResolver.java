@@ -2,6 +2,7 @@ package com.ingot.framework.data.mybatis.config;
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

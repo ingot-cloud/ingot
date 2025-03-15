@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.framework.data.mybatis.config.TenantTable;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import lombok.Getter;
 import lombok.Setter;
 

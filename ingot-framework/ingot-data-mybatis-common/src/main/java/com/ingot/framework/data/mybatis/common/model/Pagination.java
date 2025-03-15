@@ -1,8 +1,8 @@
-package com.ingot.framework.data.mybatis.model;
+package com.ingot.framework.data.mybatis.common.model;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.ingot.framework.data.mybatis.common.PaginationJackson2Serializer;
+import com.ingot.framework.data.mybatis.common.ser.PaginationJackson2Serializer;
 
 /**
  * <p>Description  : Pagination.</p>

@@ -19,7 +19,7 @@ import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.data.mybatis.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.AppUserSocial;
-import com.ingot.framework.data.mybatis.service.BaseService;
+import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
  * <p>
