@@ -33,6 +33,7 @@ public class DataScope implements Serializable {
      * 数据范围
      */
     private List<Long> scopes = new ArrayList<>();
+
     /**
      * 用户权限范围
      */
