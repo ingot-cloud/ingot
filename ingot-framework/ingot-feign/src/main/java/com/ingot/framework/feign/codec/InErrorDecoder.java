@@ -2,7 +2,7 @@ package com.ingot.framework.feign.codec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.feign.exception.IngotFeignException;
+import com.ingot.framework.feign.exception.InFeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +11,13 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- * <p>Description  : IngotErrorDecoder.</p>
+ * <p>Description  : Feign Error Decoder.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 5:23 下午.</p>
  */
 @Slf4j
-public class IngotErrorDecoder implements ErrorDecoder {
+public class InErrorDecoder implements ErrorDecoder {
     private final ErrorDecoder defaultErrorDecoder = new ErrorDecoder.Default();
 
     @SuppressWarnings("rawtypes")
@@ -30,7 +30,7 @@ public class IngotErrorDecoder implements ErrorDecoder {
             String code = (String) map.get(R.CODE);
             String message = (String) map.get(R.MESSAGE);
             log.info("IngotErrorDecoder - map={}", map);
-            return new IngotFeignException(code, message);
+            return new InFeignException(code, message);
         } catch (IOException e) {
             log.error("IngotErrorDecoder - IOException, message={}", e.getMessage(), e);
         }

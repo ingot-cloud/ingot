@@ -3,16 +3,16 @@ package com.ingot.framework.feign.exception;
 import lombok.Getter;
 
 /**
- * <p>Description  : IngotFeignException.</p>
+ * <p>Description  : 自定义 Feign Exception.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 5:29 下午.</p>
  */
-public class IngotFeignException extends RuntimeException {
-    @Getter
+@Getter
+public class InFeignException extends RuntimeException {
     private final String code;
 
-    public IngotFeignException(String code, String message){
+    public InFeignException(String code, String message){
         super(message);
         this.code = code;
     }

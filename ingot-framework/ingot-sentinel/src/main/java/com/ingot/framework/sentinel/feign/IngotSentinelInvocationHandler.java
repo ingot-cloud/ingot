@@ -9,7 +9,7 @@ import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.feign.exception.IngotFeignException;
+import com.ingot.framework.feign.exception.InFeignException;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.MethodMetadata;
@@ -113,8 +113,8 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
                     } else {
                         // 若是R类型 执行自动降级返回R
                         if (R.class == method.getReturnType()) {
-                            if (ex instanceof IngotFeignException) {
-                                return R.error(((IngotFeignException) ex).getCode(), ex.getLocalizedMessage());
+                            if (ex instanceof InFeignException) {
+                                return R.error(((InFeignException) ex).getCode(), ex.getLocalizedMessage());
                             }
                             return R.error(BaseErrorCode.REQUEST_FALLBACK.getCode(), ex.getLocalizedMessage());
                         } else {

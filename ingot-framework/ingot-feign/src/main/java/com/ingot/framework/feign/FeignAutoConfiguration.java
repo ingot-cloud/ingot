@@ -1,6 +1,6 @@
 package com.ingot.framework.feign;
 
-import com.ingot.framework.feign.codec.IngotErrorDecoder;
+import com.ingot.framework.feign.codec.InErrorDecoder;
 import feign.Feign;
 import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
@@ -22,7 +22,7 @@ public class FeignAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ErrorDecoder errorDecoder() {
-        return new IngotErrorDecoder();
+        return new InErrorDecoder();
     }
 
     @Bean
