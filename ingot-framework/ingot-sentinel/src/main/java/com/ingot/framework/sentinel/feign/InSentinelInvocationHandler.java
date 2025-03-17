@@ -27,14 +27,14 @@ import java.util.Map;
 import static feign.Util.checkNotNull;
 
 /**
- * <p>Description  : IngotSentinelInvocationHandler.</p>
+ * <p>Description  : InSentinelInvocationHandler.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 4:20 下午.</p>
  */
 @Slf4j
 @SuppressWarnings({"rawtypes"})
-public class IngotSentinelInvocationHandler implements InvocationHandler {
+public class InSentinelInvocationHandler implements InvocationHandler {
     public static final String EQUALS = "equals";
 
     public static final String HASH_CODE = "hashCode";
@@ -49,15 +49,15 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
 
     private Map<Method, Method> fallbackMethodMap;
 
-    IngotSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
-                                   FallbackFactory<?> fallbackFactory) {
+    InSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
+                                FallbackFactory<?> fallbackFactory) {
         this.target = checkNotNull(target, "target");
         this.dispatch = checkNotNull(dispatch, "dispatch");
         this.fallbackFactory = fallbackFactory;
         this.fallbackMethodMap = toFallbackMethod(dispatch);
     }
 
-    IngotSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
+    InSentinelInvocationHandler(Target<?> target, Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
         this.target = checkNotNull(target, "target");
         this.dispatch = checkNotNull(dispatch, "dispatch");
     }
@@ -138,7 +138,7 @@ public class IngotSentinelInvocationHandler implements InvocationHandler {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof IngotSentinelInvocationHandler other) {
+        if (obj instanceof InSentinelInvocationHandler other) {
             return target.equals(other.target);
         }
         return false;

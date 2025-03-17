@@ -5,12 +5,12 @@ import jakarta.servlet.http.HttpServletRequest;
 
 
 /**
- * <p>Description  : IngotRequestOriginParser.</p>
+ * <p>Description  : 自定义{@link RequestOriginParser}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 4:00 下午.</p>
  */
-public class IngotRequestOriginParser implements RequestOriginParser {
+public class InRequestOriginParser implements RequestOriginParser {
 
     private static final String ALLOW = "Allow";
 

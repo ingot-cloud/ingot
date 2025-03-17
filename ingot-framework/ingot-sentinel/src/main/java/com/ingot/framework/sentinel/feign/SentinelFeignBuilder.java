@@ -68,16 +68,16 @@ public final class SentinelFeignBuilder extends Feign.Builder implements Applica
                 FallbackFactory<?> fallbackFactoryInstance;
                 if (void.class != fallback) {
                     fallbackInstance = getFromContext(beanName, "fallback", fallback, target.type());
-                    return new IngotSentinelInvocationHandler(target, dispatch,
+                    return new InSentinelInvocationHandler(target, dispatch,
                             new FallbackFactory.Default(fallbackInstance));
                 }
 
                 if (void.class != fallbackFactory) {
                     fallbackFactoryInstance = (FallbackFactory<?>) getFromContext(beanName, "fallbackFactory",
                             fallbackFactory, FallbackFactory.class);
-                    return new IngotSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
+                    return new InSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
                 }
-                return new IngotSentinelInvocationHandler(target, dispatch);
+                return new InSentinelInvocationHandler(target, dispatch);
             }
 
             private Object getFromContext(String name, String type, Class<?> fallbackType, Class<?> targetType) {

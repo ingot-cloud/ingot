@@ -13,13 +13,13 @@ import org.springframework.http.HttpStatus;
 import java.io.PrintWriter;
 
 /**
- * <p>Description  : IngotBlockExceptionHandler.</p>
+ * <p>Description  : 自定义{@link BlockException}异常处理.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/12/31.</p>
  * <p>Time         : 10:40 上午.</p>
  */
 @Slf4j
-public class IngotBlockExceptionHandler implements BlockExceptionHandler {
+public class InBlockExceptionHandler implements BlockExceptionHandler {
 
     @Override
     public void handle(HttpServletRequest request,

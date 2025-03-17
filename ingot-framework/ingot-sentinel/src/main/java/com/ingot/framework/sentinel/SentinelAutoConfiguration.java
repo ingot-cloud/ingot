@@ -4,8 +4,8 @@ import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.RequestOriginParser;
 import com.ingot.framework.sentinel.feign.SentinelFeignBuilder;
-import com.ingot.framework.sentinel.webmvc.callback.IngotBlockExceptionHandler;
-import com.ingot.framework.sentinel.webmvc.callback.IngotRequestOriginParser;
+import com.ingot.framework.sentinel.webmvc.callback.InBlockExceptionHandler;
+import com.ingot.framework.sentinel.webmvc.callback.InRequestOriginParser;
 import feign.Feign;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -37,14 +37,14 @@ public class SentinelAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public BlockExceptionHandler blockExceptionHandler() {
-        return new IngotBlockExceptionHandler();
+        return new InBlockExceptionHandler();
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public RequestOriginParser requestOriginParser() {
-        return new IngotRequestOriginParser();
+        return new InRequestOriginParser();
     }
 
 }
