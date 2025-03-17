@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.ingot.framework.id.BizGenerator;
 import com.ingot.framework.id.IdGenerator;
 import com.ingot.framework.id.leaf.DefaultBizGenerator;
-import com.ingot.framework.id.mybatis.IngotIdentifierGenerator;
+import com.ingot.framework.id.mybatis.InIdentifierGenerator;
 import com.ingot.framework.id.properties.IdProperties;
 import com.ingot.framework.id.snowflake.impl.SnowFlakeIdGenerator;
 import com.ingot.framework.id.snowflake.worker.WorkerIdFactory;
@@ -74,6 +74,6 @@ public class IdAutoConfig {
     @Bean
     @ConditionalOnBean(IdGenerator.class)
     public IdentifierGenerator customIdentifierGenerator(IdGenerator idGenerator) {
-        return new IngotIdentifierGenerator(idGenerator);
+        return new InIdentifierGenerator(idGenerator);
     }
 }
