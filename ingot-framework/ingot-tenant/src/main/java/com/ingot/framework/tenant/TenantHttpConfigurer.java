@@ -1,6 +1,6 @@
 package com.ingot.framework.tenant;
 
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurer;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurer;
 import com.ingot.framework.tenant.filter.TenantFilter;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.security.web.header.HeaderWriterFilter;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class TenantHttpConfigurer extends IngotHttpConfigurer {
+public class TenantHttpConfigurer extends InHttpConfigurer {
     private final TenantProperties tenantProperties;
 
     @Override

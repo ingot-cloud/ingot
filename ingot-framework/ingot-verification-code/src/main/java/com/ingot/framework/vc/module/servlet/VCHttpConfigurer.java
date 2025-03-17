@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.module.servlet;
 
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurer;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,7 +14,7 @@ import org.springframework.security.web.header.HeaderWriterFilter;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class VCHttpConfigurer extends IngotHttpConfigurer {
+public class VCHttpConfigurer extends InHttpConfigurer {
     private final VCProviderManager providerManager;
     private final VCVerifyResolver verifyResolver;
     private final VCFailureHandler failureHandler;

@@ -1,8 +1,8 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.DefaultHttpConfigurersAdapter;
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurer;
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurer;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,16 +21,16 @@ import java.util.List;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class SecurityAutoConfiguration {
-    private List<IngotHttpConfigurer> httpConfigurers = Collections.emptyList();
+    private List<InHttpConfigurer> httpConfigurers = Collections.emptyList();
 
     @Bean
-    @ConditionalOnMissingBean(IngotHttpConfigurersAdapter.class)
-    public IngotHttpConfigurersAdapter ingotHttpConfigurersAdapter() {
+    @ConditionalOnMissingBean(InHttpConfigurersAdapter.class)
+    public InHttpConfigurersAdapter ingotHttpConfigurersAdapter() {
         return new DefaultHttpConfigurersAdapter(this.httpConfigurers);
     }
 
     @Autowired(required = false)
-    public void setHttpConfigurers(List<IngotHttpConfigurer> httpConfigurers) {
+    public void setHttpConfigurers(List<InHttpConfigurer> httpConfigurers) {
         this.httpConfigurers = httpConfigurers;
     }
 }

@@ -1,6 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.InTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
 import com.ingot.framework.security.core.tenantdetails.DefaultTenantDetailsService;
@@ -56,7 +56,7 @@ public class InOAuth2ResourceServerConfiguration {
         applyDefaultSecurity(null, permitResolver, http);
     }
 
-    public static void applyDefaultSecurity(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+    public static void applyDefaultSecurity(InHttpConfigurersAdapter httpConfigurersAdapter,
                                             PermitResolver permitResolver,
                                             HttpSecurity http) throws Exception {
         if (httpConfigurersAdapter != null) {
@@ -74,7 +74,7 @@ public class InOAuth2ResourceServerConfiguration {
 
     @Bean(SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+    public SecurityFilterChain resourceServerSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
                                                                  HttpSecurity http) throws Exception {
         applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
@@ -83,7 +83,7 @@ public class InOAuth2ResourceServerConfiguration {
 
     @Bean
     @Order(HIGHEST_PRECEDENCE + 10)
-    public SecurityFilterChain innerResourceSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+    public SecurityFilterChain innerResourceSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                 PermitResolver permitResolver,
                                                                 HttpSecurity http) throws Exception {
         if (httpConfigurersAdapter != null) {

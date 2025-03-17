@@ -4,13 +4,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 /**
- * <p>Description  : IngotHttpConfigurer.</p>
+ * <p>Description  : InHttpConfigurer.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/15.</p>
  * <p>Time         : 3:57 下午.</p>
  */
-public class IngotHttpConfigurer
-        extends AbstractHttpConfigurer<IngotHttpConfigurer, HttpSecurity> {
+public class InHttpConfigurer
+        extends AbstractHttpConfigurer<InHttpConfigurer, HttpSecurity> {
 
     @Override
     public void init(HttpSecurity builder) throws Exception {

@@ -13,12 +13,12 @@ import java.util.List;
  * <p>Time         : 5:38 下午.</p>
  */
 @RequiredArgsConstructor
-public class DefaultHttpConfigurersAdapter implements IngotHttpConfigurersAdapter {
-    private final List<IngotHttpConfigurer> httpConfigurers;
+public class DefaultHttpConfigurersAdapter implements InHttpConfigurersAdapter {
+    private final List<InHttpConfigurer> httpConfigurers;
 
     @Override
     public void apply(HttpSecurity http) throws Exception {
-        for (IngotHttpConfigurer configurer : this.httpConfigurers) {
+        for (InHttpConfigurer configurer : this.httpConfigurers) {
             http.with(configurer, Customizer.withDefaults());
         }
     }

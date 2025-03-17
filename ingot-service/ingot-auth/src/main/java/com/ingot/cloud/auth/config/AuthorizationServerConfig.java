@@ -6,7 +6,7 @@ import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.config.annotation.web.configuration.InOAuth2ResourceServerConfiguration;
-import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
+import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
@@ -71,7 +71,7 @@ public class AuthorizationServerConfig {
 
     @Bean(InOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
     @ConditionalOnMissingBean(name = {InOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME})
-    public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
+    public SecurityFilterChain resourceServerSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
                                                                  HttpSecurity http) throws Exception {
         InOAuth2ResourceServerConfiguration
