@@ -5,12 +5,12 @@ import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
-import com.ingot.framework.security.config.annotation.web.configuration.IngotOAuth2ResourceServerConfiguration;
+import com.ingot.framework.security.config.annotation.web.configuration.InOAuth2ResourceServerConfiguration;
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
-import com.ingot.framework.security.core.IngotSecurityProperties;
-import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
-import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
+import com.ingot.framework.security.oauth2.jwt.InJwtValidators;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -56,7 +56,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthorizationServerConfig {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final IngotOAuth2AuthProperties properties;
+    private final InOAuth2AuthProperties properties;
 
     @Bean(IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -69,12 +69,12 @@ public class AuthorizationServerConfig {
         return http.build();
     }
 
-    @Bean(IngotOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
-    @ConditionalOnMissingBean(name = {IngotOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME})
+    @Bean(InOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
+    @ConditionalOnMissingBean(name = {InOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME})
     public SecurityFilterChain resourceServerSecurityFilterChain(IngotHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
                                                                  HttpSecurity http) throws Exception {
-        IngotOAuth2ResourceServerConfiguration
+        InOAuth2ResourceServerConfiguration
                 .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
         http.csrf(new CsrfCustomizer(permitResolver))
                 .formLogin(new FormLoginCustomizer())
@@ -100,7 +100,7 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public AuthorizationServerSettings providerSettings(IngotOAuth2AuthProperties properties) {
+    public AuthorizationServerSettings providerSettings(InOAuth2AuthProperties properties) {
         return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
@@ -113,7 +113,7 @@ public class AuthorizationServerConfig {
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
                                  AuthorizationServerSettings authorizationServerSettings,
-                                 IngotSecurityProperties properties) {
+                                 InSecurityProperties properties) {
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
         jwsAlgs.addAll(JWSAlgorithm.Family.EC);
@@ -129,7 +129,7 @@ public class AuthorizationServerConfig {
         NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(
-                IngotJwtValidators.createDefaultWithIssuer(
+                InJwtValidators.createDefaultWithIssuer(
                         authorizationServerSettings.getIssuer(), properties));
         return jwtDecoder;
     }

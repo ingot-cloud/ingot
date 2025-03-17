@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2A
  * <p>Date         : 2021/9/26.</p>
  * <p>Time         : 4:18 下午.</p>
  */
-public class IngotOAuth2AuthorizationServerJackson2Module extends OAuth2AuthorizationServerJackson2Module {
+public class InOAuth2AuthorizationServerJackson2Module extends OAuth2AuthorizationServerJackson2Module {
 
     @Override
     public void setupModule(SetupContext context) {

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -22,7 +22,7 @@ import java.util.List;
  * <p>Time         : 12:54 PM.</p>
  */
 @Getter
-public class InUser extends User implements IngotUserDetails {
+public class InUser extends User implements InUserDetails {
     private static final String N_A = "N/A";
 
     /**
@@ -161,7 +161,7 @@ public class InUser extends User implements IngotUserDetails {
 
     @Override
     public List<AllowTenantDTO> getAllows() {
-        return ListUtil.list(false, IngotAuthorityUtils.extractAllowTenants(getAuthorities()));
+        return ListUtil.list(false, InAuthorityUtils.extractAllowTenants(getAuthorities()));
     }
 
     public static class Builder {

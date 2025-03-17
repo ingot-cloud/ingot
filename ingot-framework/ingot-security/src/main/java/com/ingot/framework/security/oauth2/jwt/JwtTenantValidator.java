@@ -4,8 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
 import com.ingot.framework.core.utils.RequestParamsUtils;
-import com.ingot.framework.security.core.IngotSecurityProperties;
-import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
+import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
@@ -34,15 +34,15 @@ import java.util.stream.Collectors;
 public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
     private final Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
     private final JwtClaimValidator<Long> validator;
-    private final IngotSecurityProperties properties;
+    private final InSecurityProperties properties;
 
-    public JwtTenantValidator(IngotSecurityProperties properties) {
+    public JwtTenantValidator(InSecurityProperties properties) {
         this.properties = properties;
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
                 .setAuthoritiesClaimName(JwtClaimNamesExtension.SCOPE);
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
-                .setAuthorityPrefix(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX);
+                .setAuthorityPrefix(InJwtAuthenticationConverter.AUTHORITY_PREFIX);
 
         Predicate<Long> testClaimValue = (tenantId) -> {
             log.info("token中的tenantId={}", tenantId);
@@ -68,7 +68,7 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
         List<String> ignoreRoleCodes = CollUtil.emptyIfNull(
                         properties.getIgnoreTenantValidateRoleCodeList())
                 .stream()
-                .map(item -> IngotJwtAuthenticationConverter.AUTHORITY_PREFIX + item)
+                .map(item -> InJwtAuthenticationConverter.AUTHORITY_PREFIX + item)
                 .collect(Collectors.toList());
         boolean ignoreValidate = Optional.ofNullable(jwtGrantedAuthoritiesConverter.convert(token))
                 .orElse(Collections.emptyList())

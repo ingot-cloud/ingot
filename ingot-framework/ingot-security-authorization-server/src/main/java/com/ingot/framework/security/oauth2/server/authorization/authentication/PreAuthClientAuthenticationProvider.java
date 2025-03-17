@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.oauth2.core.IngotClientAuthenticationMethod;
+import com.ingot.framework.security.oauth2.core.InClientAuthenticationMethod;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -26,7 +26,7 @@ public class PreAuthClientAuthenticationProvider implements AuthenticationProvid
         OAuth2ClientAuthenticationToken clientAuthentication =
                 (OAuth2ClientAuthenticationToken) authentication;
 
-        if (!IngotClientAuthenticationMethod.PRE_AUTH.equals(clientAuthentication.getClientAuthenticationMethod())) {
+        if (!InClientAuthenticationMethod.PRE_AUTH.equals(clientAuthentication.getClientAuthenticationMethod())) {
             return null;
         }
 

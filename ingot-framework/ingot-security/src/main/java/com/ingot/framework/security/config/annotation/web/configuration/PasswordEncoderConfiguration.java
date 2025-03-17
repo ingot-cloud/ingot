@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 /**
- * <p>Description  : DefaultPasswordConfiguration.</p>
+ * <p>Description  : 默认{@link PasswordEncoder}配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019/1/2.</p>
  * <p>Time         : 5:11 PM.</p>

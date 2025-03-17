@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.config;
 
-import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.web.authentication.IngotLoginUrlAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.web.configurers.ExceptionH
 @Slf4j
 @RequiredArgsConstructor
 public class ExceptionHandlingCustomizer implements Customizer<ExceptionHandlingConfigurer<HttpSecurity>> {
-    private final IngotOAuth2AuthProperties properties;
+    private final InOAuth2AuthProperties properties;
 
     @Override
     public void customize(ExceptionHandlingConfigurer<HttpSecurity> configurer) {

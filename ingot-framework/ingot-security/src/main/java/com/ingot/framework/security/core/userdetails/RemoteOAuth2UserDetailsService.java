@@ -4,7 +4,7 @@ import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.model.security.UserDetailsRequest;
 import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.core.utils.SocialUtils;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,8 +24,8 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
 
     @Override
     public boolean supports(AuthorizationGrantType grantType) {
-        return IngotAuthorizationGrantType.PASSWORD.equals(grantType)
-                || IngotAuthorizationGrantType.SOCIAL.equals(grantType);
+        return InAuthorizationGrantType.PASSWORD.equals(grantType)
+                || InAuthorizationGrantType.SOCIAL.equals(grantType);
     }
 
     /**
@@ -37,7 +37,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
      *                                   GrantedAuthority
      */
     @Override
-    public IngotUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public InUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("[RemoteOAuth2UserDetailsService] - loadUserByUsername: username={}", username);
         UsernameUri uri = UsernameUri.of(username);
         String grantType = uri.getGrantType();
@@ -52,7 +52,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
             params.setTenant(tenant);
         }
 
-        if (grantType.equals(IngotAuthorizationGrantType.SOCIAL.getValue())) {
+        if (grantType.equals(InAuthorizationGrantType.SOCIAL.getValue())) {
             String unique = params.getUsername();
             String[] extract = SocialUtils.extract(unique);
             SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);

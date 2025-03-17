@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import cn.hutool.core.util.NumberUtil;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
@@ -56,7 +56,7 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
             context.getClaims().claim(JwtClaimNamesExtension.USER_TYPE,
                     ((InUser) user).getUserType());
 
-            Set<String> authorities = IngotAuthorityUtils.authorityListToSet(
+            Set<String> authorities = InAuthorityUtils.authorityListToSet(
                     user.getAuthorities(), ((InUser) user).getTenantId());
             authorities.addAll(context.getAuthorizedScopes());
 

@@ -1,10 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
-import com.ingot.framework.security.core.IngotSecurityMessageSource;
+import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
@@ -96,7 +96,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     protected void doAfterPropertiesSet() {
         Assert.notNull(this.userDetailsServiceManager, "A OAuth2UserDetailsService must be set");
         // 强制使用 IngotSecurityMessageSource，覆盖默认的以及MessageSourceAware接口注入的MessageSource
-        setMessageSource(new IngotSecurityMessageSource());
+        setMessageSource(new InSecurityMessageSource());
     }
 
     protected UserDetails retrieveUser(RegisteredClient registeredClient,
@@ -127,7 +127,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     protected void additionalAuthenticationChecks(UserDetails user,
                                                   OAuth2UserDetailsAuthenticationToken token) {
         // 只有密码模式才需要进行密码验证
-        if (token.getGrantType() != IngotAuthorizationGrantType.PASSWORD) {
+        if (token.getGrantType() != InAuthorizationGrantType.PASSWORD) {
             return;
         }
 

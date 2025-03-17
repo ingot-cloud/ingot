@@ -40,7 +40,7 @@ public class PermitResolver implements InitializingBean {
     private static final String[] DEFAULT_IGNORE_URLS = new String[]{"/actuator/**", "/error", "/v3/api-docs"};
 
     private final WebApplicationContext applicationContext;
-    private final IngotOAuth2ResourceProperties properties;
+    private final InOAuth2ResourceProperties properties;
 
     /**
      * permit all public url

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.constants.CacheConstants;
 import com.ingot.framework.security.utils.SecurityUtils;
-import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
+import com.ingot.framework.security.jackson2.InSecurityJackson2Modules;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,7 +42,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         this.redisTemplate = redisTemplate;
         this.objectMapper = new ObjectMapper();
         ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
-        IngotSecurityJackson2Modules.registerModules(objectMapper, classLoader);
+        InSecurityJackson2Modules.registerModules(objectMapper, classLoader);
     }
 
     @Override

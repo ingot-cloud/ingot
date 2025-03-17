@@ -23,8 +23,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * <p>Description  : IngotTokenAuthFilter.
- * 用于验证{@link TokenAuthTypeEnum}为{@link TokenAuthTypeEnum#UNIQUE}时的情况，提示签退等逻辑。
+ * <p>Description  : 用于验证{@link TokenAuthTypeEnum}为{@link TokenAuthTypeEnum#UNIQUE}时的情况，提示签退等逻辑。
  * 该Filter在{@link org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter} 之后</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/22.</p>
@@ -32,7 +31,7 @@ import java.util.Optional;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class IngotTokenAuthFilter extends OncePerRequestFilter {
+public class InTokenAuthFilter extends OncePerRequestFilter {
     private final RequestMatcher ignoreRequestMatcher;
     private AuthorizationCacheService authorizationCacheService;
 
@@ -59,7 +58,7 @@ public class IngotTokenAuthFilter extends OncePerRequestFilter {
         }
 
         Optional<String> token = SecurityUtils.getBearerToken(request);
-        if (!token.isPresent()) {
+        if (token.isEmpty()) {
             OAuth2ErrorUtils.throwInvalidToken();
         }
 

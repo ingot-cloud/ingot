@@ -3,7 +3,7 @@ package com.ingot.framework.security.core.context;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,7 +66,7 @@ public final class SecurityAuthContext {
             return false;
         }
 
-        String adminAuthority = (IngotJwtAuthenticationConverter.AUTHORITY_PREFIX + RoleConstants.ROLE_ADMIN_CODE)
+        String adminAuthority = (InJwtAuthenticationConverter.AUTHORITY_PREFIX + RoleConstants.ROLE_ADMIN_CODE)
                 .toUpperCase();
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

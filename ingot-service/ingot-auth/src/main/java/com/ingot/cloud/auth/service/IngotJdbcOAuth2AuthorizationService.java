@@ -8,7 +8,7 @@ import com.ingot.cloud.auth.model.dto.OAuth2AuthorizationDTO;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCache;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
-import com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module;
+import com.ingot.framework.security.oauth2.server.authorization.jackson2.InOAuth2AuthorizationServerJackson2Module;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
@@ -95,7 +95,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
         ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
         List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
         objectMapper.registerModules(securityModules);
-        objectMapper.registerModule(new IngotOAuth2AuthorizationServerJackson2Module());
+        objectMapper.registerModule(new InOAuth2AuthorizationServerJackson2Module());
 
         rowMapper.setObjectMapper(objectMapper);
     }

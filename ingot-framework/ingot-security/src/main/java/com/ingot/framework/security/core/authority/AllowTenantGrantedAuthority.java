@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.security.jackson2.IngotSecurityJackson2Modules;
+import com.ingot.framework.security.jackson2.InSecurityJackson2Modules;
 import org.springframework.util.Assert;
 
 /**
@@ -13,14 +13,14 @@ import org.springframework.util.Assert;
  * <p>Date         : 2023/9/14.</p>
  * <p>Time         : 10:09 AM.</p>
  */
-public class AllowTenantGrantedAuthority implements IngotGrantedAuthority<AllowTenantDTO> {
+public class AllowTenantGrantedAuthority implements InGrantedAuthority<AllowTenantDTO> {
     private final AllowTenantDTO allow;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AllowTenantGrantedAuthority(AllowTenantDTO allow) {
         Assert.notNull(allow, "A granted authority object representation is required");
         this.allow = allow;
-        IngotSecurityJackson2Modules.registerModules(objectMapper, AllowTenantGrantedAuthority.class.getClassLoader());
+        InSecurityJackson2Modules.registerModules(objectMapper, AllowTenantGrantedAuthority.class.getClassLoader());
     }
 
     @Override

@@ -3,10 +3,10 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.security.core.IngotSecurityMessageSource;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
+import com.ingot.framework.security.core.InSecurityMessageSource;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Description  : {@link IngotAuthorizationGrantType#PRE_AUTHORIZATION_CODE} request authentication provider.</p>
+ * <p>Description  : {@link InAuthorizationGrantType#PRE_AUTHORIZATION_CODE} request authentication provider.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/7/26.</p>
  * <p>Time         : 2:51 PM.</p>
  */
 @Slf4j
 public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements AuthenticationProvider {
-    private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
+    private final MessageSourceAccessor messages = InSecurityMessageSource.getAccessor();
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -37,7 +37,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
                 (OAuth2PreAuthorizationCodeRequestAuthenticationToken) authentication;
 
         RegisteredClient registeredClient = preAuthorizationAuthenticationToken.getRegisteredClient();
-        if (!registeredClient.getAuthorizationGrantTypes().contains(IngotAuthorizationGrantType.PRE_AUTHORIZATION_CODE)) {
+        if (!registeredClient.getAuthorizationGrantTypes().contains(InAuthorizationGrantType.PRE_AUTHORIZATION_CODE)) {
             OAuth2ErrorUtils.throwAuthenticationException(
                     OAuth2ErrorCodes.UNAUTHORIZED_CLIENT, this.messages
                             .getMessage("OAuth2PreAuthorizationAuthenticationProvider.unauthorizedClient",
@@ -72,7 +72,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
 
         // 保存会话时长，使用刷新token持续时间
         long timeToLive = registeredClient.getTokenSettings().getRefreshTokenTimeToLive().getSeconds();
-        List<AllowTenantDTO> allows = ListUtil.list(false, IngotAuthorityUtils.extractAllowTenants(user.getAuthorities()));
+        List<AllowTenantDTO> allows = ListUtil.list(false, InAuthorityUtils.extractAllowTenants(user.getAuthorities()));
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
                 .authenticated(user, allows, additionalParameters, timeToLive);
     }

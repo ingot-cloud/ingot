@@ -14,10 +14,10 @@ import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.model.security.UserTypeEnum;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.core.model.security.UserDetailsRequest;
 import com.ingot.framework.core.model.security.UserDetailsResponse;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,10 +55,10 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     @Override
     public UserDetailsResponse getUserDetails(UserDetailsRequest request) {
         AuthorizationGrantType grantType = new AuthorizationGrantType(request.getGrantType());
-        if (ObjectUtil.equals(IngotAuthorizationGrantType.PASSWORD, grantType)) {
+        if (ObjectUtil.equals(InAuthorizationGrantType.PASSWORD, grantType)) {
             return getUserAuthDetails(request);
         }
-        if (ObjectUtil.equals(IngotAuthorizationGrantType.SOCIAL, grantType)) {
+        if (ObjectUtil.equals(InAuthorizationGrantType.SOCIAL, grantType)) {
             return getUserAuthDetailsSocial(request);
         }
         return null;
@@ -124,9 +124,9 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         List<String> roleCodes = roles.stream()
                 .map(item -> {
                     if (loginTenant != null) {
-                        return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
+                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
                     }
-                    return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
+                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
                 })
                 .collect(Collectors.toList());
         // 角色拥有的权限
@@ -158,9 +158,9 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                         }))
                 .map(item -> {
                     if (loginTenant != null) {
-                        return IngotAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
+                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
                     }
-                    return IngotAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
+                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
                 }).collect(Collectors.toSet());
 
         roleCodes.addAll(authorityCodeList);

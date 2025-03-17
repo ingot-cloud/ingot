@@ -9,19 +9,19 @@ import org.springframework.util.ClassUtils;
 import java.util.List;
 
 /**
- * <p>Description  : IngotSecurityJackson2Modules.</p>
+ * <p>Description  : Security Jackson Modules.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/8.</p>
  * <p>Time         : 2:29 PM.</p>
  */
 @Slf4j
-public class IngotSecurityJackson2Modules {
+public class InSecurityJackson2Modules {
     private static final String ingotOAuth2AuthorizationServerJackson2ModuleClass =
-            "com.ingot.framework.security.oauth2.server.authorization.jackson2.IngotOAuth2AuthorizationServerJackson2Module";
+            "com.ingot.framework.security.oauth2.server.authorization.jackson2.InOAuth2AuthorizationServerJackson2Module";
     private static final boolean ingotOAuth2Present;
 
     static {
-        ClassLoader classLoader = IngotSecurityJackson2Modules.class.getClassLoader();
+        ClassLoader classLoader = InSecurityJackson2Modules.class.getClassLoader();
         ingotOAuth2Present = ClassUtils.isPresent(ingotOAuth2AuthorizationServerJackson2ModuleClass, classLoader);
     }
 

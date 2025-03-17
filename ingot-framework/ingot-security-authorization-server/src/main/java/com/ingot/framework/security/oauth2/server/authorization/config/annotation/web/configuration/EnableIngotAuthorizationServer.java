@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
-import com.ingot.framework.security.config.annotation.web.configuration.EnableIngotWebSecurity;
-import com.ingot.framework.security.oauth2.core.IngotOAuth2AuthProperties;
+import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
+import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
@@ -16,8 +16,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@EnableIngotWebSecurity
-@EnableConfigurationProperties(IngotOAuth2AuthProperties.class)
+@EnableInWebSecurity
+@EnableConfigurationProperties(InOAuth2AuthProperties.class)
 @Import({IngotOAuth2AuthorizationServerConfiguration.class})
 public @interface EnableIngotAuthorizationServer {
 }

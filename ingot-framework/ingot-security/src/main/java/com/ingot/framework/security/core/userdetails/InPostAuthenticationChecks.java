@@ -8,13 +8,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 
 /**
- * <p>Description  : IngotPostAuthenticationChecks.</p>
+ * <p>Description  : {@link UserDetails} post check.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 4:06 下午.</p>
  */
 @Slf4j
-public class IngotPostAuthenticationChecks implements UserDetailsChecker {
+public class InPostAuthenticationChecks implements UserDetailsChecker {
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
     @Override

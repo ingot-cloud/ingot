@@ -1,6 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import com.ingot.framework.security.authentication.IngotDaoAuthenticationProvider;
+import com.ingot.framework.security.authentication.InDaoAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * <p>Description  : 由于{@link IngotOAuth2ResourceServerConfiguration}注入了
+ * <p>Description  : 由于{@link InOAuth2ResourceServerConfiguration}注入了
  * 多个{@link UserDetailsService}，所以Spring默认的
  * InitializeUserDetailsBeanManagerConfigurer无法提供{@link DaoAuthenticationProvider}
  * 导致无法认证{@link UsernamePasswordAuthenticationToken}.
@@ -61,7 +61,7 @@ public class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthentica
             }
             PasswordEncoder passwordEncoder = getBeanOrNull(PasswordEncoder.class);
             UserDetailsPasswordService passwordManager = getBeanOrNull(UserDetailsPasswordService.class);
-            IngotDaoAuthenticationProvider provider = new IngotDaoAuthenticationProvider();
+            InDaoAuthenticationProvider provider = new InDaoAuthenticationProvider();
             provider.setUserDetailsService(userDetailsService);
             if (passwordEncoder != null) {
                 provider.setPasswordEncoder(passwordEncoder);

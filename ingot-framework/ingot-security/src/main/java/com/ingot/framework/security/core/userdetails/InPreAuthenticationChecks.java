@@ -10,13 +10,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 
 /**
- * <p>Description  : IngotPreAuthenticationChecks.</p>
+ * <p>Description  : {@link UserDetails} pre check.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 4:07 下午.</p>
  */
 @Slf4j
-public class IngotPreAuthenticationChecks implements UserDetailsChecker {
+public class InPreAuthenticationChecks implements UserDetailsChecker {
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
     @Override

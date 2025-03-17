@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.oauth2.server.resource.authentication.IngotJwtAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -13,12 +13,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>Description  : IngotSecurityExpression.</p>
+ * <p>Description  : InSecurityExpression.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/25.</p>
  * <p>Time         : 3:09 下午.</p>
  */
-public class IngotSecurityExpression {
+public class InSecurityExpression {
 
     /**
      * 判断是否包含权限
@@ -27,7 +27,7 @@ public class IngotSecurityExpression {
      * @return {boolean}
      */
     public boolean hasAuthority(String authority) {
-        return hasAnyAuthorityName(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX, authority);
+        return hasAnyAuthorityName(InJwtAuthenticationConverter.AUTHORITY_PREFIX, authority);
     }
 
     /**
@@ -37,7 +37,7 @@ public class IngotSecurityExpression {
      * @return {boolean}
      */
     public boolean hasAnyAuthority(String... authorities) {
-        return hasAnyAuthorityName(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX, authorities);
+        return hasAnyAuthorityName(InJwtAuthenticationConverter.AUTHORITY_PREFIX, authorities);
     }
 
     /**
@@ -77,7 +77,7 @@ public class IngotSecurityExpression {
     public boolean adminOrHasAnyAuthority(String... authorities) {
         Set<String> authSet = CollUtil.newHashSet(authorities);
         authSet.add(RoleConstants.ROLE_ADMIN_CODE);
-        return hasAnyAuthorityName(IngotJwtAuthenticationConverter.AUTHORITY_PREFIX, authSet);
+        return hasAnyAuthorityName(InJwtAuthenticationConverter.AUTHORITY_PREFIX, authSet);
     }
 
     private boolean hasAnyAuthorityName(String prefix, String... authorities) {

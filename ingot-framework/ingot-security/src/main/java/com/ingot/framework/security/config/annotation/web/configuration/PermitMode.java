@@ -4,7 +4,7 @@ package com.ingot.framework.security.config.annotation.web.configuration;
 import com.ingot.framework.core.constants.SecurityConstants;
 
 /**
- * <p>Description  : PermitModel.</p>
+ * <p>Description  : {@link Permit} 模式.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019/7/12.</p>
  * <p>Time         : 2:04 PM.</p>

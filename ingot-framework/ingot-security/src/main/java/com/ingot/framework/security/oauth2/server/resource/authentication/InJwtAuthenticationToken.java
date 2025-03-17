@@ -10,12 +10,12 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotJwtAuthenticationToken.</p>
+ * <p>Description  : InJwtAuthenticationToken.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/17.</p>
  * <p>Time         : 5:33 下午.</p>
  */
-public class IngotJwtAuthenticationToken extends AbstractOAuth2TokenAuthenticationToken<Jwt> {
+public class InJwtAuthenticationToken extends AbstractOAuth2TokenAuthenticationToken<Jwt> {
 
     @Serial
     private static final long serialVersionUID = SpringSecurityCoreVersion.SERIAL_VERSION_UID;
@@ -28,7 +28,7 @@ public class IngotJwtAuthenticationToken extends AbstractOAuth2TokenAuthenticati
      * @param jwt         the JWT
      * @param authorities the authorities assigned to the JWT
      */
-    public IngotJwtAuthenticationToken(Jwt jwt, Object principal, Collection<? extends GrantedAuthority> authorities) {
+    public InJwtAuthenticationToken(Jwt jwt, Object principal, Collection<? extends GrantedAuthority> authorities) {
         super(jwt, principal, jwt, authorities);
         this.setAuthenticated(true);
         this.name = jwt.getSubject();
@@ -41,7 +41,7 @@ public class IngotJwtAuthenticationToken extends AbstractOAuth2TokenAuthenticati
      * @param authorities the authorities assigned to the JWT
      * @param name        the principal name
      */
-    public IngotJwtAuthenticationToken(Jwt jwt, Object principal, Collection<? extends GrantedAuthority> authorities, String name) {
+    public InJwtAuthenticationToken(Jwt jwt, Object principal, Collection<? extends GrantedAuthority> authorities, String name) {
         super(jwt, principal, jwt, authorities);
         this.setAuthenticated(true);
         this.name = name;

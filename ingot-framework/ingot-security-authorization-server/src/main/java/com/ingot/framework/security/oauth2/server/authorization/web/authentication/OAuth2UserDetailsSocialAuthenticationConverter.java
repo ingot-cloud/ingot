@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.core.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
@@ -21,7 +21,7 @@ import org.springframework.util.MultiValueMap;
 public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
     @Override
     protected AuthorizationGrantType getGrantType() {
-        return IngotAuthorizationGrantType.SOCIAL;
+        return InAuthorizationGrantType.SOCIAL;
     }
 
     @Override

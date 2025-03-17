@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +50,8 @@ public final class OAuth2CustomAuthenticationConverter implements Authentication
 
     private boolean filter(String grantType) {
         return ListUtil.list(false,
-                        IngotAuthorizationGrantType.PASSWORD.getValue(),
-                        IngotAuthorizationGrantType.SOCIAL.getValue())
+                        InAuthorizationGrantType.PASSWORD.getValue(),
+                        InAuthorizationGrantType.SOCIAL.getValue())
                 .contains(grantType);
     }
 }

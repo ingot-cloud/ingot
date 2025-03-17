@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
@@ -25,7 +25,7 @@ public class OAuth2CustomAuthenticationToken extends OAuth2AuthorizationGrantAut
     public OAuth2CustomAuthenticationToken(Authentication userPrincipal,
                                            Authentication clientPrincipal,
                                            Map<String, Object> additionalParameters) {
-        super(IngotAuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);
+        super(InAuthorizationGrantType.PASSWORD, clientPrincipal, additionalParameters);
         this.userPrincipal = userPrincipal;
         setDetails(userPrincipal.getDetails());
     }

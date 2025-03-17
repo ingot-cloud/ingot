@@ -1,7 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import com.ingot.framework.security.core.IngotSecurityProperties;
-import com.ingot.framework.security.oauth2.jwt.IngotJwtValidators;
+import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.jwt.InJwtValidators;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.IssuerUriCondition;
@@ -14,14 +14,14 @@ import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 /**
- * <p>Description  : IngotOAuth2ResourceServerJwtConfiguration.</p>
+ * <p>Description  : 资源服务器Jwt配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/8.</p>
  * <p>Time         : 11:09 上午.</p>
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
-public class IngotOAuth2ResourceServerJwtConfiguration {
+public class InOAuth2ResourceServerJwtConfiguration {
 
     /**
      * 参考 {@link org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerJwtConfiguration}
@@ -30,13 +30,13 @@ public class IngotOAuth2ResourceServerJwtConfiguration {
     @ConditionalOnMissingBean(JwtDecoder.class)
     @Conditional(IssuerUriCondition.class)
     JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties,
-                                     IngotSecurityProperties ingotSecurityProperties) {
+                                     InSecurityProperties inSecurityProperties) {
         log.info("[IngotOAuth2ResourceServerJwtConfiguration] 扩展 JwtValidator，使用 IngotJwtValidators.createDefaultWithIssuer");
         OAuth2ResourceServerProperties.Jwt jwt = properties.getJwt();
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(jwt.getIssuerUri());
         // 扩展 JwtValidator
-        jwtDecoder.setJwtValidator(IngotJwtValidators.createDefaultWithIssuer(
-                jwt.getIssuerUri(), ingotSecurityProperties));
+        jwtDecoder.setJwtValidator(InJwtValidators.createDefaultWithIssuer(
+                jwt.getIssuerUri(), inSecurityProperties));
         return jwtDecoder;
     }
 }

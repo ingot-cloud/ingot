@@ -6,7 +6,7 @@ import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.model.security.UserDetailsResponse;
 import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -43,7 +43,7 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
      * @param response 响应结果
      * @return {@link UserDetails}
      */
-    default IngotUserDetails parse(R<UserDetailsResponse> response) {
+    default InUserDetails parse(R<UserDetailsResponse> response) {
         return Optional.ofNullable(response)
                 .map(r -> {
                     OAuth2ErrorUtils.checkResponse(response);
@@ -54,7 +54,7 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                     List<AllowTenantDTO> allowTenants = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
                     List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(userAuthorities) + CollUtil.size(allowTenants));
                     authorities.addAll(AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0])));
-                    authorities.addAll(IngotAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
+                    authorities.addAll(InAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.security.oauth2.core.IngotClientAuthenticationMethod;
+import com.ingot.framework.security.oauth2.core.InClientAuthenticationMethod;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,7 +70,7 @@ public class PreAuthClientAuthenticationConverter implements AuthenticationConve
         parameters.forEach((key, value) ->
                 additionalParameters.put(key, (value.size() == 1) ? value.get(0) : value.toArray(new String[0])));
 
-        return new OAuth2ClientAuthenticationToken(clientId, IngotClientAuthenticationMethod.PRE_AUTH, null,
+        return new OAuth2ClientAuthenticationToken(clientId, InClientAuthenticationMethod.PRE_AUTH, null,
                 additionalParameters);
     }
 }

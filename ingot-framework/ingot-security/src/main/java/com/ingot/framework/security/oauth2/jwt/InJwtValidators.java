@@ -1,23 +1,23 @@
 package com.ingot.framework.security.oauth2.jwt;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.ingot.framework.security.core.IngotSecurityProperties;
+import com.ingot.framework.security.core.InSecurityProperties;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * <p>Description  : IngotJwtValidators.</p>
+ * <p>Description  : InJwtValidators.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/8.</p>
  * <p>Time         : 1:51 下午.</p>
  */
-public final class IngotJwtValidators {
-    private IngotJwtValidators() {
+public final class InJwtValidators {
+    private InJwtValidators() {
     }
 
     /**
@@ -36,7 +36,7 @@ public final class IngotJwtValidators {
      * supplied
      */
     public static OAuth2TokenValidator<Jwt> createDefaultWithIssuer(String issuer,
-                                                                    IngotSecurityProperties properties) {
+                                                                    InSecurityProperties properties) {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
         validators.add(new JwtIssuerValidator(issuer));

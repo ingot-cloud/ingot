@@ -9,7 +9,7 @@ import org.springframework.util.Assert;
  * <p>Date         : 2022/11/30.</p>
  * <p>Time         : 1:38 PM.</p>
  */
-public class ClientGrantedAuthority implements IngotGrantedAuthority<String> {
+public class ClientGrantedAuthority implements InGrantedAuthority<String> {
     public static final String PREFIX = "CLIENT_";
 
     private final String clientId;

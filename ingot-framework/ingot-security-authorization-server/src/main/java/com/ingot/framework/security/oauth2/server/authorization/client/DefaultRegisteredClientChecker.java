@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.client;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.security.core.IngotSecurityMessageSource;
+import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -16,7 +16,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
  */
 @Slf4j
 public class DefaultRegisteredClientChecker implements RegisteredClientChecker {
-    private final MessageSourceAccessor messages = IngotSecurityMessageSource.getAccessor();
+    private final MessageSourceAccessor messages = InSecurityMessageSource.getAccessor();
 
     @Override
     public void check(RegisteredClient client) {

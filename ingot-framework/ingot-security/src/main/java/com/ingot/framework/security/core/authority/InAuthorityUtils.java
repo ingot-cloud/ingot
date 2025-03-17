@@ -12,13 +12,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>Description  : IngotAuthorityUtils.</p>
+ * <p>Description  : Authority Utils.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2022/11/30.</p>
  * <p>Time         : 2:00 PM.</p>
  */
-public final class IngotAuthorityUtils {
-    private IngotAuthorityUtils() {
+public final class InAuthorityUtils {
+    private InAuthorityUtils() {
     }
 
     /**

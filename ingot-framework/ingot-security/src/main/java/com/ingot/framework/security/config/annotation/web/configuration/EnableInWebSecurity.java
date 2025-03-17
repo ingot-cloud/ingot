@@ -1,14 +1,14 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import com.ingot.framework.security.core.IngotSecurityProperties;
-import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
+import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.core.InOAuth2ResourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
 /**
- * <p>Description  : EnableIngotWebSecurity.</p>
+ * <p>Description  : 开启安全注解.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/14.</p>
  * <p>Time         : 3:34 下午.</p>
@@ -16,9 +16,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@EnableConfigurationProperties({IngotSecurityProperties.class, IngotOAuth2ResourceProperties.class})
-@Import({IngotOAuth2ResourceServerConfiguration.class,
-        IngotOAuth2ResourceServerJwtConfiguration.class,
+@EnableConfigurationProperties({InSecurityProperties.class, InOAuth2ResourceProperties.class})
+@Import({InOAuth2ResourceServerConfiguration.class,
+        InOAuth2ResourceServerJwtConfiguration.class,
         PasswordEncoderConfiguration.class})
-public @interface EnableIngotWebSecurity {
+public @interface EnableInWebSecurity {
 }

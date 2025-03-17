@@ -13,12 +13,12 @@ import org.springframework.util.Assert;
 import java.util.Collection;
 
 /**
- * <p>Description  : IngotJwtAuthenticationConverter.</p>
+ * <p>Description  : InJwtAuthenticationConverter.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/17.</p>
  * <p>Time         : 5:27 下午.</p>
  */
-public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     public static final String AUTHORITY_PREFIX = "SCOPE_";
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
@@ -26,7 +26,7 @@ public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractA
 
     private String principalClaimName;
 
-    public IngotJwtAuthenticationConverter() {
+    public InJwtAuthenticationConverter() {
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
                 .setAuthoritiesClaimName(JwtClaimNamesExtension.SCOPE);
@@ -39,10 +39,10 @@ public class IngotJwtAuthenticationConverter implements Converter<Jwt, AbstractA
         Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
         InUser principal = this.jwtIngotUserConverter.convert(jwt);
         if (this.principalClaimName == null) {
-            return new IngotJwtAuthenticationToken(jwt, principal, authorities);
+            return new InJwtAuthenticationToken(jwt, principal, authorities);
         }
         String principalClaimValue = jwt.getClaimAsString(this.principalClaimName);
-        return new IngotJwtAuthenticationToken(jwt, principal, authorities, principalClaimValue);
+        return new InJwtAuthenticationToken(jwt, principal, authorities, principalClaimValue);
     }
 
     /**

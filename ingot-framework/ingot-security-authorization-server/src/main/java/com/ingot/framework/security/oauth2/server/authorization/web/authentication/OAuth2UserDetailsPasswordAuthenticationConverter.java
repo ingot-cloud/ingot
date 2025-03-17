@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
+import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
@@ -12,6 +12,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 public final class OAuth2UserDetailsPasswordAuthenticationConverter extends OAuth2UserDetailsAuthenticationConverter {
     @Override
     protected AuthorizationGrantType getGrantType() {
-        return IngotAuthorizationGrantType.PASSWORD;
+        return InAuthorizationGrantType.PASSWORD;
     }
 }

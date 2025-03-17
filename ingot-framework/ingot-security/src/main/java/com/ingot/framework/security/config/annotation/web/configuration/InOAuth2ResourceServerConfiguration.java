@@ -1,17 +1,17 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
 import com.ingot.framework.security.config.annotation.web.configurers.IngotHttpConfigurersAdapter;
-import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.IngotTokenAuthConfigurer;
+import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.InTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
 import com.ingot.framework.security.core.tenantdetails.DefaultTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.*;
-import com.ingot.framework.security.oauth2.core.IngotOAuth2ResourceProperties;
+import com.ingot.framework.security.oauth2.core.InOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
-import com.ingot.framework.security.oauth2.server.resource.access.expression.IngotSecurityExpression;
+import com.ingot.framework.security.oauth2.server.resource.access.expression.InSecurityExpression;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -47,7 +47,7 @@ import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 @EnableWebSecurity(debug = true)
 @EnableMethodSecurity
 @Configuration(proxyBeanMethods = false)
-public class IngotOAuth2ResourceServerConfiguration {
+public class InOAuth2ResourceServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
@@ -68,7 +68,7 @@ public class IngotOAuth2ResourceServerConfiguration {
                 })
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver))
-                .with(new IngotTokenAuthConfigurer(permitResolver.publicRequestMatcher()), Customizer.withDefaults());
+                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher()), Customizer.withDefaults());
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -149,13 +149,13 @@ public class IngotOAuth2ResourceServerConfiguration {
 
     @Bean
     public PermitResolver permitResolver(WebApplicationContext context,
-                                         IngotOAuth2ResourceProperties ingotOAuth2ResourceProperties) {
-        return new PermitResolver(context, ingotOAuth2ResourceProperties);
+                                         InOAuth2ResourceProperties inOAuth2ResourceProperties) {
+        return new PermitResolver(context, inOAuth2ResourceProperties);
     }
 
     @Bean("ingot")
-    public IngotSecurityExpression ingotSecurityExpression() {
-        return new IngotSecurityExpression();
+    public InSecurityExpression ingotSecurityExpression() {
+        return new InSecurityExpression();
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.authentication;
 
 import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
-import com.ingot.framework.security.core.IngotSecurityMessageSource;
+import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.context.ClientContextHolder;
 import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +20,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
 
 /**
- * <p>Description  : IngotDaoAuthenticationProvider.</p>
+ * <p>Description  : 自定义AbstractUserDetailsAuthenticationProvider实现.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2022/12/1.</p>
  * <p>Time         : 3:55 PM.</p>
  */
 @Slf4j
-public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
+public class InDaoAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
     /**
      * The plaintext password used to perform PasswordEncoder#matches(CharSequence,
@@ -48,7 +48,7 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
 
     private UserDetailsPasswordService userDetailsPasswordService;
 
-    public IngotDaoAuthenticationProvider() {
+    public InDaoAuthenticationProvider() {
         setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
     }
 
@@ -72,7 +72,7 @@ public class IngotDaoAuthenticationProvider extends AbstractUserDetailsAuthentic
     protected void doAfterPropertiesSet() {
         Assert.notNull(this.userDetailsService, "A UserDetailsService must be set");
         // 强制使用 IngotSecurityMessageSource，覆盖默认的以及MessageSourceAware接口注入的MessageSource
-        setMessageSource(new IngotSecurityMessageSource());
+        setMessageSource(new InSecurityMessageSource());
     }
 
     @Override

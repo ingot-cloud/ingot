@@ -22,13 +22,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotBearerTokenAuthenticationEntryPoint.</p>
+ * <p>Description  : InBearerTokenAuthenticationEntryPoint.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/17.</p>
  * <p>Time         : 3:40 下午.</p>
  */
 @Slf4j
-public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class InBearerTokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String realmName;
@@ -45,7 +45,7 @@ public class IngotBearerTokenAuthenticationEntryPoint implements AuthenticationE
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        log.debug("[IngotBearerTokenAuthenticationEntryPoint] commence error", authException);
+        log.debug("[InBearerTokenAuthenticationEntryPoint] commence error", authException);
 
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         R<Map<String, String>> body = new R<>(BaseErrorCode.UNAUTHORIZED.getCode(),
