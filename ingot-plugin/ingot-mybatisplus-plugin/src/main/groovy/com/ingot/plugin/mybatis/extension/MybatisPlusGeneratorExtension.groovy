@@ -85,7 +85,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * entity 父类
      */
-    String superEntityClass = "com.ingot.framework.data.mybatis.model.BaseModel"
+    String superEntityClass = "com.ingot.framework.data.mybatis.common.model.BaseModel"
 
     /**
      * controller 父类
@@ -95,17 +95,17 @@ class MybatisPlusGeneratorExtension {
     /**
      * service 父类
      */
-    String superServiceClass = "com.ingot.framework.data.mybatis.service.BaseService"
+    String superServiceClass = "com.ingot.framework.data.mybatis.common.service.BaseService"
 
     /**
      * serviceImpl 父类
      */
-    String superServiceImplClass = "com.ingot.framework.data.mybatis.service.BaseServiceImpl"
+    String superServiceImplClass = "com.ingot.framework.data.mybatis.common.service.BaseServiceImpl"
 
     /**
      * mapper 父类
      */
-    String superMapperClass = "com.ingot.framework.data.mybatis.mapper.BaseMapper"
+    String superMapperClass = "com.ingot.framework.data.mybatis.common.mapper.BaseMapper"
 
     MybatisPlusGeneratorExtension() {
 
