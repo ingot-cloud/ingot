@@ -37,14 +37,14 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * <p>Description  : IngotJdbcRegisteredClientRepository.</p>
+ * <p>Description  : 自定义{@link RegisteredClientRepository}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/24.</p>
  * <p>Time         : 4:39 下午.</p>
  */
 @Slf4j
-@ImportRuntimeHints(IngotJdbcRegisteredClientRepository.JdbcRegisteredClientRepositoryRuntimeHintsRegistrar.class)
-public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepository {
+@ImportRuntimeHints(InJdbcRegisteredClientRepository.JdbcRegisteredClientRepositoryRuntimeHintsRegistrar.class)
+public class InJdbcRegisteredClientRepository implements RegisteredClientRepository {
 
     // @formatter:off
     private static final String COLUMN_NAMES = "id, "
@@ -92,7 +92,7 @@ public class IngotJdbcRegisteredClientRepository implements RegisteredClientRepo
      *
      * @param jdbcOperations the JDBC operations
      */
-    public IngotJdbcRegisteredClientRepository(JdbcOperations jdbcOperations) {
+    public InJdbcRegisteredClientRepository(JdbcOperations jdbcOperations) {
         Assert.notNull(jdbcOperations, "jdbcOperations cannot be null");
         this.jdbcOperations = jdbcOperations;
         this.registeredClientRowMapper = new RegisteredClientRowMapper();

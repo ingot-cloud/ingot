@@ -2,7 +2,7 @@ package com.ingot.cloud.auth.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.dto.OAuth2AuthorizationDTO;
-import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
+import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
@@ -84,6 +84,6 @@ public class TokenEndpoint implements RShortcuts {
     @GetMapping("/page")
     @PreAuthorize("@ingot.requiredAdmin")
     public R<?> page(Page<OAuth2AuthorizationDTO> page, OAuth2AuthorizationDTO params) {
-        return ok(((IngotJdbcOAuth2AuthorizationService) oAuth2AuthorizationService).page(page, params));
+        return ok(((InJdbcOAuth2AuthorizationService) oAuth2AuthorizationService).page(page, params));
     }
 }

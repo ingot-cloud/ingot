@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotOAuth2TypeHandler.</p>
+ * <p>Description  : CustomOAuth2TypeHandler.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/11.</p>
  * <p>Time         : 11:44 上午.</p>
@@ -29,7 +29,7 @@ import java.util.Map;
 @Slf4j
 @MappedTypes({Object.class})
 @MappedJdbcTypes(JdbcType.VARCHAR)
-public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
+public class CustomOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Class<?> type;
 
@@ -40,7 +40,7 @@ public class IngotOAuth2TypeHandler extends AbstractJsonTypeHandler<Object> {
         objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
     }
 
-    public IngotOAuth2TypeHandler(Class<?> type) {
+    public CustomOAuth2TypeHandler(Class<?> type) {
         super(type);
         if (log.isTraceEnabled()) {
             log.trace("IngotOAuth2TypeHandler(" + type + ")");

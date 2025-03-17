@@ -32,13 +32,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * <p>Description  : IngotJdbcOAuth2AuthorizationService.</p>
+ * <p>Description  : 自定义{@link JdbcOAuth2AuthorizationService}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/26.</p>
  * <p>Time         : 3:07 下午.</p>
  */
 @Slf4j
-public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2AuthorizationService {
+public class InJdbcOAuth2AuthorizationService extends JdbcOAuth2AuthorizationService {
 
     // @formatter:off
     private static final String COLUMN_NAMES = "auth.id, "
@@ -85,7 +85,7 @@ public class IngotJdbcOAuth2AuthorizationService extends JdbcOAuth2Authorization
 
     private AuthorizationCacheService authorizationCacheService;
 
-    public IngotJdbcOAuth2AuthorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
+    public InJdbcOAuth2AuthorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
         super(jdbcOperations, registeredClientRepository);
 
         OAuth2AuthorizationRowMapper rowMapper = (OAuth2AuthorizationRowMapper) getAuthorizationRowMapper();

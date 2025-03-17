@@ -1,9 +1,9 @@
 package com.ingot.cloud.auth.config;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.cloud.auth.client.IngotJdbcRegisteredClientRepository;
-import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationConsentService;
-import com.ingot.cloud.auth.service.IngotJdbcOAuth2AuthorizationService;
+import com.ingot.cloud.auth.client.InJdbcRegisteredClientRepository;
+import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationConsentService;
+import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.config.annotation.web.configuration.InOAuth2ResourceServerConfiguration;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
@@ -85,18 +85,18 @@ public class AuthorizationServerConfig {
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate,
                                                            RegisteredClientRepository registeredClientRepository) {
-        return new IngotJdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+        return new InJdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
     }
 
     @Bean
     public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate,
                                                                          RegisteredClientRepository registeredClientRepository) {
-        return new IngotJdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
+        return new InJdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
     }
 
     @Bean
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
-        return new IngotJdbcRegisteredClientRepository(jdbcTemplate);
+        return new InJdbcRegisteredClientRepository(jdbcTemplate);
     }
 
     @Bean

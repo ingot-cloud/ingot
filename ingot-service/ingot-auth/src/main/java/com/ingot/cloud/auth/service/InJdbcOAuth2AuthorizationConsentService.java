@@ -1,20 +1,7 @@
 package com.ingot.cloud.auth.service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.SqlParameterValue;
+import org.springframework.jdbc.core.*;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,13 +13,22 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
 /**
- * <p>Description  : IngotJdbcOAuth2AuthorizationConsentService.</p>
+ * <p>Description  : 自定义{@link OAuth2AuthorizationConsentService}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/26.</p>
  * <p>Time         : 3:06 下午.</p>
  */
-public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2AuthorizationConsentService {
+public class InJdbcOAuth2AuthorizationConsentService implements OAuth2AuthorizationConsentService {
 
     // @formatter:off
     private static final String COLUMN_NAMES = "registered_client_id, "
@@ -74,13 +70,13 @@ public class IngotJdbcOAuth2AuthorizationConsentService implements OAuth2Authori
      * @param jdbcOperations             the JDBC operations
      * @param registeredClientRepository the registered client repository
      */
-    public IngotJdbcOAuth2AuthorizationConsentService(JdbcOperations jdbcOperations,
-                                                      RegisteredClientRepository registeredClientRepository) {
+    public InJdbcOAuth2AuthorizationConsentService(JdbcOperations jdbcOperations,
+                                                   RegisteredClientRepository registeredClientRepository) {
         Assert.notNull(jdbcOperations, "jdbcOperations cannot be null");
         Assert.notNull(registeredClientRepository, "registeredClientRepository cannot be null");
         this.jdbcOperations = jdbcOperations;
-        this.authorizationConsentRowMapper = new IngotJdbcOAuth2AuthorizationConsentService.OAuth2AuthorizationConsentRowMapper(registeredClientRepository);
-        this.authorizationConsentParametersMapper = new IngotJdbcOAuth2AuthorizationConsentService.OAuth2AuthorizationConsentParametersMapper();
+        this.authorizationConsentRowMapper = new InJdbcOAuth2AuthorizationConsentService.OAuth2AuthorizationConsentRowMapper(registeredClientRepository);
+        this.authorizationConsentParametersMapper = new InJdbcOAuth2AuthorizationConsentService.OAuth2AuthorizationConsentParametersMapper();
     }
 
     @Override

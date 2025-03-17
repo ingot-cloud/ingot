@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * <p>Description  : EnableIngotAuthorizationServer.</p>
+ * <p>Description  : EnableInAuthorizationServer.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/14.</p>
  * <p>Time         : 10:50 上午.</p>
@@ -19,5 +19,5 @@ import java.lang.annotation.*;
 @EnableInWebSecurity
 @EnableConfigurationProperties(InOAuth2AuthProperties.class)
 @Import({InOAuth2AuthorizationServerConfiguration.class})
-public @interface EnableIngotAuthorizationServer {
+public @interface EnableInAuthorizationServer {
 }

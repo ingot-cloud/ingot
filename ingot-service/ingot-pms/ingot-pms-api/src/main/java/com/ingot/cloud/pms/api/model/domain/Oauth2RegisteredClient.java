@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.IngotOAuth2TypeHandler;
+import com.ingot.cloud.pms.api.mybatisplus.extension.handlers.CustomOAuth2TypeHandler;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import jakarta.validation.constraints.NotBlank;
@@ -93,13 +93,13 @@ public class Oauth2RegisteredClient extends BaseModel<Oauth2RegisteredClient> {
     /**
      * 客户端设置
      */
-    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
+    @TableField(typeHandler = CustomOAuth2TypeHandler.class)
     private ClientSettings clientSettings;
 
     /**
      * token设置
      */
-    @TableField(typeHandler = IngotOAuth2TypeHandler.class)
+    @TableField(typeHandler = CustomOAuth2TypeHandler.class)
     private TokenSettings tokenSettings;
 
     /**
