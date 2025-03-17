@@ -22,11 +22,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
-import org.springframework.security.authorization.method.PrePostTemplateDefaults;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.annotation.AnnotationTemplateExpressionDefaults;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -161,11 +161,11 @@ public class InOAuth2ResourceServerConfiguration {
     /**
      * 支持自定义权限表达式
      *
-     * @return {@link PrePostTemplateDefaults }
+     * @return {@link AnnotationTemplateExpressionDefaults }
      */
     @Bean
-    public PrePostTemplateDefaults prePostTemplateDefaults() {
-        return new PrePostTemplateDefaults();
+    public AnnotationTemplateExpressionDefaults prePostTemplateDefaults() {
+        return new AnnotationTemplateExpressionDefaults();
     }
 
 }
