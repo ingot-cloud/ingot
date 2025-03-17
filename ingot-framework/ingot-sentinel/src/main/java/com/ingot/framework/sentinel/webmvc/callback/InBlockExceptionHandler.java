@@ -26,7 +26,7 @@ public class InBlockExceptionHandler implements BlockExceptionHandler {
                        HttpServletResponse response,
                        String resourceName,
                        BlockException e) throws Exception {
-        log.error("sentinel 限流资源名称：{}", resourceName, e);
+        log.error("[InBlockExceptionHandler] sentinel 限流资源名称：{}", resourceName, e);
 
         response.setContentType(ContentType.JSON.toString());
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
