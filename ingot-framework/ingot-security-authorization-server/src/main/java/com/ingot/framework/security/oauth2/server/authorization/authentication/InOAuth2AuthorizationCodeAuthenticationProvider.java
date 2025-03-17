@@ -26,20 +26,20 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * <p>Description  : IngotOAuth2AuthorizationCodeAuthenticationProvider.</p>
+ * <p>Description  : 自定义授权码{@link AuthenticationProvider}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/22.</p>
  * <p>Time         : 8:53 AM.</p>
  */
 @Slf4j
-public final class IngotOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
+public final class InOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
     public static final OAuth2TokenType AUTHORIZATION_CODE_TOKEN_TYPE =
             new OAuth2TokenType(OAuth2ParameterNames.CODE);
     private final OAuth2AuthorizationService authorizationService;
     private final OAuth2AuthorizationCodeAuthenticationProvider provider;
 
-    public IngotOAuth2AuthorizationCodeAuthenticationProvider(OAuth2AuthorizationService authorizationService,
-                                                              OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
+    public InOAuth2AuthorizationCodeAuthenticationProvider(OAuth2AuthorizationService authorizationService,
+                                                           OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
         Assert.notNull(authorizationService, "authorizationService cannot be null");
         Assert.notNull(tokenGenerator, "tokenGenerator cannot be null");
         this.authorizationService = authorizationService;

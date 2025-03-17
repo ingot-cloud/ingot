@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.IngotOAuth2AuthorizationCodeAuthenticationProvider;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.InOAuth2AuthorizationCodeAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2UserDetailsAuthenticationFilter;
@@ -131,8 +131,8 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         authenticationProviders.add(customAuthenticationProvider);
 
         // 增强 OAuth2AuthorizationCodeAuthenticationProvider
-        IngotOAuth2AuthorizationCodeAuthenticationProvider ingotCodeAuthProvider =
-                new IngotOAuth2AuthorizationCodeAuthenticationProvider(authorizationService, tokenGenerator);
+        InOAuth2AuthorizationCodeAuthenticationProvider ingotCodeAuthProvider =
+                new InOAuth2AuthorizationCodeAuthenticationProvider(authorizationService, tokenGenerator);
         authenticationProviders.add(ingotCodeAuthProvider);
 
         return authenticationProviders;

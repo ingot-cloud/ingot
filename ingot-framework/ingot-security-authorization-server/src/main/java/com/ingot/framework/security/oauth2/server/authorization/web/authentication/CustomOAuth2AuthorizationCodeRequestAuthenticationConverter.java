@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotOAuth2AuthorizationCodeRequestAuthenticationConverter.</p>
+ * <p>Description  : 自定义授权码请求 {@link AuthenticationConverter}.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/9.</p>
  * <p>Time         : 10:58 AM.</p>
  */
-public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implements AuthenticationConverter {
+public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter implements AuthenticationConverter {
     private final OAuth2AuthorizationCodeRequestAuthenticationConverter converter =
             new OAuth2AuthorizationCodeRequestAuthenticationConverter();
 

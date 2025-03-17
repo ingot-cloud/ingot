@@ -20,7 +20,7 @@ public class InOAuth2AuthorizationServerJackson2Module extends OAuth2Authorizati
     @Override
     public void setupModule(SetupContext context) {
         super.setupModule(context);
-        context.setMixInAnnotations(InUser.class, IngotUserMixin.class);
+        context.setMixInAnnotations(InUser.class, InUserMixin.class);
         context.setMixInAnnotations(Long.class, LongMixin.class);
         context.setMixInAnnotations(OAuth2UserDetailsAuthenticationToken.class,
                 OAuth2UserDetailsAuthenticationTokenMixin.class);

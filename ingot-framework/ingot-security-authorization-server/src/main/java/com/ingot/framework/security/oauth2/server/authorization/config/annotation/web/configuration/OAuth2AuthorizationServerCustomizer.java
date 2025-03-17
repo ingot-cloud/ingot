@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.config.annotati
 
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AuthorizationCodeAuthenticationSuccessHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.IngotOAuth2AuthorizationCodeRequestAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.CustomOAuth2AuthorizationCodeRequestAuthenticationConverter;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationEndpointConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeRequestAuthenticationConverter;
@@ -22,7 +22,7 @@ public class OAuth2AuthorizationServerCustomizer implements Customizer<OAuth2Aut
         // 替换原有Converter
         configurer.authorizationRequestConverters(converters -> {
             converters.removeIf(converter -> converter instanceof OAuth2AuthorizationCodeRequestAuthenticationConverter);
-            converters.add(new IngotOAuth2AuthorizationCodeRequestAuthenticationConverter());
+            converters.add(new CustomOAuth2AuthorizationCodeRequestAuthenticationConverter());
         });
         configurer.authorizationResponseHandler(new AuthorizationCodeAuthenticationSuccessHandler());
         configurer.errorResponseHandler(new DefaultAuthenticationFailureHandler());

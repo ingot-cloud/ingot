@@ -8,7 +8,7 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.core.utils.CookieUtils;
 import com.ingot.framework.core.constants.InOAuth2ParameterNames;
-import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
+import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,7 +39,7 @@ import java.util.Optional;
 @Slf4j
 public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final HttpMessageConverter<OAuth2AccessTokenResponse> accessTokenHttpResponseConverter =
-            new IngotOAuth2AccessTokenResponseHttpMessageConverter();
+            new CustomOAuth2AccessTokenResponseHttpMessageConverter();
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,

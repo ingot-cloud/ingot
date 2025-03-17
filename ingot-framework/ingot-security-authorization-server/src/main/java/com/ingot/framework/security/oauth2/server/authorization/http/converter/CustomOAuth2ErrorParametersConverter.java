@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotOAuth2ErrorParametersConverter.</p>
+ * <p>Description  : 自定义OAuth2Error to Map.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/13.</p>
  * <p>Time         : 10:20 上午.</p>
  */
-public class IngotOAuth2ErrorParametersConverter implements Converter<OAuth2Error, Map<String, String>> {
+public class CustomOAuth2ErrorParametersConverter implements Converter<OAuth2Error, Map<String, String>> {
 
     @Override
     public Map<String, String> convert(OAuth2Error oauth2Error) {

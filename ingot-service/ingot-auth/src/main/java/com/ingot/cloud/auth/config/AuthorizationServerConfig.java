@@ -11,7 +11,7 @@ import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.jwt.InJwtValidators;
-import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.IngotOAuth2AuthorizationServerConfiguration;
+import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.InOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -58,11 +58,11 @@ public class AuthorizationServerConfig {
     private final RedisTemplate<String, Object> redisTemplate;
     private final InOAuth2AuthProperties properties;
 
-    @Bean(IngotOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
+    @Bean(InOAuth2AuthorizationServerConfiguration.SECURITY_FILTER_CHAIN_NAME)
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
                                                                       TenantHttpConfigurer tenantHttpConfigurer) throws Exception {
-        IngotOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        InOAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         tenantHttpConfigurer.configure(http);
         http.securityContext(new SecurityContextCustomizer(this.redisTemplate))
                 .exceptionHandling(new ExceptionHandlingCustomizer(this.properties));

@@ -18,14 +18,14 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
- * <p>Description  : IngotOAuth2AuthorizationServerConfiguration.</p>
+ * <p>Description  : OAuth2授权服务配置.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:02 下午.</p>
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
-public class IngotOAuth2AuthorizationServerConfiguration {
+public class InOAuth2AuthorizationServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "authorizationServerSecurityFilterChain";
 

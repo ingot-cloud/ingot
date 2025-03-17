@@ -15,12 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>Description  : IngotOAuth2AccessTokenResponseMapConverter.</p>
+ * <p>Description  : 自定义 {@link OAuth2AccessTokenResponse} Map converter.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/24.</p>
  * <p>Time         : 3:58 下午.</p>
  */
-public class IngotOAuth2AccessTokenResponseMapConverter
+public class CustomOAuth2AccessTokenResponseMapConverter
         implements Converter<OAuth2AccessTokenResponse, Map<String, Object>> {
 
     @Override

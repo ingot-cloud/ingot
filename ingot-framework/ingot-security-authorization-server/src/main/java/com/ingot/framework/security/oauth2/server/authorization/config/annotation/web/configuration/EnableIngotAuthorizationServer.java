@@ -18,6 +18,6 @@ import java.lang.annotation.*;
 @Documented
 @EnableInWebSecurity
 @EnableConfigurationProperties(InOAuth2AuthProperties.class)
-@Import({IngotOAuth2AuthorizationServerConfiguration.class})
+@Import({InOAuth2AuthorizationServerConfiguration.class})
 public @interface EnableIngotAuthorizationServer {
 }

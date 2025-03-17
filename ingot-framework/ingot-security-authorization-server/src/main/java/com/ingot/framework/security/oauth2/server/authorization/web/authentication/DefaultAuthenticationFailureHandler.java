@@ -2,8 +2,8 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.status.BaseErrorCode;
-import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2ErrorConverter;
-import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2ErrorParametersConverter;
+import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2ErrorConverter;
+import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2ErrorParametersConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -32,8 +32,8 @@ public class DefaultAuthenticationFailureHandler implements AuthenticationFailur
 
     public DefaultAuthenticationFailureHandler() {
         this.errorHttpResponseConverter = new OAuth2ErrorHttpMessageConverter();
-        this.errorHttpResponseConverter.setErrorConverter(new IngotOAuth2ErrorConverter());
-        this.errorHttpResponseConverter.setErrorParametersConverter(new IngotOAuth2ErrorParametersConverter());
+        this.errorHttpResponseConverter.setErrorConverter(new CustomOAuth2ErrorConverter());
+        this.errorHttpResponseConverter.setErrorParametersConverter(new CustomOAuth2ErrorParametersConverter());
     }
 
     @Override

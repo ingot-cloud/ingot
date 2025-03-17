@@ -18,13 +18,13 @@ import java.util.Collection;
 import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.GRANTED_AUTH_COLL;
 
 /**
- * <p>Description  : IngotUserDeserializer.</p>
+ * <p>Description  : {@link InUser} Deserializer.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/26.</p>
  * <p>Time         : 4:52 下午.</p>
  */
 @Slf4j
-final class IngotUserDeserializer extends JsonDeserializer<InUser> {
+final class InUserDeserializer extends JsonDeserializer<InUser> {
     @Override
     public InUser deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();
