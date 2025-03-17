@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>Description  : IngotPreconditions.</p>
+ * <p>Description  : InPreconditions.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2018/12/25.</p>
  * <p>Time         : 9:12 AM.</p>
@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-public @interface IngotPreconditions {
+public @interface InPreconditions {
 
     /**
      * Preconditions 类

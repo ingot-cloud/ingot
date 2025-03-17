@@ -22,14 +22,14 @@ import java.util.Map;
 
 
 /**
- * <p>Description  : IngotErrorAttributes.</p>
+ * <p>Description  : Custom ErrorAttributes.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2019/1/10.</p>
  * <p>Time         : 5:24 PM.</p>
  */
 @Slf4j
-public class IngotErrorAttributes implements ErrorAttributes, Ordered {
-    private static final String ERROR_ATTRIBUTE = IngotErrorAttributes.class.getName() + ".ERROR";
+public class InErrorAttributes implements ErrorAttributes, Ordered {
+    private static final String ERROR_ATTRIBUTE = InErrorAttributes.class.getName() + ".ERROR";
 
     @Override
     public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
@@ -44,7 +44,7 @@ public class IngotErrorAttributes implements ErrorAttributes, Ordered {
         Map<String, Object> finalAttributes = new LinkedHashMap<>();
         finalAttributes.put(R.DATA, errorAttributes);
 
-        log.error("[IngotErrorAttributes] error={}, attributes={}", error, errorAttributes);
+        log.error("[{}] error={}, attributes={}", ERROR_ATTRIBUTE, error, errorAttributes);
 
         // 获取真实 exception
         while (error instanceof ServletException && error.getCause() != null) {

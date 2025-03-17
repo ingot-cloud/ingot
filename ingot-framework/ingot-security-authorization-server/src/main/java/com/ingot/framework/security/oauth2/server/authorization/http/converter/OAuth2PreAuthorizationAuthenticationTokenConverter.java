@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
@@ -21,7 +21,7 @@ public class OAuth2PreAuthorizationAuthenticationTokenConverter implements Conve
     @Override
     public Map<String, Object> convert(@NonNull OAuth2PreAuthorizationCodeRequestAuthenticationToken source) {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put(IngotOAuth2ParameterNames.PRE_ALLOW_LIST, source.getAllowList());
+        parameters.put(InOAuth2ParameterNames.PRE_ALLOW_LIST, source.getAllowList());
 
         Map<String, Object> result = new HashMap<>();
         result.put(R.CODE, BaseErrorCode.OK.getCode());

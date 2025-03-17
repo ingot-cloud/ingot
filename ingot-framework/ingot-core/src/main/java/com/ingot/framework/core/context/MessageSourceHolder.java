@@ -45,7 +45,7 @@ public final class MessageSourceHolder {
         return getMessageSource().getMessage(code, args);
     }
 
-    private static IngotMessageSource getMessageSource() {
-        return SpringContextHolder.getBean(IngotMessageSource.class);
+    private static InMessageSource getMessageSource() {
+        return SpringContextHolder.getBean(InMessageSource.class);
     }
 }

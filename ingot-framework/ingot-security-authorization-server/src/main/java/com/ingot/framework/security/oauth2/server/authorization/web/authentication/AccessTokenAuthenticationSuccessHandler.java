@@ -7,7 +7,7 @@ import com.ingot.framework.core.model.event.LoginEvent;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.WebUtils;
 import com.ingot.framework.core.utils.CookieUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.IngotOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,12 +61,12 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
         Map<String, Object> additionalParameters = accessTokenAuthentication.getAdditionalParameters();
 
 
-        String sessionId = Optional.ofNullable(additionalParameters.get(IngotOAuth2ParameterNames.SESSION_ID))
+        String sessionId = Optional.ofNullable(additionalParameters.get(InOAuth2ParameterNames.SESSION_ID))
                 .map(String::valueOf)
                 .orElse("");
         if (StrUtil.isNotEmpty(sessionId)) {
             CookieUtils.setCookie(CookieUtils.SESSION_ID_NAME, sessionId, null, true, false, response);
-            additionalParameters.remove(IngotOAuth2ParameterNames.SESSION_ID);
+            additionalParameters.remove(InOAuth2ParameterNames.SESSION_ID);
         }
 
         long expiresIn = accessToken.getIssuedAt() != null && accessToken.getExpiresAt() != null ?

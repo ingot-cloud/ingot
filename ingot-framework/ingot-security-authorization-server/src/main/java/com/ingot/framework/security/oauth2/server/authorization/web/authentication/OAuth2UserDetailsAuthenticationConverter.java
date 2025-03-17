@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -41,13 +41,13 @@ public abstract class OAuth2UserDetailsAuthenticationConverter implements Authen
 
         String username = OAuth2EndpointUtils.getParameter(parameters, OAuth2ParameterNames.USERNAME);
         String password = OAuth2EndpointUtils.getParameter(parameters, OAuth2ParameterNames.PASSWORD);
-        String userTypeValue = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.USER_TYPE);
+        String userTypeValue = OAuth2EndpointUtils.getParameter(parameters, InOAuth2ParameterNames.USER_TYPE);
         UserTypeEnum userType = UserTypeEnum.getEnum(userTypeValue);
         if (userType == null) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.USER_TYPE);
+            OAuth2ErrorUtils.throwInvalidRequestParameter(InOAuth2ParameterNames.USER_TYPE);
         }
 
-        String tenant = parameters.getFirst(IngotOAuth2ParameterNames.TENANT);
+        String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
         String principal = UsernameUri.of(username, userTypeValue, getGrantType().getValue(), tenant).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.core.endpoint.PreAuthorizationGrantType;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -32,7 +32,7 @@ public class OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationConverter
         }
 
         // pre_grant_type (REQUIRED)
-        String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
+        String preGrantType = request.getParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE);
         if (StrUtil.equals(preGrantType, PreAuthorizationGrantType.PASSWORD.value())) {
             return passwordConverter.createUnauthenticated(request, authentication);
         }

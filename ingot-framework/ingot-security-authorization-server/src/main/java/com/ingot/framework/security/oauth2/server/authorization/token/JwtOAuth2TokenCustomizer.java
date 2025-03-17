@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 import cn.hutool.core.util.NumberUtil;
 import com.ingot.framework.security.core.authority.IngotAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
@@ -36,7 +36,7 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
         } else if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthToken) {
             InUser user = (InUser) preAuthToken.getPrincipal();
             Long tenant = NumberUtil.parseLong(
-                    String.valueOf(preAuthToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT)),
+                    String.valueOf(preAuthToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT)),
                     user.getTenantId());
             customizeWithUser(context,
                     user.toBuilder()

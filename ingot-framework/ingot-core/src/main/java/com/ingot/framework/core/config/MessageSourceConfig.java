@@ -1,7 +1,7 @@
 package com.ingot.framework.core.config;
 
-import com.ingot.framework.core.context.IngotMessageSource;
-import com.ingot.framework.core.context.support.IngotReloadableResourceBundleMessageSource;
+import com.ingot.framework.core.context.InMessageSource;
+import com.ingot.framework.core.context.support.InReloadableResourceBundleMessageSource;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.core.utils.validation.DefaultAssertionChecker;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -24,10 +24,10 @@ public class MessageSourceConfig {
     public static final String BASENAME = "classpath:i18n/messages";
 
     @Bean
-    @ConditionalOnMissingBean(IngotMessageSource.class)
-    public IngotMessageSource messageSource() {
-        IngotReloadableResourceBundleMessageSource messageSource =
-                new IngotReloadableResourceBundleMessageSource();
+    @ConditionalOnMissingBean(InMessageSource.class)
+    public InMessageSource messageSource() {
+        InReloadableResourceBundleMessageSource messageSource =
+                new InReloadableResourceBundleMessageSource();
         messageSource.setBasename(BASENAME);
 //        messageSource.setUseCodeAsDefaultMessage(true);
         messageSource.setDefaultEncoding(StandardCharsets.UTF_8.name());
@@ -43,7 +43,7 @@ public class MessageSourceConfig {
 
     @Bean
     @ConditionalOnMissingBean(AssertionChecker.class)
-    public AssertionChecker assertionChecker(IngotMessageSource messageSource) {
+    public AssertionChecker assertionChecker(InMessageSource messageSource) {
         return new DefaultAssertionChecker(messageSource);
     }
 }

@@ -1,6 +1,6 @@
 package com.ingot.framework.core.config;
 
-import com.ingot.framework.core.error.IngotErrorAttributes;
+import com.ingot.framework.core.error.InErrorAttributes;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -21,6 +21,6 @@ public class ErrorConfig {
 
     @Bean
     public ErrorAttributes errorAttributes() {
-        return new IngotErrorAttributes();
+        return new InErrorAttributes();
     }
 }

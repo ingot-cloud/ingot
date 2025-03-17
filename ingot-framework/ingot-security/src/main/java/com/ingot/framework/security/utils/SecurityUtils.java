@@ -1,7 +1,7 @@
 package com.ingot.framework.security.utils;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.core.utils.CookieUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -131,9 +131,9 @@ public final class SecurityUtils {
      * @return sessionID
      */
     public static String getSessionId(HttpServletRequest request) {
-        String sessionId = request.getHeader(IngotOAuth2ParameterNames.SESSION_ID);
+        String sessionId = request.getHeader(InOAuth2ParameterNames.SESSION_ID);
         if (StrUtil.isEmpty(sessionId)) {
-            sessionId = request.getParameter(IngotOAuth2ParameterNames.SESSION_ID);
+            sessionId = request.getParameter(InOAuth2ParameterNames.SESSION_ID);
         }
 
         if (StrUtil.isEmpty(sessionId)) {

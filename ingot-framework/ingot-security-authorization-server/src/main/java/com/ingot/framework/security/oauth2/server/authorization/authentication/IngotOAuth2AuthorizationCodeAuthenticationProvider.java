@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -65,16 +65,16 @@ public final class IngotOAuth2AuthorizationCodeAuthenticationProvider implements
         // 如果是OAuth2PreAuthorizationCodeRequestAuthenticationToken，那么添加 tenant
         Authentication principal = authorization.getAttribute(Principal.class.getName());
         if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preToken) {
-            preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT);
-            additionalParameters.put(IngotOAuth2ParameterNames.TENANT,
-                    preToken.getAdditionalParameters().get(IngotOAuth2ParameterNames.TENANT));
+            preToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT);
+            additionalParameters.put(InOAuth2ParameterNames.TENANT,
+                    preToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT));
         }
         OAuth2AuthorizationRequest request = authorization.getAttribute(OAuth2AuthorizationRequest.class.getName());
         if (request != null) {
-            String sessionId = Optional.ofNullable(request.getAdditionalParameters().get(IngotOAuth2ParameterNames.SESSION_ID))
+            String sessionId = Optional.ofNullable(request.getAdditionalParameters().get(InOAuth2ParameterNames.SESSION_ID))
                     .map(String::valueOf)
                     .orElse("");
-            additionalParameters.put(IngotOAuth2ParameterNames.SESSION_ID, sessionId);
+            additionalParameters.put(InOAuth2ParameterNames.SESSION_ID, sessionId);
         }
 
         return new OAuth2AccessTokenAuthenticationToken(

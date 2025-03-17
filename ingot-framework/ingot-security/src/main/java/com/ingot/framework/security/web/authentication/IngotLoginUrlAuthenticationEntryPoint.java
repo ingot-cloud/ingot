@@ -1,7 +1,7 @@
 package com.ingot.framework.security.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,7 +54,7 @@ public class IngotLoginUrlAuthenticationEntryPoint extends LoginUrlAuthenticatio
 
         String redirectUri = URLEncoder.encode(requestUrl.toString(), StandardCharsets.UTF_8);
         String loginUrl = loginForm + "?" + OAuth2ParameterNames.REDIRECT_URI + "=" + redirectUri +
-                "&" + IngotOAuth2ParameterNames.SESSION_ID + "=" + request.getSession(false).getId();
+                "&" + InOAuth2ParameterNames.SESSION_ID + "=" + request.getSession(false).getId();
         this.redirectStrategy.sendRedirect(request, response, loginUrl);
     }
 }

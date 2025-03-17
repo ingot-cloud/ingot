@@ -5,7 +5,7 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +37,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
     private static final String PKCE_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1";
 
     private static final List<String> requiredParameters = ListUtil.list(false,
-            IngotOAuth2ParameterNames.PRE_GRANT_TYPE,
+            InOAuth2ParameterNames.PRE_GRANT_TYPE,
             PkceParameterNames.CODE_CHALLENGE,
             OAuth2ParameterNames.CLIENT_ID,
             OAuth2ParameterNames.RESPONSE_TYPE,
@@ -45,7 +45,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
             OAuth2ParameterNames.SCOPE
     );
     private static final List<String> savedParameters = ListUtil.list(false,
-            IngotOAuth2ParameterNames.PRE_GRANT_TYPE,
+            InOAuth2ParameterNames.PRE_GRANT_TYPE,
             PkceParameterNames.CODE_CHALLENGE,
             OAuth2ParameterNames.CLIENT_ID,
             OAuth2ParameterNames.RESPONSE_TYPE,
@@ -64,9 +64,9 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
         // pre_grant_type (REQUIRED)
-        String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
+        String preGrantType = request.getParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE);
         if (StrUtil.isEmpty(preGrantType)) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE, null);
+            OAuth2ErrorUtils.throwInvalidRequestParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE, null);
         }
 
         // REQUIRED parameters
@@ -115,7 +115,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
             // challenge和state过滤，不校验
             if (StrUtil.equals(key, PkceParameterNames.CODE_CHALLENGE)
                     || StrUtil.equals(key, OAuth2ParameterNames.STATE)
-                    || StrUtil.equals(key, IngotOAuth2ParameterNames.PRE_GRANT_TYPE)) {
+                    || StrUtil.equals(key, InOAuth2ParameterNames.PRE_GRANT_TYPE)) {
                 return;
             }
 

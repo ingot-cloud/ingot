@@ -5,7 +5,7 @@ import com.ingot.framework.core.utils.SocialUtils;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
 import com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -28,15 +28,15 @@ public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDe
     protected Authentication createUnauthenticated(HttpServletRequest request, Authentication clientPrincipal) {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
-        String socialType = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_TYPE);
-        String code = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.SOCIAL_CODE);
-        String userTypeValue = OAuth2EndpointUtils.getParameter(parameters, IngotOAuth2ParameterNames.USER_TYPE);
+        String socialType = OAuth2EndpointUtils.getParameter(parameters, InOAuth2ParameterNames.SOCIAL_TYPE);
+        String code = OAuth2EndpointUtils.getParameter(parameters, InOAuth2ParameterNames.SOCIAL_CODE);
+        String userTypeValue = OAuth2EndpointUtils.getParameter(parameters, InOAuth2ParameterNames.USER_TYPE);
         UserTypeEnum userType = UserTypeEnum.getEnum(userTypeValue);
         if (userType == null) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.USER_TYPE);
+            OAuth2ErrorUtils.throwInvalidRequestParameter(InOAuth2ParameterNames.USER_TYPE);
         }
 
-        String tenant = parameters.getFirst(IngotOAuth2ParameterNames.TENANT);
+        String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
         String principal = UsernameUri.of(
                 SocialUtils.uniqueCode(socialType, code), userTypeValue, getGrantType().getValue(), tenant).getValue();
         return OAuth2UserDetailsAuthenticationToken

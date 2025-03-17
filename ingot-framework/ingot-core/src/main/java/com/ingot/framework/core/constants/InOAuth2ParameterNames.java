@@ -3,12 +3,12 @@ package com.ingot.framework.core.constants;
 import com.ingot.framework.core.model.enums.SocialTypeEnum;
 
 /**
- * <p>Description  : IngotOAuth2ParameterNames.</p>
+ * <p>Description  : OAuth2参数名称.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/14.</p>
  * <p>Time         : 2:50 下午.</p>
  */
-public interface IngotOAuth2ParameterNames {
+public interface InOAuth2ParameterNames {
 
     /**
      * {@code access_token} - used in Authorization Response and Access Token Response.

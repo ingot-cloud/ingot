@@ -32,7 +32,7 @@ public class PreconditionsAop implements ApplicationContextAware {
     /**
      * PrePreconditionsAop annotation.
      */
-    @Pointcut("@within(com.ingot.framework.core.utils.preconditions.IngotPreconditions)")
+    @Pointcut("@within(com.ingot.framework.core.utils.preconditions.InPreconditions)")
     public void prePreconditionsAop() {
     }
 
@@ -46,7 +46,7 @@ public class PreconditionsAop implements ApplicationContextAware {
         String methodName = joinPoint.getSignature().getName();
         log.info(">>> PreconditionsAop doBefore - method={}", methodName);
         Object target = joinPoint.getTarget();
-        IngotPreconditions annotation = target.getClass().getAnnotation(IngotPreconditions.class);
+        InPreconditions annotation = target.getClass().getAnnotation(InPreconditions.class);
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
 
         if (method == null) {

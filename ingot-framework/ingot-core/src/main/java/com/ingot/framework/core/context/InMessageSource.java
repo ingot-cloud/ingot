@@ -1,9 +1,9 @@
 package com.ingot.framework.core.context;
 
-import java.util.Locale;
-
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
+
+import java.util.Locale;
 
 /**
  * <p>Description  : IngotMessageSource.</p>
@@ -11,7 +11,7 @@ import org.springframework.context.NoSuchMessageException;
  * <p>Date         : 2022/11/29.</p>
  * <p>Time         : 2:16 PM.</p>
  */
-public interface IngotMessageSource extends MessageSource {
+public interface InMessageSource extends MessageSource {
 
     /**
      * Try to resolve the message. Treat as an error if the message can't be found.

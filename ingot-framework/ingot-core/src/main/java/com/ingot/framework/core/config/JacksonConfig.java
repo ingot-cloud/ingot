@@ -4,7 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingot.framework.core.jackson.InJavaTimeModule;
-import com.ingot.framework.core.jackson.IngotModule;
+import com.ingot.framework.core.jackson.InModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -39,7 +39,7 @@ public class JacksonConfig {
             builder.timeZone(TimeZone.getTimeZone(ASIA_BEIJING));
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
             // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
-            builder.modules(new IngotModule(), new JavaTimeModule(), new InJavaTimeModule());
+            builder.modules(new InModule(), new JavaTimeModule(), new InJavaTimeModule());
             builder.failOnUnknownProperties(false);
         };
     }

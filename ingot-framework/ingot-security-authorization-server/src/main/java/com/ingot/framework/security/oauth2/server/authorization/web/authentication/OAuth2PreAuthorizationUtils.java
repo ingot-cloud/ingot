@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.core.endpoint.PreAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +26,7 @@ public class OAuth2PreAuthorizationUtils {
         }
 
         // 检查grantType类型, 必须为PreAuthorizationGrantType.SESSION
-        String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
+        String preGrantType = request.getParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE);
         return StrUtil.equals(preGrantType, PreAuthorizationGrantType.SESSION.value());
     }
 }

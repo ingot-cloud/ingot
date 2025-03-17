@@ -1,7 +1,7 @@
 package com.ingot.framework.core.utils.validation;
 
 import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.context.IngotMessageSource;
+import com.ingot.framework.core.context.InMessageSource;
 import com.ingot.framework.core.utils.AssertionUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultAssertionChecker implements AssertionChecker {
-    private final IngotMessageSource messageSource;
+    private final InMessageSource messageSource;
 
     @Override
     public void checkOperation(boolean expression, String code) {

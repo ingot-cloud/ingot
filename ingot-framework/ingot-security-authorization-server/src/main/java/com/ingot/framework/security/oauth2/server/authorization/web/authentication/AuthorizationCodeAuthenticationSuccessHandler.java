@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2AuthorizationCodeRequestHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +36,7 @@ public class AuthorizationCodeAuthenticationSuccessHandler implements Authentica
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
         // 如果包含pre_grant_type，代表是预授权过来的
-        if (parameters.containsKey(IngotOAuth2ParameterNames.PRE_GRANT_TYPE)) {
+        if (parameters.containsKey(InOAuth2ParameterNames.PRE_GRANT_TYPE)) {
             sendResponse(request, response, authentication);
             return;
         }

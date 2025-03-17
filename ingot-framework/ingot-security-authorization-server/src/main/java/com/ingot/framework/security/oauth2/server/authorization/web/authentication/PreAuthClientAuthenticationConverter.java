@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.IngotClientAuthenticationMethod;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
@@ -45,9 +45,9 @@ public class PreAuthClientAuthenticationConverter implements AuthenticationConve
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
         // pre_grant_type (REQUIRED)
-        String preGrantType = request.getParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE);
+        String preGrantType = request.getParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE);
         if (StrUtil.isEmpty(preGrantType)) {
-            OAuth2ErrorUtils.throwInvalidRequestParameter(IngotOAuth2ParameterNames.PRE_GRANT_TYPE, null);
+            OAuth2ErrorUtils.throwInvalidRequestParameter(InOAuth2ParameterNames.PRE_GRANT_TYPE, null);
         }
 
         // client_id (REQUIRED for public clients)

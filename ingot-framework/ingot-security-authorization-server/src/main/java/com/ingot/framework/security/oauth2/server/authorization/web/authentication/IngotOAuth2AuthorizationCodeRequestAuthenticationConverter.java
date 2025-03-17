@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.utils.SecurityUtils;
-import com.ingot.framework.core.constants.IngotOAuth2ParameterNames;
+import com.ingot.framework.core.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -46,7 +46,7 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
         // 不用传递method，默认使用S256
         additionalParameters.put(PkceParameterNames.CODE_CHALLENGE_METHOD, "S256");
         // 添加sessionId
-        additionalParameters.put(IngotOAuth2ParameterNames.SESSION_ID, SecurityUtils.getSessionId(request));
+        additionalParameters.put(InOAuth2ParameterNames.SESSION_ID, SecurityUtils.getSessionId(request));
 
         return new OAuth2AuthorizationCodeRequestAuthenticationToken(
                 token.getAuthorizationUri(), token.getClientId(), principal,
@@ -55,14 +55,14 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
 
     private Authentication requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
         // tenant (REQUIRED)
-        String tenant = request.getParameter(IngotOAuth2ParameterNames.TENANT);
+        String tenant = request.getParameter(InOAuth2ParameterNames.TENANT);
         if (StrUtil.isEmpty(tenant)) {
-            throwError(IngotOAuth2ParameterNames.TENANT);
+            throwError(InOAuth2ParameterNames.TENANT);
         }
 
         // tenant必须在allow list中
         if (token.getAllowList().stream().noneMatch(item -> StrUtil.equals(item.getId(), tenant))) {
-            throwError(IngotOAuth2ParameterNames.TENANT);
+            throwError(InOAuth2ParameterNames.TENANT);
         }
 
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
@@ -81,7 +81,7 @@ public class IngotOAuth2AuthorizationCodeRequestAuthenticationConverter implemen
         });
 
         Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
-        newAdditionalParameters.put(IngotOAuth2ParameterNames.TENANT, tenant);
+        newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
                 token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
     }
