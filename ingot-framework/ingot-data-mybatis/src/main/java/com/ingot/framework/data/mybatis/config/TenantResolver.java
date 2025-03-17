@@ -1,5 +1,6 @@
 package com.ingot.framework.data.mybatis.config;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
@@ -33,7 +34,18 @@ public class TenantResolver implements InitializingBean {
             }
         }
 
-        log.info("数据隔离表如下：");
-        tenantProperties.getTables().forEach(table -> log.info("表：{}", table));
+        String tenantTables = CollUtil.isEmpty(tenantProperties.getTables()) ? "无" : String.join("\n", tenantProperties.getTables());
+
+        log.info("""
+                
+                
+                =============================================
+                
+                TenantResolver 数据隔离表:
+                
+                {}
+                
+                =============================================
+                """, tenantTables);
     }
 }
