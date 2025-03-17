@@ -113,7 +113,7 @@ public class Utils {
      */
     public static void throwVCException(VCErrorCode statusCode, String messageCode) {
         throw new VCException(statusCode,
-                IngotVCMessageSource.getAccessor()
+                InVCMessageSource.getAccessor()
                         .getMessage(messageCode));
     }
 
@@ -126,7 +126,7 @@ public class Utils {
      */
     public static void throwVCException(VCErrorCode statusCode, String messageCode, Object[] args) {
         throw new VCException(statusCode,
-                IngotVCMessageSource.getAccessor()
+                InVCMessageSource.getAccessor()
                         .getMessage(messageCode, args));
     }
 }

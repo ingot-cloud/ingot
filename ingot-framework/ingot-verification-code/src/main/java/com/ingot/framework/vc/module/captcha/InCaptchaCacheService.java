@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * <p>Date         : 2023/6/25.</p>
  * <p>Time         : 2:57 PM.</p>
  */
-public class IngotCaptchaCacheService implements CaptchaCacheService {
+public class InCaptchaCacheService implements CaptchaCacheService {
     private static final String REDIS = "redis";
 
     @Autowired

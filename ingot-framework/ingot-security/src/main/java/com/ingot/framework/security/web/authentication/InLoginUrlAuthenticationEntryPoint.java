@@ -18,13 +18,13 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 /**
- * <p>Description  : IngotLoginUrlAuthenticationEntryPoint.</p>
+ * <p>Description  : InLoginUrlAuthenticationEntryPoint.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/9/5.</p>
  * <p>Time         : 2:50 PM.</p>
  */
 @Slf4j
-public class IngotLoginUrlAuthenticationEntryPoint extends LoginUrlAuthenticationEntryPoint {
+public class InLoginUrlAuthenticationEntryPoint extends LoginUrlAuthenticationEntryPoint {
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     /**
@@ -32,7 +32,7 @@ public class IngotLoginUrlAuthenticationEntryPoint extends LoginUrlAuthenticatio
      *                     relative to the web-app context path (include a leading {@code /}) or an absolute
      *                     URL.
      */
-    public IngotLoginUrlAuthenticationEntryPoint(String loginFormUrl) {
+    public InLoginUrlAuthenticationEntryPoint(String loginFormUrl) {
         super(loginFormUrl);
     }
 

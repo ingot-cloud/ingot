@@ -7,7 +7,7 @@ import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.module.sms.*;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
@@ -31,14 +31,14 @@ public class SmsConfig {
 
     @Bean(VCConstants.BEAN_NAME_GENERATOR_SMS)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_GENERATOR_SMS})
-    public VCGenerator smsGenerator(IngotVCProperties properties) {
+    public VCGenerator smsGenerator(InVCProperties properties) {
         return new DefaultSmsVCGenerator(properties.getSms());
     }
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_SMS)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_SMS})
     public VCPreChecker smsSendChecker(RedisTemplate<String, Object> redisTemplate,
-                                       IngotVCProperties properties) {
+                                       InVCProperties properties) {
         return new DefaultSmsVCPreChecker(redisTemplate, properties.getSms());
     }
 

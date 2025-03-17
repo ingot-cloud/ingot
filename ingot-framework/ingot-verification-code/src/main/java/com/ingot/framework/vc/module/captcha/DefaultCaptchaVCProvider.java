@@ -37,7 +37,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
             throw new VCException(VCErrorCode.Send,
-                    IngotVCMessageSource.getAccessor()
+                    InVCMessageSource.getAccessor()
                             .getMessage("vc.common.sendError"));
         }
     }
@@ -69,7 +69,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
             throw new VCException(VCErrorCode.Check,
-                    IngotVCMessageSource.getAccessor()
+                    InVCMessageSource.getAccessor()
                             .getMessage("vc.common.checkError"));
         }
     }

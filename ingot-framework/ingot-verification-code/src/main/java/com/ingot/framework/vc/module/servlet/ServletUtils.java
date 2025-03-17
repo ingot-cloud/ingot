@@ -52,7 +52,7 @@ public class ServletUtils {
             return ServletRequestUtils.getStringParameter(request.getRequest(), key);
         } catch (Exception e) {
             log.error("[验证码] - getFromRequest 异常", e);
-            throw new VCException(IngotVCMessageSource.getAccessor()
+            throw new VCException(InVCMessageSource.getAccessor()
                     .getMessage("vc.common.illegalArgument",
                             new String[]{key}));
         }

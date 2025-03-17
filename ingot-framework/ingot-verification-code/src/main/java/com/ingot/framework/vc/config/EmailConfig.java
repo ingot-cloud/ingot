@@ -7,7 +7,7 @@ import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.email.*;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
@@ -31,14 +31,14 @@ public class EmailConfig {
 
     @Bean(VCConstants.BEAN_NAME_GENERATOR_EMAIL)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_GENERATOR_EMAIL})
-    public VCGenerator emailGenerator(IngotVCProperties properties) {
+    public VCGenerator emailGenerator(InVCProperties properties) {
         return new DefaultEmailVCGenerator(properties.getEmail());
     }
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_EMAIL)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_EMAIL})
     public VCPreChecker smsSendChecker(RedisTemplate<String, Object> redisTemplate,
-                                       IngotVCProperties properties) {
+                                       InVCProperties properties) {
         return new DefaultEmailVCPreChecker(redisTemplate, properties.getEmail());
     }
 

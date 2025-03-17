@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>Description  : IngotVCProperties.</p>
+ * <p>Description  : InVCProperties.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2023/3/23.</p>
  * <p>Time         : 7:40 PM.</p>
@@ -16,7 +16,7 @@ import java.util.List;
 @Setter
 @Getter
 @ConfigurationProperties("ingot.vc")
-public class IngotVCProperties {
+public class InVCProperties {
     /**
      * 图片验证码配置
      */

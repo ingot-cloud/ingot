@@ -1,7 +1,7 @@
 package com.ingot.cloud.auth.config;
 
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
-import com.ingot.framework.security.web.authentication.IngotLoginUrlAuthenticationEntryPoint;
+import com.ingot.framework.security.web.authentication.InLoginUrlAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.Customizer;
@@ -24,6 +24,6 @@ public class ExceptionHandlingCustomizer implements Customizer<ExceptionHandling
         // 默认 authorize code 模式，暂时不做特殊处理
 //        properties.getLoginFormUrl()
         configurer.authenticationEntryPoint(
-                new IngotLoginUrlAuthenticationEntryPoint(FormLoginCustomizer.LOGIN_PAGE_URL));
+                new InLoginUrlAuthenticationEntryPoint(FormLoginCustomizer.LOGIN_PAGE_URL));
     }
 }

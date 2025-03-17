@@ -18,7 +18,7 @@ public class InnerCheck {
      */
     public static void check(boolean expression, String messageCode) {
         AssertionUtils.check(expression, () -> {
-            throw new VCException(IngotVCMessageSource.getAccessor().getMessage(messageCode));
+            throw new VCException(InVCMessageSource.getAccessor().getMessage(messageCode));
         });
     }
 
@@ -32,7 +32,7 @@ public class InnerCheck {
     public static void check(boolean expression, VCErrorCode code, String messageCode) {
         AssertionUtils.check(expression, () -> {
             throw new VCException(code,
-                    IngotVCMessageSource.getAccessor().getMessage(messageCode));
+                    InVCMessageSource.getAccessor().getMessage(messageCode));
         });
     }
 
@@ -47,7 +47,7 @@ public class InnerCheck {
     public static void check(boolean expression, VCErrorCode code, String messageCode, String[] formatCode) {
         AssertionUtils.check(expression, () -> {
             throw new VCException(code,
-                    IngotVCMessageSource.getAccessor().getMessage(messageCode, formatCode));
+                    InVCMessageSource.getAccessor().getMessage(messageCode, formatCode));
         });
     }
 }

@@ -5,7 +5,7 @@ import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.reactive.*;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -31,7 +31,7 @@ public class VCReactiveConfig {
 
     @Bean
     public VCVerifyResolver vcVerifyResolver(ReactiveWebApplicationContext applicationContext,
-                                             IngotVCProperties properties) {
+                                             InVCProperties properties) {
         return new VCVerifyResolver(applicationContext, properties);
     }
 

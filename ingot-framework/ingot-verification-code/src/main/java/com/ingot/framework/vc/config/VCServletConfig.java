@@ -4,7 +4,7 @@ import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.module.servlet.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.*;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +27,7 @@ public class VCServletConfig {
 
     @Bean
     public VCVerifyResolver vcVerifyResolver(WebApplicationContext applicationContext,
-                                             IngotVCProperties properties) {
+                                             InVCProperties properties) {
         return new VCVerifyResolver(applicationContext, properties);
     }
 

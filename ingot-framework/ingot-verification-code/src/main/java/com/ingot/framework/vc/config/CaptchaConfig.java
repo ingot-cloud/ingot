@@ -17,7 +17,7 @@ import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCPreChecker;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.properties.ImageCodeProperties;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -46,12 +46,12 @@ import java.util.Properties;
 public class CaptchaConfig {
 
     @Bean(name = "AjCaptchaCacheService")
-    public CaptchaCacheService captchaCacheService(IngotVCProperties properties) {
+    public CaptchaCacheService captchaCacheService(InVCProperties properties) {
         return CaptchaServiceFactory.getCache(properties.getImage().getCacheType().name());
     }
 
     @Bean
-    public CaptchaService captchaService(IngotVCProperties properties) {
+    public CaptchaService captchaService(InVCProperties properties) {
         ImageCodeProperties prop = properties.getImage();
         Properties config = new Properties();
         config.put(Const.CAPTCHA_CACHETYPE, prop.getCacheType().name());
@@ -114,14 +114,14 @@ public class CaptchaConfig {
 
     @Bean(VCConstants.BEAN_NAME_GENERATOR_IMAGE)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_GENERATOR_IMAGE})
-    public VCGenerator imageGenerator(IngotVCProperties properties) {
+    public VCGenerator imageGenerator(InVCProperties properties) {
         return new DefaultCaptchaVCGenerator(properties.getImage());
     }
 
     @Bean(VCConstants.BEAN_NAME_SEND_CHECKER_IMAGE)
     @ConditionalOnMissingBean(name = {VCConstants.BEAN_NAME_SEND_CHECKER_IMAGE})
     public VCPreChecker imageSendChecker(RedisTemplate<String, Object> redisTemplate,
-                                         IngotVCProperties properties) {
+                                         InVCProperties properties) {
         return new DefaultCaptchaVCPreChecker(redisTemplate, properties.getImage());
     }
 

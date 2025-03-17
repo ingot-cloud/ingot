@@ -3,7 +3,7 @@ package com.ingot.framework.vc.module.servlet;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.common.VCVerify;
 import com.ingot.framework.vc.common.VCVerifyUtils;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VCVerifyResolver implements InitializingBean {
     private final WebApplicationContext applicationContext;
-    private final IngotVCProperties properties;
+    private final InVCProperties properties;
 
     private final List<VCType> typeList = new ArrayList<>();
     private final List<RequestMatcher> requestMatcherList = new ArrayList<>();

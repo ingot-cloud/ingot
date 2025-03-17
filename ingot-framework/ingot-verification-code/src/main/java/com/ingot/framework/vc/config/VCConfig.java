@@ -2,7 +2,7 @@ package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.DefaultVCRepository;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,7 +22,7 @@ import org.springframework.data.redis.core.RedisTemplate;
         SmsConfig.class,
         EmailConfig.class,
         CaptchaConfig.class})
-@EnableConfigurationProperties(IngotVCProperties.class)
+@EnableConfigurationProperties(InVCProperties.class)
 public class VCConfig {
 
     @Bean

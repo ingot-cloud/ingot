@@ -4,7 +4,7 @@ import com.ingot.framework.vc.common.ServerWebExchangeMatcher;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.common.VCVerify;
 import com.ingot.framework.vc.common.VCVerifyUtils;
-import com.ingot.framework.vc.properties.IngotVCProperties;
+import com.ingot.framework.vc.properties.InVCProperties;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class VCVerifyResolver implements InitializingBean {
 
     private final ReactiveWebApplicationContext applicationContext;
-    private final IngotVCProperties properties;
+    private final InVCProperties properties;
 
     @Getter
     private final List<VCType> typeList = new ArrayList<>();
