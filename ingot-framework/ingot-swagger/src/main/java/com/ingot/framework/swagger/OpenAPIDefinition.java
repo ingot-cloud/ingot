@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -26,6 +27,7 @@ import java.util.List;
  * <p>Date         : 2025/3/20.</p>
  * <p>Time         : 09:47.</p>
  */
+@Slf4j
 @ConditionalOnProperty(name = "ingot.swagger.enabled", havingValue = "true")
 public class OpenAPIDefinition extends OpenAPI implements InitializingBean, ApplicationContextAware {
 
