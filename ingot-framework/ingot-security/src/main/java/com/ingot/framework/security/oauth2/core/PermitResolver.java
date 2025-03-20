@@ -163,6 +163,10 @@ public class PermitResolver implements InitializingBean {
                            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         for (String url : urls) {
             List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
+            if (CollUtil.size(urlAndMethod) == 1){
+                // 如果 urlAndMethod.size() == 1，则method默认为 *
+                urlAndMethod.add("*");
+            }
 
             if (urlAndMethod.size() != 2) {
                 log.warn("[PermitResolver] {} 无法配置 permitAll, 路径非法", url);
@@ -187,11 +191,12 @@ public class PermitResolver implements InitializingBean {
         return urls.stream()
                 .filter(url -> {
                     List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    return urlAndMethod.size() == 2;
+                    return !urlAndMethod.isEmpty();
                 })
                 .flatMap(url -> {
                     List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
-                    if (StrUtil.equals(urlAndMethod.get(1), "*")) {
+                    // 长度为1，默认method为*
+                    if (urlAndMethod.size() == 1 || StrUtil.equals(urlAndMethod.get(1), "*")) {
                         AntPathRequestMatcher[] antPathRequestMatchers =
                                 {new AntPathRequestMatcher(urlAndMethod.get(0))};
                         return Arrays.stream(antPathRequestMatchers);
