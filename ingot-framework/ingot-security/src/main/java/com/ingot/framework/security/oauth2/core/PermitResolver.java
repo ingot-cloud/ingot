@@ -125,8 +125,20 @@ public class PermitResolver implements InitializingBean {
             }
         }
 
-        log.info("[PermitResolver] public urls = {}", properties.getPublicUrls());
-        log.info("[PermitResolver] inner urls = {}", properties.getInnerUrls());
+        String publicUrls = String.join("\n", properties.getPublicUrls());
+        String innerUrls = String.join("\n", properties.getInnerUrls());
+
+        log.info("""
+                
+                ===========================
+                PermitResolver
+                PUBLIC URL:
+                {}
+                
+                INNER URL:
+                {}
+                
+                """, publicUrls, innerUrls);
     }
 
     /**
