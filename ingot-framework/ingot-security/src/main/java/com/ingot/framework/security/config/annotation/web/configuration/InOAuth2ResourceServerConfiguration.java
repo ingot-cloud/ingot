@@ -44,7 +44,7 @@ import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
  * <p>Time         : 2:37 下午.</p>
  */
 @Slf4j
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 @EnableMethodSecurity
 @Configuration(proxyBeanMethods = false)
 public class InOAuth2ResourceServerConfiguration {
