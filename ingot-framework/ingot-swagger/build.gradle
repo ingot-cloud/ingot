@@ -1,0 +1,13 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api(deps.api.springdoc_starter)
+
+    compileOnly(deps.spring.framework_spring_webflux)
+    compileOnly(deps.spring.framework_webmvc)
+    compileOnly(deps.spring.spring_cloud.gateway)
+    compileOnly(deps.spring.spring_cloud.commons)
+    compileOnly(deps.alibaba.nacos_discovery_starter)
+
+    implementation project(ingot.framework_core)
+}

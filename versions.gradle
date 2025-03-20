@@ -5,6 +5,7 @@ versions.spring_cloud = "2024.0.0"
 versions.spring_cloud_alibaba = "2023.0.3.2"
 versions.spring_authorization_server = "1.4.2"
 
+versions.springdoc = "2.8.5"
 versions.hutool = "5.8.36"
 versions.mybatis_plus = "3.5.10.1"
 versions.mybatis_plus_join = "1.5.2"
@@ -14,7 +15,6 @@ versions.mysql_connector = "8.3.0"
 versions.alibaba_druid = "1.2.20"
 versions.alibaba_transmittable_thread_local = "2.14.3"
 versions.alibaba_easyexcel = "3.1.5"
-versions.swagger = "3.0.0"
 versions.commons_lang = "3.3.2"
 versions.commons_io = "2.4"
 versions.mapstruct = "1.6.2"
@@ -57,6 +57,7 @@ spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
 spring_cloud.loadbalancer_starter = "org.springframework.cloud:spring-cloud-starter-loadbalancer"
 spring_cloud.gateway_starter = "org.springframework.cloud:spring-cloud-starter-gateway"
+spring_cloud.gateway = "org.springframework.cloud:spring-cloud-gateway-server"
 spring_cloud.config_starter = "org.springframework.cloud:spring-cloud-starter-config"
 spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-server"
 spring_cloud.bus_amqp_start = "org.springframework.cloud:spring-cloud-starter-bus-amqp"
@@ -86,6 +87,10 @@ spring.spring_boot = spring_boot
 spring.spring_cloud = spring_cloud
 deps.spring = spring
 
+def api = [:]
+api.springdoc_starter = "org.springdoc:springdoc-openapi-starter-webmvc-api:${versions.springdoc}"
+deps.api = api
+
 def alibaba = [:]
 alibaba.cloud_dependencies = "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${versions.spring_cloud_alibaba}"
 alibaba.nacos_config_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config"
@@ -102,13 +107,6 @@ def google = [:]
 google.jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 google.guava = "com.google.guava:guava:31.1-jre"
 deps.google = google
-
-def swagger = [:]
-swagger.springfox_swagger2 = "io.springfox:springfox-swagger2:${versions.swagger}"
-swagger.springfox_swagger_ui = "io.springfox:springfox-swagger-ui:${versions.swagger}"
-swagger.didispace_swagger_butler_core = "com.didispace:swagger-butler-core:1.2.0"
-swagger.bootstrap_ui = "com.github.xiaoymin:swagger-bootstrap-ui:1.9.4"
-deps.swagger = swagger
 
 def apache = [:]
 apache.commons_collections4 = "org.apache.commons:commons-collections4:4.2"

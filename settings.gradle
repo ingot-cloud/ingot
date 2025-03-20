@@ -31,6 +31,8 @@ include 'ingot-framework:ingot-verification-code'
 findProject(':ingot-framework:ingot-verification-code')?.name = 'ingot-verification-code'
 include 'ingot-framework:ingot-data-scope'
 findProject(':ingot-framework:ingot-data-scope')?.name = 'ingot-data-scope'
+include 'ingot-framework:ingot-swagger'
+findProject(':ingot-framework:ingot-swagger')?.name = 'ingot-swagger'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'
