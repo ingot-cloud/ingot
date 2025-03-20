@@ -10,3 +10,5 @@ logging:
 ingot:
   mybatis:
     show-sql-log: true
+  swagger:
+    enabled: true
