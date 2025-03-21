@@ -6,6 +6,7 @@ versions.spring_cloud_alibaba = "2023.0.3.2"
 versions.spring_authorization_server = "1.4.2"
 
 versions.springdoc = "2.8.5"
+versions.swagger_core = "2.2.28"
 versions.hutool = "5.8.36"
 versions.mybatis_plus = "3.5.10.1"
 versions.mybatis_plus_join = "1.5.2"
@@ -89,6 +90,7 @@ deps.spring = spring
 
 def api = [:]
 api.springdoc_starter = "org.springdoc:springdoc-openapi-starter-webmvc-api:${versions.springdoc}"
+api.swagger_core = "io.swagger.core.v3:swagger-core-jakarta:${versions.swagger_core}"
 deps.api = api
 
 def alibaba = [:]
