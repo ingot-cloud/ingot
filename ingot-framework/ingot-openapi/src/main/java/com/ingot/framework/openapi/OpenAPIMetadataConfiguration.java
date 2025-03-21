@@ -1,4 +1,4 @@
-package com.ingot.framework.swagger;
+package com.ingot.framework.openapi;
 
 import lombok.Setter;
 import org.springframework.beans.BeansException;

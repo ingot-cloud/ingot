@@ -1,4 +1,4 @@
-package com.ingot.framework.swagger;
+package com.ingot.framework.openapi;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

@@ -1,4 +1,4 @@
-package com.ingot.framework.swagger;
+package com.ingot.framework.openapi;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

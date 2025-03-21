@@ -89,7 +89,8 @@ spring.spring_cloud = spring_cloud
 deps.spring = spring
 
 def api = [:]
-api.springdoc_starter = "org.springdoc:springdoc-openapi-starter-webmvc-api:${versions.springdoc}"
+api.springdoc_webmvc_ui_starter = "org.springdoc:springdoc-openapi-starter-webmvc-ui:${versions.springdoc}"
+api.springdoc_webmvc_api_starter = "org.springdoc:springdoc-openapi-starter-webmvc-api:${versions.springdoc}"
 api.swagger_core = "io.swagger.core.v3:swagger-core-jakarta:${versions.swagger_core}"
 deps.api = api
 

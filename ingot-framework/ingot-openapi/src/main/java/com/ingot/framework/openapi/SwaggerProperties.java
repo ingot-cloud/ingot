@@ -1,4 +1,4 @@
-package com.ingot.framework.swagger;
+package com.ingot.framework.openapi;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

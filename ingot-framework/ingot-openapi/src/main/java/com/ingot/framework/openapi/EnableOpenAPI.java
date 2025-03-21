@@ -1,4 +1,4 @@
-package com.ingot.framework.swagger;
+package com.ingot.framework.openapi;
 
 import com.ingot.framework.core.io.YamlPropertySourceFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,4 +27,10 @@ public @interface EnableOpenAPI {
      * @return String
      */
     String value() default "";
+
+    /**
+     * 是否是微服务架构
+     * @return true
+     */
+    boolean isMicro() default true;
 }

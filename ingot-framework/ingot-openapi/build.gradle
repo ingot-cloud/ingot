@@ -1,7 +1,7 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-    api(deps.api.springdoc_starter)
+    api(deps.api.springdoc_webmvc_api_starter)
 
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
