@@ -45,6 +45,9 @@ public class InTokenAuthFilter extends OncePerRequestFilter {
         }
 
         InUser user = SecurityAuthContext.getUser();
+        if (user == null) {
+            OAuth2ErrorUtils.throwInvalidToken();
+        }
         TokenAuthTypeEnum authType = TokenAuthTypeEnum.getEnum(user.getTokenAuthType());
         if (authType != TokenAuthTypeEnum.UNIQUE) {
             filterChain.doFilter(request, response);

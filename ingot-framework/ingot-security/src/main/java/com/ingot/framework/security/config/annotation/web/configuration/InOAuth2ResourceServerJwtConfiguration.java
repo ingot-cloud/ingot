@@ -31,7 +31,7 @@ public class InOAuth2ResourceServerJwtConfiguration {
     @Conditional(IssuerUriCondition.class)
     JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties,
                                      InSecurityProperties inSecurityProperties) {
-        log.info("[IngotOAuth2ResourceServerJwtConfiguration] 扩展 JwtValidator，使用 IngotJwtValidators.createDefaultWithIssuer");
+        log.info("[InOAuth2ResourceServerJwtConfiguration] 扩展 JwtValidator，使用 InJwtValidators.createDefaultWithIssuer");
         OAuth2ResourceServerProperties.Jwt jwt = properties.getJwt();
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(jwt.getIssuerUri());
         // 扩展 JwtValidator

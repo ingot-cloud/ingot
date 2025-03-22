@@ -66,6 +66,12 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         }
 
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
+        Map<String, Object> newAdditionalParameters = getAdditionalParameters(token, parameters, tenant);
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
+                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
+    }
+
+    private static Map<String, Object> getAdditionalParameters(OAuth2PreAuthorizationCodeRequestAuthenticationToken token, MultiValueMap<String, String> parameters, String tenant) {
         Map<String, Object> additionalParameters = token.getAdditionalParameters();
         additionalParameters.forEach((key, value) -> {
             List<String> requestValues = parameters.get(key);
@@ -82,8 +88,7 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
 
         Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
         newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
-        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
-                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
+        return newAdditionalParameters;
     }
 
     private static void throwError(String parameterName) {

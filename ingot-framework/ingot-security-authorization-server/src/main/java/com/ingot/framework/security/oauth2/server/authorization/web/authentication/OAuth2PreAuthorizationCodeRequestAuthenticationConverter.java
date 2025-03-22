@@ -110,6 +110,21 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
 
     private OAuth2PreAuthorizationCodeRequestAuthenticationToken changeChallengeAndCheck(OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
                                                                                          MultiValueMap<String, String> parameters) {
+        Map<String, Object> additionalParameters = getAdditionalParameters(token, parameters);
+
+        Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
+        newAdditionalParameters.put(PkceParameterNames.CODE_CHALLENGE, parameters.getFirst(PkceParameterNames.CODE_CHALLENGE));
+        String state = parameters.getFirst(OAuth2ParameterNames.STATE);
+        if (StrUtil.isNotEmpty(state)) {
+            newAdditionalParameters.put(OAuth2ParameterNames.STATE, state);
+        }
+
+        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
+                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, 0L);
+    }
+
+    private static Map<String, Object> getAdditionalParameters(OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
+                                                               MultiValueMap<String, String> parameters) {
         Map<String, Object> additionalParameters = token.getAdditionalParameters();
         additionalParameters.forEach((key, value) -> {
             // challenge和state过滤，不校验
@@ -130,16 +145,7 @@ public final class OAuth2PreAuthorizationCodeRequestAuthenticationConverter impl
                 throwError(key);
             }
         });
-
-        Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
-        newAdditionalParameters.put(PkceParameterNames.CODE_CHALLENGE, parameters.getFirst(PkceParameterNames.CODE_CHALLENGE));
-        String state = parameters.getFirst(OAuth2ParameterNames.STATE);
-        if (StrUtil.isNotEmpty(state)) {
-            newAdditionalParameters.put(OAuth2ParameterNames.STATE, state);
-        }
-
-        return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
-                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, 0L);
+        return additionalParameters;
     }
 
     private static void throwError(String parameterName) {
