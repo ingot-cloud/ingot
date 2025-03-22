@@ -45,7 +45,7 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
                 .setAuthorityPrefix(InJwtAuthenticationConverter.AUTHORITY_PREFIX);
 
         Predicate<Long> testClaimValue = (tenantId) -> {
-            log.info("token中的tenantId={}", tenantId);
+            log.info("[JwtTenantValidator] token中的tenantId={}", tenantId);
             if (tenantId == null) {
                 return false;
             }
