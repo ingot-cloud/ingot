@@ -88,34 +88,6 @@ public class AuthorizationServerConfig {
         return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
-//    @Bean
-//    public JWKSource<SecurityContext> jwkSource(JwkSupplier service) {
-//        JWKSet jwkSet = service.get();
-//        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-//    }
-//
-//    @Bean
-//    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
-//                                 InSecurityProperties properties) {
-//        Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
-//        jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
-//        jwsAlgs.addAll(JWSAlgorithm.Family.EC);
-//        jwsAlgs.addAll(JWSAlgorithm.Family.HMAC_SHA);
-//        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-//        JWSKeySelector<SecurityContext> jwsKeySelector =
-//                new JWSVerificationKeySelector<>(jwsAlgs, jwkSource);
-//        jwtProcessor.setJWSKeySelector(jwsKeySelector);
-//        // Override the default Nimbus claims set verifier as NimbusJwtDecoder handles it instead
-//        jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {
-//        });
-//
-//        NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
-//        // 扩展 JwtValidator
-//        jwtDecoder.setJwtValidator(
-//                CustomJwtValidators.createDefault(properties));
-//        return jwtDecoder;
-//    }
-
     @Bean
     public RedisSecurityContextRepository redisSecurityContextRepository() {
         return new RedisSecurityContextRepository(this.redisTemplate);
