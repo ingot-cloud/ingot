@@ -4,23 +4,12 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.auth.client.InJdbcRegisteredClientRepository;
 import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationConsentService;
 import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationService;
-import com.ingot.cloud.auth.service.JWKService;
 import com.ingot.framework.security.config.annotation.web.configuration.InOAuth2ResourceServerConfiguration;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
-import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
-import com.ingot.framework.security.oauth2.jwt.InJwtValidators;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.InOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -31,8 +20,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -41,9 +28,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRevokeRepository;
 import org.springframework.security.web.context.RedisSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRevokeRepository;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * <p>Description  : AuthServerConfiguration.</p>
@@ -104,35 +88,33 @@ public class AuthorizationServerConfig {
         return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
-    @Bean
-    public JWKSource<SecurityContext> jwkSource(JWKService service) {
-        JWKSet jwkSet = service.fetch();
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
-                                 AuthorizationServerSettings authorizationServerSettings,
-                                 InSecurityProperties properties) {
-        Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
-        jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
-        jwsAlgs.addAll(JWSAlgorithm.Family.EC);
-        jwsAlgs.addAll(JWSAlgorithm.Family.HMAC_SHA);
-        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-        JWSKeySelector<SecurityContext> jwsKeySelector =
-                new JWSVerificationKeySelector<>(jwsAlgs, jwkSource);
-        jwtProcessor.setJWSKeySelector(jwsKeySelector);
-        // Override the default Nimbus claims set verifier as NimbusJwtDecoder handles it instead
-        jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {
-        });
-
-        NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
-        // 扩展 JwtValidator
-        jwtDecoder.setJwtValidator(
-                InJwtValidators.createDefaultWithIssuer(
-                        authorizationServerSettings.getIssuer(), properties));
-        return jwtDecoder;
-    }
+//    @Bean
+//    public JWKSource<SecurityContext> jwkSource(JwkSupplier service) {
+//        JWKSet jwkSet = service.get();
+//        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+//    }
+//
+//    @Bean
+//    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
+//                                 InSecurityProperties properties) {
+//        Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
+//        jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
+//        jwsAlgs.addAll(JWSAlgorithm.Family.EC);
+//        jwsAlgs.addAll(JWSAlgorithm.Family.HMAC_SHA);
+//        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
+//        JWSKeySelector<SecurityContext> jwsKeySelector =
+//                new JWSVerificationKeySelector<>(jwsAlgs, jwkSource);
+//        jwtProcessor.setJWSKeySelector(jwsKeySelector);
+//        // Override the default Nimbus claims set verifier as NimbusJwtDecoder handles it instead
+//        jwtProcessor.setJWTClaimsSetVerifier((claims, context) -> {
+//        });
+//
+//        NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
+//        // 扩展 JwtValidator
+//        jwtDecoder.setJwtValidator(
+//                CustomJwtValidators.createDefault(properties));
+//        return jwtDecoder;
+//    }
 
     @Bean
     public RedisSecurityContextRepository redisSecurityContextRepository() {

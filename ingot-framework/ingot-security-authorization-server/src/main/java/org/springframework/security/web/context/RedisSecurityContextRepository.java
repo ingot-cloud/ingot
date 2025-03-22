@@ -76,10 +76,8 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
             if (BooleanUtil.isTrue(has)) {
                 String value = this.objectMapper.writeValueAsString(context);
                 Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-                if (expire != null) {
-                    redisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
-                    return;
-                }
+                redisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
+                return;
             }
 
             // 2. 没保存过，则进行保存
@@ -101,8 +99,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         if (StrUtil.isEmpty(sessionId)) {
             return false;
         }
-        Boolean result = redisTemplate.hasKey(key(sessionId));
-        return result != null ? result : false;
+        return redisTemplate.hasKey(key(sessionId));
     }
 
     @Override

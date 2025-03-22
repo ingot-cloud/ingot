@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>Description  : InJwtValidators.</p>
+ * <p>Description  : 自定义JwtValidators.</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/10/8.</p>
  * <p>Time         : 1:51 下午.</p>
  */
-public final class InJwtValidators {
-    private InJwtValidators() {
+public final class CustomJwtValidators {
+    private CustomJwtValidators() {
     }
 
     /**
@@ -40,6 +40,19 @@ public final class InJwtValidators {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
         validators.add(new JwtIssuerValidator(issuer));
+        validators.add(new JwtTenantValidator(properties));
+        return new DelegatingOAuth2TokenValidator<>(validators);
+    }
+
+    /**
+     * 创建一个{@link Jwt}验证器，包含所有标准验证器。
+     *
+     * @param properties {@link InSecurityProperties}
+     * @return {@link OAuth2TokenValidator}
+     */
+    public static OAuth2TokenValidator<Jwt> createDefault(InSecurityProperties properties) {
+        List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
+        validators.add(new JwtTimestampValidator());
         validators.add(new JwtTenantValidator(properties));
         return new DelegatingOAuth2TokenValidator<>(validators);
     }

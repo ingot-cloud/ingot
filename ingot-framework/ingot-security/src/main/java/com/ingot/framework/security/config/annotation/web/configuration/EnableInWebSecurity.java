@@ -18,7 +18,7 @@ import java.lang.annotation.*;
 @Documented
 @EnableConfigurationProperties({InSecurityProperties.class, InOAuth2ResourceProperties.class})
 @Import({InOAuth2ResourceServerConfiguration.class,
-        InOAuth2ResourceServerJwtConfiguration.class,
+        CustomOAuth2ResourceServerJwtConfiguration.class,
         PasswordEncoderConfiguration.class})
 public @interface EnableInWebSecurity {
 }
