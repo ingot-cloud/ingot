@@ -7,6 +7,7 @@ versions.spring_authorization_server = "1.4.2"
 
 versions.springdoc = "2.8.5"
 versions.swagger_core = "2.2.28"
+versions.knife4j_ui = "3.0.5"
 versions.hutool = "5.8.36"
 versions.mybatis_plus = "3.5.10.1"
 versions.mybatis_plus_join = "1.5.2"
@@ -91,7 +92,9 @@ deps.spring = spring
 def api = [:]
 api.springdoc_webmvc_ui_starter = "org.springdoc:springdoc-openapi-starter-webmvc-ui:${versions.springdoc}"
 api.springdoc_webmvc_api_starter = "org.springdoc:springdoc-openapi-starter-webmvc-api:${versions.springdoc}"
+api.springdoc_webflux_ui_starter = "org.springdoc:springdoc-openapi-starter-webflux-ui:${versions.springdoc}"
 api.swagger_core = "io.swagger.core.v3:swagger-core-jakarta:${versions.swagger_core}"
+api.knife4j_ui = "io.springboot:knife4j-openapi3-ui:${versions.knife4j_ui}"
 deps.api = api
 
 def alibaba = [:]

@@ -9,6 +9,8 @@ dependencies {
     implementation(deps.spring.spring_cloud.openfeign_starter)
     implementation(deps.spring.spring_cloud.loadbalancer_starter)
     implementation(deps.alibaba.sentinel_gateway)
+    implementation(deps.api.knife4j_ui)
+    implementation(deps.api.springdoc_webflux_ui_starter)
 
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_core)
