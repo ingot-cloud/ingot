@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -119,7 +120,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     private List<String> loadRoles(List<SysRole> roles, Long loginTenant) {
         if (CollUtil.isEmpty(roles)) {
-            return CollUtil.empty(String.class);
+            return ListUtil.empty();
         }
         List<String> roleCodes = roles.stream()
                 .map(item -> {
