@@ -130,6 +130,7 @@ public class PermitResolver implements InitializingBean {
 
         log.info("""
                 
+                
                 ===========================
                 PermitResolver
                 PUBLIC URL:
@@ -137,6 +138,7 @@ public class PermitResolver implements InitializingBean {
                 
                 INNER URL:
                 {}
+                ===========================
                 
                 """, publicUrls, innerUrls);
     }
