@@ -14,6 +14,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.security.access.RequiredAdmin;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
+@Tag(description = "tenant", name = "系统组织管理模块")
 @RequestMapping(value = "/v1/admin/tenant")
 @RequiredArgsConstructor
 public class AdminTenantAPI implements RShortcuts {

@@ -13,6 +13,7 @@ import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
+@Tag(description = "social", name = "系统社交管理模块")
 @RequestMapping(value = "/v1/admin/social")
 @RequiredArgsConstructor
 public class AdminSocialAPI implements RShortcuts {

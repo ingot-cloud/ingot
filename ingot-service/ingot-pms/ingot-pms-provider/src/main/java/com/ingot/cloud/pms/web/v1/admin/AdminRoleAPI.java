@@ -16,6 +16,7 @@ import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantEnv;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
+@Tag(description = "role", name = "系统角色管理模块")
 @RequestMapping(value = "/v1/admin/role")
 @RequiredArgsConstructor
 public class AdminRoleAPI implements RShortcuts {

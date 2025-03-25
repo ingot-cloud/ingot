@@ -8,6 +8,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.security.access.HasAnyAuthority;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
+@Tag(description = "id", name = "ID管理模块")
 @RequestMapping(value = "/v1/admin/id")
 @RequiredArgsConstructor
 public class AdminIdAPI implements RShortcuts {

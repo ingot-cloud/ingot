@@ -43,18 +43,21 @@ public class AdminUserAPI implements RShortcuts {
 
     @HasAnyAuthority({"basic:user:r", "basic:user:w"})
     @GetMapping("/page")
+    @Operation(summary = "用户分页接口", description = "用户分页接口")
     public R<?> page(Page<SysUser> page, AllOrgUserFilterDTO condition) {
         return ok(sysUserService.allOrgUserPage(page, condition));
     }
 
     @HasAnyAuthority({"basic:user:w"})
     @PostMapping
+    @Operation(summary = "创建用户", description = "创建系统用户")
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         return ok(bizUserService.createUser(params));
     }
 
     @HasAnyAuthority({"basic:user:w"})
     @PutMapping
+    @Operation(summary = "更新用户", description = "更新系统用户")
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
         bizUserService.updateUser(params);
         return ok();
@@ -62,6 +65,7 @@ public class AdminUserAPI implements RShortcuts {
 
     @HasAnyAuthority({"basic:user:w"})
     @DeleteMapping("/{id}")
+    @Operation(summary = "删除用户", description = "删除系统用户")
     public R<?> removeById(@PathVariable Long id) {
         bizUserService.deleteUser(id);
         return ok();
@@ -69,12 +73,14 @@ public class AdminUserAPI implements RShortcuts {
 
     @HasAnyAuthority({"basic:user:w", "basic:user:r"})
     @GetMapping("/orgInfo/{userId}")
+    @Operation(summary = "用户组织信息", description = "用户组织信息")
     public R<?> orgInfo(@PathVariable Long userId) {
         return ok(bizUserService.userOrgInfo(userId));
     }
 
     @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/org")
+    @Operation(summary = "用户组织信息编辑", description = "用户组织信息编辑")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgEdit(params);
         return ok();
@@ -82,6 +88,7 @@ public class AdminUserAPI implements RShortcuts {
 
     @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/org/leave")
+    @Operation(summary = "用户离开组织", description = "用户离开组织")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgLeave(params);
         return ok();
@@ -89,17 +96,20 @@ public class AdminUserAPI implements RShortcuts {
 
     @HasAnyAuthority({"basic:user:w"})
     @PutMapping("/resetPwd/{userId}")
+    @Operation(summary = "重置密码", description = "重置密码")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizUserService.resetPwd(userId));
     }
 
     @HasAnyAuthority({"basic:user:w", "basic:user:r"})
     @GetMapping("/profile/{id}")
+    @Operation(summary = "用户简介信息", description = "用户简介信息")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));
     }
 
     @PutMapping("/edit")
+    @Operation(summary = "更新用户基本信息", description = "更新用户基本信息")
     public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
         long userId = SecurityAuthContext.getUser().getId();
         bizUserService.updateUserBaseInfo(userId, params);

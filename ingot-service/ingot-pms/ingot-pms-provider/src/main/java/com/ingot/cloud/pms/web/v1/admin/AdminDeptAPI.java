@@ -5,6 +5,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.tenant.TenantEnv;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
+@Tag(description = "dept", name = "部门管理模块")
 @RequestMapping(value = "/v1/admin/dept")
 @RequiredArgsConstructor
 public class AdminDeptAPI implements RShortcuts {

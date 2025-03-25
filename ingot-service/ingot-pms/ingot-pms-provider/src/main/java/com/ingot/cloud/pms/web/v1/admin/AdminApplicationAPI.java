@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.service.biz.BizApplicationService;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.access.HasAnyAuthority;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 11:13.</p>
  */
 @Slf4j
+@Tag(description = "application", name = "系统应用管理模块")
 @RestController
 @RequestMapping(value = "/v1/admin/application")
 @RequiredArgsConstructor

@@ -8,6 +8,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.HasAnyAuthority;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 10:12 下午.</p>
  */
 @RestController
+@Tag(description = "client", name = "OAuth2客户端管理模块")
 @RequestMapping(value = "/v1/admin/client")
 @RequiredArgsConstructor
 public class AdminClientAPI implements RShortcuts {

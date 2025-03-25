@@ -10,6 +10,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 10:12 下午.</p>
  */
 @RestController
+@Tag(description = "menu", name = "系统菜单管理模块")
 @RequestMapping(value = "/v1/admin/menu")
 @RequiredArgsConstructor
 public class AdminMenuAPI implements RShortcuts {
