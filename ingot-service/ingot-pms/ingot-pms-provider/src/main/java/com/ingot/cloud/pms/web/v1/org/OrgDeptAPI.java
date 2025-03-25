@@ -6,6 +6,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 2:12 PM.</p>
  */
 @Slf4j
+@Tag(description = "orgDept", name = "组织部门模块")
 @RestController
 @RequestMapping(value = "/v1/org/dept")
 @RequiredArgsConstructor

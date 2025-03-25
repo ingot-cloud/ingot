@@ -4,6 +4,7 @@ import com.ingot.framework.core.error.exception.IllegalOperationException;
 import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.oss.OssService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import java.io.IOException;
  * <p>Time         : 10:13 AM.</p>
  */
 @RestController
+@Tag(description = "oss", name = "OSS模块")
 @RequestMapping(value = "/v1/oss")
 @RequiredArgsConstructor
 public class OSSCommonAPI implements RShortcuts {

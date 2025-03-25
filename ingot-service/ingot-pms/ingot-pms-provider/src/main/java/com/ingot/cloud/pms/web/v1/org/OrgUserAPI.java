@@ -13,6 +13,7 @@ import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantContextHolder;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 1:55 PM.</p>
  */
 @Slf4j
+@Tag(description = "orgUser", name = "组织用户模块")
 @RestController
 @RequestMapping(value = "/v1/org/user")
 @RequiredArgsConstructor

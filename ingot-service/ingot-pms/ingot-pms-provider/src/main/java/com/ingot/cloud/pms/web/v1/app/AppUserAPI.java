@@ -6,6 +6,7 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.core.model.support.RShortcuts;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 16:16.</p>
  */
 @RestController
+@Tag(description = "appAuth", name = "app用户信息模块")
 @RequestMapping("/v1/app/user")
 @RequiredArgsConstructor
 public class AppUserAPI implements RShortcuts {
