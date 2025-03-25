@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms;
 
+import com.ingot.framework.openapi.EnableOpenAPI;
 import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <p>Date         : 2020/11/4.</p>
  * <p>Time         : 4:15 下午.</p>
  */
+@EnableOpenAPI("pms")
 @EnableInWebSecurity
 @EnableTransactionManagement
 @EnableDiscoveryClient

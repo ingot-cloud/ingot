@@ -1,7 +1,6 @@
 ingot:
-  swagger:
-    enabled: false
+  openapi:
     title: IngotCloud API
     gateway: http://${INGOT_GATEWAY:ingot-gateway}:7980
-    token-url: ${ingot.swagger.gateway}/auth/oauth2/token
+    token-url: ${ingot.openapi.gateway}/auth/oauth2/token
     scope: server

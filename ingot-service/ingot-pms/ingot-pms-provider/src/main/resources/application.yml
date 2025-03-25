@@ -27,3 +27,7 @@ spring:
       - optional:nacos:application-common.yml
       - optional:nacos:application-mysql.yml
       - optional:nacos:${spring.application.name}.yml
+
+springdoc:
+  api-docs:
+    enabled: false

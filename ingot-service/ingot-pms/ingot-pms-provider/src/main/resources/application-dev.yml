@@ -10,5 +10,7 @@ logging:
 ingot:
   mybatis:
     show-sql-log: true
-  swagger:
+
+springdoc:
+  api-docs:
     enabled: true

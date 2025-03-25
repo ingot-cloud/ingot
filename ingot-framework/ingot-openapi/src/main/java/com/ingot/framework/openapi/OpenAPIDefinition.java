@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +27,6 @@ import java.util.List;
  * <p>Time         : 09:47.</p>
  */
 @Slf4j
-@ConditionalOnProperty(name = "ingot.swagger.enabled", havingValue = "true")
 public class OpenAPIDefinition extends OpenAPI implements InitializingBean, ApplicationContextAware {
 
     @Setter
@@ -36,10 +34,10 @@ public class OpenAPIDefinition extends OpenAPI implements InitializingBean, Appl
 
     private ApplicationContext applicationContext;
 
-    private SecurityScheme securityScheme(SwaggerProperties swaggerProperties) {
+    private SecurityScheme securityScheme(OpenAPIProperties openAPIProperties) {
         OAuthFlow clientCredential = new OAuthFlow();
-        clientCredential.setTokenUrl(swaggerProperties.getTokenUrl());
-        clientCredential.setScopes(new Scopes().addString(swaggerProperties.getScope(), swaggerProperties.getScope()));
+        clientCredential.setTokenUrl(openAPIProperties.getTokenUrl());
+        clientCredential.setScopes(new Scopes().addString(openAPIProperties.getScope(), openAPIProperties.getScope()));
         OAuthFlows oauthFlows = new OAuthFlows();
         oauthFlows.password(clientCredential);
         SecurityScheme securityScheme = new SecurityScheme();
@@ -50,13 +48,13 @@ public class OpenAPIDefinition extends OpenAPI implements InitializingBean, Appl
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        SwaggerProperties swaggerProperties = applicationContext.getBean(SwaggerProperties.class);
-        this.info(new Info().title(swaggerProperties.getTitle()));
+        OpenAPIProperties openAPIProperties = applicationContext.getBean(OpenAPIProperties.class);
+        this.info(new Info().title(openAPIProperties.getTitle()));
         // oauth2.0 password
-        this.schemaRequirement(HttpHeaders.AUTHORIZATION, this.securityScheme(swaggerProperties));
+        this.schemaRequirement(HttpHeaders.AUTHORIZATION, this.securityScheme(openAPIProperties));
         // servers
         List<Server> serverList = new ArrayList<>();
-        serverList.add(new Server().url(swaggerProperties.getGateway() + "/" + path));
+        serverList.add(new Server().url(openAPIProperties.getGateway() + "/" + path));
         this.servers(serverList);
         // 支持参数平铺
         SpringDocUtils.getConfig().addSimpleTypesForParameterObject(Class.class);

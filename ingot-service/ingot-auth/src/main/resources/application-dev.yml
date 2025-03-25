@@ -12,3 +12,7 @@ ingot:
     oauth2:
       auth:
         loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
+
+springdoc:
+  api-docs:
+    enabled: true

@@ -17,9 +17,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@EnableConfigurationProperties(SwaggerProperties.class)
+@EnableConfigurationProperties(OpenAPIProperties.class)
 @Import({OpenAPIDefinitionImportSelector.class})
-@PropertySource(value = "classpath:swagger-config.yaml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:openapi-config.yaml", factory = YamlPropertySourceFactory.class)
 public @interface EnableOpenAPI {
     /**
      * 网关路由前缀

@@ -1,5 +1,6 @@
 package com.ingot.framework.openapi;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -15,11 +16,11 @@ import java.util.Objects;
  * <p>Date         : 2025/3/20.</p>
  * <p>Time         : 09:51.</p>
  */
+@Slf4j
 public class OpenAPIDefinitionImportSelector implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, @NonNull BeanDefinitionRegistry registry) {
-
         Map<String, Object> annotationAttributes = metadata.getAnnotationAttributes(EnableOpenAPI.class.getName(),
                 true);
         if (annotationAttributes == null) {
