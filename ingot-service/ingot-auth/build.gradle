@@ -12,6 +12,7 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_tenant)
     implementation project(ingot.pms_api)
+    implementation project(ingot.framework_openapi)
 }
 
 
