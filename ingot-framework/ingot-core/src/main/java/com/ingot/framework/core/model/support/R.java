@@ -6,6 +6,7 @@ import com.ingot.framework.core.model.status.ErrorCode;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.function.Consumer;
 
 /**
  * <p>Description  : R.</p>
@@ -63,7 +64,7 @@ public class R<T> implements Serializable {
         this.data = data;
     }
 
-    public R<?> data(T data) {
+    public R<T> data(T data) {
         this.data = data;
         return this;
     }
@@ -76,7 +77,7 @@ public class R<T> implements Serializable {
         return code;
     }
 
-    public R<?> code(String code) {
+    public R<T> code(String code) {
         this.code = code;
         return this;
     }
@@ -85,7 +86,7 @@ public class R<T> implements Serializable {
         return message;
     }
 
-    public R<?> message(String message) {
+    public R<T> message(String message) {
         this.message = message;
         return this;
     }
@@ -96,6 +97,23 @@ public class R<T> implements Serializable {
     public boolean isSuccess() {
         return StrUtil.equals(getCode(), BaseErrorCode.OK.getCode());
     }
+
+    /**
+     * 如果成功则Consumer，并且传递Data
+     *
+     * @param consumer {@link Consumer}
+     * @return this
+     */
+    public R<T> ifSuccess(Consumer<T> consumer) {
+        if (isSuccess()) {
+            consumer.accept(data);
+        }
+        return this;
+    }
+
+
+    // 实例方法
+    // =============================================================
 
     /**
      * 响应成功
