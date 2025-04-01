@@ -1,0 +1,31 @@
+server:
+  port: 5210
+
+spring:
+  application:
+    name: ingot-service-test
+  datasource:
+    username: ${MYSQL_USERNAME:dev}
+    password: ${MYSQL_PASSWORD:123456}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:ingotredis}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848}
+        namespace: ingot
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+  config:
+    import:
+      - optional:nacos:application-common.yml
+      - optional:nacos:application-mysql.yml
+      - optional:nacos:${spring.application.name}.yml
+
+

@@ -43,6 +43,8 @@ include 'ingot-service:ingot-pms:ingot-pms-api'
 findProject(':ingot-service:ingot-pms:ingot-pms-api')?.name = 'ingot-pms-api'
 include 'ingot-service:ingot-pms:ingot-pms-provider'
 findProject(':ingot-service:ingot-pms:ingot-pms-provider')?.name = 'ingot-pms-provider'
+include 'ingot-service:ingot-test'
+findProject(':ingot-service:ingot-test')?.name = 'ingot-test'
 
 // Plugin
 include 'ingot-plugin:ingot-mybatisplus-plugin'
