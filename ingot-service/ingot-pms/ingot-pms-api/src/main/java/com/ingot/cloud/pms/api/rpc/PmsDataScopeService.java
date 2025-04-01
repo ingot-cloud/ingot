@@ -30,10 +30,17 @@ public interface PmsDataScopeService {
     R<List<SysRole>> getRoleListByCodes(@RequestBody List<String> roleCodeList);
 
     /**
-     * 获取子级部门
+     * 获取子级部门以及当前部门信息
      *
      * @param deptId 部门ID
      */
-    @GetMapping("/dataScope/dept/getDescendantList/{deptId}")
-    R<List<SysDept>> getDescendantList(@PathVariable("deptId") Long deptId);
+    @GetMapping("/dataScope/dept/getSelfAndDescendantList/{deptId}")
+    R<List<SysDept>> getSelfAndDescendantList(@PathVariable("deptId") Long deptId);
+
+    /**
+     * 获取用户当前部门以及所有子部门信息
+     * @param userId 用户ID
+     */
+    @GetMapping("/dept/getUserSelfAndDescendantDeptList/{userId}")
+    R<List<SysDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId);
 }
