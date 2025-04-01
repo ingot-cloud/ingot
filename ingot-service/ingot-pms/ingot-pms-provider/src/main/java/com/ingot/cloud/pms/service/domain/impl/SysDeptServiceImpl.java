@@ -65,10 +65,15 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     }
 
     @Override
-    public List<SysDept> getUserDescendant(long userId, boolean includeSelf) {
-        List<Long> deptIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
+    public List<Long> getUserDeptIds(long userId) {
+        return CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
                         .eq(SysUserDept::getUserId, userId)))
                 .stream().map(SysUserDept::getDeptId).toList();
+    }
+
+    @Override
+    public List<SysDept> getUserDescendant(long userId, boolean includeSelf) {
+        List<Long> deptIds = getUserDeptIds(userId);
         if (CollUtil.isEmpty(deptIds)) {
             return ListUtil.empty();
         }
