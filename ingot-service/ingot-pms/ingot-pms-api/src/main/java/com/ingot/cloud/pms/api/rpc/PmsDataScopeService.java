@@ -39,8 +39,12 @@ public interface PmsDataScopeService {
 
     /**
      * 获取用户当前部门以及所有子部门信息
+     *
      * @param userId 用户ID
      */
     @GetMapping("/dept/getUserSelfAndDescendantDeptList/{userId}")
     R<List<SysDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId);
+
+    @GetMapping("/dataScope/dept/getUserDeptIds/{userId}")
+    R<List<Long>> getUserDeptIds(@PathVariable("userId") Long userId);
 }
