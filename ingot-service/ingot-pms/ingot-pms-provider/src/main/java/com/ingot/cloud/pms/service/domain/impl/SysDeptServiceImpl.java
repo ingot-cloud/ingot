@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
@@ -64,7 +65,21 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
     }
 
     @Override
-    public List<SysDept> listDescendant(Long deptId) {
+    public List<SysDept> getUserDescendant(long userId, boolean includeSelf) {
+        List<Long> deptIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
+                        .eq(SysUserDept::getUserId, userId)))
+                .stream().map(SysUserDept::getDeptId).toList();
+        if (CollUtil.isEmpty(deptIds)) {
+            return ListUtil.empty();
+        }
+
+        return deptIds.stream()
+                .flatMap(deptId -> getDescendantList(deptId, includeSelf).stream())
+                .toList();
+    }
+
+    @Override
+    public List<SysDept> getDescendantList(Long deptId, boolean includeSelf) {
         // 查询全部部门
         List<SysDept> allDeptList = list(Wrappers.emptyWrapper());
 
@@ -73,7 +88,11 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         recursiveDept(allDeptList, deptId, resDeptList);
 
         // 添加当前节点
-        resDeptList.addAll(allDeptList.stream().filter(sysDept -> deptId.equals(sysDept.getId())).toList());
+        if (includeSelf) {
+            resDeptList.addAll(allDeptList.stream()
+                    .filter(sysDept -> deptId.equals(sysDept.getId()))
+                    .toList());
+        }
         return resDeptList;
     }
 
@@ -160,9 +179,11 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
      */
     private void recursiveDept(List<SysDept> allDeptList, Long parentId, List<SysDept> resDeptList) {
         // 使用 Stream API 进行筛选和遍历
-        allDeptList.stream().filter(sysDept -> sysDept.getPid().equals(parentId)).forEach(sysDept -> {
-            resDeptList.add(sysDept);
-            recursiveDept(allDeptList, sysDept.getId(), resDeptList);
-        });
+        allDeptList.stream()
+                .filter(sysDept -> sysDept.getPid().equals(parentId))
+                .forEach(sysDept -> {
+                    resDeptList.add(sysDept);
+                    recursiveDept(allDeptList, sysDept.getId(), resDeptList);
+                });
     }
 }

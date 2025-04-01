@@ -34,8 +34,13 @@ public class DataScopeAPI implements RShortcuts {
         return ok(sysRoleService.getRoleListByCodes(roleCodeList));
     }
 
-    @GetMapping("/dept/getDescendantList/{deptId}")
-    public R<List<SysDept>> getDescendantList(@PathVariable("deptId") Long deptId) {
-        return ok(sysDeptService.listDescendant(deptId));
+    @GetMapping("/dept/getSelfAndDescendantList/{deptId}")
+    public R<List<SysDept>> getSelfAndDescendantDeptList(@PathVariable("deptId") Long deptId) {
+        return ok(sysDeptService.getDescendantList(deptId, true));
+    }
+
+    @GetMapping("/dept/getUserSelfAndDescendantDeptList/{userId}")
+    public R<List<SysDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId) {
+        return ok(sysDeptService.getUserDescendant(userId, true));
     }
 }
