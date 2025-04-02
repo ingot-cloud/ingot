@@ -1,12 +1,15 @@
 package com.ingot.framework.data.mybatis.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.DataPermissionInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
+import com.ingot.framework.data.mybatis.plugins.CustomDataPermissionHandler;
 import com.ingot.framework.data.mybatis.plugins.DruidSqlLogFilter;
 import com.ingot.framework.data.mybatis.plugins.InOptimisticLockerInterceptor;
 import com.ingot.framework.data.mybatis.plugins.InTenantLineHandler;
 import com.ingot.framework.data.mybatis.properties.MybatisProperties;
+import com.ingot.framework.data.mybatis.scope.config.DataScopeProperties;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -32,7 +35,8 @@ import javax.sql.DataSource;
 public class MybatisPlusConfig {
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor(TenantProperties tenantProperties) {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(TenantProperties tenantProperties,
+                                                         DataScopeProperties dataScopeProperties) {
         MybatisPlusInterceptor mybatisPlusInterceptor = new MybatisPlusInterceptor();
 
         // tenant
@@ -43,6 +47,11 @@ public class MybatisPlusConfig {
         mybatisPlusInterceptor.addInnerInterceptor(new InOptimisticLockerInterceptor());
         // page
         mybatisPlusInterceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        // permission
+        CustomDataPermissionHandler permissionHandler = new CustomDataPermissionHandler(dataScopeProperties);
+        DataPermissionInterceptor permissionInterceptor = new DataPermissionInterceptor();
+        permissionInterceptor.setDataPermissionHandler(permissionHandler);
+        mybatisPlusInterceptor.addInnerInterceptor(permissionInterceptor);
         return mybatisPlusInterceptor;
     }
 
