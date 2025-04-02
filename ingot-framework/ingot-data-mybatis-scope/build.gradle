@@ -1,13 +1,11 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-//    api(deps.mybatis.plus_jsqlparser)
-//
-//
-//    implementation(deps.mybatis.plus_annotation)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.mybatis.plus_spring)
     implementation(deps.mybatis.plus_join)
+    implementation project(ingot.framework_data_mybatis_common)
     implementation project(ingot.framework_core)
+    implementation project(ingot.framework_security)
     implementation project(ingot.pms_api)
 }

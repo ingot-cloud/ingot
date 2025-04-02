@@ -1,6 +1,8 @@
-package com.ingot.framework.data.scope;
+package com.ingot.framework.data.mybatis.scope.config;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,12 +14,10 @@ import java.util.List;
  * <p>Date         : 2025/3/12.</p>
  * <p>Time         : 15:42.</p>
  */
-@Data
-public class DataScope implements Serializable {
-    /**
-     * 跳过数据权限过滤
-     */
-    private boolean skip = false;
+@Getter
+@Setter
+@ConfigurationProperties(prefix = "ingot.mybatis.scope")
+public class DataScopeProperties implements Serializable {
 
     /**
      * 数据范围字段名
@@ -30,13 +30,7 @@ public class DataScope implements Serializable {
     private String userFieldName = "created_by";
 
     /**
-     * 数据范围
+     * 需要进行数据权限过滤的表
      */
-    private List<Long> scopes = new ArrayList<>();
-
-    /**
-     * 用户权限范围
-     */
-    private Long userScope;
-
+    private List<String> tables = new ArrayList<>();
 }
