@@ -77,7 +77,7 @@ public final class SecurityAuthContext {
     /**
      * 获取用户角色信息
      *
-     * @return 角色集合
+     * @return 角色编码集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
      */
     public static List<String> getRoles() {
         Authentication authentication = getAuthentication();
@@ -85,6 +85,7 @@ public final class SecurityAuthContext {
 
         return authorities.stream()
                 .map(GrantedAuthority::getAuthority)
+                .map(code -> StrUtil.subAfter(code, InJwtAuthenticationConverter.AUTHORITY_PREFIX, false))
                 .collect(Collectors.toList());
     }
 
