@@ -3,6 +3,7 @@ package com.ingot.framework.core.config;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.model.transform.CommonTypeTransform;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Lazy;
  * <p>Time         : 4:37 PM.</p>
  */
 @AutoConfiguration
+@EnableConfigurationProperties(CoreProperties.class)
 public class CoreConfig {
 
     /**

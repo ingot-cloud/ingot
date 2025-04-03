@@ -19,8 +19,8 @@ public class AspectConfig {
     @Bean
     @Order(Integer.MIN_VALUE + 1)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public RequestLogAop requestLogAop() {
-        return new RequestLogAop();
+    public RequestLogAop requestLogAop(CoreProperties properties) {
+        return new RequestLogAop(properties);
     }
 
     @Bean

@@ -1,8 +1,10 @@
 package com.ingot.framework.core.utils;
 
-import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.BooleanUtil;
+import com.ingot.framework.core.config.CoreProperties;
 import com.ingot.framework.core.context.RequestContextHolder;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -10,7 +12,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 
 import java.util.Arrays;
-import java.util.Map;
 
 /**
  * <p>Description  : RequestLogAop.</p>
@@ -20,7 +21,9 @@ import java.util.Map;
  */
 @Slf4j
 @Aspect
+@RequiredArgsConstructor
 public class RequestLogAop {
+    private final CoreProperties properties;
 
     /**
      * Point cut wrapper.
@@ -37,30 +40,65 @@ public class RequestLogAop {
      */
     @Around("pointCutWrapper()")
     public Object methodWrapperHandler(ProceedingJoinPoint pjp) throws Throwable {
+        if (BooleanUtil.isFalse(properties.getRequestLog())) {
+            return pjp.proceed();
+        }
+
         long startTime = System.currentTimeMillis();
 
         HttpServletRequest request = RequestContextHolder.getRequest().orElse(null);
 
-        if (request == null){
+        if (request == null) {
             return pjp.proceed();
         }
 
-        Map<String, Object> param = MapUtil.newHashMap();
-        param.put("URL", request.getRequestURI());
-        param.put("HTTP_METHOD", request.getMethod());
-        param.put("IP", request.getRemoteAddr());
-        param.put("CLASS_METHOD", pjp.getSignature().getDeclaringTypeName() + "." + pjp.getSignature().getName());
-        param.put("ARGS", Arrays.toString(pjp.getArgs()));
-
-        log.info("[RequestLog] - request param={}", param);
+        log.info("""
+                        
+                        
+                        [RequestLog] - {}
+                        IP: {}
+                        HTTP METHOD: {}
+                        CLASS_METHOD: {}
+                        ARGS: {}
+                        """,
+                request.getRequestURI(),
+                request.getRemoteAddr(),
+                request.getMethod(),
+                pjp.getSignature().getDeclaringTypeName() + "." + pjp.getSignature().getName(),
+                Arrays.toString(pjp.getArgs()));
 
         Object result;
-
         try {
             result = pjp.proceed();
-            log.debug("[RequestLog] - {} response = {}", pjp.getSignature(), request);
+            log.info("""
+                            
+                            
+                            [RequestLog] - {}
+                            IP: {}
+                            HTTP METHOD: {}
+                            CLASS_METHOD: {}
+                            RESPONSE: {}
+                            """,
+                    request.getRequestURI(),
+                    request.getRemoteAddr(),
+                    request.getMethod(),
+                    pjp.getSignature().getDeclaringTypeName() + "." + pjp.getSignature().getName(),
+                    result);
         } finally {
-            log.info("[RequestLog] - " + pjp.getSignature() + " use time:" + (System.currentTimeMillis() - startTime));
+            log.info("""
+                            
+                            
+                            [RequestLog] - {}
+                            IP: {}
+                            HTTP METHOD: {}
+                            CLASS_METHOD: {}
+                            USE TIME: {}ms
+                            """,
+                    request.getRequestURI(),
+                    request.getRemoteAddr(),
+                    request.getMethod(),
+                    pjp.getSignature().getDeclaringTypeName() + "." + pjp.getSignature().getName(),
+                    (System.currentTimeMillis() - startTime));
         }
 
         return result;
