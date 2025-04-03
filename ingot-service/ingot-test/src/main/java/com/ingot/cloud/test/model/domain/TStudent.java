@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.data.mybatis.common.annotation.DataScopeTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@DataScopeTable
 @TableName("t_student")
 public class TStudent extends BaseModel<TStudent> {
 
@@ -36,4 +38,8 @@ public class TStudent extends BaseModel<TStudent> {
      */
     @TableField("`name`")
     private String name;
+
+    private Long deptId;
+
+    private Long created_by;
 }

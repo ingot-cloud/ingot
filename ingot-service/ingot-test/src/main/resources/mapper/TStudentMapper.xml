@@ -2,4 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ingot.cloud.test.mapper.TStudentMapper">
 
+    <select id="studentList" resultType="com.ingot.cloud.test.model.domain.TStudent">
+        SELECT s.*
+        FROM t_student AS s
+            INNER JOIN t_class_student AS cs ON s.id = cs.student_id
+        WHERE cs.class_id = 1
+    </select>
+
 </mapper>

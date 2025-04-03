@@ -2,9 +2,9 @@ package com.ingot.cloud.test.mapper;
 
 import com.ingot.cloud.test.model.domain.TStudent;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
-
-
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * <p>
@@ -17,4 +17,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface TStudentMapper extends BaseMapper<TStudent> {
 
+    List<TStudent> studentList();
 }

@@ -8,7 +8,7 @@ dependencies {
     implementation(deps.spring.spring_boot.configuration_processor)
 
     implementation project(ingot.framework_feign)
-    implementation project(ingot.framework_security)
     implementation project(ingot.framework_sentinel)
-    implementation project(ingot.framework_core)
+    implementation project(ingot.framework_security)
+    implementation project(ingot.framework_tenant)
 }

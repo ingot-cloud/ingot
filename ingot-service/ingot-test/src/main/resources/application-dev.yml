@@ -6,7 +6,4 @@ logging:
     org.springframework.security: trace
     org.springframework.security.oauth2: debug
     com.alibaba.nacos.client.naming: info
-
-ingot:
-  mybatis:
-    show-sql-log: true
+    org.springframework.aop: DEBUG

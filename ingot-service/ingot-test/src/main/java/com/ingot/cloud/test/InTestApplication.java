@@ -1,5 +1,6 @@
 package com.ingot.cloud.test;
 
+import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <p>Time         : 16:47.</p>
  */
 @EnableTransactionManagement
+@EnableInWebSecurity
 @EnableDiscoveryClient
 @SpringBootApplication
 public class InTestApplication {
