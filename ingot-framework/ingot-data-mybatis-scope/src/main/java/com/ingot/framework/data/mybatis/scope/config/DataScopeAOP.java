@@ -8,7 +8,6 @@ import com.ingot.framework.core.model.support.R;
 import com.ingot.framework.data.mybatis.scope.context.DataScopeContextHolder;
 import com.ingot.framework.data.mybatis.scope.error.DataScopeErrorCode;
 import com.ingot.framework.data.mybatis.scope.error.DataScopeException;
-import com.ingot.framework.data.mybatis.scope.model.DataScopeTypeEnum;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +76,7 @@ public class DataScopeAOP {
     private void setScopes(InUser user, List<SysRole> roles) {
         List<Long> scopes = new ArrayList<>();
         for (SysRole role : roles) {
-            switch (DataScopeTypeEnum.getEnum(role.getScopeType())) {
+            switch (role.getScopeType()) {
                 case ALL:
                     DataScopeContextHolder.skip();
                     return;

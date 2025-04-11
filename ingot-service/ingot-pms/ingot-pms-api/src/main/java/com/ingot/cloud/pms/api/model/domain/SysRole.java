@@ -9,6 +9,7 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -79,7 +80,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 数据权限类型
      */
-    private Integer scopeType;
+    private DataScopeTypeEnum scopeType;
 
     /**
      * 数据权限范围

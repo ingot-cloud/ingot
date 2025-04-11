@@ -1,4 +1,4 @@
-package com.ingot.framework.data.mybatis.scope.model;
+package com.ingot.framework.data.mybatis.common.model;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
