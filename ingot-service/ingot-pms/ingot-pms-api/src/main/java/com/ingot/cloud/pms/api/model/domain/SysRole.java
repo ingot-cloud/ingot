@@ -1,9 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
@@ -85,6 +83,7 @@ public class SysRole extends BaseModel<SysRole> {
     /**
      * 数据权限范围
      */
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> scopes;
 
     /**
