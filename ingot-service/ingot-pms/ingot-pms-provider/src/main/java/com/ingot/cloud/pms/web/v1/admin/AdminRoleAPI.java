@@ -122,6 +122,16 @@ public class AdminRoleAPI implements RShortcuts {
         return ok();
     }
 
+    /**
+     * 组织角色绑定默认权限
+     */
+    @HasAnyAuthority({"basic:role:w"})
+    @PutMapping("/orgRoleBindDefaultAuthority")
+    public R<?> orgRoleBindDefaultAuthorities(@RequestBody RelationDTO<Long, Long> params) {
+        bizRoleService.orgRoleBindDefaultAuthorities(params);
+        return ok();
+    }
+
     @HasAnyAuthority({"basic:role:w"})
     @GetMapping("/bindAuthority/{id}")
     public R<?> getBindAuthorities(@PathVariable Long id,

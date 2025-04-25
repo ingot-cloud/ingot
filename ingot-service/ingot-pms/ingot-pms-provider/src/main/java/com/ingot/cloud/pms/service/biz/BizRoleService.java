@@ -111,4 +111,12 @@ public interface BizRoleService {
      * @param params {@link RelationDTO}
      */
     void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params);
+
+    /**
+     * 给组织角色绑定默认权限，不会影响当前每个组织角色对应的权限<br>
+     * 新创建的组织会默认使用这些权限
+     *
+     * @param params {@link RelationDTO}
+     */
+    void orgRoleBindDefaultAuthorities(RelationDTO<Long, Long> params);
 }

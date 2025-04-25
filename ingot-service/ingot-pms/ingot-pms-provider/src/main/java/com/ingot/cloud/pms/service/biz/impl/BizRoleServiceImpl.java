@@ -183,6 +183,15 @@ public class BizRoleServiceImpl implements BizRoleService {
         }
     }
 
+    @Override
+    public void orgRoleBindDefaultAuthorities(RelationDTO<Long, Long> params) {
+        SysRole current = sysRoleService.getById(params.getId());
+        assertionChecker.checkOperation(!StrUtil.equals(current.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
+                "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
+
+        sysRoleAuthorityService.roleBindAuthorities(params);
+    }
+
     private void ensureRoles(long userId, List<Long> roles, String roleCode) {
         // 如果当前组织包含指定角色，那么需要判断该用户是否有当前指定角色，如果有则确保该角色不被删除
         SysRole ensureRole = sysRoleService.getRoleByCode(roleCode);
