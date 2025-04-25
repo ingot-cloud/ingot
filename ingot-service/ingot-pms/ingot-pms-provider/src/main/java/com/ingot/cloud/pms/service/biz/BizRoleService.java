@@ -105,7 +105,8 @@ public interface BizRoleService {
     void removeRoleGroupEffectOrg(long id, boolean isAdmin);
 
     /**
-     * 角色绑定权限
+     * 角色绑定权限, 不可绑定组织管理员角色{@link com.ingot.framework.core.constants.RoleConstants#ROLE_ORG_ADMIN_CODE}<br>
+     * 组织管理员角色自动处理
      *
      * @param params {@link RelationDTO}
      */

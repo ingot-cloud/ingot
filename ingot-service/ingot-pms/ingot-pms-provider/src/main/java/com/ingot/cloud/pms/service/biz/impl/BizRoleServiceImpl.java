@@ -173,8 +173,11 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params) {
-        sysRoleAuthorityService.roleBindAuthorities(params);
         SysRole current = sysRoleService.getById(params.getId());
+        assertionChecker.checkOperation(!StrUtil.equals(current.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
+                "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
+
+        sysRoleAuthorityService.roleBindAuthorities(params);
         if (current.getType() == OrgTypeEnum.Tenant) {
             tenantOps.roleBindAuthorities(params, current);
         }
