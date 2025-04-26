@@ -12,9 +12,9 @@ import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.core.utils.DateUtils;
 import com.ingot.framework.data.redis.utils.RedisUtils;
-import com.ingot.framework.core.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Description  : TenantEngine.</p>
@@ -177,14 +179,47 @@ public class TenantEngine {
     }
 
     /**
-     * 租户默认角色关联权限
+     * 租户默认角色关联权限<br>
+     * 1. 管理员关联所有权限
+     * 2. 给所有非管理员角色的组织类型角色绑定默认权限
      */
     public void tenantRoleBindAuthorities(SysTenant tenant, List<SysRole> roles, List<SysAuthority> authorities) {
-        TenantEnv.runAs(tenant.getId(), () -> {
+        // 组织角色模版ID, 不包括管理员角色(RoleConstants.ROLE_ORG_ADMIN_CODE)
+        List<Long> modelRoles = roles.stream()
+                .filter(role -> role.getType() == OrgTypeEnum.Tenant)
+                .filter(role -> !StrUtil.equals(role.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
+                .map(SysRole::getModelId)
+                .toList();
+        // 角色模版ID->权限编码 映射关系
+        Map<Long, List<String>> roleAuthorityCodes = new HashMap<>();
+        for (Long roleId : modelRoles) {
+            List<String> codes = CollUtil.emptyIfNull(sysRoleAuthorityService.getAuthoritiesByRole(roleId))
+                    .stream().map(SysAuthority::getCode)
+                    .toList();
+            if (CollUtil.isNotEmpty(codes)) {
+                roleAuthorityCodes.put(roleId, codes);
+            }
+        }
+
+        Long orgId = tenant.getId();
+        TenantEnv.runAs(orgId, () -> {
+            // 管理员关联所有权限
             SysRole role = roles.stream()
                     .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
                     .findFirst().orElseThrow();
-            TenantUtils.bindAuthorities(tenant.getId(), role.getId(), authorities, sysRoleAuthorityService);
+            TenantUtils.bindAuthorities(orgId, role.getId(), authorities, sysRoleAuthorityService);
+
+            // 非管理员组织角色，关联默认权限
+            roles.stream()
+                    .filter(item -> roleAuthorityCodes.containsKey(item.getModelId()))
+                    .forEach(item -> {
+                        List<String> codes = roleAuthorityCodes.get(item.getModelId());
+                        List<SysAuthority> targetAuthorities = authorities.stream()
+                                .filter(authority -> codes.contains(authority.getCode()))
+                                .toList();
+                        TenantUtils.bindAuthorities(orgId, item.getId(), targetAuthorities, sysRoleAuthorityService);
+                    });
+
         });
     }
 

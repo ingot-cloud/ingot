@@ -16,6 +16,7 @@ import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import java.util.List;
  * <p>Date         : 2023/9/21.</p>
  * <p>Time         : 11:09 AM.</p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BizOrgServiceImpl implements BizOrgService {

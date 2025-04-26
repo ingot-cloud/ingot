@@ -6,6 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
@@ -67,6 +68,8 @@ public class OrgRoleAPI implements RShortcuts {
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
         // 组织创建角色，角色不能为部门角色
         params.setFilterDept(Boolean.FALSE);
+        // 自定义组织角色，类型为CUSTOM
+        params.setType(OrgTypeEnum.Custom);
         sysRoleService.createRole(params, false);
         return ok();
     }
