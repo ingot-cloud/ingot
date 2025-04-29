@@ -1,11 +1,15 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
+import com.ingot.cloud.pms.api.model.vo.user.SimpleUserWithPhoneVO;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.core.model.support.R;
@@ -39,6 +43,21 @@ public class AdminUserAPI implements RShortcuts {
     @Operation(summary = "获取用户信息", description = "根据当前Token获取用户信息")
     public R<?> user() {
         return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
+    }
+
+    @HasAnyAuthority({"basic:user:r", "basic:user:w"})
+    @GetMapping("/searchByPhone")
+    @Operation(summary = "根据手机号查询用户信息", description = "根据手机号查询用户信息")
+    public R<?> searchByPhone(@RequestParam String phone) {
+        return ok(CollUtil.emptyIfNull(sysUserService.list(
+                        Wrappers.<SysUser>lambdaQuery()
+                                .like(SysUser::getPhone, phone)))
+                .stream()
+                .map(item -> {
+                    SimpleUserWithPhoneVO result = new SimpleUserWithPhoneVO();
+                    BeanUtil.copyProperties(item, result);
+                    return result;
+                }).toList());
     }
 
     @HasAnyAuthority({"basic:user:r", "basic:user:w"})

@@ -17,6 +17,8 @@ import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,4 +93,9 @@ public class BizOrgServiceImpl implements BizOrgService {
         TenantEnv.runAs(id, () -> tenantEngine.destroy(id));
     }
 
+    public static void main(String[] args) {
+        String password = "111111";
+        PasswordEncoder encode = new BCryptPasswordEncoder();
+        System.out.println(encode.encode(password));
+    }
 }
