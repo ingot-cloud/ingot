@@ -102,6 +102,7 @@ public class TenantEngine {
                         SysRoleGroup group = new SysRoleGroup();
                         BeanUtil.copyProperties(item, group);
                         group.setId(null);
+                        group.setTenantId(null);
                         group.setModelId(item.getId());
                         return group;
                     }).toList();
@@ -112,6 +113,7 @@ public class TenantEngine {
                         SysRole role = new SysRole();
                         BeanUtil.copyProperties(item, role);
                         role.setId(null);
+                        role.setTenantId(null);
                         role.setModelId(item.getId());
                         role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
                         role.setCreatedAt(DateUtils.now());
