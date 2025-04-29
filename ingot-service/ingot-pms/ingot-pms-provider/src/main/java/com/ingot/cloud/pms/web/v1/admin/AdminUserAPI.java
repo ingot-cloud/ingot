@@ -2,6 +2,8 @@ package com.ingot.cloud.pms.web.v1.admin;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -49,6 +51,10 @@ public class AdminUserAPI implements RShortcuts {
     @GetMapping("/searchByPhone")
     @Operation(summary = "根据手机号查询用户信息", description = "根据手机号查询用户信息")
     public R<?> searchByPhone(@RequestParam String phone) {
+        // 优化，如果手机号传的是从1开始的字符串，那么长度大于6的时候才开始检索，避免数据量过大
+        if (StrUtil.startWith(phone, "1") && StrUtil.length(phone) < 7) {
+            return ok(ListUtil.empty());
+        }
         return ok(CollUtil.emptyIfNull(sysUserService.list(
                         Wrappers.<SysUser>lambdaQuery()
                                 .like(SysUser::getPhone, phone)))
