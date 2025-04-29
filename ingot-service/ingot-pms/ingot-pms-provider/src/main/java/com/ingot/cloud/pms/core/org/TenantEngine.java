@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.core.org;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -99,10 +100,9 @@ public class TenantEngine {
             List<SysRoleGroup> orgRoleGroups = templateRoleGroups.stream()
                     .map(item -> {
                         SysRoleGroup group = new SysRoleGroup();
+                        BeanUtil.copyProperties(item, group);
+                        group.setId(null);
                         group.setModelId(item.getId());
-                        group.setName(item.getName());
-                        group.setType(item.getType());
-                        group.setSort(item.getSort());
                         return group;
                     }).toList();
             sysRoleGroupService.saveBatch(orgRoleGroups);
@@ -110,13 +110,12 @@ public class TenantEngine {
             List<SysRole> orgRoles = templateRoles.stream()
                     .map(item -> {
                         SysRole role = new SysRole();
-                        role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
+                        BeanUtil.copyProperties(item, role);
+                        role.setId(null);
                         role.setModelId(item.getId());
-                        role.setName(item.getName());
-                        role.setCode(item.getCode());
-                        role.setType(item.getType());
-                        role.setStatus(item.getStatus());
+                        role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
                         role.setCreatedAt(DateUtils.now());
+                        role.setUpdatedAt(role.getCreatedAt());
                         return role;
                     }).toList();
             sysRoleService.saveBatch(orgRoles);
