@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
@@ -83,16 +84,11 @@ public interface RoleService {
             vo.setChildren(roles.stream()
                     .filter(role -> Objects.equals(role.getGroupId(), item.getId()))
                     .map(role -> {
-                        RoleGroupItemVO itemVo = new RoleGroupItemVO();
-                        itemVo.setIsGroup(Boolean.FALSE);
-                        itemVo.setId(role.getId());
-                        itemVo.setName(role.getName());
-                        itemVo.setType(role.getType());
-                        itemVo.setFilterDept(role.getFilterDept());
-                        itemVo.setGroupId(item.getId());
-                        itemVo.setStatus(role.getStatus());
-                        itemVo.setCode(role.getCode());
-                        return itemVo;
+                        RoleGroupItemVO target = new RoleGroupItemVO();
+                        BeanUtil.copyProperties(role, target);
+                        target.setGroupId(item.getId());
+                        target.setIsGroup(Boolean.FALSE);
+                        return target;
                     }).toList());
             return vo;
         };

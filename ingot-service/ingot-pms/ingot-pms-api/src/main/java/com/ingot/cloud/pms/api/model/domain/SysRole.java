@@ -27,7 +27,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TenantTable
-@TableName("sys_role")
+@TableName(value = "sys_role", autoResultMap = true)
 public class SysRole extends BaseModel<SysRole> {
 
     private static final long serialVersionUID = 1L;
