@@ -19,4 +19,5 @@ public interface DeptTrans {
 
     DeptTreeNodeVO to(DeptWithManagerVO params);
 
+    SysDept to(DeptTreeNodeVO in);
 }

@@ -6,14 +6,13 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
-import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.IDConstants;
 import com.ingot.framework.core.model.common.RelationDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
@@ -67,6 +66,32 @@ public class TenantUtils {
 
                 if (CollUtil.isNotEmpty(node.getChildren())) {
                     createMenuFn(collect, node.getChildren(), item.getId(), menuTrans, sysMenuService);
+                }
+            }
+        }
+    }
+
+    public static void createDeptFn(List<SysDept> collect,
+                                    List<? extends TreeNode<Long>> tree,
+                                    long pid,
+                                    DeptTrans trans,
+                                    SysDeptService service) {
+
+        for (TreeNode<Long> node : tree) {
+            if (node instanceof DeptTreeNodeVO menuNode) {
+                SysDept item = trans.to(menuNode);
+                item.setId(null);
+                item.setPid(pid);
+                item.setDeletedAt(null);
+                item.setCreatedAt(DateUtils.now());
+                item.setUpdatedAt(item.getCreatedAt());
+                service.save(item);
+                if (collect != null) {
+                    collect.add(item);
+                }
+
+                if (CollUtil.isNotEmpty(node.getChildren())) {
+                    createDeptFn(collect, node.getChildren(), item.getId(), trans, service);
                 }
             }
         }

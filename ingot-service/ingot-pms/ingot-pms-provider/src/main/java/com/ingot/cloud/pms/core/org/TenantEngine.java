@@ -9,7 +9,9 @@ import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.core.constants.CacheConstants;
@@ -23,9 +25,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>Description  : TenantEngine.</p>
@@ -58,6 +58,7 @@ public class TenantEngine {
     private final TenantProperties tenantProperties;
     private final AuthorityTrans authorityTrans;
     private final MenuTrans menuTrans;
+    private final DeptTrans deptTrans;
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**
@@ -74,15 +75,37 @@ public class TenantEngine {
     }
 
     /**
-     * 创建租户部门
+     * 创建租户部门<br>
+     * 1. 创建以租户名称命名的部门<br>
+     * 2. 创建默认子部门(系统默认)<br>
      */
     public SysDept createTenantDept(SysTenant tenant) {
+        // 获取所有预设部门
+        List<DeptTreeNodeVO> templateTree = CollUtil.emptyIfNull(sysDeptService.treeList());
+        DeptTreeNodeVO templateMainDept = templateTree.stream()
+                .filter(item -> Objects.equals(item.getMainFlag(), Boolean.TRUE))
+                .findFirst()
+                .orElse(null);
+        // 获取主部门下面所有模本部门信息
+        List<DeptTreeNodeVO> templateList = templateMainDept == null ? ListUtil.empty()
+                : CollUtil.emptyIfNull(templateMainDept.getChildren())
+                .stream().map(item -> (DeptTreeNodeVO) item).toList();
+
         return TenantEnv.applyAs(tenant.getId(), () -> {
-            SysDept dept = new SysDept();
-            dept.setName(tenant.getName());
-            dept.setMainFlag(Boolean.TRUE);
-            sysDeptService.createDept(dept);
-            return dept;
+            // 1. 创建主部门(当前组织名称的部门)
+            SysDept mainDept = new SysDept();
+            mainDept.setName(tenant.getName());
+            mainDept.setMainFlag(Boolean.TRUE);
+            sysDeptService.createDept(mainDept);
+
+            // 2. 创建默认子部门
+            if (templateMainDept == null) {
+                return mainDept;
+            }
+
+            List<SysDept> collect = new ArrayList<>();
+            TenantUtils.createDeptFn(collect, templateList, mainDept.getId(), deptTrans, sysDeptService);
+            return mainDept;
         });
     }
 
