@@ -111,6 +111,9 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         // 1.获取可以访问的租户列表
         List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
 
+        if (CollUtil.isEmpty(userTenantList)) {
+            return ListUtil.empty();
+        }
         return BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
