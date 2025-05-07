@@ -1,31 +1,28 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
-import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
-import com.ingot.framework.core.model.security.UserTypeEnum;
-import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.core.model.security.UserDetailsRequest;
 import com.ingot.framework.core.model.security.UserDetailsResponse;
-import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
+import com.ingot.framework.core.model.security.UserTypeEnum;
+import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdminSupportUserDetailsService implements SupportUserDetailsService {
+public class AdminSupportUserDetailsService implements SupportUserDetailsService<SysUser> {
     private final SysTenantService sysTenantService;
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
@@ -55,16 +52,10 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     @Override
     public UserDetailsResponse getUserDetails(UserDetailsRequest request) {
-        AuthorizationGrantType grantType = new AuthorizationGrantType(request.getGrantType());
-        if (ObjectUtil.equals(InAuthorizationGrantType.PASSWORD, grantType)) {
-            return getUserAuthDetails(request);
-        }
-        if (ObjectUtil.equals(InAuthorizationGrantType.SOCIAL, grantType)) {
-            return getUserAuthDetailsSocial(request);
-        }
-        return null;
+        return commonGetUserDetails(request, socialProcessorManager);
     }
 
+    @Override
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
         String username = request.getUsername();
         // 1.作为手机号查询
@@ -79,60 +70,26 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         return map(user, request.getUserType(), request.getTenant());
     }
 
-    public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
-        return TenantEnv.applyAs(request.getTenant(), () -> {
-            SocialTypeEnum socialType = request.getSocialType();
-            String socialCode = request.getSocialCode();
-            String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-            return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
-        });
-    }
-
-    private UserDetailsResponse map(SysUser user, UserTypeEnum userType, Long tenant) {
-        return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
-                .map(value -> {
-                    List<AllowTenantDTO> allows = getTenantList(user);
-                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
-
-                    UserDetailsResponse result = userTrans.toUserDetails(value);
-                    result.setTenant(tenant);
-                    result.setUserType(userType.getValue());
-                    result.setAllows(allows);
-
-                    // 查询拥有的角色
-                    List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
-
-                    result.setRoles(loadRoles(roles, tenant));
-                    return result;
-                }).orElse(null));
-    }
-
-    private List<AllowTenantDTO> getTenantList(SysUser user) {
+    @Override
+    public List<AllowTenantDTO> getAllowTenants(SysUser user) {
         // 1.获取可以访问的租户列表
         List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
-
-        if (CollUtil.isEmpty(userTenantList)) {
-            return ListUtil.empty();
-        }
-        return BizUtils.getAllows(sysTenantService,
-                userTenantList.stream()
-                        .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
-                (item) -> item.setMain(userTenantList.stream()
-                        .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
+        return getAllowTenantList(user, userTenantList, sysTenantService);
     }
 
-    private List<String> loadRoles(List<SysRole> roles, Long loginTenant) {
-        if (CollUtil.isEmpty(roles)) {
-            return ListUtil.empty();
+    @Override
+    public UserDetailsResponse userToUserDetailsResponse(SysUser user) {
+        return userTrans.toUserDetails(user);
+    }
+
+    @Override
+    public void setRoles(UserDetailsResponse result, SysUser user, Long loginTenant) {
+        List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
+        List<String> roleCodes = getRoleCodes(roles, loginTenant);
+        if (CollUtil.isEmpty(roleCodes)) {
+            return;
         }
-        List<String> roleCodes = roles.stream()
-                .map(item -> {
-                    if (loginTenant != null) {
-                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
-                    }
-                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
-                })
-                .collect(Collectors.toList());
+
         // 角色拥有的权限
         List<SysAuthority> authorities = sysAuthorityService.getAuthorityByRoles(roles);
 
@@ -167,7 +124,8 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
                     return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
                 }).collect(Collectors.toSet());
 
-        roleCodes.addAll(authorityCodeList);
-        return roleCodes;
+        List<String> finalRoleCodes = new ArrayList<>(roleCodes);
+        finalRoleCodes.addAll(authorityCodeList);
+        result.setRoles(finalRoleCodes);
     }
 }

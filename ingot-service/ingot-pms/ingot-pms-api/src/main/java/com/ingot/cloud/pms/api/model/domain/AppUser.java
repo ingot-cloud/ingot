@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.cloud.pms.api.model.types.UserType;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @TableName("app_user")
-public class AppUser extends BaseModel<AppUser> {
+public class AppUser extends BaseModel<AppUser> implements UserType {
 
     private static final long serialVersionUID = 1L;
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
@@ -25,7 +26,7 @@ import java.time.LocalDateTime;
 @Setter
 @TenantTable
 @TableName("app_role")
-public class AppRole extends BaseModel<AppRole> {
+public class AppRole extends BaseModel<AppRole> implements RoleType {
 
     private static final long serialVersionUID = 1L;
 

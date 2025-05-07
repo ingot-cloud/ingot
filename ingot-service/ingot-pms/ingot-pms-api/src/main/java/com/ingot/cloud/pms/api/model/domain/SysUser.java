@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.cloud.pms.api.model.types.UserType;
 import com.ingot.framework.core.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
@@ -29,7 +30,7 @@ import java.time.LocalDateTime;
 @Schema(description = "系统用户")
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_user")
-public class SysUser extends BaseModel<SysUser> {
+public class SysUser extends BaseModel<SysUser> implements UserType {
 
     private static final long serialVersionUID = 1L;
 

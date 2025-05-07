@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.domain;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.core.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
@@ -28,7 +29,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @TenantTable
 @TableName(value = "sys_role", autoResultMap = true)
-public class SysRole extends BaseModel<SysRole> {
+public class SysRole extends BaseModel<SysRole> implements RoleType {
 
     private static final long serialVersionUID = 1L;
 

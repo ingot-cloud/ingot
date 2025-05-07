@@ -7,6 +7,9 @@ package com.ingot.cloud.pms.api.model.types;
  * <p>Time         : 15:40.</p>
  */
 public interface UserTenantType {
+    /**
+     * ID
+     */
     Long getId();
 
     /**

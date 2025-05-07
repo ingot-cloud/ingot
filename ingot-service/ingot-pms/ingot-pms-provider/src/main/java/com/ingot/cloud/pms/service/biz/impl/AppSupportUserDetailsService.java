@@ -1,33 +1,26 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
 import com.ingot.cloud.pms.api.model.transform.UserTrans;
-import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
-import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.service.domain.AppRoleService;
+import com.ingot.cloud.pms.service.domain.AppUserService;
+import com.ingot.cloud.pms.service.domain.AppUserTenantService;
+import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
-import com.ingot.framework.core.model.security.UserTypeEnum;
-import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.core.model.security.UserDetailsRequest;
 import com.ingot.framework.core.model.security.UserDetailsResponse;
-import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
-import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.core.model.security.UserTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : AppSupportUserDetailsService.</p>
@@ -38,7 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AppSupportUserDetailsService implements SupportUserDetailsService {
+public class AppSupportUserDetailsService implements SupportUserDetailsService<AppUser> {
     private final SysTenantService sysTenantService;
     private final AppUserService appUserService;
     private final AppRoleService appRoleService;
@@ -54,14 +47,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
 
     @Override
     public UserDetailsResponse getUserDetails(UserDetailsRequest request) {
-        AuthorizationGrantType grantType = new AuthorizationGrantType(request.getGrantType());
-        if (ObjectUtil.equals(InAuthorizationGrantType.PASSWORD, grantType)) {
-            return getUserAuthDetails(request);
-        }
-        if (ObjectUtil.equals(InAuthorizationGrantType.SOCIAL, grantType)) {
-            return getUserAuthDetailsSocial(request);
-        }
-        return null;
+        return commonGetUserDetails(request, socialProcessorManager);
     }
 
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
@@ -78,60 +64,27 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService {
         return map(user, request.getUserType(), request.getTenant());
     }
 
-    public UserDetailsResponse getUserAuthDetailsSocial(UserDetailsRequest request) {
-        return TenantEnv.applyAs(request.getTenant(), () -> {
-            SocialTypeEnum socialType = request.getSocialType();
-            String socialCode = request.getSocialCode();
-            String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-            return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
-        });
-    }
-
-    private UserDetailsResponse map(AppUser user, UserTypeEnum userType, Long tenant) {
-        return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
-                .map(value -> {
-                    List<AllowTenantDTO> allows = getTenantList(user);
-                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
-
-                    UserDetailsResponse result = userTrans.toUserDetails(value);
-                    result.setTenant(tenant);
-                    result.setUserType(userType.getValue());
-                    result.setAllows(allows);
-
-                    // 查询拥有的角色
-                    List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
-
-                    setRoles(result, roles, tenant);
-                    return result;
-                }).orElse(null));
-    }
-
-    private List<AllowTenantDTO> getTenantList(AppUser user) {
+    @Override
+    public List<AllowTenantDTO> getAllowTenants(AppUser user) {
         // 1.获取可以访问的租户列表
         List<AppUserTenant> userTenantList = appUserTenantService.list(
                 Wrappers.<AppUserTenant>lambdaQuery()
                         .eq(AppUserTenant::getUserId, user.getId()));
-
-        return BizUtils.getAllows(sysTenantService,
-                userTenantList.stream()
-                        .map(AppUserTenant::getTenantId).collect(Collectors.toSet()),
-                (item) -> item.setMain(userTenantList.stream()
-                        .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
+        return getAllowTenantList(user, userTenantList, sysTenantService);
     }
 
-    private void setRoles(UserDetailsResponse result, List<AppRole> roles, Long loginTenant) {
-        if (CollUtil.isEmpty(roles)) {
+    @Override
+    public UserDetailsResponse userToUserDetailsResponse(AppUser user) {
+        return userTrans.toUserDetails(user);
+    }
+
+    @Override
+    public void setRoles(UserDetailsResponse result, AppUser user, Long loginTenant) {
+        List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
+        List<String> roleCodes = getRoleCodes(roles, loginTenant);
+        if (CollUtil.isEmpty(roleCodes)) {
             return;
         }
-        List<String> roleCodes = roles.stream()
-                .map(item -> {
-                    if (loginTenant != null) {
-                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
-                    }
-                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
-                })
-                .collect(Collectors.toList());
         result.setRoles(roleCodes);
     }
-
 }

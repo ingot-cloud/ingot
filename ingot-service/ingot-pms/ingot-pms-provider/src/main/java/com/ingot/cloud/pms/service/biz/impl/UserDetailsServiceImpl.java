@@ -20,11 +20,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private final List<SupportUserDetailsService> supportUserDetailsServices;
+    private final List<SupportUserDetailsService<?>> supportUserDetailsServices;
 
     @Override
     public UserDetailsResponse getUserDetails(UserDetailsRequest params) {
-        for (SupportUserDetailsService service : supportUserDetailsServices) {
+        for (SupportUserDetailsService<?> service : supportUserDetailsServices) {
             if (service.support(params)) {
                 return service.getUserDetails(params);
             }
