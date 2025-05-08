@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.domain;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
+import com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
@@ -31,6 +32,13 @@ public interface SysDeptService extends BaseService<SysDept> {
      * @return tree列表
      */
     List<DeptTreeNodeVO> treeList(SysDept condition);
+
+    /**
+     * 获取部门列表，并且返回部门成员数量
+     *
+     * @return {@link DeptWithMemberCountDTO}
+     */
+    List<DeptWithMemberCountDTO> listWithMemberCount();
 
     /**
      * 获取用户所在部门ID列表

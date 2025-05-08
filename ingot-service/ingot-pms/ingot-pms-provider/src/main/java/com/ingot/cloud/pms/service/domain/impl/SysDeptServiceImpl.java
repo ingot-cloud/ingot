@@ -5,6 +5,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
+import com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO;
 import com.ingot.cloud.pms.api.model.transform.DeptTrans;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -62,6 +63,11 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
         TreeUtils.compensate(tree, nodeList);
         return tree;
+    }
+
+    @Override
+    public List<DeptWithMemberCountDTO> listWithMemberCount() {
+        return baseMapper.listWithMemberCount();
     }
 
     @Override

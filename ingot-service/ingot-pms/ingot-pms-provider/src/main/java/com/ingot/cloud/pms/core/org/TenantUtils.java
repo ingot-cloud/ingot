@@ -534,7 +534,21 @@ public class TenantUtils {
         List<MenuTreeNodeVO> currentMenus = TenantUtils.getTargetMenus(orgId, rootMenuId, sysMenuService, menuTrans);
         List<MenuTreeNodeVO> templateMenuTree = loadAppInfo.getMenuTree();
 
+        // 创建/更新菜单
         menuCreateDiff(collectAuthorityIdMap, templateMenuTree, currentMenus, rootMenuId, sysMenuService, menuTrans);
+
+        // 删除菜单，如果当前组织菜单已经被删除，那么需要将组织中相应菜单删除
+        List<MenuTreeNodeVO> templateMenuList = TreeUtils.stretch(templateMenuTree);
+        List<Long> removeMenuIdList = currentMenus
+                .stream()
+                .filter(item -> templateMenuList.stream()
+                        .noneMatch(templateMenu -> StrUtil.equals(templateMenu.getPath(), item.getPath())))
+                .map(TreeNode::getId)
+                .toList();
+        if (CollUtil.isEmpty(removeMenuIdList)) {
+            return;
+        }
+        sysMenuService.remove(Wrappers.<SysMenu>lambdaQuery().in(SysMenu::getId, removeMenuIdList));
     }
 
     /**

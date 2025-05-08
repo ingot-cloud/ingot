@@ -42,4 +42,9 @@ public class DeptTreeNodeVO extends TreeNode<Long> {
      * 部门主管
      */
     private List<SimpleUserVO> managerUsers;
+
+    /**
+     * 部门人员数量
+     */
+    private Long memberCount;
 }

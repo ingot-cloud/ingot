@@ -20,4 +20,8 @@ public class DeptWithManagerVO extends SysDept {
      * 部门主管
      */
     private List<SimpleUserVO> managerUsers;
+    /**
+     * 部门人员数量
+     */
+    private Long memberCount;
 }

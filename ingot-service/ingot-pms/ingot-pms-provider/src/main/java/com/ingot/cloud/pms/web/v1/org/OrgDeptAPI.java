@@ -32,6 +32,12 @@ public class OrgDeptAPI implements RShortcuts {
         return ok(bizDeptService.orgList());
     }
 
+    @AdminOrHasAnyAuthority({"contacts:member:r", "contacts:dept:w", "contacts:dept:r"})
+    @GetMapping("/tree2")
+    public R<?> tree2() {
+        return ok(bizDeptService.orgTree());
+    }
+
     @AdminOrHasAnyAuthority({"contacts:dept:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody DeptWithManagerDTO params) {

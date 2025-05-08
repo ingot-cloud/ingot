@@ -48,7 +48,7 @@ public class BizDeptServiceImpl implements BizDeptService {
         SysRole role = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_MANAGER);
         // 获取当前组织所有主管
         List<UserWithDeptVO> managerUsers = CollUtil.emptyIfNull(sysRoleUserService.getRoleUserWithDeptList(role.getId()));
-        return sysDeptService.list().stream()
+        return sysDeptService.listWithMemberCount().stream()
                 .map(dept -> {
                     DeptWithManagerVO item = new DeptWithManagerVO();
                     BeanUtil.copyProperties(dept, item);
@@ -173,6 +173,16 @@ public class BizDeptServiceImpl implements BizDeptService {
         result.add(mainNode);
         result.addAll(childTree);
         return result;
+    }
+
+    @Override
+    public List<DeptTreeNodeVO> orgTree() {
+        List<DeptWithManagerVO> all = listWithManager();
+        List<DeptTreeNodeVO> allNode = all.stream()
+                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .map(deptTrans::to).toList();
+
+        return TreeUtils.build(allNode);
     }
 
     @Override

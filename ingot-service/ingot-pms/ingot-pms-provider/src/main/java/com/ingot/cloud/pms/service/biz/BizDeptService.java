@@ -33,15 +33,26 @@ public interface BizDeptService {
     List<SimpleUserVO> getDeptUsersWithRole(long deptId, List<String> roleCodeList);
 
     /**
-     * 组织部门列表
+     * 组织部门列表, 主部门（组织）和一级部门平级<br>
+     * 比如组织部门名称为：测试部门<br>
+     * 测试部门下面有两个部门：A部门和B部门<br>
+     * 那么列表返回：测试部门，A部门，B部门
      *
      * @return {@link DeptTreeNodeVO}
      */
     List<DeptTreeNodeVO> orgList();
 
     /**
+     * 组织部门树，一级部门在主部门之下
+     *
+     * @return {@link DeptTreeNodeVO}
+     */
+    List<DeptTreeNodeVO> orgTree();
+
+    /**
      * 设置部门主管
-     * @param deptId 部门ID
+     *
+     * @param deptId  部门ID
      * @param userIds 用户ID列表
      */
     void setDeptManager(long deptId, List<Long> userIds);
