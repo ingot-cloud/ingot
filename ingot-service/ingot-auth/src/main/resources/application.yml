@@ -13,7 +13,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8849},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8850}
         namespace: ingot
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
