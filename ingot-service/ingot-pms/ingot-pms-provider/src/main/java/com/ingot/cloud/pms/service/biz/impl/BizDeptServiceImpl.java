@@ -6,7 +6,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
-import com.ingot.cloud.pms.api.model.transform.DeptTrans;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
@@ -40,7 +40,7 @@ public class BizDeptServiceImpl implements BizDeptService {
     private final SysUserService sysUserService;
 
     private final AssertionChecker assertionChecker;
-    private final DeptTrans deptTrans;
+    private final DeptConvert deptConvert;
 
     @Override
     public List<DeptWithManagerVO> listWithManager() {
@@ -161,7 +161,7 @@ public class BizDeptServiceImpl implements BizDeptService {
         List<DeptWithManagerVO> all = listWithManager();
         List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
-                .map(deptTrans::to).toList();
+                .map(deptConvert::to).toList();
 
         List<DeptTreeNodeVO> childNode = allNode.stream().filter(item -> !item.getMainFlag()).toList();
         DeptTreeNodeVO mainNode = allNode.stream().filter(DeptTreeNodeVO::getMainFlag).findFirst().orElse(null);
@@ -180,7 +180,7 @@ public class BizDeptServiceImpl implements BizDeptService {
         List<DeptWithManagerVO> all = listWithManager();
         List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
-                .map(deptTrans::to).toList();
+                .map(deptConvert::to).toList();
 
         return TreeUtils.build(allNode);
     }

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.AppRoleService;
 import com.ingot.cloud.pms.service.domain.AppUserService;
@@ -38,7 +38,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
     private final AppUserTenantService appUserTenantService;
 
     private final SocialProcessorManager socialProcessorManager;
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
 
     @Override
     public boolean support(UserDetailsRequest request) {
@@ -75,7 +75,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
 
     @Override
     public UserDetailsResponse userToUserDetailsResponse(AppUser user) {
-        return userTrans.toUserDetails(user);
+        return userConvert.toUserDetails(user);
     }
 
     @Override

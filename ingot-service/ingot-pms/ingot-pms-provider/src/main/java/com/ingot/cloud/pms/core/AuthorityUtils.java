@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.core.org.TenantUtils;
@@ -34,13 +34,13 @@ public class AuthorityUtils {
      * @param orgId                       组织ID
      * @param sysApplicationTenantService {@link SysApplicationTenantService}
      * @param sysAuthorityService         {@link SysAuthorityService}
-     * @param authorityTrans              转换器
+     * @param authorityConvert              转换器
      * @return {@link AuthorityTreeNodeVO}
      */
     public static List<AuthorityTreeNodeVO> getOrgAuthorities(long orgId,
                                                               SysApplicationTenantService sysApplicationTenantService,
                                                               SysAuthorityService sysAuthorityService,
-                                                              AuthorityTrans authorityTrans) {
+                                                              AuthorityConvert authorityConvert) {
         List<SysApplicationTenant> appList = sysApplicationTenantService.list(Wrappers.<SysApplicationTenant>lambdaQuery()
                 .eq(SysApplicationTenant::getStatus, CommonStatusEnum.ENABLE));
         if (CollUtil.isEmpty(appList)) {
@@ -50,7 +50,7 @@ public class AuthorityUtils {
         return appList.stream()
                 .flatMap(app ->
                         TenantUtils.getTargetAuthorities(
-                                        orgId, app.getAuthorityId(), sysAuthorityService, authorityTrans)
+                                        orgId, app.getAuthorityId(), sysAuthorityService, authorityConvert)
                                 .stream())
                 .toList();
     }
@@ -85,15 +85,15 @@ public class AuthorityUtils {
      *
      * @param authorities    {@link SysAuthority}
      * @param condition      条件
-     * @param authorityTrans 转换器
+     * @param authorityConvert 转换器
      * @return {@link AuthorityTreeNodeVO}
      */
     public static List<AuthorityTreeNodeVO> mapTree(List<SysAuthority> authorities,
                                                     AuthorityFilterDTO condition,
-                                                    AuthorityTrans authorityTrans) {
+                                                    AuthorityConvert authorityConvert) {
         List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .filter(BizFilter.authorityFilter(condition))
-                .map(authorityTrans::to).collect(Collectors.toList());
+                .map(authorityConvert::to).collect(Collectors.toList());
 
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
         TreeUtils.compensate(tree, nodeList);

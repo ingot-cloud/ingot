@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.core.BizIdGen;
@@ -53,7 +53,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     private final RedisCacheService redisCacheService;
 
     private final AssertionChecker assertI18nService;
-    private final RoleTrans roleTrans;
+    private final RoleConvert roleConvert;
     private final BizIdGen bizIdGen;
 
     @Override
@@ -78,7 +78,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
                         ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom))
                 .eq(SysRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
-                .map(roleTrans::option).collect(Collectors.toList());
+                .map(roleConvert::option).collect(Collectors.toList());
     }
 
     @Override
@@ -90,7 +90,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         List<SysRoleGroup> groups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
                 .in(!isAdmin, SysRoleGroup::getType,
                         ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom)));
-        return temp.stream().map(sysToRolePageItemMap(roleTrans, groups)).toList();
+        return temp.stream().map(sysToRolePageItemMap(roleConvert, groups)).toList();
     }
 
     @Override
@@ -126,7 +126,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
 
         List<SysRoleGroup> groups = sysRoleGroupService.list();
         return PageUtils.map(temp, item -> {
-            RolePageItemVO v = roleTrans.to(item);
+            RolePageItemVO v = roleConvert.to(item);
             v.setGroupName(groups.stream()
                     .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
                     .findFirst()

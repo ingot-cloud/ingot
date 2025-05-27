@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
@@ -43,7 +43,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     private final SysApplicationTenantService sysApplicationTenantService;
 
     private final SocialProcessorManager socialProcessorManager;
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
 
     @Override
     public boolean support(UserDetailsRequest request) {
@@ -79,7 +79,7 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
 
     @Override
     public UserDetailsResponse userToUserDetailsResponse(SysUser user) {
-        return userTrans.toUserDetails(user);
+        return userConvert.toUserDetails(user);
     }
 
     @Override

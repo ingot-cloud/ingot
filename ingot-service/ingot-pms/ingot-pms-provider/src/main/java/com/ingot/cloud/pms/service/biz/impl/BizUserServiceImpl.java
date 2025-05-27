@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
@@ -65,7 +65,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
     private final UserOpsChecker userOpsChecker;
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
 
     @Override
     public UserProfileVO getUserProfile(long id) {
@@ -74,7 +74,7 @@ public class BizUserServiceImpl implements BizUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        UserProfileVO profile = userTrans.toUserProfile(user);
+        UserProfileVO profile = userConvert.toUserProfile(user);
         List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
         profile.setOrgList(userTenantList);
 
@@ -88,7 +88,7 @@ public class BizUserServiceImpl implements BizUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
-        SysUser user = userTrans.to(params);
+        SysUser user = userConvert.to(params);
         if (StrUtil.isNotEmpty(user.getPhone())
                 && !StrUtil.equals(user.getPhone(), current.getPhone())) {
             assertionChecker.checkOperation(sysUserService.count(Wrappers.<SysUser>lambdaQuery()
@@ -120,7 +120,7 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public ResetPwdVO createUser(UserDTO params) {
-        SysUser user = userTrans.to(params);
+        SysUser user = userConvert.to(params);
 
         // 默认初始化密码
         String initPwd = RandomUtil.randomString(6);
@@ -143,7 +143,7 @@ public class BizUserServiceImpl implements BizUserService {
             userOpsChecker.disableUser(params.getId());
         }
 
-        SysUser user = userTrans.to(params);
+        SysUser user = userConvert.to(params);
         sysUserService.updateUser(user);
     }
 
@@ -230,7 +230,7 @@ public class BizUserServiceImpl implements BizUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        OrgUserProfileVO profile = userTrans.toOrgUserProfile(user);
+        OrgUserProfileVO profile = userConvert.toOrgUserProfile(user);
 
         List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(id))
                 .stream().map(SysUserDept::getDeptId).toList();
@@ -251,7 +251,7 @@ public class BizUserServiceImpl implements BizUserService {
                 .eq(SysUser::getPhone, params.getPhone()));
         if (user == null) {
             // 密码默认为手机号
-            user = userTrans.to(params);
+            user = userConvert.to(params);
             user.setUsername(params.getPhone());
             user.setPassword(params.getPhone());
             user.setInitPwd(Boolean.TRUE);
@@ -270,7 +270,7 @@ public class BizUserServiceImpl implements BizUserService {
     public void orgUpdateUser(OrgUserDTO params) {
         assertionChecker.checkOperation(params.getId() != null, "Common.IDNonNull");
 
-        SysUser user = userTrans.to(params);
+        SysUser user = userConvert.to(params);
         // 更新用户
         sysUserService.updateUser(user);
 

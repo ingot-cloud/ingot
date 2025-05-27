@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
@@ -38,7 +38,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRoleAuthorityMapper, SysRoleAuthority, Long> implements SysRoleAuthorityService {
-    private final AuthorityTrans authorityTrans;
+    private final AuthorityConvert authorityConvert;
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final RoleBindTargets<Long> removeRbt = (roleId, targetIds) -> {
@@ -178,6 +178,6 @@ public class SysRoleAuthorityServiceImpl extends CommonRoleRelationService<SysRo
         List<SysAuthority> authorities = SpringContextHolder.getBean(SysRoleAuthorityService.class)
                 .getAuthoritiesByRole(roleId);
 
-        return AuthorityUtils.mapTree(authorities, condition, authorityTrans);
+        return AuthorityUtils.mapTree(authorities, condition, authorityConvert);
     }
 }

@@ -4,8 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
-import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
+import com.ingot.cloud.pms.api.model.convert.MenuConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
@@ -49,8 +49,8 @@ public class TenantOps {
     private final AppRoleUserService appRoleUserService;
 
     private final TenantProperties tenantProperties;
-    private final AuthorityTrans authorityTrans;
-    private final MenuTrans menuTrans;
+    private final AuthorityConvert authorityConvert;
+    private final MenuConvert menuConvert;
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void createRole(SysRole role) {
@@ -291,7 +291,7 @@ public class TenantOps {
      */
     public void syncApplication(SysApplication application) {
         LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
-                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
+                application, tenantProperties, menuConvert, authorityConvert, sysAuthorityService, sysMenuService);
 
         getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
             // 当前组织应用信息
@@ -304,10 +304,10 @@ public class TenantOps {
 
             // 同步模版权限并且返回权限ID映射
             Map<Long, Long> authorityIdMap = TenantUtils.syncTemplateAuthorityAndReturnMap(
-                    org.getId(), rootAuthorityId, loadAppInfo, sysAuthorityService, authorityTrans, sysRoleAuthorityService);
+                    org.getId(), rootAuthorityId, loadAppInfo, sysAuthorityService, authorityConvert, sysRoleAuthorityService);
 
             // 同步模版菜单
-            TenantUtils.syncTemplateManu(org.getId(), rootMenuId, loadAppInfo, authorityIdMap, sysMenuService, menuTrans);
+            TenantUtils.syncTemplateManu(org.getId(), rootMenuId, loadAppInfo, authorityIdMap, sysMenuService, menuConvert);
 
             // 删除缓存keys
             RedisUtils.deleteKeys(redisTemplate,
@@ -330,12 +330,12 @@ public class TenantOps {
      */
     public void createApplication(SysApplication application) {
         LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
-                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
+                application, tenantProperties, menuConvert, authorityConvert, sysAuthorityService, sysMenuService);
 
         getOrgs().forEach(org -> TenantEnv.runAs(org.getId(), () -> {
             List<SysAuthority> authorityCollect = TenantUtils.createAppAndReturnAuthority(
                     org.getId(), application, loadAppInfo,
-                    menuTrans, sysAuthorityService, sysMenuService, sysApplicationTenantService);
+                    menuConvert, sysAuthorityService, sysMenuService, sysApplicationTenantService);
 
             // 管理员绑定第一个权限
             SysRole role = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
@@ -386,9 +386,9 @@ public class TenantOps {
             long rootMenu = applicationTenant.getMenuId();
             long rootAuthority = applicationTenant.getAuthorityId();
             List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
-                    org.getId(), rootMenu, sysMenuService, menuTrans);
+                    org.getId(), rootMenu, sysMenuService, menuConvert);
             List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
-                    org.getId(), rootAuthority, sysAuthorityService, authorityTrans);
+                    org.getId(), rootAuthority, sysAuthorityService, authorityConvert);
 
             // 删除菜单
             sysMenuService.remove(Wrappers.<SysMenu>lambdaQuery()

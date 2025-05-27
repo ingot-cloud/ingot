@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
@@ -13,7 +13,7 @@ import org.mapstruct.Mapper;
  * <p>Time         : 9:47 下午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface DeptTrans {
+public interface DeptConvert {
 
     DeptTreeNodeVO to(SysDept params);
 

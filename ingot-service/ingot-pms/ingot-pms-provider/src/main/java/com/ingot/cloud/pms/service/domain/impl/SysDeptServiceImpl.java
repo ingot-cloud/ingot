@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO;
-import com.ingot.cloud.pms.api.model.transform.DeptTrans;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
     private final SysUserDeptService sysUserDeptService;
 
-    private final DeptTrans deptTrans;
+    private final DeptConvert deptConvert;
     private final AssertionChecker assertI18nService;
 
     @Override
@@ -48,7 +48,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         List<SysDept> all = list();
         List<DeptTreeNodeVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(SysDept::getSort))
-                .map(deptTrans::to).collect(Collectors.toList());
+                .map(deptConvert::to).collect(Collectors.toList());
 
         return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
     }
@@ -58,7 +58,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
         List<DeptTreeNodeVO> nodeList = list().stream()
                 .filter(BizFilter.deptFilter(condition))
                 .sorted(Comparator.comparingInt(SysDept::getSort))
-                .map(deptTrans::to).collect(Collectors.toList());
+                .map(deptConvert::to).collect(Collectors.toList());
 
         List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
         TreeUtils.compensate(tree, nodeList);

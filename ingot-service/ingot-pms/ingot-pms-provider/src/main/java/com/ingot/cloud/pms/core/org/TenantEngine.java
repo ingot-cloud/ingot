@@ -8,9 +8,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
-import com.ingot.cloud.pms.api.model.transform.DeptTrans;
-import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
+import com.ingot.cloud.pms.api.model.convert.MenuConvert;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
@@ -56,9 +56,9 @@ public class TenantEngine {
 
     private final BizIdGen bizIdGen;
     private final TenantProperties tenantProperties;
-    private final AuthorityTrans authorityTrans;
-    private final MenuTrans menuTrans;
-    private final DeptTrans deptTrans;
+    private final AuthorityConvert authorityConvert;
+    private final MenuConvert menuConvert;
+    private final DeptConvert deptConvert;
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**
@@ -104,7 +104,7 @@ public class TenantEngine {
             }
 
             List<SysDept> collect = new ArrayList<>();
-            TenantUtils.createDeptFn(collect, templateList, mainDept.getId(), deptTrans, sysDeptService);
+            TenantUtils.createDeptFn(collect, templateList, mainDept.getId(), deptConvert, sysDeptService);
             return mainDept;
         });
     }
@@ -166,10 +166,10 @@ public class TenantEngine {
 
     private List<SysAuthority> createApp(SysTenant org, SysApplication application) {
         LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
-                application, tenantProperties, menuTrans, authorityTrans, sysAuthorityService, sysMenuService);
+                application, tenantProperties, menuConvert, authorityConvert, sysAuthorityService, sysMenuService);
         return TenantUtils.createAppAndReturnAuthority(
                 org.getId(), application, loadAppInfo,
-                menuTrans, sysAuthorityService, sysMenuService, sysApplicationTenantService);
+                menuConvert, sysAuthorityService, sysMenuService, sysApplicationTenantService);
     }
 
     /**

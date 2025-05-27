@@ -5,9 +5,9 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
-import com.ingot.cloud.pms.api.model.transform.DeptTrans;
-import com.ingot.cloud.pms.api.model.transform.MenuTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
+import com.ingot.cloud.pms.api.model.convert.MenuConvert;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
@@ -42,18 +42,18 @@ public class TenantUtils {
      * @param collect        收集
      * @param tree           节点列表
      * @param pid            父ID
-     * @param menuTrans      对象转换类
+     * @param menuConvert      对象转换类
      * @param sysMenuService menu service
      */
     public static void createMenuFn(List<SysMenu> collect,
                                     List<? extends TreeNode<Long>> tree,
                                     long pid,
-                                    MenuTrans menuTrans,
+                                    MenuConvert menuConvert,
                                     SysMenuService sysMenuService) {
 
         for (TreeNode<Long> node : tree) {
             if (node instanceof MenuTreeNodeVO menuNode) {
-                SysMenu item = menuTrans.to(menuNode);
+                SysMenu item = menuConvert.to(menuNode);
                 item.setId(null);
                 item.setPid(pid);
                 item.setUpdatedAt(null);
@@ -65,7 +65,7 @@ public class TenantUtils {
                 }
 
                 if (CollUtil.isNotEmpty(node.getChildren())) {
-                    createMenuFn(collect, node.getChildren(), item.getId(), menuTrans, sysMenuService);
+                    createMenuFn(collect, node.getChildren(), item.getId(), menuConvert, sysMenuService);
                 }
             }
         }
@@ -74,7 +74,7 @@ public class TenantUtils {
     public static void createDeptFn(List<SysDept> collect,
                                     List<? extends TreeNode<Long>> tree,
                                     long pid,
-                                    DeptTrans trans,
+                                    DeptConvert trans,
                                     SysDeptService service) {
 
         for (TreeNode<Long> node : tree) {
@@ -164,9 +164,9 @@ public class TenantUtils {
      */
     public static SysMenu createMenu(long pid,
                                      SysMenu menu,
-                                     MenuTrans menuTrans,
+                                     MenuConvert menuConvert,
                                      SysMenuService service) {
-        SysMenu item = menuTrans.copy(menu);
+        SysMenu item = menuConvert.copy(menu);
         item.setId(null);
         item.setPid(pid);
         item.setUpdatedAt(null);
@@ -236,7 +236,7 @@ public class TenantUtils {
      */
     public static long ensureMenuTargetOrgParent(long orgId,
                                                  List<SysMenu> templateMenuList,
-                                                 MenuTrans menuTrans,
+                                                 MenuConvert menuConvert,
                                                  SysMenuService service) {
         return TenantEnv.applyAs(orgId, () -> {
             int len = CollUtil.size(templateMenuList);
@@ -252,7 +252,7 @@ public class TenantUtils {
                     continue;
                 }
 
-                menu = createMenu(pid, templateMenuList.get(i), menuTrans, service);
+                menu = createMenu(pid, templateMenuList.get(i), menuConvert, service);
                 pid = menu.getId();
             }
             return pid;
@@ -309,23 +309,23 @@ public class TenantUtils {
      * @param orgId     组织ID
      * @param menuId    菜单ID
      * @param service   菜单服务
-     * @param menuTrans 菜单转换
+     * @param menuConvert 菜单转换
      * @return 菜单列表
      */
     public static List<MenuTreeNodeVO> getTargetMenus(long orgId,
                                                       long menuId,
                                                       SysMenuService service,
-                                                      MenuTrans menuTrans) {
+                                                      MenuConvert menuConvert) {
         return TenantEnv.applyAs(orgId, () -> {
             List<MenuTreeNodeVO> list = new ArrayList<>();
 
             SysMenu menu = service.getById(menuId);
-            list.add(menuTrans.to(menu));
+            list.add(menuConvert.to(menu));
 
             List<SysMenu> children = service.list(Wrappers.<SysMenu>lambdaQuery()
                     .eq(SysMenu::getPid, menu.getId()));
             if (CollUtil.isNotEmpty(children)) {
-                children.forEach(itemMenu -> list.addAll(getTargetMenus(orgId, itemMenu.getId(), service, menuTrans)));
+                children.forEach(itemMenu -> list.addAll(getTargetMenus(orgId, itemMenu.getId(), service, menuConvert)));
             }
 
             return list;
@@ -343,17 +343,17 @@ public class TenantUtils {
     public static List<AuthorityTreeNodeVO> getTargetAuthorities(long orgId,
                                                                  long authorityId,
                                                                  SysAuthorityService service,
-                                                                 AuthorityTrans authorityTrans) {
+                                                                 AuthorityConvert authorityConvert) {
         return TenantEnv.applyAs(orgId, () -> {
             List<AuthorityTreeNodeVO> list = new ArrayList<>();
 
             SysAuthority authority = service.getById(authorityId);
-            list.add(authorityTrans.to(authority));
+            list.add(authorityConvert.to(authority));
 
             List<SysAuthority> children = service.list(Wrappers.<SysAuthority>lambdaQuery()
                     .eq(SysAuthority::getPid, authority.getId()));
             if (CollUtil.isNotEmpty(children)) {
-                children.forEach(itemMenu -> list.addAll(getTargetAuthorities(orgId, itemMenu.getId(), service, authorityTrans)));
+                children.forEach(itemMenu -> list.addAll(getTargetAuthorities(orgId, itemMenu.getId(), service, authorityConvert)));
             }
 
             return list;
@@ -411,8 +411,8 @@ public class TenantUtils {
      */
     public static LoadAppInfo getLoadAppInfo(SysApplication application,
                                              TenantProperties tenantProperties,
-                                             MenuTrans menuTrans,
-                                             AuthorityTrans authorityTrans,
+                                             MenuConvert menuConvert,
+                                             AuthorityConvert authorityConvert,
                                              SysAuthorityService sysAuthorityService,
                                              SysMenuService sysMenuService) {
         LoadAppInfo result = new LoadAppInfo();
@@ -420,9 +420,9 @@ public class TenantUtils {
         long rootMenu = application.getMenuId();
         long rootAuthority = application.getAuthorityId();
         List<MenuTreeNodeVO> menuList = TenantUtils.getTargetMenus(
-                tenantProperties.getDefaultId(), rootMenu, sysMenuService, menuTrans);
+                tenantProperties.getDefaultId(), rootMenu, sysMenuService, menuConvert);
         List<AuthorityTreeNodeVO> authorityList = TenantUtils.getTargetAuthorities(
-                tenantProperties.getDefaultId(), rootAuthority, sysAuthorityService, authorityTrans);
+                tenantProperties.getDefaultId(), rootAuthority, sysAuthorityService, authorityConvert);
 
         long rootAuthorityParentId = authorityList.get(0).getPid();
         long rootMenuParentId = menuList.get(0).getPid();
@@ -445,7 +445,7 @@ public class TenantUtils {
     public static List<SysAuthority> createAppAndReturnAuthority(long orgId,
                                                                  SysApplication application,
                                                                  LoadAppInfo loadAppInfo,
-                                                                 MenuTrans menuTrans,
+                                                                 MenuConvert menuConvert,
                                                                  SysAuthorityService sysAuthorityService,
                                                                  SysMenuService sysMenuService,
                                                                  SysApplicationTenantService sysApplicationTenantService) {
@@ -465,10 +465,10 @@ public class TenantUtils {
 
         // 获取当前应用的父菜单ID
         long menuParentId = TenantUtils.ensureMenuTargetOrgParent(
-                orgId, menuParentTemplateList, menuTrans, sysMenuService);
+                orgId, menuParentTemplateList, menuConvert, sysMenuService);
         // 创建菜单
         List<SysMenu> menuCollect = new ArrayList<>();
-        TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuTrans, sysMenuService);
+        TenantUtils.createMenuFn(menuCollect, menuTree, menuParentId, menuConvert, sysMenuService);
 
         SysApplicationTenant applicationTenant = new SysApplicationTenant();
         applicationTenant.setAppId(application.getId());
@@ -490,16 +490,16 @@ public class TenantUtils {
      * @param rootAuthorityId     当前跟权限ID
      * @param loadAppInfo         加载的模版信息
      * @param sysAuthorityService {@link SysAuthorityService}
-     * @param authorityTrans      {@link AuthorityTrans}
+     * @param authorityConvert      {@link AuthorityConvert}
      */
     public static Map<Long, Long> syncTemplateAuthorityAndReturnMap(long orgId,
                                                                     long rootAuthorityId,
                                                                     LoadAppInfo loadAppInfo,
                                                                     SysAuthorityService sysAuthorityService,
-                                                                    AuthorityTrans authorityTrans,
+                                                                    AuthorityConvert authorityConvert,
                                                                     SysRoleAuthorityService sysRoleAuthorityService) {
         List<AuthorityTreeNodeVO> currentAuthorities = TenantUtils.getTargetAuthorities(
-                orgId, rootAuthorityId, sysAuthorityService, authorityTrans);
+                orgId, rootAuthorityId, sysAuthorityService, authorityConvert);
         List<AuthorityTreeNodeVO> templateAuthorities = loadAppInfo.getAuthorityList();
         List<AuthorityTreeNodeVO> templateAuthorityTree = loadAppInfo.getAuthorityTree();
 
@@ -530,12 +530,12 @@ public class TenantUtils {
                                         LoadAppInfo loadAppInfo,
                                         Map<Long, Long> collectAuthorityIdMap,
                                         SysMenuService sysMenuService,
-                                        MenuTrans menuTrans) {
-        List<MenuTreeNodeVO> currentMenus = TenantUtils.getTargetMenus(orgId, rootMenuId, sysMenuService, menuTrans);
+                                        MenuConvert menuConvert) {
+        List<MenuTreeNodeVO> currentMenus = TenantUtils.getTargetMenus(orgId, rootMenuId, sysMenuService, menuConvert);
         List<MenuTreeNodeVO> templateMenuTree = loadAppInfo.getMenuTree();
 
         // 创建/更新菜单
-        menuCreateDiff(collectAuthorityIdMap, templateMenuTree, currentMenus, rootMenuId, sysMenuService, menuTrans);
+        menuCreateDiff(collectAuthorityIdMap, templateMenuTree, currentMenus, rootMenuId, sysMenuService, menuConvert);
 
         // 删除菜单，如果当前组织菜单已经被删除，那么需要将组织中相应菜单删除
         List<MenuTreeNodeVO> templateMenuList = TreeUtils.stretch(templateMenuTree);
@@ -604,14 +604,14 @@ public class TenantUtils {
                                       List<MenuTreeNodeVO> currentList,
                                       long pid,
                                       SysMenuService sysMenuService,
-                                      MenuTrans menuTrans) {
+                                      MenuConvert menuConvert) {
         for (TreeNode<Long> node : templateTree) {
             if (node instanceof MenuTreeNodeVO menu) {
                 long nextPid = 0;
                 // 如果当前没有这个菜单，则创建
                 if (currentList.stream().noneMatch(menuItem -> StrUtil.equals(menuItem.getPath(), menu.getPath()))) {
                     // 创建
-                    SysMenu item = menuTrans.to(menu);
+                    SysMenu item = menuConvert.to(menu);
                     item.setId(null);
                     item.setPid(pid);
                     // 替换权限ID
@@ -631,7 +631,7 @@ public class TenantUtils {
                         nextPid = currentMenu.getId();
 
                         // 更新当前实体相关信息
-                        SysMenu sysMenu = menuTrans.to(menu);
+                        SysMenu sysMenu = menuConvert.to(menu);
                         sysMenu.setId(currentMenu.getId());
                         sysMenu.setPid(null);
                         sysMenu.setAuthorityId(null);
@@ -651,7 +651,7 @@ public class TenantUtils {
 
                 if (CollUtil.isNotEmpty(menu.getChildren())) {
                     menuCreateDiff(collectAuthorityIdMap, menu.getChildren(), currentList,
-                            nextPid, sysMenuService, menuTrans);
+                            nextPid, sysMenuService, menuConvert);
                 }
             }
         }

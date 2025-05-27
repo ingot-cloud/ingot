@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.AppUserMapper;
 import com.ingot.cloud.pms.service.domain.*;
@@ -45,7 +45,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     private final AppRoleUserService appRoleUserService;
     private final AppUserSocialService appUserSocialService;
 
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
 
@@ -80,7 +80,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
                     });
 
             UserInfoDTO result = new UserInfoDTO();
-            result.setUser(userTrans.toUserBaseInfo(userInfo));
+            result.setUser(userConvert.toUserBaseInfo(userInfo));
             result.setRoles(roleCodes);
             result.setAllows(allows);
             return result;

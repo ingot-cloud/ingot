@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
@@ -53,7 +53,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     private final SysRoleAuthorityService sysRoleAuthorityService;
     private final SysApplicationService sysApplicationService;
     private final AssertionChecker assertI18nService;
-    private final AuthorityTrans authorityTrans;
+    private final AuthorityConvert authorityConvert;
 
     @Override
     @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityListKey, unless = "#result.isEmpty()")
@@ -100,7 +100,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                 .list()
                 .stream()
                 .sorted(Comparator.comparing(SysAuthority::getId))
-                .map(authorityTrans::to).collect(Collectors.toList());
+                .map(authorityConvert::to).collect(Collectors.toList());
         return TreeUtils.build(nodeList);
     }
 
@@ -113,7 +113,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                 .filter(BizFilter.authorityFilter(filter))
                 .sorted(Comparator.comparing(SysAuthority::getType)
                         .thenComparing(SysAuthority::getId))
-                .map(authorityTrans::to).collect(Collectors.toList());
+                .map(authorityConvert::to).collect(Collectors.toList());
 
         List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
         TreeUtils.compensate(tree, nodeList);

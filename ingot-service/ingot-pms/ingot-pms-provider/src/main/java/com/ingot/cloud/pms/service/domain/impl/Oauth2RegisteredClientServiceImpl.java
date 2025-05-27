@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
-import com.ingot.cloud.pms.api.model.transform.ClientTrans;
+import com.ingot.cloud.pms.api.model.convert.ClientConvert;
 import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -53,7 +53,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         implements Oauth2RegisteredClientService {
     private final AssertionChecker assertI18nService;
     private final PasswordEncoder passwordEncoder;
-    private final ClientTrans clientTrans;
+    private final ClientConvert clientConvert;
     private final BizIdGen bizIdGen;
 
     @Override
@@ -100,7 +100,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                         .eq(Oauth2RegisteredClient::getClientId, params.getClientId())) == 0,
                 "Oauth2RegisteredClientServiceImpl.ExistClientId");
 
-        Oauth2RegisteredClient client = clientTrans.to(params);
+        Oauth2RegisteredClient client = clientConvert.to(params);
         // id 和 clientId 保持一致
         String id = bizIdGen.genAppIdCode();
         String secret = StrUtil.uuid().replaceAll("-", "");
@@ -144,7 +144,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
                 TokenSettings.withSettings(current.getTokenSettings().getSettings());
         fillSettings(params, clientSettingsBuilder, tokenSettingsBuilder);
 
-        Oauth2RegisteredClient client = clientTrans.to(params);
+        Oauth2RegisteredClient client = clientConvert.to(params);
         client.setClientSecret(null);
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
@@ -220,7 +220,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     }
 
     private OAuth2RegisteredClientVO toVo(Oauth2RegisteredClient client) {
-        OAuth2RegisteredClientVO item = clientTrans.to(client);
+        OAuth2RegisteredClientVO item = clientConvert.to(client);
         // 覆盖秘钥为null
         item.setClientSecret(null);
         item.setRequireAuthorizationConsent(client.getClientSettings().isRequireAuthorizationConsent());

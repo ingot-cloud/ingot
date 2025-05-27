@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
@@ -54,7 +54,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
     private final TenantProperties tenantProperties;
 
     @Override
@@ -83,7 +83,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                     });
 
             UserInfoDTO result = new UserInfoDTO();
-            result.setUser(userTrans.toUserBaseInfo(userInfo));
+            result.setUser(userConvert.toUserBaseInfo(userInfo));
             result.setRoles(roleCodes);
             result.setAllows(allows);
             return result;

@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
@@ -12,7 +12,7 @@ import org.mapstruct.Mapper;
  * <p>Time         : 10:07 上午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface MenuTrans {
+public interface MenuConvert {
 
     MenuTreeNodeVO to(SysMenu params);
 

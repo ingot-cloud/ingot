@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.core.BizIdGen;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> implements AppRoleService, RoleService {
     private final AppRoleUserService appRoleUserService;
     private final AppRoleGroupService appRoleGroupService;
-    private final RoleTrans roleTrans;
+    private final RoleConvert roleConvert;
     private final AssertionChecker assertionChecker;
     private final BizIdGen bizIdGen;
     private final Map<String, AppRole> roleCache = new ConcurrentHashMap<>();
@@ -88,7 +88,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
                         ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom))
                 .eq(AppRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
-                .map(roleTrans::option).collect(Collectors.toList());
+                .map(roleConvert::option).collect(Collectors.toList());
     }
 
     @Override
@@ -100,7 +100,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
         List<AppRoleGroup> groups = appRoleGroupService.list(Wrappers.<AppRoleGroup>lambdaQuery()
                 .in(!isAdmin, AppRoleGroup::getType,
                         ListUtil.list(false, OrgTypeEnum.Tenant, OrgTypeEnum.Custom)));
-        return temp.stream().map(appToRolePageItemMap(roleTrans, groups)).toList();
+        return temp.stream().map(appToRolePageItemMap(roleConvert, groups)).toList();
     }
 
     @Override

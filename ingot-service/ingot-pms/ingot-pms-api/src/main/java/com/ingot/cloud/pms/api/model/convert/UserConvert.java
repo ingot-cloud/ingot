@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -19,7 +19,7 @@ import org.mapstruct.Mapper;
  * <p>Time         : 5:02 下午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface UserTrans {
+public interface UserConvert {
     SysUser to(UserDTO in);
 
     SysUser to(OrgUserDTO in);

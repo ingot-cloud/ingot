@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
@@ -15,7 +15,7 @@ import org.mapstruct.Mapping;
  * <p>Time         : 4:22 下午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface RoleTrans {
+public interface RoleConvert {
 
     RolePageItemVO to(SysRole role);
 

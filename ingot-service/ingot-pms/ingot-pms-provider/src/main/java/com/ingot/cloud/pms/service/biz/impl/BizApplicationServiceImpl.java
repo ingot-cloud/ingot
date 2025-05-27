@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
-import com.ingot.cloud.pms.api.model.transform.ApplicationTrans;
+import com.ingot.cloud.pms.api.model.convert.ApplicationConvert;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
 import com.ingot.cloud.pms.core.org.TenantOps;
@@ -46,7 +46,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
 
     private final TenantOps tenantOps;
     private final AssertionChecker assertionChecker;
-    private final ApplicationTrans applicationTrans;
+    private final ApplicationConvert applicationConvert;
 
     @Override
     public IPage<ApplicationPageItemVO> page(Page<SysApplication> page, ApplicationFilterDTO filter) {
@@ -65,7 +65,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
                     .in(SysMenu::getId, list.stream().map(SysApplicationTenant::getMenuId).toList()));
 
             return list.stream().map(item -> {
-                ApplicationOrgPageItemVO pageItem = applicationTrans.to(item);
+                ApplicationOrgPageItemVO pageItem = applicationConvert.to(item);
                 menuList.stream()
                         .filter(menuItem -> Objects.equals(menuItem.getId(), item.getMenuId()))
                         .findFirst()

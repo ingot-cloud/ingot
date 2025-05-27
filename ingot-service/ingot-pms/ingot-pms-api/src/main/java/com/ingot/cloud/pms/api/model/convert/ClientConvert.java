@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
@@ -13,7 +13,7 @@ import org.mapstruct.Mapper;
  * <p>Time         : 9:55 上午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface ClientTrans {
+public interface ClientConvert {
 
     Oauth2RegisteredClient to(OAuth2RegisteredClientDTO in);
 

@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.transform.RoleTrans;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 
@@ -26,9 +26,9 @@ import java.util.function.Function;
  */
 public interface RoleService {
 
-    default Function<AppRole, RolePageItemVO> appToRolePageItemMap(RoleTrans roleTrans, List<AppRoleGroup> groups) {
+    default Function<AppRole, RolePageItemVO> appToRolePageItemMap(RoleConvert roleConvert, List<AppRoleGroup> groups) {
         return item -> {
-            RolePageItemVO v = roleTrans.to(item);
+            RolePageItemVO v = roleConvert.to(item);
             v.setGroupName(groups.stream()
                     .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
                     .findFirst()
@@ -38,9 +38,9 @@ public interface RoleService {
         };
     }
 
-    default Function<SysRole, RolePageItemVO> sysToRolePageItemMap(RoleTrans roleTrans, List<SysRoleGroup> groups) {
+    default Function<SysRole, RolePageItemVO> sysToRolePageItemMap(RoleConvert roleConvert, List<SysRoleGroup> groups) {
         return item -> {
-            RolePageItemVO v = roleTrans.to(item);
+            RolePageItemVO v = roleConvert.to(item);
             v.setGroupName(groups.stream()
                     .filter(group -> Objects.equals(group.getId(), item.getGroupId()))
                     .findFirst()

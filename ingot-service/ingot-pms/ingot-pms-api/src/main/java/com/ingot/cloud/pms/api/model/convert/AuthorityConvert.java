@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.transform;
+package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
@@ -12,7 +12,7 @@ import org.mapstruct.Mapper;
  * <p>Time         : 5:21 下午.</p>
  */
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
-public interface AuthorityTrans {
+public interface AuthorityConvert {
 
     AuthorityTreeNodeVO to(SysAuthority params);
 

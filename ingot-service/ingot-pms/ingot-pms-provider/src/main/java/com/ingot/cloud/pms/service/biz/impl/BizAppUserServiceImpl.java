@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.api.model.dto.user.AppUserCreateDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.transform.UserTrans;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
@@ -54,7 +54,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     private final AssertionChecker assertionChecker;
     private final PasswordEncoder passwordEncoder;
-    private final UserTrans userTrans;
+    private final UserConvert userConvert;
 
     @Override
     public IPage<AppUser> page(Page<AppUser> page, AppUser filter) {
@@ -73,7 +73,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        UserProfileVO profile = userTrans.toUserProfile(user);
+        UserProfileVO profile = userConvert.toUserProfile(user);
         List<AppUserTenant> userTenantList = appUserTenantService.getUserOrgs(user.getId());
         profile.setOrgList(userTenantList);
 
@@ -87,7 +87,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
-        AppUser user = userTrans.toAppUser(params);
+        AppUser user = userConvert.toAppUser(params);
         if (StrUtil.isNotEmpty(user.getPhone())
                 && !StrUtil.equals(user.getPhone(), current.getPhone())) {
             assertionChecker.checkOperation(appUserService.count(Wrappers.<AppUser>lambdaQuery()
@@ -145,7 +145,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public ResetPwdVO createUser(AppUserCreateDTO params) {
-        AppUser user = userTrans.to(params);
+        AppUser user = userConvert.to(params);
 
         // 默认初始化密码
         String initPwd = RandomUtil.randomString(6);
@@ -243,7 +243,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
 
-        OrgUserProfileVO profile = userTrans.toOrgUserProfile(user);
+        OrgUserProfileVO profile = userConvert.toOrgUserProfile(user);
         return profile;
     }
 
@@ -258,7 +258,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
                 .eq(AppUser::getPhone, params.getPhone()));
         if (user == null) {
             // 密码默认为手机号
-            user = userTrans.toAppUser(params);
+            user = userConvert.toAppUser(params);
             user.setUsername(params.getPhone());
             user.setPassword(params.getPhone());
             user.setInitPwd(Boolean.TRUE);
@@ -273,7 +273,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
     public void orgUpdateUser(OrgUserDTO params) {
         assertionChecker.checkOperation(params.getId() != null, "Common.IDNonNull");
 
-        AppUser user = userTrans.toAppUser(params);
+        AppUser user = userConvert.toAppUser(params);
         // 更新用户
         appUserService.updateUser(user);
     }

@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.transform.AuthorityTrans;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.core.org.TenantOps;
@@ -48,13 +48,13 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     private final TenantOps tenantOps;
     private final AssertionChecker assertionChecker;
-    private final AuthorityTrans authorityTrans;
+    private final AuthorityConvert authorityConvert;
 
     @Override
     public List<AuthorityTreeNodeVO> getOrgAuthority(long orgId) {
         return TenantEnv.applyAs(orgId, () -> {
             List<AuthorityTreeNodeVO> authorities = AuthorityUtils.getOrgAuthorities(
-                    orgId, sysApplicationTenantService, sysAuthorityService, authorityTrans);
+                    orgId, sysApplicationTenantService, sysAuthorityService, authorityConvert);
             return TreeUtils.build(authorities);
         });
     }
@@ -65,7 +65,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         List<SysAuthority> finallyAuthorities = AuthorityUtils.filterOrgLockAuthority(
                 authorities, sysApplicationTenantService);
 
-        return AuthorityUtils.mapTree(finallyAuthorities, condition, authorityTrans);
+        return AuthorityUtils.mapTree(finallyAuthorities, condition, authorityConvert);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class BizRoleServiceImpl implements BizRoleService {
                 "BizRoleServiceImpl.CantOperateManager");
 
         List<Long> authorities = CollUtil.emptyIfNull(AuthorityUtils.getOrgAuthorities(
-                        TenantContextHolder.get(), sysApplicationTenantService, sysAuthorityService, authorityTrans))
+                        TenantContextHolder.get(), sysApplicationTenantService, sysAuthorityService, authorityConvert))
                 .stream().map(TreeNode::getId).toList();
 
         if (CollUtil.isNotEmpty(bindList)) {
