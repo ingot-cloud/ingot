@@ -106,17 +106,15 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
         // 取消关联角色
-        assertionChecker.checkOperation(appRoleUserService.removeByUserId(id),
-                "SysUserServiceImpl.RemoveFailed");
+        appRoleUserService.removeByUserId(id);
 
         // 取消关联社交信息
         appUserSocialService.remove(
                 Wrappers.<AppUserSocial>lambdaQuery().eq(AppUserSocial::getUserId, id));
 
         // 取消关联租户
-        assertionChecker.checkOperation(appUserTenantService.remove(
-                        Wrappers.<AppUserTenant>lambdaQuery().eq(AppUserTenant::getUserId, id)),
-                "SysUserServiceImpl.RemoveFailed");
+        appUserTenantService.remove(
+                Wrappers.<AppUserTenant>lambdaQuery().eq(AppUserTenant::getUserId, id));
 
         assertionChecker.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");

@@ -145,17 +145,15 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     @Transactional(rollbackFor = Exception.class)
     public void removeUserById(long id) {
         // 取消关联角色
-        assertI18nService.checkOperation(sysRoleUserService.removeByUserId(id),
-                "SysUserServiceImpl.RemoveFailed");
+        sysRoleUserService.removeByUserId(id);
 
         // 取消关联社交信息
         sysUserSocialService.remove(
                 Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id));
 
         // 取消关联租户
-        assertI18nService.checkOperation(sysUserTenantService.remove(
-                        Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id)),
-                "SysUserServiceImpl.RemoveFailed");
+        sysUserTenantService.remove(
+                Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id));
 
         // 取消关联部门
         sysDeptService.setDepts(id, null);
