@@ -176,8 +176,9 @@ aspectj.aspectjweaver = "org.aspectj:aspectjweaver:1.9.22"
 deps.aspectj = aspectj
 
 def junit = [:]
-junit.api = "org.junit.jupiter:junit-jupiter-api:${versions.junit}"
-junit.engine = "org.junit.jupiter:junit-jupiter-engine:${versions.junit}"
+junit.bom = "org.junit:junit-bom:${versions.junit}"
+junit.jupiter = "org.junit.jupiter:junit-jupiter"
+junit.platform_launcher = "org.junit.platform:junit-platform-launcher"
 deps.junit = junit
 
 deps.h2 = "com.h2database:h2:2.3.232"

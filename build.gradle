@@ -35,6 +35,7 @@ subprojects {
             mavenBom deps.spring.spring_boot.dependencies
             mavenBom deps.spring.spring_cloud.dependencies
             mavenBom deps.alibaba.cloud_dependencies
+            mavenBom deps.junit.bom
         }
     }
 }

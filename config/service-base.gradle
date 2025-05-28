@@ -6,8 +6,8 @@ sourceCompatibility = '17'
 
 dependencies {
     // test
-    testImplementation(deps.junit.api)
-    testRuntimeOnly(deps.junit.engine)
+    testImplementation(deps.junit.jupiter)
+    testRuntimeOnly(deps.junit.platform_launcher)
     testImplementation(deps.spring.spring_boot.test)
     
     // nacos
