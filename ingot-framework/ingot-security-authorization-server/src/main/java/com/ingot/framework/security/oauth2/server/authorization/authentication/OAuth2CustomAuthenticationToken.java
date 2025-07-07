@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
+import lombok.Getter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
@@ -12,6 +13,7 @@ import java.util.Map;
  * <p>Date         : 2021/9/8.</p>
  * <p>Time         : 5:24 下午.</p>
  */
+@Getter
 public class OAuth2CustomAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
     private final Authentication userPrincipal;
 
@@ -30,7 +32,4 @@ public class OAuth2CustomAuthenticationToken extends OAuth2AuthorizationGrantAut
         setDetails(userPrincipal.getDetails());
     }
 
-    public Authentication getUserPrincipal() {
-        return this.userPrincipal;
-    }
 }
