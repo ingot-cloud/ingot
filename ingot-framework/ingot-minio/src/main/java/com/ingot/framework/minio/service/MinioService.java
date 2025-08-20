@@ -1,18 +1,19 @@
 package com.ingot.framework.minio.service;
 
-import com.ingot.framework.minio.common.MinioItem;
-import io.minio.*;
-import io.minio.messages.Bucket;
-import io.minio.messages.Item;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import com.ingot.framework.minio.common.MinioItem;
+import io.minio.*;
+import io.minio.http.Method;
+import io.minio.messages.Bucket;
+import io.minio.messages.Item;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
 
 /**
  * <p>Description  : MinioService.</p>
@@ -113,6 +114,7 @@ public class MinioService implements InitializingBean {
     public String getObjectURL(String bucketName, String objectName, int duration, TimeUnit unit) {
         try {
             return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
                     .bucket(bucketName)
                     .object(objectName).expiry(duration, unit).build());
         } catch (Exception e) {
