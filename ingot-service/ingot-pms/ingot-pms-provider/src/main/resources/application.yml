@@ -4,30 +4,3 @@ server:
 spring:
   application:
     name: ingot-service-pms
-  datasource:
-    username: ${MYSQL_USERNAME:dev}
-    password: ${MYSQL_PASSWORD:123456}
-  data:
-    redis:
-      password: ${REDIS_PASSWORD:ingotredis}
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8849},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8850}
-        namespace: ingot
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:nacos}
-      config:
-        server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        namespace: ${spring.cloud.nacos.discovery.namespace}
-        username: ${spring.cloud.nacos.discovery.username}
-        password: ${spring.cloud.nacos.discovery.password}
-  config:
-    import:
-      - optional:nacos:application-common.yml
-      - optional:nacos:application-mysql.yml
-      - optional:nacos:${spring.application.name}.yml
-
-springdoc:
-  api-docs:
-    enabled: false

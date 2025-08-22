@@ -3,8 +3,10 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     ​
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <springProperty scope="context" name="logPath" source="logs.path"/>
+    <springProperty scope="context" name="mybatisMapper" source="logs.mybatisMapper"/>
     <!-- Example for logging into the build folder of your project -->
-    <property name="LOG_FILE" value="/ingot-data/logs/${springAppName}/${springAppName}"/>
+    <property name="LOG_FILE" value="${logPath}/${springAppName}/${springAppName}"/>
     ​
     <property name="CONSOLE_LOG_PATTERN"
               value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-B3-ParentSpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
@@ -76,7 +78,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.ingot.pms.mapper" level="DEBUG">
+    <logger name="${mybatisMapper}" level="DEBUG">
         <appender-ref ref="MyBatisStatistics"/>
     </logger>
 

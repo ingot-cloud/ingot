@@ -1,7 +1,4 @@
 spring:
-  datasource:
-    username: ${MYSQL_USERNAME:dev}
-    password: ${MYSQL_PASSWORD:123456}
   data:
     redis:
       password: ${REDIS_PASSWORD:ingotredis}
@@ -20,25 +17,11 @@ spring:
   config:
     import:
       - optional:nacos:application-common.yml
-      - optional:nacos:application-mysql.yml
       - optional:nacos:${spring.application.name}.yml
 
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
 
 logs:
   path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.pms.mapper
-
-ingot:
-  mybatis:
-    show-sql-log: true
-
-# 日志等级
-logging:
-  level:
-    org.springframework.web: trace
-    org.springframework.security: trace
-    org.springframework.security.oauth2: debug
-    com.alibaba.nacos.client.naming: info

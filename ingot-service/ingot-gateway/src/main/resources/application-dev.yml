@@ -1,10 +1,33 @@
+spring:
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:ingotredis}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8849},${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8850}
+        namespace: ingot
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+  config:
+    import:
+      - optional:nacos:application-common.yml
+      - optional:nacos:${spring.application.name}.yml
+
+springdoc:
+  api-docs:
+    enabled: true
+
+logs:
+  path: /ingot-data/logs
 
 # 日志等级
 logging:
   level:
     org.springframework.web: trace
     com.alibaba.nacos.client.naming: info
-
-springdoc:
-  api-docs:
-    enabled: true

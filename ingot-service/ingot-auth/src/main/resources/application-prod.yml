@@ -25,20 +25,14 @@ spring:
 
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
 
 logs:
   path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.pms.mapper
+  mybatisMapper: com.ingot.cloud.auth.mapper
 
 ingot:
-  mybatis:
-    show-sql-log: true
-
-# 日志等级
-logging:
-  level:
-    org.springframework.web: trace
-    org.springframework.security: trace
-    org.springframework.security.oauth2: debug
-    com.alibaba.nacos.client.naming: info
+  security:
+    oauth2:
+      auth:
+        loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
