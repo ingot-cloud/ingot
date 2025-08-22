@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./config.properties
+source ./config.env
 
 # 客户端版本信息配置
 version=0.1.0

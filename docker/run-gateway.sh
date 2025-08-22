@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./config.properties
+source ./config.env
 
 # 域名配置
 VIRTUAL_HOST=ingot-api.ingotcloud.top
