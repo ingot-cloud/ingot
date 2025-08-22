@@ -20,8 +20,12 @@ docker run -d --name ${serviceName} --restart always \
     --add-host ingot-db-mysql:${MYSQL_HOST} \
     --add-host ingot-auth-server:${INGOT_AUTH_SERVER} \
     --add-host ingot-gateway:${INGOT_GATEWAY} \
-    -e NACOS_HOST=${NACOS_HOST} \
-    -e NACOS_PORT=${NACOS_PORT} \
+    -e NACOS_HOST1=${NACOS_HOST1} \
+    -e NACOS_PORT1=${NACOS_PORT1} \
+    -e NACOS_HOST2=${NACOS_HOST2} \
+    -e NACOS_PORT2=${NACOS_PORT2} \
+    -e NACOS_HOST3=${NACOS_HOST3} \
+    -e NACOS_PORT3=${NACOS_PORT3} \
     -e NACOS_USERNAME=${NACOS_USERNAME} \
     -e NACOS_PASSWORD=${NACOS_PASSWORD} \
     -e REDIS_HOST=${REDIS_HOST} \
