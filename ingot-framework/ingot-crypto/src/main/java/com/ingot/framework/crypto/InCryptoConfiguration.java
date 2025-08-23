@@ -1,7 +1,5 @@
 package com.ingot.framework.crypto;
 
-import com.ingot.framework.core.jackson.InJackson2ObjectMapperBuilderCustomizer;
-import com.ingot.framework.crypto.jackson.CryptoObjectMapperCustomizer;
 import com.ingot.framework.crypto.web.DefaultSecretKeyResolver;
 import com.ingot.framework.crypto.web.SecretKeyResolver;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -23,10 +21,5 @@ public class InCryptoConfiguration {
     @ConditionalOnMissingBean(SecretKeyResolver.class)
     public SecretKeyResolver defaultSecretKeyResolver(InCryptoProperties properties) {
         return new DefaultSecretKeyResolver(properties);
-    }
-
-    @Bean
-    public InJackson2ObjectMapperBuilderCustomizer cryptoObjectMapperCustomizer() {
-        return new CryptoObjectMapperCustomizer();
     }
 }

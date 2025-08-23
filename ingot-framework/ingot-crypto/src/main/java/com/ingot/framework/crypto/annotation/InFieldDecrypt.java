@@ -2,6 +2,9 @@ package com.ingot.framework.crypto.annotation;
 
 import java.lang.annotation.*;
 
+import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ingot.framework.crypto.jackson.CryptoDeserializer;
 import com.ingot.framework.crypto.model.CryptoType;
 
 /**
@@ -14,6 +17,8 @@ import com.ingot.framework.crypto.model.CryptoType;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@JacksonAnnotationsInside
+@JsonDeserialize(using = CryptoDeserializer.class)
 public @interface InFieldDecrypt {
     /**
      * 加解密类型
