@@ -1,12 +1,10 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.Serializable;
+
 import com.ingot.framework.crypto.annotation.InFieldDecrypt;
-import com.ingot.framework.crypto.jackson.CryptoDeserializer;
 import com.ingot.framework.crypto.model.CryptoType;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * <p>Description  : UserPasswordDTO.</p>
@@ -17,9 +15,7 @@ import java.io.Serializable;
 @Data
 public class UserPasswordDTO implements Serializable {
     @InFieldDecrypt(CryptoType.AES)
-    @JsonDeserialize(using = CryptoDeserializer.class)
     private String password;
     @InFieldDecrypt(CryptoType.AES)
-    @JsonDeserialize(using = CryptoDeserializer.class)
     private String newPassword;
 }

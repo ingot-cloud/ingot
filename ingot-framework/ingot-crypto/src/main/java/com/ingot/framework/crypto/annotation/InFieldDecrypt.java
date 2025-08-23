@@ -1,8 +1,8 @@
 package com.ingot.framework.crypto.annotation;
 
-import com.ingot.framework.crypto.model.CryptoType;
-
 import java.lang.annotation.*;
+
+import com.ingot.framework.crypto.model.CryptoType;
 
 /**
  * <p>Description  : IngotFieldDecrypt.</p>
