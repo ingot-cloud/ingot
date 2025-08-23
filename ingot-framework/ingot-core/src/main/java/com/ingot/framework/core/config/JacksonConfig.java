@@ -45,7 +45,11 @@ public class JacksonConfig {
             builder.timeZone(TimeZone.getTimeZone(ASIA_BEIJING));
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
             // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
-            builder.modules(new InModule(), new JavaTimeModule(), new InJavaTimeModule());
+            builder.modules((list) -> {
+                list.add(new InModule());
+                list.add(new JavaTimeModule());
+                list.add(new InJavaTimeModule());
+            });
             builder.failOnUnknownProperties(false);
         };
     }
