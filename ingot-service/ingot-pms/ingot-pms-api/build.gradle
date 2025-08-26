@@ -8,6 +8,7 @@ dependencies {
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_crypto)
     implementation project(ingot.framework_data_mybatis_common)
+    implementation project(ingot.framework_oss_common)
 
     //mapstruct
     implementation(deps.mapstruct.library)
