@@ -1,12 +1,11 @@
 package com.ingot.framework.crypto.utils;
 
-import cn.hutool.core.codec.Base64;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.Mode;
-import cn.hutool.crypto.Padding;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
-import cn.hutool.crypto.symmetric.AES;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.error.exception.BizException;
 import com.ingot.framework.crypto.annotation.InDecrypt;
@@ -20,11 +19,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.lang.Nullable;
 
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-
 /**
  * <p>Description  : Utils.</p>
  * <p>Author       : wangchao.</p>
@@ -33,6 +27,7 @@ import java.util.Objects;
  */
 @Slf4j
 public class CryptoUtils {
+    public static final String ENCRYPT_FAIL_CONTENT = "***";
 
     @Nullable
     public static CryptoInfoRecord getEncryptInfo(MethodParameter methodParameter) {
@@ -68,16 +63,21 @@ public class CryptoUtils {
         }
 
         String secretKey = getSecretKey(record);
-        switch (type) {
-            case AES -> {
-                AES aes = new AES(Mode.CBC, Padding.NoPadding, new SecretKeySpec(secretKey.getBytes(), "AES"),
-                        new IvParameterSpec(secretKey.getBytes()));
-                return aes.encryptBase64(rawData);
+        try {
+            switch (type) {
+                case AES -> {
+                    return AESUtils.encryptCBC(rawData, secretKey);
+                }
+                case AES_GCM -> {
+                    return AESUtils.encryptGCM(rawData, secretKey);
+                }
+                case RSA -> {
+                    return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
+                            .encryptBase64(rawData, KeyType.PrivateKey);
+                }
             }
-            case RSA -> {
-                return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
-                        .encryptBase64(rawData, KeyType.PrivateKey);
-            }
+        } catch (Exception e) {
+            throwError(CryptoErrorCode.CRYPTO_TYPE_ERROR, e.getLocalizedMessage());
         }
 
         throwError(CryptoErrorCode.CRYPTO_TYPE_ERROR);
@@ -98,19 +98,21 @@ public class CryptoUtils {
         }
 
         String secretKey = getSecretKey(record);
-        switch (type) {
-            case AES -> {
-                AES aes = new AES(Mode.CBC, Padding.NoPadding,
-                        new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES"),
-                        new IvParameterSpec(secretKey.getBytes(StandardCharsets.UTF_8)));
-                return aes.decrypt(Base64.decode(cryptoData));
+        try {
+            switch (type) {
+                case AES -> {
+                    return AESUtils.decryptCBC(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
+                }
+                case RSA -> {
+                    return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
+                            .decrypt(cryptoData,
+                                    KeyType.PrivateKey);
+                }
             }
-            case RSA -> {
-                return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
-                        .decrypt(cryptoData,
-                                KeyType.PrivateKey);
-            }
+        } catch (Exception e) {
+            throwError(CryptoErrorCode.CRYPTO_TYPE_ERROR, e.getLocalizedMessage());
         }
+
         throwError(CryptoErrorCode.CRYPTO_TYPE_ERROR);
         return cryptoData;
     }
@@ -142,6 +144,10 @@ public class CryptoUtils {
 
     public static void throwError(CryptoErrorCode code) {
         throw new BizException(code);
+    }
+
+    public static void throwError(CryptoErrorCode code, String message) {
+        throw new BizException(code.getCode(), message);
     }
 
     public static String logMsg(String message) {

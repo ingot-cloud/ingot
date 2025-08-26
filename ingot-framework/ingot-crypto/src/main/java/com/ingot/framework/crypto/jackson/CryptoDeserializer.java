@@ -1,5 +1,9 @@
 package com.ingot.framework.crypto.jackson;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -15,10 +19,6 @@ import com.ingot.framework.crypto.utils.CryptoUtils;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 
 /**
  * <p>Description  : CryptoDeserializer.</p>
@@ -42,7 +42,7 @@ public class CryptoDeserializer extends JsonDeserializer<String> implements Cont
         CryptoInfoRecord record = new CryptoInfoRecord(type, key);
         try {
             return switch (type) {
-                case AES, RSA -> StrUtil.str(
+                case AES, AES_GCM, RSA -> StrUtil.str(
                         CryptoUtils.decrypt(p.getText().getBytes(StandardCharsets.UTF_8), record),
                         StandardCharsets.UTF_8
                 ).trim();

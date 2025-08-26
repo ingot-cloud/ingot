@@ -12,7 +12,17 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CryptoType {
+    /**
+     * AES默认CBC模式
+     */
     AES("aes", "AES"),
+    /**
+     * AES, GCM模式
+     */
+    AES_GCM("aes_gcm", "AES"),
+    /**
+     * RSA
+     */
     RSA("ras", "RSA");
 
     private final String value;
