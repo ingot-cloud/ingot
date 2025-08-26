@@ -1,14 +1,17 @@
 package com.ingot.framework.minio.service;
 
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+
 import cn.hutool.core.io.IoUtil;
 import com.ingot.framework.core.oss.OSSResult;
 import com.ingot.framework.core.oss.OssService;
+import com.ingot.framework.minio.common.MinioObjectInfo;
 import com.ingot.framework.minio.properties.MinioProperties;
+import com.ingot.framework.minio.common.MinioPathParser;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.InputStream;
 
 /**
  * <p>Description  : MinioOSSService.</p>
@@ -29,8 +32,7 @@ public class MinioOssService implements OssService {
             minioService.putObject(bucket, fileName, inputStream);
             result.setBucketName(bucket);
             result.setFileName(fileName);
-            result.setUrl(minioProperties.getPublicUrl() +
-                    "/" + bucket + "/" + fileName + "?t=" + System.currentTimeMillis());
+            result.setUrl(getObjectURL(bucket + "/" + fileName));
             return result;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -46,4 +48,26 @@ public class MinioOssService implements OssService {
             log.error("文件读取异常", e);
         }
     }
+
+    @Override
+    public String getObjectURL(String url) {
+        MinioObjectInfo objectInfo = MinioPathParser.parse(url);
+        return minioService.getObjectURL(
+                objectInfo.bucket(),
+                objectInfo.objectName(),
+                minioProperties.getExpiredTime(),
+                TimeUnit.SECONDS);
+    }
+
+    @Override
+    public String getObjectURL(String url, int expiredSeconds) {
+        MinioObjectInfo objectInfo = MinioPathParser.parse(url);
+        return minioService.getObjectURL(
+                objectInfo.bucket(),
+                objectInfo.objectName(),
+                expiredSeconds,
+                TimeUnit.SECONDS);
+    }
+
+
 }

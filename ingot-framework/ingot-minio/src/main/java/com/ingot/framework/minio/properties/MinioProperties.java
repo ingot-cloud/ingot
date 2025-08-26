@@ -19,10 +19,6 @@ public class MinioProperties {
      */
     private String url;
     /**
-     * 公网API地址
-     */
-    private String publicUrl;
-    /**
      * 用户名
      */
     private String accessKey;
@@ -30,6 +26,10 @@ public class MinioProperties {
      * 密码
      */
     private String secretKey;
+    /**
+     * 过期时间，单位秒，默认300秒过期时间
+     */
+    private Integer expiredTime = 300;
 
 }
 
