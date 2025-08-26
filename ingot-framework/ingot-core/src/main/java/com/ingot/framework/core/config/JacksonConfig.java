@@ -1,15 +1,18 @@
 package com.ingot.framework.core.config;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingot.framework.core.jackson.InJackson2ObjectMapperBuilderCustomizer;
 import com.ingot.framework.core.jackson.InJavaTimeModule;
 import com.ingot.framework.core.jackson.InModule;
+import com.ingot.framework.core.jackson.InJacksonModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -35,12 +38,9 @@ public class JacksonConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public Jackson2ObjectMapperBuilderCustomizer customizer(List<InJackson2ObjectMapperBuilderCustomizer> customizers) {
-        log.info("JacksonConfig - customizers={}", customizers);
+    public Jackson2ObjectMapperBuilderCustomizer customizer(List<InJackson2ObjectMapperBuilderCustomizer> customizers,
+                                                            List<InJacksonModule> modules) {
         return builder -> {
-            // ext
-            customizers.forEach(customizer -> customizer.customize(builder));
-
             builder.locale(Locale.getDefault());
             builder.timeZone(TimeZone.getTimeZone(ASIA_BEIJING));
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
@@ -49,8 +49,16 @@ public class JacksonConfig {
                 list.add(new InModule());
                 list.add(new JavaTimeModule());
                 list.add(new InJavaTimeModule());
+                if (CollUtil.isNotEmpty(modules)) {
+                    list.addAll(modules.stream()
+                            .sorted(Comparator.comparingInt(InJacksonModule::getOrder))
+                            .toList());
+                }
             });
             builder.failOnUnknownProperties(false);
+
+            // ext
+            customizers.forEach(customizer -> customizer.customize(builder));
         };
     }
 }

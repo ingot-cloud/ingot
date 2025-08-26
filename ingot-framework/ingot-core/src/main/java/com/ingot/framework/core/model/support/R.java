@@ -1,12 +1,12 @@
 package com.ingot.framework.core.model.support;
 
+import java.io.Serializable;
+import java.util.function.Consumer;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.model.status.BaseErrorCode;
 import com.ingot.framework.core.model.status.ErrorCode;
 import lombok.ToString;
-
-import java.io.Serializable;
-import java.util.function.Consumer;
 
 /**
  * <p>Description  : R.</p>
