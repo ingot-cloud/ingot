@@ -103,6 +103,9 @@ public class CryptoUtils {
                 case AES -> {
                     return AESUtils.decryptCBC(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
                 }
+                case AES_GCM -> {
+                    return AESUtils.decryptGCM(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
+                }
                 case RSA -> {
                     return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
                             .decrypt(cryptoData,

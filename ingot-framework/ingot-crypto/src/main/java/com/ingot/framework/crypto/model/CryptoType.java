@@ -19,7 +19,7 @@ public enum CryptoType {
     /**
      * AES, GCM模式
      */
-    AES_GCM("aes_gcm", "AES"),
+    AES_GCM("aes_gcm", "AES_GCM"),
     /**
      * RSA
      */

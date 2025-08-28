@@ -12,6 +12,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import cn.hutool.core.codec.Base64;
 import jakarta.validation.constraints.NotNull;
@@ -41,7 +42,7 @@ public class AESUtils {
      *
      * @param plainText 带加密数据
      * @param key       秘钥
-     * @return 密文
+     * @return Base64(IV[16字节] + Ciphertext)
      * @throws Exception 异常
      */
     public static String encryptCBC(String plainText, String key) throws Exception {
@@ -53,7 +54,7 @@ public class AESUtils {
      *
      * @param plainText 带加密数据
      * @param key       秘钥
-     * @return 密文
+     * @return Base64(IV[16字节] + Ciphertext)
      * @throws Exception 异常
      */
     public static String encryptCBC(byte[] plainText, String key) throws Exception {
@@ -71,7 +72,7 @@ public class AESUtils {
     /**
      * CBC模式解密，PKCS5Padding
      *
-     * @param cipherText 密文数据
+     * @param cipherText 密文数据Base64(IV[16字节] + Ciphertext)
      * @param key        秘钥
      * @return 明文
      * @throws Exception 异常
@@ -83,7 +84,7 @@ public class AESUtils {
     /**
      * CBC模式解密，PKCS5Padding
      *
-     * @param cipherText 密文数据
+     * @param cipherText 密文数据Base64(IV[16字节] + Ciphertext)
      * @param key        秘钥
      * @return 明文
      * @throws Exception 异常
@@ -167,25 +168,10 @@ public class AESUtils {
         return decryptGCM(key, Base64.decode(cipherText));
     }
 
-    @NotNull
-    private static String decryptGCM(String key, byte[] combined) throws NoSuchAlgorithmException, NoSuchPaddingException,
-            InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-        byte[] iv = new byte[GCM_IV_LENGTH];
-        byte[] encrypted = new byte[combined.length - GCM_IV_LENGTH];
-        System.arraycopy(combined, 0, iv, 0, iv.length);
-        System.arraycopy(combined, iv.length, encrypted, 0, encrypted.length);
-
-        Cipher cipher = Cipher.getInstance(GCM_NOPADDING);
-        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), AES), spec);
-
-        return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
-    }
-
     private static String encrypt(byte[] plainText, Cipher cipher, byte[] iv) throws Exception {
         byte[] encrypted = cipher.doFinal(plainText);
 
-        // 拼接 iv + 密文
+        // 拼接 iv + 密文 + tag
         byte[] combined = new byte[iv.length + encrypted.length];
         System.arraycopy(iv, 0, combined, 0, iv.length);
         System.arraycopy(encrypted, 0, combined, iv.length, encrypted.length);
@@ -193,15 +179,30 @@ public class AESUtils {
         return Base64.encode(combined);
     }
 
+    @NotNull
+    private static String decryptGCM(String keyStr, byte[] combined) throws NoSuchAlgorithmException, NoSuchPaddingException,
+            InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+        byte[] iv = Arrays.copyOfRange(combined, 0, GCM_IV_LENGTH);
+        byte[] cipherBytes = Arrays.copyOfRange(combined, GCM_IV_LENGTH, combined.length);
+
+        SecretKeySpec keySpec = new SecretKeySpec(keyStr.getBytes(StandardCharsets.UTF_8), AES);
+
+        Cipher cipher = Cipher.getInstance(GCM_NOPADDING);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, spec);
+
+        byte[] decrypted = cipher.doFinal(cipherBytes);
+        return new String(decrypted, StandardCharsets.UTF_8);
+    }
+
 //    public static void main(String[] args) throws Exception {
-//        String key = "1234567890123456";
+//        String key = "ingotingotingot1";
 //        String plainText = "test1";
 //
 //        String cipherText = encryptCBC(plainText, key);
 //        System.out.println("CBC cipherText=" + cipherText);
 //        String text = decryptCBC(cipherText, key);
 //        System.out.println("CBC text=" + text);
-//
 //
 //        cipherText = encryptGCM(plainText, key);
 //        System.out.println("GCM cipherText=" + cipherText);
