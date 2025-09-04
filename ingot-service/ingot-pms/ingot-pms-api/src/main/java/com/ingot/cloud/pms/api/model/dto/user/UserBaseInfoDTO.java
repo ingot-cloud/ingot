@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
+import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
 
 /**
@@ -19,6 +20,7 @@ public class UserBaseInfoDTO implements Serializable {
     @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
     private String nickname;
+    @OssUrl
     private String avatar;
     private Boolean initPwd;
 }

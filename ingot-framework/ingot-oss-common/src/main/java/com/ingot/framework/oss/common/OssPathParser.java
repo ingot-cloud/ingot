@@ -1,5 +1,7 @@
 package com.ingot.framework.oss.common;
 
+import java.net.URI;
+
 /**
  * <p>Description  : MinioPathParser.</p>
  * <p>Author       : jy.</p>
@@ -26,18 +28,37 @@ public class OssPathParser {
 
         // 判断是否是URL
         if (path.startsWith("http://") || path.startsWith("https://")) {
-            String noProtocol = path.replaceFirst("https?://", "");
-            int firstSlash = noProtocol.indexOf('/');
-            if (firstSlash == -1) {
-                throw new IllegalArgumentException("URL格式错误：" + path);
+//            String noProtocol = path.replaceFirst("https?://", "");
+//            int firstSlash = noProtocol.indexOf('/');
+//            if (firstSlash == -1) {
+//                throw new IllegalArgumentException("URL格式错误：" + path);
+//            }
+//            String bucketAndObject = noProtocol.substring(firstSlash + 1);
+//            int secondSlash = bucketAndObject.indexOf('/');
+//            if (secondSlash == -1) {
+//                throw new IllegalArgumentException("URL中缺少objectName：" + path);
+//            }
+//            bucket = bucketAndObject.substring(0, secondSlash);
+//            objectName = bucketAndObject.substring(secondSlash + 1);
+            // 处理全路径
+            try {
+                URI uri = URI.create(path);
+                String rawPath = uri.getPath(); // e.g. /bucket/dir/file?name=1.txt
+                if (rawPath.startsWith("/")) {
+                    rawPath = rawPath.substring(1);
+                }
+                int firstSlash = rawPath.indexOf('/');
+                if (firstSlash > -1) {
+                    bucket = rawPath.substring(0, firstSlash);
+                    objectName = rawPath.substring(firstSlash + 1);
+                } else {
+                    bucket = rawPath;
+                    objectName = "";
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid OSS path: " + path, e);
             }
-            String bucketAndObject = noProtocol.substring(firstSlash + 1);
-            int secondSlash = bucketAndObject.indexOf('/');
-            if (secondSlash == -1) {
-                throw new IllegalArgumentException("URL中缺少objectName：" + path);
-            }
-            bucket = bucketAndObject.substring(0, secondSlash);
-            objectName = bucketAndObject.substring(secondSlash + 1);
+
         } else {
             int firstSlash = path.indexOf('/');
             if (firstSlash == -1) {

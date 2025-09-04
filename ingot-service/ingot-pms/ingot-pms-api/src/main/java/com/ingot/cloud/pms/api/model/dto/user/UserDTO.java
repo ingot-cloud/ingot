@@ -1,9 +1,10 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
+
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.oss.common.OssSaveUrl;
+import lombok.Data;
 
 /**
  * <p>Description  : UserDto.</p>
@@ -32,6 +33,7 @@ public class UserDTO implements Serializable {
     /**
      * 头像
      */
+    @OssSaveUrl
     private String avatar;
     /**
      * 状态, 0:正常，9:禁用

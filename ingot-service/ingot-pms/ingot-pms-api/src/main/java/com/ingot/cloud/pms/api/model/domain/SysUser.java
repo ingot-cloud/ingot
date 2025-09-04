@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -11,12 +13,11 @@ import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import com.ingot.framework.oss.common.OssUrl;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -85,6 +86,7 @@ public class SysUser extends BaseModel<SysUser> implements UserType {
      * 头像
      */
     @Schema(description = "头像")
+    @OssUrl
     private String avatar;
 
     /**

@@ -1,12 +1,13 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.cloud.pms.api.model.types.UserTenantType;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.ingot.cloud.pms.api.model.types.UserTenantType;
+import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.oss.common.OssUrl;
+import lombok.Data;
 
 /**
  * <p>Description  : 用户简介.</p>
@@ -44,6 +45,7 @@ public class UserProfileVO implements Serializable {
     /**
      * 头像
      */
+    @OssUrl
     private String avatar;
 
     /**
