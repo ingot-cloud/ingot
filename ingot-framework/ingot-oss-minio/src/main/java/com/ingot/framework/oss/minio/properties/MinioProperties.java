@@ -30,6 +30,21 @@ public class MinioProperties {
      * 过期时间，单位秒，默认300秒过期时间
      */
     private Integer expiredTime = 300;
+    /**
+     * 端点配置
+     */
+    private Endpoint endpoint;
 
+    @Data
+    public static class Endpoint {
+        /**
+         * 是否开启端点
+         */
+        private boolean enable = false;
+        /**
+         * 端点访问前缀，e.g. oss，那么端点为/oss/minio
+         */
+        private String name;
+    }
 }
 

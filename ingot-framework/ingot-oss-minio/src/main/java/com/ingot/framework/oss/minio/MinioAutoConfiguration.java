@@ -23,7 +23,7 @@ public class MinioAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(MinioService.class)
-    @ConditionalOnProperty(name = "ingot.minio.url")
+    @ConditionalOnProperty(name = "ingot.oss.minio.url")
     public MinioService minioService(MinioProperties properties) {
         return new MinioService(
                 properties.getUrl(),

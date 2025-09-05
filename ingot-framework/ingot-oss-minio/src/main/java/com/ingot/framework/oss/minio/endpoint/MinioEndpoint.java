@@ -1,5 +1,10 @@
 package com.ingot.framework.oss.minio.endpoint;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import com.ingot.framework.oss.minio.common.MinioItem;
 import com.ingot.framework.oss.minio.service.MinioService;
 import io.minio.StatObjectResponse;
@@ -10,11 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 /**
  * <p>Description  : MinioEndpoint.</p>
  * <p>Author       : wangchao.</p>
@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @AllArgsConstructor
-@ConditionalOnProperty(name = "ingot.minio.endpoint.enable", havingValue = "true")
-@RequestMapping("${ingot.minio.endpoint.name:/minio}")
+@ConditionalOnProperty(name = "ingot.oss.minio.endpoint.enable", havingValue = "true")
+@RequestMapping("${ingot.oss.minio.endpoint.name:/minio}")
 public class MinioEndpoint {
     private final MinioService minioService;
 
