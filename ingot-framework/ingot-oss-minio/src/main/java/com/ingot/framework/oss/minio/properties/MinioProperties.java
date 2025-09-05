@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "ingot.minio")
+@ConfigurationProperties(prefix = "ingot.oss.minio")
 public class MinioProperties {
     /**
      * minio 服务地址 http://ip:port
