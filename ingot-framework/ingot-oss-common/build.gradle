@@ -1,7 +1,7 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-    implementation project(ingot.framework_core)
+    implementation project(ingot.framework_commons)
 
     compileOnly(deps.spring.framework_spring_web)
 }
