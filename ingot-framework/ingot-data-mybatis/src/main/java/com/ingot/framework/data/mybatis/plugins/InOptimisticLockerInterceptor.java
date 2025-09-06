@@ -1,7 +1,7 @@
 package com.ingot.framework.data.mybatis.plugins;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.Intercepts;
@@ -21,7 +21,7 @@ public class InOptimisticLockerInterceptor extends OptimisticLockerInnerIntercep
         // 重新处理 Long，使用时间戳
         if (long.class.equals(clazz) || Long.class.equals(clazz)) {
             // UTC time millis
-            return DateUtils.utcEpochMilli();
+            return DateUtil.utcEpochMilli();
         }
         return super.getUpdatedVersionVal(clazz, originalVersionVal);
     }

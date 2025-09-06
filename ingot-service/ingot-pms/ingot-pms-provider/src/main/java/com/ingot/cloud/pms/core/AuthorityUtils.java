@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 
 import java.util.List;
 import java.util.Objects;
@@ -95,8 +95,8 @@ public class AuthorityUtils {
                 .filter(BizFilter.authorityFilter(condition))
                 .map(authorityConvert::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
-        TreeUtils.compensate(tree, nodeList);
+        List<AuthorityTreeNodeVO> tree = TreeUtil.build(nodeList);
+        TreeUtil.compensate(tree, nodeList);
         return tree;
     }
 

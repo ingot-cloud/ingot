@@ -9,8 +9,8 @@ import com.ingot.framework.commons.constants.RoleConstants;
  * <p>Date         : 2022/12/21.</p>
  * <p>Time         : 7:31 PM.</p>
  */
-public final class RoleUtils {
-    private RoleUtils() {
+public final class RoleUtil {
+    private RoleUtil() {
     }
 
     /**

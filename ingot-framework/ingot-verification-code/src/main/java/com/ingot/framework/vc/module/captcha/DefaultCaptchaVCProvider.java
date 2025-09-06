@@ -6,7 +6,7 @@ import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.utils.WebUtils;
+import com.ingot.framework.commons.utils.WebUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.common.*;
 import com.ingot.framework.vc.module.servlet.ServletUtils;
@@ -32,7 +32,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
         try {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtils.getRemoteIP(request.getRequest()));
+            vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
             ResponseModel responseModel = captchaService.get(vo);
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
         InnerCheck.check(StrUtil.isNotEmpty(code), "vc.check.image.illegalArgs");
 
         CaptchaVO vo = new CaptchaVO();
-        vo.setBrowserInfo(WebUtils.getRemoteIP(request.getRequest()));
+        vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
         vo.setCaptchaVerification(code);
         vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
         InnerCheck.check(captchaService.verification(vo).isSuccess(), "vc.check.image.checkFailure");
@@ -61,7 +61,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             String token = ServletUtils.getFromRequest(request, "token");
 
             CaptchaVO vo = new CaptchaVO();
-            vo.setBrowserInfo(WebUtils.getRemoteIP(request.getRequest()));
+            vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
             vo.setPointJson(pointJson);
             vo.setToken(token);
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);

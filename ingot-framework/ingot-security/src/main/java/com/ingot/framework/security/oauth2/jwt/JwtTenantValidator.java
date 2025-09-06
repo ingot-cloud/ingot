@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.jwt;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
-import com.ingot.framework.commons.utils.RequestParamsUtils;
+import com.ingot.framework.commons.utils.RequestParamsUtil;
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +55,7 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
             }
 
             // 保证token中的tenantId和请求中的tenantId一致
-            String tenantValue = RequestParamsUtils.getTenantId(request);
+            String tenantValue = RequestParamsUtil.getTenantId(request);
             return StrUtil.equals(tenantValue, String.valueOf(tenantId));
         };
         this.validator = new JwtClaimValidator<>(JwtClaimNamesExtension.TENANT, testClaimValue);

@@ -4,7 +4,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.service.domain.AppUserService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class AppUserAPI implements RShortcuts {
         params.setPassword(null);
         params.setInitPwd(null);
         params.setStatus(null);
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         appUserService.updateById(params);
         return ok();
     }

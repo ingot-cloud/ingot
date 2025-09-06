@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>Date         : 2024/9/3.</p>
  * <p>Time         : 10:06.</p>
  */
-public final class RequestParamsUtils {
+public final class RequestParamsUtil {
     private final static String UNDEFINED_STR = "undefined";
 
     /**

@@ -14,8 +14,8 @@ import com.ingot.cloud.pms.service.domain.SysDeptService;
 import com.ingot.cloud.pms.service.domain.SysUserDeptService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +50,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptConvert::to).collect(Collectors.toList());
 
-        return TreeUtils.build(allNode, IDConstants.ROOT_TREE_ID);
+        return TreeUtil.build(allNode, IDConstants.ROOT_TREE_ID);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptConvert::to).collect(Collectors.toList());
 
-        List<DeptTreeNodeVO> tree = TreeUtils.build(nodeList);
-        TreeUtils.compensate(tree, nodeList);
+        List<DeptTreeNodeVO> tree = TreeUtil.build(nodeList);
+        TreeUtil.compensate(tree, nodeList);
         return tree;
     }
 
@@ -109,7 +109,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
 
     @Override
     public void createDept(SysDept params) {
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         if (params.getStatus() == null) {
             params.setStatus(CommonStatusEnum.ENABLE);
         }
@@ -132,7 +132,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptMapper, SysDept> 
 
     @Override
     public void updateDept(SysDept params) {
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysDeptServiceImpl.UpdateFailed");
     }

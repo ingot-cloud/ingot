@@ -2,7 +2,7 @@ package com.ingot.framework.vc.module.servlet;
 
 import java.util.Map;
 
-import com.ingot.framework.commons.utils.WebUtils;
+import com.ingot.framework.commons.utils.WebUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.Utils;
@@ -29,7 +29,7 @@ public class DefaultVCProviderManager implements VCProviderManager {
         VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
         String receiver = ServletUtils.getReceiver(request);
-        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
+        String remoteIP = WebUtil.getRemoteIP(request.getRequest());
         checker.beforeSend(receiver, remoteIP);
         provider.create(request, generator);
     }
@@ -39,7 +39,7 @@ public class DefaultVCProviderManager implements VCProviderManager {
         VCProvider provider = Utils.getProvider(type, providerMap);
         VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
-        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
+        String remoteIP = WebUtil.getRemoteIP(request.getRequest());
         checker.beforeCheck(remoteIP);
         provider.checkOnly(request, type);
     }
@@ -49,7 +49,7 @@ public class DefaultVCProviderManager implements VCProviderManager {
         VCProvider provider = Utils.getProvider(type, providerMap);
         VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
-        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
+        String remoteIP = WebUtil.getRemoteIP(request.getRequest());
         checker.beforeCheck(remoteIP);
         provider.check(request, type);
     }

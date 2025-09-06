@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Time         : 14:47.</p>
  */
 @Slf4j
-public final class AddressUtils {
+public final class AddressUtil {
     private static final String ANY_HOST = "0.0.0.0";
     private static final String LOCALHOST = "127.0.0.1";
     private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");

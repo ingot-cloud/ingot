@@ -17,7 +17,7 @@ import cn.hutool.core.util.StrUtil;
  * <p>Date         : 2019/2/14.</p>
  * <p>Time         : 2:15 PM.</p>
  */
-public final class DateUtils {
+public final class DateUtil {
 
     /**
      * UTC 时间戳

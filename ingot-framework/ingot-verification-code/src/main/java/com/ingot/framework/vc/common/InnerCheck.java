@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.common;
 
-import com.ingot.framework.commons.utils.AssertionUtils;
+import com.ingot.framework.commons.utils.AssertionUtil;
 
 /**
  * <p>Description  : InnerCheck.</p>
@@ -17,7 +17,7 @@ public class InnerCheck {
      * @param messageCode 消息编码
      */
     public static void check(boolean expression, String messageCode) {
-        AssertionUtils.check(expression, () -> {
+        AssertionUtil.check(expression, () -> {
             throw new VCException(InVCMessageSource.getAccessor().getMessage(messageCode));
         });
     }
@@ -30,7 +30,7 @@ public class InnerCheck {
      * @param messageCode 消息编码
      */
     public static void check(boolean expression, VCErrorCode code, String messageCode) {
-        AssertionUtils.check(expression, () -> {
+        AssertionUtil.check(expression, () -> {
             throw new VCException(code,
                     InVCMessageSource.getAccessor().getMessage(messageCode));
         });
@@ -45,7 +45,7 @@ public class InnerCheck {
      * @param formatCode  格式化
      */
     public static void check(boolean expression, VCErrorCode code, String messageCode, String[] formatCode) {
-        AssertionUtils.check(expression, () -> {
+        AssertionUtil.check(expression, () -> {
             throw new VCException(code,
                     InVCMessageSource.getAccessor().getMessage(messageCode, formatCode));
         });

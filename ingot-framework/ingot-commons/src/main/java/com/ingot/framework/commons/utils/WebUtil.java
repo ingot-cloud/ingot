@@ -20,7 +20,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * <p>Time         : 上午10:25.</p>
  */
 @Slf4j
-public final class WebUtils extends org.springframework.web.util.WebUtils {
+public final class WebUtil extends org.springframework.web.util.WebUtils {
 
     /**
      * Gets request.

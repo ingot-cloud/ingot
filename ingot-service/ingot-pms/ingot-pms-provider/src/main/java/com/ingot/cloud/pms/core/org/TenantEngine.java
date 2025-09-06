@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.data.redis.utils.RedisUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
@@ -139,7 +139,7 @@ public class TenantEngine {
                         role.setTenantId(null);
                         role.setModelId(item.getId());
                         role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
-                        role.setCreatedAt(DateUtils.now());
+                        role.setCreatedAt(DateUtil.now());
                         role.setUpdatedAt(role.getCreatedAt());
                         return role;
                     }).toList();

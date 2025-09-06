@@ -1,31 +1,22 @@
 package com.ingot.framework.commons.utils.tree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.commons.constants.IDConstants;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * <p>Description  : TreeModelUtils.</p>
- * <p>Author       : jy.</p>
- * <p>Date         : 2024/3/22.</p>
- * <p>Time         : 10:08.</p>
+ * <p>Description  : TreeUtils.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2021/3/29.</p>
+ * <p>Time         : 9:29 下午.</p>
  */
-public class TreeModelUtils {
+public class TreeUtil {
 
-    private static final long ROOT_TREE_ID = IDConstants.ROOT_TREE_ID;
-
-    /**
-     * 构建Tree
-     *
-     * @param all 所有节点
-     * @param <T> 子类型
-     * @return 树节点列表
-     */
-    public static <T extends TreeModel<Long>> List<T> build(List<T> all) {
-        return build(all, ROOT_TREE_ID);
+    public static <T extends TreeNode<Long>> List<T> build(List<T> all) {
+        return build(all, IDConstants.ROOT_TREE_ID);
     }
 
     /**
@@ -36,11 +27,11 @@ public class TreeModelUtils {
      * @param <T>    子类型
      * @return 树节点列表
      */
-    public static <ID, T extends TreeModel<ID>> List<T> build(List<T> all, ID rootId) {
+    public static <ID, T extends TreeNode<ID>> List<T> build(List<T> all, ID rootId) {
         List<T> trees = new ArrayList<>();
 
         for (T node : all) {
-            if (ObjectUtil.isEmpty(node.getPid()) ||
+            if (node.getPid() == null ||
                     ObjectUtil.equal(node.getPid(), rootId)) {
                 trees.add(node);
             }
@@ -57,6 +48,28 @@ public class TreeModelUtils {
     }
 
     /**
+     * 展开 tree
+     *
+     * @param tree 树结构列表
+     * @param <T>  类型
+     * @return 展开列表
+     */
+    @SuppressWarnings("unchecked")
+    public static <ID, T extends TreeNode<ID>> List<T> stretch(List<T> tree) {
+        List<T> list = new ArrayList<>();
+
+        for (T node : tree) {
+            list.add(node);
+            if (!CollUtil.isEmpty(node.getChildren())) {
+                list.addAll(stretch((List<T>) node.getChildren()));
+                node.setChildren(null);
+            }
+        }
+
+        return list;
+    }
+
+    /**
      * 检索树中是否包含指定节点
      *
      * @param tree   树结构列表
@@ -64,13 +77,13 @@ public class TreeModelUtils {
      * @param <T>    类型
      * @return 是否包含
      */
-    public static <ID, T extends TreeModel<ID>> boolean contains(List<T> tree, T target) {
+    public static <T extends TreeNode> boolean contains(List<T> tree, T target) {
         for (T node : tree) {
             if (ObjectUtil.equal(node.getId(), target.getId())) {
                 return true;
             }
             if (!CollUtil.isEmpty(node.getChildren())
-                    && contains((List<T>) node.getChildren(), target)) {
+                    && contains(node.getChildren(), target)) {
                 return true;
             }
         }
@@ -85,7 +98,7 @@ public class TreeModelUtils {
      * @param trees 树列表
      * @param list  树节点列表
      */
-    public static <ID, T extends TreeModel<ID>> void compensate(List<T> trees, List<T> list) {
+    public static <T extends TreeNode> void compensate(List<T> trees, List<T> list) {
         list.forEach(node -> {
             if (!contains(trees, node)) {
                 trees.add(node);

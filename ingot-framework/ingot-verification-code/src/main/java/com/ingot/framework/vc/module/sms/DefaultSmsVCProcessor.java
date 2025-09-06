@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.module.sms;
 
-import com.ingot.framework.commons.utils.reactive.WebUtils;
+import com.ingot.framework.commons.utils.reactive.WebUtil;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
 import com.ingot.framework.vc.module.reactive.AbstractVCProcessor;
@@ -26,7 +26,7 @@ public class DefaultSmsVCProcessor extends AbstractVCProcessor {
     @Override
     protected Mono<ServerResponse> send(ServerRequest request, VC validateCode) {
         String receiver = ReactorUtils.getReceiver(request);
-        String remoteIP = WebUtils.getRemoteIP(request);
+        String remoteIP = WebUtil.getRemoteIP(request);
         // 发送短息
         smsCodeSender.send(receiver, remoteIP, validateCode);
         return ReactorUtils.defaultSendSuccess();

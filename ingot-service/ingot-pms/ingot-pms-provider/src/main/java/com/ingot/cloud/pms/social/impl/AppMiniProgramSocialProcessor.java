@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.core.SocialUtils;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -60,7 +60,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
         // 如果当前存在绑定关系，那么更新绑定关系
         if (current != null) {
             current.setUserId(user.getId());
-            current.setBindAt(DateUtils.now());
+            current.setBindAt(DateUtil.now());
             appUserSocialService.updateById(current);
             return;
         }
@@ -69,7 +69,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
         userSocial.setUserId(user.getId());
         userSocial.setType(SocialTypeEnum.APP_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
-        userSocial.setBindAt(DateUtils.now());
+        userSocial.setBindAt(DateUtil.now());
         appUserSocialService.save(userSocial);
     }
 }

@@ -17,7 +17,7 @@ import org.apache.commons.codec.binary.Base64;
  * <p>Date         : 2018/9/20.</p>
  * <p>Time         : 下午4:14.</p>
  */
-public final class DigestUtils {
+public final class DigestUtil {
     /**
      * 摘要码
      */

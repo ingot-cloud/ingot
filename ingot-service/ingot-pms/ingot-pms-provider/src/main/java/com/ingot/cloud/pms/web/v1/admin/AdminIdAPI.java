@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.BizLeafAlloc;
 import com.ingot.cloud.pms.service.domain.BizLeafAllocService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class AdminIdAPI implements RShortcuts {
     @HasAnyAuthority({"develop:id:w"})
     @PostMapping
     public R<?> create(@RequestBody BizLeafAlloc params) {
-        params.setUpdateTime(DateUtils.now());
+        params.setUpdateTime(DateUtil.now());
         bizLeafAllocService.save(params);
         return ok();
     }
@@ -44,7 +44,7 @@ public class AdminIdAPI implements RShortcuts {
     @HasAnyAuthority({"develop:id:w"})
     @PutMapping
     public R<?> update(@RequestBody BizLeafAlloc params) {
-        params.setUpdateTime(DateUtils.now());
+        params.setUpdateTime(DateUtil.now());
         bizLeafAllocService.updateById(params);
         return ok();
     }

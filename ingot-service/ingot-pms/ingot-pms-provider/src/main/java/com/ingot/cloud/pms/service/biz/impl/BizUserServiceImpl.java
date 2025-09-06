@@ -24,7 +24,7 @@ import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -103,7 +103,7 @@ public class BizUserServiceImpl implements BizUserService {
                     "SysUserServiceImpl.EmailExist");
         }
 
-        user.setUpdatedAt(DateUtils.now());
+        user.setUpdatedAt(DateUtil.now());
         assertionChecker.checkOperation(sysUserService.updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }

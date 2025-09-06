@@ -5,7 +5,7 @@ import com.anji.captcha.model.common.ResponseModel;
 import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.utils.reactive.WebUtils;
+import com.ingot.framework.commons.utils.reactive.WebUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.common.*;
 import com.ingot.framework.vc.module.reactive.ReactorUtils;
@@ -32,7 +32,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
         try {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtils.getRemoteIP(request));
+            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
             ResponseModel responseModel = captchaService.get(vo);
 
             InnerCheck.check(responseModel.isSuccess(), VCErrorCode.Illegal,
@@ -53,7 +53,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaVerification(code);
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtils.getRemoteIP(exchange.getRequest()));
+            vo.setBrowserInfo(WebUtil.getRemoteIP(exchange.getRequest()));
             InnerCheck.check(captchaService.verification(vo).isSuccess(), "vc.check.image.checkFailure");
             return chain.filter(exchange);
         } catch (VCException e) {
@@ -70,7 +70,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
             CaptchaVO vo = new CaptchaVO();
             vo.setPointJson(pointJson);
             vo.setToken(token);
-            vo.setBrowserInfo(WebUtils.getRemoteIP(request));
+            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
             ResponseModel responseModel = captchaService.check(vo);
             return ReactorUtils.successResponse(R.ok(responseModel));

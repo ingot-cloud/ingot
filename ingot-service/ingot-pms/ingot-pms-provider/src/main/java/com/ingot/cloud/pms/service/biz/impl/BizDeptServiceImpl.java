@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.common.RelationDTO;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.commons.constants.RoleConstants;
 import lombok.RequiredArgsConstructor;
@@ -168,7 +168,7 @@ public class BizDeptServiceImpl implements BizDeptService {
         if (mainNode == null) {
             return ListUtil.empty();
         }
-        List<DeptTreeNodeVO> childTree = TreeUtils.build(childNode, mainNode.getId());
+        List<DeptTreeNodeVO> childTree = TreeUtil.build(childNode, mainNode.getId());
         List<DeptTreeNodeVO> result = new ArrayList<>(childTree.size() + 1);
         result.add(mainNode);
         result.addAll(childTree);
@@ -182,7 +182,7 @@ public class BizDeptServiceImpl implements BizDeptService {
                 .sorted(Comparator.comparingInt(SysDept::getSort))
                 .map(deptConvert::to).toList();
 
-        return TreeUtils.build(allNode);
+        return TreeUtil.build(allNode);
     }
 
     @Override

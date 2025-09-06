@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.SysTenantMapper;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.properties.TenantProperties;
@@ -44,7 +44,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
                     "SysTenantServiceImpl.CodeExisted");
         }
 
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         params.setStatus(CommonStatusEnum.ENABLE);
         assertI18nService.checkOperation(save(params),
                 "SysTenantServiceImpl.CreateFailed");
@@ -64,7 +64,7 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
     public void updateTenantById(SysTenant params) {
         // 租户编码不可修改
         params.setCode(null);
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysTenantServiceImpl.UpdateFailed");
     }

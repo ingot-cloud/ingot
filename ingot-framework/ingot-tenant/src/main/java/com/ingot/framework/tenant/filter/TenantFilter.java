@@ -1,7 +1,7 @@
 package com.ingot.framework.tenant.filter;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.utils.RequestParamsUtils;
+import com.ingot.framework.commons.utils.RequestParamsUtil;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import jakarta.servlet.FilterChain;
@@ -33,7 +33,7 @@ public class TenantFilter extends OncePerRequestFilter {
         final String url = request.getRequestURI();
         log.info("[TenantFilter] do filter url = {}", url);
 
-        String tenantId = RequestParamsUtils.getTenantId(request);
+        String tenantId = RequestParamsUtil.getTenantId(request);
         boolean hasTenantId = StrUtil.isNotBlank(tenantId);
         try {
             if (hasTenantId) {

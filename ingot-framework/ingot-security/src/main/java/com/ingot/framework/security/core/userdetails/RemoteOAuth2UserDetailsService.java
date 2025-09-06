@@ -3,7 +3,7 @@ package com.ingot.framework.security.core.userdetails;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
-import com.ingot.framework.commons.utils.SocialUtils;
+import com.ingot.framework.commons.utils.SocialUtil;
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
 
         if (grantType.equals(InAuthorizationGrantType.SOCIAL.getValue())) {
             String unique = params.getUsername();
-            String[] extract = SocialUtils.extract(unique);
+            String[] extract = SocialUtil.extract(unique);
             SocialTypeEnum socialType = SocialTypeEnum.get(extract[0]);
             if (socialType == null) {
                 log.error("[RemoteOAuth2UserDetailsService] 非法社交类型={}", extract[0]);

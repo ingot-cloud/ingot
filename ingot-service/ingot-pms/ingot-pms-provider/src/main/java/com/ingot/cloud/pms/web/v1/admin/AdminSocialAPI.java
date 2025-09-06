@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
@@ -46,8 +46,8 @@ public class AdminSocialAPI implements RShortcuts {
     @Transactional(rollbackFor = Exception.class)
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
         params.setTenantId(TenantContextHolder.get());
-        params.setCreatedAt(DateUtils.now());
-        params.setUpdatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.now());
         sysSocialDetailsService.save(params);
 
         // 更新 WxMaService 配置
@@ -62,7 +62,7 @@ public class AdminSocialAPI implements RShortcuts {
     @PutMapping
     @Transactional(rollbackFor = Exception.class)
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         sysSocialDetailsService.updateById(params);
 
         // 如果更新了secret，那么需要重新add

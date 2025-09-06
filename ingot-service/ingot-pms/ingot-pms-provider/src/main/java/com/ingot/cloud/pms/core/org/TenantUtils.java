@@ -16,9 +16,9 @@ import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.tree.TreeNode;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +58,7 @@ public class TenantUtils {
                 item.setPid(pid);
                 item.setUpdatedAt(null);
                 item.setDeletedAt(null);
-                item.setCreatedAt(DateUtils.now());
+                item.setCreatedAt(DateUtil.now());
                 sysMenuService.save(item);
                 if (collect != null) {
                     collect.add(item);
@@ -83,7 +83,7 @@ public class TenantUtils {
                 item.setId(null);
                 item.setPid(pid);
                 item.setDeletedAt(null);
-                item.setCreatedAt(DateUtils.now());
+                item.setCreatedAt(DateUtil.now());
                 item.setUpdatedAt(item.getCreatedAt());
                 service.save(item);
                 if (collect != null) {
@@ -149,7 +149,7 @@ public class TenantUtils {
         item.setType(authorityType.getType());
         item.setStatus(authorityType.getStatus());
         item.setRemark(authorityType.getRemark());
-        item.setCreatedAt(DateUtils.now());
+        item.setCreatedAt(DateUtil.now());
         sysAuthorityService.save(item);
         return item;
     }
@@ -171,7 +171,7 @@ public class TenantUtils {
         item.setPid(pid);
         item.setUpdatedAt(null);
         item.setDeletedAt(null);
-        item.setCreatedAt(DateUtils.now());
+        item.setCreatedAt(DateUtil.now());
         service.save(item);
         return item;
     }
@@ -426,8 +426,8 @@ public class TenantUtils {
 
         long rootAuthorityParentId = authorityList.get(0).getPid();
         long rootMenuParentId = menuList.get(0).getPid();
-        List<MenuTreeNodeVO> menuTree = TreeUtils.build(menuList, rootMenuParentId);
-        List<AuthorityTreeNodeVO> authorityTree = TreeUtils.build(authorityList, rootAuthorityParentId);
+        List<MenuTreeNodeVO> menuTree = TreeUtil.build(menuList, rootMenuParentId);
+        List<AuthorityTreeNodeVO> authorityTree = TreeUtil.build(authorityList, rootAuthorityParentId);
         List<SysAuthority> authorityParentTemplateList = TenantUtils.getAuthorityParentList(
                 tenantProperties.getDefaultId(), rootAuthorityParentId, sysAuthorityService);
         List<SysMenu> menuParentTemplateList = TenantUtils.getMenuParentList(
@@ -477,7 +477,7 @@ public class TenantUtils {
         // 模版应用是默认应用，并且是可用的情况，才给应用设置可用
         applicationTenant.setStatus(BooleanUtil.isTrue(application.getDefaultApp())
                 && application.getStatus() == CommonStatusEnum.ENABLE ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK);
-        applicationTenant.setCreatedAt(DateUtils.now());
+        applicationTenant.setCreatedAt(DateUtil.now());
         sysApplicationTenantService.save(applicationTenant);
 
         return authorityCollect;
@@ -538,7 +538,7 @@ public class TenantUtils {
         menuCreateDiff(collectAuthorityIdMap, templateMenuTree, currentMenus, rootMenuId, sysMenuService, menuConvert);
 
         // 删除菜单，如果当前组织菜单已经被删除，那么需要将组织中相应菜单删除
-        List<MenuTreeNodeVO> templateMenuList = TreeUtils.stretch(templateMenuTree);
+        List<MenuTreeNodeVO> templateMenuList = TreeUtil.stretch(templateMenuTree);
         List<Long> removeMenuIdList = currentMenus
                 .stream()
                 .filter(item -> templateMenuList.stream()
@@ -586,7 +586,7 @@ public class TenantUtils {
                                 item.setName(authNode.getName());
                                 item.setStatus(authNode.getStatus());
                                 item.setRemark(authNode.getRemark());
-                                item.setUpdatedAt(DateUtils.now());
+                                item.setUpdatedAt(DateUtil.now());
                                 sysAuthorityService.updateById(item);
                             });
                 }
@@ -620,7 +620,7 @@ public class TenantUtils {
                     }
                     item.setUpdatedAt(null);
                     item.setDeletedAt(null);
-                    item.setCreatedAt(DateUtils.now());
+                    item.setCreatedAt(DateUtil.now());
                     sysMenuService.save(item);
                     nextPid = item.getId();
                 } else {
@@ -644,7 +644,7 @@ public class TenantUtils {
                                         }
                                     });
                         }
-                        sysMenu.setUpdatedAt(DateUtils.now());
+                        sysMenu.setUpdatedAt(DateUtil.now());
                         sysMenuService.updateById(sysMenu);
                     }
                 }

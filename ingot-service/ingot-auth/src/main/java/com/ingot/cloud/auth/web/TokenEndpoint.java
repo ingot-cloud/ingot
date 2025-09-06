@@ -6,7 +6,7 @@ import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationService;
 import com.ingot.cloud.auth.utils.OAuth2AuthorizationUtils;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.commons.utils.CookieUtils;
+import com.ingot.framework.commons.utils.CookieUtil;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +55,7 @@ public class TokenEndpoint implements RShortcuts {
 
         securityContextRevokeRepository.revokeContext(request);
 
-        CookieUtils.removeCookie(CookieUtils.SESSION_ID_NAME, null, null, response);
+        CookieUtil.removeCookie(CookieUtil.SESSION_ID_NAME, null, null, response);
         return ok();
     }
 

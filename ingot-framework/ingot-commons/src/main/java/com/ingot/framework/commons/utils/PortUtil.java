@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Time         : 10:42.</p>
  */
 @Slf4j
-public final class PortUtils {
+public final class PortUtil {
 
     /**
      * find available port

@@ -18,8 +18,8 @@ import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.commons.utils.DateUtils;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantEnv;
@@ -101,7 +101,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                 .stream()
                 .sorted(Comparator.comparing(SysAuthority::getId))
                 .map(authorityConvert::to).collect(Collectors.toList());
-        return TreeUtils.build(nodeList);
+        return TreeUtil.build(nodeList);
     }
 
     @Override
@@ -115,8 +115,8 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
                         .thenComparing(SysAuthority::getId))
                 .map(authorityConvert::to).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtils.build(nodeList);
-        TreeUtils.compensate(tree, nodeList);
+        List<AuthorityTreeNodeVO> tree = TreeUtil.build(nodeList);
+        TreeUtil.compensate(tree, nodeList);
         return tree;
     }
 
@@ -132,7 +132,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
         if (fillParentCode) {
             params.setCode(formatCode(params.getPid(), params.getCode()));
         }
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         assertI18nService.checkOperation(save(params),
                 "SysAuthorityServiceImpl.CreateFailed");
     }
@@ -150,7 +150,7 @@ public class SysAuthorityServiceImpl extends BaseServiceImpl<SysAuthorityMapper,
     public void updateAuthority(SysAuthority params) {
         // 权限编码不可更新
         params.setCode(null);
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysAuthorityServiceImpl.UpdateFailed");
     }

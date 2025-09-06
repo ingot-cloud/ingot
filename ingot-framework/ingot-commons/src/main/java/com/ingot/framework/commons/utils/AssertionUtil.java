@@ -10,7 +10,7 @@ import com.ingot.framework.commons.model.support.R;
  * <p>Date         : 2019/5/24.</p>
  * <p>Time         : 4:45 PM.</p>
  */
-public final class AssertionUtils {
+public final class AssertionUtil {
 
     @FunctionalInterface
     public interface Predicate {

@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.module.email;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.commons.utils.WebUtils;
+import com.ingot.framework.commons.utils.WebUtil;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
 import com.ingot.framework.vc.module.servlet.AbstractVCProvider;
@@ -26,7 +26,7 @@ public class DefaultEmailVCProvider extends AbstractVCProvider {
     @Override
     protected void send(ServletWebRequest request, VC validateCode) throws Exception {
         String receiver = ServletUtils.getReceiver(request);
-        String remoteIP = WebUtils.getRemoteIP(request.getRequest());
+        String remoteIP = WebUtil.getRemoteIP(request.getRequest());
 
         // 发送短息
         emailCodeSender.send(receiver, remoteIP, validateCode);

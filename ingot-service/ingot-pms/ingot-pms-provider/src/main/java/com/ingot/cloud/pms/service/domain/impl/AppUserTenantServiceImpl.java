@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.mapper.AppUserTenantMapper;
 import com.ingot.cloud.pms.service.domain.AppUserTenantService;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,7 +44,7 @@ public class AppUserTenantServiceImpl extends BaseServiceImpl<AppUserTenantMappe
         userTenant.setMain(CollUtil.isEmpty(joinedOrgList));
         userTenant.setName(tenant.getName());
         userTenant.setAvatar(tenant.getAvatar());
-        userTenant.setCreatedAt(DateUtils.now());
+        userTenant.setCreatedAt(DateUtil.now());
         save(userTenant);
     }
 

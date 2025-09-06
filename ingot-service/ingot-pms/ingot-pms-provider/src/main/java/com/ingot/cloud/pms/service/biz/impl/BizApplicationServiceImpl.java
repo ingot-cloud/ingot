@@ -20,7 +20,7 @@ import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -95,7 +95,7 @@ public class BizApplicationServiceImpl implements BizApplicationService {
 
         params.setAuthorityId(menu.getAuthorityId());
         params.setStatus(CommonStatusEnum.ENABLE);
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         sysApplicationService.save(params);
 
         tenantOps.createApplication(params);

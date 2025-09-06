@@ -19,7 +19,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
  * <p>Time         : 10:17 AM.</p>
  */
 @Slf4j
-public final class CookieUtils {
+public final class CookieUtil {
     public static final String SESSION_ID_NAME = "JSESSIONID";
 
     /**

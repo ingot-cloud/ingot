@@ -21,7 +21,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
  * <p>Time         : 09:27.</p>
  */
 @Slf4j
-public final class WebUtils {
+public final class WebUtil {
 
     /**
      * 获得用户远程地址

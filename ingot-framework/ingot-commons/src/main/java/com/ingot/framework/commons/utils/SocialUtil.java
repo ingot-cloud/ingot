@@ -9,7 +9,7 @@ import com.ingot.framework.commons.model.enums.SocialTypeEnum;
  * <p>Date         : 2021/1/3.</p>
  * <p>Time         : 7:51 下午.</p>
  */
-public final class SocialUtils {
+public final class SocialUtil {
 
     /**
      * 生成唯一码

@@ -17,7 +17,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.utils.tree.TreeNode;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -55,7 +55,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         return TenantEnv.applyAs(orgId, () -> {
             List<AuthorityTreeNodeVO> authorities = AuthorityUtils.getOrgAuthorities(
                     orgId, sysApplicationTenantService, sysAuthorityService, authorityConvert);
-            return TreeUtils.build(authorities);
+            return TreeUtil.build(authorities);
         });
     }
 

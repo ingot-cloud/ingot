@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.mapper.AppUserMapper;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -91,7 +91,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     public void createUser(AppUser user) {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setCreatedAt(DateUtils.now());
+        user.setCreatedAt(DateUtil.now());
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.ENABLE);
         }
@@ -134,7 +134,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
 
         checkUserUniqueField(user, current);
 
-        user.setUpdatedAt(DateUtils.now());
+        user.setUpdatedAt(DateUtil.now());
         assertionChecker.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }

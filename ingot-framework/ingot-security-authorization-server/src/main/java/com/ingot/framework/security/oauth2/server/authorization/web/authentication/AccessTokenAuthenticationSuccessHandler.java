@@ -4,9 +4,9 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.model.common.AuthSuccessDTO;
 import com.ingot.framework.commons.model.event.LoginEvent;
-import com.ingot.framework.commons.utils.DateUtils;
-import com.ingot.framework.commons.utils.WebUtils;
-import com.ingot.framework.commons.utils.CookieUtils;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.WebUtil;
+import com.ingot.framework.commons.utils.CookieUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
@@ -65,7 +65,7 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
                 .map(String::valueOf)
                 .orElse("");
         if (StrUtil.isNotEmpty(sessionId)) {
-            CookieUtils.setCookie(CookieUtils.SESSION_ID_NAME, sessionId, null, true, false, response);
+            CookieUtil.setCookie(CookieUtil.SESSION_ID_NAME, sessionId, null, true, false, response);
             additionalParameters.remove(InOAuth2ParameterNames.SESSION_ID);
         }
 
@@ -94,9 +94,9 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
         AuthSuccessDTO payload = new AuthSuccessDTO();
         payload.setGrantType(grantType);
-        payload.setIp(WebUtils.getClientIP(request));
+        payload.setIp(WebUtil.getClientIP(request));
         payload.setUsername(parameters.getFirst(OAuth2ParameterNames.USERNAME));
-        payload.setTime(DateUtils.now());
+        payload.setTime(DateUtil.now());
         SpringContextHolder.publishEvent(new LoginEvent(payload));
     }
 

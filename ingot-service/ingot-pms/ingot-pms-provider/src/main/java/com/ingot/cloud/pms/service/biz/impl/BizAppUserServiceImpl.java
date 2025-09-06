@@ -22,8 +22,8 @@ import com.ingot.cloud.pms.service.biz.BizAppRoleService;
 import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
-import com.ingot.framework.commons.utils.UUIDUtils;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.UUIDUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -102,7 +102,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
                     "SysUserServiceImpl.EmailExist");
         }
 
-        user.setUpdatedAt(DateUtils.now());
+        user.setUpdatedAt(DateUtil.now());
         assertionChecker.checkOperation(appUserService.updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }
@@ -115,13 +115,13 @@ public class BizAppUserServiceImpl implements BizAppUserService {
         if (user == null) {
             user = new AppUser();
             user.setUsername(params.getPhone());
-            user.setPassword(passwordEncoder.encode(UUIDUtils.generateShortUuid()));
+            user.setPassword(passwordEncoder.encode(UUIDUtil.generateShortUuid()));
             user.setAvatar(params.getAvatar());
             user.setNickname(params.getNickname());
             user.setPhone(params.getPhone());
             user.setStatus(UserStatusEnum.ENABLE);
             user.setInitPwd(Boolean.TRUE);
-            user.setCreatedAt(DateUtils.now());
+            user.setCreatedAt(DateUtil.now());
             appUserService.save(user);
         }
 
@@ -172,7 +172,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
         appUserService.checkUserUniqueField(params, current);
 
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertionChecker.checkOperation(appUserService.updateById(params),
                 "SysUserServiceImpl.UpdateFailed");
     }

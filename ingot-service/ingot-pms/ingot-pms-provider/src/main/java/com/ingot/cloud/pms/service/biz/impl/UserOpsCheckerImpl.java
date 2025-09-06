@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.commons.utils.RoleUtils;
+import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -68,7 +68,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
     private Optional<SysRole> getAdmin(long id) {
         List<SysRole> roles = sysRoleService.getRolesOfUser(id);
         return roles.stream()
-                .filter(item -> RoleUtils.isAdmin(item.getCode()))
+                .filter(item -> RoleUtil.isAdmin(item.getCode()))
                 .findFirst();
     }
 }

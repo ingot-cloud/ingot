@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +38,7 @@ public class PhoneSocialProcessor implements SocialProcessor<SysUser> {
     @Override
     public void bind(SysUser user, String uniqueID) {
         user.setPhone(uniqueID);
-        user.setUpdatedAt(DateUtils.now());
+        user.setUpdatedAt(DateUtil.now());
         user.updateById();
     }
 }

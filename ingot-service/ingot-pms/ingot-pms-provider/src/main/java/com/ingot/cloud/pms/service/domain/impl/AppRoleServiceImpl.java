@@ -21,7 +21,7 @@ import com.ingot.cloud.pms.service.domain.AppRoleUserService;
 import com.ingot.cloud.pms.service.domain.RoleService;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.Option;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantContextHolder;
@@ -133,7 +133,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
         }
 
         params.setStatus(CommonStatusEnum.ENABLE);
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         assertionChecker.checkOperation(save(params),
                 "SysRoleServiceImpl.CreateFailed");
     }
@@ -177,7 +177,7 @@ public class AppRoleServiceImpl extends BaseServiceImpl<AppRoleMapper, AppRole> 
         params.setCode(null);
         // 角色类型不能修改
         params.setType(null);
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertionChecker.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
 

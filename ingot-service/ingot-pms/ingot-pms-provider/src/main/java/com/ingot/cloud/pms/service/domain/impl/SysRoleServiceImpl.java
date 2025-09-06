@@ -21,12 +21,12 @@ import com.ingot.cloud.pms.mapper.SysRoleMapper;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.Option;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.utils.PageUtils;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.data.redis.service.RedisCacheService;
-import com.ingot.framework.commons.utils.RoleUtils;
+import com.ingot.framework.commons.utils.RoleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -191,7 +191,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         }
 
         params.setStatus(CommonStatusEnum.ENABLE);
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
         assertI18nService.checkOperation(save(params),
                 "SysRoleServiceImpl.CreateFailed");
     }
@@ -202,7 +202,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         assertI18nService.checkOperation(role != null,
                 "SysRoleServiceImpl.NonExist");
 
-        assertI18nService.checkOperation(!RoleUtils.isAdmin(role.getCode()),
+        assertI18nService.checkOperation(!RoleUtil.isAdmin(role.getCode()),
                 "SysRoleServiceImpl.SuperAdminRemoveFailed");
 
         // 非超管只能删除自定义角色
@@ -241,7 +241,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         }
 
         if (params.getStatus() == CommonStatusEnum.LOCK) {
-            assertI18nService.checkOperation(!RoleUtils.isAdmin(role.getCode()),
+            assertI18nService.checkOperation(!RoleUtil.isAdmin(role.getCode()),
                     "SysRoleServiceImpl.DisableAdminFailed");
         }
 
@@ -249,7 +249,7 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
         params.setCode(null);
         // 角色类型不能修改
         params.setType(null);
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(updateById(params),
                 "SysRoleServiceImpl.UpdateFailed");
 

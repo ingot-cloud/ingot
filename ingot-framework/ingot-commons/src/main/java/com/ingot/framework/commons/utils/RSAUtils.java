@@ -190,7 +190,7 @@ public final class RSAUtils {
 
     private static InputStream getResourceAsStream(String filename) {
         InputStream stream = RSAUtils.class.getClassLoader().getResourceAsStream(filename);
-        AssertionUtils.checkArgument(stream != null);
+        AssertionUtil.checkArgument(stream != null);
         return stream;
     }
 }

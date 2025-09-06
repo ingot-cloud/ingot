@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.UUIDUtils;
+import com.ingot.framework.commons.utils.UUIDUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -74,7 +74,7 @@ public class MenuUtils {
         } else {
             pPath = "/";
         }
-        String path = pPath + UUIDUtils.generateShortUuid();
+        String path = pPath + UUIDUtil.generateShortUuid();
         params.setPath(path);
     }
 

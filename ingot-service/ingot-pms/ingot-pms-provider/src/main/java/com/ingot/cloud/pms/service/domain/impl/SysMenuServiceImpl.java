@@ -12,7 +12,7 @@ import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.commons.utils.tree.TreeUtils;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
         List<MenuTreeNodeVO> allNodeList = SpringContextHolder
                 .getBean(SysMenuService.class).nodeList();
         List<MenuTreeNodeVO> nodeList = MenuUtils.filterMenus(allNodeList, authorities);
-        List<MenuTreeNodeVO> tree = TreeUtils.build(nodeList)
+        List<MenuTreeNodeVO> tree = TreeUtil.build(nodeList)
                 .stream()
                 .sorted(Comparator.comparing(MenuTreeNodeVO::getSort))
                 .toList();
@@ -66,6 +66,6 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuMapper, SysMenu> 
                         .thenComparing(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
 
-        return TreeUtils.build(allNode);
+        return TreeUtil.build(allNode);
     }
 }

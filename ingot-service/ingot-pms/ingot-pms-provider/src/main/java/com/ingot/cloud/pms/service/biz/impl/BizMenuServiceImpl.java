@@ -13,7 +13,7 @@ import com.ingot.cloud.pms.service.domain.SysApplicationService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.CacheConstants;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +72,7 @@ public class BizMenuServiceImpl implements BizMenuService {
             MenuUtils.setViewPathAccordingToPath(params);
         }
 
-        params.setCreatedAt(DateUtils.now());
+        params.setCreatedAt(DateUtil.now());
 
         // 同步创建权限，并且关联
         Long authorityId = createAuthorityId(params, parent);
@@ -149,7 +149,7 @@ public class BizMenuServiceImpl implements BizMenuService {
             }
         }
 
-        params.setUpdatedAt(DateUtils.now());
+        params.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(sysMenuService.updateById(params),
                 "SysMenuServiceImpl.UpdateFailed");
 

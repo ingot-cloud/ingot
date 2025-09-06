@@ -2,7 +2,7 @@ package com.ingot.framework.security.utils;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
-import com.ingot.framework.commons.utils.CookieUtils;
+import com.ingot.framework.commons.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -145,7 +145,7 @@ public final class SecurityUtils {
 
         if (StrUtil.isEmpty(sessionId) && request.getCookies() != null) {
             sessionId = Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals(CookieUtils.SESSION_ID_NAME))
+                    .filter(cookie -> cookie.getName().equals(CookieUtil.SESSION_ID_NAME))
                     .map(Cookie::getValue)
                     .findFirst().orElse(null);
         }

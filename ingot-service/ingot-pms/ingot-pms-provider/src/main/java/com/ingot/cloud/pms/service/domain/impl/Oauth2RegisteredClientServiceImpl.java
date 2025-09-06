@@ -17,7 +17,7 @@ import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
@@ -110,7 +110,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         client.setId(id);
         client.setClientId(id);
-        client.setClientIdIssuedAt(DateUtils.now());
+        client.setClientIdIssuedAt(DateUtil.now());
         client.setClientSecret(passwordEncoder.encode(secret));
 
         ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
@@ -123,7 +123,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
-        client.setUpdatedAt(DateUtils.now());
+        client.setUpdatedAt(DateUtil.now());
 
         assertI18nService.checkOperation(save(client),
                 "Oauth2RegisteredClientServiceImpl.CreateFailed");
@@ -148,7 +148,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         client.setClientSecret(null);
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
-        client.setUpdatedAt(DateUtils.now());
+        client.setUpdatedAt(DateUtil.now());
 
         assertI18nService.checkOperation(updateById(client),
                 "Oauth2RegisteredClientServiceImpl.UpdateFailed");
@@ -174,7 +174,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         result.setAppSecret(secret);
 
         current.setClientSecret(passwordEncoder.encode(secret));
-        current.setUpdatedAt(DateUtils.now());
+        current.setUpdatedAt(DateUtil.now());
         current.updateById();
         return result;
     }

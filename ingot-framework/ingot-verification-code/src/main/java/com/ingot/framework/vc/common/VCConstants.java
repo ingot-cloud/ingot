@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.utils.DigestUtils;
+import com.ingot.framework.commons.utils.DigestUtil;
 
 /**
  * <p>Description  : VCConstants.</p>
@@ -58,7 +58,7 @@ public interface VCConstants {
      * @return cache key
      */
     static String getSmsCheckKey(String receiver, String remoteIP, String type) {
-        String digest = DigestUtils.md5(receiver + remoteIP);
+        String digest = DigestUtil.md5(receiver + remoteIP);
         return CACHE_SMS_CHECK + ":" + type + ":" + digest;
     }
 
@@ -70,7 +70,7 @@ public interface VCConstants {
      * @return cache key
      */
     static String getEmailCheckKey(String receiver, String remoteIP) {
-        String digest = DigestUtils.md5(receiver + remoteIP);
+        String digest = DigestUtil.md5(receiver + remoteIP);
         return CACHE_EMAIL_CHECK + ":" + digest;
     }
 
@@ -82,7 +82,7 @@ public interface VCConstants {
      * @return cache key
      */
     static String getCaptchaCheckKey(String receiver, String remoteIP) {
-        String digest = DigestUtils.md5(receiver + remoteIP);
+        String digest = DigestUtil.md5(receiver + remoteIP);
         return CACHE_CAPTCHA_CHECK + ":" + digest;
     }
 
