@@ -1,4 +1,4 @@
-package com.ingot.framework.crypto.utils;
+package com.ingot.framework.commons.utils.crypto;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

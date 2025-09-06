@@ -1,4 +1,4 @@
-package com.ingot.framework.commons.utils;
+package com.ingot.framework.commons.utils.crypto;
 
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -11,6 +11,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.utils.AssertionUtil;
 
 /**
  * <p>Description  : RSAUtils.</p>
