@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.module.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.*;

@@ -1,7 +1,7 @@
 package com.ingot.framework.security.core.authority;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
 

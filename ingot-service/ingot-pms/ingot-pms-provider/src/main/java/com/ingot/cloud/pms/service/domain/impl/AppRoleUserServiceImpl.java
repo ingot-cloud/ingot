@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.AppRoleUserMapper;
 import com.ingot.cloud.pms.service.domain.AppRoleUserService;
-import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.RelationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

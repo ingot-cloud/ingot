@@ -5,14 +5,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.utils.DigestUtils;
-import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.utils.DigestUtils;
+import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import static com.ingot.framework.core.constants.CacheConstants.AUTHORIZATION_DETAILS;
+import static com.ingot.framework.commons.constants.CacheConstants.AUTHORIZATION_DETAILS;
 
 /**
  * <p>Description  : DefaultAuthorizationCacheService.</p>

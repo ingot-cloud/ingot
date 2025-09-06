@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.module.email;
 
-import com.ingot.framework.core.utils.reactive.WebUtils;
+import com.ingot.framework.commons.utils.reactive.WebUtils;
 import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VC;
 import com.ingot.framework.vc.module.reactive.AbstractVCProcessor;

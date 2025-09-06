@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
-import com.ingot.framework.core.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2AuthorizationCodeRequestHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

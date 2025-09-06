@@ -5,7 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
-import com.ingot.framework.core.model.support.Option;
+import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.module.reactive;
 
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.vc.common.VCConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

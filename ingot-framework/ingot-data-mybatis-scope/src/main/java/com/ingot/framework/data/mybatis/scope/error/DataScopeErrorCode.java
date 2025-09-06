@@ -1,6 +1,6 @@
 package com.ingot.framework.data.mybatis.scope.error;
 
-import com.ingot.framework.core.model.status.ErrorCode;
+import com.ingot.framework.commons.model.status.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

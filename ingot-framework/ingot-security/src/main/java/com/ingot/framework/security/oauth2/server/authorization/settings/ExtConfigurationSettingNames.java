@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.settings;
 
-import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 
 /**
  * <p>Description  : 扩展 ConfigurationSettingNames.</p>

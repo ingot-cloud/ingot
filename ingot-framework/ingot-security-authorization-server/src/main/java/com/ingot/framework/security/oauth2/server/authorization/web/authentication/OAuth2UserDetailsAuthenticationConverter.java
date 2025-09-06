@@ -1,10 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.security.UserTypeEnum;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;

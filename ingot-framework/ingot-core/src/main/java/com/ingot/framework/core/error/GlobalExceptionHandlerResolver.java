@@ -1,8 +1,11 @@
 package com.ingot.framework.core.error;
 
-import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseErrorCode;
-import com.ingot.framework.core.model.support.R;
+import java.util.List;
+import java.util.Set;
+
+import com.ingot.framework.commons.model.status.BaseErrorCode;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.error.BizException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +18,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * <p>Description  : GlobalExceptionHandler.</p>

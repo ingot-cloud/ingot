@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.security.UserTypeEnum;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 

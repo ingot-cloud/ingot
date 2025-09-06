@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.module.reactive;
 
-import com.ingot.framework.core.utils.reactive.WebUtils;
+import com.ingot.framework.commons.utils.reactive.WebUtils;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.Utils;

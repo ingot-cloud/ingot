@@ -4,7 +4,7 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.crypto.InCryptoProperties;
 import com.ingot.framework.crypto.model.CryptoType;
 import com.ingot.framework.crypto.utils.CryptoUtils;

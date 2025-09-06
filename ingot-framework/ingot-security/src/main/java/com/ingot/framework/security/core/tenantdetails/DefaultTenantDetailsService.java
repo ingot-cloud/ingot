@@ -1,10 +1,10 @@
 package com.ingot.framework.security.core.tenantdetails;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.security.TenantDetailsRequest;
-import com.ingot.framework.core.model.security.TenantDetailsResponse;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.security.TenantDetailsRequest;
+import com.ingot.framework.commons.model.security.TenantDetailsResponse;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.RequiredArgsConstructor;
 

@@ -1,6 +1,6 @@
 package com.ingot.framework.security.core.tenantdetails;
 
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 
 import java.util.List;
 

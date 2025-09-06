@@ -2,7 +2,7 @@ package com.ingot.framework.data.redis.utils;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.CacheConstants;
+import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.data.redis.core.RedisTemplate;
 

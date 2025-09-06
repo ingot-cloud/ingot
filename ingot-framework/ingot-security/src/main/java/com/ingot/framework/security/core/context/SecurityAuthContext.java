@@ -1,7 +1,7 @@
 package com.ingot.framework.security.core.context;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.RoleConstants;
+import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;

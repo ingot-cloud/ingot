@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import lombok.Getter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;

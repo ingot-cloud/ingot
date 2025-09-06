@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.oauth2.core.InClientAuthenticationMethod;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.core.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;

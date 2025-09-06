@@ -4,7 +4,8 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.framework.commons.model.common.RelationDTO;
 
 import java.util.List;
 
@@ -105,7 +106,7 @@ public interface BizRoleService {
     void removeRoleGroupEffectOrg(long id, boolean isAdmin);
 
     /**
-     * 角色绑定权限, 不可绑定组织管理员角色{@link com.ingot.framework.core.constants.RoleConstants#ROLE_ORG_ADMIN_CODE}<br>
+     * 角色绑定权限, 不可绑定组织管理员角色{@link RoleConstants#ROLE_ORG_ADMIN_CODE}<br>
      * 组织管理员角色自动处理
      *
      * @param params {@link RelationDTO}

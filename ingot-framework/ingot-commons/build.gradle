@@ -1,0 +1,28 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+
+    api(deps.rx_java)
+    api(deps.aspectj.aspectjweaver)
+    api(deps.alibaba.transmittable_thread_local)
+    api(deps.jakarta_validation_api)
+    // jackson
+    api(deps.jackson.annotation)
+    api(deps.jackson.data_bind)
+    api(deps.jackson.jsr310)
+    // log basic
+    api(deps.log.logback_classic)
+    // hutool
+    api(deps.hutool)
+    api(deps.google.guava)
+    api(deps.spring.spring_boot.validation_starter)
+    // swagger
+    api(deps.api.swagger_core)
+
+    implementation(deps.apache.common_codec)
+    implementation(deps.mybatis.plus_extension)
+
+    compileOnly(deps.jakarta_servlet_api)
+    compileOnly(deps.spring.framework_spring_webflux)
+    compileOnly(deps.spring.framework_webmvc)
+}

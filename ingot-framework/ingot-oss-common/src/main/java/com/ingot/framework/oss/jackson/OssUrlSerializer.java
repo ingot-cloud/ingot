@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
-import com.ingot.framework.core.oss.OssService;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.oss.common.OssObjectInfo;
 import com.ingot.framework.oss.common.OssPathParser;
 import com.ingot.framework.oss.common.OssUrl;

@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.api.model.vo.menu;
 
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.framework.core.utils.tree.TreeNode;
+import com.ingot.framework.commons.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

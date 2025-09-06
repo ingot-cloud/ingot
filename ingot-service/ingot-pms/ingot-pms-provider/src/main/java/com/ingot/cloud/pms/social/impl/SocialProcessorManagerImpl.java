@@ -3,8 +3,8 @@ package com.ingot.cloud.pms.social.impl;
 import com.ingot.cloud.pms.common.PmsMessageSource;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
-import com.ingot.framework.core.error.exception.IllegalOperationException;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.error.IllegalOperationException;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

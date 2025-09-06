@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.client;
 import java.util.Map;
 import java.util.Optional;
 
-import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.oauth2.server.authorization.settings.ExtConfigurationSettingNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;

@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import lombok.Data;
 
 import java.io.Serializable;

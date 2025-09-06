@@ -1,6 +1,8 @@
 rootProject.name = 'ingot'
 
 // Framework
+include 'ingot-framework:ingot-commons'
+findProject(':ingot-framework:ingot-commons')?.name = 'ingot-commons'
 include 'ingot-framework:ingot-core'
 findProject(':ingot-framework:ingot-core')?.name = 'ingot-core'
 include 'ingot-framework:ingot-data-mybatis'

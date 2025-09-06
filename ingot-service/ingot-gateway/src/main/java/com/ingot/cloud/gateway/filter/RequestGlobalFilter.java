@@ -1,6 +1,6 @@
 package com.ingot.cloud.gateway.filter;
 
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;

@@ -2,7 +2,7 @@ package com.ingot.framework.vc.module.servlet;
 
 import cn.hutool.core.util.CharsetUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.vc.common.VCException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

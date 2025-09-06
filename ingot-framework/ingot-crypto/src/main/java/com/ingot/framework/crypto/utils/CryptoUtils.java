@@ -7,7 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.crypto.annotation.InDecrypt;
 import com.ingot.framework.crypto.annotation.InEncrypt;
 import com.ingot.framework.crypto.model.CryptoErrorCode;

@@ -1,6 +1,6 @@
 package com.ingot.framework.tenant.interceptor;
 
-import com.ingot.framework.core.constants.HeaderConstants;
+import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

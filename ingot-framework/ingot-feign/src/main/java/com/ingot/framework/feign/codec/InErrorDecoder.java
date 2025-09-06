@@ -1,7 +1,7 @@
 package com.ingot.framework.feign.codec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.feign.exception.InFeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;

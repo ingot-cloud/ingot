@@ -2,12 +2,12 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
-import com.ingot.framework.core.model.common.AuthSuccessDTO;
-import com.ingot.framework.core.model.event.LoginEvent;
-import com.ingot.framework.core.utils.DateUtils;
-import com.ingot.framework.core.utils.WebUtils;
-import com.ingot.framework.core.utils.CookieUtils;
-import com.ingot.framework.core.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.model.common.AuthSuccessDTO;
+import com.ingot.framework.commons.model.event.LoginEvent;
+import com.ingot.framework.commons.utils.DateUtils;
+import com.ingot.framework.commons.utils.WebUtils;
+import com.ingot.framework.commons.utils.CookieUtils;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

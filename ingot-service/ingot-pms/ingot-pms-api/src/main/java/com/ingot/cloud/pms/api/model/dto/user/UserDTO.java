@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.oss.common.OssSaveUrl;
 import lombok.Data;
 

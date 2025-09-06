@@ -1,7 +1,7 @@
 package com.ingot.framework.data.mybatis.plugins;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
-import com.ingot.framework.core.utils.DateUtils;
+import com.ingot.framework.commons.utils.DateUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.Intercepts;

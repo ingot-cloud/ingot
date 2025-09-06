@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.vo.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import lombok.Data;
 
 import java.io.Serializable;

@@ -1,6 +1,6 @@
 package com.ingot.framework.core.utils.validation;
 
-import com.ingot.framework.core.error.exception.IllegalOperationException;
+import com.ingot.framework.commons.error.IllegalOperationException;
 
 /**
  * <p>Description  : AssertionChecker.</p>

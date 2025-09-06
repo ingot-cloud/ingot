@@ -1,8 +1,8 @@
 package com.ingot.framework.security.utils;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.InOAuth2ParameterNames;
-import com.ingot.framework.core.utils.CookieUtils;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.utils.CookieUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -18,8 +18,8 @@ import java.util.Base64;
 import java.util.Enumeration;
 import java.util.Optional;
 
-import static com.ingot.framework.core.constants.SecurityConstants.OAUTH2_BASIC_TYPE_WITH_SPACE;
-import static com.ingot.framework.core.constants.SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE;
+import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BASIC_TYPE_WITH_SPACE;
+import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE;
 
 
 /**

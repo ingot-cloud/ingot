@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.common;
 
-import com.ingot.framework.core.utils.AssertionUtils;
+import com.ingot.framework.commons.utils.AssertionUtils;
 
 /**
  * <p>Description  : InnerCheck.</p>

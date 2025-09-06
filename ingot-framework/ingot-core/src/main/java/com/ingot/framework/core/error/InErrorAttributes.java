@@ -1,9 +1,15 @@
 package com.ingot.framework.core.error;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import cn.hutool.core.util.ObjectUtil;
-import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseErrorCode;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.status.BaseErrorCode;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.error.BizException;
 import jakarta.servlet.ServletException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -13,12 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 
 /**

@@ -4,8 +4,8 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.io.IoUtil;
-import com.ingot.framework.core.oss.OSSResult;
-import com.ingot.framework.core.oss.OssService;
+import com.ingot.framework.commons.oss.OSSResult;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.oss.common.OssObjectInfo;
 import com.ingot.framework.oss.minio.properties.MinioProperties;
 import com.ingot.framework.oss.common.OssPathParser;

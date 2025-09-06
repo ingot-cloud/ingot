@@ -1,8 +1,8 @@
 package com.ingot.framework.security.core.tenantdetails;
 
-import com.ingot.framework.core.model.security.TenantDetailsRequest;
-import com.ingot.framework.core.model.security.TenantDetailsResponse;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.security.TenantDetailsRequest;
+import com.ingot.framework.commons.model.security.TenantDetailsResponse;
+import com.ingot.framework.commons.model.support.R;
 
 /**
  * <p>Description  : RemoteTenantDetailsService.</p>

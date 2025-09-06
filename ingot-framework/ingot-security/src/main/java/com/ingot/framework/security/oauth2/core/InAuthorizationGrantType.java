@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.core;
 
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**

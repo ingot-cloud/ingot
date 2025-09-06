@@ -2,8 +2,8 @@ package com.ingot.cloud.pms.api.rpc;
 
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.framework.core.constants.ServiceNameConstants;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.constants.ServiceNameConstants;
+import com.ingot.framework.commons.model.support.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

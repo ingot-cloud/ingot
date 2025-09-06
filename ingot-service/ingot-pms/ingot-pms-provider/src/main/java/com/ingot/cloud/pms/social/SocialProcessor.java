@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.social;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 
 /**
  * <p>Description  : SocialProcessor.</p>

@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.authority.AllowTenantGrantedAuthority;
 import com.ingot.framework.security.core.authority.ClientGrantedAuthority;
 import com.ingot.framework.security.core.userdetails.InUser;

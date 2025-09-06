@@ -1,14 +1,14 @@
 package com.ingot.framework.vc.module.servlet;
 
-import com.ingot.framework.core.utils.WebUtils;
+import java.util.Map;
+
+import com.ingot.framework.commons.utils.WebUtils;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.context.request.ServletWebRequest;
-
-import java.util.Map;
 
 /**
  * <p>Description  : DefaultVCProviderManager.</p>

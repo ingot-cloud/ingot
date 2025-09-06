@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.web.v1.common;
 
-import com.ingot.framework.core.error.exception.IllegalOperationException;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
-import com.ingot.framework.core.oss.OssService;
+import com.ingot.framework.commons.error.IllegalOperationException;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.commons.oss.OssService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

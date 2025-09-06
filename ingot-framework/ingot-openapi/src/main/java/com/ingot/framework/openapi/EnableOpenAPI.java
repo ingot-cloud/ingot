@@ -1,6 +1,6 @@
 package com.ingot.framework.openapi;
 
-import com.ingot.framework.core.io.YamlPropertySourceFactory;
+import com.ingot.framework.commons.io.YamlPropertySourceFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;

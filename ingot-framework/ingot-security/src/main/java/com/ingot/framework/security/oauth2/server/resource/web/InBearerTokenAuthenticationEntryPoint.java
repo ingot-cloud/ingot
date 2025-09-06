@@ -1,8 +1,8 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.status.BaseErrorCode;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.status.BaseErrorCode;
+import com.ingot.framework.commons.model.support.R;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

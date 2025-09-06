@@ -3,7 +3,7 @@ package com.ingot.framework.security.oauth2.jwt;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
-import com.ingot.framework.core.utils.RequestParamsUtils;
+import com.ingot.framework.commons.utils.RequestParamsUtils;
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import jakarta.servlet.http.HttpServletRequest;

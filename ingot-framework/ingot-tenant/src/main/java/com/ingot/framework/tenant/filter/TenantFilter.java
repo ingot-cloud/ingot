@@ -1,7 +1,7 @@
 package com.ingot.framework.tenant.filter;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.utils.RequestParamsUtils;
+import com.ingot.framework.commons.utils.RequestParamsUtils;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.properties.TenantProperties;
 import jakarta.servlet.FilterChain;

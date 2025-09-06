@@ -2,8 +2,8 @@ package com.ingot.cloud.test.mybatis;
 
 import com.ingot.cloud.test.model.domain.TStudent;
 import com.ingot.cloud.test.service.domain.TStudentService;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.data.mybatis.scope.config.DataScope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

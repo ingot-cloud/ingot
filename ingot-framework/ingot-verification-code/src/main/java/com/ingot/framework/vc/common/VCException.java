@@ -1,6 +1,6 @@
 package com.ingot.framework.vc.common;
 
-import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.commons.error.BizException;
 
 /**
  * <p>Description  : VCException.</p>

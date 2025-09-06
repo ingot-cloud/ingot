@@ -1,7 +1,7 @@
 package com.ingot.framework.vc.common;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.utils.DigestUtils;
+import com.ingot.framework.commons.utils.DigestUtils;
 
 /**
  * <p>Description  : VCConstants.</p>

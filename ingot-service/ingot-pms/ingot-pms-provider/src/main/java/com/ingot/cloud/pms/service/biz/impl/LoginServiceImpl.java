@@ -10,7 +10,7 @@ import com.ingot.cloud.pms.common.wechat.WechatProperties;
 import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.cloud.pms.service.biz.LoginService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
 import me.chanjar.weixin.common.error.WxErrorException;

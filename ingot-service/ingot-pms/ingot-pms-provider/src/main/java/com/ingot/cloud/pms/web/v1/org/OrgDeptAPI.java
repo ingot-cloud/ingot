@@ -2,8 +2,8 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import io.swagger.v3.oas.annotations.tags.Tag;

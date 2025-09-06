@@ -13,8 +13,8 @@ import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.tree.TreeUtils;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeUtils;
 
 import java.util.List;
 import java.util.Objects;

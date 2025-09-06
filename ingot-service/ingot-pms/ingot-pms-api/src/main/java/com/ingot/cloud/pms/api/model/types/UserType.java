@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.types;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 
 /**
  * <p>Description  : UserType.</p>

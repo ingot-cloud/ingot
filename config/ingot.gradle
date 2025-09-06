@@ -1,6 +1,7 @@
 def ingot = [:]
 
 // framework
+ingot.framework_commons = ":ingot-framework:ingot-commons"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_data_mybatis = ":ingot-framework:ingot-data-mybatis"
 ingot.framework_data_mybatis_common = ":ingot-framework:ingot-data-mybatis-common"

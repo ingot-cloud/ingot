@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.PreAuthClientAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationCodeRequestEndpointFilter;

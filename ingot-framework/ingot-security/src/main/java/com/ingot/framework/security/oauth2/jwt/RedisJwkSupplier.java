@@ -1,8 +1,8 @@
 package com.ingot.framework.security.oauth2.jwt;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.CacheConstants;
-import com.ingot.framework.core.utils.RSAUtils;
+import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.utils.RSAUtils;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;

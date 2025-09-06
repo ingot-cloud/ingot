@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.client;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;

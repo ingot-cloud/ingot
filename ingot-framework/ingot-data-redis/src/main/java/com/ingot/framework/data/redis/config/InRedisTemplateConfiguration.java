@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.ingot.framework.core.jackson.InJavaTimeModule;
-import com.ingot.framework.core.jackson.InModule;
+import com.ingot.framework.commons.jackson.InJavaTimeModule;
+import com.ingot.framework.commons.jackson.InModule;
 import com.ingot.framework.data.redis.service.DefaultRedisCacheService;
 import com.ingot.framework.data.redis.service.RedisCacheService;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import static com.ingot.framework.core.constants.BeanIds.REDIS_TEMPLATE;
+import static com.ingot.framework.commons.constants.BeanIds.REDIS_TEMPLATE;
 
 /**
  * <p>Description  : RedisTemplate配置.</p>

@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
+import com.ingot.framework.commons.constants.IDConstants;
 
 import java.util.List;
 
@@ -58,7 +59,7 @@ public interface BizDeptService {
     void setDeptManager(long deptId, List<Long> userIds);
 
     /**
-     * 创建部门，不可创建主部门(pid={@link com.ingot.framework.core.constants.IDConstants#ROOT_TREE_ID})
+     * 创建部门，不可创建主部门(pid={@link IDConstants#ROOT_TREE_ID})
      *
      * @param params {@link SysDept}
      */

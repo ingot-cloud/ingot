@@ -1,7 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

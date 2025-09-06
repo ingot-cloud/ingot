@@ -1,6 +1,6 @@
 package com.ingot.framework.tenant.properties;
 
-import com.ingot.framework.core.constants.IDConstants;
+import com.ingot.framework.commons.constants.IDConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import lombok.Data;

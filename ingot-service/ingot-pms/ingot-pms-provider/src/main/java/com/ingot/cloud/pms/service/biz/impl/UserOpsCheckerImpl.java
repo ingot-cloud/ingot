@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.core.utils.RoleUtils;
+import com.ingot.framework.commons.utils.RoleUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

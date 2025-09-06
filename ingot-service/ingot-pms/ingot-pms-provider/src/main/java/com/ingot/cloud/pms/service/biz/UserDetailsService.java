@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.service.biz;
 
-import com.ingot.framework.core.model.security.UserDetailsRequest;
-import com.ingot.framework.core.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.security.UserDetailsRequest;
+import com.ingot.framework.commons.model.security.UserDetailsResponse;
 
 /**
  * <p>Description  : UserDetailService.</p>

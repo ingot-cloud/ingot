@@ -19,6 +19,8 @@ dependencies {
     // swagger
     api(deps.api.swagger_core)
 
+    api project(ingot.framework_commons)
+
     implementation(deps.apache.common_codec)
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)

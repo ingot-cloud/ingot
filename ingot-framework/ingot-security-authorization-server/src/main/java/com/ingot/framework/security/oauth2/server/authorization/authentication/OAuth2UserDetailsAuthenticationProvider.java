@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.dto.auth;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.Data;
 
 import java.io.Serializable;

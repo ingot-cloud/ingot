@@ -2,9 +2,9 @@ package com.ingot.cloud.gateway.error;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseErrorCode;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.status.BaseErrorCode;
+import com.ingot.framework.commons.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;

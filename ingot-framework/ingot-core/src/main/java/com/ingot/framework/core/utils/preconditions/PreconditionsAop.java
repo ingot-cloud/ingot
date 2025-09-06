@@ -1,6 +1,9 @@
 package com.ingot.framework.core.utils.preconditions;
 
-import com.ingot.framework.core.error.exception.BizException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import com.ingot.framework.commons.error.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,10 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import static com.ingot.framework.core.model.status.CoreErrorCode.*;
+import static com.ingot.framework.commons.model.status.CoreErrorCode.*;
 
 /**
  * <p>Description  : PreconditionsAop.</p>

@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.model.convert;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
-import com.ingot.framework.core.model.transform.CommonTypeTransform;
+import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 
 /**

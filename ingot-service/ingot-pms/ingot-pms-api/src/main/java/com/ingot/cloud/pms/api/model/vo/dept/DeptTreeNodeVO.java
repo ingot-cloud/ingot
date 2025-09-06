@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.tree.TreeNode;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

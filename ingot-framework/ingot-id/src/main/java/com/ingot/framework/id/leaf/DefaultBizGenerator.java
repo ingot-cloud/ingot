@@ -1,7 +1,7 @@
 package com.ingot.framework.id.leaf;
 
-import com.ingot.framework.core.error.exception.BizException;
-import com.ingot.framework.core.model.status.BaseErrorCode;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.id.BizGenerator;
 import com.ingot.framework.id.leaf.common.Result;
 import com.ingot.framework.id.leaf.common.Status;

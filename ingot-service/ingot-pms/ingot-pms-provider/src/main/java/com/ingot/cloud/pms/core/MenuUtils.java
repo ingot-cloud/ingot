@@ -7,9 +7,9 @@ import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
-import com.ingot.framework.core.constants.IDConstants;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.utils.UUIDUtils;
+import com.ingot.framework.commons.constants.IDConstants;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.UUIDUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;

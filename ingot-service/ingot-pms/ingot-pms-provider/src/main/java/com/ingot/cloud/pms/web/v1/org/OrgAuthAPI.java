@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.framework.core.model.common.RelationDTO;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
 import io.swagger.v3.oas.annotations.tags.Tag;

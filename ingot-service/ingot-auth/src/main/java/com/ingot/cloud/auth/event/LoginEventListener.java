@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.event;
 
-import com.ingot.framework.core.model.event.LoginEvent;
+import com.ingot.framework.commons.model.event.LoginEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -5,8 +5,8 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
-import com.ingot.framework.core.constants.SocialConstants;
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.constants.SocialConstants;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 /**

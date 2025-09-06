@@ -2,7 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;

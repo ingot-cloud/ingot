@@ -2,7 +2,7 @@ package com.ingot.framework.tenant.interceptor;
 
 import java.io.IOException;
 
-import com.ingot.framework.core.constants.HeaderConstants;
+import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;

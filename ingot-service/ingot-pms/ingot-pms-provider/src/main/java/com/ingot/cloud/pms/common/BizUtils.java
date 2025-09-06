@@ -4,9 +4,9 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.core.model.common.AllowTenantDTO;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
-import com.ingot.framework.core.model.enums.UserStatusEnum;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 
 import java.util.List;
 import java.util.Set;

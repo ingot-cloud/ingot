@@ -1,6 +1,6 @@
 package com.ingot.framework.oss.minio;
 
-import com.ingot.framework.core.oss.OssService;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.oss.minio.properties.MinioProperties;
 import com.ingot.framework.oss.minio.service.MinioOssService;
 import com.ingot.framework.oss.minio.service.MinioService;

@@ -2,8 +2,8 @@ package com.ingot.cloud.pms.web.v1.app;
 
 import com.ingot.cloud.pms.api.model.dto.auth.MiniProgramRegisterDTO;
 import com.ingot.cloud.pms.service.biz.LoginService;
-import com.ingot.framework.core.model.support.R;
-import com.ingot.framework.core.model.support.RShortcuts;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

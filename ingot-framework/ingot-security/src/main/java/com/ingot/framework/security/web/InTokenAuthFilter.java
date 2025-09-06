@@ -1,7 +1,7 @@
 package com.ingot.framework.security.web;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;

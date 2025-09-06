@@ -1,6 +1,6 @@
 package com.ingot.framework.data.mybatis.scope.error;
 
-import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.commons.error.BizException;
 
 /**
  * <p>Description  : DataScopeException.</p>

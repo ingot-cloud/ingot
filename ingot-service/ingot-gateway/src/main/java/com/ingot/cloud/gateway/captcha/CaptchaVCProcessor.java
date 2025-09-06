@@ -2,7 +2,7 @@ package com.ingot.cloud.gateway.captcha;
 
 import cn.hutool.core.util.StrUtil;
 import com.anji.captcha.service.CaptchaService;
-import com.ingot.framework.core.constants.SecurityConstants;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCType;

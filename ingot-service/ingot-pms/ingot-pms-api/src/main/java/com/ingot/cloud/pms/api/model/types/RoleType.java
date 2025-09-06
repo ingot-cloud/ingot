@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.api.model.types;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 
 /**
  * <p>Description  : RoleType.</p>

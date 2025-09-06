@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.rpc.PmsDataScopeService;
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.data.mybatis.scope.context.DataScopeContextHolder;
 import com.ingot.framework.data.mybatis.scope.error.DataScopeErrorCode;
 import com.ingot.framework.data.mybatis.scope.error.DataScopeException;

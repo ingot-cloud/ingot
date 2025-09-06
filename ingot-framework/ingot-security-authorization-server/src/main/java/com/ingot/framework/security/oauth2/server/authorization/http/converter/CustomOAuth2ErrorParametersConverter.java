@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
-import com.ingot.framework.core.model.support.R;
+import com.ingot.framework.commons.model.support.R;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.util.StringUtils;

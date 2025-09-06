@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.SysRoleUserMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleUserService;
-import com.ingot.framework.core.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.RelationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

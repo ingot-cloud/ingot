@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.dto.client;
 
-import com.ingot.framework.core.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

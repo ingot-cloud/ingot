@@ -1,8 +1,8 @@
 package com.ingot.framework.core.utils.validation;
 
-import com.ingot.framework.core.error.exception.BizException;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.core.context.InMessageSource;
-import com.ingot.framework.core.utils.AssertionUtils;
+import com.ingot.framework.commons.utils.AssertionUtils;
 import lombok.RequiredArgsConstructor;
 
 /**

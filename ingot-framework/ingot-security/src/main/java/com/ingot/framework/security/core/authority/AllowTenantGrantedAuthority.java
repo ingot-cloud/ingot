@@ -3,7 +3,7 @@ package com.ingot.framework.security.core.authority;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.core.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.security.jackson2.InSecurityJackson2Modules;
 import org.springframework.util.Assert;
 

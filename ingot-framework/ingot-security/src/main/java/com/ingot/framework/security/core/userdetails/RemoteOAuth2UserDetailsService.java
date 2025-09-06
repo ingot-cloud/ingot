@@ -1,9 +1,9 @@
 package com.ingot.framework.security.core.userdetails;
 
-import com.ingot.framework.core.model.enums.SocialTypeEnum;
-import com.ingot.framework.core.model.security.UserDetailsRequest;
-import com.ingot.framework.core.model.security.UserTypeEnum;
-import com.ingot.framework.core.utils.SocialUtils;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.security.UserDetailsRequest;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.commons.utils.SocialUtils;
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -3,8 +3,8 @@ package com.ingot.cloud.pms.api.model.convert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
-import com.ingot.framework.core.model.support.Option;
-import com.ingot.framework.core.model.transform.CommonTypeTransform;
+import com.ingot.framework.commons.model.support.Option;
+import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
