@@ -23,7 +23,7 @@ import jakarta.validation.constraints.NotNull;
  * <p>Date         : 2025/8/26.</p>
  * <p>Time         : 11:05.</p>
  */
-public class AESUtils {
+public final class AESUtil {
 
     private static final String AES = "AES";
     private static final int IV_LENGTH = 16; // CBC: 16字节

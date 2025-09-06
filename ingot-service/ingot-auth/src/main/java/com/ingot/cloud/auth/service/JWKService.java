@@ -2,7 +2,7 @@ package com.ingot.cloud.auth.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.CacheConstants;
-import com.ingot.framework.commons.utils.crypto.RSAUtils;
+import com.ingot.framework.commons.utils.crypto.RSAUtil;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
@@ -42,15 +42,15 @@ public class JWKService {
             String keyID = stringRedisTemplate.opsForValue()
                     .get(CacheConstants.Security.AUTHORIZATION_KEY_ID);
             if (StrUtil.isEmpty(priStr) || StrUtil.isEmpty(pubStr) || StrUtil.isEmpty(keyID)) {
-                KeyPair keyPair = RSAUtils.generateKey();
+                KeyPair keyPair = RSAUtil.generateKey();
                 keyID = UUID.randomUUID().toString();
                 publicKey = (RSAPublicKey) keyPair.getPublic();
                 privateKey = (RSAPrivateKey) keyPair.getPrivate();
 
                 this.cache(keyPair, keyID);
             } else {
-                publicKey = (RSAPublicKey) RSAUtils.getPublicKey(RSAUtils.toBytes(pubStr));
-                privateKey = (RSAPrivateKey) RSAUtils.getPrivateKey(RSAUtils.toBytes(priStr));
+                publicKey = (RSAPublicKey) RSAUtil.getPublicKey(RSAUtil.toBytes(pubStr));
+                privateKey = (RSAPrivateKey) RSAUtil.getPrivateKey(RSAUtil.toBytes(priStr));
             }
 
             log.info("[JWKService] fetch(), keyID={}", keyID);
@@ -67,7 +67,7 @@ public class JWKService {
 
     public JWKSet forceRefresh() {
         try {
-            KeyPair keyPair = RSAUtils.generateKey();
+            KeyPair keyPair = RSAUtil.generateKey();
             String keyID = UUID.randomUUID().toString();
             RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
             RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
@@ -86,9 +86,9 @@ public class JWKService {
 
     private void cache(KeyPair keyPair, String keyID) {
         stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_PRI,
-                RSAUtils.toHexString(keyPair.getPrivate().getEncoded()));
+                RSAUtil.toHexString(keyPair.getPrivate().getEncoded()));
         stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_PUB,
-                RSAUtils.toHexString(keyPair.getPublic().getEncoded()));
+                RSAUtil.toHexString(keyPair.getPublic().getEncoded()));
         stringRedisTemplate.opsForValue().set(CacheConstants.Security.AUTHORIZATION_KEY_ID,
                 keyID);
         this.needUpdate.set(true);

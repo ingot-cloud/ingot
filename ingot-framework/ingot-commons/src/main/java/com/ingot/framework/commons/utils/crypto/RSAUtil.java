@@ -19,7 +19,7 @@ import com.ingot.framework.commons.utils.AssertionUtil;
  * <p>Date         : 2021/10/27.</p>
  * <p>Time         : 11:27 上午.</p>
  */
-public final class RSAUtils {
+public final class RSAUtil {
 
     /**
      * 生成RSA公钥
@@ -190,7 +190,7 @@ public final class RSAUtils {
     }
 
     private static InputStream getResourceAsStream(String filename) {
-        InputStream stream = RSAUtils.class.getClassLoader().getResourceAsStream(filename);
+        InputStream stream = RSAUtil.class.getClassLoader().getResourceAsStream(filename);
         AssertionUtil.checkArgument(stream != null);
         return stream;
     }

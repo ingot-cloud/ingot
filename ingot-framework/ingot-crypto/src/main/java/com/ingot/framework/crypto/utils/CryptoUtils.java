@@ -6,7 +6,7 @@ import java.util.Objects;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
-import com.ingot.framework.commons.utils.crypto.AESUtils;
+import com.ingot.framework.commons.utils.crypto.AESUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.crypto.annotation.InDecrypt;
@@ -67,10 +67,10 @@ public class CryptoUtils {
         try {
             switch (type) {
                 case AES -> {
-                    return AESUtils.encryptCBC(rawData, secretKey);
+                    return AESUtil.encryptCBC(rawData, secretKey);
                 }
                 case AES_GCM -> {
-                    return AESUtils.encryptGCM(rawData, secretKey);
+                    return AESUtil.encryptGCM(rawData, secretKey);
                 }
                 case RSA -> {
                     return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
@@ -102,10 +102,10 @@ public class CryptoUtils {
         try {
             switch (type) {
                 case AES -> {
-                    return AESUtils.decryptCBC(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
+                    return AESUtil.decryptCBC(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
                 }
                 case AES_GCM -> {
-                    return AESUtils.decryptGCM(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
+                    return AESUtil.decryptGCM(cryptoData, secretKey).getBytes(StandardCharsets.UTF_8);
                 }
                 case RSA -> {
                     return SecureUtil.rsa(secretKey.getBytes(StandardCharsets.UTF_8), null)
