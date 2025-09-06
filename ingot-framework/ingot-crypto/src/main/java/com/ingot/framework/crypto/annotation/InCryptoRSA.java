@@ -1,8 +1,8 @@
 package com.ingot.framework.crypto.annotation;
 
-import com.ingot.framework.crypto.model.CryptoType;
-
 import java.lang.annotation.*;
+
+import com.ingot.framework.crypto.model.CryptoType;
 
 /**
  * <p>Description  : IngotCryptoRSA.</p>
@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@InDecrypt(CryptoType.AES)
-@InEncrypt(CryptoType.AES)
+@InDecrypt(CryptoType.RSA)
+@InEncrypt(CryptoType.RSA)
 public @interface InCryptoRSA {
 }

@@ -23,7 +23,7 @@ public enum CryptoType {
     /**
      * RSA
      */
-    RSA("ras", "RSA");
+    RSA("rsa", "RSA");
 
     private final String value;
     private final String text;
