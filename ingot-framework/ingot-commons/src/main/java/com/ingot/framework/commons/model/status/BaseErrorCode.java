@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * <p>Description  : BaseStatusCode.
+ * <p>Description  : BaseErrorCode.
  * 格式：类型+4位状态码，类型为空时为基础状态码。eg: PMS0001</p>
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2020/10/10.</p>
