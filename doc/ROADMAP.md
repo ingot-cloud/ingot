@@ -69,6 +69,8 @@
 * [x] 分离账号体系，前端用户独立表
 * [x] 登录成功，异步日志通知
 
-### 授权
+### 授权服务器
 * [x] 默认使用Authorization Code + PKCE
 * [x] 自有APP登录默认使用Password或Social登录模式，注意Client Secret不暴露
+* [ ] OIDC
+* [ ] Device Code
