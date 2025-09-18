@@ -1,13 +1,18 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Optional;
+
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.common.AuthSuccessDTO;
 import com.ingot.framework.commons.model.event.LoginEvent;
+import com.ingot.framework.commons.utils.CookieUtil;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.WebUtil;
-import com.ingot.framework.commons.utils.CookieUtil;
-import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,11 +29,6 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
-
-import java.io.IOException;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * <p>Description  : AccessTokenAuthenticationSuccessHandler.</p>

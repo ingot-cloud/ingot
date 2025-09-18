@@ -8,8 +8,8 @@ import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
-import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 
 /**

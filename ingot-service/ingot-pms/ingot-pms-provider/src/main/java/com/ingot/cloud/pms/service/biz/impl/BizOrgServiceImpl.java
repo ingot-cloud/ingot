@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
@@ -21,8 +23,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizOrgServiceImpl.</p>

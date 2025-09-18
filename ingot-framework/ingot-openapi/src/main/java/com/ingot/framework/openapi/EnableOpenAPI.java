@@ -1,11 +1,11 @@
 package com.ingot.framework.openapi;
 
+import java.lang.annotation.*;
+
 import com.ingot.framework.commons.io.YamlPropertySourceFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-
-import java.lang.annotation.*;
 
 /**
  * <p>Description  : EnableOpenAPI.</p>

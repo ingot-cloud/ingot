@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-
-import java.util.List;
 
 /**
  * <p>Description  : SysUserTenantService.</p>

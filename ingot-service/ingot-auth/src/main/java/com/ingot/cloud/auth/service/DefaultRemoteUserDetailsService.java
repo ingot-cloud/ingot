@@ -1,10 +1,10 @@
 package com.ingot.cloud.auth.service;
 
 import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
-import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import lombok.RequiredArgsConstructor;
 
 /**

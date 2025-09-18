@@ -1,9 +1,9 @@
 package com.ingot.framework.security.core;
 
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : Security Message Source.</p>

@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.core.org;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * <p>Description  : 装载APP所用信息.</p>

@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
@@ -7,8 +9,6 @@ import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
 import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-
-import java.util.List;
 
 /**
  * <p>

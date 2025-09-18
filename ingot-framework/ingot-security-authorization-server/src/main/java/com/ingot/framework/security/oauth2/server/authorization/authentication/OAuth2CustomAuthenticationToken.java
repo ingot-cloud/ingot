@@ -1,11 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.util.Map;
+
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import lombok.Getter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
-
-import java.util.Map;
 
 /**
  * <p>Description  : 自定义OAuth2认证Token.</p>

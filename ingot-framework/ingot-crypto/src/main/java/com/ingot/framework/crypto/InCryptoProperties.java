@@ -1,11 +1,11 @@
 package com.ingot.framework.crypto;
 
+import java.util.Map;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-
-import java.util.Map;
 
 /**
  * <p>Description  : 加密属性.</p>

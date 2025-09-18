@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
+import java.io.IOException;
+import java.util.Map;
+
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.converter.Converter;
@@ -11,9 +14,6 @@ import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.lang.NonNull;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * <p>Description  : OAuth2PreAuthHttpMessageConverter.</p>

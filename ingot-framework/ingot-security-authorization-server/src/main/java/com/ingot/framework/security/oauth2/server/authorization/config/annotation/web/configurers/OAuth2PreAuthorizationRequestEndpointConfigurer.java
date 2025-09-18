@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.PreAuthClientAuthenticationProvider;
@@ -16,9 +19,6 @@ import org.springframework.security.oauth2.server.authorization.web.OAuth2PreAut
 import org.springframework.security.web.context.RedisSecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationEndpointConfigurer.</p>

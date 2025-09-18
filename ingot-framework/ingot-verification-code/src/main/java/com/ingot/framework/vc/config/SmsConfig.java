@@ -1,8 +1,8 @@
 package com.ingot.framework.vc.config;
 
 import com.ingot.framework.vc.VCGenerator;
-import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.VCPreChecker;
+import com.ingot.framework.vc.VCRepository;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;

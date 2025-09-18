@@ -1,5 +1,9 @@
 package com.ingot.cloud.pms.api.mybatisplus.extension.handlers;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.core.toolkit.Assert;
 import com.baomidou.mybatisplus.extension.handlers.AbstractJsonTypeHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,10 +19,6 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>Description  : CustomOAuth2TypeHandler.</p>

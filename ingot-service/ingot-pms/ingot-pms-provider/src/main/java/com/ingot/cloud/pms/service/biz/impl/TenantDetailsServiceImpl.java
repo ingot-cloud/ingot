@@ -1,5 +1,9 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
@@ -13,10 +17,6 @@ import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : TenantDetailsServiceImpl.</p>

@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.security.Principal;
+import java.util.Set;
+
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -17,9 +20,6 @@ import org.springframework.security.oauth2.server.authorization.token.DefaultOAu
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
-
-import java.security.Principal;
-import java.util.Set;
 
 import static com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 

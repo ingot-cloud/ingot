@@ -1,11 +1,11 @@
 package com.ingot.framework.vc.common;
 
+import java.util.List;
+
 import cn.hutool.core.text.AntPathMatcher;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
-
-import java.util.List;
 
 /**
  * <p>Description  : RequestMeta.</p>

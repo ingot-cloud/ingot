@@ -1,11 +1,11 @@
 package com.ingot.framework.security.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : 安全配置.</p>

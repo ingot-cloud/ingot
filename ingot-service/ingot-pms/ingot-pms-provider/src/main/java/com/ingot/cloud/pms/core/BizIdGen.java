@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.core;
 
+import java.util.Random;
+
 import com.ingot.framework.id.BizGenerator;
 import com.ingot.framework.id.config.IdAutoConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.stereotype.Component;
-
-import java.util.Random;
 
 /**
  * <p>Description  : BizIdGen.</p>

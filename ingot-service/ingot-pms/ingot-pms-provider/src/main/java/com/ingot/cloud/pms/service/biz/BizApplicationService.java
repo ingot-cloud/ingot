@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
@@ -7,8 +9,6 @@ import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.dto.application.ApplicationFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationOrgPageItemVO;
 import com.ingot.cloud.pms.api.model.vo.application.ApplicationPageItemVO;
-
-import java.util.List;
 
 /**
  * <p>Description  : 应用服务，应用=权限+菜单</p>

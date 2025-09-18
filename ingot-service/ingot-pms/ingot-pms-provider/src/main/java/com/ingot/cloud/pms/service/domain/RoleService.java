@@ -1,22 +1,22 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * <p>Description  : RoleService.</p>

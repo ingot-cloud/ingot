@@ -1,5 +1,9 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
@@ -14,10 +18,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * <p>Description  : OAuth2扩展UserDetailsService.</p>

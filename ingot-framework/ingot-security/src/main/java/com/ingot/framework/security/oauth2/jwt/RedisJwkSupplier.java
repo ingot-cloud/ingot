@@ -1,5 +1,10 @@
 package com.ingot.framework.security.oauth2.jwt;
 
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.utils.crypto.RSAUtil;
@@ -8,11 +13,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
-import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.UUID;
 
 /**
  * <p>Description  : Redis实现.</p>

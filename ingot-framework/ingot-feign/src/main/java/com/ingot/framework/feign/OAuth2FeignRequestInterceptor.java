@@ -4,13 +4,12 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.core.context.RequestContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 

@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
@@ -12,8 +14,6 @@ import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizAppUserService.</p>

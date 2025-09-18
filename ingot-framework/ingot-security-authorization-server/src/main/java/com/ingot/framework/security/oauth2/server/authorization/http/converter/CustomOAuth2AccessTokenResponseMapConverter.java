@@ -1,18 +1,18 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>Description  : 自定义 {@link OAuth2AccessTokenResponse} Map converter.</p>

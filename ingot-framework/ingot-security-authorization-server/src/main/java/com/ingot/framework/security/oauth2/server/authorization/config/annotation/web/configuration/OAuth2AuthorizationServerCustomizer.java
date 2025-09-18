@@ -1,8 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.AuthorizationCodeAuthenticationSuccessHandler;
-import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.CustomOAuth2AuthorizationCodeRequestAuthenticationConverter;
+import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationEndpointConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeRequestAuthenticationConverter;

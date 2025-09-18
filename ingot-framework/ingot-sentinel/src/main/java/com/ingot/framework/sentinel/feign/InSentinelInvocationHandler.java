@@ -1,5 +1,12 @@
 package com.ingot.framework.sentinel.feign;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
@@ -16,13 +23,6 @@ import feign.MethodMetadata;
 import feign.Target;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static feign.Util.checkNotNull;
 

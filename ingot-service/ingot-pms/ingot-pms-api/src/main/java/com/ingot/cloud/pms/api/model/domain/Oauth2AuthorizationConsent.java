@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * <p>

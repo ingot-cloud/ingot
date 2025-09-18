@@ -1,7 +1,7 @@
 package com.ingot.framework.core.config;
 
-import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
+import com.ingot.framework.core.context.SpringContextHolder;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

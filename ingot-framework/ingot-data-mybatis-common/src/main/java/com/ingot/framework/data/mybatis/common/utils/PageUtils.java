@@ -1,10 +1,10 @@
 package com.ingot.framework.data.mybatis.common.utils;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * <p>Description  : PageUtils.</p>

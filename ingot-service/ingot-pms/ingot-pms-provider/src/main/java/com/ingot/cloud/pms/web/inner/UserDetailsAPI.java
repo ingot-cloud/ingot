@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.service.biz.UserDetailsService;
+import com.ingot.framework.commons.model.security.UserDetailsRequest;
+import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
-import com.ingot.framework.commons.model.security.UserDetailsRequest;
-import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;

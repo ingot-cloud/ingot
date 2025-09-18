@@ -1,11 +1,11 @@
 package com.ingot.framework.security.oauth2.core.endpoint;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 import com.ingot.framework.commons.constants.SecurityConstants;
 import org.springframework.security.core.SpringSecurityCoreVersion;
 import org.springframework.util.Assert;
-
-import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * <p>Description  : PreAuthorizationGrantType.</p>

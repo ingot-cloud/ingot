@@ -1,20 +1,19 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : 自定义OAuth2认证转换器.</p>

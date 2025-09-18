@@ -3,9 +3,9 @@ package com.ingot.framework.core.error;
 import java.util.List;
 import java.util.Set;
 
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.error.BizException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

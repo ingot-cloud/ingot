@@ -8,8 +8,8 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.List;
 
-import com.ingot.framework.id.snowflake.impl.SnowFlakeIdGenerator;
 import com.ingot.framework.id.properties.IdProperties;
+import com.ingot.framework.id.snowflake.impl.SnowFlakeIdGenerator;
 import com.ingot.framework.id.snowflake.worker.AbsWorkerIdFactory;
 import lombok.extern.slf4j.Slf4j;
 

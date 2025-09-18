@@ -2,12 +2,12 @@ package com.ingot.cloud.auth.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.web.context.RedisSecurityContextRepository;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.SecurityContextConfigurer;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RedisSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 
 /**

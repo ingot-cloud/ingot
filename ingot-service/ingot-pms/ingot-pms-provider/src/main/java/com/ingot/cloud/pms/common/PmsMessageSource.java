@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.common;
 
+import java.nio.charset.StandardCharsets;
+
 import com.ingot.framework.core.context.InMessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : PmsMessageSource.</p>

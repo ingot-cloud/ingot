@@ -1,5 +1,8 @@
 package com.ingot.framework.data.redis.cache;
 
+import java.time.Duration;
+import java.util.Map;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.data.redis.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +13,6 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-
-import java.time.Duration;
-import java.util.Map;
 
 /**
  * <p>Description  : IngotRedisCacheManager.</p>

@@ -1,12 +1,17 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO;
-import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.mapper.SysDeptMapper;
@@ -21,11 +26,6 @@ import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>

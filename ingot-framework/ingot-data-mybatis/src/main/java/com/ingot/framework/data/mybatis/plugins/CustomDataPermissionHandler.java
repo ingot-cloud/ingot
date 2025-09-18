@@ -1,5 +1,7 @@
 package com.ingot.framework.data.mybatis.plugins;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.extension.plugins.handler.MultiDataPermissionHandler;
@@ -14,8 +16,6 @@ import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-
-import java.util.List;
 
 /**
  * <p>Description  : CustomDataPermissionHandler.</p>

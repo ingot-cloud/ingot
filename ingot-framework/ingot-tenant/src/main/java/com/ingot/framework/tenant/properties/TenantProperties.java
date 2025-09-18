@@ -1,12 +1,12 @@
 package com.ingot.framework.tenant.properties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.commons.constants.IDConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : TenantProperties.</p>

@@ -1,11 +1,11 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.lang.annotation.*;
+
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.core.InOAuth2ResourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-
-import java.lang.annotation.*;
 
 /**
  * <p>Description  : 开启安全注解.</p>

@@ -1,13 +1,20 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.CacheKey;
@@ -17,9 +24,9 @@ import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.IDConstants;
-import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import com.ingot.framework.tenant.TenantEnv;
@@ -30,13 +37,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /**
  * <p>

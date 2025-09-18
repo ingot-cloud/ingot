@@ -1,5 +1,9 @@
 package com.ingot.framework.security.oauth2.server.resource.access.expression;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.RoleConstants;
@@ -7,10 +11,6 @@ import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : InSecurityExpression.</p>

@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
+import java.io.IOException;
+import java.util.Collections;
+
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2PreAuthHttpMessageConverter;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
@@ -26,9 +29,6 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Collections;
 
 /**
  * <p>Description  : .</p>

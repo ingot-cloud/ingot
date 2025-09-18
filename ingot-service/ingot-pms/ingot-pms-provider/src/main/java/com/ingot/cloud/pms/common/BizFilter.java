@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.common;
 
+import java.util.function.Predicate;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
@@ -7,8 +9,6 @@ import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-
-import java.util.function.Predicate;
 
 /**
  * <p>Description  : BizFilter.</p>

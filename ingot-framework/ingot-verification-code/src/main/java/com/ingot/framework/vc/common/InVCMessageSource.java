@@ -1,9 +1,9 @@
 package com.ingot.framework.vc.common;
 
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : InVCMessageSource.</p>

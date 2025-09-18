@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.web.inner;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.service.domain.SysDeptService;
@@ -11,8 +13,6 @@ import com.ingot.framework.security.config.annotation.web.configuration.PermitMo
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * <p>Description  : DataScopeAPI.</p>

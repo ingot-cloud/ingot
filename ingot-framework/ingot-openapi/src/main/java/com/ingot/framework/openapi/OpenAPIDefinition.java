@@ -1,5 +1,8 @@
 package com.ingot.framework.openapi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.OAuthFlow;
@@ -16,9 +19,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : OpenAPIDefinition.</p>

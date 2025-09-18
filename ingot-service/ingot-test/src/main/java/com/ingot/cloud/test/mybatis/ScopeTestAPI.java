@@ -1,5 +1,7 @@
 package com.ingot.cloud.test.mybatis;
 
+import java.util.List;
+
 import com.ingot.cloud.test.model.domain.TStudent;
 import com.ingot.cloud.test.service.domain.TStudentService;
 import com.ingot.framework.commons.model.support.R;
@@ -10,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * <p>Description  : ScopeTestAPI.</p>

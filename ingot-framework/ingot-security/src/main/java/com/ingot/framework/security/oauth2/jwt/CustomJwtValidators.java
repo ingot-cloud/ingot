@@ -1,14 +1,14 @@
 package com.ingot.framework.security.oauth2.jwt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.security.core.InSecurityProperties;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : 自定义JwtValidators.</p>

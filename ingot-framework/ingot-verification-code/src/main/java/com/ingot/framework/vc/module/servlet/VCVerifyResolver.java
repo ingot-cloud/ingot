@@ -1,9 +1,17 @@
 package com.ingot.framework.vc.module.servlet;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.common.VCVerify;
 import com.ingot.framework.vc.common.VCVerifyUtils;
 import com.ingot.framework.vc.properties.InVCProperties;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -14,14 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : VCVerifyResolver.</p>

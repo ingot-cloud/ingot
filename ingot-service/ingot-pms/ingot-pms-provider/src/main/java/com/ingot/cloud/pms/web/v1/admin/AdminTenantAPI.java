@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.web.v1.admin;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -19,8 +21,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * <p>Description  : TenantApi.</p>

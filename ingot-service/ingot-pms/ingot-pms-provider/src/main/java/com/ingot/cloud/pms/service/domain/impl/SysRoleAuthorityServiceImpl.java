@@ -1,12 +1,14 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
@@ -14,8 +16,8 @@ import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.mapper.SysRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.framework.commons.constants.CacheConstants;
-import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.data.redis.utils.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +25,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * <p>

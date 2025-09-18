@@ -1,12 +1,12 @@
 package com.ingot.framework.data.mybatis.scope.config;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * <p>Description  : DataScope.</p>

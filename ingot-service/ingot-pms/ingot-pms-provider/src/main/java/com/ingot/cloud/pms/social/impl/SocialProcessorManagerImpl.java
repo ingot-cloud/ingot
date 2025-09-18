@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.social.impl;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.common.PmsMessageSource;
 import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
@@ -7,8 +9,6 @@ import com.ingot.framework.commons.error.IllegalOperationException;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * <p>Description  : SocialProcessorManagerImpl.</p>

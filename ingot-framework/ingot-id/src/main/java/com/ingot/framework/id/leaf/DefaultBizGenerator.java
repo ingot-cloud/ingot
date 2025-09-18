@@ -1,5 +1,8 @@
 package com.ingot.framework.id.leaf;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
+
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.id.BizGenerator;
@@ -11,9 +14,6 @@ import com.ingot.framework.id.leaf.segment.dao.impl.IDAllocDaoImpl;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.sql.DataSource;
-import java.sql.SQLException;
 
 /**
  * <p>Description  : BizGeneratorImpl.</p>

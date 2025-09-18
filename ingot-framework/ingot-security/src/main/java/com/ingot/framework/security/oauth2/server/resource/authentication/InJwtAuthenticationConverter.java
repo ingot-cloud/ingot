@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
+import java.util.Collection;
+
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import org.springframework.core.convert.converter.Converter;
@@ -9,8 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
-
-import java.util.Collection;
 
 /**
  * <p>Description  : InJwtAuthenticationConverter.</p>

@@ -1,13 +1,16 @@
 package com.ingot.framework.security.web;
 
+import java.io.IOException;
+import java.util.Optional;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
-import com.ingot.framework.security.utils.SecurityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCache;
 import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
+import com.ingot.framework.security.utils.SecurityUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Optional;
 
 /**
  * <p>Description  : 用于验证{@link TokenAuthTypeEnum}为{@link TokenAuthTypeEnum#UNIQUE}时的情况，提示签退等逻辑。

@@ -1,9 +1,9 @@
 package com.ingot.framework.commons.model.common;
 
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * <p>Description  : AuthSuccessDTO.</p>

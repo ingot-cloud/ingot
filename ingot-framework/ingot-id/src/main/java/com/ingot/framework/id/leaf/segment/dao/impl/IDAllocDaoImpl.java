@@ -1,8 +1,7 @@
 package com.ingot.framework.id.leaf.segment.dao.impl;
 
-import java.util.List;
-
 import javax.sql.DataSource;
+import java.util.List;
 
 import com.ingot.framework.id.leaf.segment.dao.IDAllocDao;
 import com.ingot.framework.id.leaf.segment.dao.IDAllocMapper;

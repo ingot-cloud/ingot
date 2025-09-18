@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>Description  : UserPageItemVO.</p>

@@ -1,5 +1,9 @@
 package com.ingot.framework.security.web.authentication;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import jakarta.servlet.ServletException;
@@ -12,10 +16,6 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.UrlUtils;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : InLoginUrlAuthenticationEntryPoint.</p>

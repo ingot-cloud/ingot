@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.api.rpc;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.framework.commons.constants.ServiceNameConstants;
@@ -9,8 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.List;
 
 /**
  * <p>Description  : PmsDataScopeService.</p>

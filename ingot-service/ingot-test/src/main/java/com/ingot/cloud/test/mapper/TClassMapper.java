@@ -2,8 +2,6 @@ package com.ingot.cloud.test.mapper;
 
 import com.ingot.cloud.test.model.domain.TClass;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
-
-
 import org.apache.ibatis.annotations.Mapper;
 
 /**

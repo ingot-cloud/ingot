@@ -1,13 +1,17 @@
 package com.ingot.cloud.pms.core;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.core.org.TenantUtils;
@@ -15,10 +19,6 @@ import com.ingot.cloud.pms.service.domain.SysApplicationTenantService;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : AuthorityUtils.</p>

@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.framework.commons.constants.IDConstants;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizDeptService.</p>

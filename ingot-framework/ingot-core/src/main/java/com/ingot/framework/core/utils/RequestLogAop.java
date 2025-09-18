@@ -1,5 +1,7 @@
 package com.ingot.framework.core.utils;
 
+import java.util.Arrays;
+
 import cn.hutool.core.util.BooleanUtil;
 import com.ingot.framework.core.config.CoreProperties;
 import com.ingot.framework.core.context.RequestContextHolder;
@@ -10,8 +12,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-
-import java.util.Arrays;
 
 /**
  * <p>Description  : RequestLogAop.</p>

@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.OAuth2AuthorizationCodeRequestHttpMessageConverter;
 import jakarta.servlet.ServletException;
@@ -17,9 +20,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : AuthorizationCodeAuthenticationSuccessHandler.</p>

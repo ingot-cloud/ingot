@@ -1,5 +1,9 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.security.Principal;
+import java.util.Map;
+import java.util.Optional;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
@@ -20,10 +24,6 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
-
-import java.security.Principal;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * <p>Description  : 自定义授权码{@link AuthenticationProvider}.</p>

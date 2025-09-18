@@ -1,5 +1,8 @@
 package com.ingot.framework.security.core.tenantdetails;
 
+import java.util.List;
+import java.util.Optional;
+
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.security.TenantDetailsRequest;
@@ -7,9 +10,6 @@ import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * <p>Description  : RemoteTenantDetailsService.</p>

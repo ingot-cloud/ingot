@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysUserDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-
-import java.util.List;
 
 /**
  * <p>

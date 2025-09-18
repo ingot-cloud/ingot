@@ -1,10 +1,10 @@
 package com.ingot.cloud.test.mapper;
 
+import java.util.List;
+
 import com.ingot.cloud.test.model.domain.TStudent;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-
-import java.util.List;
 
 /**
  * <p>

@@ -4,9 +4,9 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.id.IdGenerator;
 import com.ingot.framework.id.snowflake.worker.WorkerIdFactory;
-import com.ingot.framework.commons.error.BizException;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.ingot.framework.commons.model.status.BaseErrorCode.ID_CLOCK_BACK;

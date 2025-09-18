@@ -1,10 +1,9 @@
 package com.ingot.framework.core.utils.validation.constraintvalidators;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.annotation.CommonStatusValidate;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 /**
  * <p>Description  : CommonStatusValidator.</p>

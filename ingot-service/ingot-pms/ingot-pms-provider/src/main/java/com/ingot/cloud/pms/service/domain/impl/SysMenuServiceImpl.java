@@ -1,5 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
@@ -11,17 +15,13 @@ import com.ingot.cloud.pms.core.MenuUtils;
 import com.ingot.cloud.pms.mapper.SysMenuMapper;
 import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.CacheConstants;
-import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>

@@ -1,18 +1,18 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
+import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
-import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.framework.security.core.userdetails.InUser;
-
-import java.util.List;
 
 /**
  * <p>Description  : 业务用户service.</p>

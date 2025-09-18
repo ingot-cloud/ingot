@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
@@ -13,9 +16,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * <p>

@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,8 +12,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.authority.AllowTenantGrantedAuthority;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : AllowTenantGrantedAuthorityDeserializer.</p>

@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.api.model.vo.biz;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * <p>Description  : ResetPwdVO.</p>

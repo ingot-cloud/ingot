@@ -1,13 +1,13 @@
 package com.ingot.cloud.pms.api.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>Description  : MenuTypeEnums.</p>

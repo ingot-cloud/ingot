@@ -1,11 +1,13 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
-import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.AppRoleService;
 import com.ingot.cloud.pms.service.domain.AppUserService;
@@ -19,8 +21,6 @@ import com.ingot.framework.commons.model.security.UserTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * <p>Description  : AppSupportUserDetailsService.</p>

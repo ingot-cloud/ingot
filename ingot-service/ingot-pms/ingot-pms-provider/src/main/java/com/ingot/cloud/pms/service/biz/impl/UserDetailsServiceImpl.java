@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.biz.UserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
@@ -7,8 +9,6 @@ import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * <p>Description  : UserDetailServiceImpl.</p>

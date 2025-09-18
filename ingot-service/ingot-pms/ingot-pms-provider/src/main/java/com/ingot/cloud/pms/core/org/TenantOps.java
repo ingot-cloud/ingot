@@ -1,20 +1,23 @@
 package com.ingot.cloud.pms.core.org;
 
+import java.util.List;
+import java.util.Map;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.convert.MenuConvert;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import com.ingot.framework.data.redis.utils.RedisUtils;
-import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import com.ingot.framework.tenant.properties.TenantProperties;
@@ -22,9 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>Description  : TenantOps.</p>

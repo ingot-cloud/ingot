@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.api.model.dto.biz;
 
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * <p>Description  : 用户组织相关内容编辑.</p>

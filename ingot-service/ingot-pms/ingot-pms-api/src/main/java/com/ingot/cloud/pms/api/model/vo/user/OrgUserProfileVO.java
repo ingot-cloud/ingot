@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.api.model.vo.user;
 
-import com.ingot.framework.commons.model.enums.UserStatusEnum;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
+import lombok.Data;
 
 /**
  * <p>Description  : 组织用户简介.</p>

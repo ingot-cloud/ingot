@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -11,9 +14,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * <p>

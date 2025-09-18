@@ -15,15 +15,15 @@
  */
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.core.userdetails.InUser;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * TODO

@@ -1,5 +1,7 @@
 package com.ingot.framework.data.mybatis.scope.config;
 
+import javax.sql.DataSource;
+
 import com.ingot.cloud.pms.api.rpc.PmsDataScopeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -8,8 +10,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-
-import javax.sql.DataSource;
 
 /**
  * <p>Description  : InDataScopeConfig.</p>

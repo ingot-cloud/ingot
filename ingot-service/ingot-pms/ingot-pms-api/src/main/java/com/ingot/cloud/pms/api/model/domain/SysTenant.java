@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -7,12 +10,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * <p>

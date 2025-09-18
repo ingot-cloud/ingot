@@ -1,5 +1,7 @@
 package com.ingot.framework.crypto;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.crypto.web.InDecryptParamResolver;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +9,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
 
 /**
  * <p>Description  : 参数配置.</p>

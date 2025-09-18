@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.api.model.dto.user;
 
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * <p>Description  : 组织系统用户DTO.</p>

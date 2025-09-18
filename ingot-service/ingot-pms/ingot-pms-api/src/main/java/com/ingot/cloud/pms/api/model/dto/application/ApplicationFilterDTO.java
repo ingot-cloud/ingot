@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.api.model.dto.application;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * <p>Description  : ApplicationFilterDTO.</p>

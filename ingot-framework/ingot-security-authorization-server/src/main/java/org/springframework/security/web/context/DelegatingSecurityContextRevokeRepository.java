@@ -1,9 +1,9 @@
 package org.springframework.security.web.context;
 
+import java.util.List;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 /**
  * <p>Description  : DelegatingSecurityContextRevokeRepository.</p>

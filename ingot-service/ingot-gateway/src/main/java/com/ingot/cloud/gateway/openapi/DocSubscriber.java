@@ -1,5 +1,8 @@
 package com.ingot.cloud.gateway.openapi;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.alibaba.nacos.client.naming.event.InstancesChangeEvent;
 import com.alibaba.nacos.common.notify.Event;
 import com.alibaba.nacos.common.notify.listener.Subscriber;
@@ -8,9 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.properties.AbstractSwaggerUiConfigProperties;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : DocSubscriber.</p>

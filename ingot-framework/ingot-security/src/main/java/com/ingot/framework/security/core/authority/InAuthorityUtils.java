@@ -1,15 +1,15 @@
 package com.ingot.framework.security.core.authority;
 
-import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.util.Assert;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.util.Assert;
 
 /**
  * <p>Description  : Authority Utils.</p>

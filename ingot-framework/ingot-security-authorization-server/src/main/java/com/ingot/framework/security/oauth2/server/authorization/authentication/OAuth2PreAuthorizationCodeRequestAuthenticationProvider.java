@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
+import java.util.List;
+import java.util.Map;
+
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
@@ -17,9 +20,6 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>Description  : {@link InAuthorizationGrantType#PRE_AUTHORIZATION_CODE} request authentication provider.</p>

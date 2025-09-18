@@ -1,5 +1,9 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -7,13 +11,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.vo.role.RoleGroupItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.core.BizIdGen;
@@ -22,18 +26,14 @@ import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.utils.DateUtil;
-import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.data.mybatis.common.utils.PageUtils;
-import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
-import com.ingot.framework.data.redis.service.RedisCacheService;
 import com.ingot.framework.commons.utils.RoleUtil;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.data.mybatis.common.utils.PageUtils;
+import com.ingot.framework.data.redis.service.RedisCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * <p>

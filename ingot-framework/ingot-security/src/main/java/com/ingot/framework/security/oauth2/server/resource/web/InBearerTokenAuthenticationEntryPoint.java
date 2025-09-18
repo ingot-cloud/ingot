@@ -1,5 +1,9 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
@@ -16,10 +20,6 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.resource.BearerTokenError;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.util.StringUtils;
-
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * <p>Description  : InBearerTokenAuthenticationEntryPoint.</p>

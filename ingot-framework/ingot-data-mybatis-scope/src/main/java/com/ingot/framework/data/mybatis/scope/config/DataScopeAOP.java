@@ -1,5 +1,8 @@
 package com.ingot.framework.data.mybatis.scope.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
@@ -16,9 +19,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : DataScopeAOP.</p>

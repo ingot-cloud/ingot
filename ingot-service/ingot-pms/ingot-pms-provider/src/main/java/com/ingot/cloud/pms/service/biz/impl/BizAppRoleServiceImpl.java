@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
@@ -12,8 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizAppRoleServiceImpl.</p>

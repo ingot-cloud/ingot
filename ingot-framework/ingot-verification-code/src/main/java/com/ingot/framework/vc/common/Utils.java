@@ -1,13 +1,13 @@
 package com.ingot.framework.vc.common;
 
+import java.util.Map;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
 
 /**
  * <p>Description  : Utils.</p>

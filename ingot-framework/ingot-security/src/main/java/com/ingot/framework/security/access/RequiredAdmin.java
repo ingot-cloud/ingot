@@ -1,12 +1,12 @@
 package com.ingot.framework.security.access;
 
-import com.ingot.framework.security.oauth2.server.resource.access.expression.InSecurityExpression;
-import org.springframework.security.access.prepost.PreAuthorize;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.ingot.framework.security.oauth2.server.resource.access.expression.InSecurityExpression;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * <p>Description  : {@link InSecurityExpression#requiredAdmin()}.</p>

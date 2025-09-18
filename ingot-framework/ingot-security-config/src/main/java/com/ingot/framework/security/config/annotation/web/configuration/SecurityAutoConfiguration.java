@@ -1,5 +1,8 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.ingot.framework.security.config.annotation.web.configurers.DefaultHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
@@ -8,9 +11,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * <p>Description  : SecurityAutoConfiguration.</p>

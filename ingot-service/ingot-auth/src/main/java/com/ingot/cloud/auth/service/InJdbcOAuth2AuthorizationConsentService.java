@@ -1,5 +1,14 @@
 package com.ingot.cloud.auth.service;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.*;
 import org.springframework.lang.Nullable;
@@ -12,15 +21,6 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 /**
  * <p>Description  : 自定义{@link OAuth2AuthorizationConsentService}.</p>

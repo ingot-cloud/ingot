@@ -1,11 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
+import java.lang.annotation.*;
+
 import com.ingot.framework.security.config.annotation.web.configuration.EnableInWebSecurity;
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-
-import java.lang.annotation.*;
 
 /**
  * <p>Description  : EnableInAuthorizationServer.</p>

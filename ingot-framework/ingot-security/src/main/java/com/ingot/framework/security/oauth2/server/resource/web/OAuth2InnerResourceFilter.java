@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
+import java.io.IOException;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.SecurityConstants;
 import jakarta.servlet.FilterChain;
@@ -10,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : OAuth2InnerResourceFilter.</p>

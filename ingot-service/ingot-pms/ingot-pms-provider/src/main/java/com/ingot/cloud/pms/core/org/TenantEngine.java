@@ -1,16 +1,18 @@
 package com.ingot.cloud.pms.core.org;
 
+import java.util.*;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.convert.MenuConvert;
+import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.core.BizIdGen;
 import com.ingot.cloud.pms.service.domain.*;
@@ -24,8 +26,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
 
 /**
  * <p>Description  : TenantEngine.</p>

@@ -1,5 +1,9 @@
 package com.ingot.framework.security.core.context;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -7,10 +11,6 @@ import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtA
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : SecurityAuthContext.</p>

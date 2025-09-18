@@ -1,9 +1,9 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.List;
+
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.List;
 
 /**
  * <p>Description  : {@link UserDetails} 扩展.</p>

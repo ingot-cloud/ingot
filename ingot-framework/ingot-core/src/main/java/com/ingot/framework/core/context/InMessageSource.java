@@ -1,9 +1,9 @@
 package com.ingot.framework.core.context;
 
+import java.util.Locale;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
-
-import java.util.Locale;
 
 /**
  * <p>Description  : IngotMessageSource.</p>

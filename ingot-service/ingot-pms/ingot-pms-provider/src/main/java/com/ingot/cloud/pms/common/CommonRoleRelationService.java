@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.common;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -7,8 +9,6 @@ import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * <p>Description  : CommonRoleRelationService.</p>

@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.web.v1.common;
 
+import java.io.IOException;
+
 import com.ingot.framework.commons.error.IllegalOperationException;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
@@ -11,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : OSSCommonAPI.</p>

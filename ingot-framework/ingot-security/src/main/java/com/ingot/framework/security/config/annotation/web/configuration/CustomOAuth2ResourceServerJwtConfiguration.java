@@ -1,5 +1,8 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.jwt.CustomJwtValidators;
 import com.ingot.framework.security.oauth2.jwt.JwkSupplier;
@@ -23,9 +26,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * <p>Description  : 自定义资源服务器Jwt配置.</p>

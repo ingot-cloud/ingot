@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.common.wechat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.api.impl.WxMaServiceImpl;
@@ -17,9 +20,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : WechatConfiguration.</p>

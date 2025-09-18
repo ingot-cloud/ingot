@@ -1,11 +1,11 @@
 package com.ingot.framework.commons.model.security;
 
+import java.io.Serializable;
+import java.util.List;
+
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * <p>Description  : UserDetailsResponse.</p>

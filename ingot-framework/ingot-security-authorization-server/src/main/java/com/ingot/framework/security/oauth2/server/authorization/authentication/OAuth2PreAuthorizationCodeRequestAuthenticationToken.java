@@ -1,14 +1,14 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
-import lombok.Getter;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import lombok.Getter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationCodeRequestAuthenticationToken.</p>

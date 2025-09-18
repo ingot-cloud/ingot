@@ -1,8 +1,8 @@
 package com.ingot.framework.security.oauth2.jwt;
 
-import com.nimbusds.jose.jwk.JWKSet;
-
 import java.util.function.Supplier;
+
+import com.nimbusds.jose.jwk.JWKSet;
 
 /**
  * <p>Description  : JWK供应商.</p>

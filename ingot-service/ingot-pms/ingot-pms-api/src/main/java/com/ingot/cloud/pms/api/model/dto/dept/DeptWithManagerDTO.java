@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.api.model.dto.dept;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * <p>Description  : DeptWithManagerDTO.</p>

@@ -1,10 +1,10 @@
 package com.ingot.framework.commons.model.security;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * <p>Description  : TokenAuthType.</p>

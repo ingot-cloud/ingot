@@ -1,5 +1,7 @@
 package com.ingot.framework.core.config;
 
+import java.nio.charset.StandardCharsets;
+
 import com.ingot.framework.core.context.InMessageSource;
 import com.ingot.framework.core.context.support.InReloadableResourceBundleMessageSource;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -9,8 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Description  : MessageConfig.</p>

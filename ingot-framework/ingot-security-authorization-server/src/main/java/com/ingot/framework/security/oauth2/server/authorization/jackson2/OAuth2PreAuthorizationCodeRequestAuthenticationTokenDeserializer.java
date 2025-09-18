@@ -1,5 +1,9 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,10 +16,6 @@ import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationCodeRequestAuthenticationTokenDeserializer.</p>

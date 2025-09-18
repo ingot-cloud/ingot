@@ -1,27 +1,27 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.*;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
-import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.commons.constants.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
 
 /**
  * <p>Description  : BizDeptServiceImpl.</p>

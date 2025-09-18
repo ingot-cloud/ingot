@@ -1,14 +1,17 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.dto.user.*;
+import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 import com.ingot.framework.security.core.userdetails.InUser;
-
-import java.util.List;
 
 /**
  * <p>

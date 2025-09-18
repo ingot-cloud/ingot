@@ -1,10 +1,16 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
+import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
@@ -18,12 +24,6 @@ import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : AdminSupportUserDetailsService.</p>

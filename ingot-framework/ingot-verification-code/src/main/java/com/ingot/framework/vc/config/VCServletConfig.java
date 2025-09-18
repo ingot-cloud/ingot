@@ -1,8 +1,9 @@
 package com.ingot.framework.vc.config;
 
+import java.util.Map;
+
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
-import com.ingot.framework.vc.module.servlet.VCVerifyResolver;
 import com.ingot.framework.vc.module.servlet.*;
 import com.ingot.framework.vc.properties.InVCProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -11,8 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.Map;
 
 /**
  * <p>Description  : VCServletConfig.</p>

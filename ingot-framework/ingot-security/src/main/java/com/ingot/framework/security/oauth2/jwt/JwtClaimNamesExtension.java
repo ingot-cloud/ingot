@@ -1,11 +1,11 @@
 package com.ingot.framework.security.oauth2.jwt;
 
+import java.util.ArrayList;
+
 import cn.hutool.core.map.MapUtil;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
-
-import java.util.ArrayList;
 
 /**
  * <p>Description  : {@link JwtClaimNames}的扩展，并且包含之前的常量.</p>

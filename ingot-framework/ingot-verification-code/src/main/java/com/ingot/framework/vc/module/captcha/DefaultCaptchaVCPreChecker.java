@@ -1,5 +1,7 @@
 package com.ingot.framework.vc.module.captcha;
 
+import java.util.concurrent.TimeUnit;
+
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.Utils;
 import com.ingot.framework.vc.common.VCConstants;
@@ -7,8 +9,6 @@ import com.ingot.framework.vc.properties.ImageCodeProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>Description  : DefaultCaptchaVCSendChecker.</p>

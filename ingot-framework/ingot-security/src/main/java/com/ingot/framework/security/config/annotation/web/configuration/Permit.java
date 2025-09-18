@@ -1,10 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * <p>Description  : 用户鉴权放行注解，用于细化用户权限，对于不需要鉴权的接口可以不进行拦截.</p>

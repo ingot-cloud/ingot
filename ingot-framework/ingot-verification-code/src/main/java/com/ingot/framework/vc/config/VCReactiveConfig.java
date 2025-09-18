@@ -1,5 +1,7 @@
 package com.ingot.framework.vc.config;
 
+import java.util.Map;
+
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
@@ -15,8 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
-
-import java.util.Map;
 
 /**
  * <p>Description  : VCReactiveConfig.</p>

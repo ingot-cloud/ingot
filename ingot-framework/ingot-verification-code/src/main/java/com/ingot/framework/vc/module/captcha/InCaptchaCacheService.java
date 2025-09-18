@@ -1,10 +1,10 @@
 package com.ingot.framework.vc.module.captcha;
 
+import java.util.concurrent.TimeUnit;
+
 import com.anji.captcha.service.CaptchaCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>Description  : IngotCaptchaCacheService.</p>

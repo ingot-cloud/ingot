@@ -1,14 +1,14 @@
 package com.ingot.cloud.pms.api.model.vo.menu;
 
+import java.io.Serial;
+
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.framework.commons.utils.tree.TreeNode;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * <p>Description  : MenuTreeNodeVO.</p>

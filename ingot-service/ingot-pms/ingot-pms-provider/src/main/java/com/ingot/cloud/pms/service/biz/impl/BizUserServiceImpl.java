@@ -1,17 +1,19 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
@@ -23,10 +25,10 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.tenant.TenantContextHolder;
@@ -36,8 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizUserServiceImpl.</p>

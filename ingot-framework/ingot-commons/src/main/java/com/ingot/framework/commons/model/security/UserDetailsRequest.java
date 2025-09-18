@@ -1,9 +1,9 @@
 package com.ingot.framework.commons.model.security;
 
+import java.io.Serializable;
+
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * <p>Description  : UserDetailsRequest.</p>

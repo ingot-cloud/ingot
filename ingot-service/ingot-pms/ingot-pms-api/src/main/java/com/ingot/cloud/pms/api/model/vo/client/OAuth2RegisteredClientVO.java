@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.api.model.vo.client;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>Description  : OAuth2RegisteredClientVO.</p>

@@ -1,5 +1,10 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -18,11 +23,6 @@ import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
 import com.ingot.framework.tenant.TenantEnv;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : SupportUserDetailsService.</p>

@@ -1,9 +1,12 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.core.InClientAuthenticationMethod;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
-import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
@@ -15,9 +18,6 @@ import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.MultiValueMap;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>Description  : PreAuthClientAuthenticationConverter.</p>

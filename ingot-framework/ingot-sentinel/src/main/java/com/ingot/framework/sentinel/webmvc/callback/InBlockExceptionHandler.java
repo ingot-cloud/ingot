@@ -1,5 +1,7 @@
 package com.ingot.framework.sentinel.webmvc.callback;
 
+import java.io.PrintWriter;
+
 import cn.hutool.http.ContentType;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
@@ -9,8 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-
-import java.io.PrintWriter;
 
 /**
  * <p>Description  : 自定义{@link BlockException}异常处理.</p>

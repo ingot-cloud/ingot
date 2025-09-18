@@ -1,9 +1,11 @@
 package com.ingot.framework.security.oauth2.server.authorization.token;
 
+import java.util.Set;
+
 import cn.hutool.core.util.NumberUtil;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
@@ -12,8 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-
-import java.util.Set;
 
 /**
  * <p>Description  : JwtOAuth2TokenCustomizer.</p>

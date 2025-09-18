@@ -1,15 +1,15 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.ingot.framework.security.oauth2.core.OAuth2Authentication;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * <p>Description  : DefaultOAuth2UserDetailsServiceManager.</p>

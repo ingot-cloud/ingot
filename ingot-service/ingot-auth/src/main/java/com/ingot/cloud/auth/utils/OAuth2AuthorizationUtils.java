@@ -1,12 +1,12 @@
 package com.ingot.cloud.auth.utils;
 
+import java.security.Principal;
+import java.util.Optional;
+
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
-
-import java.security.Principal;
-import java.util.Optional;
 
 /**
  * <p>Description  : OAuth2AuthorizationUtils.</p>

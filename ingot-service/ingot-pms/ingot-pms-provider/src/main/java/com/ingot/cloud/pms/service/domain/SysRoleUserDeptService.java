@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.SysRoleUserDept;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-
-import java.util.List;
 
 /**
  * <p>

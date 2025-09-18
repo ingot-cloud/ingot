@@ -1,5 +1,7 @@
 package com.ingot.framework.tenant.filter;
 
+import java.io.IOException;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.utils.RequestParamsUtil;
 import com.ingot.framework.tenant.TenantContextHolder;
@@ -12,8 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : TenantFilter.</p>

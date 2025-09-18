@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.InOAuth2AuthorizationCodeAuthenticationProvider;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2CustomAuthenticationProvider;
@@ -25,9 +28,6 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>Description  : OAuth2TokenEndpointEnhanceConfigurer.</p>

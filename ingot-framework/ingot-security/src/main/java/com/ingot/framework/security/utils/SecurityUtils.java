@@ -1,5 +1,12 @@
 package com.ingot.framework.security.utils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Enumeration;
+import java.util.Optional;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.utils.CookieUtil;
@@ -10,13 +17,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.Optional;
 
 import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BASIC_TYPE_WITH_SPACE;
 import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE;

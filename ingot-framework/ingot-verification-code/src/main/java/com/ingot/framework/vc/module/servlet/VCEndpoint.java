@@ -4,14 +4,13 @@ import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.ServletWebRequest;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * <p>Description  : VCEndpoint.</p>

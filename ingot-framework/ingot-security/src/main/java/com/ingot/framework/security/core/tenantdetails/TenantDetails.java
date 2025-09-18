@@ -1,8 +1,8 @@
 package com.ingot.framework.security.core.tenantdetails;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
-
 import java.util.List;
+
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 
 /**
  * <p>Description  : TenantDetails.</p>

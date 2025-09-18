@@ -7,9 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.error.BizException;
 import jakarta.servlet.ServletException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;

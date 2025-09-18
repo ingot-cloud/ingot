@@ -1,10 +1,10 @@
 package com.ingot.framework.vc.properties;
 
+import java.awt.*;
+
 import com.anji.captcha.model.common.CaptchaTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.awt.*;
 
 /**
  * <p>Description  : ImageCodeProperties.</p>

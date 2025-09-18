@@ -1,9 +1,14 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
+import java.io.IOException;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2ErrorConverter;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2ErrorParametersConverter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -14,11 +19,6 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.http.converter.OAuth2ErrorHttpMessageConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * <p>Description  : 默认认证失败处理器.</p>

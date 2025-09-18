@@ -1,5 +1,10 @@
 package com.ingot.framework.vc.common;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
@@ -8,11 +13,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import reactor.core.publisher.Mono;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : VCVerifyUtils.</p>

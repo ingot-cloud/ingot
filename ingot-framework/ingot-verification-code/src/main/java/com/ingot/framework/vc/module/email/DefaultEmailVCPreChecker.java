@@ -1,5 +1,7 @@
 package com.ingot.framework.vc.module.email;
 
+import java.util.concurrent.TimeUnit;
+
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.InnerCheck;
@@ -10,8 +12,6 @@ import com.ingot.framework.vc.properties.EmailCodeProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>Description  : DefaultEmailVCSendChecker.</p>

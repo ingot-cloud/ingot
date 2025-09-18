@@ -1,10 +1,10 @@
 package com.ingot.framework.data.mybatis.scope.context;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
-
-import java.util.List;
 
 /**
  * <p>Description  : DataScopeContextHolder.</p>

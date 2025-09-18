@@ -1,5 +1,9 @@
 package com.ingot.framework.vc.config;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import com.anji.captcha.model.common.Const;
 import com.anji.captcha.service.CaptchaCacheService;
 import com.anji.captcha.service.CaptchaService;
@@ -11,9 +15,9 @@ import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
 import com.ingot.framework.vc.common.VCConstants;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCGenerator;
+import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCPreChecker;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProcessor;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProvider;
-import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCPreChecker;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.framework.vc.module.servlet.VCProvider;
 import com.ingot.framework.vc.properties.ImageCodeProperties;
@@ -29,10 +33,6 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.FileCopyUtils;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * <p>Description  : CaptchaConfig.</p>

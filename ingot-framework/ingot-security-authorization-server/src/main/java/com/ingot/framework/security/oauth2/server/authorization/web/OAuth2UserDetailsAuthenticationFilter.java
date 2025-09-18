@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web;
 
+import java.io.IOException;
+
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.web.authentication.DefaultAuthenticationFailureHandler;
@@ -24,8 +26,6 @@ import org.springframework.security.web.authentication.DelegatingAuthenticationC
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : 用户详情认证过滤器.</p>

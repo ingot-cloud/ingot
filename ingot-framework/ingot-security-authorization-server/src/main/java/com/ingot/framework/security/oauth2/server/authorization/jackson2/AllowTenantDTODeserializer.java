@@ -1,5 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,8 +11,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : AllowTenantDTODeserializer.</p>

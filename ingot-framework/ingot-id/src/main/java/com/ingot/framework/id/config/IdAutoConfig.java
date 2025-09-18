@@ -1,5 +1,7 @@
 package com.ingot.framework.id.config;
 
+import javax.sql.DataSource;
+
 import com.baomidou.mybatisplus.autoconfigure.IdentifierGeneratorAutoConfiguration;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.ingot.framework.id.BizGenerator;
@@ -22,8 +24,6 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
-
-import javax.sql.DataSource;
 
 /**
  * <p>Description  : IdAutoConfig.</p>

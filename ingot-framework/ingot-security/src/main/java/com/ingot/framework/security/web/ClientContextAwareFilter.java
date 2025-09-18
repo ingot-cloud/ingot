@@ -1,5 +1,7 @@
 package com.ingot.framework.security.web;
 
+import java.io.IOException;
+
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.context.ClientContextHolder;
@@ -16,8 +18,6 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
 
 /**
  * <p>Description  : ClientContextAwareFilter.</p>

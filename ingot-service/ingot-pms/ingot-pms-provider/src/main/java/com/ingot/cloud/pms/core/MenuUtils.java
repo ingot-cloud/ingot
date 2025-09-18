@@ -1,5 +1,10 @@
 package com.ingot.cloud.pms.core;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -10,11 +15,6 @@ import com.ingot.cloud.pms.service.domain.SysMenuService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.UUIDUtil;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>Description  : MenuUtils.</p>

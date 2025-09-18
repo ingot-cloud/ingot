@@ -1,8 +1,7 @@
 package com.ingot.framework.security.oauth2.server.resource.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import com.ingot.framework.security.oauth2.core.PermitResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.util.matcher.RequestMatcher;

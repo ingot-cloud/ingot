@@ -1,10 +1,10 @@
 package com.ingot.framework.security.core.tenantdetails;
 
-import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
-
 import java.util.Collections;
 import java.util.List;
+
+import cn.hutool.core.collection.ListUtil;
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
 
 /**
  * <p>Description  : Tenant.</p>

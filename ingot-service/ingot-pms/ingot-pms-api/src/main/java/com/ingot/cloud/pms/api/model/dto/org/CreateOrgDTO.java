@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.api.model.dto.org;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * <p>Description  : CreateOrgDTO.</p>

@@ -1,19 +1,19 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import cn.hutool.core.collection.ListUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
-import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * <p>Description  : 自定义User.</p>

@@ -1,7 +1,7 @@
-import { fileURLToPath, URL } from "node:url";
-import { resolve } from "path";
-import { defineConfig, loadEnv } from "vite";
-import { createHtmlPlugin } from "vite-plugin-html";
+import {fileURLToPath, URL} from "node:url";
+import {resolve} from "path";
+import {defineConfig, loadEnv} from "vite";
+import {createHtmlPlugin} from "vite-plugin-html";
 import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/

@@ -1,11 +1,11 @@
 package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.service.biz.TenantDetailsService;
+import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
-import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;

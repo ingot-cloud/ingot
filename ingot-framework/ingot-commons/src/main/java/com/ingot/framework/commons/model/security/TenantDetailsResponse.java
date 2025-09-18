@@ -1,10 +1,10 @@
 package com.ingot.framework.commons.model.security;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import lombok.Data;
 
 /**
  * <p>Description  : TenantDetailsResponse.</p>

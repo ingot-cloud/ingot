@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -14,8 +16,6 @@ import com.ingot.cloud.pms.service.domain.SysRoleUserService;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * <p>

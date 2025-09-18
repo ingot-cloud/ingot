@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
+import java.io.Serializable;
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * <p>Description  : RoleGroupItemVO.</p>

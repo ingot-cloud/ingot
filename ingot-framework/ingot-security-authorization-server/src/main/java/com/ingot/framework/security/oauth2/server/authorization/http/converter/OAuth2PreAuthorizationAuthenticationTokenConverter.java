@@ -1,14 +1,14 @@
 package com.ingot.framework.security.oauth2.server.authorization.http.converter;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>Description  : OAuth2PreAuthorizationAuthenticationTokenConverter.</p>

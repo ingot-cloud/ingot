@@ -1,5 +1,7 @@
 package com.ingot.framework.data.mybatis.config;
 
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -9,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
-
-import java.util.List;
 
 /**
  * <p>Description  : TenantResolver.</p>

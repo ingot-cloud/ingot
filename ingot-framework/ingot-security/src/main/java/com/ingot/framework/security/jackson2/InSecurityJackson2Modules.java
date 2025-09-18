@@ -1,12 +1,12 @@
 package com.ingot.framework.security.jackson2;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.util.ClassUtils;
-
-import java.util.List;
 
 /**
  * <p>Description  : Security Jackson Modules.</p>

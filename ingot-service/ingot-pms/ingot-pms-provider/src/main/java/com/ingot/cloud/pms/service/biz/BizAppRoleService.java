@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
-
-import java.util.List;
 
 /**
  * <p>Description  : BizAppRoleService.</p>

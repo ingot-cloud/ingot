@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.api.rpc;
 
 import com.ingot.framework.commons.constants.ServiceNameConstants;
-import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.support.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

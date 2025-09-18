@@ -1,12 +1,12 @@
 package com.ingot.framework.crypto.model;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.lang.NonNull;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>Description  : CryptoHttpInputMessage.</p>

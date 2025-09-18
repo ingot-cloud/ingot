@@ -1,12 +1,12 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * <p>Description  : DeptTreeNodeVO.</p>

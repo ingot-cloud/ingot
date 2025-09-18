@@ -1,5 +1,7 @@
 package com.ingot.framework.vc.module.reactive;
 
+import java.util.Map;
+
 import com.ingot.framework.commons.utils.reactive.WebUtil;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.VCPreChecker;
@@ -12,8 +14,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 /**
  * <p>Description  : DefaultVCProcessorManager.</p>

@@ -1,14 +1,14 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
+import java.sql.Blob;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.sql.Blob;
-import java.time.LocalDateTime;
 
 /**
  * <p>

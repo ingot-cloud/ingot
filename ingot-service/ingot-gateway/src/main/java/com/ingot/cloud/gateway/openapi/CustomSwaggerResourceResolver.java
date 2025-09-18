@@ -1,5 +1,7 @@
 package com.ingot.cloud.gateway.openapi;
 
+import java.util.List;
+
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springdoc.webflux.ui.SwaggerResourceResolver;
 import org.springframework.core.io.Resource;
@@ -7,8 +9,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.reactive.resource.ResourceResolverChain;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 /**
  * <p>Description  : CustomSwaggerResourceResolver.</p>

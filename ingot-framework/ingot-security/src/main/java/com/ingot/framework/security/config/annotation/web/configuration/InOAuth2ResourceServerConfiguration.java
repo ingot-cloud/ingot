@@ -1,5 +1,7 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.util.List;
+
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.InTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
@@ -32,8 +34,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
