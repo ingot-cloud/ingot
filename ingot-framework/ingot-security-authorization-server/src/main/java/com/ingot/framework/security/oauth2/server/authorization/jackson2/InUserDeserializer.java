@@ -43,6 +43,6 @@ final class InUserDeserializer extends JsonDeserializer<InUser> {
         String username = JsonNodeUtils.findStringValue(root, InUserFieldNames.USERNAME);
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, InUserFieldNames.AUTHORITIES, GRANTED_AUTH_COLL, mapper);
-        return InUser.stateless(id, tenantId, clientId, tokenAuthType, username, userType, authorities);
+        return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities);
     }
 }
