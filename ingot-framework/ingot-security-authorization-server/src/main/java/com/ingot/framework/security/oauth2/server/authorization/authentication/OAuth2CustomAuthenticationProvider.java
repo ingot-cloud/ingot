@@ -1,9 +1,13 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
+import com.ingot.framework.security.oauth2.server.authorization.common.OAuth2Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -66,6 +70,13 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         // OAuth2UserDetailsAuthenticationToken
         Authentication principal = customAuthenticationToken.getUserPrincipal();
 
+        Map<String, Object> additionalParameters = new HashMap<>();
+        if (principal instanceof OAuth2UserDetailsAuthenticationToken userDetailsAuthenticationToken) {
+            Object userPrincipal = userDetailsAuthenticationToken.getPrincipal();
+            InUser user = userPrincipal instanceof InUser ? (InUser) userPrincipal : null;
+            OAuth2Util.setupLoginInfo(additionalParameters, null, user);
+        }
+
         // @formatter:off
         DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
                 .registeredClient(registeredClient)
@@ -126,7 +137,7 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         this.authorizationService.save(authorizationBuilder.build());
 
         return new OAuth2AccessTokenAuthenticationToken(
-                registeredClient, clientPrincipal, accessToken, refreshToken);
+                registeredClient, clientPrincipal, accessToken, refreshToken, additionalParameters);
     }
 
     @Override

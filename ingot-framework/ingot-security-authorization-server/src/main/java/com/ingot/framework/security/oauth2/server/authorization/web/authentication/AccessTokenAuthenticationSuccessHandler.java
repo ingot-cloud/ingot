@@ -13,6 +13,7 @@ import com.ingot.framework.commons.utils.CookieUtil;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.WebUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.security.oauth2.server.authorization.common.OAuth2Util;
 import com.ingot.framework.security.oauth2.server.authorization.http.converter.CustomOAuth2AccessTokenResponseHttpMessageConverter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.MultiValueMap;
 
 /**
  * <p>Description  : AccessTokenAuthenticationSuccessHandler.</p>
@@ -89,13 +89,22 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
 
     private void sendSuccessEventLog(HttpServletRequest request,
                                      Authentication authentication) {
+        OAuth2AccessTokenAuthenticationToken accessTokenAuthentication =
+                (OAuth2AccessTokenAuthenticationToken) authentication;
+        Map<String, Object> additionalParameters = accessTokenAuthentication.getAdditionalParameters();
+
+        String username = OAuth2Util.getLoginUsername(additionalParameters);
+        String org = OAuth2Util.getLoginOrg(additionalParameters);
+        // 清理多余参数
+        OAuth2Util.clearLoginInfo(additionalParameters);
+
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
 
-        MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
         AuthSuccessDTO payload = new AuthSuccessDTO();
         payload.setGrantType(grantType);
         payload.setIp(WebUtil.getClientIP(request));
-        payload.setUsername(parameters.getFirst(OAuth2ParameterNames.USERNAME));
+        payload.setUsername(username);
+        payload.setOrg(org);
         payload.setTime(DateUtil.now());
         SpringContextHolder.publishEvent(new LoginEvent(payload));
     }

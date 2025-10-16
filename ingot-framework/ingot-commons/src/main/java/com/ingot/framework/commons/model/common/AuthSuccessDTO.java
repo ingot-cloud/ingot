@@ -13,8 +13,24 @@ import lombok.Data;
  */
 @Data
 public class AuthSuccessDTO implements Serializable {
+    /**
+     * 登录授权类型
+     */
     private String grantType;
+    /**
+     * 登录账号
+     */
     private String username;
+    /**
+     * 登录组织
+     */
+    private String org;
+    /**
+     * 登录IP
+     */
     private String ip;
+    /**
+     * 登录时间
+     */
     private LocalDateTime time;
 }

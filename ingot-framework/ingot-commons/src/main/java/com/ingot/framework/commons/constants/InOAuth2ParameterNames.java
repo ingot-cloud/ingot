@@ -64,4 +64,9 @@ public interface InOAuth2ParameterNames {
      * 传递sessionId字段
      */
     String SESSION_ID = "s_token";
+
+    /**
+     * 用户名
+     */
+    String USERNAME = "in_ua";
 }

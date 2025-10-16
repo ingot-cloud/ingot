@@ -7,6 +7,8 @@ import java.util.Optional;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.oauth2.server.authorization.common.OAuth2Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -65,10 +67,12 @@ public final class InOAuth2AuthorizationCodeAuthenticationProvider implements Au
         // 如果是OAuth2PreAuthorizationCodeRequestAuthenticationToken，那么添加 tenant
         Authentication principal = authorization.getAttribute(Principal.class.getName());
         if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preToken) {
-            preToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT);
-            additionalParameters.put(InOAuth2ParameterNames.TENANT,
-                    preToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT));
+            String org = (String) preToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT);
+            Object userPrincipal = preToken.getPrincipal();
+            InUser user = userPrincipal instanceof InUser ? (InUser) userPrincipal : null;
+            OAuth2Util.setupLoginInfo(additionalParameters, org, user);
         }
+
         OAuth2AuthorizationRequest request = authorization.getAttribute(OAuth2AuthorizationRequest.class.getName());
         if (request != null) {
             String sessionId = Optional.ofNullable(request.getAdditionalParameters().get(InOAuth2ParameterNames.SESSION_ID))
