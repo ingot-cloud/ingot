@@ -16,6 +16,7 @@ public class OAuth2TokenEndpointCustomizer implements Customizer<OAuth2TokenEndp
 
     @Override
     public void customize(OAuth2TokenEndpointConfigurer configurer) {
+        // todo AccessTokenAuthenticationSuccessHandler 区分grant type，进行不同login event处理
         // 1. 添加 OAuth2CustomAuthenticationConverter
         configurer.accessTokenRequestConverter(new OAuth2CustomAuthenticationConverter());
         // 2. 自定义 AuthenticationSuccessHandler 和 AuthenticationFailureHandler

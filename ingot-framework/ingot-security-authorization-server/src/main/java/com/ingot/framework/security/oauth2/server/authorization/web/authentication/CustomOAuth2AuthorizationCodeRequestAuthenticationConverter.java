@@ -8,6 +8,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.utils.ErrorUtil;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +40,8 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
             principal = requiredCheck(request, token);
         }
 
+        Authentication finalOPrincipal = principal;
+
         OAuth2AuthorizationCodeRequestAuthenticationToken token =
                 (OAuth2AuthorizationCodeRequestAuthenticationToken) converter.convert(request);
 
@@ -48,9 +51,11 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         // 添加sessionId
         additionalParameters.put(InOAuth2ParameterNames.SESSION_ID, SecurityUtils.getSessionId(request));
 
-        return new OAuth2AuthorizationCodeRequestAuthenticationToken(
-                token.getAuthorizationUri(), token.getClientId(), principal,
-                token.getRedirectUri(), token.getState(), token.getScopes(), additionalParameters);
+        return ErrorUtil.tryOrThrow(() ->
+                        new OAuth2AuthorizationCodeRequestAuthenticationToken(
+                                token.getAuthorizationUri(), token.getClientId(), finalOPrincipal,
+                                token.getRedirectUri(), token.getState(), token.getScopes(), additionalParameters),
+                e -> createError(OAuth2ErrorCodes.INVALID_REQUEST, e));
     }
 
     private Authentication requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
@@ -94,5 +99,10 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     private static void throwError(String parameterName) {
         OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, "OAuth 2.0 Parameter: " + parameterName, null);
         throw new OAuth2AuthorizationCodeRequestAuthenticationException(error, null);
+    }
+
+    private static OAuth2AuthorizationCodeRequestAuthenticationException createError(String message, Throwable cause) {
+        OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST, message, null);
+        return new OAuth2AuthorizationCodeRequestAuthenticationException(error, cause, null);
     }
 }
