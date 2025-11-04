@@ -8,6 +8,7 @@ import java.util.Map;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.security.oauth2.server.authorization.common.OAuth2Util;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -42,7 +43,9 @@ public class CustomOAuth2AccessTokenResponseMapConverter
         }
         if (!CollectionUtils.isEmpty(tokenResponse.getAdditionalParameters())) {
             for (Map.Entry<String, Object> entry : tokenResponse.getAdditionalParameters().entrySet()) {
-                parameters.put(entry.getKey(), entry.getValue().toString());
+                if (!OAuth2Util.isIgnoreKey(entry.getKey())) {
+                    parameters.put(entry.getKey(), entry.getValue().toString());
+                }
             }
         }
 

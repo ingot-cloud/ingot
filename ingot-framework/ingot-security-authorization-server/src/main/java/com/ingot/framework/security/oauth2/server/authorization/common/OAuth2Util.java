@@ -35,4 +35,8 @@ public class OAuth2Util {
     public static String getLoginUsername(Map<String, Object> additionalParameters) {
         return (String) additionalParameters.get(InOAuth2ParameterNames.USERNAME);
     }
+
+    public static boolean isIgnoreKey(String key) {
+        return StrUtil.startWith(key, InOAuth2ParameterNames.IGNORE_PREFIX);
+    }
 }

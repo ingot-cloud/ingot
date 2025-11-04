@@ -9,6 +9,10 @@ import com.ingot.framework.commons.model.enums.SocialTypeEnum;
  * <p>Time         : 2:50 下午.</p>
  */
 public interface InOAuth2ParameterNames {
+    /**
+     * Token 响应中，不进行返回的参数key前缀
+     */
+    String IGNORE_PREFIX = "in:";
 
     /**
      * {@code access_token} - used in Authorization Response and Access Token Response.
@@ -68,5 +72,5 @@ public interface InOAuth2ParameterNames {
     /**
      * 用户名
      */
-    String USERNAME = "in_ua";
+    String USERNAME = IGNORE_PREFIX + "ua";
 }
