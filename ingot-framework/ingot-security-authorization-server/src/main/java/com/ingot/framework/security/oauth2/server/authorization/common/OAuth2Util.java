@@ -28,11 +28,6 @@ public class OAuth2Util {
         }
     }
 
-    public static void clearLoginInfo(Map<String, Object> additionalParameters) {
-        additionalParameters.remove(InOAuth2ParameterNames.USERNAME);
-        additionalParameters.remove(InOAuth2ParameterNames.TENANT);
-    }
-
     public static String getLoginOrg(Map<String, Object> additionalParameters) {
         return (String) additionalParameters.get(InOAuth2ParameterNames.TENANT);
     }
