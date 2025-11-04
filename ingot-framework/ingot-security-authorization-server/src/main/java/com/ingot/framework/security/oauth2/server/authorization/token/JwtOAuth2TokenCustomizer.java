@@ -46,18 +46,18 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
     }
 
     private void customizeWithUser(JwtEncodingContext context, UserDetails user) {
-        if (user instanceof InUser) {
+        if (user instanceof InUser inUser) {
             context.getClaims().claim(JwtClaimNamesExtension.ID,
-                    ((InUser) user).getId());
+                    inUser.getId());
             context.getClaims().claim(JwtClaimNamesExtension.TENANT,
-                    ((InUser) user).getTenantId());
+                    inUser.getTenantId());
             context.getClaims().claim(JwtClaimNamesExtension.AUTH_TYPE,
-                    ((InUser) user).getTokenAuthType());
+                    inUser.getTokenAuthType());
             context.getClaims().claim(JwtClaimNamesExtension.USER_TYPE,
-                    ((InUser) user).getUserType());
+                    inUser.getUserType());
 
             Set<String> authorities = InAuthorityUtils.authorityListToSet(
-                    user.getAuthorities(), ((InUser) user).getTenantId());
+                    user.getAuthorities(), inUser.getTenantId());
             authorities.addAll(context.getAuthorizedScopes());
 
             context.getClaims().claim(JwtClaimNamesExtension.SCOPE, authorities);
