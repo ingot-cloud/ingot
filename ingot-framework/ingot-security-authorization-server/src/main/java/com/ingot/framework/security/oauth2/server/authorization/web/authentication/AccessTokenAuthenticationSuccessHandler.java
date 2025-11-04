@@ -95,8 +95,6 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
 
         String username = OAuth2Util.getLoginUsername(additionalParameters);
         String org = OAuth2Util.getLoginOrg(additionalParameters);
-        // 清理多余参数
-        OAuth2Util.clearLoginInfo(additionalParameters);
 
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
 
