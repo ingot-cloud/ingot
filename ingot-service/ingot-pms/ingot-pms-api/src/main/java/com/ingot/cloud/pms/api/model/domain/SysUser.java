@@ -59,6 +59,7 @@ public class SysUser extends BaseModel<SysUser> implements UserType {
     /**
      * 初始化密码标识
      */
+    @JsonIgnore
     @Schema(description = "初始化密码标识")
     private Boolean initPwd;
 
