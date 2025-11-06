@@ -2,6 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -50,6 +51,14 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
         String redirectUri = (String) additionalParameters.get(OAuth2ParameterNames.REDIRECT_URI);
         if (!registeredClient.getRedirectUris().contains(redirectUri)) {
             OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ParameterNames.REDIRECT_URI, null);
+        }
+
+        // check scope
+        String scopes = (String) additionalParameters.get(OAuth2ParameterNames.SCOPE);
+        List<String> requestedScopes = StrUtil.split(scopes, StrUtil.SPACE);
+        Set<String> allowedScopes = registeredClient.getScopes();
+        if (!requestedScopes.isEmpty() && !allowedScopes.containsAll(requestedScopes)) {
+            OAuth2ErrorUtils.throwInvalidRequestParameter(OAuth2ParameterNames.SCOPE, null);
         }
 
         // code_challenge (REQUIRED for public clients) - RFC 7636 (PKCE)
