@@ -1,9 +1,9 @@
 def deps = [:]
 def versions = [:]
-versions.spring_boot = "3.4.3"
-versions.spring_cloud = "2024.0.0"
-versions.spring_cloud_alibaba = "2023.0.3.2"
-versions.spring_authorization_server = "1.4.2"
+versions.spring_boot = "3.5.7"
+versions.spring_cloud = "2025.0.0"
+versions.spring_cloud_alibaba = "2025.0.0.0"
+versions.spring_authorization_server = "1.5.3"
 
 versions.springdoc = "2.8.5"
 versions.swagger_core = "2.2.28"
@@ -58,8 +58,7 @@ spring_boot.aop_starter = "org.springframework.boot:spring-boot-starter-aop"
 spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies:${versions.spring_cloud}"
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
 spring_cloud.loadbalancer_starter = "org.springframework.cloud:spring-cloud-starter-loadbalancer"
-spring_cloud.gateway_starter = "org.springframework.cloud:spring-cloud-starter-gateway"
-spring_cloud.gateway = "org.springframework.cloud:spring-cloud-gateway-server"
+spring_cloud.gateway = "org.springframework.cloud:spring-cloud-starter-gateway-server-webflux"
 spring_cloud.config_starter = "org.springframework.cloud:spring-cloud-starter-config"
 spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-server"
 spring_cloud.bus_amqp_start = "org.springframework.cloud:spring-cloud-starter-bus-amqp"

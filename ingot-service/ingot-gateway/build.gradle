@@ -5,7 +5,7 @@ dependencies {
 //    implementation(deps.spring.spring_boot.actuator_starter)
     implementation(deps.spring.spring_boot.data_redis_reactive_starter)
 
-    implementation(deps.spring.spring_cloud.gateway_starter)
+    implementation(deps.spring.spring_cloud.gateway)
     implementation(deps.spring.spring_cloud.openfeign_starter)
     implementation(deps.spring.spring_cloud.loadbalancer_starter)
     implementation(deps.alibaba.sentinel_gateway)
