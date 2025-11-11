@@ -90,7 +90,7 @@ class MybatisPlusGeneratorExtension {
     /**
      * controller 父类
      */
-    String superControllerClass = "com.ingot.framework.core.model.support.RShortcuts"
+    String superControllerClass = "com.ingot.framework.commons.model.support.RShortcuts"
 
     /**
      * service 父类
