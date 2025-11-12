@@ -1,48 +1,47 @@
 package com.ingot.cloud.pms.api.model.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * <p>Description  : OrgTypeEnums.</p>
+ * <p>Description  : OrgPlanUnitEnum.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2023/11/22.</p>
- * <p>Time         : 10:23.</p>
+ * <p>Date         : 2025/11/11.</p>
+ * <p>Time         : 15:18.</p>
  */
 @Getter
 @RequiredArgsConstructor
-public enum OrgTypeEnum {
-    Platform("0", "平台"),
-    Tenant("1", "组织"),
-    Custom("9", "自定义");
+public enum OrgPlanUnitEnum {
+    MONTH("1", "月"),
+    YEAR("2", "年");
 
     @JsonValue
     @EnumValue
     private final String value;
     private final String text;
 
-    private static final Map<String, OrgTypeEnum> valueMap = new HashMap<>();
-    private static final Map<String, OrgTypeEnum> textMap = new HashMap<>();
+    private static final Map<String, OrgPlanUnitEnum> valueMap = new HashMap<>();
+    private static final Map<String, OrgPlanUnitEnum> textMap = new HashMap<>();
 
     static {
-        for (OrgTypeEnum item : OrgTypeEnum.values()) {
+        for (OrgPlanUnitEnum item : OrgPlanUnitEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static OrgTypeEnum getEnumByText(String text) {
+    public static OrgPlanUnitEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static OrgTypeEnum getEnum(String value) {
+    public static OrgPlanUnitEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

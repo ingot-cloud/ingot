@@ -10,39 +10,38 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * <p>Description  : OrgTypeEnums.</p>
+ * <p>Description  : DictTypeEnum.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2023/11/22.</p>
- * <p>Time         : 10:23.</p>
+ * <p>Date         : 2025/11/12.</p>
+ * <p>Time         : 10:59.</p>
  */
 @Getter
 @RequiredArgsConstructor
-public enum OrgTypeEnum {
-    Platform("0", "平台"),
-    Tenant("1", "组织"),
-    Custom("9", "自定义");
+public enum DictTypeEnum {
+    TYPE("0", "字典类型"),
+    ITEM("1", "字典项");
 
     @JsonValue
     @EnumValue
     private final String value;
     private final String text;
 
-    private static final Map<String, OrgTypeEnum> valueMap = new HashMap<>();
-    private static final Map<String, OrgTypeEnum> textMap = new HashMap<>();
+    private static final Map<String, DictTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, DictTypeEnum> textMap = new HashMap<>();
 
     static {
-        for (OrgTypeEnum item : OrgTypeEnum.values()) {
+        for (DictTypeEnum item : DictTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static OrgTypeEnum getEnumByText(String text) {
+    public static DictTypeEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static OrgTypeEnum getEnum(String value) {
+    public static DictTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }

@@ -1,48 +1,47 @@
 package com.ingot.cloud.pms.api.model.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * <p>Description  : OrgTypeEnums.</p>
+ * <p>Description  : AuthorityTypeEnum.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2023/11/22.</p>
- * <p>Time         : 10:23.</p>
+ * <p>Date         : 2025/11/12.</p>
+ * <p>Time         : 09:11.</p>
  */
 @Getter
 @RequiredArgsConstructor
-public enum OrgTypeEnum {
-    Platform("0", "平台"),
-    Tenant("1", "组织"),
-    Custom("9", "自定义");
+public enum AuthorityTypeEnum {
+    MENU("0", "菜单权限"),
+    API("1", "API权限");
 
     @JsonValue
     @EnumValue
     private final String value;
     private final String text;
 
-    private static final Map<String, OrgTypeEnum> valueMap = new HashMap<>();
-    private static final Map<String, OrgTypeEnum> textMap = new HashMap<>();
+    private static final Map<String, AuthorityTypeEnum> valueMap = new HashMap<>();
+    private static final Map<String, AuthorityTypeEnum> textMap = new HashMap<>();
 
     static {
-        for (OrgTypeEnum item : OrgTypeEnum.values()) {
+        for (AuthorityTypeEnum item : AuthorityTypeEnum.values()) {
             valueMap.put(item.getValue(), item);
             textMap.put(item.getText(), item);
         }
     }
 
-    public static OrgTypeEnum getEnumByText(String text) {
+    public static AuthorityTypeEnum getEnumByText(String text) {
         return textMap.get(text);
     }
 
     @JsonCreator
-    public static OrgTypeEnum getEnum(String value) {
+    public static AuthorityTypeEnum getEnum(String value) {
         return valueMap.get(value);
     }
 }
