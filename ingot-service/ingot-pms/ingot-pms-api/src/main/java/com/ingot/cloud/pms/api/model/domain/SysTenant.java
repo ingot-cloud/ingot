@@ -54,9 +54,9 @@ public class SysTenant extends BaseModel<SysTenant> {
     private String avatar;
 
     /**
-     * 开始日期
+     * 计划ID
      */
-    private LocalDate startAt;
+    private Long planId;
 
     /**
      * 结束日期
