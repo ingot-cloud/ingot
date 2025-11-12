@@ -49,6 +49,11 @@ public class SysTenant extends BaseModel<SysTenant> {
     private String code;
 
     /**
+     * 组织类型
+     */
+    private String orgType;
+
+    /**
      * 头像
      */
     private String avatar;
