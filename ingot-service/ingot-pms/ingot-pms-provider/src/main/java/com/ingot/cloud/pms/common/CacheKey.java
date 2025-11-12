@@ -14,6 +14,7 @@ public interface CacheKey {
     String DefaultExpiredTimeSeconds = "604800";
 
     String AuthorityListKey = "'list'";
+    String AuthorityItemKey = "'item-' + #id";
     String AuthorityRoleKey = "'role-' + #roleId";
     String ClientListKey = "'list'";
     String MenuListKey = "'list'";
