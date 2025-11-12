@@ -35,7 +35,7 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["sys_tenant_plan", "sys_tenant_plan_record"]
+        tables = ["meta_role_authority"]
 
         /**
          * 包名
