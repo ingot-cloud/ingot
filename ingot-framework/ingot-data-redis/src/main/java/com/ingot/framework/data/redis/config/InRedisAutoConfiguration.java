@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.data.redis.cache.InRedisCacheManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -76,7 +77,8 @@ public class InRedisAutoConfiguration {
             CacheProperties.Redis redisProperties = this.cacheProperties.getRedis();
             RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
             config = config.serializeValuesWith(RedisSerializationContext.SerializationPair
-                    .fromSerializer(RedisSerializer.java()));
+                    .fromSerializer(RedisSerializer.java()))
+                    .computePrefixWith(cacheName -> cacheName + StrUtil.COLON); // 使用单冒号，默认为CacheKeyPrefix.SEPARATOR
             if (redisProperties.getTimeToLive() != null) {
                 config = config.entryTtl(redisProperties.getTimeToLive());
             }
