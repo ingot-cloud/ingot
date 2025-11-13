@@ -35,25 +35,25 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
     private final AssertionChecker assertionChecker;
 
     @Override
-    @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityListKey, unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.META_AUTHORITIES, key = CacheKey.ListKey, unless = "#result.isEmpty()")
     public List<MetaAuthority> list() {
         return super.list();
     }
 
     @Override
-    @Cacheable(value = CacheConstants.AUTHORITY_DETAILS, key = CacheKey.AuthorityItemKey, unless = "#result == null")
+    @Cacheable(value = CacheConstants.META_AUTHORITIES, key = CacheKey.ItemKey, unless = "#result == null")
     public MetaAuthority getById(Serializable id) {
         return super.getById(id);
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
     public void create(MetaAuthority authority, boolean fillParentCode) {
         createAndReturnId(authority, fillParentCode);
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
     public Long createAndReturnId(MetaAuthority authority, boolean fillParentCode) {
         assertionChecker.checkOperation(authority.getType() != null,
                 "MetaAuthorityServiceImpl.TypeNonNull");
@@ -82,7 +82,7 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
     public void update(MetaAuthority authority) {
         // 权限编码不可更新
         authority.setCode(null);
@@ -91,11 +91,13 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.AUTHORITY_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
     public void delete(long id) {
-        // 叶子权限才可以删除
-        boolean result = count(Wrappers.<MetaAuthority>lambdaQuery().eq(MetaAuthority::getPid, id)) == 0;
-        assertionChecker.checkOperation(result, "MetaAuthorityServiceImpl.RemoveFailedMustLeaf");
+        // 叶子才可以删除
+        boolean result = count(Wrappers.<MetaAuthority>lambdaQuery()
+                .eq(MetaAuthority::getPid, id)) == 0;
+        assertionChecker.checkOperation(result,
+                "MetaAuthorityServiceImpl.RemoveFailedMustLeaf");
 
         removeById(id);
     }

@@ -14,10 +14,16 @@ public interface CacheKey {
     String DefaultExpiredTimeSeconds = "604800";
 
     String AuthorityListKey = "'list'";
-    String AuthorityItemKey = "'item-' + #id";
     String AuthorityRoleKey = "'role-' + #roleId";
     String ClientListKey = "'list'";
     String MenuListKey = "'list'";
+
+    /**
+     * 公共缓存Key
+     */
+    String ListKey = "'list'";
+    String ItemKey = "'item-' + #id";
+    String CodeKey = "'code-' + #code";
 
     /**
      * 获取指定角色绑定权限缓存key

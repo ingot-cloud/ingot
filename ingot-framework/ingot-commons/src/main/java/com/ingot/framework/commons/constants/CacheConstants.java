@@ -29,6 +29,16 @@ public interface CacheConstants {
     String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization";
 
     /**
+     * 元数据-权限
+     */
+    String META_AUTHORITIES = IGNORE_TENANT_PREFIX + ":meta:authorities";
+
+    /**
+     * 元数据-角色
+     */
+    String META_ROLES = IGNORE_TENANT_PREFIX + ":meta:roles";
+
+    /**
      * 所有权限
      */
     String AUTHORITY_DETAILS = "authority_details";
