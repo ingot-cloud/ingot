@@ -7,14 +7,16 @@ import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -32,6 +34,7 @@ public class MetaMenu extends BaseModel<MetaMenu> {
      * ID
      */
     @TableId(type = IdType.ASSIGN_ID)
+    @NotNull(message = "{Common.IDNonNull}", groups = {Group.Update.class, Group.Delete.class})
     private Long id;
 
     /**

@@ -1,8 +1,11 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
 import com.ingot.cloud.pms.service.biz.BizMetaAuthorityService;
+import com.ingot.cloud.pms.service.domain.MetaAppService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
     private final MetaAuthorityService authorityService;
     private final MetaRoleAuthorityService roleAuthorityService;
+    private final MetaAppService appService;
 
     private final AssertionChecker assertionChecker;
 
@@ -51,6 +55,11 @@ public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
         assert current != null;
         assertionChecker.checkOperation(current.getType() != AuthorityTypeEnum.MENU,
                 "BizMetaAuthorityServiceImpl.CantDeleteMenuAuthority");
+
+        // 判断是否为应用，如果是应用那么不可删除
+        assertionChecker.checkOperation(appService.count(Wrappers.<MetaApp>lambdaQuery()
+                        .eq(MetaApp::getMenuId, id)) == 0,
+                "BizMetaAuthorityServiceImpl.IsApplication");
 
         // 清空角色权限关联
         roleAuthorityService.clearByAuthorityId(id);

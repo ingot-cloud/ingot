@@ -8,10 +8,11 @@ import java.util.stream.Collectors;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.domain.MetaMenu;
 import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.service.domain.SysMenuService;
+import com.ingot.cloud.pms.service.domain.MetaMenuService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.UUIDUtil;
@@ -66,10 +67,10 @@ public class MenuUtils {
     /**
      * 设置外部链接path
      */
-    public static void setMenuOuterLinkPath(SysMenu params, Long pid, SysMenuService sysMenuService) {
-        String pPath = "";
+    public static void setMenuOuterLinkPath(MetaMenu params, Long pid, MetaMenuService menuService) {
+        String pPath;
         if (pid != null && pid > 0) {
-            SysMenu parent = sysMenuService.getById(pid);
+            MetaMenu parent = menuService.getById(pid);
             pPath = parent.getPath() + "/";
         } else {
             pPath = "/";
@@ -83,7 +84,7 @@ public class MenuUtils {
      *
      * @param menu {@link SysMenu}
      */
-    public static void setViewPathAccordingToPath(SysMenu menu) {
+    public static void setViewPathAccordingToPath(MetaMenu menu) {
         String path = menu.getPath();
         if (BooleanUtil.isTrue(menu.getProps())) {
             path = StrUtil.subBefore(path, "/", true);
@@ -95,10 +96,10 @@ public class MenuUtils {
      * 获取菜单权限code, 将菜单path替换为编码<br>
      * path：/a/b/c => a:b:c
      *
-     * @param menu {@link SysMenu}
+     * @param menu {@link MetaMenu}
      * @return code
      */
-    public static String getMenuAuthorityCode(SysMenu menu) {
+    public static String getMenuAuthorityCode(MetaMenu menu) {
         String path = menu.getPath();
         String r = StrUtil.replace(path, StrUtil.COLON, "");
         r = StrUtil.replace(r, StrUtil.SLASH, StrUtil.COLON);

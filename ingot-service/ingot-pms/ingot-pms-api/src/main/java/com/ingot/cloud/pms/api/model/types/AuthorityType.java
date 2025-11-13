@@ -32,7 +32,7 @@ public interface AuthorityType {
 
     OrgTypeEnum getType();
 
-    void setType(OrgTypeEnum type);
+    void setOrgType(OrgTypeEnum type);
 
     String getRemark();
 

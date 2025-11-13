@@ -1,10 +1,12 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
@@ -13,7 +15,7 @@ import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -23,8 +25,8 @@ import lombok.ToString;
 @Setter
 @ToString
 @TableName("meta_authority")
-public class MetaAuthority extends BaseModel<MetaAuthority> {
-
+public class MetaAuthority extends BaseModel<MetaAuthority> implements AuthorityType {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
