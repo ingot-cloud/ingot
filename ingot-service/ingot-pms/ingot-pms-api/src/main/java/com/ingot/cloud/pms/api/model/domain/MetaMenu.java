@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.types.MenuType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
@@ -26,7 +27,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @TableName("meta_menu")
-public class MetaMenu extends BaseModel<MetaMenu> {
+public class MetaMenu extends BaseModel<MetaMenu> implements MenuType {
 
     private static final long serialVersionUID = 1L;
 

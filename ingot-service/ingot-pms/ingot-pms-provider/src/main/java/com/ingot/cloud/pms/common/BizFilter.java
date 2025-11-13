@@ -7,7 +7,7 @@ import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
+import com.ingot.cloud.pms.api.model.types.MenuType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 
 /**
@@ -24,7 +24,7 @@ public final class BizFilter {
      * @param condition 条件
      * @return {@link Predicate}
      */
-    public static Predicate<MenuTreeNodeVO> menuFilter(MenuFilterDTO condition) {
+    public static Predicate<MenuTreeNodeVO> menuFilter(MenuType condition) {
         return (item) -> {
             if (condition == null) {
                 return true;
@@ -32,8 +32,8 @@ public final class BizFilter {
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());
             }
-            if (StrUtil.isNotEmpty(condition.getOrgTypeText())) {
-                return StrUtil.equals(item.getOrgType().getValue(), condition.getOrgTypeText());
+            if (condition.getOrgType() != null) {
+                return item.getOrgType() == condition.getOrgType();
             }
             return true;
         };

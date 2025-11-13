@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
-import com.ingot.cloud.pms.api.model.dto.menu.MenuFilterDTO;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -49,7 +48,7 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     }
 
     @Override
-    public List<MenuTreeNodeVO> treeList(MenuFilterDTO filter) {
+    public List<MenuTreeNodeVO> treeList(MetaMenu filter) {
         List<MenuTreeNodeVO> allNode = menuService.nodeList().stream()
                 .filter(BizFilter.menuFilter(filter))
                 .sorted(Comparator.comparing(MenuTreeNodeVO::getOrgType)
