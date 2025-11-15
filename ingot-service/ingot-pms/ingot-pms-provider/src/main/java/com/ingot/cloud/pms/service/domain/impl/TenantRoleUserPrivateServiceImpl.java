@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.mapper.TenantRoleUserPrivateMapper;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author jymot
@@ -17,4 +18,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRoleUserPrivateMapper, TenantRoleUserPrivate> implements TenantRoleUserPrivateService {
 
+    @Override
+    public void clearByRoleId(long id) {
+        remove(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                .eq(TenantRoleUserPrivate::getRoleId, id));
+    }
 }
