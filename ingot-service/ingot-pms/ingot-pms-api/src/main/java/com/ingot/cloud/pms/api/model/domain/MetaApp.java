@@ -48,6 +48,11 @@ public class MetaApp extends BaseModel<MetaApp> {
     private String name;
 
     /**
+     * 应用图标
+     */
+    private String icon;
+
+    /**
      * 应用介绍
      */
     private String intro;

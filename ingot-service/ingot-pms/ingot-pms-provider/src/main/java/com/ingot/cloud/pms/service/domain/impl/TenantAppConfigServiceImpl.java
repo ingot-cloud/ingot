@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
 import com.ingot.cloud.pms.mapper.TenantAppConfigMapper;
 import com.ingot.cloud.pms.service.domain.TenantAppConfigService;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author jymot
@@ -17,4 +18,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class TenantAppConfigServiceImpl extends BaseServiceImpl<TenantAppConfigMapper, TenantAppConfig> implements TenantAppConfigService {
 
+    @Override
+    public void clearByAppId(long id) {
+        remove(Wrappers.<TenantAppConfig>lambdaQuery()
+                .eq(TenantAppConfig::getMetaId, id));
+    }
 }

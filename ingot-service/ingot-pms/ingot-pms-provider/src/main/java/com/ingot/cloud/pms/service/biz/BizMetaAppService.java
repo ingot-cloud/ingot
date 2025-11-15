@@ -1,19 +1,16 @@
-package com.ingot.cloud.pms.service.domain;
+package com.ingot.cloud.pms.service.biz;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
-import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
- * <p>
- * 服务类
- * </p>
- *
- * @author jymot
- * @since 2025-11-12
+ * <p>Description  : BizMetaAppService.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/15.</p>
+ * <p>Time         : 16:42.</p>
  */
-public interface MetaAppService extends BaseService<MetaApp> {
+public interface BizMetaAppService {
 
     /**
      * 元数据应用列表
@@ -44,5 +41,4 @@ public interface MetaAppService extends BaseService<MetaApp> {
      * @param id 应用ID
      */
     void delete(long id);
-
 }
