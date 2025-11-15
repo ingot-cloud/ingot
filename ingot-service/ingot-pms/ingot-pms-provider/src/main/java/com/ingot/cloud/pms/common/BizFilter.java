@@ -4,10 +4,10 @@ import java.util.function.Predicate;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.types.MenuType;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 
 /**
@@ -45,7 +45,7 @@ public final class BizFilter {
      * @param condition 条件
      * @return {@link Predicate}
      */
-    public static Predicate<SysAuthority> authorityFilter(AuthorityFilterDTO condition) {
+    public static Predicate<AuthorityType> authorityFilter(AuthorityType condition) {
         return (item) -> {
             if (condition == null) {
                 return true;
@@ -53,8 +53,8 @@ public final class BizFilter {
             if (StrUtil.isNotEmpty(condition.getName())) {
                 return StrUtil.startWith(item.getName(), condition.getName());
             }
-            if (StrUtil.isNotEmpty(condition.getOrgTypeText())) {
-                return StrUtil.equals(item.getType().getValue(), condition.getOrgTypeText());
+            if (condition.getOrgType() != null) {
+                return item.getOrgType() == condition.getOrgType();
             }
             return true;
         };
@@ -91,6 +91,21 @@ public final class BizFilter {
             }
             if (StrUtil.isNotEmpty(condition.getClientId())) {
                 return StrUtil.startWith(item.getClientId(), condition.getClientId());
+            }
+            return true;
+        };
+    }
+
+    public static Predicate<RoleType> roleFilter(RoleType condition) {
+        return (item) -> {
+            if (condition == null) {
+                return true;
+            }
+            if (StrUtil.isNotEmpty(condition.getName())) {
+                return StrUtil.startWith(item.getName(), condition.getName());
+            }
+            if (condition.getOrgType() != null) {
+                return item.getOrgType() == condition.getOrgType();
             }
             return true;
         };

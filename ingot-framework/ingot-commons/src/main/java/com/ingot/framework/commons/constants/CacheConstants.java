@@ -39,6 +39,16 @@ public interface CacheConstants {
     String META_ROLES = IGNORE_TENANT_PREFIX + ":meta:roles";
 
     /**
+     * 元数据-角色权限
+     */
+    String META_ROLE_AUTHORITIES = IGNORE_TENANT_PREFIX + ":meta:role_authorities";
+
+    /**
+     * 元数据-菜单
+     */
+    String META_MENUS = IGNORE_TENANT_PREFIX + ":meta:menus";
+
+    /**
      * 所有权限
      */
     String AUTHORITY_DETAILS = "authority_details";

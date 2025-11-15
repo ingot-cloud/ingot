@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.SysApplicationTenant;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.core.org.TenantUtils;
@@ -34,7 +34,7 @@ public class AuthorityUtils {
      * @param orgId                       组织ID
      * @param sysApplicationTenantService {@link SysApplicationTenantService}
      * @param sysAuthorityService         {@link SysAuthorityService}
-     * @param authorityConvert              转换器
+     * @param authorityConvert            转换器
      * @return {@link AuthorityTreeNodeVO}
      */
     public static List<AuthorityTreeNodeVO> getOrgAuthorities(long orgId,
@@ -83,14 +83,14 @@ public class AuthorityUtils {
     /**
      * 权限转为tree结构
      *
-     * @param authorities    {@link SysAuthority}
-     * @param condition      条件
+     * @param authorities      {@link SysAuthority}
+     * @param condition        条件
      * @param authorityConvert 转换器
      * @return {@link AuthorityTreeNodeVO}
      */
-    public static List<AuthorityTreeNodeVO> mapTree(List<SysAuthority> authorities,
-                                                    AuthorityFilterDTO condition,
-                                                    AuthorityConvert authorityConvert) {
+    public static List<AuthorityTreeNodeVO> mapTree(List<? extends AuthorityType> authorities,
+                                                    AuthorityConvert authorityConvert,
+                                                    AuthorityType condition) {
         List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .filter(BizFilter.authorityFilter(condition))
                 .map(authorityConvert::to).collect(Collectors.toList());

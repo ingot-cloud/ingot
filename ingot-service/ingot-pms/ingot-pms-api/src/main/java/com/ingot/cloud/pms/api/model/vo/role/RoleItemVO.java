@@ -1,41 +1,30 @@
-package com.ingot.cloud.pms.api.model.domain;
+package com.ingot.cloud.pms.api.model.vo.role;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
-import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 /**
- * <p>
- *
- * </p>
- *
- * @author jymot
- * @since 2025-11-12
+ * <p>Description  : RoleItemVO.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/14.</p>
+ * <p>Time         : 11:19.</p>
  */
-@Getter
-@Setter
-@ToString
-@TableName(value = "meta_role", autoResultMap = true)
-public class MetaRole extends BaseModel<MetaRole> implements RoleType {
+@Data
+public class RoleItemVO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -46,19 +35,16 @@ public class MetaRole extends BaseModel<MetaRole> implements RoleType {
     /**
      * 角色名称
      */
-    @TableField("`name`")
     private String name;
 
     /**
      * 角色编码
      */
-    @TableField("`code`")
     private String code;
 
     /**
      * 角色类型
      */
-    @TableField("`type`")
     private RoleTypeEnum type;
 
     /**
@@ -79,7 +65,6 @@ public class MetaRole extends BaseModel<MetaRole> implements RoleType {
     /**
      * 数据权限范围
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> scopes;
 
     /**
@@ -97,9 +82,9 @@ public class MetaRole extends BaseModel<MetaRole> implements RoleType {
      */
     private LocalDateTime updatedAt;
 
-    /**
-     * 删除日期
-     */
-    @TableLogic
-    private LocalDateTime deletedAt;
+    /* --- 扩展 --- */
+    private String typeText;
+    private String orgTypeText;
+    private String scopeTypeText;
+    private String statusText;
 }

@@ -1,6 +1,9 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 
 /**
  * <p>Description  : BizMetaAuthorityService.</p>
@@ -9,6 +12,14 @@ import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
  * <p>Time         : 14:52.</p>
  */
 public interface BizMetaAuthorityService {
+
+    /**
+     * 获取权限树
+     *
+     * @param filter {@link MetaAuthority} 过滤条件
+     * @return {@link AuthorityTreeNodeVO}
+     */
+    List<AuthorityTreeNodeVO> treeList(MetaAuthority filter);
 
     /**
      * 创建非菜单权限

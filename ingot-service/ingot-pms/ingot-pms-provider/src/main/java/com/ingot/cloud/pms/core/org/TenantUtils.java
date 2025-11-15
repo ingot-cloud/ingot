@@ -146,7 +146,7 @@ public class TenantUtils {
         item.setPid(pid);
         item.setName(authorityType.getName());
         item.setCode(authorityType.getCode());
-        item.setOrgType(authorityType.getType());
+        item.setOrgType(authorityType.getOrgType());
         item.setStatus(authorityType.getStatus());
         item.setRemark(authorityType.getRemark());
         item.setCreatedAt(DateUtil.now());

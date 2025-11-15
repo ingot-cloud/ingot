@@ -6,12 +6,15 @@ import java.util.List;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.MetaRoleMapper;
 import com.ingot.cloud.pms.service.domain.MetaRoleService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.RoleUtil;
+import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -64,11 +67,23 @@ public class MetaRoleServiceImpl extends BaseServiceImpl<MetaRoleMapper, MetaRol
                 "MetaRoleServiceImpl.TypeNonNull");
         assertionChecker.checkOperation(role.getOrgType() != null,
                 "MetaRoleServiceImpl.OrgTypeNonNull");
-        assertionChecker.checkOperation(StrUtil.isNotEmpty(role.getCode()),
-                "MetaRoleServiceImpl.CodeNonNull");
-        assertionChecker.checkOperation(count(Wrappers.<MetaRole>lambdaQuery()
+        assertionChecker.checkOperation(
+                role.getType() == RoleTypeEnum.ROLE,
+                StrUtil.isNotEmpty(role.getCode()),
+                "MetaRoleServiceImpl.CodeNonNull"
+        );
+        assertionChecker.checkOperation(
+                role.getType() == RoleTypeEnum.ROLE,
+                count(Wrappers.<MetaRole>lambdaQuery()
                         .eq(MetaRole::getCode, role.getCode())) == 0,
-                "MetaRoleServiceImpl.ExistCode");
+                "MetaRoleServiceImpl.ExistCode"
+        );
+        assertionChecker.checkOperation(
+                role.getPid() != null,
+                count(Wrappers.<MetaRole>lambdaQuery()
+                        .eq(MetaRole::getId, role.getPid())) == 0,
+                "MetaRoleServiceImpl.ParentNonExist"
+        );
 
         if (role.getStatus() == null) {
             role.setStatus(CommonStatusEnum.ENABLE);
@@ -97,6 +112,13 @@ public class MetaRoleServiceImpl extends BaseServiceImpl<MetaRoleMapper, MetaRol
     @Override
     @CacheEvict(value = CacheConstants.META_ROLES, allEntries = true)
     public void delete(long id) {
+        MetaRole role = SpringContextHolder.getBean(MetaRoleService.class).getById(id);
+        if (role == null) {
+            return;
+        }
+        assertionChecker.checkOperation(!RoleUtil.isAdmin(role.getCode()),
+                "MetaRoleServiceImpl.SuperAdminRemoveFailed");
+
         // 叶子才可以删除
         boolean result = count(Wrappers.<MetaRole>lambdaQuery()
                 .eq(MetaRole::getPid, id)) == 0;

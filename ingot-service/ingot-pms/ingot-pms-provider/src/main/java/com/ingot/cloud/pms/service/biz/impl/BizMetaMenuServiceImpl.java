@@ -88,7 +88,7 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
         // 判断是否为应用，如果是应用那么不可删除
         assertionChecker.checkOperation(appService.count(Wrappers.<MetaApp>lambdaQuery()
                         .eq(MetaApp::getMenuId, id)) == 0,
-                "SysMenuServiceImpl.IsApplication");
+                "BizMetaMenuServiceImpl.IsApplication");
 
         // 删除权限
         authorityService.delete(current.getAuthorityId());

@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.authority;
 
+import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
@@ -30,7 +31,12 @@ public class AuthorityTreeNodeVO extends TreeNode<Long> implements AuthorityType
     /**
      * 权限类型
      */
-    private OrgTypeEnum type;
+    private AuthorityTypeEnum type;
+
+    /**
+     * 组织类型
+     */
+    private OrgTypeEnum orgType;
 
     /**
      * 状态, 0:正常，9:禁用
