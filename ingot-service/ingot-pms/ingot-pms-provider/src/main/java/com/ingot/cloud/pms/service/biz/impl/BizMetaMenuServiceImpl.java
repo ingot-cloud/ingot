@@ -16,6 +16,7 @@ import com.ingot.cloud.pms.service.biz.BizMetaMenuService;
 import com.ingot.cloud.pms.service.domain.MetaAppService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
+import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     private final MetaMenuService menuService;
     private final MetaAuthorityService authorityService;
     private final MetaAppService appService;
+    private final MetaRoleAuthorityService roleAuthorityService;
 
     private final AssertionChecker assertionChecker;
 
@@ -92,6 +94,8 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
 
         // 删除权限
         authorityService.delete(current.getAuthorityId());
+        // 清空角色权限关联
+        roleAuthorityService.clearByAuthorityId(current.getAuthorityId());
 
         menuService.delete(id);
     }
