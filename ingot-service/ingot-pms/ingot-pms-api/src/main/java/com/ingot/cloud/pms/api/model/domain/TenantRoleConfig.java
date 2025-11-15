@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@TenantTable
 @TableName("tenant_role_config")
 public class TenantRoleConfig extends BaseModel {
 

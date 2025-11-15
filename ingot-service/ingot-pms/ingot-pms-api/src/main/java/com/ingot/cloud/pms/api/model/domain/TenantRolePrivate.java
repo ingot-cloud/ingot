@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Getter;
@@ -26,6 +27,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@TenantTable
 @TableName(value = "tenant_role_private", autoResultMap = true)
 public class TenantRolePrivate extends BaseModel {
 
