@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.*;
 public class MetaMenuAPI implements RShortcuts {
     private final BizMetaMenuService menuService;
 
-    @AdminOrHasAnyAuthority({"platform:menu:action", "platform:menu:read"})
+    @AdminOrHasAnyAuthority({"meta:menu:query"})
     @GetMapping("/tree")
     @Operation(summary = "菜单树", description = "菜单树列表")
     public R<?> tree(MetaMenu filter) {
         return ok(menuService.treeList(filter));
     }
 
-    @AdminOrHasAnyAuthority({"platform:menu:w"})
+    @AdminOrHasAnyAuthority({"meta:menu:create"})
     @PostMapping
     @Operation(summary = "创建菜单", description = "创建菜单")
     public R<?> create(@Validated(Group.Create.class) @RequestBody MetaMenu params) {
@@ -40,7 +40,7 @@ public class MetaMenuAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:menu:w"})
+    @AdminOrHasAnyAuthority({"meta:menu:update"})
     @PutMapping
     @Operation(summary = "更新菜单", description = "更新菜单")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaMenu params) {
@@ -48,7 +48,7 @@ public class MetaMenuAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:menu:w"})
+    @AdminOrHasAnyAuthority({"meta:menu:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单", description = "删除菜单")
     public R<?> removeById(@PathVariable Long id) {

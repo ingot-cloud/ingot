@@ -29,21 +29,21 @@ import org.springframework.web.bind.annotation.*;
 public class MetaRoleAPI implements RShortcuts {
     private final BizMetaRoleService bizMetaRoleService;
 
-    @AdminOrHasAnyAuthority({"platform:role:query"})
+    @AdminOrHasAnyAuthority({"meta:role:query"})
     @GetMapping(value = "/options")
     @Operation(summary = "角色选项", description = "角色选项列表")
     public R<List<Option<Long>>> options(MetaRole condition) {
         return ok(bizMetaRoleService.options(condition));
     }
 
-    @AdminOrHasAnyAuthority({"platform:role:query"})
+    @AdminOrHasAnyAuthority({"meta:role:query"})
     @GetMapping(value = "/list")
     @Operation(summary = "角色列表", description = "角色列表")
     public R<List<RoleItemVO>> conditionList(MetaRole condition) {
         return ok(bizMetaRoleService.conditionList(condition));
     }
 
-    @AdminOrHasAnyAuthority({"platform:role:create"})
+    @AdminOrHasAnyAuthority({"meta:role:create"})
     @PostMapping
     @Operation(summary = "创建角色", description = "创建角色")
     public R<Void> create(@RequestBody MetaRole params) {
@@ -51,7 +51,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:role:update"})
+    @AdminOrHasAnyAuthority({"meta:role:update"})
     @PutMapping
     @Operation(summary = "更新角色", description = "更新角色")
     public R<Void> update(@RequestBody MetaRole params) {
@@ -59,7 +59,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:role:delete"})
+    @AdminOrHasAnyAuthority({"meta:role:delete"})
     @DeleteMapping(value = "/{id}")
     @Operation(summary = "删除角色", description = "删除角色")
     public R<Void> delete(@PathVariable Long id) {
