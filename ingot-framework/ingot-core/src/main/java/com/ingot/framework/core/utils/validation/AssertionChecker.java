@@ -21,6 +21,15 @@ public interface AssertionChecker {
     /**
      * 检查数据操作，如果表达式为 false，则抛出 {@link IllegalOperationException}
      *
+     * @param condition  生效条件
+     * @param expression 表达式结果
+     * @param code       message code
+     */
+    void checkOperation(boolean condition, boolean expression, String code);
+
+    /**
+     * 检查数据操作，如果表达式为 false，则抛出 {@link IllegalOperationException}
+     *
      * @param expression     表达式结果
      * @param code           message code
      * @param defaultMessage 默认消息

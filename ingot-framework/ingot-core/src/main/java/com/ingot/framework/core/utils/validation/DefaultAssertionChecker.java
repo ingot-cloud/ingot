@@ -17,6 +17,14 @@ public class DefaultAssertionChecker implements AssertionChecker {
 
     @Override
     public void checkOperation(boolean expression, String code) {
+        checkOperation(true, expression, code);
+    }
+
+    @Override
+    public void checkOperation(boolean condition, boolean expression, String code) {
+        if (!condition) {
+            return;
+        }
         AssertionUtil.checkOperation(expression, messageSource.getMessage(code, code));
     }
 
