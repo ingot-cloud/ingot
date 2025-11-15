@@ -38,7 +38,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
     private final AssertionChecker assertionChecker;
 
     @Override
-    @Cacheable(value = CacheConstants.MENU_DETAILS + "#" + CacheKey.DefaultExpiredTimeSeconds,
+    @Cacheable(value = CacheConstants.META_MENUS + "#" + CacheKey.DefaultExpiredTimeSeconds,
             key = CacheKey.ListKey,
             unless = "#result.isEmpty()")
     public List<MenuTreeNodeVO> nodeList() {
@@ -46,7 +46,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
     }
 
     @Override
-    @Cacheable(value = CacheConstants.MENU_DETAILS + "#" + CacheKey.DefaultExpiredTimeSeconds,
+    @Cacheable(value = CacheConstants.META_MENUS + "#" + CacheKey.DefaultExpiredTimeSeconds,
             key = CacheKey.ItemKey,
             unless = "#result == null")
     public MetaMenu getById(Serializable id) {
@@ -57,7 +57,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_MENUS, allEntries = true)
     public void create(MetaMenu params) {
         if (params.getLinkType() == null) {
             params.setLinkType(MenuLinkTypeEnum.Default);
@@ -96,7 +96,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_MENUS, allEntries = true)
     public void update(MetaMenu params) {
         MetaMenu current = innerGetById(params.getId());
         assertionChecker.checkOperation(current != null,
@@ -151,7 +151,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_MENUS, allEntries = true)
     public void delete(long id) {
         MetaMenu current = innerGetById(id);
         assertionChecker.checkOperation(current != null,
