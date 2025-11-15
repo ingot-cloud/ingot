@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
@@ -14,7 +15,7 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface AuthorityConvert {
 
-    AuthorityTreeNodeVO to(SysAuthority params);
+    AuthorityTreeNodeVO to(AuthorityType params);
 
     SysAuthority to(AuthorityTreeNodeVO params);
 }
