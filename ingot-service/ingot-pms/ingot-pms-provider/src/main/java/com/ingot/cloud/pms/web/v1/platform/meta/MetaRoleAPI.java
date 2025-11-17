@@ -3,8 +3,10 @@ package com.ingot.cloud.pms.web.v1.platform.meta;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleItemVO;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
+import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
@@ -66,4 +68,22 @@ public class MetaRoleAPI implements RShortcuts {
         bizMetaRoleService.delete(id);
         return ok();
     }
+
+    @AdminOrHasAnyAuthority({"meta:role:authorities:assign"})
+    @PutMapping(value = "/{id}/authorities")
+    @Operation(summary = "绑定权限", description = "绑定权限")
+    public R<Void> bindAuthorities(@PathVariable Long id,
+                                   @RequestBody RelationDTO<Long, Long> params) {
+        params.setId(id);
+        bizMetaRoleService.bindAuthorities(params);
+        return ok();
+    }
+
+    @AdminOrHasAnyAuthority({"meta:role:authorities:query"})
+    @GetMapping(value = "/{id}/authorities")
+    @Operation(summary = "获取角色权限", description = "获取角色权限")
+    public R<List<AuthorityTreeNodeVO>> getAuthorities(@PathVariable Long id) {
+        return ok(bizMetaRoleService.getRoleAuthorities(id));
+    }
+
 }

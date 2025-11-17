@@ -5,6 +5,7 @@ import java.util.List;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleItemVO;
+import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
 
 /**
@@ -59,4 +60,11 @@ public interface BizMetaRoleService {
      * @param id 角色ID
      */
     void delete(long id);
+
+    /**
+     * 绑定权限
+     *
+     * @param params {@link RelationDTO}
+     */
+    void bindAuthorities(RelationDTO<Long, Long> params);
 }

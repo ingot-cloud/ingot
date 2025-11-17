@@ -18,6 +18,7 @@ import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
+import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -93,5 +94,10 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
         roleUserPrivateService.clearByRoleId(id);
         // 删除角色
         roleService.delete(id);
+    }
+
+    @Override
+    public void bindAuthorities(RelationDTO<Long, Long> params) {
+        roleAuthorityService.roleBindAuthorities(params);
     }
 }
