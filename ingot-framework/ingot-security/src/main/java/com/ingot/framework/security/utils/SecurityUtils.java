@@ -2,13 +2,14 @@ package com.ingot.framework.security.utils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Enumeration;
+import java.util.Optional;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.utils.CookieUtil;
-import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,7 +17,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.GrantedAuthority;
 
 import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BASIC_TYPE_WITH_SPACE;
 import static com.ingot.framework.commons.constants.SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE;
@@ -151,18 +151,5 @@ public final class SecurityUtils {
         }
 
         return sessionId;
-    }
-
-    /**
-     * 转换权限为角色编码
-     *
-     * @param authorities 权限
-     * @return 角色编码集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
-     */
-    public static List<String> mapRoleCodes(Collection<? extends GrantedAuthority> authorities) {
-        return authorities.stream()
-                .map(GrantedAuthority::getAuthority)
-                .map(code -> StrUtil.subAfter(code, InJwtAuthenticationConverter.AUTHORITY_PREFIX, false))
-                .collect(Collectors.toList());
     }
 }

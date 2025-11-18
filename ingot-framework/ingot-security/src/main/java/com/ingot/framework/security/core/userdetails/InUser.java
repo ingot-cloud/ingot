@@ -12,7 +12,6 @@ import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -174,7 +173,7 @@ public class InUser extends User implements InUserDetails {
     @JsonIgnore
     public List<String> getRoleCodeList() {
         Collection<? extends GrantedAuthority> authorities = getAuthorities();
-        return SecurityUtils.mapRoleCodes(authorities);
+        return ListUtil.toList(InAuthorityUtils.authorityListToRoleCodes(authorities));
     }
 
     public static class Builder {

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
 
@@ -103,6 +104,22 @@ public final class InAuthorityUtils {
                     }
                     return value;
                 })
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 转换权限为角色编码
+     *
+     * @param userAuthorities 用户权限
+     * @return 角色编码集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
+     */
+    public static Set<String> authorityListToRoleCodes(Collection<? extends GrantedAuthority> userAuthorities) {
+        Assert.notNull(userAuthorities, "userAuthorities cannot be null");
+        return userAuthorities.stream()
+                .filter(authority ->
+                        !(authority instanceof AllowTenantGrantedAuthority) && !(authority instanceof ClientGrantedAuthority))
+                .map(GrantedAuthority::getAuthority)
+                .map(code -> StrUtil.subAfter(code, InJwtAuthenticationConverter.AUTHORITY_PREFIX, false))
                 .collect(Collectors.toSet());
     }
 
