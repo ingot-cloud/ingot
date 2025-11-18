@@ -28,6 +28,7 @@ public interface CacheConstants {
      */
     String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization";
 
+    /* 元数据 */
     /**
      * 元数据-权限
      */
@@ -47,6 +48,21 @@ public interface CacheConstants {
      * 元数据-菜单
      */
     String META_MENUS = IGNORE_TENANT_PREFIX + ":meta:menus";
+
+    /**
+     * 元数据-应用
+     */
+    String META_APPS = IGNORE_TENANT_PREFIX + ":meta:apps";
+
+    /* 组织 */
+    /**
+     * 组织角色
+     */
+    String TENANT_ROLES = "roles";
+    /**
+     * 组织角色权限
+     */
+    String TENANT_ROLE_AUTHORITIES = "role_authorities";
 
     /**
      * 所有权限

@@ -52,9 +52,13 @@ public interface RoleType {
     /**
      * 组织类型
      */
-    OrgTypeEnum getOrgType();
+    default OrgTypeEnum getOrgType() {
+        return OrgTypeEnum.Tenant;
+    }
 
-    void setOrgType(OrgTypeEnum orgType);
+    default void setOrgType(OrgTypeEnum orgType){
+        // nothing to do
+    }
 
     /**
      * 域类型

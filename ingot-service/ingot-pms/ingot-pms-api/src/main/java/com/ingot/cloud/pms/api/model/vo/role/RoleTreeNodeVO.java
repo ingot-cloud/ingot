@@ -1,36 +1,29 @@
 package com.ingot.cloud.pms.api.model.vo.role;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeNode;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
- * <p>Description  : RoleItemVO.</p>
+ * <p>Description  : RoleTreeNodeVO.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2025/11/14.</p>
  * <p>Time         : 11:19.</p>
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class RoleItemVO implements Serializable {
+public class RoleTreeNodeVO extends TreeNode<Long> implements RoleType {
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /**
-     * ID
-     */
-    private Long id;
-
-    /**
-     * PID
-     */
-    private Long pid;
 
     /**
      * 角色名称
