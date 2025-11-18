@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.core;
 
 import java.util.Random;
 
+import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.id.BizGenerator;
 import com.ingot.framework.id.config.IdAutoConfig;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +28,8 @@ public class BizIdGen {
      * @return 组织编码
      */
     public String genOrgCode() {
-        long id = bizGenerator.getId("org_role_code");
-        return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
+        long id = bizGenerator.getId("org_code");
+        return String.format("org_%d", (id << 6 | RANDOM.nextInt(64)));
     }
 
     /**
@@ -38,7 +39,8 @@ public class BizIdGen {
      */
     public String genOrgSysRoleCode() {
         long id = bizGenerator.getId("org_role_code");
-        return String.format("org_role_%d", (id << 6 | RANDOM.nextInt(64)));
+        return String.format("%s%d",
+                RoleConstants.ORG_ROLE_CODE_PREFIX, (id << 6 | RANDOM.nextInt(64)));
     }
 
     /**
@@ -57,7 +59,7 @@ public class BizIdGen {
      * @return APP ID
      */
     public String genAppIdCode() {
-        long id = bizGenerator.getId("org_role_code");
+        long id = bizGenerator.getId("app_id");
         return String.format("in%d", (id << 6 | RANDOM.nextInt(64)));
     }
 }
