@@ -3,9 +3,9 @@ package com.ingot.framework.security.core.context;
 import java.util.Collection;
 import java.util.List;
 
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
@@ -76,14 +76,17 @@ public final class SecurityAuthContext {
     }
 
     /**
-     * 获取用户角色信息
+     * 获取用户角色编码
      *
-     * @return 角色编码集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
+     * @return 角色编码集合
      */
     public static List<String> getRoles() {
         Authentication authentication = getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        return ListUtil.toList(InAuthorityUtils.authorityListToRoleCodes(authorities));
+        return InAuthorityUtils.authorityListToScopes(authorities)
+                .stream()
+                .filter(RoleUtil::isRoleCode)
+                .toList();
     }
 
 }

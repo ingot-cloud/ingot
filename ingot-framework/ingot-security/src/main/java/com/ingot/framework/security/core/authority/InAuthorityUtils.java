@@ -108,12 +108,12 @@ public final class InAuthorityUtils {
     }
 
     /**
-     * 转换权限为角色编码
+     * 获取Scopes，并且去掉{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
      *
      * @param userAuthorities 用户权限
-     * @return 角色编码集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
+     * @return Scope集合，去掉了{@link InJwtAuthenticationConverter#AUTHORITY_PREFIX}前缀
      */
-    public static Set<String> authorityListToRoleCodes(Collection<? extends GrantedAuthority> userAuthorities) {
+    public static Set<String> authorityListToScopes(Collection<? extends GrantedAuthority> userAuthorities) {
         Assert.notNull(userAuthorities, "userAuthorities cannot be null");
         return userAuthorities.stream()
                 .filter(authority ->

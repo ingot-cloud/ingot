@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.Getter;
@@ -173,7 +174,10 @@ public class InUser extends User implements InUserDetails {
     @JsonIgnore
     public List<String> getRoleCodeList() {
         Collection<? extends GrantedAuthority> authorities = getAuthorities();
-        return ListUtil.toList(InAuthorityUtils.authorityListToRoleCodes(authorities));
+        return InAuthorityUtils.authorityListToScopes(authorities)
+                .stream()
+                .filter(RoleUtil::isRoleCode)
+                .toList();
     }
 
     public static class Builder {
