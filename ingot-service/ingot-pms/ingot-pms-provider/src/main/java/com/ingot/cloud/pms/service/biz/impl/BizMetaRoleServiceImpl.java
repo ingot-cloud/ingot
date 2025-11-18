@@ -10,8 +10,9 @@ import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.role.RoleItemVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
@@ -20,6 +21,7 @@ import com.ingot.cloud.pms.service.domain.MetaRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,28 +52,27 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     }
 
     @Override
-    public List<RoleItemVO> conditionList(MetaRole condition) {
-        return roleService.list().stream()
+    public List<RoleTreeNodeVO> conditionTree(MetaRole condition) {
+        List<RoleTreeNodeVO> list = roleService.list().stream()
                 .filter(BizFilter.roleFilter(condition))
-                .map(role -> {
-                    RoleItemVO item = roleConvert.to(role);
-                    item.setTypeText(role.getType().getText());
-                    item.setOrgTypeText(role.getOrgType().getText());
-                    item.setScopeTypeText(role.getScopeType().getText());
-                    item.setStatusText(role.getStatus().getText());
-                    return item;
-                }).toList();
+                .map(role -> BizUtils.convert(role, roleConvert))
+                .toList();
+        return TreeUtil.build(list);
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId) {
+    public List<MetaAuthority> getRoleAuthorities(long roleId) {
         List<Long> ids = roleAuthorityService.getRoleBindAuthorityIds(roleId);
         if (CollUtil.isEmpty(ids)) {
             return ListUtil.empty();
         }
-        List<MetaAuthority> authorities = authorityService.list(Wrappers.<MetaAuthority>lambdaQuery()
+        return authorityService.list(Wrappers.<MetaAuthority>lambdaQuery()
                 .in(MetaAuthority::getId, ids));
+    }
 
+    @Override
+    public List<AuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId) {
+        List<MetaAuthority> authorities = getRoleAuthorities(roleId);
         return AuthorityUtils.mapTree(authorities, authorityConvert, null);
     }
 

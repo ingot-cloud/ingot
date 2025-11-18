@@ -2,9 +2,10 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
+import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.role.RoleItemVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
 
@@ -28,9 +29,17 @@ public interface BizMetaRoleService {
      * 角色条件查询
      *
      * @param condition {@link MetaRole}
-     * @return {@link RoleItemVO}
+     * @return {@link RoleTreeNodeVO}
      */
-    List<RoleItemVO> conditionList(MetaRole condition);
+    List<RoleTreeNodeVO> conditionTree(MetaRole condition);
+
+    /**
+     * 获取角色权限
+     *
+     * @param roleId 角色ID
+     * @return {@link MetaAuthority}
+     */
+    List<MetaAuthority> getRoleAuthorities(long roleId);
 
     /**
      * 获取角色权限
@@ -38,7 +47,7 @@ public interface BizMetaRoleService {
      * @param roleId 角色ID
      * @return {@link AuthorityTreeNodeVO}
      */
-    List<AuthorityTreeNodeVO> getRoleAuthorities(long roleId);
+    List<AuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId);
 
     /**
      * 创建角色
