@@ -2,12 +2,12 @@ package com.ingot.framework.security.core.context;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
+import com.ingot.framework.security.utils.SecurityUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -82,11 +82,7 @@ public final class SecurityAuthContext {
     public static List<String> getRoles() {
         Authentication authentication = getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-
-        return authorities.stream()
-                .map(GrantedAuthority::getAuthority)
-                .map(code -> StrUtil.subAfter(code, InJwtAuthenticationConverter.AUTHORITY_PREFIX, false))
-                .collect(Collectors.toList());
+        return SecurityUtils.mapRoleCodes(authorities);
     }
 
 }

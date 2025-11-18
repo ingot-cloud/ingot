@@ -11,6 +11,8 @@ import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.security.utils.SecurityUtils;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -162,6 +164,17 @@ public class InUser extends User implements InUserDetails {
     @Override
     public List<AllowTenantDTO> getAllows() {
         return ListUtil.list(false, InAuthorityUtils.extractAllowTenants(getAuthorities()));
+    }
+
+    /**
+     * {@link SecurityAuthContext#getRoles()}
+     *
+     * @return 角色编码列表
+     */
+    @JsonIgnore
+    public List<String> getRoleCodeList() {
+        Collection<? extends GrantedAuthority> authorities = getAuthorities();
+        return SecurityUtils.mapRoleCodes(authorities);
     }
 
     public static class Builder {
