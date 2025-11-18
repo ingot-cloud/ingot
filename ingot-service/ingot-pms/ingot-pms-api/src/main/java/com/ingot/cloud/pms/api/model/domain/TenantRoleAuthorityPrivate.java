@@ -43,6 +43,11 @@ public class TenantRoleAuthorityPrivate extends BaseModel<TenantRoleAuthorityPri
     private Long roleId;
 
     /**
+     * 是否为元数据角色
+     */
+    private Boolean metaRole;
+
+    /**
      * 权限ID
      */
     private Long authorityId;

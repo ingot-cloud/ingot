@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
@@ -29,7 +30,7 @@ import lombok.ToString;
 @ToString
 @TenantTable
 @TableName(value = "tenant_role_private", autoResultMap = true)
-public class TenantRolePrivate extends BaseModel {
+public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements RoleType {
 
     private static final long serialVersionUID = 1L;
 

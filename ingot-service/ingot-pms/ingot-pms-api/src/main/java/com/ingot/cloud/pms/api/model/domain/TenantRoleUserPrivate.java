@@ -11,7 +11,7 @@ import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -41,6 +41,11 @@ public class TenantRoleUserPrivate extends BaseModel<TenantRoleUserPrivate> {
      * 角色ID
      */
     private Long roleId;
+
+    /**
+     * 是否为元数据角色
+     */
+    private Boolean metaRole;
 
     /**
      * 用户ID
