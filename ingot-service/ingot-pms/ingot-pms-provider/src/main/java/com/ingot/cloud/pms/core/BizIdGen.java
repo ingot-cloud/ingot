@@ -28,8 +28,7 @@ public class BizIdGen {
      * @return 组织编码
      */
     public String genOrgCode() {
-        long id = bizGenerator.getId("org_code");
-        return String.format("org_%d", (id << 6 | RANDOM.nextInt(64)));
+        return gen("org_code", "org_%d");
     }
 
     /**
@@ -38,9 +37,7 @@ public class BizIdGen {
      * @return 角色编码
      */
     public String genOrgSysRoleCode() {
-        long id = bizGenerator.getId("org_role_code");
-        return String.format("%s%d",
-                RoleConstants.ORG_ROLE_CODE_PREFIX, (id << 6 | RANDOM.nextInt(64)));
+        return gen("org_role_code", RoleConstants.ORG_ROLE_CODE_PREFIX);
     }
 
     /**
@@ -49,8 +46,7 @@ public class BizIdGen {
      * @return 角色编码
      */
     public String genOrgAppRoleCode() {
-        long id = bizGenerator.getId("org_role_code");
-        return String.format("org_app_role_%d", (id << 6 | RANDOM.nextInt(64)));
+        return gen("org_role_code", "org_app_role_");
     }
 
     /**
@@ -59,7 +55,22 @@ public class BizIdGen {
      * @return APP ID
      */
     public String genAppIdCode() {
-        long id = bizGenerator.getId("app_id");
-        return String.format("in%d", (id << 6 | RANDOM.nextInt(64)));
+        return gen("app_id", "in_");
+    }
+
+    /**
+     * 根据key和前缀生成业务ID
+     *
+     * @param key    业务Key
+     * @param prefix 前缀
+     * @return 业务ID
+     */
+    public String gen(String key, String prefix) {
+        long id = bizGenerator.getId(key);
+        return format(prefix, id);
+    }
+
+    private String format(String prefix, long id) {
+        return String.format("%s%d", prefix, (id << 6 | RANDOM.nextInt(64)));
     }
 }
