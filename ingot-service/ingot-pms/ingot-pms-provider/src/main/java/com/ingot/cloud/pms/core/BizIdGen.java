@@ -36,7 +36,7 @@ public class BizIdGen {
      *
      * @return 角色编码
      */
-    public String genOrgSysRoleCode() {
+    public String genOrgRoleCode() {
         return gen("org_role_code", RoleConstants.ORG_ROLE_CODE_PREFIX);
     }
 
