@@ -46,4 +46,9 @@ public class TenantRoleUserPrivate extends BaseModel<TenantRoleUserPrivate> {
      * 用户ID
      */
     private Long userId;
+
+    /**
+     * 部门ID，可以为空，部门角色该字段不为空
+     */
+    private Long deptId;
 }
