@@ -8,6 +8,16 @@ package com.ingot.framework.commons.constants;
  */
 public interface RoleConstants {
     /**
+     * 角色前缀
+     */
+    String META_ROLE_CODE_PREFIX = "role_";
+    /**
+     * 组织角色前缀
+     */
+    String ORG_ROLE_CODE_PREFIX = "org_role_";
+
+
+    /**
      * 超管角色编码
      */
     String ROLE_ADMIN_CODE = "role_admin";
