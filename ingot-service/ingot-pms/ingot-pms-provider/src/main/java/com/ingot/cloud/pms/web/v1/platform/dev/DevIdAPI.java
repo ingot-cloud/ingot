@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.pms.web.v1.platform.dev;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -7,7 +7,8 @@ import com.ingot.cloud.pms.service.domain.BizLeafAllocService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
-import com.ingot.framework.security.access.HasAnyAuthority;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,19 +22,21 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@Tag(description = "id", name = "ID管理模块")
-@RequestMapping(value = "/v1/admin/id")
+@Tag(description = "DevID", name = "业务ID管理模块")
+@RequestMapping(value = "/v1/platform/dev/id")
 @RequiredArgsConstructor
-public class AdminIdAPI implements RShortcuts {
+public class DevIdAPI implements RShortcuts {
     private final BizLeafAllocService bizLeafAllocService;
 
-    @HasAnyAuthority({"develop:id:w", "develop:id:r"})
+    @Operation(summary = "分页查询", description = "分页查询")
+    @AdminOrHasAnyAuthority({"dev:id:query"})
     @GetMapping("/page")
     public R<?> page(Page<BizLeafAlloc> page, BizLeafAlloc condition) {
         return ok(bizLeafAllocService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
-    @HasAnyAuthority({"develop:id:w"})
+    @Operation(summary = "创建ID", description = "创建ID")
+    @AdminOrHasAnyAuthority({"dev:id:create"})
     @PostMapping
     public R<?> create(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtil.now());
@@ -41,7 +44,8 @@ public class AdminIdAPI implements RShortcuts {
         return ok();
     }
 
-    @HasAnyAuthority({"develop:id:w"})
+    @Operation(summary = "更新ID", description = "更新ID")
+    @AdminOrHasAnyAuthority({"dev:id:update"})
     @PutMapping
     public R<?> update(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtil.now());
@@ -49,7 +53,8 @@ public class AdminIdAPI implements RShortcuts {
         return ok();
     }
 
-    @HasAnyAuthority({"develop:id:w"})
+    @Operation(summary = "删除ID", description = "删除ID")
+    @AdminOrHasAnyAuthority({"dev:id:delete"})
     @DeleteMapping("/{id}")
     public R<?> remove(@PathVariable String id) {
         bizLeafAllocService.removeById(id);
