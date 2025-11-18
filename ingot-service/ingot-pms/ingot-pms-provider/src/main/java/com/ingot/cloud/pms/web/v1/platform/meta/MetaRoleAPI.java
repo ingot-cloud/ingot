@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.role.RoleItemVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
 import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.model.support.Option;
@@ -41,8 +41,8 @@ public class MetaRoleAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"meta:role:query"})
     @GetMapping(value = "/list")
     @Operation(summary = "角色列表", description = "角色列表")
-    public R<List<RoleItemVO>> conditionList(MetaRole condition) {
-        return ok(bizMetaRoleService.conditionList(condition));
+    public R<List<RoleTreeNodeVO>> conditionList(MetaRole condition) {
+        return ok(bizMetaRoleService.conditionTree(condition));
     }
 
     @AdminOrHasAnyAuthority({"meta:role:create"})
@@ -83,7 +83,7 @@ public class MetaRoleAPI implements RShortcuts {
     @GetMapping(value = "/{id}/authorities")
     @Operation(summary = "获取角色权限", description = "获取角色权限")
     public R<List<AuthorityTreeNodeVO>> getAuthorities(@PathVariable Long id) {
-        return ok(bizMetaRoleService.getRoleAuthorities(id));
+        return ok(bizMetaRoleService.getRoleAuthoritiesTree(id));
     }
 
 }

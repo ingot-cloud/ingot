@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -23,6 +24,7 @@ import lombok.Setter;
 @TableName("sys_user_tenant")
 public class SysUserTenant extends BaseModel<SysUserTenant> implements UserTenantType {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
