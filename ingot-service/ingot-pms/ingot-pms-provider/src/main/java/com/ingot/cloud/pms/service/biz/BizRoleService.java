@@ -27,12 +27,20 @@ public interface BizRoleService {
     List<RoleType> getUserRoles(long userId);
 
     /**
-     * 角色编码转换角色ID
+     * 角色编码转换角色
      *
      * @param codes 角色编码列表
-     * @return 角色ID列表
+     * @return 角色列表
      */
     List<RoleType> getRolesByCodes(List<String> codes);
+
+    /**
+     * 根据编码获取角色
+     *
+     * @param code 角色编码
+     * @return {@link RoleType}
+     */
+    RoleType getByCode(String code);
 
     /**
      * 角色下拉列表

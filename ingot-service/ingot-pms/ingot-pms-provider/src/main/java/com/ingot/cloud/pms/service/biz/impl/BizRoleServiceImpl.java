@@ -109,18 +109,31 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
+    public RoleType getByCode(String code) {
+        if (RoleUtil.isMetaRoleCode(code)) {
+            return metaRoleService.getByCode(code);
+        }
+        return tenantRolePrivateService.getByCode(code);
+    }
+
+    @Override
     public List<Option<Long>> options(TenantRolePrivate condition) {
         // meta
         List<Option<Long>> options = new ArrayList<>(metaRoleService.list(
                         Wrappers.<MetaRole>lambdaQuery()
-                                .eq(MetaRole::getOrgType, OrgTypeEnum.Tenant))
+                                .eq(MetaRole::getOrgType, OrgTypeEnum.Tenant)
+                                .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
                 .filter(item -> item.getOrgType() == OrgTypeEnum.Tenant)
                 .filter(BizFilter.roleFilter(condition))
                 .map(role -> Option.of(role.getId(), role.getName()))
                 .toList());
         // tenant
-        List<Option<Long>> tenantOptions = tenantRolePrivateService.list().stream()
+        List<Option<Long>> tenantOptions = tenantRolePrivateService.list(
+                        Wrappers.<TenantRolePrivate>lambdaQuery()
+                                .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
+                )
+                .stream()
                 .filter(BizFilter.roleFilter(condition))
                 .map(role -> Option.of(role.getId(), role.getName()))
                 .toList();
