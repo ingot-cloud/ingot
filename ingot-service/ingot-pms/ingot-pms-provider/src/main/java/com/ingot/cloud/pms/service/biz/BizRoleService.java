@@ -2,122 +2,102 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
-import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
+import com.ingot.cloud.pms.api.model.types.RoleType;
+import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.support.Option;
 
 /**
- * <p>Description  : BizRoleService.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/9/21.</p>
- * <p>Time         : 8:56 AM.</p>
+ * <p>Description  : 业务角色处理，包含元数据.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/18.</p>
+ * <p>Time         : 09:33.</p>
  */
 public interface BizRoleService {
 
     /**
-     * 获取组织当前可以操作的权限
-     *
-     * @param orgId 组织ID
-     * @return {@link AuthorityTreeNodeVO}
-     */
-    List<AuthorityTreeNodeVO> getOrgAuthority(long orgId);
-
-    /**
-     * 获取组织角色权限
-     *
-     * @param roleId    角色ID
-     * @param condition 条件参数
-     * @return {@link AuthorityTreeNodeVO}
-     */
-    List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId,
-                                                    AuthorityFilterDTO condition);
-
-    /**
-     * 组织角色绑定权限
-     *
-     * @param params {@link RelationDTO}
-     */
-    void orgRoleBindAuthorities(RelationDTO<Long, Long> params);
-
-    /**
-     * 组织角色绑定用户
-     *
-     * @param params {@link RelationDTO}
-     */
-    void orgRoleBindUsers(RelationDTO<Long, Long> params);
-
-    /**
-     * 设置用户角色
+     * 获取用户绑定的所有角色
      *
      * @param userId 用户ID
-     * @param roles  角色
+     * @return {@link RoleType}
      */
-    void setOrgUserRoles(long userId, List<Long> roles);
+    List<RoleType> getUserRoles(long userId);
 
     /**
-     * 创建角色，如果创建的是组织类型角色，那么会影响所有组织
+     * 角色编码转换角色ID
      *
-     * @param role    {@link SysRole}
-     * @param isAdmin 是否为超管
+     * @param codes 角色编码列表
+     * @return 角色ID列表
      */
-    void createRoleEffectOrg(SysRole role, boolean isAdmin);
+    List<RoleType> getRolesByCodes(List<String> codes);
 
     /**
-     * 更新角色，如果更新的是组织类型角色，那么会影响所有组织
+     * 角色下拉列表
      *
-     * @param role    {@link SysRole}
-     * @param isAdmin 是否为超管
+     * @param condition {@link TenantRolePrivate}
+     * @return {@link Option}
      */
-    void updateRoleEffectOrg(SysRole role, boolean isAdmin);
+    List<Option<Long>> options(TenantRolePrivate condition);
 
     /**
-     * 删除角色，如果删除的是组织类型角色，那么会影响所有组织
+     * 角色条件查询
      *
-     * @param id      角色ID
-     * @param isAdmin 是否为超管
+     * @param condition {@link TenantRolePrivate}
+     * @return {@link RoleTreeNodeVO}
      */
-    void removeRoleEffectOrg(long id, boolean isAdmin);
+    List<RoleTreeNodeVO> conditionTree(TenantRolePrivate condition);
 
     /**
-     * 创建角色组，如果创建的是组织类型角色组，那么会影响所有组织
+     * 获取角色权限
      *
-     * @param group   {@link SysRoleGroup}
-     * @param isAdmin 是否为超管
+     * @param roleId 角色ID
+     * @return {@link BizAuthorityVO}
      */
-    void createRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin);
+    List<BizAuthorityVO> getRoleAuthorities(long roleId);
 
     /**
-     * 更新角色组，如果更新的是组织类型角色组，那么会影响所有组织
+     * 获取角色权限
      *
-     * @param group   {@link SysRoleGroup}
-     * @param isAdmin 是否为超管
+     * @param roleId 角色ID
+     * @return {@link BizAuthorityTreeNodeVO}
      */
-    void updateRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin);
+    List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId);
 
     /**
-     * 删除角色组，如果删除的是组织类型角色组，那么会影响所有组织
+     * 创建角色
      *
-     * @param id      组id
-     * @param isAdmin 是否为超管
+     * @param params {@link TenantRolePrivate}
      */
-    void removeRoleGroupEffectOrg(long id, boolean isAdmin);
+    void create(TenantRolePrivate params);
 
     /**
-     * 角色绑定权限, 不可绑定组织管理员角色{@link RoleConstants#ROLE_ORG_ADMIN_CODE}<br>
-     * 组织管理员角色自动处理
+     * 更新角色
+     *
+     * @param params {@link TenantRolePrivate}
+     */
+    void update(TenantRolePrivate params);
+
+    /**
+     * 删除角色
+     *
+     * @param id 角色ID
+     */
+    void delete(long id);
+
+    /**
+     * 绑定权限
      *
      * @param params {@link RelationDTO}
      */
-    void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params);
+    void bindAuthorities(RelationDTO<Long, Long> params);
 
     /**
-     * 给组织角色绑定默认权限，不会影响当前每个组织角色对应的权限<br>
-     * 新创建的组织会默认使用这些权限
+     * 绑定用户
      *
      * @param params {@link RelationDTO}
      */
-    void orgRoleBindDefaultAuthorities(RelationDTO<Long, Long> params);
+    void bindUsers(RelationDTO<Long, Long> params);
 }

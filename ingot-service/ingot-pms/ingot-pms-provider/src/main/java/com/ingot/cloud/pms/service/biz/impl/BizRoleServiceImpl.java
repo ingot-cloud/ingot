@@ -1,207 +1,214 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
-import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
+import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
+import com.ingot.cloud.pms.api.model.dto.common.BizBindDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.types.RoleType;
+import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
+import com.ingot.cloud.pms.common.BizFilter;
+import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.core.AuthorityUtils;
-import com.ingot.cloud.pms.core.org.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
-import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.common.RelationDTO;
-import com.ingot.framework.commons.utils.tree.TreeNode;
+import com.ingot.framework.commons.model.support.Option;
+import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
-import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.tenant.TenantContextHolder;
-import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>Description  : BizRoleServiceImpl.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2023/9/21.</p>
- * <p>Time         : 8:58 AM.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/18.</p>
+ * <p>Time         : 09:34.</p>
  */
 @Service
 @RequiredArgsConstructor
 public class BizRoleServiceImpl implements BizRoleService {
-    private final SysRoleUserService sysRoleUserService;
-    private final SysRoleService sysRoleService;
-    private final SysRoleGroupService sysRoleGroupService;
-    private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysApplicationTenantService sysApplicationTenantService;
-    private final SysAuthorityService sysAuthorityService;
+    private final MetaRoleService metaRoleService;
+    private final MetaAuthorityService authorityService;
+    private final MetaRoleAuthorityService roleAuthorityService;
 
-    private final TenantOps tenantOps;
-    private final AssertionChecker assertionChecker;
+    private final TenantRolePrivateService tenantRolePrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
+    private final TenantRoleAuthorityPrivateService tenantRoleAuthorityPrivateService;
+
     private final AuthorityConvert authorityConvert;
+    private final RoleConvert roleConvert;
 
     @Override
-    public List<AuthorityTreeNodeVO> getOrgAuthority(long orgId) {
-        return TenantEnv.applyAs(orgId, () -> {
-            List<AuthorityTreeNodeVO> authorities = AuthorityUtils.getOrgAuthorities(
-                    orgId, sysApplicationTenantService, sysAuthorityService, authorityConvert);
-            return TreeUtil.build(authorities);
-        });
+    public List<RoleType> getUserRoles(long userId) {
+        List<TenantRoleUserPrivate> roleUserPrivateList = tenantRoleUserPrivateService.getUserRoles(userId);
+        if (CollUtil.isEmpty(roleUserPrivateList)) {
+            return ListUtil.empty();
+        }
+
+        List<RoleType> result = new ArrayList<>(roleUserPrivateList.size());
+
+        List<Long> metaRoleIds = roleUserPrivateList.stream()
+                .filter(item -> BooleanUtil.isTrue(item.getMetaRole()))
+                .map(TenantRoleUserPrivate::getRoleId)
+                .toList();
+        if (CollUtil.isNotEmpty(metaRoleIds)) {
+            List<MetaRole> metaRoleList = metaRoleService.listByIds(metaRoleIds);
+            result.addAll(metaRoleList);
+        }
+
+        List<Long> privateRoleIds = roleUserPrivateList.stream()
+                .filter(item -> BooleanUtil.isFalse(item.getMetaRole()))
+                .map(TenantRoleUserPrivate::getRoleId)
+                .toList();
+        if (CollUtil.isNotEmpty(privateRoleIds)) {
+            List<TenantRolePrivate> metaRoleList = tenantRolePrivateService.listByIds(privateRoleIds);
+            result.addAll(metaRoleList);
+        }
+
+        return result;
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getOrgRoleAuthorities(long roleId, AuthorityFilterDTO condition) {
-        List<SysAuthority> authorities = sysRoleAuthorityService.getAuthoritiesByRole(roleId);
-        List<SysAuthority> finallyAuthorities = AuthorityUtils.filterOrgLockAuthority(
-                authorities, sysApplicationTenantService);
+    public List<RoleType> getRolesByCodes(List<String> codes) {
+        List<RoleType> result = new ArrayList<>();
 
-        return AuthorityUtils.mapTree(finallyAuthorities, condition, authorityConvert);
+        if (codes.stream().anyMatch(RoleUtil::isMetaRoleCode)) {
+            result.addAll(metaRoleService.list().stream()
+                    .filter(item -> codes.contains(item.getCode()))
+                    .toList());
+        }
+
+        if (codes.stream().anyMatch(RoleUtil::isOrgRoleCode)) {
+            result.addAll(tenantRolePrivateService.list().stream()
+                    .filter(item -> codes.contains(item.getCode()))
+                    .toList());
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Option<Long>> options(TenantRolePrivate condition) {
+        // meta
+        List<Option<Long>> options = new ArrayList<>(metaRoleService.list(
+                        Wrappers.<MetaRole>lambdaQuery()
+                                .eq(MetaRole::getOrgType, OrgTypeEnum.Tenant))
+                .stream()
+                .filter(item -> item.getOrgType() == OrgTypeEnum.Tenant)
+                .filter(BizFilter.roleFilter(condition))
+                .map(role -> Option.of(role.getId(), role.getName()))
+                .toList());
+        // tenant
+        List<Option<Long>> tenantOptions = tenantRolePrivateService.list().stream()
+                .filter(BizFilter.roleFilter(condition))
+                .map(role -> Option.of(role.getId(), role.getName()))
+                .toList();
+        options.addAll(tenantOptions);
+        return options;
+    }
+
+    @Override
+    public List<RoleTreeNodeVO> conditionTree(TenantRolePrivate condition) {
+        List<RoleTreeNodeVO> list = new ArrayList<>(metaRoleService.list(
+                        Wrappers.<MetaRole>lambdaQuery()
+                                .eq(MetaRole::getOrgType, OrgTypeEnum.Tenant)).
+                stream()
+                .filter(BizFilter.roleFilter(condition))
+                .map(role -> BizUtils.convert(role, roleConvert))
+                .toList());
+        list.addAll(tenantRolePrivateService.list()
+                .stream().filter(BizFilter.roleFilter(condition))
+                .map(role -> BizUtils.convert(role, roleConvert))
+                .toList());
+        return TreeUtil.build(list);
+    }
+
+    @Override
+    public List<BizAuthorityVO> getRoleAuthorities(long roleId) {
+        // private
+        List<Long> tenantIds = tenantRoleAuthorityPrivateService.getRoleBindAuthorityIds(roleId);
+        Set<Long> ids = new HashSet<>(tenantIds);
+        // meta
+        List<Long> metaIds = roleAuthorityService.getRoleBindAuthorityIds(roleId);
+        ids.addAll(metaIds);
+
+        if (CollUtil.isEmpty(ids)) {
+            return ListUtil.empty();
+        }
+        return authorityService.list(Wrappers.<MetaAuthority>lambdaQuery()
+                        .in(MetaAuthority::getId, ids))
+                .stream()
+                .map(item -> {
+                    BizAuthorityVO vo = authorityConvert.to(item);
+                    vo.setMetaRoleBind(metaIds.stream()
+                            .anyMatch(id -> id.equals(item.getId())));
+                    return vo;
+                })
+                .toList();
+    }
+
+    @Override
+    public List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId) {
+        List<BizAuthorityVO> authorities = getRoleAuthorities(roleId);
+        return AuthorityUtils.bizMapTree(authorities, authorityConvert, null);
+    }
+
+    @Override
+    public void create(TenantRolePrivate params) {
+        tenantRolePrivateService.create(params);
+    }
+
+    @Override
+    public void update(TenantRolePrivate params) {
+        tenantRolePrivateService.update(params);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void orgRoleBindAuthorities(RelationDTO<Long, Long> params) {
-        long roleId = params.getId();
-        List<Long> bindList = params.getBindIds();
-        SysRole role = sysRoleService.getById(roleId);
-        assertionChecker.checkOperation(!StrUtil.equals(role.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
-                "BizRoleServiceImpl.CantOperateManager");
-
-        List<Long> authorities = CollUtil.emptyIfNull(AuthorityUtils.getOrgAuthorities(
-                        TenantContextHolder.get(), sysApplicationTenantService, sysAuthorityService, authorityConvert))
-                .stream().map(TreeNode::getId).toList();
-
-        if (CollUtil.isNotEmpty(bindList)) {
-            boolean canBind = new HashSet<>(authorities).containsAll(bindList);
-            assertionChecker.checkOperation(canBind, "BizRoleServiceImpl.CantBindAndUnBindAuth");
-        }
-
-        // 更新选取
-        sysRoleAuthorityService.roleBindAuthorities(params);
+    public void delete(long id) {
+        // 清除关联权限
+        tenantRoleAuthorityPrivateService.clearByRoleId(id);
+        // 清除关联用户
+        tenantRoleUserPrivateService.clearByRoleId(id);
+        // 删除角色
+        tenantRolePrivateService.delete(id);
     }
 
     @Override
-    public void orgRoleBindUsers(RelationDTO<Long, Long> params) {
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
-        long roleId = params.getId();
-        assertionChecker.checkOperation(roleId != managerRole.getId(),
-                "BizRoleServiceImpl.CantOperateManager");
-
-        sysRoleUserService.roleBindUsers(params);
+    public void bindAuthorities(RelationDTO<Long, Long> params) {
+        // 元数据角色，和自定义角色，都在私有绑定关系中进行绑定
+        BizBindDTO bindParams = new BizBindDTO();
+        bindParams.setId(params.getId());
+        bindParams.setMetaFlag(metaRoleService.count(Wrappers.<MetaRole>lambdaQuery()
+                .eq(MetaRole::getId, params.getId())) > 0);
+        bindParams.setBindIds(params.getBindIds());
+        tenantRoleAuthorityPrivateService.roleBindAuthorities(bindParams);
     }
 
     @Override
-    public void setOrgUserRoles(long userId, List<Long> roles) {
-        // 如果操作的自己，那么需要判断角色
-        long opsUserId = SecurityAuthContext.getUser().getId();
-        if (opsUserId == userId) {
-            ensureRoles(userId, roles, RoleConstants.ROLE_ADMIN_CODE);
-            ensureRoles(userId, roles, RoleConstants.ROLE_ORG_ADMIN_CODE);
-        }
-
-        sysRoleUserService.setUserRoles(userId, roles);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void createRoleEffectOrg(SysRole role, boolean isAdmin) {
-        sysRoleService.createRole(role, isAdmin);
-        if (role.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.createRole(role);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateRoleEffectOrg(SysRole role, boolean isAdmin) {
-        sysRoleService.updateRoleById(role, isAdmin);
-        SysRole current = sysRoleService.getById(role.getId());
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.updateRole(role);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void removeRoleEffectOrg(long id, boolean isAdmin) {
-        SysRole current = sysRoleService.getById(id);
-        sysRoleService.removeRoleById(id, isAdmin);
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.removeRole(current);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void createRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin) {
-        sysRoleService.createGroup(group, isAdmin);
-        if (group.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.createRoleGroup(group);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateRoleGroupEffectOrg(SysRoleGroup group, boolean isAdmin) {
-        sysRoleService.updateGroup(group, isAdmin);
-        SysRoleGroup current = sysRoleGroupService.getById(group.getId());
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.updateRoleGroup(group);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void removeRoleGroupEffectOrg(long id, boolean isAdmin) {
-        SysRoleGroup current = sysRoleGroupService.getById(id);
-        sysRoleService.deleteGroup(id, isAdmin);
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.removeRoleGroup(current);
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void roleBindAuthoritiesEffectOrg(RelationDTO<Long, Long> params) {
-        SysRole current = sysRoleService.getById(params.getId());
-        assertionChecker.checkOperation(!StrUtil.equals(current.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
-                "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
-
-        sysRoleAuthorityService.roleBindAuthorities(params);
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.roleBindAuthorities(params, current);
-        }
-    }
-
-    @Override
-    public void orgRoleBindDefaultAuthorities(RelationDTO<Long, Long> params) {
-        SysRole current = sysRoleService.getById(params.getId());
-        assertionChecker.checkOperation(!StrUtil.equals(current.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
-                "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
-
-        sysRoleAuthorityService.roleBindAuthorities(params);
-    }
-
-    private void ensureRoles(long userId, List<Long> roles, String roleCode) {
-        // 如果当前组织包含指定角色，那么需要判断该用户是否有当前指定角色，如果有则确保该角色不被删除
-        SysRole ensureRole = sysRoleService.getRoleByCode(roleCode);
-        if (ensureRole != null) {
-            long count = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
-                    .eq(SysRoleUser::getUserId, userId)
-                    .eq(SysRoleUser::getRoleId, ensureRole.getId()));
-            if (count > 0) {
-                roles.add(ensureRole.getId());
-            }
-        }
+    public void bindUsers(RelationDTO<Long, Long> params) {
+        BizBindDTO bindParams = new BizBindDTO();
+        bindParams.setId(params.getId());
+        bindParams.setMetaFlag(metaRoleService.count(Wrappers.<MetaRole>lambdaQuery()
+                .eq(MetaRole::getId, params.getId())) > 0);
+        bindParams.setBindIds(params.getBindIds());
+        bindParams.setRemoveIds(params.getRemoveIds());
+        tenantRoleUserPrivateService.roleBindUsers(bindParams);
     }
 }
