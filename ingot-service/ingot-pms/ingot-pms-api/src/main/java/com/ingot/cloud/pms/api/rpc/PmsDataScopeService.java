@@ -2,8 +2,8 @@ package com.ingot.cloud.pms.api.rpc;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.constants.ServiceNameConstants;
 import com.ingot.framework.commons.model.support.R;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -27,7 +27,7 @@ public interface PmsDataScopeService {
      * @param roleCodeList 角色编码
      */
     @PostMapping("/dataScope/role/getRoleListByCodes")
-    R<List<SysRole>> getRoleListByCodes(@RequestBody List<String> roleCodeList);
+    R<List<RoleType>> getRoleListByCodes(@RequestBody List<String> roleCodeList);
 
     /**
      * 获取子级部门以及当前部门信息
@@ -35,7 +35,7 @@ public interface PmsDataScopeService {
      * @param deptId 部门ID
      */
     @GetMapping("/dataScope/dept/getSelfAndDescendantList/{deptId}")
-    R<List<SysDept>> getSelfAndDescendantList(@PathVariable("deptId") Long deptId);
+    R<List<TenantDept>> getSelfAndDescendantList(@PathVariable("deptId") Long deptId);
 
     /**
      * 获取用户当前部门以及所有子部门信息
@@ -43,7 +43,7 @@ public interface PmsDataScopeService {
      * @param userId 用户ID
      */
     @GetMapping("/dept/getUserSelfAndDescendantDeptList/{userId}")
-    R<List<SysDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId);
+    R<List<TenantDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId);
 
     @GetMapping("/dataScope/dept/getUserDeptIds/{userId}")
     R<List<Long>> getUserDeptIds(@PathVariable("userId") Long userId);

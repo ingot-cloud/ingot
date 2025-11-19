@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.rpc.PmsDataScopeService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.data.mybatis.scope.context.DataScopeContextHolder;
@@ -59,13 +59,13 @@ public class DataScopeAOP {
                 throw new DataScopeException(DataScopeErrorCode.DS_403);
             }
 
-            R<List<SysRole>> result = dataScopeService.getRoleListByCodes(roleCodes);
+            R<List<RoleType>> result = dataScopeService.getRoleListByCodes(roleCodes);
             if (!result.isSuccess()) {
                 throw new DataScopeException(result.getMessage());
             }
 
             // 填充scope
-            List<SysRole> roles = result.getData();
+            List<RoleType> roles = result.getData();
             setScopes(user, roles);
             return point.proceed();
         } finally {
@@ -73,9 +73,9 @@ public class DataScopeAOP {
         }
     }
 
-    private void setScopes(InUser user, List<SysRole> roles) {
+    private void setScopes(InUser user, List<RoleType> roles) {
         List<Long> scopes = new ArrayList<>();
-        for (SysRole role : roles) {
+        for (RoleType role : roles) {
             switch (role.getScopeType()) {
                 case ALL:
                     DataScopeContextHolder.skip();
@@ -89,7 +89,7 @@ public class DataScopeAOP {
                     dataScopeService.getUserSelfAndDescendantDeptList(user.getId())
                             .ifSuccess(deptList -> {
                                 if (CollUtil.isNotEmpty(deptList)) {
-                                    scopes.addAll(deptList.stream().map(SysDept::getId).distinct().toList());
+                                    scopes.addAll(deptList.stream().map(TenantDept::getId).distinct().toList());
                                 }
                             });
                     break;
