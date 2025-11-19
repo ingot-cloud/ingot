@@ -2,5 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ingot.cloud.pms.mapper.TenantDeptMapper">
 
+    <select id="listWithMemberCount" resultType="com.ingot.cloud.pms.api.model.dto.dept.DeptWithMemberCountDTO">
+        SELECT d.*, COUNT(ud.id) AS memberCount
+        FROM sys_dept AS d
+                 LEFT JOIN sys_user_dept AS ud ON d.id = ud.dept_id
+        WHERE d.deleted_at IS NULL
+        GROUP BY d.id
+    </select>
 
 </mapper>
