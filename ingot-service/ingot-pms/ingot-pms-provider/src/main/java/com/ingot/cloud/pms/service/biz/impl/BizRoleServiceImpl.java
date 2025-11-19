@@ -27,6 +27,7 @@ import com.ingot.cloud.pms.core.AuthorityUtils;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
@@ -68,7 +69,9 @@ public class BizRoleServiceImpl implements BizRoleService {
                 .map(TenantRoleUserPrivate::getRoleId)
                 .toList();
         if (CollUtil.isNotEmpty(metaRoleIds)) {
-            List<MetaRole> metaRoleList = metaRoleService.listByIds(metaRoleIds);
+            List<MetaRole> metaRoleList = metaRoleService.list(Wrappers.<MetaRole>lambdaQuery()
+                    .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE)
+                    .in(MetaRole::getId, metaRoleIds));
             result.addAll(metaRoleList);
         }
 
@@ -77,8 +80,10 @@ public class BizRoleServiceImpl implements BizRoleService {
                 .map(TenantRoleUserPrivate::getRoleId)
                 .toList();
         if (CollUtil.isNotEmpty(privateRoleIds)) {
-            List<TenantRolePrivate> metaRoleList = tenantRolePrivateService.listByIds(privateRoleIds);
-            result.addAll(metaRoleList);
+            List<TenantRolePrivate> privateRoleList = tenantRolePrivateService.list(Wrappers.<TenantRolePrivate>lambdaQuery()
+                    .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
+                    .in(TenantRolePrivate::getId, privateRoleIds));
+            result.addAll(privateRoleList);
         }
 
         return result;
