@@ -2,10 +2,10 @@ package com.ingot.cloud.pms.web.inner;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.service.domain.SysDeptService;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
+import com.ingot.cloud.pms.api.model.types.RoleType;
+import com.ingot.cloud.pms.service.biz.BizDeptService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
@@ -26,26 +26,26 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/dataScope")
 @RequiredArgsConstructor
 public class DataScopeAPI implements RShortcuts {
-    private final SysRoleService sysRoleService;
-    private final SysDeptService sysDeptService;
+    private final BizRoleService bizRoleService;
+    private final BizDeptService bizDeptService;
 
-    @PostMapping("/role/getRoleListByCodes")
-    public R<List<SysRole>> getRoleListByCodes(@RequestBody List<String> roleCodeList) {
-        return ok(sysRoleService.getRoleListByCodes(roleCodeList));
+    @PostMapping("/role/roleListByCodes")
+    public R<List<RoleType>> getRoleListByCodes(@RequestBody List<String> roleCodeList) {
+        return ok(bizRoleService.getRolesByCodes(roleCodeList));
     }
 
-    @GetMapping("/dept/getSelfAndDescendantList/{deptId}")
-    public R<List<SysDept>> getSelfAndDescendantDeptList(@PathVariable("deptId") Long deptId) {
-        return ok(sysDeptService.getDescendantList(deptId, true));
+    @GetMapping("/dept/selfAndDescendantList/{deptId}")
+    public R<List<TenantDept>> getSelfAndDescendantDeptList(@PathVariable("deptId") Long deptId) {
+        return ok(bizDeptService.getDescendantList(deptId, true));
     }
 
-    @GetMapping("/dept/getUserSelfAndDescendantDeptList/{userId}")
-    public R<List<SysDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId) {
-        return ok(sysDeptService.getUserDescendant(userId, true));
+    @GetMapping("/dept/userSelfAndDescendantDeptList/{userId}")
+    public R<List<TenantDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId) {
+        return ok(bizDeptService.getUserDescendant(userId, true));
     }
 
-    @GetMapping("/dataScope/dept/getUserDeptIds/{userId}")
+    @GetMapping("/dataScope/dept/userDeptIds/{userId}")
     R<List<Long>> getUserDeptIds(@PathVariable("userId") Long userId) {
-        return ok(sysDeptService.getUserDeptIds(userId));
+        return ok(bizDeptService.getUserDeptIds(userId));
     }
 }
