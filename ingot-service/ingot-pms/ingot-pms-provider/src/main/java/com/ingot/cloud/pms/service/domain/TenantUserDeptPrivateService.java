@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.service.domain;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.TenantUserDeptPrivate;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
@@ -13,4 +16,19 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
  */
 public interface TenantUserDeptPrivateService extends BaseService<TenantUserDeptPrivate> {
 
+    /**
+     * 设置部门
+     *
+     * @param userId  用户ID
+     * @param deptIds 部门ID列表
+     */
+    void setDepartments(long userId, Collection<Long> deptIds);
+
+    /**
+     * 获取用户部门ID列表
+     *
+     * @param userId 用户ID
+     * @return List
+     */
+    List<Long> getUserDepartmentIds(long userId);
 }
