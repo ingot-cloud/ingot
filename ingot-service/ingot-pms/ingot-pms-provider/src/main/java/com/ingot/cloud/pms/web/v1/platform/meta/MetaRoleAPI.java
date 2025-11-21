@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
@@ -73,9 +73,9 @@ public class MetaRoleAPI implements RShortcuts {
     @PutMapping(value = "/{id}/authorities")
     @Operation(summary = "绑定权限", description = "绑定权限")
     public R<Void> bindAuthorities(@PathVariable Long id,
-                                   @RequestBody RelationDTO<Long, Long> params) {
+                                   @RequestBody SetDTO<Long, Long> params) {
         params.setId(id);
-        bizMetaRoleService.bindAuthorities(params);
+        bizMetaRoleService.setAuthorities(params);
         return ok();
     }
 
