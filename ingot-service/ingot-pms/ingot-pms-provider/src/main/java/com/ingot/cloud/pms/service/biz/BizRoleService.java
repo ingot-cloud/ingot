@@ -2,12 +2,15 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
+import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
+import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.support.Option;
 
 /**
@@ -19,12 +22,12 @@ import com.ingot.framework.commons.model.support.Option;
 public interface BizRoleService {
 
     /**
-     * 获取用户绑定的所有角色
+     * 获取角色
      *
-     * @param userId 用户ID
+     * @param ids 角色ID列表
      * @return {@link RoleType}
      */
-    List<RoleType> getUserRoles(long userId);
+    List<RoleType> getRoles(List<Long> ids);
 
     /**
      * 角色编码转换角色
@@ -69,10 +72,27 @@ public interface BizRoleService {
     /**
      * 获取角色权限
      *
-     * @param roleId 角色ID
+     * @param roleId    角色ID
+     * @param condition 查询条件
      * @return {@link BizAuthorityTreeNodeVO}
      */
-    List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId);
+    List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId, MetaAuthority condition);
+
+    /**
+     * 获取角色列表的权限
+     *
+     * @param roles 角色列表
+     * @return 权限列表
+     */
+    List<AuthorityType> getRolesAuthorities(List<RoleType> roles);
+
+    /**
+     * 获取角色列表的权限及子权限
+     *
+     * @param roles 角色列表
+     * @return 权限列表
+     */
+    List<AuthorityType> getRolesAuthoritiesAndChildren(List<RoleType> roles);
 
     /**
      * 创建角色
@@ -96,16 +116,17 @@ public interface BizRoleService {
     void delete(long id);
 
     /**
-     * 绑定权限
+     * 给角色设置权限，整体替换
      *
-     * @param params {@link RelationDTO}
+     * @param params {@link AssignDTO}
      */
-    void bindAuthorities(RelationDTO<Long, Long> params);
+    void setAuthorities(AssignDTO<Long, Long> params);
 
     /**
-     * 绑定用户
+     * 角色分配用户
      *
-     * @param params {@link RelationDTO}
+     * @param params {@link BizRoleAssignUsersDTO}
      */
-    void bindUsers(RelationDTO<Long, Long> params);
+    void assignUsers(BizRoleAssignUsersDTO params);
+
 }
