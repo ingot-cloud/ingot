@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.api.model.dto.dept;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptWithManagerDTO extends SysDept {
+public class DeptWithManagerDTO extends TenantDept {
     /**
      * 主管ID
      */

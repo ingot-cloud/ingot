@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.api.model.vo.dept;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptWithManagerVO extends SysDept {
+public class DeptWithManagerVO extends TenantDept {
     /**
      * 部门主管
      */

@@ -2,11 +2,10 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
-import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.framework.commons.constants.IDConstants;
 
 /**
@@ -18,20 +17,20 @@ import com.ingot.framework.commons.constants.IDConstants;
 public interface BizDeptService {
 
     /**
+     * 获取部门的所有后代部门列表
+     *
+     * @param deptId      部门ID
+     * @param includeSelf 是否包含当前部门
+     * @return 部门列表
+     */
+    List<TenantDept> getDescendantList(Long deptId, boolean includeSelf);
+
+    /**
      * 获取部门列表，并且返回每个部门的管理员信息
      *
      * @return {@link DeptWithManagerVO}
      */
     List<DeptWithManagerVO> listWithManager();
-
-    /**
-     * 获取部门指定角色的所有用户
-     *
-     * @param deptId       部门ID
-     * @param roleCodeList 角色列表
-     * @return {@link SimpleUserVO}
-     */
-    List<SimpleUserVO> getDeptUsersWithRole(long deptId, List<String> roleCodeList);
 
     /**
      * 组织部门列表, 主部门（组织）和一级部门平级<br>
@@ -61,14 +60,14 @@ public interface BizDeptService {
     /**
      * 创建部门，不可创建主部门(pid={@link IDConstants#ROOT_TREE_ID})
      *
-     * @param params {@link SysDept}
+     * @param params {@link TenantDept}
      */
     void orgCreateDept(DeptWithManagerDTO params);
 
     /**
      * 更新部门，不可更新主部门
      *
-     * @param params {@link SysDept}
+     * @param params {@link TenantDept}
      */
     void orgUpdateDept(DeptWithManagerDTO params);
 

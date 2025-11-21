@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.convert;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
@@ -15,9 +15,9 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface DeptConvert {
 
-    DeptTreeNodeVO to(SysDept params);
+    DeptTreeNodeVO to(TenantDept params);
 
     DeptTreeNodeVO to(DeptWithManagerVO params);
 
-    SysDept to(DeptTreeNodeVO in);
+    TenantDept to(DeptTreeNodeVO in);
 }

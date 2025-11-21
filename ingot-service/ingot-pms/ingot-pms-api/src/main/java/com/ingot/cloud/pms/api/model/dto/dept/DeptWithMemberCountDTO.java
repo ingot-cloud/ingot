@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.dto.dept;
 
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptWithMemberCountDTO extends SysDept {
+public class DeptWithMemberCountDTO extends TenantDept {
     /**
      * 部门人员数量
      */

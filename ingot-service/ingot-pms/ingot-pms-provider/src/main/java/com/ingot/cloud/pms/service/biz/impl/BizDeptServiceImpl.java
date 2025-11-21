@@ -7,16 +7,22 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.DeptConvert;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
+import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
-import com.ingot.cloud.pms.api.model.vo.user.UserWithDeptVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
-import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.domain.SysUserService;
+import com.ingot.cloud.pms.service.domain.TenantDeptService;
+import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
+import com.ingot.cloud.pms.service.domain.TenantUserDeptPrivateService;
 import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.model.common.RelationDTO;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
@@ -32,38 +38,83 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BizDeptServiceImpl implements BizDeptService {
-    private final SysDeptService sysDeptService;
-    private final SysRoleService sysRoleService;
-    private final SysRoleUserService sysRoleUserService;
-    private final SysUserDeptService sysUserDeptService;
-    private final SysRoleUserDeptService sysRoleUserDeptService;
     private final SysUserService sysUserService;
+
+    private final TenantDeptService tenantDeptService;
+    private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
+
+    private final BizRoleService bizRoleService;
 
     private final AssertionChecker assertionChecker;
     private final DeptConvert deptConvert;
 
     @Override
+    public List<TenantDept> getDescendantList(Long deptId, boolean includeSelf) {
+        // 查询全部部门
+        List<TenantDept> allDeptList = tenantDeptService.list();
+
+        // 递归查询所有子节点
+        List<TenantDept> resDeptList = new ArrayList<>();
+        recursiveDept(allDeptList, deptId, resDeptList);
+
+        // 添加当前节点
+        if (includeSelf) {
+            resDeptList.addAll(allDeptList.stream()
+                    .filter(sysDept -> deptId.equals(sysDept.getId()))
+                    .toList());
+        }
+        return resDeptList;
+    }
+
+    /**
+     * 递归查询所有子节点。
+     *
+     * @param allDeptList 所有部门列表
+     * @param parentId    父部门ID
+     * @param resDeptList 结果集合
+     */
+    private void recursiveDept(List<TenantDept> allDeptList, Long parentId, List<TenantDept> resDeptList) {
+        // 使用 Stream API 进行筛选和遍历
+        allDeptList.stream()
+                .filter(sysDept -> sysDept.getPid().equals(parentId))
+                .forEach(sysDept -> {
+                    resDeptList.add(sysDept);
+                    recursiveDept(allDeptList, sysDept.getId(), resDeptList);
+                });
+    }
+
+    @Override
     public List<DeptWithManagerVO> listWithManager() {
         // 获取主管角色
-        SysRole role = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_MANAGER);
+        RoleType role = bizRoleService.getByCode(RoleConstants.ROLE_ORG_MANAGER);
         // 获取当前组织所有主管
-        List<UserWithDeptVO> managerUsers = CollUtil.emptyIfNull(sysRoleUserService.getRoleUserWithDeptList(role.getId()));
-        return sysDeptService.listWithMemberCount().stream()
+        List<SysUser> managerUsers = new ArrayList<>();
+        List<TenantRoleUserPrivate> roleUsers = CollUtil.emptyIfNull(tenantRoleUserPrivateService.listRoleUsers(role.getId()));
+        if (CollUtil.isNotEmpty(roleUsers)) {
+            managerUsers.addAll(sysUserService.list(Wrappers.<SysUser>lambdaQuery()
+                    .in(SysUser::getId, roleUsers.stream()
+                            .map(TenantRoleUserPrivate::getUserId).toList())));
+        }
+        return tenantDeptService.listWithMemberCount().stream()
                 .map(dept -> {
                     DeptWithManagerVO item = new DeptWithManagerVO();
                     BeanUtil.copyProperties(dept, item);
 
                     // 如果当前组织没有设置过主管，那么直接返回
-                    if (CollUtil.isEmpty(managerUsers)) {
+                    if (CollUtil.isEmpty(roleUsers)) {
                         return item;
                     }
 
                     // 获取当前部门的主管ID
-                    item.setManagerUsers(managerUsers.stream()
-                            .filter(user -> Objects.equals(user.getDeptId(), dept.getId()))
-                            .map(user -> {
+                    item.setManagerUsers(roleUsers.stream()
+                            .filter(roleUser -> Objects.equals(roleUser.getDeptId(), dept.getId()))
+                            .map(roleUser -> {
                                 SimpleUserVO simpleUser = new SimpleUserVO();
-                                BeanUtil.copyProperties(user, simpleUser);
+                                managerUsers.stream()
+                                        .filter(managerUser -> Objects.equals(managerUser.getId(), roleUser.getUserId()))
+                                        .findFirst()
+                                        .ifPresent(user -> BeanUtil.copyProperties(user, simpleUser));
                                 return simpleUser;
                             })
                             .toList());
@@ -74,93 +125,10 @@ public class BizDeptServiceImpl implements BizDeptService {
     }
 
     @Override
-    public List<SimpleUserVO> getDeptUsersWithRole(long deptId, List<String> roleCodeList) {
-        if (CollUtil.isEmpty(roleCodeList)) {
-            return ListUtil.empty();
-        }
-        List<SysRole> roleList = sysRoleService.getRoleListByCodes(roleCodeList);
-        if (CollUtil.isEmpty(roleList)) {
-            return ListUtil.empty();
-        }
-        // 需要过滤部门的角色
-        List<SysRole> filterDeptRoles = roleList.stream().filter(SysRole::getFilterDept).toList();
-        List<SimpleUserVO> filterDeptRolesUsers = getDeptUsersByFilterDeptRoles(deptId, filterDeptRoles);
-
-        // 默认普通角色
-        List<SysRole> defaultRoles = roleList.stream().filter(role -> !role.getFilterDept()).toList();
-        List<SimpleUserVO> defaultRolesUsers = getDeptUsersByDefaultRoles(deptId, defaultRoles);
-
-        // diff
-        List<Long> tempUserIds = filterDeptRolesUsers.stream().map(SimpleUserVO::getId).toList();
-        List<SimpleUserVO> diff = defaultRolesUsers.stream()
-                .filter(item -> !tempUserIds.contains(item.getId()))
-                .toList();
-
-        filterDeptRolesUsers.addAll(diff);
-        return filterDeptRolesUsers;
-    }
-
-    private List<SimpleUserVO> getDeptUsersByFilterDeptRoles(long deptId, List<SysRole> filterDeptRoles) {
-        // 部门没有绑定的角色直接返回
-        List<SysRoleUserDept> roleUserDepts = sysRoleUserDeptService.list(Wrappers.<SysRoleUserDept>lambdaQuery()
-                .eq(SysRoleUserDept::getDeptId, deptId));
-        if (CollUtil.isEmpty(roleUserDepts)) {
-            return ListUtil.empty();
-        }
-
-        List<Long> roleIds = filterDeptRoles.stream().map(SysRole::getId).toList();
-        List<Long> userIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                        .in(SysRoleUser::getId, roleUserDepts.stream().map(SysRoleUserDept::getRoleUserId)))
-                .stream()
-                .filter(item -> roleIds.contains(item.getRoleId()))
-                .map(SysRoleUser::getUserId)
-                .distinct()
-                .toList();
-        if (CollUtil.isEmpty(userIds)) {
-            return ListUtil.empty();
-        }
-
-        return sysUserService.list(Wrappers.<SysUser>lambdaQuery().in(SysUser::getId, userIds))
-                .stream().map(user -> {
-                    SimpleUserVO item = new SimpleUserVO();
-                    BeanUtil.copyProperties(user, item);
-                    return item;
-                }).toList();
-    }
-
-    private List<SimpleUserVO> getDeptUsersByDefaultRoles(long deptId, List<SysRole> defaultRoles) {
-        if (CollUtil.isEmpty(defaultRoles)) {
-            return ListUtil.empty();
-        }
-
-        List<SysUser> users = sysRoleUserService.getRoleListUsers(defaultRoles.stream().map(SysRole::getId).toList());
-        if (CollUtil.isEmpty(users)) {
-            return ListUtil.empty();
-        }
-        List<Long> userIds = users.stream().map(SysUser::getId).toList();
-
-        // 部门用户
-        List<Long> deptUserIds = CollUtil.emptyIfNull(sysUserDeptService.list(Wrappers.<SysUserDept>lambdaQuery()
-                        .eq(SysUserDept::getDeptId, deptId)
-                        .in(SysUserDept::getUserId, userIds)))
-                .stream()
-                .map(SysUserDept::getUserId)
-                .toList();
-        return users.stream()
-                .filter(user -> deptUserIds.contains(user.getId()))
-                .map(user -> {
-                    SimpleUserVO item = new SimpleUserVO();
-                    BeanUtil.copyProperties(user, item);
-                    return item;
-                })
-                .toList();
-    }
-
-    @Override
     public List<DeptTreeNodeVO> orgList() {
         List<DeptWithManagerVO> all = listWithManager();
         List<DeptTreeNodeVO> allNode = all.stream()
-                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .sorted(Comparator.comparingInt(DeptWithManagerVO::getSort))
                 .map(deptConvert::to).toList();
 
         List<DeptTreeNodeVO> childNode = allNode.stream().filter(item -> !item.getMainFlag()).toList();
@@ -179,7 +147,7 @@ public class BizDeptServiceImpl implements BizDeptService {
     public List<DeptTreeNodeVO> orgTree() {
         List<DeptWithManagerVO> all = listWithManager();
         List<DeptTreeNodeVO> allNode = all.stream()
-                .sorted(Comparator.comparingInt(SysDept::getSort))
+                .sorted(Comparator.comparingInt(DeptWithManagerVO::getSort))
                 .map(deptConvert::to).toList();
 
         return TreeUtil.build(allNode);
@@ -192,47 +160,17 @@ public class BizDeptServiceImpl implements BizDeptService {
         }
 
         // 获取主管角色
-        SysRole role = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_MANAGER);
+        RoleType role = bizRoleService.getByCode(RoleConstants.ROLE_ORG_MANAGER);
 
         // 清空当前部门主管
-        List<Long> rudIds = sysRoleUserDeptService.getRoleUserDeptIdsByDeptAndRole(deptId, role.getId());
-        if (CollUtil.isNotEmpty(rudIds)) {
-            sysRoleUserDeptService.remove(Wrappers.<SysRoleUserDept>lambdaQuery()
-                    .in(SysRoleUserDept::getId, rudIds));
-        }
+        tenantRoleUserPrivateService.clearByRoleAndDept(role.getId(), deptId);
 
-        // 判断当前没有主管角色的用户
-        List<Long> currentManagerList = CollUtil.emptyIfNull(sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                        .eq(SysRoleUser::getRoleId, role.getId())
-                        .in(SysRoleUser::getUserId, userIds))).stream()
-                .map(SysRoleUser::getUserId)
-                .toList();
-        List<Long> notBindManagerUserIds = userIds.stream()
-                .filter(userId -> !currentManagerList.contains(userId))
-                .toList();
-        if (CollUtil.isNotEmpty(notBindManagerUserIds)) {
-            RelationDTO<Long, Long> relation = new RelationDTO<>();
-            relation.setId(role.getId());
-            relation.setBindIds(notBindManagerUserIds);
-            sysRoleUserService.roleBindUsers(relation);
-        }
-
-        // 设置主管
-        List<Long> ruIds = sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                        .eq(SysRoleUser::getRoleId, role.getId())
-                        .in(SysRoleUser::getUserId, userIds))
-                .stream().map(SysRoleUser::getId).toList();
-        List<SysRoleUserDept> list = ruIds.stream().map(id -> {
-            SysRoleUserDept item = new SysRoleUserDept();
-            item.setRoleUserId(id);
-            item.setDeptId(deptId);
-            return item;
-        }).toList();
-        if (CollUtil.size(list) == 1) {
-            sysRoleUserDeptService.save(list.get(0));
-        } else {
-            sysRoleUserDeptService.saveBatch(list);
-        }
+        // 绑定主管
+        BizRoleAssignUsersDTO params = new BizRoleAssignUsersDTO();
+        params.setId(role.getId());
+        params.setAssignIds(userIds);
+        params.setDeptId(deptId);
+        bizRoleService.assignUsers(params);
     }
 
     @Override
@@ -240,7 +178,7 @@ public class BizDeptServiceImpl implements BizDeptService {
     public void orgCreateDept(DeptWithManagerDTO params) {
         assertionChecker.checkOperation(params.getPid() != null,
                 "BizDeptServiceImpl.createError");
-        sysDeptService.createDept(params);
+        tenantDeptService.create(params);
 
         if (CollUtil.isEmpty(params.getManagerUserIds())) {
             return;
@@ -251,14 +189,14 @@ public class BizDeptServiceImpl implements BizDeptService {
 
     @Override
     public void orgUpdateDept(DeptWithManagerDTO params) {
-        SysDept main = sysDeptService.getMainDept();
+        TenantDept main = tenantDeptService.getMainDept();
         // 不能更新主部门
         assertionChecker.checkOperation(!Objects.equals(params.getId(), main.getId()),
                 "BizDeptServiceImpl.updateError");
         params.setMainFlag(null);
         params.setPid(null);
 
-        sysDeptService.updateDept(params);
+        tenantDeptService.update(params);
 
         if (CollUtil.isEmpty(params.getManagerUserIds())) {
             return;
@@ -270,22 +208,20 @@ public class BizDeptServiceImpl implements BizDeptService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void orgDeleteDept(long id) {
-        SysDept main = sysDeptService.getMainDept();
+        TenantDept main = tenantDeptService.getMainDept();
         // 不能删除主部门
         assertionChecker.checkOperation(id != main.getId(),
                 "BizDeptServiceImpl.deleteError");
-        sysDeptService.removeDeptById(id);
+        tenantDeptService.delete(id);
 
         // 删除改部门关联数据
-        sysRoleUserDeptService.remove(Wrappers.<SysRoleUserDept>lambdaQuery()
-                .eq(SysRoleUserDept::getDeptId, id));
-
+        tenantRoleUserPrivateService.clearByDeptId(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void setUserDeptsEnsureMainDept(long userId, List<Long> deptIds) {
-        SysDept main = sysDeptService.getMainDept();
+        TenantDept main = tenantDeptService.getMainDept();
         if (main != null) {
             if (CollUtil.isEmpty(deptIds)) {
                 deptIds = ListUtil.list(false, main.getId());
@@ -295,6 +231,6 @@ public class BizDeptServiceImpl implements BizDeptService {
         }
 
         Set<Long> temp = new HashSet<>(deptIds);
-        sysDeptService.setDepts(userId, temp.stream().toList());
+        tenantUserDeptPrivateService.setDepartments(userId, temp);
     }
 }
