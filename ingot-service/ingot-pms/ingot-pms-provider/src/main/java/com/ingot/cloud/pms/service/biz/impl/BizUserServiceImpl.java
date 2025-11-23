@@ -1,12 +1,15 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.bo.role.BizAssignRoleBO;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
@@ -14,23 +17,21 @@ import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
-import com.ingot.cloud.pms.core.AuthorityUtils;
-import com.ingot.cloud.pms.service.biz.BizDeptService;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.biz.BizUserService;
-import com.ingot.cloud.pms.service.biz.UserOpsChecker;
+import com.ingot.cloud.pms.core.BizRoleUtils;
+import com.ingot.cloud.pms.service.biz.*;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -50,22 +51,95 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BizUserServiceImpl implements BizUserService {
     private final SysUserService sysUserService;
-    private final SysRoleService sysRoleService;
-    private final SysAuthorityService sysAuthorityService;
-    private final SysDeptService sysDeptService;
     private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
-    private final SysMenuService sysMenuService;
-    private final SysUserDeptService sysUserDeptService;
-    private final SysRoleUserService sysRoleUserService;
-    private final BizDeptService bizDeptService;
+    private final SysUserSocialService sysUserSocialService;
+
+    private final MetaRoleService metaRoleService;
+    private final TenantRolePrivateService tenantRolePrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
+    private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
     private final BizRoleService bizRoleService;
-    private final SysApplicationTenantService sysApplicationTenantService;
+    private final BizDeptService bizDeptService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
     private final UserOpsChecker userOpsChecker;
     private final UserConvert userConvert;
+
+    @Override
+    public List<Long> getUserDeptIds(long userId) {
+        return CollUtil.emptyIfNull(tenantUserDeptPrivateService.getUserDepartmentIds(userId));
+    }
+
+    @Override
+    public List<TenantDept> getUserDescendant(long userId, boolean includeSelf) {
+        List<Long> deptIds = getUserDeptIds(userId);
+        if (CollUtil.isEmpty(deptIds)) {
+            return ListUtil.empty();
+        }
+
+        return deptIds.stream()
+                .flatMap(deptId -> bizDeptService.getDescendantList(deptId, includeSelf).stream())
+                .toList();
+    }
+
+    @Override
+    public List<RoleType> getUserRoles(long userId) {
+        List<TenantRoleUserPrivate> roleUserPrivateList = tenantRoleUserPrivateService.getUserRoles(userId);
+        if (CollUtil.isEmpty(roleUserPrivateList)) {
+            return ListUtil.empty();
+        }
+
+        List<RoleType> result = new ArrayList<>(roleUserPrivateList.size());
+
+        List<Long> metaRoleIds = roleUserPrivateList.stream()
+                .filter(item -> BooleanUtil.isTrue(item.getMetaRole()))
+                .map(TenantRoleUserPrivate::getRoleId)
+                .toList();
+        if (CollUtil.isNotEmpty(metaRoleIds)) {
+            List<MetaRole> metaRoleList = metaRoleService.list(Wrappers.<MetaRole>lambdaQuery()
+                    .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE)
+                    .in(MetaRole::getId, metaRoleIds));
+            result.addAll(metaRoleList);
+        }
+
+        List<Long> privateRoleIds = roleUserPrivateList.stream()
+                .filter(item -> BooleanUtil.isFalse(item.getMetaRole()))
+                .map(TenantRoleUserPrivate::getRoleId)
+                .toList();
+        if (CollUtil.isNotEmpty(privateRoleIds)) {
+            List<TenantRolePrivate> privateRoleList = tenantRolePrivateService.list(Wrappers.<TenantRolePrivate>lambdaQuery()
+                    .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
+                    .in(TenantRolePrivate::getId, privateRoleIds));
+            result.addAll(privateRoleList);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void setUserRoles(long userId, List<Long> roleIds) {
+        // 如果操作的自己，那么需要判断角色
+        long opsUserId = SecurityAuthContext.getUser().getId();
+        if (opsUserId == userId) {
+            BizRoleUtils.ensureRoles(userId, roleIds, RoleConstants.ROLE_ADMIN_CODE,
+                    bizRoleService, tenantRoleUserPrivateService);
+            BizRoleUtils.ensureRoles(userId, roleIds, RoleConstants.ROLE_ORG_ADMIN_CODE,
+                    bizRoleService, tenantRoleUserPrivateService);
+        }
+
+        List<RoleType> roles = bizRoleService.getRoles(roleIds);
+        List<BizAssignRoleBO> assignRoles = roles.stream()
+                .map(item -> {
+                    BizAssignRoleBO role = new BizAssignRoleBO();
+                    role.setRoleId(item.getId());
+                    role.setMetaRole(item.getOrgType() == OrgTypeEnum.Platform);
+                    return role;
+                }).toList();
+
+        tenantRoleUserPrivateService.setRoles(userId, assignRoles);
+    }
 
     @Override
     public UserProfileVO getUserProfile(long id) {
@@ -109,16 +183,6 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
-    public List<MenuTreeNodeVO> getUserMenus(InUser user) {
-        List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
-        List<SysAuthority> authorities = sysAuthorityService.getAuthorityAndChildrenByRoles(roles);
-
-        List<SysAuthority> finallyAuthorities = AuthorityUtils.filterOrgLockAuthority(
-                authorities, sysApplicationTenantService);
-        return sysMenuService.getMenuByAuthorities(finallyAuthorities);
-    }
-
-    @Override
     public ResetPwdVO createUser(UserDTO params) {
         SysUser user = userConvert.to(params);
 
@@ -129,7 +193,7 @@ public class BizUserServiceImpl implements BizUserService {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
         user.setStatus(UserStatusEnum.ENABLE);
-        sysUserService.createUser(user);
+        sysUserService.create(user);
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
@@ -144,13 +208,29 @@ public class BizUserServiceImpl implements BizUserService {
         }
 
         SysUser user = userConvert.to(params);
-        sysUserService.updateUser(user);
+        sysUserService.update(user);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(long id) {
         userOpsChecker.removeUser(id);
-        sysUserService.removeUserById(id);
+
+        // 取消关联角色
+        tenantRoleUserPrivateService.clearByUserId(id);
+
+        // 取消关联社交信息
+        sysUserSocialService.remove(
+                Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id));
+
+        // 取消关联租户
+        sysUserTenantService.remove(
+                Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id));
+
+        // 取消关联部门
+        tenantUserDeptPrivateService.setDepartments(id, null);
+
+        sysUserService.delete(id);
     }
 
     @Override
@@ -178,7 +258,7 @@ public class BizUserServiceImpl implements BizUserService {
 
             sysUserTenantService.joinTenant(userId, tenant);
             bizDeptService.setUserDeptsEnsureMainDept(userId, params.getDeptIds());
-            bizRoleService.setOrgUserRoles(userId, params.getRoleIds());
+            setUserRoles(userId, params.getRoleIds());
         });
     }
 
@@ -196,11 +276,9 @@ public class BizUserServiceImpl implements BizUserService {
             long userId = params.getId();
             sysUserTenantService.leaveTenant(userId);
             // 取消关联部门
-            sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
-                    .eq(SysUserDept::getUserId, userId));
+            tenantUserDeptPrivateService.clearByUserId(userId);
             // 取消关联角色
-            sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
-                    .eq(SysRoleUser::getUserId, userId));
+            tenantRoleUserPrivateService.clearByUserId(userId);
         });
     }
 
@@ -212,12 +290,11 @@ public class BizUserServiceImpl implements BizUserService {
                     UserOrgInfoVO item = new UserOrgInfoVO();
                     item.setOrgId(org.getTenantId());
 
-                    List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(userId))
-                            .stream().map(SysUserDept::getDeptId).toList();
+                    List<Long> deptIds = getUserDeptIds(userId);
                     item.setDeptIds(deptIds);
 
-                    List<Long> roleIds = CollUtil.emptyIfNull(sysRoleService.getRolesOfUser(userId))
-                            .stream().map(SysRole::getId).toList();
+                    List<Long> roleIds = CollUtil.emptyIfNull(getUserRoles(userId))
+                            .stream().map(RoleType::getId).toList();
                     item.setRoleIds(roleIds);
                     return item;
                 })).toList();
@@ -231,10 +308,7 @@ public class BizUserServiceImpl implements BizUserService {
         assert user != null;
 
         OrgUserProfileVO profile = userConvert.toOrgUserProfile(user);
-
-        List<Long> deptIds = CollUtil.emptyIfNull(sysDeptService.getUserDepts(id))
-                .stream().map(SysUserDept::getDeptId).toList();
-        profile.setDeptIds(deptIds);
+        profile.setDeptIds(getUserDeptIds(id));
         return profile;
     }
 
@@ -255,7 +329,7 @@ public class BizUserServiceImpl implements BizUserService {
             user.setUsername(params.getPhone());
             user.setPassword(params.getPhone());
             user.setInitPwd(Boolean.TRUE);
-            sysUserService.createUser(user);
+            sysUserService.create(user);
         }
 
         // 加入租户
@@ -272,7 +346,7 @@ public class BizUserServiceImpl implements BizUserService {
 
         SysUser user = userConvert.to(params);
         // 更新用户
-        sysUserService.updateUser(user);
+        sysUserService.update(user);
 
         if (CollUtil.isNotEmpty(params.getDeptIds())) {
             // 更新部门
@@ -287,20 +361,18 @@ public class BizUserServiceImpl implements BizUserService {
         assertionChecker.checkOperation(userId != id, "BizUserServiceImpl.RemoveSelfFailed");
 
         // 判断删除用户是否为除主管理员
-        SysRole managerRole = sysRoleService.getRoleByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
-        long deleteCount = sysRoleUserService.count(Wrappers.<SysRoleUser>lambdaQuery()
-                .eq(SysRoleUser::getRoleId, managerRole.getId())
-                .eq(SysRoleUser::getUserId, id));
+        RoleType managerRole = bizRoleService.getByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
+        long deleteCount = tenantRoleUserPrivateService.count(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                .eq(TenantRoleUserPrivate::getRoleId, managerRole.getId())
+                .eq(TenantRoleUserPrivate::getUserId, id));
         assertionChecker.checkOperation(deleteCount == 0, "BizUserServiceImpl.CantRemoveManager");
 
         // 取消关联组织
         sysUserTenantService.leaveTenant(id);
         // 取消关联部门
-        sysUserDeptService.remove(Wrappers.<SysUserDept>lambdaQuery()
-                .eq(SysUserDept::getUserId, id));
+        tenantUserDeptPrivateService.clearByUserId(id);
         // 取消关联角色
-        sysRoleUserService.remove(Wrappers.<SysRoleUser>lambdaQuery()
-                .eq(SysRoleUser::getUserId, id));
+        tenantRoleUserPrivateService.clearByUserId(id);
     }
 
     @Override
@@ -309,6 +381,7 @@ public class BizUserServiceImpl implements BizUserService {
         SysUser current = sysUserService.getById(id);
         assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
+        assert current != null;
         if (!BooleanUtil.isTrue(current.getInitPwd())) {
             return;
         }

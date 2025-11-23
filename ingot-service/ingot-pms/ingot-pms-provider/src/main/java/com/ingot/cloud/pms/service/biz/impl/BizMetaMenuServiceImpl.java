@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaMenu;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
-import com.ingot.cloud.pms.core.MenuUtils;
+import com.ingot.cloud.pms.core.BizMenuUtils;
 import com.ingot.cloud.pms.service.biz.BizMetaMenuService;
 import com.ingot.cloud.pms.service.domain.MetaAppService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
@@ -42,7 +42,7 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     @Override
     public List<MenuTreeNodeVO> getMenuByAuthorities(List<? extends AuthorityType> authorities) {
         List<MenuTreeNodeVO> allNodeList = menuService.nodeList();
-        List<MenuTreeNodeVO> nodeList = MenuUtils.filterMenus(allNodeList, authorities);
+        List<MenuTreeNodeVO> nodeList = BizMenuUtils.filterMenus(allNodeList, authorities);
         return TreeUtil.build(nodeList)
                 .stream()
                 .sorted(Comparator.comparing(MenuTreeNodeVO::getSort))
@@ -109,7 +109,7 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
         }
 
         authority.setName(menu.getName());
-        authority.setCode(MenuUtils.getMenuAuthorityCode(menu));
+        authority.setCode(BizMenuUtils.getMenuAuthorityCode(menu));
         authority.setStatus(menu.getStatus());
         authority.setOrgType(menu.getOrgType());
         return authorityService.createAndReturnId(authority, false);

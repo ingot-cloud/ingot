@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BizAuthorityTreeNodeVO extends AuthorityTreeNodeVO{
+public class BizAuthorityTreeNodeVO extends AuthorityTreeNodeVO {
     /**
      * 是否为元数据角色绑定的权限
      */

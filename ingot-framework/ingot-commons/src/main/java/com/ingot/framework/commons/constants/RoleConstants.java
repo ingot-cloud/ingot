@@ -14,7 +14,7 @@ public interface RoleConstants {
     /**
      * 组织角色前缀
      */
-    String ORG_ROLE_CODE_PREFIX = "org_role_";
+    String ORG_ROLE_CODE_PREFIX = "role_org_";
 
 
     /**

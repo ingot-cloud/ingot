@@ -3,24 +3,25 @@ package com.ingot.cloud.pms.service.biz.impl;
 import java.util.List;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.SysAuthority;
 import com.ingot.cloud.pms.api.model.domain.SysDept;
 import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
+import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.core.BizAuthorityUtils;
 import com.ingot.cloud.pms.core.org.TenantEngine;
+import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
-import com.ingot.cloud.pms.service.domain.AppUserTenantService;
-import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.cloud.pms.service.domain.SysUserTenantService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.OrgConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,20 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final SysUserTenantService sysUserTenantService;
     private final AppUserTenantService appUserTenantService;
     private final AssertionChecker assertionChecker;
+
+    private final MetaAuthorityService metaAuthorityService;
+
+    private final BizAppService bizAppService;
+    private final AuthorityConvert authorityConvert;
+
+    @Override
+    public List<AuthorityTreeNodeVO> getTenantAuthorityTree(long tenantID) {
+        return TenantEnv.applyAs(tenantID, () -> {
+            List<AuthorityTreeNodeVO> authorities = BizAuthorityUtils.getTenantAuthorities(
+                    tenantID, bizAppService, metaAuthorityService, authorityConvert);
+            return TreeUtil.build(authorities);
+        });
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -91,11 +106,5 @@ public class BizOrgServiceImpl implements BizOrgService {
 
         // 销毁组织
         TenantEnv.runAs(id, () -> tenantEngine.destroy(id));
-    }
-
-    public static void main(String[] args) {
-        String password = "111111";
-        PasswordEncoder encode = new BCryptPasswordEncoder();
-        System.out.println(encode.encode(password));
     }
 }

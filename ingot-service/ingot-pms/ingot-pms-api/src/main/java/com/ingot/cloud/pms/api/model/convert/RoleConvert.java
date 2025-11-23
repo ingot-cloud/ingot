@@ -1,9 +1,8 @@
 package com.ingot.cloud.pms.api.model.convert;
 
-import com.ingot.cloud.pms.api.model.domain.AppRole;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
+import com.ingot.cloud.pms.api.model.bo.role.BizAssignRoleBO;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.model.vo.role.RolePageItemVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
@@ -19,17 +18,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface RoleConvert {
 
-    RolePageItemVO to(SysRole role);
-
-    RolePageItemVO to(AppRole role);
-
     RoleTreeNodeVO to(RoleType in);
 
     @Mapping(target = "value", source = "id")
     @Mapping(target = "label", source = "name")
-    Option<Long> option(SysRole role);
+    Option<Long> option(RoleType role);
 
-    @Mapping(target = "value", source = "id")
-    @Mapping(target = "label", source = "name")
-    Option<Long> option(AppRole role);
+    TenantRoleUserPrivate to(BizAssignRoleBO in);
 }

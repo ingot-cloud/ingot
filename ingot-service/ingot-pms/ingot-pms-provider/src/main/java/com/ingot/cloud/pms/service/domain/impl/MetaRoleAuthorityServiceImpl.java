@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaRoleAuthority;
 import com.ingot.cloud.pms.mapper.MetaRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.framework.commons.constants.CacheConstants;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,9 +32,9 @@ public class MetaRoleAuthorityServiceImpl extends BaseServiceImpl<MetaRoleAuthor
             key = "'role-' + #params.id"
     )
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindAuthorities(RelationDTO<Long, Long> params) {
+    public void roleSetAuthorities(SetDTO<Long, Long> params) {
         Long roleId = params.getId();
-        List<Long> bindIds = params.getBindIds();
+        List<Long> bindIds = params.getSetIds();
 
         // 清空当前权限
         remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
@@ -54,7 +54,7 @@ public class MetaRoleAuthorityServiceImpl extends BaseServiceImpl<MetaRoleAuthor
 
     @Override
     @Cacheable(
-            value = CacheConstants.META_AUTHORITIES,
+            value = CacheConstants.META_ROLE_AUTHORITIES,
             key = "'role-' + #id",
             unless = "#result.isEmpty()"
     )

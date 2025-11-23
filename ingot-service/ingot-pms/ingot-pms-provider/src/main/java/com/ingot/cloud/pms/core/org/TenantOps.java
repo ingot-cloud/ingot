@@ -14,7 +14,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import com.ingot.framework.data.redis.utils.RedisUtils;
@@ -253,8 +253,8 @@ public class TenantOps {
      * 2. 绑定新权限
      * @param params 关联参数
      */
-    public void roleBindAuthorities(RelationDTO<Long, Long> params, SysRole role) {
-        List<Long> bindIds = params.getBindIds();
+    public void roleBindAuthorities(AssignDTO<Long, Long> params, SysRole role) {
+        List<Long> bindIds = params.getAssignIds();
 
         // 待绑定权限编码
         List<String> bindCodes = CollUtil.isEmpty(bindIds) ? null : sysAuthorityService.list(
@@ -262,7 +262,7 @@ public class TenantOps {
                                 .in(SysAuthority::getId, bindIds))
                 .stream().map(SysAuthority::getCode).toList();
 
-        RelationDTO<Long, Long> orgRelation = new RelationDTO<>();
+        AssignDTO<Long, Long> orgRelation = new AssignDTO<>();
         getOrgs().forEach(org ->
                 TenantEnv.runAs(org.getId(),
                         () -> {
@@ -271,7 +271,7 @@ public class TenantOps {
 
                             orgRelation.setId(orgRole.getId());
                             if (CollUtil.isNotEmpty(bindCodes)) {
-                                orgRelation.setBindIds(sysAuthorityService.list(
+                                orgRelation.setAssignIds(sysAuthorityService.list(
                                                 Wrappers.<SysAuthority>lambdaQuery()
                                                         .in(SysAuthority::getCode, bindCodes))
                                         .stream().map(SysAuthority::getId).toList());

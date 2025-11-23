@@ -32,9 +32,9 @@ public class TenantRoleAuthorityPrivateServiceImpl extends BaseServiceImpl<Tenan
             key = "'role-' + #params.id"
     )
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindAuthorities(BizBindDTO params) {
+    public void roleSetAuthorities(BizBindDTO params) {
         Long roleId = params.getId();
-        List<Long> bindIds = params.getBindIds();
+        List<Long> bindIds = params.getAssignIds();
         boolean metaFlag = params.isMetaFlag();
 
         // 清空当前权限
@@ -56,7 +56,7 @@ public class TenantRoleAuthorityPrivateServiceImpl extends BaseServiceImpl<Tenan
 
     @Override
     @Cacheable(
-            value = CacheConstants.META_AUTHORITIES,
+            value = CacheConstants.TENANT_ROLE_AUTHORITIES,
             key = "'role-' + #id",
             unless = "#result.isEmpty()"
     )

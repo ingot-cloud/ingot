@@ -2,17 +2,17 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
-import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
-import com.ingot.framework.security.core.userdetails.InUser;
 
 /**
  * <p>Description  : 业务用户service.</p>
@@ -21,6 +21,39 @@ import com.ingot.framework.security.core.userdetails.InUser;
  * <p>Time         : 6:44 PM.</p>
  */
 public interface BizUserService {
+
+    /**
+     * 获取用户所在部门ID列表
+     *
+     * @param userId 用户ID
+     * @return 部门ID列表
+     */
+    List<Long> getUserDeptIds(long userId);
+
+    /**
+     * 获取用户所在部门的所有子部门
+     *
+     * @param userId      用户ID
+     * @param includeSelf 是否包含当前部门
+     * @return 部门列表
+     */
+    List<TenantDept> getUserDescendant(long userId, boolean includeSelf);
+
+    /**
+     * 获取用户绑定的所有角色
+     *
+     * @param userId 用户ID
+     * @return {@link RoleType}
+     */
+    List<RoleType> getUserRoles(long userId);
+
+    /**
+     * 设置用户角色
+     *
+     * @param userId  用户
+     * @param roleIds 角色列表
+     */
+    void setUserRoles(long userId, List<Long> roleIds);
 
     /**
      * 获取用户简介信息
@@ -36,14 +69,6 @@ public interface BizUserService {
      * @param params 基本信息参数
      */
     void updateUserBaseInfo(long id, UserBaseInfoDTO params);
-
-    /**
-     * 获取用户可用菜单
-     *
-     * @param user {@link InUser}
-     * @return {@link MenuTreeNodeVO} List
-     */
-    List<MenuTreeNodeVO> getUserMenus(InUser user);
 
     /**
      * 创建用户
@@ -91,6 +116,7 @@ public interface BizUserService {
 
     /**
      * 用户组织信息
+     *
      * @param userId 用户ID
      * @return {@link UserOrgInfoVO}
      */

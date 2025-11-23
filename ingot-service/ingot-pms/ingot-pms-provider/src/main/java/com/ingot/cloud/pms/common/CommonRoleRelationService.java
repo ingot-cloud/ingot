@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.common;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
@@ -28,13 +28,13 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
     /**
      * 目标类型关联角色
      */
-    public void bindRoles(RelationDTO<TargetID, Long> params,
+    public void bindRoles(AssignDTO<TargetID, Long> params,
                           TargetBindRoles<TargetID> remove,
                           TargetBindRoles<TargetID> bind,
                           String removeErrorMsgCode) {
         TargetID id = params.getId();
-        List<Long> removeIds = params.getRemoveIds();
-        List<Long> bindIds = params.getBindIds();
+        List<Long> removeIds = params.getUnassignIds();
+        List<Long> bindIds = params.getAssignIds();
 
         if (CollUtil.isNotEmpty(removeIds)) {
             log.debug("[CommonRoleRelationService] - 目标[{}]绑定角色 取消关联[{}]", id, removeIds);
@@ -51,13 +51,13 @@ public class CommonRoleRelationService<M extends BaseMapper<T>, T, TargetID> ext
     /**
      * 角色关联目标
      */
-    public void bindTargets(RelationDTO<Long, TargetID> params,
+    public void bindTargets(AssignDTO<Long, TargetID> params,
                             RoleBindTargets<TargetID> remove,
                             RoleBindTargets<TargetID> bind,
                             String removeErrorMsgCode) {
         Long id = params.getId();
-        List<TargetID> removeIds = params.getRemoveIds();
-        List<TargetID> bindIds = params.getBindIds();
+        List<TargetID> removeIds = params.getUnassignIds();
+        List<TargetID> bindIds = params.getAssignIds();
 
         if (CollUtil.isNotEmpty(removeIds)) {
             log.debug("[CommonRoleRelationService] - 角色[{}]绑定目标 取消关联[{}]", id, removeIds);

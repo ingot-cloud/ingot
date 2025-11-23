@@ -13,13 +13,13 @@ import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.core.AuthorityUtils;
+import com.ingot.cloud.pms.core.BizAuthorityUtils;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.MetaRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +73,7 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     @Override
     public List<AuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId) {
         List<MetaAuthority> authorities = getRoleAuthorities(roleId);
-        return AuthorityUtils.mapTree(authorities, authorityConvert, null);
+        return BizAuthorityUtils.mapTree(authorities, authorityConvert, null);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     }
 
     @Override
-    public void bindAuthorities(RelationDTO<Long, Long> params) {
-        roleAuthorityService.roleBindAuthorities(params);
+    public void setAuthorities(SetDTO<Long, Long> params) {
+        roleAuthorityService.roleSetAuthorities(params);
     }
 }

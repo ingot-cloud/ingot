@@ -111,8 +111,8 @@ public interface SupportUserDetailsService<T extends UserType> {
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
-                    // 查询拥有的角色
-                    setRoles(result, value, tenant);
+                    // 查询拥有的Scope
+                    setScope(result, value, tenant);
                     return result;
                 }).orElse(null));
     }
@@ -134,13 +134,14 @@ public interface SupportUserDetailsService<T extends UserType> {
     UserDetailsResponse userToUserDetailsResponse(T user);
 
     /**
-     * 设置用户角色
+     * 设置用户Scope
      *
      * @param result      {@link UserDetailsResponse}
      * @param user        用户
+     * @param allows      允许登录的组织
      * @param loginTenant 登录租户
      */
-    void setRoles(UserDetailsResponse result, T user, Long loginTenant);
+    void setScope(UserDetailsResponse result, T user, List<AllowTenantDTO> allows, Long loginTenant);
 
     /**
      * 获取用户可用租户列表

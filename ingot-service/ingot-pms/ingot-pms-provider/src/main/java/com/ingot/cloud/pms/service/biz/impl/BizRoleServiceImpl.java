@@ -66,6 +66,20 @@ public class BizRoleServiceImpl implements BizRoleService {
     private final AssertionChecker assertionChecker;
 
     @Override
+    public MetaRole getMetaRole(long id) {
+        return metaRoleService.getById(id);
+    }
+
+    @Override
+    public RoleType getRole(long id) {
+        MetaRole metaRole = metaRoleService.getById(id);
+        if (metaRole != null) {
+            return metaRole;
+        }
+        return tenantRolePrivateService.getById(id);
+    }
+
+    @Override
     public List<RoleType> getRoles(List<Long> ids) {
         List<RoleType> result = new ArrayList<>();
 

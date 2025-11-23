@@ -4,7 +4,7 @@ import java.util.function.Predicate;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.types.MenuType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
@@ -66,7 +66,7 @@ public final class BizFilter {
      * @param condition 条件
      * @return {@link Predicate}
      */
-    public static Predicate<SysDept> deptFilter(SysDept condition) {
+    public static Predicate<TenantDept> deptFilter(TenantDept condition) {
         return (item) -> {
             if (condition == null) {
                 return true;

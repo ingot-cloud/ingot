@@ -1,16 +1,20 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,6 +32,7 @@ import lombok.Setter;
 @TableName("app_role")
 public class AppRole extends BaseModel<AppRole> implements RoleType {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -67,7 +72,7 @@ public class AppRole extends BaseModel<AppRole> implements RoleType {
      * 角色类型
      */
     @TableField("`type`")
-    private OrgTypeEnum type;
+    private RoleTypeEnum type;
 
     /**
      * 状态, 0:正常，9:禁用
@@ -89,4 +94,43 @@ public class AppRole extends BaseModel<AppRole> implements RoleType {
      * 删除日期
      */
     private LocalDateTime deletedAt;
+
+    @Override
+    public Long getPid() {
+        return 0L;
+    }
+
+    @Override
+    public void setPid(Long id) {
+
+    }
+    @Override
+    public OrgTypeEnum getOrgType() {
+        return null;
+    }
+
+    @Override
+    public void setOrgType(OrgTypeEnum orgType) {
+
+    }
+
+    @Override
+    public DataScopeTypeEnum getScopeType() {
+        return null;
+    }
+
+    @Override
+    public void setScopeType(DataScopeTypeEnum scopeType) {
+
+    }
+
+    @Override
+    public List<Long> getScopes() {
+        return List.of();
+    }
+
+    @Override
+    public void setScopes(List<Long> scopes) {
+
+    }
 }

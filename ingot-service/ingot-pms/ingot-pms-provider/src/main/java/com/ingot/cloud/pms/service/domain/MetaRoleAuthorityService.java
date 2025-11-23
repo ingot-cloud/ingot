@@ -3,7 +3,8 @@ package com.ingot.cloud.pms.service.domain;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaRoleAuthority;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
@@ -17,11 +18,11 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
 public interface MetaRoleAuthorityService extends BaseService<MetaRoleAuthority> {
 
     /**
-     * 角色绑定权限
+     * 角色设置权限
      *
-     * @param params {@link RelationDTO}
+     * @param params {@link AssignDTO}
      */
-    void roleBindAuthorities(RelationDTO<Long, Long> params);
+    void roleSetAuthorities(SetDTO<Long, Long> params);
 
     /**
      * 获取角色绑定的权限ID列表

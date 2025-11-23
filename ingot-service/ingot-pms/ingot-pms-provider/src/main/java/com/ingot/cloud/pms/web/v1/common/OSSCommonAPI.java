@@ -6,6 +6,7 @@ import com.ingot.framework.commons.error.IllegalOperationException;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.oss.OssService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class OSSCommonAPI implements RShortcuts {
     private final OssService ossService;
 
+    @Operation(summary = "上传文件", description = "上传文件")
     @PostMapping("/upload")
     public R<?> upload(@RequestParam("file") MultipartFile file,
                        @RequestParam(value = "bucketName") String bucketName,

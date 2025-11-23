@@ -10,13 +10,13 @@ import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <p>Description  : SocialUtils.</p>
+ * <p>Description  : BizSocialUtils.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2024/1/18.</p>
  * <p>Time         : 13:52.</p>
  */
 @Slf4j
-public class SocialUtils {
+public class BizSocialUtils {
 
     /**
      * 获取微信小程序OpenId

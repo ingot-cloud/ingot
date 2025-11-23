@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
@@ -40,14 +40,14 @@ public interface AppRoleUserService extends BaseService<AppRoleUser> {
      *
      * @param params 关联参数
      */
-    void userBindRoles(RelationDTO<Long, Long> params);
+    void userBindRoles(AssignDTO<Long, Long> params);
 
     /**
      * 角色绑定用户
      *
      * @param params 关联参数
      */
-    void roleBindUsers(RelationDTO<Long, Long> params);
+    void roleBindUsers(AssignDTO<Long, Long> params);
 
     /**
      * 获取角色用户

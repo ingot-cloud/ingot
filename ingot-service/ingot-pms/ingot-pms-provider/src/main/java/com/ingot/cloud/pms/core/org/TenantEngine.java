@@ -190,7 +190,7 @@ public class TenantEngine {
                 user.setPhone(params.getPhone());
                 user.setPassword(params.getPhone());
                 user.setNickname(params.getPhone());
-                sysUserService.createUser(user);
+                sysUserService.create(user);
             }
 
             // 加入租户

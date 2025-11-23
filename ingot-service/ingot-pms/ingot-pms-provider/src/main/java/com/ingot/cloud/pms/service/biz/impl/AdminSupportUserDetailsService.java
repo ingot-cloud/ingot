@@ -11,11 +11,15 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.RoleType;
+import com.ingot.cloud.pms.service.biz.BizAppService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -37,13 +41,14 @@ import org.springframework.stereotype.Service;
 public class AdminSupportUserDetailsService implements SupportUserDetailsService<SysUser> {
     private final SysTenantService sysTenantService;
     private final SysUserService sysUserService;
-    private final SysRoleService sysRoleService;
-    private final SysAuthorityService sysAuthorityService;
     private final SysUserTenantService sysUserTenantService;
-    private final SysApplicationTenantService sysApplicationTenantService;
+
+    private final BizAppService bizAppService;
+    private final BizRoleService bizRoleService;
 
     private final SocialProcessorManager socialProcessorManager;
     private final UserConvert userConvert;
+    private final BizUserService bizUserService;
 
     @Override
     public boolean support(UserDetailsRequest request) {
@@ -83,22 +88,21 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     }
 
     @Override
-    public void setRoles(UserDetailsResponse result, SysUser user, Long loginTenant) {
-        List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
+    public void setScope(UserDetailsResponse result, SysUser user, List<AllowTenantDTO> allows, Long loginTenant) {
+        // 需要查看所有可以登录的组织，每个组织的角色，权限（InAuthorityUtils.authorityWithTenant）
+        List<RoleType> roles = bizUserService.getUserRoles(user.getId());
         List<String> roleCodes = getRoleCodes(roles, loginTenant);
         if (CollUtil.isEmpty(roleCodes)) {
             return;
         }
 
         // 角色拥有的权限
-        List<SysAuthority> authorities = sysAuthorityService.getAuthorityByRoles(roles);
+        List<AuthorityType> authorities = bizRoleService.getRolesAuthorities(roles);
 
         // 查询所有组织的应用
-        List<SysApplicationTenant> appList = TenantEnv.globalApply(() ->
-                CollUtil.emptyIfNull(sysApplicationTenantService.list(
-                        Wrappers.<SysApplicationTenant>lambdaQuery()
-                                .eq(SysApplicationTenant::getStatus, CommonStatusEnum.LOCK))));
-        List<SysAuthority> removeAuthorities = appList.stream()
+        List<MetaApp> appList = TenantEnv.globalApply(() ->
+                CollUtil.emptyIfNull(bizAppService.getDisabledApps()));
+        List<AuthorityType> removeAuthorities = appList.stream()
                 .filter(app -> authorities.stream()
                         .anyMatch(auth -> Objects.equals(auth.getId(), app.getAuthorityId())))
                 .map(app -> authorities.stream()

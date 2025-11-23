@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.biz;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
@@ -20,6 +21,22 @@ import com.ingot.framework.commons.model.support.Option;
  * <p>Time         : 09:33.</p>
  */
 public interface BizRoleService {
+
+    /**
+     * 获取元数据角色
+     *
+     * @param id 角色ID
+     * @return {@link MetaRole}
+     */
+    MetaRole getMetaRole(long id);
+
+    /**
+     * 获取角色
+     *
+     * @param id 角色ID
+     * @return {@link RoleType}
+     */
+    RoleType getRole(long id);
 
     /**
      * 获取角色

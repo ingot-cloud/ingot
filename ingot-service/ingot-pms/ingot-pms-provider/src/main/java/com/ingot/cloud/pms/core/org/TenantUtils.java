@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.IDConstants;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.tree.TreeNode;
@@ -42,7 +42,7 @@ public class TenantUtils {
      * @param collect        收集
      * @param tree           节点列表
      * @param pid            父ID
-     * @param menuConvert      对象转换类
+     * @param menuConvert    对象转换类
      * @param sysMenuService menu service
      */
     public static void createMenuFn(List<SysMenu> collect,
@@ -306,9 +306,9 @@ public class TenantUtils {
     /**
      * 获取指定组织指定菜单列表，根据所给菜单，查询该菜单以及其所有子菜单
      *
-     * @param orgId     组织ID
-     * @param menuId    菜单ID
-     * @param service   菜单服务
+     * @param orgId       组织ID
+     * @param menuId      菜单ID
+     * @param service     菜单服务
      * @param menuConvert 菜单转换
      * @return 菜单列表
      */
@@ -342,16 +342,16 @@ public class TenantUtils {
      */
     public static List<AuthorityTreeNodeVO> getTargetAuthorities(long orgId,
                                                                  long authorityId,
-                                                                 SysAuthorityService service,
+                                                                 MetaAuthorityService service,
                                                                  AuthorityConvert authorityConvert) {
         return TenantEnv.applyAs(orgId, () -> {
             List<AuthorityTreeNodeVO> list = new ArrayList<>();
 
-            SysAuthority authority = service.getById(authorityId);
+            AuthorityType authority = service.getById(authorityId);
             list.add(authorityConvert.to(authority));
 
-            List<SysAuthority> children = service.list(Wrappers.<SysAuthority>lambdaQuery()
-                    .eq(SysAuthority::getPid, authority.getId()));
+            List<MetaAuthority> children = service.list(Wrappers.<MetaAuthority>lambdaQuery()
+                    .eq(MetaAuthority::getPid, authority.getId()));
             if (CollUtil.isNotEmpty(children)) {
                 children.forEach(itemMenu -> list.addAll(getTargetAuthorities(orgId, itemMenu.getId(), service, authorityConvert)));
             }
@@ -382,9 +382,9 @@ public class TenantUtils {
                     .filter(item -> authorities.stream().noneMatch(i -> Objects.equals(i.getId(), item.getPid())))
                     .map(SysAuthority::getId).toList();
 
-            RelationDTO<Long, Long> params = new RelationDTO<>();
+            AssignDTO<Long, Long> params = new AssignDTO<>();
             params.setId(roleId);
-            params.setBindIds(bindIds);
+            params.setAssignIds(bindIds);
             service.roleBindAuthorities(params);
         });
     }
@@ -490,7 +490,7 @@ public class TenantUtils {
      * @param rootAuthorityId     当前跟权限ID
      * @param loadAppInfo         加载的模版信息
      * @param sysAuthorityService {@link SysAuthorityService}
-     * @param authorityConvert      {@link AuthorityConvert}
+     * @param authorityConvert    {@link AuthorityConvert}
      */
     public static Map<Long, Long> syncTemplateAuthorityAndReturnMap(long orgId,
                                                                     long rootAuthorityId,

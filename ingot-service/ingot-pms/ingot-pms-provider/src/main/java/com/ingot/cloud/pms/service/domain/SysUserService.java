@@ -1,17 +1,13 @@
 package com.ingot.cloud.pms.service.domain;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
-import com.ingot.framework.security.core.userdetails.InUser;
 
 /**
  * <p>
@@ -22,21 +18,6 @@ import com.ingot.framework.security.core.userdetails.InUser;
  * @since 2020-11-20
  */
 public interface SysUserService extends BaseService<SysUser> {
-
-    /**
-     * 通过 {@link InUser} 获取用户信息
-     *
-     * @param user {@link InUser} 当前登录用户
-     * @return {@link UserInfoDTO}
-     */
-    UserInfoDTO getUserInfo(InUser user);
-
-    /**
-     * 获取平台超级管理员ID列表
-     *
-     * @return id列表
-     */
-    List<Long> getAdminIdList();
 
     /**
      * 条件查询用户分页信息
@@ -72,21 +53,21 @@ public interface SysUserService extends BaseService<SysUser> {
      *
      * @param user {@link SysUser}
      */
-    void createUser(SysUser user);
-
-    /**
-     * 根据ID删除用户
-     *
-     * @param id 用户ID
-     */
-    void removeUserById(long id);
+    void create(SysUser user);
 
     /**
      * 更新用户
      *
      * @param user {@link SysUser}
      */
-    void updateUser(SysUser user);
+    void update(SysUser user);
+
+    /**
+     * 根据ID删除用户
+     *
+     * @param id 用户ID
+     */
+    void delete(long id);
 
     /**
      * 用户修改密码

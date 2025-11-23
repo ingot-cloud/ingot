@@ -19,8 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum OrgTypeEnum {
     Platform("0", "平台"),
-    Tenant("1", "组织"),
-    Custom("9", "自定义");
+    Tenant("1", "组织");
 
     @JsonValue
     @EnumValue

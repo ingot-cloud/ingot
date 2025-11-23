@@ -1,38 +1,25 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.convert.UserConvert;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.AllOrgUserFilterDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserQueryDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemVO;
-import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.mapper.SysUserMapper;
-import com.ingot.cloud.pms.service.domain.*;
-import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
-import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantEnv;
-import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -45,65 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
-    private final SysRoleService sysRoleService;
-    private final SysRoleUserService sysRoleUserService;
-    private final SysUserSocialService sysUserSocialService;
-    private final SysUserTenantService sysUserTenantService;
-    private final SysTenantService sysTenantService;
-    private final SysDeptService sysDeptService;
-
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertI18nService;
-    private final UserConvert userConvert;
-    private final TenantProperties tenantProperties;
-
-    @Override
-    public UserInfoDTO getUserInfo(InUser user) {
-        // 使用当前用户 tenant 进行操作
-        return TenantEnv.applyAs(user.getTenantId(), () -> {
-            SysUser userInfo = getById(user.getId());
-            if (userInfo == null) {
-                OAuth2ErrorUtils.throwInvalidRequest("用户异常");
-            }
-
-            List<SysRole> roles = sysRoleService.getRolesOfUser(user.getId());
-            List<String> roleCodes = roles.stream()
-                    .map(SysRole::getCode).collect(Collectors.toList());
-
-            // 获取可以访问的租户列表
-            List<SysUserTenant> userTenantList = sysUserTenantService.list(
-                    Wrappers.<SysUserTenant>lambdaQuery()
-                            .eq(SysUserTenant::getUserId, user.getId()));
-            List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService,
-                    userTenantList.stream()
-                            .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
-                    (item) -> {
-                        // main=true，为当前登录的租户
-                        item.setMain(Long.parseLong(item.getId()) == user.getTenantId());
-                    });
-
-            UserInfoDTO result = new UserInfoDTO();
-            result.setUser(userConvert.toUserBaseInfo(userInfo));
-            result.setRoles(roleCodes);
-            result.setAllows(allows);
-            return result;
-        });
-    }
-
-    @Override
-    public List<Long> getAdminIdList() {
-        return TenantEnv.applyAs(tenantProperties.getDefaultId(), () -> {
-            SysRole admin = sysRoleService.getOne(Wrappers.<SysRole>lambdaQuery()
-                    .eq(SysRole::getCode, RoleConstants.ROLE_ADMIN_CODE));
-            if (admin == null) {
-                return ListUtil.empty();
-            }
-
-            return sysRoleUserService.list(Wrappers.<SysRoleUser>lambdaQuery()
-                            .eq(SysRoleUser::getRoleId, admin.getId()))
-                    .stream().map(SysRoleUser::getUserId).toList();
-        });
-    }
 
     @Override
     public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId) {
@@ -127,7 +57,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public void createUser(SysUser user) {
+    public void create(SysUser user) {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreatedAt(DateUtil.now());
@@ -142,28 +72,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void removeUserById(long id) {
-        // 取消关联角色
-        sysRoleUserService.removeByUserId(id);
-
-        // 取消关联社交信息
-        sysUserSocialService.remove(
-                Wrappers.<SysUserSocial>lambdaQuery().eq(SysUserSocial::getUserId, id));
-
-        // 取消关联租户
-        sysUserTenantService.remove(
-                Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id));
-
-        // 取消关联部门
-        sysDeptService.setDepts(id, null);
-
-        assertI18nService.checkOperation(removeById(id),
-                "SysUserServiceImpl.RemoveFailed");
-    }
-
-    @Override
-    public void updateUser(SysUser user) {
+    public void update(SysUser user) {
         SysUser current = getById(user.getId());
 
         if (StrUtil.isNotEmpty(user.getPassword())) {
@@ -179,6 +88,12 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         user.setUpdatedAt(DateUtil.now());
         assertI18nService.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
+    }
+
+    @Override
+    public void delete(long id) {
+        assertI18nService.checkOperation(removeById(id),
+                "SysUserServiceImpl.RemoveFailed");
     }
 
     private void checkUserUniqueField(SysUser update, SysUser current) {

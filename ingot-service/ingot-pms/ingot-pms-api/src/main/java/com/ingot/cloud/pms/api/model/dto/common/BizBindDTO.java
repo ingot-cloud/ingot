@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.dto.common;
 
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BizBindDTO extends RelationDTO<Long, Long> {
+public class BizBindDTO extends AssignDTO<Long, Long> {
     /**
      * 当前绑定ID是否为元数据
      */

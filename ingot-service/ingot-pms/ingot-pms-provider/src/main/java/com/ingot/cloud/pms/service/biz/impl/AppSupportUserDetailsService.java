@@ -79,7 +79,7 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
     }
 
     @Override
-    public void setRoles(UserDetailsResponse result, AppUser user, Long loginTenant) {
+    public void setScope(UserDetailsResponse result, AppUser user, List<AllowTenantDTO> allows, Long loginTenant) {
         List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
         List<String> roleCodes = getRoleCodes(roles, loginTenant);
         if (CollUtil.isEmpty(roleCodes)) {

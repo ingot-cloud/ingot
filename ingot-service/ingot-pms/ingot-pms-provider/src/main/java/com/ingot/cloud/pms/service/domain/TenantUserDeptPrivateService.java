@@ -8,7 +8,7 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author jymot
@@ -31,4 +31,11 @@ public interface TenantUserDeptPrivateService extends BaseService<TenantUserDept
      * @return List
      */
     List<Long> getUserDepartmentIds(long userId);
+
+    /**
+     * 根据用户ID清空数据
+     *
+     * @param userId 用户ID
+     */
+    void clearByUserId(long userId);
 }

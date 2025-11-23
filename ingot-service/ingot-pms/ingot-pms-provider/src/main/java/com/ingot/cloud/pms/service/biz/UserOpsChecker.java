@@ -13,12 +13,12 @@ public interface UserOpsChecker {
      *
      * @param id 用户ID
      */
-    void removeUser(long id);
+    void removeUser(long userId);
 
     /**
      * 禁用用户操作
      *
      * @param id 用户ID
      */
-    void disableUser(long id);
+    void disableUser(long userId);
 }

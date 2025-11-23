@@ -27,12 +27,8 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
     @Transactional(rollbackFor = Exception.class)
     public void setDepartments(long userId, Collection<Long> deptIds) {
         // 先清空部门
-        long deptCount = count(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
+        remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
                 .eq(TenantUserDeptPrivate::getUserId, userId));
-        if (deptCount != 0) {
-            remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
-                    .eq(TenantUserDeptPrivate::getUserId, userId));
-        }
 
         if (CollUtil.isEmpty(deptIds)) {
             return;
@@ -64,5 +60,11 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
                 .stream()
                 .map(TenantUserDeptPrivate::getDeptId)
                 .toList();
+    }
+
+    @Override
+    public void clearByUserId(long userId) {
+        remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
+                .eq(TenantUserDeptPrivate::getUserId, userId));
     }
 }

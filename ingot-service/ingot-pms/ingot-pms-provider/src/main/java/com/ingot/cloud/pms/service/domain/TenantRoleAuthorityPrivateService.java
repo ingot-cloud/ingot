@@ -8,7 +8,7 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author jymot
@@ -16,11 +16,11 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
  */
 public interface TenantRoleAuthorityPrivateService extends BaseService<TenantRoleAuthorityPrivate> {
     /**
-     * 角色绑定权限
+     * 角色设置权限
      *
      * @param params {@link BizBindDTO}
      */
-    void roleBindAuthorities(BizBindDTO params);
+    void roleSetAuthorities(BizBindDTO params);
 
     /**
      * 获取角色绑定的权限ID列表

@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaMenu;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
-import com.ingot.cloud.pms.core.MenuUtils;
+import com.ingot.cloud.pms.core.BizMenuUtils;
 import com.ingot.cloud.pms.mapper.MetaMenuMapper;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
 import com.ingot.framework.commons.constants.CacheConstants;
@@ -64,7 +64,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
         }
         // 链接类型不是默认, 自动生成path
         if (params.getLinkType() != MenuLinkTypeEnum.Default) {
-            MenuUtils.setMenuOuterLinkPath(params, params.getPid(), this);
+            BizMenuUtils.setMenuOuterLinkPath(params, params.getPid(), this);
         }
 
         // 外部链接，path可以为空
@@ -86,7 +86,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
             assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                     "MetaMenuServiceImpl.ViewPathNotNull");
         } else {
-            MenuUtils.setViewPathAccordingToPath(params);
+            BizMenuUtils.setViewPathAccordingToPath(params);
         }
 
         params.setCreatedAt(DateUtil.now());
@@ -116,7 +116,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
 
         // 如果修改了链接类型，并且修改的内容不是默认类型，那么需要自动处理path
         if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnum.Default) {
-            MenuUtils.setMenuOuterLinkPath(params, current.getPid(), this);
+            BizMenuUtils.setMenuOuterLinkPath(params, current.getPid(), this);
             // 修改为外部链接，customViewPath设置为false
             params.setCustomViewPath(Boolean.FALSE);
         }
@@ -135,7 +135,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
                     && (params.getLinkType() == MenuLinkTypeEnum.Default
                     || (params.getLinkType() == null && current.getLinkType() == MenuLinkTypeEnum.Default))) {
                 // 如果修改了路径，那么需要修改默认视图path
-                MenuUtils.setViewPathAccordingToPath(params);
+                BizMenuUtils.setViewPathAccordingToPath(params);
             }
         } else {
             // 自定义视图

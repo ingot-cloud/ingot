@@ -4,12 +4,11 @@ import com.ingot.cloud.pms.api.model.domain.SysRole;
 import com.ingot.cloud.pms.api.model.domain.SysRoleGroup;
 import com.ingot.cloud.pms.api.model.dto.authority.AuthorityFilterDTO;
 import com.ingot.cloud.pms.api.model.dto.role.RoleFilterDTO;
-import com.ingot.cloud.pms.api.model.dto.role.RoleGroupSortDTO;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizOrgRoleServiceOld;
 import com.ingot.cloud.pms.service.domain.SysAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleAuthorityService;
 import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
@@ -37,7 +36,7 @@ public class AdminRoleAPI implements RShortcuts {
     private final SysRoleService sysRoleService;
     private final SysAuthorityService sysAuthorityService;
     private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final BizRoleService bizRoleService;
+    private final BizOrgRoleServiceOld bizOrgRoleServiceOld;
 
     @HasAnyAuthority({"basic:role:w", "basic:role:r"})
     @GetMapping("/options")
@@ -66,49 +65,21 @@ public class AdminRoleAPI implements RShortcuts {
     @HasAnyAuthority({"basic:role:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody SysRole params) {
-        bizRoleService.createRoleEffectOrg(params, SecurityAuthContext.isAdmin());
+        bizOrgRoleServiceOld.createRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @HasAnyAuthority({"basic:role:w"})
     @PutMapping
     public R<?> update(@Validated(Group.Update.class) @RequestBody SysRole params) {
-        bizRoleService.updateRoleEffectOrg(params, SecurityAuthContext.isAdmin());
+        bizOrgRoleServiceOld.updateRoleEffectOrg(params, SecurityAuthContext.isAdmin());
         return ok();
     }
 
     @HasAnyAuthority({"basic:role:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
-        bizRoleService.removeRoleEffectOrg(id, SecurityAuthContext.isAdmin());
-        return ok();
-    }
-
-    @HasAnyAuthority({"basic:role:w"})
-    @PostMapping("/group")
-    public R<?> createGroup(@RequestBody SysRoleGroup params) {
-        bizRoleService.createRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
-        return ok();
-    }
-
-    @HasAnyAuthority({"basic:role:w"})
-    @PutMapping("/group")
-    public R<?> updateGroup(@RequestBody SysRoleGroup params) {
-        bizRoleService.updateRoleGroupEffectOrg(params, SecurityAuthContext.isAdmin());
-        return ok();
-    }
-
-    @HasAnyAuthority({"basic:role:w"})
-    @DeleteMapping("/group/{id}")
-    public R<?> removeGroupById(@PathVariable Long id) {
-        bizRoleService.removeRoleGroupEffectOrg(id, SecurityAuthContext.isAdmin());
-        return ok();
-    }
-
-    @HasAnyAuthority({"basic:role:w"})
-    @PutMapping("/group/sort")
-    public R<?> groupSort(@RequestBody RoleGroupSortDTO params) {
-        sysRoleService.sortGroup(params.getIds());
+        bizOrgRoleServiceOld.removeRoleEffectOrg(id, SecurityAuthContext.isAdmin());
         return ok();
     }
 
@@ -117,8 +88,8 @@ public class AdminRoleAPI implements RShortcuts {
      */
     @HasAnyAuthority({"basic:role:w"})
     @PutMapping("/bindAuthority")
-    public R<?> bindAuthority(@RequestBody @Validated RelationDTO<Long, Long> params) {
-        bizRoleService.roleBindAuthoritiesEffectOrg(params);
+    public R<?> bindAuthority(@RequestBody @Validated AssignDTO<Long, Long> params) {
+        bizOrgRoleServiceOld.roleBindAuthoritiesEffectOrg(params);
         return ok();
     }
 
@@ -127,8 +98,8 @@ public class AdminRoleAPI implements RShortcuts {
      */
     @HasAnyAuthority({"basic:role:w"})
     @PutMapping("/orgRoleBindDefaultAuthority")
-    public R<?> orgRoleBindDefaultAuthorities(@RequestBody RelationDTO<Long, Long> params) {
-        bizRoleService.orgRoleBindDefaultAuthorities(params);
+    public R<?> orgRoleBindDefaultAuthorities(@RequestBody AssignDTO<Long, Long> params) {
+        bizOrgRoleServiceOld.orgRoleBindDefaultAuthorities(params);
         return ok();
     }
 

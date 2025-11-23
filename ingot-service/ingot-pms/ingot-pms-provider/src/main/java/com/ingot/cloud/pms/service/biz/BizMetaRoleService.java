@@ -6,7 +6,8 @@ import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 
 /**
@@ -73,7 +74,7 @@ public interface BizMetaRoleService {
     /**
      * 绑定权限
      *
-     * @param params {@link RelationDTO}
+     * @param params {@link AssignDTO}
      */
-    void bindAuthorities(RelationDTO<Long, Long> params);
+    void setAuthorities(SetDTO<Long, Long> params);
 }

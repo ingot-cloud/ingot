@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
-import com.ingot.cloud.pms.api.model.domain.SysRoleUser;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
+import com.ingot.cloud.pms.api.model.types.RoleType;
+import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
-import com.ingot.cloud.pms.service.domain.SysRoleService;
-import com.ingot.cloud.pms.service.domain.SysRoleUserService;
+import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -24,49 +24,50 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserOpsCheckerImpl implements UserOpsChecker {
-    private final SysRoleService sysRoleService;
-    private final SysRoleUserService sysRoleUserService;
+    private final BizUserService bizUserService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
 
-    private final AssertionChecker assertI18nService;
+    private final AssertionChecker assertionChecker;
 
     @Override
-    public void removeUser(long id) {
-        long userId = SecurityAuthContext.getUser().getId();
-        assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.RemoveSelfFailed");
+    public void removeUser(long userId) {
+        long operatorId = SecurityAuthContext.getUser().getId();
+        assertionChecker.checkOperation(userId != operatorId,
+                "UserOpsCheckerImpl.RemoveSelfFailed");
 
-        Optional<SysRole> admin = getAdmin(id);
+        Optional<RoleType> admin = getAdmin(userId);
         if (admin.isEmpty()) {
             return;
         }
 
         // 如果删除的用户是admin用户，那么至少保留一个admin用户
-        assertI18nService.checkOperation(
-                sysRoleUserService.count(
-                        Wrappers.<SysRoleUser>lambdaQuery()
-                                .eq(SysRoleUser::getRoleId, admin.get().getId())) > 1,
+        assertionChecker.checkOperation(
+                tenantRoleUserPrivateService.count(
+                        Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                                .eq(TenantRoleUserPrivate::getRoleId, admin.get().getId())) > 1,
                 "UserOpsCheckerImpl.RemoveAdminFailed");
     }
 
     @Override
     public void disableUser(long id) {
         long userId = SecurityAuthContext.getUser().getId();
-        assertI18nService.checkOperation(userId != id, "UserOpsCheckerImpl.DisableSelfFailed");
+        assertionChecker.checkOperation(userId != id, "UserOpsCheckerImpl.DisableSelfFailed");
 
-        Optional<SysRole> admin = getAdmin(id);
+        Optional<RoleType> admin = getAdmin(userId);
         if (admin.isEmpty()) {
             return;
         }
 
         // 如果禁用的用户是admin用户，那么至少保留一个admin用户
-        assertI18nService.checkOperation(
-                sysRoleUserService.count(
-                        Wrappers.<SysRoleUser>lambdaQuery()
-                                .eq(SysRoleUser::getRoleId, admin.get().getId())) > 1,
+        assertionChecker.checkOperation(
+                tenantRoleUserPrivateService.count(
+                        Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                                .eq(TenantRoleUserPrivate::getRoleId, admin.get().getId())) > 1,
                 "UserOpsCheckerImpl.DisableAdminFailed");
     }
 
-    private Optional<SysRole> getAdmin(long id) {
-        List<SysRole> roles = sysRoleService.getRolesOfUser(id);
+    private Optional<RoleType> getAdmin(long userId) {
+        List<RoleType> roles = bizUserService.getUserRoles(userId);
         return roles.stream()
                 .filter(item -> RoleUtil.isAdmin(item.getCode()))
                 .findFirst();

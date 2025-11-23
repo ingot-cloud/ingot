@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.social.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.api.model.domain.AppUserSocial;
-import com.ingot.cloud.pms.core.SocialUtils;
+import com.ingot.cloud.pms.core.BizSocialUtils;
 import com.ingot.cloud.pms.service.domain.AppUserService;
 import com.ingot.cloud.pms.service.domain.AppUserSocialService;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
@@ -35,7 +35,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
 
     @Override
     public String getUniqueID(String code) {
-        return SocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.APP_MINI_PROGRAM, code);
+        return BizSocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.APP_MINI_PROGRAM, code);
     }
 
     @Override

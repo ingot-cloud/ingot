@@ -18,12 +18,12 @@ import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.UUIDUtil;
 
 /**
- * <p>Description  : MenuUtils.</p>
+ * <p>Description  : BizMenuUtils.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2023/11/23.</p>
  * <p>Time         : 17:01.</p>
  */
-public class MenuUtils {
+public class BizMenuUtils {
 
     /**
      * 根据权限筛选过滤菜单

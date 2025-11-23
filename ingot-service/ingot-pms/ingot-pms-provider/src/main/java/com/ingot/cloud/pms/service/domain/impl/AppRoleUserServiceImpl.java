@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.AppRoleUserMapper;
 import com.ingot.cloud.pms.service.domain.AppRoleUserService;
-import com.ingot.framework.commons.model.common.RelationDTO;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,14 +119,14 @@ public class AppRoleUserServiceImpl extends CommonRoleRelationService<AppRoleUse
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void userBindRoles(RelationDTO<Long, Long> params) {
+    public void userBindRoles(AssignDTO<Long, Long> params) {
         bindRoles(params, removeTbr, bindTbr,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void roleBindUsers(RelationDTO<Long, Long> params) {
+    public void roleBindUsers(AssignDTO<Long, Long> params) {
         bindTargets(params, removeRbt, bindRbt,
                 "SysRoleUserServiceImpl.RemoveFailed");
     }
