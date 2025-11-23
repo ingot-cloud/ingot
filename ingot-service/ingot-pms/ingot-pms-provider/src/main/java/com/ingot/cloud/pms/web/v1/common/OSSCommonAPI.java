@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
  * <p>Time         : 10:13 AM.</p>
  */
 @RestController
-@Tag(description = "oss", name = "OSS模块")
+@Tag(description = "OSS", name = "OSS模块")
 @RequestMapping(value = "/v1/oss")
 @RequiredArgsConstructor
 public class OSSCommonAPI implements RShortcuts {

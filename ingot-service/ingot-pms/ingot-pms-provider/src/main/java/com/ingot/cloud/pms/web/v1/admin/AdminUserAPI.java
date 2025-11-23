@@ -41,12 +41,6 @@ public class AdminUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
 
-    @GetMapping
-    @Operation(summary = "获取用户信息", description = "根据当前Token获取用户信息")
-    public R<?> user() {
-        return ok(sysUserService.getUserInfo(SecurityAuthContext.getUser()));
-    }
-
     @HasAnyAuthority({"basic:user:r", "basic:user:w"})
     @GetMapping("/searchByPhone")
     @Operation(summary = "根据手机号查询用户信息", description = "根据手机号查询用户信息")
