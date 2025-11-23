@@ -5,6 +5,7 @@ import com.ingot.cloud.pms.api.model.domain.AppUser;
 import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,18 +18,20 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 11:02 AM.</p>
  */
 @Slf4j
-@Tag(description = "orgAppUser", name = "组织App用户模块")
+@Tag(description = "OrgAppUser", name = "组织App用户模块")
 @RestController
 @RequestMapping(value = "/v1/org/appUser")
 @RequiredArgsConstructor
 public class OrgAppUserAPI implements RShortcuts {
     private final BizAppUserService bizAppUserService;
 
+    @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
     public R<?> page(Page<AppUser> page, AppUser condition) {
         return ok(bizAppUserService.pageTenant(page, condition));
     }
 
+    @Operation(summary = "更新", description = "更新")
     @PutMapping
     public R<?> update(@RequestBody AppUser params) {
         bizAppUserService.updateUser(params);
