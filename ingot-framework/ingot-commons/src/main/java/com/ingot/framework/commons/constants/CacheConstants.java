@@ -59,6 +59,7 @@ public interface CacheConstants {
      * 组织角色
      */
     String TENANT_ROLES = "roles";
+
     /**
      * 组织角色权限
      */

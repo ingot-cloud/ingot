@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
 import com.ingot.cloud.pms.mapper.TenantAppConfigMapper;
 import com.ingot.cloud.pms.service.domain.TenantAppConfigService;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,19 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class TenantAppConfigServiceImpl extends BaseServiceImpl<TenantAppConfigMapper, TenantAppConfig> implements TenantAppConfigService {
+
+    @Override
+    public void create(TenantAppConfig params) {
+        params.setCreatedAt(DateUtil.now());
+        params.setUpdatedAt(params.getCreatedAt());
+        save(params);
+    }
+
+    @Override
+    public void update(TenantAppConfig params) {
+        params.setUpdatedAt(DateUtil.now());
+        updateById(params);
+    }
 
     @Override
     public void clearByAppId(long id) {

@@ -2,7 +2,11 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 
@@ -15,12 +19,51 @@ import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 public interface BizOrgService {
 
     /**
+     * 条件分页查询
+     *
+     * @param params 条件
+     * @return 返回分页数据
+     */
+    IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params);
+
+    /**
      * 获取组织权限树
      *
      * @param tenantID 租户权限
      * @return {@link AuthorityTreeNodeVO}
      */
     List<AuthorityTreeNodeVO> getTenantAuthorityTree(long tenantID);
+
+    /**
+     * 搜索
+     *
+     * @param filter 过滤条件
+     * @return {@link SysTenant}
+     */
+    List<SysTenant> search(SysTenant filter);
+
+    /**
+     * 获取详情
+     *
+     * @param id 组织ID
+     * @return {@link SysTenant}
+     */
+    SysTenant getDetails(long id);
+
+    /**
+     * 获取组织应用
+     *
+     * @param tenantId 组织ID
+     * @return {@link MetaApp}
+     */
+    List<MetaApp> getOrgApps(long tenantId);
+
+    /**
+     * 更新组织应用状态
+     *
+     * @param params {@link AppEnabledDTO}
+     */
+    void updateOrgAppStatus(AppEnabledDTO params);
 
     /**
      * 创建组织

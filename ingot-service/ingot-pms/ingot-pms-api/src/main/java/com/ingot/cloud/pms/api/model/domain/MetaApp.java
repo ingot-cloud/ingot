@@ -58,11 +58,6 @@ public class MetaApp extends BaseModel<MetaApp> {
     private String intro;
 
     /**
-     * 是否默认启用
-     */
-    private Boolean defaultEnabled;
-
-    /**
      * 状态
      */
     @TableField("`status`")

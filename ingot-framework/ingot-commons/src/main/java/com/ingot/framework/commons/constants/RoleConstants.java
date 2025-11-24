@@ -20,25 +20,25 @@ public interface RoleConstants {
     /**
      * 超管角色编码
      */
-    String ROLE_ADMIN_CODE = "role_admin";
+    String ROLE_ADMIN_CODE = META_ROLE_CODE_PREFIX + "admin";
 
     /**
      * 管理员角色编码
      */
-    String ROLE_ORG_ADMIN_CODE = "role_org_admin";
+    String ROLE_ORG_ADMIN_CODE = ORG_ROLE_CODE_PREFIX + "admin";
 
     /**
      * 子管理员角色编码
      */
-    String ROLE_ORG_SUB_ADMIN_CODE = "role_org_sub_admin";
+    String ROLE_ORG_SUB_ADMIN_CODE = ORG_ROLE_CODE_PREFIX + "sub_admin";
 
     /**
      * 主管
      */
-    String ROLE_ORG_MANAGER = "role_org_manager";
+    String ROLE_ORG_MANAGER = ORG_ROLE_CODE_PREFIX + "manager";
 
     /**
      * 用户角色编码
      */
-    String ROLE_USER_CODE = "role_user";
+    String ROLE_USER_CODE = META_ROLE_CODE_PREFIX + "user";
 }

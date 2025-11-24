@@ -2,20 +2,18 @@ package com.ingot.cloud.pms.web.v1.platform.admin;
 
 import java.util.List;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
-import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.security.access.HasAnyAuthority;
-import com.ingot.framework.security.access.RequiredAdmin;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.tenant.TenantContextHolder;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,55 +32,64 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/v1/platform/admin/tenant")
 @RequiredArgsConstructor
 public class AdminTenantAPI implements RShortcuts {
-    private final SysTenantService sysTenantService;
     private final BizOrgService bizOrgService;
 
-    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
+    @Operation(summary = "组织列表", description = "组织列表")
+    @AdminOrHasAnyAuthority({"basic:tenant:search"})
     @GetMapping("/search")
-    public R<?> search(SysTenant filter) {
-        String name = filter.getName();
-        if (StrUtil.isEmpty(name)) {
-            return ok(ListUtil.empty());
-        }
-
-        List<SysTenant> list = CollUtil.emptyIfNull(
-                sysTenantService.list(Wrappers.<SysTenant>lambdaQuery()
-                        .like(SysTenant::getName, name)));
-
-        return ok(list.stream()
-                .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
-                .toList());
+    public R<List<SysTenant>> search(SysTenant filter) {
+        return ok(bizOrgService.search(filter));
     }
 
-    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
+    @Operation(summary = "组织详情", description = "组织详情")
+    @AdminOrHasAnyAuthority({"basic:tenant:detail"})
     @GetMapping("/{id}")
-    public R<?> getTenantInfo(@PathVariable Long id) {
-        return ok(sysTenantService.getById(id));
+    public R<SysTenant> getTenantInfo(@PathVariable Long id) {
+        return ok(bizOrgService.getDetails(id));
     }
 
-    @HasAnyAuthority({"basic:tenant:w", "basic:tenant:r"})
+    @Operation(summary = "组织列表", description = "组织列表")
+    @AdminOrHasAnyAuthority({"basic:tenant:query"})
     @GetMapping("/page")
-    public R<?> page(Page<SysTenant> page, SysTenant params) {
-        return ok(sysTenantService.conditionPage(page, params));
+    public R<IPage<SysTenant>> page(Page<SysTenant> page, SysTenant params) {
+        return ok(bizOrgService.conditionPage(page, params));
     }
 
-    @RequiredAdmin
+    @Operation(summary = "组织应用列表", description = "组织应用列表")
+    @AdminOrHasAnyAuthority({"basic:tenant:app:query"})
+    @GetMapping("/apps")
+    public R<List<MetaApp>> getApps() {
+        return ok(bizOrgService.getOrgApps(TenantContextHolder.get()));
+    }
+
+    @Operation(summary = "更新组织应用状态", description = "更新组织应用状态")
+    @AdminOrHasAnyAuthority({"basic:tenant:app:update"})
+    @PutMapping("/app/status")
+    public R<Void> updateAppStatus(@RequestBody AppEnabledDTO params) {
+        bizOrgService.updateOrgAppStatus(params);
+        return ok();
+    }
+
+    @Operation(summary = "创建组织", description = "创建组织")
+    @AdminOrHasAnyAuthority({"basic:tenant:create"})
     @PostMapping
-    public R<?> create(@Valid @RequestBody CreateOrgDTO params) {
+    public R<Void> create(@Valid @RequestBody CreateOrgDTO params) {
         bizOrgService.createOrg(params);
         return ok();
     }
 
-    @RequiredAdmin
+    @Operation(summary = "更新组织", description = "更新组织")
+    @AdminOrHasAnyAuthority({"basic:tenant:update"})
     @PutMapping
-    public R<?> update(@Valid @RequestBody SysTenant params) {
+    public R<Void> update(@Valid @RequestBody SysTenant params) {
         bizOrgService.updateBase(params);
         return ok();
     }
 
-    @RequiredAdmin
+    @Operation(summary = "删除组织", description = "删除组织")
+    @AdminOrHasAnyAuthority({"basic:tenant:delete"})
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Long id) {
+    public R<Void> removeById(@PathVariable Long id) {
         bizOrgService.removeOrg(id);
         return ok();
     }

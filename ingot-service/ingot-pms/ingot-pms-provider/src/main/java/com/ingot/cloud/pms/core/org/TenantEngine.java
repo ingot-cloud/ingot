@@ -1,6 +1,8 @@
 package com.ingot.cloud.pms.core.org;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -13,8 +15,11 @@ import com.ingot.cloud.pms.api.model.convert.MenuConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.core.BizIdGen;
+import com.ingot.cloud.pms.service.biz.BizDeptService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.RoleConstants;
@@ -51,15 +56,18 @@ public class TenantEngine {
     private final AppUserTenantService appUserTenantService;
     private final AppRoleService appRoleService;
     private final AppRoleUserService appRoleUserService;
-    private final SysApplicationService sysApplicationService;
     private final SysApplicationTenantService sysApplicationTenantService;
 
+
+    private final TenantDeptService tenantDeptService;
+    private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
+
+    private final BizUserService bizUserService;
+    private final BizRoleService bizRoleService;
+
     private final BizIdGen bizIdGen;
-    private final TenantProperties tenantProperties;
-    private final AuthorityConvert authorityConvert;
-    private final MenuConvert menuConvert;
-    private final DeptConvert deptConvert;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final BizDeptService bizDeptService;
 
     /**
      * 创建租户
@@ -76,111 +84,25 @@ public class TenantEngine {
 
     /**
      * 创建租户部门<br>
-     * 1. 创建以租户名称命名的部门<br>
-     * 2. 创建默认子部门(系统默认)<br>
+     * 创建以租户名称命名的部门<br>
      */
-    public SysDept createTenantDept(SysTenant tenant) {
-        // 获取所有预设部门
-        List<DeptTreeNodeVO> templateTree = CollUtil.emptyIfNull(sysDeptService.treeList());
-        DeptTreeNodeVO templateMainDept = templateTree.stream()
-                .filter(item -> Objects.equals(item.getMainFlag(), Boolean.TRUE))
-                .findFirst()
-                .orElse(null);
-        // 获取主部门下面所有模本部门信息
-        List<DeptTreeNodeVO> templateList = templateMainDept == null ? ListUtil.empty()
-                : CollUtil.emptyIfNull(templateMainDept.getChildren())
-                .stream().map(item -> (DeptTreeNodeVO) item).toList();
-
+    public TenantDept createTenantDept(SysTenant tenant) {
         return TenantEnv.applyAs(tenant.getId(), () -> {
             // 1. 创建主部门(当前组织名称的部门)
-            SysDept mainDept = new SysDept();
-            mainDept.setName(tenant.getName());
-            mainDept.setMainFlag(Boolean.TRUE);
-            sysDeptService.createDept(mainDept);
-
-            // 2. 创建默认子部门
-            if (templateMainDept == null) {
-                return mainDept;
-            }
-
-            List<SysDept> collect = new ArrayList<>();
-            TenantUtils.createDeptFn(collect, templateList, mainDept.getId(), deptConvert, sysDeptService);
-            return mainDept;
+            TenantDept main = new TenantDept();
+            main.setName(tenant.getName());
+            main.setMainFlag(Boolean.TRUE);
+            main.setSort(0);
+            tenantDeptService.create(main);
+            return main;
         });
     }
 
     /**
-     * 创建租户角色
+     * 初始化租户管理员
      */
-    public List<SysRole> createTenantRoles(SysTenant tenant) {
-        List<SysRole> templateRoles = sysRoleService.list(Wrappers.<SysRole>lambdaQuery()
-                .eq(SysRole::getType, OrgTypeEnum.Tenant));
-        List<SysRoleGroup> templateRoleGroups = sysRoleGroupService.list(Wrappers.<SysRoleGroup>lambdaQuery()
-                .eq(SysRoleGroup::getType, OrgTypeEnum.Tenant));
-
-        return TenantEnv.applyAs(tenant.getId(), () -> {
-            List<Long> templateGroupIds = templateRoleGroups.stream().map(SysRoleGroup::getId).toList();
-            List<SysRoleGroup> orgRoleGroups = templateRoleGroups.stream()
-                    .map(item -> {
-                        SysRoleGroup group = new SysRoleGroup();
-                        BeanUtil.copyProperties(item, group);
-                        group.setId(null);
-                        group.setTenantId(null);
-                        group.setModelId(item.getId());
-                        return group;
-                    }).toList();
-            sysRoleGroupService.saveBatch(orgRoleGroups);
-
-            List<SysRole> orgRoles = templateRoles.stream()
-                    .map(item -> {
-                        SysRole role = new SysRole();
-                        BeanUtil.copyProperties(item, role);
-                        role.setId(null);
-                        role.setTenantId(null);
-                        role.setModelId(item.getId());
-                        role.setGroupId(orgRoleGroups.get(templateGroupIds.indexOf(item.getGroupId())).getId());
-                        role.setCreatedAt(DateUtil.now());
-                        role.setUpdatedAt(role.getCreatedAt());
-                        return role;
-                    }).toList();
-            sysRoleService.saveBatch(orgRoles);
-            return orgRoles;
-        });
-    }
-
-    /**
-     * 创建组合权限和菜单
-     */
-    public List<SysAuthority> createTenantAuthorityAndMenu(SysTenant tenant) {
-        // 获取所有应用
-        List<SysApplication> appList = sysApplicationService.list();
-        if (CollUtil.isEmpty(appList)) {
-            return ListUtil.empty();
-        }
-
-        return TenantEnv.applyAs(tenant.getId(), () ->
-                appList.stream()
-                        .flatMap(application -> createApp(tenant, application).stream())
-                        .toList());
-    }
-
-    private List<SysAuthority> createApp(SysTenant org, SysApplication application) {
-        LoadAppInfo loadAppInfo = TenantUtils.getLoadAppInfo(
-                application, tenantProperties, menuConvert, authorityConvert, sysAuthorityService, sysMenuService);
-        return TenantUtils.createAppAndReturnAuthority(
-                org.getId(), application, loadAppInfo,
-                menuConvert, sysAuthorityService, sysMenuService, sysApplicationTenantService);
-    }
-
-    /**
-     * 创建租户管理员
-     */
-    public void createTenantUser(CreateOrgDTO params, SysTenant tenant, List<SysRole> roles, SysDept dept) {
+    public void initTenantManager(CreateOrgDTO params, SysTenant tenant, TenantDept dept) {
         TenantEnv.runAs(tenant.getId(), () -> {
-            SysRole role = roles.stream()
-                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
-                    .findFirst().orElseThrow();
-
             // 如果已经存在注册用户，那么直接关联新组织信息
             SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getPhone, params.getPhone()));
             if (user == null) {
@@ -193,57 +115,14 @@ public class TenantEngine {
                 sysUserService.create(user);
             }
 
+            RoleType managerRole = bizRoleService.getByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
+
             // 加入租户
             sysUserTenantService.joinTenant(user.getId(), tenant);
             // 设置部门
-            sysDeptService.setDepts(user.getId(), List.of(dept.getId()));
+            tenantUserDeptPrivateService.setDepartments(user.getId(), List.of(dept.getId()));
             // 设置主角色
-            sysRoleUserService.setUserRoles(user.getId(), List.of(role.getId()));
-        });
-    }
-
-    /**
-     * 租户默认角色关联权限<br>
-     * 1. 管理员关联所有权限
-     * 2. 给所有非管理员角色的组织类型角色绑定默认权限
-     */
-    public void tenantRoleBindAuthorities(SysTenant tenant, List<SysRole> roles, List<SysAuthority> authorities) {
-        // 组织角色模版ID, 不包括管理员角色(RoleConstants.ROLE_ORG_ADMIN_CODE)
-        List<Long> modelRoles = roles.stream()
-                .filter(role -> role.getType() == OrgTypeEnum.Tenant)
-                .filter(role -> !StrUtil.equals(role.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
-                .map(SysRole::getModelId)
-                .toList();
-        // 角色模版ID->权限编码 映射关系
-        Map<Long, List<String>> roleAuthorityCodes = new HashMap<>();
-        for (Long roleId : modelRoles) {
-            List<String> codes = CollUtil.emptyIfNull(sysRoleAuthorityService.getAuthoritiesByRole(roleId))
-                    .stream().map(SysAuthority::getCode)
-                    .toList();
-            if (CollUtil.isNotEmpty(codes)) {
-                roleAuthorityCodes.put(roleId, codes);
-            }
-        }
-
-        Long orgId = tenant.getId();
-        TenantEnv.runAs(orgId, () -> {
-            // 管理员关联所有权限
-            SysRole role = roles.stream()
-                    .filter(item -> StrUtil.equals(item.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE))
-                    .findFirst().orElseThrow();
-            TenantUtils.bindAuthorities(orgId, role.getId(), authorities, sysRoleAuthorityService);
-
-            // 非管理员组织角色，关联默认权限
-            roles.stream()
-                    .filter(item -> roleAuthorityCodes.containsKey(item.getModelId()))
-                    .forEach(item -> {
-                        List<String> codes = roleAuthorityCodes.get(item.getModelId());
-                        List<SysAuthority> targetAuthorities = authorities.stream()
-                                .filter(authority -> codes.contains(authority.getCode()))
-                                .toList();
-                        TenantUtils.bindAuthorities(orgId, item.getId(), targetAuthorities, sysRoleAuthorityService);
-                    });
-
+            bizUserService.setUserRoles(user.getId(), List.of(managerRole.getId()));
         });
     }
 

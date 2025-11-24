@@ -176,8 +176,16 @@ public class BizDeptServiceImpl implements BizDeptService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void orgCreateDept(DeptWithManagerDTO params) {
-        assertionChecker.checkOperation(params.getPid() != null,
-                "BizDeptServiceImpl.createError");
+        if (params.getPid() == null) {
+            // 获取main部门ID
+            TenantDept main = tenantDeptService.getMainDept();
+            params.setPid(main.getId());
+        } else {
+            // 判断是否存在
+            assertionChecker.checkOperation(tenantDeptService.count(Wrappers.<TenantDept>lambdaQuery()
+                    .eq(TenantDept::getId, params.getPid())) > 0, "BizDeptServiceImpl.DeptNotExist");
+        }
+        params.setMainFlag(false);
         tenantDeptService.create(params);
 
         if (CollUtil.isEmpty(params.getManagerUserIds())) {

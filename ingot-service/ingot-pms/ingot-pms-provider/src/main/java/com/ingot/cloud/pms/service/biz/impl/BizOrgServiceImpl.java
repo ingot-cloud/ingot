@@ -1,13 +1,20 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import java.util.List;
+import java.util.Objects;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.domain.SysAuthority;
-import com.ingot.cloud.pms.api.model.domain.SysDept;
-import com.ingot.cloud.pms.api.model.domain.SysRole;
+import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
+import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.BizAuthorityUtils;
@@ -41,10 +48,17 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final AppUserTenantService appUserTenantService;
     private final AssertionChecker assertionChecker;
 
+    private final MetaAppService metaAppService;
     private final MetaAuthorityService metaAuthorityService;
+    private final TenantAppConfigService tenantAppConfigService;
 
     private final BizAppService bizAppService;
     private final AuthorityConvert authorityConvert;
+
+    @Override
+    public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
+        return sysTenantService.conditionPage(page, params);
+    }
 
     @Override
     public List<AuthorityTreeNodeVO> getTenantAuthorityTree(long tenantID) {
@@ -56,25 +70,70 @@ public class BizOrgServiceImpl implements BizOrgService {
     }
 
     @Override
+    public List<SysTenant> search(SysTenant filter) {
+        String name = filter.getName();
+        if (StrUtil.isEmpty(name)) {
+            return ListUtil.empty();
+        }
+
+        return CollUtil.emptyIfNull(
+                sysTenantService.list(Wrappers.<SysTenant>lambdaQuery()
+                        .eq(SysTenant::getStatus, CommonStatusEnum.ENABLE)
+                        .like(SysTenant::getName, name)));
+    }
+
+    @Override
+    public SysTenant getDetails(long id) {
+        return sysTenantService.getById(id);
+    }
+
+    @Override
+    public List<MetaApp> getOrgApps(long tenantId) {
+        return TenantEnv.applyAs(tenantId, () -> {
+            List<MetaApp> list = metaAppService.list();
+            if (CollUtil.isEmpty(list)) {
+                return ListUtil.empty();
+            }
+
+            List<TenantAppConfig> appConfigs = tenantAppConfigService.list();
+
+            return list.stream().peek(item ->
+                    appConfigs.stream()
+                            .filter(config -> Objects.equals(config.getMetaId(), item.getId()))
+                            .findFirst()
+                            .ifPresent(config ->
+                                    item.setStatus(config.getEnabled()
+                                            ? CommonStatusEnum.ENABLE : CommonStatusEnum.LOCK))).toList();
+        });
+    }
+
+    @Override
+    public void updateOrgAppStatus(AppEnabledDTO params) {
+        TenantAppConfig tenantAppConfig = tenantAppConfigService.getOne(Wrappers.<TenantAppConfig>lambdaQuery()
+                .eq(TenantAppConfig::getMetaId, params.getId()));
+        if (tenantAppConfig == null) {
+            tenantAppConfig = new TenantAppConfig();
+            tenantAppConfig.setMetaId(params.getId());
+            tenantAppConfig.setEnabled(params.getEnabled());
+            tenantAppConfigService.create(tenantAppConfig);
+            return;
+        }
+
+        tenantAppConfig.setEnabled(params.getEnabled());
+        tenantAppConfigService.update(tenantAppConfig);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void createOrg(CreateOrgDTO params) {
         // 1. 创建tenant
         SysTenant tenant = tenantEngine.createTenant(params);
 
         // 2. 创建部门
-        SysDept dept = tenantEngine.createTenantDept(tenant);
+        TenantDept dept = tenantEngine.createTenantDept(tenant);
 
-        // 3. 创建角色，角色组
-        List<SysRole> roles = tenantEngine.createTenantRoles(tenant);
-
-        // 4. 创建权限
-        List<SysAuthority> authorities = tenantEngine.createTenantAuthorityAndMenu(tenant);
-
-        // 5. 创建默认用户, 设置部门，设置角色
-        tenantEngine.createTenantUser(params, tenant, roles, dept);
-
-        // 6. 角色绑定权限
-        tenantEngine.tenantRoleBindAuthorities(tenant, roles, authorities);
+        // 3. 初始化组织管理员
+        tenantEngine.initTenantManager(params, tenant, dept);
     }
 
     @Override

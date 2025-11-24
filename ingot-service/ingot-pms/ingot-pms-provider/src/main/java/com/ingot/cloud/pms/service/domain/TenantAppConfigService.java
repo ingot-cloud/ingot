@@ -14,6 +14,20 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
 public interface TenantAppConfigService extends BaseService<TenantAppConfig> {
 
     /**
+     * 创建配置
+     *
+     * @param params {@link TenantAppConfig}
+     */
+    void create(TenantAppConfig params);
+
+    /**
+     * 更新配置
+     *
+     * @param params {@link TenantAppConfig}
+     */
+    void update(TenantAppConfig params);
+
+    /**
      * 根据应用ID清除数据
      *
      * @param id 应用ID
