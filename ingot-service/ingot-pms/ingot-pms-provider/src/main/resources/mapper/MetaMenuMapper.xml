@@ -4,7 +4,7 @@
 
     <select id="getAll" resultType="com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO">
         SELECT menu.*, authority.code as authority_code
-        FROM sys_menu AS menu
+        FROM meta_menu AS menu
                  LEFT JOIN meta_authority AS authority ON authority.id = menu.authority_id
         WHERE menu.deleted_at IS NULL
     </select>
