@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(description = "client", name = "OAuth2客户端管理模块")
-@RequestMapping(value = "/v1/admin/client")
+@RequestMapping(value = "/v1/platform/admin/client")
 @RequiredArgsConstructor
 public class AdminClientAPI implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;

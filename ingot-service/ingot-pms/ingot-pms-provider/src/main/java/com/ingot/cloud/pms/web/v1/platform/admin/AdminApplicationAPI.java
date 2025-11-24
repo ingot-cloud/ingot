@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Tag(description = "application", name = "系统应用管理模块")
 @RestController
-@RequestMapping(value = "/v1/admin/application")
+@RequestMapping(value = "/v1/platform/admin/application")
 @RequiredArgsConstructor
 public class AdminApplicationAPI implements RShortcuts {
     private final BizApplicationService bizApplicationService;

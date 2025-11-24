@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Tag(description = "appRole", name = "App端角色管理模块")
 @RestController
-@RequestMapping(value = "/v1/admin/appRole")
+@RequestMapping(value = "/v1/platform/admin/appRole")
 @RequiredArgsConstructor
 public class AdminAppRoleAPI implements RShortcuts {
     private final AppRoleService appRoleService;

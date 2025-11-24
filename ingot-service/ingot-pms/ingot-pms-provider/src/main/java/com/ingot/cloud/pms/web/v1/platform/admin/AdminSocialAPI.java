@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @Tag(description = "social", name = "系统社交管理模块")
-@RequestMapping(value = "/v1/admin/social")
+@RequestMapping(value = "/v1/platform/admin/social")
 @RequiredArgsConstructor
 public class AdminSocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;

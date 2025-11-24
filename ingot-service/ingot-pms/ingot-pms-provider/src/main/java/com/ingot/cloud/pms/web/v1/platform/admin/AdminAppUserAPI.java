@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Tag(description = "appUser", name = "App端用户管理模块")
 @RestController
-@RequestMapping(value = "/v1/admin/appUser")
+@RequestMapping(value = "/v1/platform/admin/appUser")
 @RequiredArgsConstructor
 public class AdminAppUserAPI implements RShortcuts {
     private final BizAppUserService bizAppUserService;
