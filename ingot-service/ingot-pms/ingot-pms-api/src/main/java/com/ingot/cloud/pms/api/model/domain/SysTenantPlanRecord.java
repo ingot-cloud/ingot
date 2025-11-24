@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -26,7 +27,7 @@ import lombok.ToString;
 @ToString
 @TableName("sys_tenant_plan_record")
 public class SysTenantPlanRecord extends BaseModel<SysTenantPlanRecord> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

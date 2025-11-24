@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -32,7 +33,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_user")
 public class SysUser extends BaseModel<SysUser> implements UserType {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

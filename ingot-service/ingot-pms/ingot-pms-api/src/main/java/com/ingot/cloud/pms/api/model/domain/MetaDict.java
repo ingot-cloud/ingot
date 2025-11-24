@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
@@ -23,7 +24,7 @@ import lombok.ToString;
 @ToString
 @TableName("meta_dict")
 public class MetaDict extends BaseModel<MetaDict> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

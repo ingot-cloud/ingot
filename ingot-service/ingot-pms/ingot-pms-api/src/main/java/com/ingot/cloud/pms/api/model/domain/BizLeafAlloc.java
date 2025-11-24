@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -21,7 +22,7 @@ import lombok.Setter;
 @Setter
 @TableName("biz_leaf_alloc")
 public class BizLeafAlloc extends BaseModel<BizLeafAlloc> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId("biz_tag")

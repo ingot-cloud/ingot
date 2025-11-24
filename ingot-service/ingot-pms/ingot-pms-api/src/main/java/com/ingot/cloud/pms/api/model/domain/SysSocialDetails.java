@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -26,8 +27,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_social_details")
-public class SysSocialDetails extends BaseModel<SysRoleAuthority> {
+public class SysSocialDetails extends BaseModel<SysSocialDetails> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

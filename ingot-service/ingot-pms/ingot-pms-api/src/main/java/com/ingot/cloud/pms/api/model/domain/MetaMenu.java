@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
@@ -28,7 +29,7 @@ import lombok.ToString;
 @ToString
 @TableName("meta_menu")
 public class MetaMenu extends BaseModel<MetaMenu> implements MenuType {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

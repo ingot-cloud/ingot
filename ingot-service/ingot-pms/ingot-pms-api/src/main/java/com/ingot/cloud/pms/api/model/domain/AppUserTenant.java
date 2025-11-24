@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @Setter
 @TableName("app_user_tenant")
 public class AppUserTenant extends BaseModel<AppUserTenant> implements UserTenantType {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

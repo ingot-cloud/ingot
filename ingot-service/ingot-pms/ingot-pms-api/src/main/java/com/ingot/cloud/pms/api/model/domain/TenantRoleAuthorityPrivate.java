@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -24,6 +26,7 @@ import lombok.ToString;
 @TableName("tenant_role_authority_private")
 public class TenantRoleAuthorityPrivate extends BaseModel<TenantRoleAuthorityPrivate> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

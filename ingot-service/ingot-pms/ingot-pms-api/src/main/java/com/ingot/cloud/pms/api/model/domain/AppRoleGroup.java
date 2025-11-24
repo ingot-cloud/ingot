@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -23,7 +25,7 @@ import lombok.Setter;
 @TenantTable
 @TableName("app_role_group")
 public class AppRoleGroup extends Model<AppRoleGroup> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

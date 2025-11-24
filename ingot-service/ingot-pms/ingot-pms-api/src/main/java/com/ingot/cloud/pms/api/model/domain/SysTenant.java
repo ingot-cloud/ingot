@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -27,7 +28,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_tenant")
 public class SysTenant extends BaseModel<SysTenant> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

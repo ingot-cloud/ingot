@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
@@ -22,7 +23,7 @@ import lombok.ToString;
 @ToString
 @TableName("meta_app")
 public class MetaApp extends BaseModel<MetaApp> {
-
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
