@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.biz.impl;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
@@ -79,12 +80,11 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
     }
 
     @Override
-    public void setScope(UserDetailsResponse result, AppUser user, List<AllowTenantDTO> allows, Long loginTenant) {
+    public List<String> getScopes(Long tenant, AppUser user) {
         List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
-        List<String> roleCodes = getRoleCodes(roles, loginTenant);
-        if (CollUtil.isEmpty(roleCodes)) {
-            return;
+        if (CollUtil.isEmpty(roles)) {
+            return ListUtil.empty();
         }
-        result.setRoles(roleCodes);
+        return getRoleCodes(roles, tenant);
     }
 }

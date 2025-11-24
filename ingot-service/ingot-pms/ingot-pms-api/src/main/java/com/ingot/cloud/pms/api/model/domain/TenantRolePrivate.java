@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -32,6 +33,7 @@ import lombok.ToString;
 @TableName(value = "tenant_role_private", autoResultMap = true)
 public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements RoleType {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

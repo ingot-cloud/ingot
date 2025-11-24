@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -88,7 +90,8 @@ public interface SupportUserDetailsService<T extends UserType> {
             SocialTypeEnum socialType = request.getSocialType();
             String socialCode = request.getSocialCode();
             String uniqueID = socialProcessorManager.getUniqueID(socialType, socialCode);
-            return map(socialProcessorManager.getUserInfo(socialType, uniqueID), request.getUserType(), request.getTenant());
+            return map(socialProcessorManager.getUserInfo(socialType, uniqueID),
+                    request.getUserType(), request.getTenant());
         });
     }
 
@@ -104,15 +107,33 @@ public interface SupportUserDetailsService<T extends UserType> {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<AllowTenantDTO> allows = getAllowTenants(user);
-                    value.setStatus(BizUtils.getUserStatus(allows, value.getStatus(), tenant));
+                    UserStatusEnum userStatus = BizUtils.getUserStatus(allows, value.getStatus(), tenant);
+                    value.setStatus(userStatus);
 
                     UserDetailsResponse result = userToUserDetailsResponse(value);
                     result.setTenant(tenant);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
 
-                    // 查询拥有的Scope
-                    setScope(result, value, tenant);
+                    // 如果已经被禁用那么直接返回
+                    if (userStatus == UserStatusEnum.LOCK) {
+                        return result;
+                    }
+
+                    // 设置用户Scope
+                    List<String> scopes = new ArrayList<>();
+
+                    // 确认登录的租户不为空，那么查询用户在当前租户下的Scope
+                    if (tenant != null) {
+                        scopes.addAll(TenantEnv.applyAs(tenant, () -> getScopes(tenant, user)));
+                    } else {
+                        scopes.addAll(allows.stream()
+                                .flatMap(org ->
+                                        TenantEnv.applyAs(Long.parseLong(org.getId()),
+                                                () -> getScopes(Long.parseLong(org.getId()), user)).stream())
+                                .toList());
+                    }
+                    result.setScopes(scopes);
                     return result;
                 }).orElse(null));
     }
@@ -134,14 +155,13 @@ public interface SupportUserDetailsService<T extends UserType> {
     UserDetailsResponse userToUserDetailsResponse(T user);
 
     /**
-     * 设置用户Scope
+     * 获取用户Scope
      *
-     * @param result      {@link UserDetailsResponse}
-     * @param user        用户
-     * @param allows      允许登录的组织
-     * @param loginTenant 登录租户
+     * @param tenant 登录组织
+     * @param user   用户
+     * @return Scope List
      */
-    void setScope(UserDetailsResponse result, T user, List<AllowTenantDTO> allows, Long loginTenant);
+    List<String> getScopes(Long tenant, T user);
 
     /**
      * 获取用户可用租户列表
@@ -161,7 +181,8 @@ public interface SupportUserDetailsService<T extends UserType> {
                 userTenantList.stream()
                         .map(UserTenantType::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
-                        .anyMatch(t -> Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
+                        .anyMatch(t ->
+                                Objects.equals(t.getTenantId(), Long.parseLong(item.getId())) && t.getMain())));
     }
 
     /**
@@ -176,12 +197,8 @@ public interface SupportUserDetailsService<T extends UserType> {
             return ListUtil.empty();
         }
         return roles.stream()
-                .map(item -> {
-                    if (loginTenant != null) {
-                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
-                    }
-                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
-                })
+                .map(item ->
+                        InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant))
                 .toList();
     }
 

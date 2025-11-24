@@ -40,9 +40,9 @@ public class UserDetailsResponse implements Serializable {
      */
     private UserStatusEnum status;
     /**
-     * 权限列表，roleCode以及authorityCode
+     * 权限列表，包含roleCode以及authorityCode
      */
-    private List<String> roles;
+    private List<String> scopes;
     /**
      * 可以访问的租户列表
      */

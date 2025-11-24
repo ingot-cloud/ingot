@@ -2,8 +2,10 @@ package com.ingot.cloud.pms.api.model.types;
 
 import java.util.List;
 
+import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
+import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 
@@ -27,6 +29,13 @@ public interface RoleType {
     Long getPid();
 
     void setPid(Long id);
+
+    /**
+     * 获取角色对应租户ID，只对{@link TenantRolePrivate}生效
+     */
+    default Long getTenantId() {
+        return IDConstants.DEFAULT_TENANT_ID;
+    }
 
     /**
      * 角色名称
@@ -56,7 +65,7 @@ public interface RoleType {
         return OrgTypeEnum.Tenant;
     }
 
-    default void setOrgType(OrgTypeEnum orgType){
+    default void setOrgType(OrgTypeEnum orgType) {
         // nothing to do
     }
 

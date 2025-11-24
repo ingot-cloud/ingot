@@ -50,10 +50,10 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                     return r.getData();
                 })
                 .map(data -> {
-                    List<String> userAuthorities = Optional.ofNullable(data.getRoles()).orElse(ListUtil.empty());
+                    List<String> scopes = Optional.ofNullable(data.getScopes()).orElse(ListUtil.empty());
                     List<AllowTenantDTO> allowTenants = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
-                    List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(userAuthorities) + CollUtil.size(allowTenants));
-                    authorities.addAll(AuthorityUtils.createAuthorityList(userAuthorities.toArray(new String[0])));
+                    List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(scopes) + CollUtil.size(allowTenants));
+                    authorities.addAll(AuthorityUtils.createAuthorityList(scopes.toArray(new String[0])));
                     authorities.addAll(InAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;

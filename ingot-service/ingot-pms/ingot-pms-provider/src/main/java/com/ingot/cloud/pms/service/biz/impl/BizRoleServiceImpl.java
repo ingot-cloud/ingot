@@ -196,20 +196,23 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     public List<AuthorityType> getRolesAuthorities(List<RoleType> roles) {
-        List<MetaAuthority> all = authorityService.list();
+        List<MetaAuthority> enabledAuthorities = authorityService.list()
+                .stream()
+                .filter(auth -> auth.getStatus() == CommonStatusEnum.ENABLE)
+                .toList();
         return roles.stream()
                 .flatMap(role -> {
                     OrgTypeEnum orgType = role.getOrgType();
                     if (orgType == OrgTypeEnum.Platform) {
                         return roleAuthorityService.getRoleBindAuthorityIds(role.getId()).stream()
-                                .map(id -> all.stream()
+                                .map(id -> enabledAuthorities.stream()
                                         .filter(item -> item.getId().equals(id))
                                         .findFirst()
                                         .orElse(null))
                                 .filter(Objects::nonNull);
                     }
                     return tenantRoleAuthorityPrivateService.getRoleBindAuthorityIds(role.getId()).stream()
-                            .map(id -> all.stream()
+                            .map(id -> enabledAuthorities.stream()
                                     .filter(item -> item.getId().equals(id))
                                     .findFirst()
                                     .orElse(null))

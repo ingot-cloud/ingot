@@ -3,28 +3,28 @@ package com.ingot.cloud.pms.service.biz.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
-import com.ingot.cloud.pms.api.model.domain.*;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
-import com.ingot.cloud.pms.service.domain.*;
+import com.ingot.cloud.pms.service.domain.SysTenantService;
+import com.ingot.cloud.pms.service.domain.SysUserService;
+import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
-import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -88,48 +88,23 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
     }
 
     @Override
-    public void setScope(UserDetailsResponse result, SysUser user, List<AllowTenantDTO> allows, Long loginTenant) {
-        // 需要查看所有可以登录的组织，每个组织的角色，权限（InAuthorityUtils.authorityWithTenant）
+    public List<String> getScopes(Long tenant, SysUser user) {
+        // 查询所有角色
         List<RoleType> roles = bizUserService.getUserRoles(user.getId());
-        List<String> roleCodes = getRoleCodes(roles, loginTenant);
-        if (CollUtil.isEmpty(roleCodes)) {
-            return;
+        if (CollUtil.isEmpty(roles)) {
+            return ListUtil.empty();
         }
-
-        // 角色拥有的权限
-        List<AuthorityType> authorities = bizRoleService.getRolesAuthorities(roles);
-
-        // 查询所有组织的应用
-        List<MetaApp> appList = TenantEnv.globalApply(() ->
-                CollUtil.emptyIfNull(bizAppService.getDisabledApps()));
-        List<AuthorityType> removeAuthorities = appList.stream()
-                .filter(app -> authorities.stream()
-                        .anyMatch(auth -> Objects.equals(auth.getId(), app.getAuthorityId())))
-                .map(app -> authorities.stream()
-                        .filter(auth -> Objects.equals(auth.getId(), app.getAuthorityId()))
-                        .findFirst().orElse(null))
+        // InAuthorityUtils.authorityWithTenant 包装角色编码
+        List<String> scopes = new ArrayList<>(getRoleCodes(roles, tenant));
+        // 查询组织不可用应用
+        List<MetaApp> disabledApps = bizAppService.getDisabledApps();
+        List<String> authorities = bizRoleService.getRolesAuthorities(roles).stream()
+                .filter(auth -> disabledApps.stream()
+                        .noneMatch(app -> Objects.equals(auth.getId(), app.getAuthorityId())))
+                .map(auth -> InAuthorityUtils.authorityWithTenant(auth.getCode(), tenant))
                 .toList();
+        scopes.addAll(authorities);
 
-        // 过滤权限，去掉已经禁用应用的权限
-        Set<String> authorityCodeList = authorities.stream()
-                .filter(item -> removeAuthorities.stream()
-                        .noneMatch(remove -> {
-                            if (Objects.equals(remove.getId(), item.getId())) {
-                                return true;
-                            }
-
-                            long orgId = loginTenant != null ? loginTenant : item.getTenantId();
-                            return orgId == remove.getTenantId() && StrUtil.startWith(item.getCode(), remove.getCode());
-                        }))
-                .map(item -> {
-                    if (loginTenant != null) {
-                        return InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant);
-                    }
-                    return InAuthorityUtils.authorityWithTenant(item.getCode(), item.getTenantId());
-                }).collect(Collectors.toSet());
-
-        List<String> finalRoleCodes = new ArrayList<>(roleCodes);
-        finalRoleCodes.addAll(authorityCodeList);
-        result.setRoles(finalRoleCodes);
+        return scopes;
     }
 }
