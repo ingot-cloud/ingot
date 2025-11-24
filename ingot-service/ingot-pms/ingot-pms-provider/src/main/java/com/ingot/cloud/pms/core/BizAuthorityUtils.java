@@ -72,7 +72,7 @@ public class BizAuthorityUtils {
             List<AuthorityTreeNodeVO> list = new ArrayList<>();
 
             AuthorityType authority = service.getById(authorityId);
-            list.add(authorityConvert.to(authority));
+            list.add(authorityConvert.toTreeNode(authority));
 
             List<MetaAuthority> children = service.list(Wrappers.<MetaAuthority>lambdaQuery()
                     .eq(MetaAuthority::getPid, authority.getId()));
@@ -123,7 +123,7 @@ public class BizAuthorityUtils {
                                                     AuthorityType condition) {
         List<AuthorityTreeNodeVO> nodeList = authorities.stream()
                 .filter(BizFilter.authorityFilter(condition))
-                .map(authorityConvert::to).collect(Collectors.toList());
+                .map(authorityConvert::toTreeNode).collect(Collectors.toList());
 
         List<AuthorityTreeNodeVO> tree = TreeUtil.build(nodeList);
         TreeUtil.compensate(tree, nodeList);

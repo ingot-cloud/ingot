@@ -46,7 +46,7 @@ public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
                 .filter(BizFilter.authorityFilter(filter))
                 .sorted(Comparator.comparing(AuthorityType::getOrgType)
                         .thenComparing(AuthorityType::getId))
-                .map(authorityConvert::to).collect(Collectors.toList());
+                .map(authorityConvert::toTreeNode).collect(Collectors.toList());
 
         List<AuthorityTreeNodeVO> tree = TreeUtil.build(nodeList);
         TreeUtil.compensate(tree, nodeList);

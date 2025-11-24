@@ -1,6 +1,5 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
@@ -24,10 +23,12 @@ import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.core.BizRoleUtils;
-import com.ingot.cloud.pms.service.biz.*;
+import com.ingot.cloud.pms.service.biz.BizDeptService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -86,36 +87,8 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public List<RoleType> getUserRoles(long userId) {
-        List<TenantRoleUserPrivate> roleUserPrivateList = tenantRoleUserPrivateService.getUserRoles(userId);
-        if (CollUtil.isEmpty(roleUserPrivateList)) {
-            return ListUtil.empty();
-        }
-
-        List<RoleType> result = new ArrayList<>(roleUserPrivateList.size());
-
-        List<Long> metaRoleIds = roleUserPrivateList.stream()
-                .filter(item -> BooleanUtil.isTrue(item.getMetaRole()))
-                .map(TenantRoleUserPrivate::getRoleId)
-                .toList();
-        if (CollUtil.isNotEmpty(metaRoleIds)) {
-            List<MetaRole> metaRoleList = metaRoleService.list(Wrappers.<MetaRole>lambdaQuery()
-                    .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE)
-                    .in(MetaRole::getId, metaRoleIds));
-            result.addAll(metaRoleList);
-        }
-
-        List<Long> privateRoleIds = roleUserPrivateList.stream()
-                .filter(item -> BooleanUtil.isFalse(item.getMetaRole()))
-                .map(TenantRoleUserPrivate::getRoleId)
-                .toList();
-        if (CollUtil.isNotEmpty(privateRoleIds)) {
-            List<TenantRolePrivate> privateRoleList = tenantRolePrivateService.list(Wrappers.<TenantRolePrivate>lambdaQuery()
-                    .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
-                    .in(TenantRolePrivate::getId, privateRoleIds));
-            result.addAll(privateRoleList);
-        }
-
-        return result;
+        return BizRoleUtils.getUserRoles(userId,
+                metaRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
     }
 
     @Override

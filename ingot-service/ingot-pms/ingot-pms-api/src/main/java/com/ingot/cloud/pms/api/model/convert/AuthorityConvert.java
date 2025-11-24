@@ -17,7 +17,7 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
 public interface AuthorityConvert {
 
-    AuthorityTreeNodeVO to(AuthorityType params);
+    AuthorityTreeNodeVO toTreeNode(AuthorityType params);
 
     BizAuthorityTreeNodeVO to(BizAuthorityVO params);
 

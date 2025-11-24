@@ -6,8 +6,10 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.core.BizRoleUtils;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
+import com.ingot.cloud.pms.service.domain.MetaRoleService;
+import com.ingot.cloud.pms.service.domain.TenantRolePrivateService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -24,7 +26,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserOpsCheckerImpl implements UserOpsChecker {
-    private final BizUserService bizUserService;
+    private final MetaRoleService metaRoleService;
+    private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
 
     private final AssertionChecker assertionChecker;
@@ -67,7 +70,8 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
     }
 
     private Optional<RoleType> getAdmin(long userId) {
-        List<RoleType> roles = bizUserService.getUserRoles(userId);
+        List<RoleType> roles = BizRoleUtils.getUserRoles(userId,
+                metaRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
         return roles.stream()
                 .filter(item -> RoleUtil.isAdmin(item.getCode()))
                 .findFirst();
