@@ -1,34 +1,22 @@
-package com.ingot.cloud.pms.core.org;
+package com.ingot.cloud.pms.core;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.convert.DeptConvert;
-import com.ingot.cloud.pms.api.model.convert.MenuConvert;
-import com.ingot.cloud.pms.api.model.domain.*;
+import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
+import com.ingot.cloud.pms.api.model.domain.SysTenant;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.core.BizIdGen;
-import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.*;
-import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.RoleConstants;
-import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.data.redis.utils.RedisUtils;
 import com.ingot.framework.tenant.TenantEnv;
-import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -42,24 +30,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TenantEngine {
     private final SysTenantService sysTenantService;
-    private final SysDeptService sysDeptService;
-    private final SysRoleService sysRoleService;
-    private final SysRoleGroupService sysRoleGroupService;
-    private final SysAuthorityService sysAuthorityService;
     private final SysUserService sysUserService;
     private final SysUserTenantService sysUserTenantService;
-    private final SysUserDeptService sysUserDeptService;
-    private final SysRoleUserService sysRoleUserService;
-    private final SysRoleUserDeptService sysRoleUserDeptService;
-    private final SysRoleAuthorityService sysRoleAuthorityService;
-    private final SysMenuService sysMenuService;
     private final AppUserTenantService appUserTenantService;
     private final AppRoleService appRoleService;
     private final AppRoleUserService appRoleUserService;
-    private final SysApplicationTenantService sysApplicationTenantService;
 
 
+    private final TenantAppConfigService tenantAppConfigService;
     private final TenantDeptService tenantDeptService;
+    private final TenantRoleAuthorityPrivateService tenantRoleAuthorityPrivateService;
+    private final TenantRolePrivateService tenantRolePrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
     private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
 
     private final BizUserService bizUserService;
@@ -67,7 +49,6 @@ public class TenantEngine {
 
     private final BizIdGen bizIdGen;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final BizDeptService bizDeptService;
 
     /**
      * 创建租户
@@ -131,47 +112,34 @@ public class TenantEngine {
      *
      * @param id 租户ID
      */
-    @CacheEvict(value = {CacheConstants.MENU_DETAILS, CacheConstants.AUTHORITY_DETAILS}, allEntries = true)
     public void destroy(long id) {
         TenantEnv.runAs(id, () -> {
-            // 系统用户取消关联组织
-            sysUserTenantService.remove(Wrappers.<SysUserTenant>lambdaQuery()
-                    .eq(SysUserTenant::getTenantId, id));
+            // 移除组织
+            sysTenantService.removeTenantById(id);
 
-            // 取消组织用户关联部门
-            sysUserDeptService.remove(Wrappers.lambdaQuery());
-            // 取消组织用户关联角色
-            sysRoleUserService.remove(Wrappers.lambdaQuery());
-            // 取消组织角色用户部门关联关系
-            sysRoleUserDeptService.remove(Wrappers.lambdaQuery());
+            // 系统用户取消关联组织
+            sysUserTenantService.clearByTenantId(id);
+            // 清空app配置
+            tenantAppConfigService.clearByAppId(id);
+            // 清空部门
+            tenantDeptService.clearByTenantId(id);
+            // 清空角色权限配置
+            tenantRoleAuthorityPrivateService.clearByTenantId(id);
+            // 清空角色
+            tenantRolePrivateService.clearByTenantId(id);
+            // 清空用户角色关联关系
+            tenantRoleUserPrivateService.clearByTenantId(id);
+            // 清空用户部门关联关系
+            tenantUserDeptPrivateService.clearByTenantId(id);
 
             // app用户取消关联组织信息
             appUserTenantService.remove(Wrappers.<AppUserTenant>lambdaQuery()
                     .eq(AppUserTenant::getTenantId, id));
+
             // 取消关联角色
             appRoleUserService.remove(Wrappers.lambdaQuery());
 
-            // 移除组织
-            sysTenantService.removeTenantById(id);
-            // 移除部门
-            sysDeptService.remove(Wrappers.lambdaQuery());
-            // 移除菜单
-            sysMenuService.remove(Wrappers.lambdaQuery());
-            // 移除权限
-            sysAuthorityService.remove(Wrappers.lambdaQuery());
-            // 移除应用
-            sysApplicationTenantService.remove(Wrappers.lambdaQuery());
-
-            sysRoleService.remove(Wrappers.<SysRole>lambdaQuery()
-                    .eq(SysRole::getTenantId, id));
-
-            sysRoleGroupService.remove(Wrappers.<SysRoleGroup>lambdaQuery()
-                    .eq(SysRoleGroup::getTenantId, id));
-
-            sysRoleAuthorityService.remove(Wrappers.lambdaQuery());
-
-            appRoleService.remove(Wrappers.<AppRole>lambdaQuery()
-                    .eq(AppRole::getTenantId, id));
+            appRoleService.remove(Wrappers.lambdaQuery());
 
             // clear cache
             RedisUtils.deleteKeys(redisTemplate, ListUtil.list(false, "*"));

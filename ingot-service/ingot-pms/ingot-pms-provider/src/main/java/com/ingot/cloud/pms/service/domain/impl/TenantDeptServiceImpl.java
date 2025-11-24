@@ -97,4 +97,10 @@ public class TenantDeptServiceImpl extends BaseServiceImpl<TenantDeptMapper, Ten
         return getOne(Wrappers.<TenantDept>lambdaQuery()
                 .eq(TenantDept::getMainFlag, Boolean.TRUE));
     }
+
+    @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantDept>lambdaQuery()
+                .eq(TenantDept::getTenantId, tenantId));
+    }
 }

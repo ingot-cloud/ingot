@@ -38,4 +38,10 @@ public interface TenantUserDeptPrivateService extends BaseService<TenantUserDept
      * @param userId 用户ID
      */
     void clearByUserId(long userId);
+
+    /**
+     * 根据租户ID清理数据
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }

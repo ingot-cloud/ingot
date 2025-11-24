@@ -48,4 +48,11 @@ public interface TenantRolePrivateService extends BaseService<TenantRolePrivate>
      * @param id 角色ID
      */
     void delete(long id);
+
+    /**
+     * 根据租户清理数据
+     *
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }

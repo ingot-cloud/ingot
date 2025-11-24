@@ -54,6 +54,12 @@ public class SysUserTenantServiceImpl extends BaseServiceImpl<SysUserTenantMappe
     }
 
     @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<SysUserTenant>lambdaQuery()
+                .eq(SysUserTenant::getTenantId, tenantId));
+    }
+
+    @Override
     public void updateBase(SysTenant params) {
         boolean needUpdate = false;
         SysUserTenant entity = new SysUserTenant();

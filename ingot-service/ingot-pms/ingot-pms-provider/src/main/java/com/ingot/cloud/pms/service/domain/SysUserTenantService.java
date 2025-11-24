@@ -30,6 +30,12 @@ public interface SysUserTenantService extends BaseService<SysUserTenant> {
     void leaveTenant(long userId);
 
     /**
+     * 根据组织ID清理关联关系
+     * @param tenantId 组织ID
+     */
+    void clearByTenantId(long tenantId);
+
+    /**
      * 更新基本信息
      *
      * @param params {@link SysTenant}

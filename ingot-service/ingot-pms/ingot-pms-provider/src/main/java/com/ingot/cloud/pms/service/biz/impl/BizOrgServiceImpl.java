@@ -18,7 +18,7 @@ import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.core.BizAuthorityUtils;
-import com.ingot.cloud.pms.core.org.TenantEngine;
+import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
 import com.ingot.cloud.pms.service.domain.*;

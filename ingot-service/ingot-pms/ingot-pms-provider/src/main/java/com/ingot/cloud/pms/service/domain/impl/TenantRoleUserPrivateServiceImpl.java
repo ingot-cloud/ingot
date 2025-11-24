@@ -118,4 +118,10 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
                 .eq(TenantRoleUserPrivate::getRoleId, roleId)
                 .eq(TenantRoleUserPrivate::getDeptId, deptId));
     }
+
+    @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                .eq(TenantRoleUserPrivate::getTenantId, tenantId));
+    }
 }

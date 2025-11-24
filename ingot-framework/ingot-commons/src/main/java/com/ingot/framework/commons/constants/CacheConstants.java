@@ -66,16 +66,6 @@ public interface CacheConstants {
     String TENANT_ROLE_AUTHORITIES = "role_authorities";
 
     /**
-     * 所有权限
-     */
-    String AUTHORITY_DETAILS = "authority_details";
-
-    /**
-     * 菜单
-     */
-    String MENU_DETAILS = "menu_details";
-
-    /**
      * 授权信息
      */
     String AUTHORIZATION_DETAILS = "auth_details";

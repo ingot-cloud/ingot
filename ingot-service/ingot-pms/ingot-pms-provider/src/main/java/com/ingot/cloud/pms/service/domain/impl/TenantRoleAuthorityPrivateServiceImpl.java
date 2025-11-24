@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author jymot
@@ -88,5 +88,15 @@ public class TenantRoleAuthorityPrivateServiceImpl extends BaseServiceImpl<Tenan
     public void clearByRoleId(long roleId) {
         remove(Wrappers.<TenantRoleAuthorityPrivate>lambdaQuery()
                 .eq(TenantRoleAuthorityPrivate::getRoleId, roleId));
+    }
+
+    @Override
+    @CacheEvict(
+            value = CacheConstants.TENANT_ROLE_AUTHORITIES,
+            allEntries = true
+    )
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantRoleAuthorityPrivate>lambdaQuery()
+                .eq(TenantRoleAuthorityPrivate::getTenantId, tenantId));
     }
 }

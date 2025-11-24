@@ -122,4 +122,10 @@ public class TenantRolePrivateServiceImpl extends BaseServiceImpl<TenantRolePriv
 
         removeById(id);
     }
+
+    @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantRolePrivate>lambdaQuery()
+                .eq(TenantRolePrivate::getTenantId, tenantId));
+    }
 }

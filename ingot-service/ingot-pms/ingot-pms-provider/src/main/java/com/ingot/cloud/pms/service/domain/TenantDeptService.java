@@ -65,4 +65,11 @@ public interface TenantDeptService extends BaseService<TenantDept> {
      * @return {@link TenantDept}
      */
     TenantDept getMainDept();
+
+    /**
+     * 更具租户ID清除数据
+     *
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }

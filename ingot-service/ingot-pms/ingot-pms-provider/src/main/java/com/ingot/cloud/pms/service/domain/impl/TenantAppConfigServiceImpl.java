@@ -37,4 +37,10 @@ public class TenantAppConfigServiceImpl extends BaseServiceImpl<TenantAppConfigM
         remove(Wrappers.<TenantAppConfig>lambdaQuery()
                 .eq(TenantAppConfig::getMetaId, id));
     }
+
+    @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantAppConfig>lambdaQuery()
+                .eq(TenantAppConfig::getTenantId, tenantId));
+    }
 }

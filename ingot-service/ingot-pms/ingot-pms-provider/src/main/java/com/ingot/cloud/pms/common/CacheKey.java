@@ -13,10 +13,7 @@ public interface CacheKey {
      */
     String DefaultExpiredTimeSeconds = "604800";
 
-    String AuthorityListKey = "'list'";
-    String AuthorityRoleKey = "'role-' + #roleId";
     String ClientListKey = "'list'";
-    String MenuListKey = "'list'";
 
     /**
      * 公共缓存Key
@@ -24,14 +21,4 @@ public interface CacheKey {
     String ListKey = "'list'";
     String ItemKey = "'item-' + #id";
     String CodeKey = "'code-' + #code";
-
-    /**
-     * 获取指定角色绑定权限缓存key
-     *
-     * @param roleId 角色ID
-     * @return Key
-     */
-    static String getAuthorityRoleKey(long roleId) {
-        return "role-" + roleId;
-    }
 }

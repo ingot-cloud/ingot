@@ -67,4 +67,10 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
         remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
                 .eq(TenantUserDeptPrivate::getUserId, userId));
     }
+
+    @Override
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
+                .eq(TenantUserDeptPrivate::getTenantId, tenantId));
+    }
 }

@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.core.org.TenantOps;
 import com.ingot.cloud.pms.service.biz.BizAppRoleService;
 import com.ingot.cloud.pms.service.domain.AppRoleGroupService;
 import com.ingot.cloud.pms.service.domain.AppRoleService;
@@ -28,7 +26,6 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     private final AppRoleService appRoleService;
     private final AppRoleGroupService appRoleGroupService;
     private final AppRoleUserService appRoleUserService;
-    private final TenantOps tenantOps;
 
     @Override
     public void setOrgUserRoles(long userId, List<Long> roles) {
@@ -39,9 +36,6 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     @Transactional(rollbackFor = Exception.class)
     public void createRoleEffectOrg(AppRole role, boolean isAdmin) {
         appRoleService.createRole(role, isAdmin);
-        if (role.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.createRole(role);
-        }
     }
 
     @Override
@@ -49,9 +43,6 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     public void updateRoleEffectOrg(AppRole role, boolean isAdmin) {
         appRoleService.updateRoleById(role, isAdmin);
         AppRole current = appRoleService.getById(role.getId());
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.updateRole(role);
-        }
     }
 
     @Override
@@ -59,18 +50,12 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     public void removeRoleEffectOrg(long id, boolean isAdmin) {
         AppRole current = appRoleService.getById(id);
         appRoleService.removeRoleById(id, isAdmin);
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.removeRole(current);
-        }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createRoleGroupEffectOrg(AppRoleGroup group, boolean isAdmin) {
         appRoleService.createGroup(group, isAdmin);
-        if (group.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.createRoleGroup(group);
-        }
     }
 
     @Override
@@ -78,9 +63,6 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     public void updateRoleGroupEffectOrg(AppRoleGroup group, boolean isAdmin) {
         appRoleService.updateGroup(group, isAdmin);
         AppRoleGroup current = appRoleGroupService.getById(group.getId());
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.updateRoleGroup(group);
-        }
     }
 
     @Override
@@ -88,8 +70,5 @@ public class BizAppRoleServiceImpl implements BizAppRoleService {
     public void removeRoleGroupEffectOrg(long id, boolean isAdmin) {
         AppRoleGroup current = appRoleGroupService.getById(id);
         appRoleService.deleteGroup(id, isAdmin);
-        if (current.getType() == OrgTypeEnum.Tenant) {
-            tenantOps.removeRoleGroup(current);
-        }
     }
 }

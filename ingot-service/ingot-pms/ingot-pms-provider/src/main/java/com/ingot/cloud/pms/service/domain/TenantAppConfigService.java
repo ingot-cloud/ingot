@@ -33,4 +33,11 @@ public interface TenantAppConfigService extends BaseService<TenantAppConfig> {
      * @param id 应用ID
      */
     void clearByAppId(long id);
+
+    /**
+     * 根据租户ID清除数据
+     *
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }

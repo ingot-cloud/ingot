@@ -43,4 +43,11 @@ public interface TenantRoleAuthorityPrivateService extends BaseService<TenantRol
      * @param roleId 角色ID
      */
     void clearByRoleId(long roleId);
+
+    /**
+     * 清空租户角色权限关系
+     *
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }
