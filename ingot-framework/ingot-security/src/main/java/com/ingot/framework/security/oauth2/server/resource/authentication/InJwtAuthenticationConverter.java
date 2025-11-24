@@ -22,7 +22,7 @@ public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuth
     public static final String AUTHORITY_PREFIX = "SCOPE_";
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
-    private final Converter<Jwt, InUser> jwtIngotUserConverter = new JwtInUserConverter();
+    private final Converter<Jwt, InUser> jwtInUserConverter = new JwtInUserConverter();
 
     private String principalClaimName;
 
@@ -37,7 +37,7 @@ public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuth
     @Override
     public final AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
         Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
-        InUser principal = this.jwtIngotUserConverter.convert(jwt);
+        InUser principal = this.jwtInUserConverter.convert(jwt);
         if (this.principalClaimName == null) {
             return new InJwtAuthenticationToken(jwt, principal, authorities);
         }

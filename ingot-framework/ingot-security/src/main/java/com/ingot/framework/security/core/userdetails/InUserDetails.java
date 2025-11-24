@@ -1,8 +1,5 @@
 package com.ingot.framework.security.core.userdetails;
 
-import java.util.List;
-
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -13,10 +10,4 @@ import org.springframework.security.core.userdetails.UserDetails;
  */
 public interface InUserDetails extends UserDetails {
 
-    /**
-     * 返回允许访问的组织租户信息
-     *
-     * @return {@link AllowTenantDTO}
-     */
-    List<AllowTenantDTO> getAllows();
 }

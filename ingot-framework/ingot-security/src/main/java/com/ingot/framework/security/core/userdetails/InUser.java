@@ -1,13 +1,10 @@
 package com.ingot.framework.security.core.userdetails;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import cn.hutool.core.collection.ListUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.RoleUtil;
@@ -68,17 +65,6 @@ public class InUser extends User implements InUserDetails {
         this.tokenAuthType = tokenAuthType;
         this.clientId = clientId;
         this.userType = userType;
-    }
-
-    /**
-     * 无敏感信息，无权限信息 UserDetails
-     *
-     * @return {@link InUser}
-     */
-    public static InUser simple(Long id, Long tenantId, String clientId,
-                                String tokenAuthType, String userType, String username) {
-        return stateless(id, tenantId, clientId,
-                tokenAuthType, userType, username, Collections.emptyList());
     }
 
     /**
@@ -161,11 +147,6 @@ public class InUser extends User implements InUserDetails {
         return super.isEnabled();
     }
 
-    @Override
-    public List<AllowTenantDTO> getAllows() {
-        return ListUtil.list(false, InAuthorityUtils.extractAllowTenants(getAuthorities()));
-    }
-
     /**
      * {@link SecurityAuthContext#getRoles()}
      *
@@ -173,7 +154,7 @@ public class InUser extends User implements InUserDetails {
      */
     @JsonIgnore
     public List<String> getRoleCodeList() {
-        Collection<? extends GrantedAuthority> authorities = getAuthorities();
+        Collection<? extends GrantedAuthority> authorities = SecurityAuthContext.getAuthentication().getAuthorities();
         return InAuthorityUtils.authorityListToScopes(authorities)
                 .stream()
                 .filter(RoleUtil::isRoleCode)
