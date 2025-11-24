@@ -9,7 +9,6 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
-import com.ingot.cloud.pms.api.model.domain.SysMenu;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
@@ -82,7 +81,7 @@ public class BizMenuUtils {
     /**
      * 根据path生成视图路径
      *
-     * @param menu {@link SysMenu}
+     * @param menu {@link MetaMenu}
      */
     public static void setViewPathAccordingToPath(MetaMenu menu) {
         String path = menu.getPath();

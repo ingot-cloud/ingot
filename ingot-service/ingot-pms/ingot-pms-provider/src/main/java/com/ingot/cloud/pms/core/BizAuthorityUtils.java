@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.core;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -7,17 +8,19 @@ import java.util.stream.Collectors;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
 import com.ingot.cloud.pms.common.BizFilter;
-import com.ingot.cloud.pms.core.org.TenantUtils;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
+import com.ingot.framework.tenant.TenantEnv;
 
 /**
  * <p>Description  : BizAuthorityUtils.</p>
@@ -47,10 +50,39 @@ public class BizAuthorityUtils {
 
         return appList.stream()
                 .flatMap(app ->
-                        TenantUtils.getTargetAuthorities(
-                                        orgId, app.getAuthorityId(), authorityService, authorityConvert)
+                        getTargetAuthorities(
+                                orgId, app.getAuthorityId(), authorityService, authorityConvert)
                                 .stream())
                 .toList();
+    }
+
+    /**
+     * 获取指定组织的指定权限的所有子权限，包含指定权限
+     *
+     * @param orgId       组织ID
+     * @param authorityId 权限ID
+     * @param service     服务
+     * @return 权限列表
+     */
+    public static List<AuthorityTreeNodeVO> getTargetAuthorities(long orgId,
+                                                                 long authorityId,
+                                                                 MetaAuthorityService service,
+                                                                 AuthorityConvert authorityConvert) {
+        return TenantEnv.applyAs(orgId, () -> {
+            List<AuthorityTreeNodeVO> list = new ArrayList<>();
+
+            AuthorityType authority = service.getById(authorityId);
+            list.add(authorityConvert.to(authority));
+
+            List<MetaAuthority> children = service.list(Wrappers.<MetaAuthority>lambdaQuery()
+                    .eq(MetaAuthority::getPid, authority.getId()));
+            if (CollUtil.isNotEmpty(children)) {
+                children.forEach(itemMenu ->
+                        list.addAll(getTargetAuthorities(orgId, itemMenu.getId(), service, authorityConvert)));
+            }
+
+            return list;
+        });
     }
 
     /**
