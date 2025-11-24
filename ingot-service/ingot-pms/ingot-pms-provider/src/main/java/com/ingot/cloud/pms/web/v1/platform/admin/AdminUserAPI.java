@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.pms.web.v1.platform.admin;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -33,9 +33,9 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 6:48 下午.</p>
  */
 @Slf4j
-@Tag(description = "user", name = "系统用户管理模块")
+@Tag(description = "User", name = "系统用户管理模块")
 @RestController
-@RequestMapping(value = "/v1/admin/user")
+@RequestMapping(value = "/v1/platform/admin/user")
 @RequiredArgsConstructor
 public class AdminUserAPI implements RShortcuts {
     private final SysUserService sysUserService;

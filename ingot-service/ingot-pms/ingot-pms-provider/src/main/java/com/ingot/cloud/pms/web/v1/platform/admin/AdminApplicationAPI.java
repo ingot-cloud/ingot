@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.pms.web.v1.platform.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysApplication;

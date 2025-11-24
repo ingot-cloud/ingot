@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.pms.web.v1.platform.admin;
 
 import java.util.List;
 
@@ -30,8 +30,8 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@Tag(description = "tenant", name = "系统组织管理模块")
-@RequestMapping(value = "/v1/admin/tenant")
+@Tag(description = "Tenant", name = "系统组织管理模块")
+@RequestMapping(value = "/v1/platform/admin/tenant")
 @RequiredArgsConstructor
 public class AdminTenantAPI implements RShortcuts {
     private final SysTenantService sysTenantService;
