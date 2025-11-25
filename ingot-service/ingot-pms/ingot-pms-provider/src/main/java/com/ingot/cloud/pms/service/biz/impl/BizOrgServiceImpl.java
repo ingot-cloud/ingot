@@ -148,6 +148,8 @@ public class BizOrgServiceImpl implements BizOrgService {
             }
         }
 
+        params.setCode(null);
+        params.setOrgType(null);
         params.setEndAt(null);
         sysTenantService.updateTenantById(params);
 

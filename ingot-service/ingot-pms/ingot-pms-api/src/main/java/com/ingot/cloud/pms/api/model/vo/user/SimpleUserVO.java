@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.vo.user;
 
 import java.io.Serializable;
 
+import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
 
 /**
@@ -23,5 +24,6 @@ public class SimpleUserVO implements Serializable {
     /**
      * 头像
      */
+    @OssUrl
     private String avatar;
 }

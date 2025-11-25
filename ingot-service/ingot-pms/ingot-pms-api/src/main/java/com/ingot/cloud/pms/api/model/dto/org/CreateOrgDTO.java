@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.dto.org;
 
 import java.io.Serializable;
 
+import com.ingot.framework.oss.common.OssSaveUrl;
 import lombok.Data;
 
 /**
@@ -15,6 +16,7 @@ public class CreateOrgDTO implements Serializable {
     /**
      * 头像
      */
+    @OssSaveUrl
     private String avatar;
     /**
      * 租户名称

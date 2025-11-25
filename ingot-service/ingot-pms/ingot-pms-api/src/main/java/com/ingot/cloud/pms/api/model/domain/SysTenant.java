@@ -12,6 +12,8 @@ import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import com.ingot.framework.oss.common.OssSaveUrl;
+import com.ingot.framework.oss.common.OssUrl;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -58,6 +60,8 @@ public class SysTenant extends BaseModel<SysTenant> {
     /**
      * 头像
      */
+    @OssSaveUrl
+    @OssUrl
     private String avatar;
 
     /**

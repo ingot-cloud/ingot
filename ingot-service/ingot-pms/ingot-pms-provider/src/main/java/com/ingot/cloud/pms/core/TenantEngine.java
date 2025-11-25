@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
@@ -59,6 +60,8 @@ public class TenantEngine {
         tenant.setName(params.getName());
         tenant.setAvatar(params.getAvatar());
         tenant.setCode(orgCode);
+        // 只能创建租户类型
+        tenant.setOrgType(OrgTypeEnum.Tenant);
         sysTenantService.createTenant(tenant);
         return tenant;
     }
