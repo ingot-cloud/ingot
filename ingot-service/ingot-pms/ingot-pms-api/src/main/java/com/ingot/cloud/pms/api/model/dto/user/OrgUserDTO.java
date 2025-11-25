@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.dto.user;
 import java.io.Serializable;
 import java.util.List;
 
+import com.ingot.framework.oss.common.OssSaveUrl;
 import lombok.Data;
 
 /**
@@ -41,6 +42,7 @@ public class OrgUserDTO implements Serializable {
     /**
      * 头像
      */
+    @OssSaveUrl
     private String avatar;
 
 }

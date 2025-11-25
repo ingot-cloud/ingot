@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
+import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
 
 /**
@@ -41,6 +42,7 @@ public class UserPageItemVO implements Serializable {
     /**
      * 头像
      */
+    @OssUrl
     private String avatar;
     /**
      * 状态, 0:正常，9:禁用

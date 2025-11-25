@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
+import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
 
 /**
@@ -48,6 +49,7 @@ public class OrgUserProfileVO implements Serializable {
     /**
      * 头像
      */
+    @OssUrl
     private String avatar;
 
     /**

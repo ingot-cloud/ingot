@@ -25,10 +25,10 @@
         FROM sys_user_tenant AS ut
                  LEFT JOIN sys_user AS u ON u.id = ut.user_id
                  <if test="condition.deptId != null and condition.deptId != 0">
-                     LEFT JOIN sys_user_dept AS ud ON ud.user_id = u.id
+                     LEFT JOIN tenant_user_dept_private AS ud ON ud.user_id = u.id
                  </if>
                  <if test="condition.roleId != null and condition.roleId > 0">
-                     LEFT JOIN sys_role_user AS ru ON ru.user_id = u.id
+                     LEFT JOIN tenant_role_user_private AS ru ON ru.user_id = u.id
                  </if>
         WHERE
             ut.tenant_id = #{tenantId}
@@ -65,7 +65,7 @@
                u.avatar,
                u.status,
                u.created_at
-        FROM sys_user_dept AS ud
+        FROM tenant_user_dept_private AS ud
                  LEFT JOIN sys_user AS u ON u.id = ud.user_id
         WHERE ud.tenant_id = #{tenantId}
           AND ud.dept_id = #{deptId}
