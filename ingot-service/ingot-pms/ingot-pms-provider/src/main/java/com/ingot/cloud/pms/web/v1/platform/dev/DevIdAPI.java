@@ -29,14 +29,14 @@ public class DevIdAPI implements RShortcuts {
     private final BizLeafAllocService bizLeafAllocService;
 
     @Operation(summary = "分页查询", description = "分页查询")
-    @AdminOrHasAnyAuthority({"dev:id:query"})
+    @AdminOrHasAnyAuthority({"platform:dev:id:query"})
     @GetMapping("/page")
     public R<?> page(Page<BizLeafAlloc> page, BizLeafAlloc condition) {
         return ok(bizLeafAllocService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
     @Operation(summary = "创建ID", description = "创建ID")
-    @AdminOrHasAnyAuthority({"dev:id:create"})
+    @AdminOrHasAnyAuthority({"platform:dev:id:create"})
     @PostMapping
     public R<?> create(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtil.now());
@@ -45,7 +45,7 @@ public class DevIdAPI implements RShortcuts {
     }
 
     @Operation(summary = "更新ID", description = "更新ID")
-    @AdminOrHasAnyAuthority({"dev:id:update"})
+    @AdminOrHasAnyAuthority({"platform:dev:id:update"})
     @PutMapping
     public R<?> update(@RequestBody BizLeafAlloc params) {
         params.setUpdateTime(DateUtil.now());
@@ -54,7 +54,7 @@ public class DevIdAPI implements RShortcuts {
     }
 
     @Operation(summary = "删除ID", description = "删除ID")
-    @AdminOrHasAnyAuthority({"dev:id:delete"})
+    @AdminOrHasAnyAuthority({"platform:dev:id:delete"})
     @DeleteMapping("/{id}")
     public R<?> remove(@PathVariable String id) {
         bizLeafAllocService.removeById(id);

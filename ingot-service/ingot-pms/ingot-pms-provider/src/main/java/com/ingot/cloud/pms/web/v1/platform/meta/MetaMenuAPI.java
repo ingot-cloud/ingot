@@ -32,7 +32,7 @@ public class MetaMenuAPI implements RShortcuts {
         return ok(menuService.treeList(filter));
     }
 
-    @AdminOrHasAnyAuthority({"meta:menu:create"})
+    @AdminOrHasAnyAuthority({"platform:meta:menu:create"})
     @PostMapping
     @Operation(summary = "创建菜单", description = "创建菜单")
     public R<?> create(@Validated(Group.Create.class) @RequestBody MetaMenu params) {
@@ -40,7 +40,7 @@ public class MetaMenuAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:menu:update"})
+    @AdminOrHasAnyAuthority({"platform:meta:menu:update"})
     @PutMapping
     @Operation(summary = "更新菜单", description = "更新菜单")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaMenu params) {
@@ -48,7 +48,7 @@ public class MetaMenuAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:menu:delete"})
+    @AdminOrHasAnyAuthority({"platform:meta:menu:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单", description = "删除菜单")
     public R<?> removeById(@PathVariable Long id) {

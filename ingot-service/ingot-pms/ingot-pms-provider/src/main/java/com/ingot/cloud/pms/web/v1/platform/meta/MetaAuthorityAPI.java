@@ -29,14 +29,14 @@ import org.springframework.web.bind.annotation.*;
 public class MetaAuthorityAPI implements RShortcuts {
     private final BizMetaAuthorityService metaAuthorityService;
 
-    @AdminOrHasAnyAuthority({"meta:authority:query"})
+    @AdminOrHasAnyAuthority({"platform:meta:authority:query"})
     @GetMapping("/tree")
     @Operation(summary = "权限树", description = "权限树列表")
     public R<List<AuthorityTreeNodeVO>> tree(MetaAuthority params) {
         return ok(metaAuthorityService.treeList(params));
     }
 
-    @AdminOrHasAnyAuthority({"meta:authority:create"})
+    @AdminOrHasAnyAuthority({"platform:meta:authority:create"})
     @PostMapping
     @Operation(summary = "创建权限", description = "创建权限")
     public R<?> create(@Validated(Group.Create.class) @RequestBody MetaAuthority params) {
@@ -45,7 +45,7 @@ public class MetaAuthorityAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:authority:update"})
+    @AdminOrHasAnyAuthority({"platform:meta:authority:update"})
     @PutMapping
     @Operation(summary = "更新权限", description = "更新权限")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaAuthority params) {
@@ -54,7 +54,7 @@ public class MetaAuthorityAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:authority:delete"})
+    @AdminOrHasAnyAuthority({"platform:meta:authority:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除权限", description = "删除权限")
     public R<?> removeById(@PathVariable Long id) {

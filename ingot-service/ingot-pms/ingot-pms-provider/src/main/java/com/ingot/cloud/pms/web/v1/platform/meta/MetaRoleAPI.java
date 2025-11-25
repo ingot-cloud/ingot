@@ -38,14 +38,14 @@ public class MetaRoleAPI implements RShortcuts {
         return ok(bizMetaRoleService.options(condition));
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:query"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:query"})
     @GetMapping(value = "/list")
     @Operation(summary = "角色列表", description = "角色列表")
     public R<List<RoleTreeNodeVO>> conditionList(MetaRole condition) {
         return ok(bizMetaRoleService.conditionTree(condition));
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:create"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:create"})
     @PostMapping
     @Operation(summary = "创建角色", description = "创建角色")
     public R<Void> create(@RequestBody MetaRole params) {
@@ -53,7 +53,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:update"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:update"})
     @PutMapping
     @Operation(summary = "更新角色", description = "更新角色")
     public R<Void> update(@RequestBody MetaRole params) {
@@ -61,7 +61,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:delete"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:delete"})
     @DeleteMapping(value = "/{id}")
     @Operation(summary = "删除角色", description = "删除角色")
     public R<Void> delete(@PathVariable Long id) {
@@ -69,7 +69,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:authorities:assign"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:authorities:assign"})
     @PutMapping(value = "/{id}/authorities")
     @Operation(summary = "绑定权限", description = "绑定权限")
     public R<Void> bindAuthorities(@PathVariable Long id,
@@ -79,7 +79,7 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:role:authorities:query"})
+    @AdminOrHasAnyAuthority({"platform:meta:role:authorities:query"})
     @GetMapping(value = "/{id}/authorities")
     @Operation(summary = "获取角色权限", description = "获取角色权限")
     public R<List<AuthorityTreeNodeVO>> getAuthorities(@PathVariable Long id) {

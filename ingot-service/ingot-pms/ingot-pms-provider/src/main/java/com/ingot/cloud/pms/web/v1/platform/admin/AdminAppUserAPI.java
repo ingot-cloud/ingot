@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.security.access.HasAnyAuthority;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,19 +31,19 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAppUserAPI implements RShortcuts {
     private final BizAppUserService bizAppUserService;
 
-    @HasAnyAuthority({"app:user"})
+    @AdminOrHasAnyAuthority({"app:user"})
     @GetMapping("/page")
     public R<?> userPage(Page<AppUser> page, AppUser filter) {
         return ok(bizAppUserService.page(page, filter));
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @PostMapping
     public R<?> create(@Validated(Group.Create.class) @RequestBody AppUserCreateDTO params) {
         return ok(bizAppUserService.createUser(params));
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @PutMapping
     public R<?> update(@RequestBody AppUser params) {
         params.setPassword(null);
@@ -52,40 +52,40 @@ public class AdminAppUserAPI implements RShortcuts {
         return ok();
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizAppUserService.deleteUser(id);
         return ok();
     }
 
-    @HasAnyAuthority({"app:user:r"})
+    @AdminOrHasAnyAuthority({"app:user:r"})
     @GetMapping("/orgInfo/{userId}")
     public R<?> orgInfo(@PathVariable Long userId) {
         return ok(bizAppUserService.userOrgInfo(userId));
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @PutMapping("/org")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
         bizAppUserService.userOrgEdit(params);
         return ok();
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @PutMapping("/org/leave")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizAppUserService.userOrgLeave(params);
         return ok();
     }
 
-    @HasAnyAuthority({"app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:w"})
     @PutMapping("/resetPwd/{userId}")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizAppUserService.resetPwd(userId));
     }
 
-    @HasAnyAuthority({"app:user:r", "app:user:w"})
+    @AdminOrHasAnyAuthority({"app:user:r", "app:user:w"})
     @GetMapping("/profile/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizAppUserService.getUserProfile(id));

@@ -27,14 +27,14 @@ import org.springframework.web.bind.annotation.*;
 public class MetaAppAPI implements RShortcuts {
     private final BizMetaAppService metaAppService;
 
-    @AdminOrHasAnyAuthority({"meta:app:query"})
+    @AdminOrHasAnyAuthority({"platform:meta:app:query"})
     @GetMapping("/page")
     @Operation(summary = "应用分页", description = "应用分页数据")
     public R<IPage<MetaApp>> page(Page<MetaApp> page, MetaApp condition) {
         return ok(metaAppService.conditionPage(page, condition));
     }
 
-    @AdminOrHasAnyAuthority({"meta:app:create"})
+    @AdminOrHasAnyAuthority({"platform:meta:app:create"})
     @PostMapping
     @Operation(summary = "创建应用", description = "创建应用")
     public R<?> create(@Validated(Group.Create.class) @RequestBody MetaApp params) {
@@ -42,7 +42,7 @@ public class MetaAppAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:app:update"})
+    @AdminOrHasAnyAuthority({"platform:meta:app:update"})
     @PutMapping
     @Operation(summary = "更新应用", description = "更新应用")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaApp params) {
@@ -50,7 +50,7 @@ public class MetaAppAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"meta:app:delete"})
+    @AdminOrHasAnyAuthority({"platform:meta:app:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除应用", description = "删除应用")
     public R<?> removeById(@PathVariable Long id) {

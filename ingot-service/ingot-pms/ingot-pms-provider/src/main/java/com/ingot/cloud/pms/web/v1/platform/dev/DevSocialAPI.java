@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.admin;
+package com.ingot.cloud.pms.web.v1.platform.dev;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
@@ -11,8 +11,9 @@ import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.Group;
-import com.ingot.framework.security.access.HasAnyAuthority;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +29,22 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@Tag(description = "social", name = "系统社交管理模块")
-@RequestMapping(value = "/v1/platform/admin/social")
+@Tag(description = "DevSocial", name = "社交管理模块")
+@RequestMapping(value = "/v1/platform/dev/social")
 @RequiredArgsConstructor
-public class AdminSocialAPI implements RShortcuts {
+public class DevSocialAPI implements RShortcuts {
     private final SysSocialDetailsService sysSocialDetailsService;
     private final WxMaService wxMaService;
 
-    @HasAnyAuthority({"develop:social:w", "develop:social:r"})
+    @Operation(summary = "查询列表", description = "查询列表")
+    @AdminOrHasAnyAuthority({"platform:develop:social:query"})
     @GetMapping("/page")
     public R<?> page(Page<SysSocialDetails> page, SysSocialDetails condition) {
         return ok(sysSocialDetailsService.page(page, Wrappers.lambdaQuery(condition)));
     }
 
-    @HasAnyAuthority({"develop:social:w"})
+    @Operation(summary = "创建", description = "创建")
+    @AdminOrHasAnyAuthority({"platform:develop:social:create"})
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
     public R<?> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
@@ -58,7 +61,8 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @HasAnyAuthority({"develop:social:w"})
+    @Operation(summary = "更新", description = "更新")
+    @AdminOrHasAnyAuthority({"platform:develop:social:update"})
     @PutMapping
     @Transactional(rollbackFor = Exception.class)
     public R<?> update(@RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
@@ -77,7 +81,8 @@ public class AdminSocialAPI implements RShortcuts {
         return ok();
     }
 
-    @HasAnyAuthority({"develop:social:w"})
+    @Operation(summary = "删除", description = "删除")
+    @AdminOrHasAnyAuthority({"platform:develop:social:delete"})
     @DeleteMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
     public R<?> remove(@PathVariable Long id) {
