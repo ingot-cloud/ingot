@@ -3,6 +3,8 @@ package com.ingot.framework.core.config;
 import java.time.format.DateTimeFormatter;
 
 import cn.hutool.core.date.DatePattern;
+import com.ingot.framework.core.convert.IntegerToEnumConverterFactory;
+import com.ingot.framework.core.convert.StringToEnumConverterFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.format.FormatterRegistry;
@@ -34,5 +36,9 @@ public class WebConfig implements WebMvcConfigurer {
         registrar.setDateFormatter(DateTimeFormatter.ofPattern(DatePattern.NORM_DATE_PATTERN));
         registrar.setDateTimeFormatter(DateTimeFormatter.ofPattern(DatePattern.NORM_DATETIME_PATTERN));
         registrar.registerFormatters(registry);
+
+        // 注册枚举转换器
+        registry.addConverterFactory(new StringToEnumConverterFactory());
+        registry.addConverterFactory(new IntegerToEnumConverterFactory());
     }
 }

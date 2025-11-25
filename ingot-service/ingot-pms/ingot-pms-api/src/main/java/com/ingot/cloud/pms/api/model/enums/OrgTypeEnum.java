@@ -6,6 +6,7 @@ import java.util.Map;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.ingot.framework.core.convert.EnumDeserializeMethod;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -40,6 +41,7 @@ public enum OrgTypeEnum {
         return textMap.get(text);
     }
 
+    @EnumDeserializeMethod
     @JsonCreator
     public static OrgTypeEnum getEnum(String value) {
         return valueMap.get(value);
