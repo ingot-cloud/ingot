@@ -58,6 +58,14 @@ public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
         assertionChecker.checkOperation(authority.getType() != AuthorityTypeEnum.MENU,
                 "BizMetaAuthorityServiceImpl.CantCreateMenuAuthority");
 
+        if (authority.getPid() != null) {
+            MetaAuthority parent = authorityService.getById(authority.getPid());
+            assertionChecker.checkOperation(parent != null, "BizMetaAuthorityServiceImpl.ParentNotExist");
+            assert parent != null;
+            authority.setType(parent.getType());
+            authority.setOrgType(parent.getOrgType());
+        }
+
         authorityService.create(authority, true);
     }
 

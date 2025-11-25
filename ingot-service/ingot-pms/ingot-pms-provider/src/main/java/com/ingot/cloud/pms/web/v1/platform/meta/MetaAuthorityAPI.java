@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.web.v1.platform.meta;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizMetaAuthorityService;
 import com.ingot.framework.commons.model.support.R;
@@ -39,6 +40,7 @@ public class MetaAuthorityAPI implements RShortcuts {
     @PostMapping
     @Operation(summary = "创建权限", description = "创建权限")
     public R<?> create(@Validated(Group.Create.class) @RequestBody MetaAuthority params) {
+        params.setType(AuthorityTypeEnum.API);
         metaAuthorityService.createNonMenuAuthority(params);
         return ok();
     }
@@ -47,6 +49,7 @@ public class MetaAuthorityAPI implements RShortcuts {
     @PutMapping
     @Operation(summary = "更新权限", description = "更新权限")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaAuthority params) {
+        params.setType(null);
         metaAuthorityService.updateNonMenuAuthority(params);
         return ok();
     }
