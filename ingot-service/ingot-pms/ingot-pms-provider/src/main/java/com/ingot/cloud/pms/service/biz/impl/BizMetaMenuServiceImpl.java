@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
+import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
@@ -103,15 +104,19 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     private Long createAuthority(MetaMenu menu) {
         // 创建权限
         MetaAuthority authority = new MetaAuthority();
-        if (menu.getPid() != null && menu.getPid() > 0) {
-            MetaMenu parent = menuService.getById(menu.getPid());
-            authority.setPid(parent != null ? parent.getAuthorityId() : null);
-        }
-
         authority.setName(menu.getName());
         authority.setCode(BizMenuUtils.getMenuAuthorityCode(menu));
         authority.setStatus(menu.getStatus());
+        authority.setType(AuthorityTypeEnum.MENU);
         authority.setOrgType(menu.getOrgType());
+
+        if (menu.getPid() != null && menu.getPid() > 0) {
+            MetaMenu parent = menuService.getById(menu.getPid());
+            if (parent != null) {
+                authority.setPid(parent.getAuthorityId());
+                authority.setOrgType(parent.getOrgType());
+            }
+        }
         return authorityService.createAndReturnId(authority, false);
     }
 }

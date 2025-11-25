@@ -81,7 +81,7 @@ public class MetaRoleServiceImpl extends BaseServiceImpl<MetaRoleMapper, MetaRol
         assertionChecker.checkOperation(
                 role.getPid() != null,
                 count(Wrappers.<MetaRole>lambdaQuery()
-                        .eq(MetaRole::getId, role.getPid())) == 0,
+                        .eq(MetaRole::getId, role.getPid())) > 0,
                 "MetaRoleServiceImpl.ParentNonExist"
         );
 

@@ -57,7 +57,9 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
                 .filter(BizFilter.roleFilter(condition))
                 .map(role -> BizUtils.convert(role, roleConvert))
                 .toList();
-        return TreeUtil.build(list);
+        List<RoleTreeNodeVO> tree = TreeUtil.build(list);
+        TreeUtil.compensate(tree, list);
+        return tree;
     }
 
     @Override
