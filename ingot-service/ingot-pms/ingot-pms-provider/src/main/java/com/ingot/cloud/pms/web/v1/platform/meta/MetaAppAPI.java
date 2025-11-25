@@ -46,7 +46,7 @@ public class MetaAppAPI implements RShortcuts {
     @PutMapping
     @Operation(summary = "更新应用", description = "更新应用")
     public R<?> update(@Validated(Group.Update.class) @RequestBody MetaApp params) {
-        metaAppService.create(params);
+        metaAppService.update(params);
         return ok();
     }
 

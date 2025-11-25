@@ -32,7 +32,9 @@ public class SysTenantServiceImpl extends BaseServiceImpl<SysTenantMapper, SysTe
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
-        return page(page, Wrappers.lambdaQuery(params));
+        return page(page, Wrappers.<SysTenant>lambdaQuery()
+                .eq(params.getOrgType() != null, SysTenant::getOrgType, params.getOrgType())
+                .like(StrUtil.isNotEmpty(params.getName()), SysTenant::getName, params.getName()));
     }
 
     @Override
