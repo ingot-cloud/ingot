@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.crypto.annotation.InFieldEncrypt;
+import com.ingot.framework.crypto.model.CryptoType;
 import lombok.Data;
 
 /**
@@ -21,6 +23,7 @@ public class UserInfoDTO implements Serializable {
     /**
      * 拥有角色
      */
+    @InFieldEncrypt(CryptoType.AES)
     private List<String> roles;
     /**
      * 可以访问的租户

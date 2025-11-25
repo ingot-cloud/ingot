@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
+import com.ingot.framework.crypto.annotation.InFieldEncrypt;
+import com.ingot.framework.crypto.model.CryptoType;
 import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
 
@@ -22,5 +24,6 @@ public class UserBaseInfoDTO implements Serializable {
     private String nickname;
     @OssUrl
     private String avatar;
+    @InFieldEncrypt(CryptoType.AES)
     private Boolean initPwd;
 }
