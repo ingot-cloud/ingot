@@ -5,10 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
 import com.ingot.framework.crypto.annotation.InFieldEncrypt;
 import com.ingot.framework.crypto.model.CryptoInfoRecord;
@@ -27,25 +24,37 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
-public class CryptoSerializer extends JsonSerializer<String> implements ContextualSerializer {
+public class CryptoSerializer extends JsonSerializer<Object> implements ContextualSerializer {
     private CryptoType type;
     private String key;
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void serialize(String value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value == null || value.isEmpty()) {
+    public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        if (value == null) {
             gen.writeNull();
             return;
         }
         CryptoInfoRecord record = new CryptoInfoRecord(type, key);
         try {
             String en = switch (type) {
-                case AES, AES_GCM, RSA -> StrUtil.str(
-                        CryptoUtils.encrypt(value.getBytes(StandardCharsets.UTF_8), record),
-                        StandardCharsets.UTF_8
-                ).trim();
+                case AES, AES_GCM, RSA -> {
+                    String enValue;
+                    if (value instanceof String) {
+                        enValue = value.toString();
+                    } else {
+                        enValue = objectMapper.writeValueAsString(value);
+                    }
+                    yield StrUtil.str(
+                            CryptoUtils.encrypt(enValue.getBytes(StandardCharsets.UTF_8), record),
+                            StandardCharsets.UTF_8
+                    ).trim();
+                }
             };
+            if (StrUtil.isEmpty(en)) {
+                gen.writeNull();
+                return;
+            }
             gen.writeString(en);
         } catch (Exception e) {
             // 如果失败则原样返回指定内容
