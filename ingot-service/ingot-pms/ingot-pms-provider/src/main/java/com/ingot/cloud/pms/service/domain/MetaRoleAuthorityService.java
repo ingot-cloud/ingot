@@ -25,6 +25,13 @@ public interface MetaRoleAuthorityService extends BaseService<MetaRoleAuthority>
     void roleSetAuthorities(SetDTO<Long, Long> params);
 
     /**
+     * 角色分配权限
+     *
+     * @param params {@link AssignDTO}
+     */
+    void roleAssignAuthorities(AssignDTO<Long, Long> params);
+
+    /**
      * 获取角色绑定的权限ID列表
      *
      * @param id 角色ID

@@ -23,6 +23,13 @@ public interface TenantRoleAuthorityPrivateService extends BaseService<TenantRol
     void roleSetAuthorities(BizBindDTO params);
 
     /**
+     * 角色分配权限
+     *
+     * @param params {@link BizBindDTO}
+     */
+    void roleAssignAuthorities(BizBindDTO params);
+
+    /**
      * 获取角色绑定的权限ID列表
      *
      * @param id 角色ID

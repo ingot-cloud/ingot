@@ -293,4 +293,18 @@ public class BizRoleServiceImpl implements BizRoleService {
         bindParams.setUnassignIds(params.getUnassignIds());
         tenantRoleUserPrivateService.roleBindUsers(bindParams);
     }
+
+    @Override
+    public void orgManagerAssignAuthorities(List<Long> ids, boolean assign) {
+        RoleType managerRole = getByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
+
+        AssignDTO<Long, Long> bindParams = new AssignDTO<>();
+        bindParams.setId(managerRole.getId());
+        if (assign) {
+            bindParams.setAssignIds(ids);
+        } else {
+            bindParams.setUnassignIds(ids);
+        }
+        roleAuthorityService.roleAssignAuthorities(bindParams);
+    }
 }

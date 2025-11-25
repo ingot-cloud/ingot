@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.List;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -7,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
 import com.ingot.cloud.pms.service.biz.BizMetaAppService;
+import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.MetaAppService;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
 import com.ingot.cloud.pms.service.domain.TenantAppConfigService;
@@ -28,6 +31,8 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
     private final MetaMenuService menuService;
     private final TenantAppConfigService tenantAppConfigService;
 
+    private final BizRoleService bizRoleService;
+
     private final AssertionChecker assertionChecker;
 
     @Override
@@ -36,6 +41,7 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void create(MetaApp params) {
         assertionChecker.checkOperation(params.getMenuId() != null,
                 "BizMetaAppServiceImpl.MenuNonNull");
@@ -53,6 +59,9 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
         }
 
         appService.create(params);
+
+        // 创建一个应用，就需要给组织管理员角色绑定相关权限
+        bizRoleService.orgManagerAssignAuthorities(List.of(params.getAuthorityId()), true);
     }
 
     @Override
@@ -70,7 +79,13 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(long id) {
+        MetaApp app = appService.getById(id);
+        assertionChecker.checkOperation(app != null, "BizMetaAppServiceImpl.NonNull");
+        assert app != null;
+
         appService.delete(id);
         tenantAppConfigService.clearByAppId(id);
+        // 删除一个应用，要给组织管理员取消相关权限
+        bizRoleService.orgManagerAssignAuthorities(List.of(app.getAuthorityId()), false);
     }
 }

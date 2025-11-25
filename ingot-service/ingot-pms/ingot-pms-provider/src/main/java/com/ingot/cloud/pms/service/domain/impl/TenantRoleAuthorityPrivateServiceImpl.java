@@ -41,7 +41,38 @@ public class TenantRoleAuthorityPrivateServiceImpl extends BaseServiceImpl<Tenan
         remove(Wrappers.<TenantRoleAuthorityPrivate>lambdaQuery()
                 .eq(TenantRoleAuthorityPrivate::getRoleId, roleId));
 
-        List<TenantRoleAuthorityPrivate> bindList = CollUtil.emptyIfNull(bindIds).stream()
+        if (CollUtil.isNotEmpty(bindIds)) {
+            List<TenantRoleAuthorityPrivate> bindList = getBindList(roleId, bindIds, metaFlag);
+            saveBatch(bindList);
+        }
+    }
+
+    @Override
+    @CacheEvict(
+            value = CacheConstants.TENANT_ROLE_AUTHORITIES,
+            key = "'role-' + #params.id"
+    )
+    @Transactional(rollbackFor = Exception.class)
+    public void roleAssignAuthorities(BizBindDTO params) {
+        Long roleId = params.getId();
+        List<Long> bindIds = params.getAssignIds();
+        List<Long> unbindIds = params.getUnassignIds();
+        boolean metaFlag = params.isMetaFlag();
+
+        if (CollUtil.isNotEmpty(unbindIds)) {
+            remove(Wrappers.<TenantRoleAuthorityPrivate>lambdaQuery()
+                    .eq(TenantRoleAuthorityPrivate::getRoleId, roleId)
+                    .in(TenantRoleAuthorityPrivate::getAuthorityId, unbindIds));
+        }
+
+        if (CollUtil.isNotEmpty(bindIds)) {
+            List<TenantRoleAuthorityPrivate> bindList = getBindList(roleId, bindIds, metaFlag);
+            saveBatch(bindList);
+        }
+    }
+
+    private List<TenantRoleAuthorityPrivate> getBindList(long roleId, List<Long> bindIds, boolean metaFlag) {
+        return CollUtil.emptyIfNull(bindIds).stream()
                 .map(authorityId -> {
                     TenantRoleAuthorityPrivate bind = new TenantRoleAuthorityPrivate();
                     bind.setRoleId(roleId);
@@ -49,9 +80,6 @@ public class TenantRoleAuthorityPrivateServiceImpl extends BaseServiceImpl<Tenan
                     bind.setMetaRole(metaFlag);
                     return bind;
                 }).toList();
-        if (CollUtil.isNotEmpty(bindList)) {
-            saveBatch(bindList);
-        }
     }
 
     @Override

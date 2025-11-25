@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaRoleAuthority;
 import com.ingot.cloud.pms.mapper.MetaRoleAuthorityMapper;
 import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
 import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.cache.annotation.CacheEvict;
@@ -40,16 +41,43 @@ public class MetaRoleAuthorityServiceImpl extends BaseServiceImpl<MetaRoleAuthor
         remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
                 .eq(MetaRoleAuthority::getRoleId, roleId));
 
-        List<MetaRoleAuthority> bindList = CollUtil.emptyIfNull(bindIds).stream()
+        if (CollUtil.isNotEmpty(bindIds)) {
+            List<MetaRoleAuthority> bindList = getBindList(roleId, bindIds);
+            saveBatch(bindList);
+        }
+    }
+
+    @Override
+    @CacheEvict(
+            value = CacheConstants.META_ROLE_AUTHORITIES,
+            key = "'role-' + #params.id"
+    )
+    @Transactional(rollbackFor = Exception.class)
+    public void roleAssignAuthorities(AssignDTO<Long, Long> params) {
+        Long roleId = params.getId();
+        List<Long> bindIds = params.getAssignIds();
+        List<Long> unbindIds = params.getUnassignIds();
+
+        if (CollUtil.isNotEmpty(unbindIds)) {
+            remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
+                    .eq(MetaRoleAuthority::getRoleId, roleId)
+                    .in(MetaRoleAuthority::getAuthorityId, unbindIds));
+        }
+
+        if (CollUtil.isNotEmpty(bindIds)) {
+            List<MetaRoleAuthority> bindList = getBindList(roleId, bindIds);
+            saveBatch(bindList);
+        }
+    }
+
+    private List<MetaRoleAuthority> getBindList(long roleId, List<Long> bindIds) {
+        return CollUtil.emptyIfNull(bindIds).stream()
                 .map(authorityId -> {
                     MetaRoleAuthority bind = new MetaRoleAuthority();
                     bind.setRoleId(roleId);
                     bind.setAuthorityId(authorityId);
                     return bind;
                 }).toList();
-        if (CollUtil.isNotEmpty(bindList)) {
-            saveBatch(bindList);
-        }
     }
 
     @Override

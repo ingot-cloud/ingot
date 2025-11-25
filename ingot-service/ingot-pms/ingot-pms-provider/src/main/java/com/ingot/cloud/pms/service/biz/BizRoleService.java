@@ -146,4 +146,11 @@ public interface BizRoleService {
      */
     void assignUsers(BizRoleAssignUsersDTO params);
 
+    /**
+     * 组织管理员分配权限
+     *
+     * @param ids    权限ID列表
+     * @param assign 是否分配，true:分配，false:取消分配
+     */
+    void orgManagerAssignAuthorities(List<Long> ids, boolean assign);
 }
