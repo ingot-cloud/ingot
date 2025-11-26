@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.admin;
+package com.ingot.cloud.pms.web.v1.platform.system;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppUser;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/v1/platform/admin/appUser")
 @RequiredArgsConstructor
-public class AdminAppUserAPI implements RShortcuts {
+public class SystemAppUserAPI implements RShortcuts {
     private final BizAppUserService bizAppUserService;
 
     @AdminOrHasAnyAuthority({"app:user"})

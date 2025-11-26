@@ -84,4 +84,9 @@ public class RoleTreeNodeVO extends TreeNode<Long> implements RoleType {
      * 是否为租户创建的
      */
     private boolean custom;
+
+    @Override
+    public boolean getMetaRole() {
+        return false;
+    }
 }

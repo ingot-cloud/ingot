@@ -115,6 +115,16 @@ public class AppRole extends BaseModel<AppRole> implements RoleType {
     }
 
     @Override
+    public Boolean getFilterDept() {
+        return null;
+    }
+
+    @Override
+    public void setFilterDept(Boolean filterDept) {
+
+    }
+
+    @Override
     public DataScopeTypeEnum getScopeType() {
         return null;
     }
@@ -132,5 +142,10 @@ public class AppRole extends BaseModel<AppRole> implements RoleType {
     @Override
     public void setScopes(List<Long> scopes) {
 
+    }
+
+    @Override
+    public boolean getMetaRole() {
+        return false;
     }
 }

@@ -56,7 +56,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
         long userId = SecurityAuthContext.getUser().getId();
         assertionChecker.checkOperation(userId != id, "UserOpsCheckerImpl.DisableSelfFailed");
 
-        Optional<RoleType> admin = getAdmin(userId);
+        Optional<RoleType> admin = getAdmin(id);
         if (admin.isEmpty()) {
             return;
         }

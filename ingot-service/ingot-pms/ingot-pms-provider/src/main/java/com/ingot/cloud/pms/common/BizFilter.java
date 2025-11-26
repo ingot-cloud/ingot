@@ -107,6 +107,9 @@ public final class BizFilter {
             if (condition.getOrgType() != null) {
                 return item.getOrgType() == condition.getOrgType();
             }
+            if (condition.getFilterDept() != null) {
+                return item.getFilterDept() == condition.getFilterDept();
+            }
             return true;
         };
     }

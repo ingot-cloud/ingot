@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.admin;
+package com.ingot.cloud.pms.web.v1.platform.system;
 
 import com.ingot.cloud.pms.api.model.domain.AppRole;
 import com.ingot.cloud.pms.api.model.domain.AppRoleGroup;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/v1/platform/admin/appRole")
 @RequiredArgsConstructor
-public class AdminAppRoleAPI implements RShortcuts {
+public class SystemAppRoleAPI implements RShortcuts {
     private final AppRoleService appRoleService;
     private final BizAppRoleService bizAppRoleService;
 

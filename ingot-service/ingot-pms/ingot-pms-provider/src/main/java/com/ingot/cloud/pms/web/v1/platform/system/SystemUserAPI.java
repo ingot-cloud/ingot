@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.admin;
+package com.ingot.cloud.pms.web.v1.platform.system;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -33,15 +33,15 @@ import org.springframework.web.bind.annotation.*;
  * <p>Time         : 6:48 下午.</p>
  */
 @Slf4j
-@Tag(description = "User", name = "系统用户管理模块")
+@Tag(description = "SystemUser", name = "系统用户管理模块")
 @RestController
-@RequestMapping(value = "/v1/platform/admin/user")
+@RequestMapping(value = "/v1/platform/system/user")
 @RequiredArgsConstructor
-public class AdminUserAPI implements RShortcuts {
+public class SystemUserAPI implements RShortcuts {
     private final SysUserService sysUserService;
     private final BizUserService bizUserService;
 
-    @AdminOrHasAnyAuthority({"basic:user:r", "basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:search"})
     @GetMapping("/searchByPhone")
     @Operation(summary = "根据手机号查询用户信息", description = "根据手机号查询用户信息")
     public R<?> searchByPhone(@RequestParam String phone) {
@@ -60,21 +60,21 @@ public class AdminUserAPI implements RShortcuts {
                 }).toList());
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:r", "basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:query"})
     @GetMapping("/page")
     @Operation(summary = "用户分页接口", description = "用户分页接口")
     public R<?> page(Page<SysUser> page, AllOrgUserFilterDTO condition) {
         return ok(sysUserService.allOrgUserPage(page, condition));
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:create"})
     @PostMapping
     @Operation(summary = "创建用户", description = "创建系统用户")
     public R<?> create(@Validated(Group.Create.class) @RequestBody UserDTO params) {
         return ok(bizUserService.createUser(params));
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:update"})
     @PutMapping
     @Operation(summary = "更新用户", description = "更新系统用户")
     public R<?> update(@Validated(Group.Update.class) @RequestBody UserDTO params) {
@@ -82,7 +82,7 @@ public class AdminUserAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除用户", description = "删除系统用户")
     public R<?> removeById(@PathVariable Long id) {
@@ -90,14 +90,14 @@ public class AdminUserAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w", "basic:user:r"})
+    @AdminOrHasAnyAuthority({"platform:system:user:org:details"})
     @GetMapping("/orgInfo/{userId}")
     @Operation(summary = "用户组织信息", description = "用户组织信息")
     public R<?> orgInfo(@PathVariable Long userId) {
         return ok(bizUserService.userOrgInfo(userId));
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
+    @AdminOrHasAnyAuthority({"platform:system:user:org:update"})
     @PutMapping("/org")
     @Operation(summary = "用户组织信息编辑", description = "用户组织信息编辑")
     public R<?> userOrgEdit(@RequestBody UserOrgEditDTO params) {
@@ -105,29 +105,29 @@ public class AdminUserAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
-    @PutMapping("/org/leave")
+    @AdminOrHasAnyAuthority({"platform:system:user:org:delete"})
+    @DeleteMapping("/org")
     @Operation(summary = "用户离开组织", description = "用户离开组织")
     public R<?> userOrgLeave(@RequestBody UserOrgEditDTO params) {
         bizUserService.userOrgLeave(params);
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w"})
-    @PutMapping("/resetPwd/{userId}")
+    @AdminOrHasAnyAuthority({"platform:system:user:reset"})
+    @PutMapping("/pwd/{userId}")
     @Operation(summary = "重置密码", description = "重置密码")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizUserService.resetPwd(userId));
     }
 
-    @AdminOrHasAnyAuthority({"basic:user:w", "basic:user:r"})
+    @AdminOrHasAnyAuthority({"platform:system:user:details"})
     @GetMapping("/profile/{id}")
     @Operation(summary = "用户简介信息", description = "用户简介信息")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getUserProfile(id));
     }
 
-    @PutMapping("/edit")
+    @PutMapping("/base")
     @Operation(summary = "更新用户基本信息", description = "更新用户基本信息")
     public R<?> updateUserBaseInfo(@RequestBody UserBaseInfoDTO params) {
         long userId = SecurityAuthContext.getUser().getId();

@@ -47,7 +47,7 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "角色树", description = "角色树")
     @AdminOrHasAnyAuthority({"contacts:role:query"})
     @GetMapping("/tree")
-    public R<List<RoleTreeNodeVO>> list(TenantRolePrivate condition) {
+    public R<List<RoleTreeNodeVO>> tree(TenantRolePrivate condition) {
         return ok(bizRoleService.conditionTree(condition));
     }
 

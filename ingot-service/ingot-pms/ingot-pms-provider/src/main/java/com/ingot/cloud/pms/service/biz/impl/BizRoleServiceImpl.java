@@ -19,6 +19,7 @@ import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.BizBindDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
@@ -304,15 +305,17 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Override
     public void assignUsers(BizRoleAssignUsersDTO params) {
         Long deptId = params.getDeptId();
-        MetaRole metaRole = metaRoleService.getById(params.getId());
-        if (metaRole != null) {
-            assertionChecker.checkOperation(BooleanUtil.isFalse(metaRole.getFilterDept()) || deptId != null,
-                    "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
-        }
+        RoleType role = getRole(params.getId());
+        assertionChecker.checkOperation(role != null, "BizRoleServiceImpl.RoleNonNul");
+        assert role != null;
+        assertionChecker.checkOperation(BooleanUtil.isFalse(role.getFilterDept()) || deptId != null,
+                "BizRoleServiceImpl.BindDeptRoleDeptNonNull");
+        assertionChecker.checkOperation(role.getType() != RoleTypeEnum.GROUP,
+                "BizRoleServiceImpl.CantBindRoleGroup");
 
         BizRoleAssignUsersBO bindParams = new BizRoleAssignUsersBO();
         bindParams.setId(params.getId());
-        bindParams.setMetaFlag(metaRole != null);
+        bindParams.setMetaFlag(role.getMetaRole());
         bindParams.setDeptId(deptId);
         bindParams.setAssignIds(params.getAssignIds());
         bindParams.setUnassignIds(params.getUnassignIds());

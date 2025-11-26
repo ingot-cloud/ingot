@@ -70,6 +70,11 @@ public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements R
     private RoleTypeEnum type;
 
     /**
+     * 是否过滤部门
+     */
+    private Boolean filterDept;
+
+    /**
      * 数据范围类型
      */
     private DataScopeTypeEnum scopeType;
@@ -106,4 +111,9 @@ public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements R
      */
     @TableLogic
     private LocalDateTime deletedAt;
+
+    @Override
+    public boolean getMetaRole() {
+        return false;
+    }
 }

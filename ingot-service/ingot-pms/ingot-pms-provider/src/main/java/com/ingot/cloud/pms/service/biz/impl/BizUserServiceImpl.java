@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
-import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
@@ -103,11 +103,16 @@ public class BizUserServiceImpl implements BizUserService {
         }
 
         List<RoleType> roles = bizRoleService.getRoles(roleIds);
+        // 不能绑定角色组
+        assertionChecker.checkOperation(roles.stream()
+                        .noneMatch(item -> item.getType() == RoleTypeEnum.GROUP),
+                "BizUserServiceImpl.CantBindRoleGroup");
+
         List<BizAssignRoleBO> assignRoles = roles.stream()
                 .map(item -> {
                     BizAssignRoleBO role = new BizAssignRoleBO();
                     role.setRoleId(item.getId());
-                    role.setMetaRole(item.getOrgType() == OrgTypeEnum.Platform);
+                    role.setMetaRole(item.getMetaRole());
                     return role;
                 }).toList();
 
@@ -227,11 +232,21 @@ public class BizUserServiceImpl implements BizUserService {
     public void userOrgEdit(UserOrgEditDTO params) {
         TenantEnv.runAs(params.getOrgId(), () -> {
             long userId = params.getId();
+            List<Long> roleIds = params.getRoleIds();
             SysTenant tenant = sysTenantService.getById(params.getOrgId());
 
             sysUserTenantService.joinTenant(userId, tenant);
             bizDeptService.setUserDeptsEnsureMainDept(userId, params.getDeptIds());
-            setUserRoles(userId, params.getRoleIds());
+
+            // 直接给组织人员配置角色，不能配置部门角色
+            if (CollUtil.isNotEmpty(roleIds)) {
+                List<RoleType> roles = bizRoleService.getRoles(roleIds);
+                // 不能绑定部门角色
+                assertionChecker.checkOperation(roles.stream()
+                                .noneMatch(item -> BooleanUtil.isTrue(item.getFilterDept())),
+                        "BizUserServiceImpl.CantBindDeptRole");
+                setUserRoles(userId, roleIds);
+            }
         });
     }
 

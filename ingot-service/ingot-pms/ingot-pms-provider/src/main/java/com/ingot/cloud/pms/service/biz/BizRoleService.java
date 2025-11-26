@@ -73,7 +73,7 @@ public interface BizRoleService {
     /**
      * 角色条件查询
      *
-     * @param condition {@link TenantRolePrivate}
+     * @param condition        {@link TenantRolePrivate}
      * @return {@link RoleTreeNodeVO}
      */
     List<RoleTreeNodeVO> conditionTree(TenantRolePrivate condition);

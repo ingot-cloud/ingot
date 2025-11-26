@@ -70,6 +70,15 @@ public interface RoleType {
     }
 
     /**
+     * 是否过滤部门
+     *
+     * @return true:过滤部门
+     */
+    Boolean getFilterDept();
+
+    void setFilterDept(Boolean filterDept);
+
+    /**
      * 域类型
      */
     DataScopeTypeEnum getScopeType();
@@ -89,4 +98,11 @@ public interface RoleType {
     CommonStatusEnum getStatus();
 
     void setStatus(CommonStatusEnum status);
+
+    /**
+     * 是否为元数据角色
+     *
+     * @return Boolean
+     */
+    boolean getMetaRole();
 }

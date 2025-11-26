@@ -102,4 +102,9 @@ public class MetaRole extends BaseModel<MetaRole> implements RoleType {
      */
     @TableLogic
     private LocalDateTime deletedAt;
+
+    @Override
+    public boolean getMetaRole() {
+        return true;
+    }
 }
