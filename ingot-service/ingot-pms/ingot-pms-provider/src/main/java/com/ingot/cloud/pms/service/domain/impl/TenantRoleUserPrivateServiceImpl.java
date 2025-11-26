@@ -58,7 +58,18 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
                     .in(TenantRoleUserPrivate::getUserId, removeIds));
         }
 
-        List<TenantRoleUserPrivate> bindList = CollUtil.emptyIfNull(bindIds).stream()
+        if (CollUtil.isEmpty(bindIds)) {
+            return;
+        }
+
+        // 避免重复绑定
+        List<Long> alreadyExistsUserIds = CollUtil.emptyIfNull(list(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                .eq(TenantRoleUserPrivate::getRoleId, roleId)
+                .in(TenantRoleUserPrivate::getUserId, bindIds))
+                .stream().map(TenantRoleUserPrivate::getUserId).toList());
+
+        List<TenantRoleUserPrivate> bindList = bindIds.stream()
+                .filter(userId -> !alreadyExistsUserIds.contains(userId))
                 .map(userId -> {
                     TenantRoleUserPrivate bind = new TenantRoleUserPrivate();
                     bind.setRoleId(roleId);

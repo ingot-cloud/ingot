@@ -2,16 +2,17 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
-import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
+import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 
 /**
@@ -21,6 +22,17 @@ import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
  * <p>Time         : 6:44 PM.</p>
  */
 public interface BizUserService {
+
+    /**
+     * 获取用户，并且返回是否可以绑定指定角色状态
+     *
+     * @param page      分页数据
+     * @param condition 条件参数
+     * @param orgId     组织ID
+     * @param roleId    指定角色ID
+     * @return {@link UserPageItemWithBindRoleStatusVO}
+     */
+    IPage<UserPageItemWithBindRoleStatusVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId, Long roleId);
 
     /**
      * 获取用户所在部门ID列表

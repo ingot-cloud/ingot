@@ -1,26 +1,28 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import java.util.List;
+import java.util.Objects;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.bo.role.BizAssignRoleBO;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
-import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
-import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
+import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
+import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.core.BizRoleUtils;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
@@ -32,6 +34,7 @@ import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.common.utils.PageUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
@@ -67,6 +70,23 @@ public class BizUserServiceImpl implements BizUserService {
     private final AssertionChecker assertionChecker;
     private final UserOpsChecker userOpsChecker;
     private final UserConvert userConvert;
+
+    @Override
+    public IPage<UserPageItemWithBindRoleStatusVO> conditionPage(Page<SysUser> page,
+                                                                 UserQueryDTO condition,
+                                                                 Long orgId,
+                                                                 Long roleId) {
+        List<Long> userIds = tenantRoleUserPrivateService.listRoleUsers(roleId)
+                .stream()
+                .map(TenantRoleUserPrivate::getUserId)
+                .toList();
+        return PageUtils.map(sysUserService.conditionPage(page, condition, orgId), item -> {
+            UserPageItemWithBindRoleStatusVO vo = new UserPageItemWithBindRoleStatusVO();
+            BeanUtil.copyProperties(item, vo);
+            vo.setCanBind(userIds.stream().noneMatch(id -> Objects.equals(id, item.getUserId())));
+            return vo;
+        });
+    }
 
     @Override
     public List<Long> getUserDeptIds(long userId) {

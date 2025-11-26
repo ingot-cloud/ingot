@@ -40,6 +40,17 @@ public class OrgUserAPI implements RShortcuts {
         return ok(sysUserService.conditionPage(page, condition, tenantId));
     }
 
+    @Operation(summary = "组织用户分页", description = "组织用户分页")
+    @AdminOrHasAnyAuthority({"contacts:member:query"})
+    @GetMapping("/role/{roleId}/page")
+    public R<?> pageWithRoleStatus(Page<SysUser> page,
+                                   UserQueryDTO condition,
+                                   @PathVariable Long roleId) {
+        Long tenantId = TenantContextHolder.get();
+        condition.setRoleId(null);
+        return ok(bizUserService.conditionPage(page, condition, tenantId, roleId));
+    }
+
     @Operation(summary = "组织用户创建", description = "组织用户创建")
     @AdminOrHasAnyAuthority({"contacts:member:create"})
     @PostMapping
