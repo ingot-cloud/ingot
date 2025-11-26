@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.service.biz.impl;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
@@ -9,13 +10,13 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.bo.role.BizRoleAssignUsersBO;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.convert.RoleConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.BizBindDTO;
-import com.ingot.cloud.pms.api.model.bo.role.BizRoleAssignUsersBO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.AuthorityType;
@@ -31,6 +32,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.utils.RoleUtil;
@@ -140,6 +142,7 @@ public class BizRoleServiceImpl implements BizRoleService {
                 )
                 .stream()
                 .filter(BizFilter.roleFilter(condition))
+                .sorted(Comparator.comparing(TenantRolePrivate::getSort))
                 .map(role -> Option.of(role.getId(), role.getName()))
                 .toList();
         options.addAll(tenantOptions);
@@ -157,7 +160,12 @@ public class BizRoleServiceImpl implements BizRoleService {
                 .toList());
         list.addAll(tenantRolePrivateService.list()
                 .stream().filter(BizFilter.roleFilter(condition))
-                .map(role -> BizUtils.convert(role, roleConvert))
+                .sorted(Comparator.comparing(TenantRolePrivate::getSort))
+                .map(role -> {
+                    RoleTreeNodeVO item = BizUtils.convert(role, roleConvert);
+                    item.setCustom(true);
+                    return item;
+                })
                 .toList());
         return TreeUtil.build(list);
     }
@@ -251,15 +259,32 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
+    public void sort(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+
+        AtomicInteger index = new AtomicInteger(0);
+        List<TenantRolePrivate> list = ids.stream().map(id -> {
+            TenantRolePrivate role = new TenantRolePrivate();
+            role.setId(id);
+            role.setSort(index.getAndIncrement());
+            return role;
+        }).toList();
+
+        tenantRolePrivateService.updateBatchById(list);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
-    public void setAuthorities(AssignDTO<Long, Long> params) {
+    public void setAuthorities(SetDTO<Long, Long> params) {
         MetaRole metaRole = metaRoleService.getById(params.getId());
         if (metaRole != null) {
             assertionChecker.checkOperation(!StrUtil.equals(metaRole.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
                     "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
         }
 
-        List<Long> bindList = params.getAssignIds();
+        List<Long> bindList = params.getSetIds();
         if (CollUtil.isNotEmpty(bindList)) {
             List<Long> authorities = CollUtil.emptyIfNull(BizAuthorityUtils.getTenantAuthorities(
                             TenantContextHolder.get(), bizAppService, authorityService, authorityConvert))

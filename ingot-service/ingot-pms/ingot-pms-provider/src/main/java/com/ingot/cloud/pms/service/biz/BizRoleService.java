@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
-import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 
 /**
@@ -133,11 +133,16 @@ public interface BizRoleService {
     void delete(long id);
 
     /**
+     * 排序
+     */
+    void sort(List<Long> ids);
+
+    /**
      * 给角色设置权限，整体替换
      *
-     * @param params {@link AssignDTO}
+     * @param params {@link SetDTO}
      */
-    void setAuthorities(AssignDTO<Long, Long> params);
+    void setAuthorities(SetDTO<Long, Long> params);
 
     /**
      * 角色分配用户

@@ -80,4 +80,8 @@ public class RoleTreeNodeVO extends TreeNode<Long> implements RoleType {
     private String orgTypeText;
     private String scopeTypeText;
     private String statusText;
+    /**
+     * 是否为租户创建的
+     */
+    private boolean custom;
 }

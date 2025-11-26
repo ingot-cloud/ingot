@@ -1,11 +1,17 @@
 package com.ingot.cloud.pms.web.v1.org;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
+import com.ingot.cloud.pms.api.model.dto.common.IdsDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
+import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
@@ -34,21 +40,21 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "角色选项", description = "角色选项")
     @AdminOrHasAnyAuthority({"contacts:role:query"})
     @GetMapping("/options")
-    public R<?> options() {
+    public R<List<Option<Long>>> options() {
         return ok(bizRoleService.options(null));
     }
 
     @Operation(summary = "角色树", description = "角色树")
     @AdminOrHasAnyAuthority({"contacts:role:query"})
     @GetMapping("/tree")
-    public R<?> list(TenantRolePrivate condition) {
+    public R<List<RoleTreeNodeVO>> list(TenantRolePrivate condition) {
         return ok(bizRoleService.conditionTree(condition));
     }
 
     @Operation(summary = "创建角色", description = "创建角色")
     @AdminOrHasAnyAuthority({"contacts:role:create"})
     @PostMapping
-    public R<?> create(@Validated(Group.Create.class) @RequestBody TenantRolePrivate params) {
+    public R<Void> create(@Validated(Group.Create.class) @RequestBody TenantRolePrivate params) {
         // 自定义组织角色
         params.setOrgType(OrgTypeEnum.Tenant);
         bizRoleService.create(params);
@@ -58,7 +64,7 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "更新角色", description = "更新角色")
     @AdminOrHasAnyAuthority({"contacts:role:update"})
     @PutMapping
-    public R<?> update(@Validated(Group.Update.class) @RequestBody TenantRolePrivate params) {
+    public R<Void> update(@Validated(Group.Update.class) @RequestBody TenantRolePrivate params) {
         bizRoleService.update(params);
         return ok();
     }
@@ -66,16 +72,24 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "删除角色", description = "删除角色")
     @AdminOrHasAnyAuthority({"contacts:role:delete"})
     @DeleteMapping("/{id}")
-    public R<?> removeById(@PathVariable Long id) {
+    public R<Void> removeById(@PathVariable Long id) {
         bizRoleService.delete(id);
+        return ok();
+    }
+
+    @Operation(summary = "角色排序", description = "角色排序")
+    @AdminOrHasAnyAuthority({"contacts:role:sort"})
+    @PutMapping("/sort")
+    public R<Void> sort(@RequestBody IdsDTO params) {
+        bizRoleService.sort(params.getIds());
         return ok();
     }
 
     @Operation(summary = "角色分配用户", description = "角色分配用户")
     @AdminOrHasAnyAuthority({"contacts:role:user:assign"})
     @PutMapping("/{id}/users")
-    public R<?> assignUsers(@PathVariable Long id,
-                            @RequestBody BizRoleAssignUsersDTO params) {
+    public R<Void> assignUsers(@PathVariable Long id,
+                               @RequestBody BizRoleAssignUsersDTO params) {
         params.setId(id);
         bizRoleService.assignUsers(params);
         return ok();
@@ -84,8 +98,8 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "设置角色权限", description = "设置角色权限")
     @AdminOrHasAnyAuthority("contacts:role:authorities:set")
     @PutMapping("/{id}/authorities")
-    public R<?> setAuthorities(@PathVariable Long id,
-                               @RequestBody AssignDTO<Long, Long> params) {
+    public R<Void> setAuthorities(@PathVariable Long id,
+                                  @RequestBody SetDTO<Long, Long> params) {
         params.setId(id);
         bizRoleService.setAuthorities(params);
         return ok();
@@ -94,8 +108,8 @@ public class OrgRoleAPI implements RShortcuts {
     @Operation(summary = "获取角色权限树", description = "获取角色权限树")
     @AdminOrHasAnyAuthority("contacts:role:authorities:query")
     @GetMapping("/{id}/authorities")
-    public R<?> getRoleAuthoritiesTree(@PathVariable Long id,
-                                       MetaAuthority condition) {
+    public R<List<BizAuthorityTreeNodeVO>> getRoleAuthoritiesTree(@PathVariable Long id,
+                                                                  MetaAuthority condition) {
         return ok(bizRoleService.getRoleAuthoritiesTree(id, condition));
     }
 }

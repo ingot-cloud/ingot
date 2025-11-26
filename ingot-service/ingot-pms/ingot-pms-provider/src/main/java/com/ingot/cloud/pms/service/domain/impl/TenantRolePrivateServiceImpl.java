@@ -3,7 +3,6 @@ package com.ingot.cloud.pms.service.domain.impl;
 import java.io.Serializable;
 import java.util.List;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
@@ -66,11 +65,6 @@ public class TenantRolePrivateServiceImpl extends BaseServiceImpl<TenantRolePriv
     public TenantRolePrivate createAndReturnResult(TenantRolePrivate role) {
         assertionChecker.checkOperation(role.getType() != null,
                 "TenantRolePrivateServiceImpl.TypeNonNull");
-        assertionChecker.checkOperation(
-                role.getType() == RoleTypeEnum.ROLE,
-                StrUtil.isNotEmpty(role.getCode()),
-                "TenantRolePrivateServiceImpl.CodeNonNull"
-        );
         if (role.getType() == RoleTypeEnum.ROLE) {
             role.setCode(bizIdGen.genOrgRoleCode());
         }
@@ -78,7 +72,7 @@ public class TenantRolePrivateServiceImpl extends BaseServiceImpl<TenantRolePriv
         assertionChecker.checkOperation(
                 role.getPid() != null,
                 count(Wrappers.<TenantRolePrivate>lambdaQuery()
-                        .eq(TenantRolePrivate::getId, role.getPid())) == 0,
+                        .eq(TenantRolePrivate::getId, role.getPid())) > 0,
                 "TenantRolePrivateServiceImpl.ParentNonExist"
         );
 

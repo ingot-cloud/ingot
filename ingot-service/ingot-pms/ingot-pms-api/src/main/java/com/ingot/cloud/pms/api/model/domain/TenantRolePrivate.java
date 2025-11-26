@@ -81,6 +81,11 @@ public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements R
     private List<Long> scopes;
 
     /**
+     * 排序
+     */
+    private Integer sort;
+
+    /**
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
