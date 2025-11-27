@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.AppUserCreateDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
@@ -27,18 +27,18 @@ public interface BizAppUserService {
      *
      * @param page   分页参数
      * @param filter 条件参数
-     * @return {@link AppUser}
+     * @return {@link Member}
      */
-    IPage<AppUser> page(Page<AppUser> page, AppUser filter);
+    IPage<Member> page(Page<Member> page, Member filter);
 
     /**
      * 用户列表分页
      *
      * @param page   分页参数
      * @param filter 条件参数
-     * @return {@link AppUser}
+     * @return {@link Member}
      */
-    IPage<AppUser> pageTenant(Page<AppUser> page, AppUser filter);
+    IPage<Member> pageTenant(Page<Member> page, Member filter);
 
     /**
      * 获取用户简介信息
@@ -59,9 +59,9 @@ public interface BizAppUserService {
      * 创建用户, 如果手机号已经创建用户那么不处理
      *
      * @param params {@link AppUserCreateDTO}
-     * @return {@link AppUser}
+     * @return {@link Member}
      */
-    AppUser createIfPhoneNotUsed(AppUserCreateDTO params);
+    Member createIfPhoneNotUsed(AppUserCreateDTO params);
 
     /**
      * 创建用户
@@ -76,7 +76,7 @@ public interface BizAppUserService {
      *
      * @param params
      */
-    void updateUser(AppUser params);
+    void updateUser(Member params);
 
     /**
      * 删除用户

@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.convert;
 
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.dto.user.AppUserCreateDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
@@ -24,27 +24,27 @@ public interface UserConvert {
 
     SysUser to(OrgUserDTO in);
 
-    AppUser toAppUser(OrgUserDTO in);
+    Member toAppUser(OrgUserDTO in);
 
     SysUser to(UserBaseInfoDTO in);
 
-    AppUser toAppUser(UserBaseInfoDTO in);
+    Member toAppUser(UserBaseInfoDTO in);
 
-    AppUser to(AppUserCreateDTO in);
+    Member to(AppUserCreateDTO in);
 
     UserBaseInfoDTO toUserBaseInfo(SysUser in);
 
-    UserBaseInfoDTO toUserBaseInfo(AppUser in);
+    UserBaseInfoDTO toUserBaseInfo(Member in);
 
     UserProfileVO toUserProfile(SysUser in);
 
-    UserProfileVO toUserProfile(AppUser in);
+    UserProfileVO toUserProfile(Member in);
 
     OrgUserProfileVO toOrgUserProfile(SysUser in);
 
-    OrgUserProfileVO toOrgUserProfile(AppUser in);
+    OrgUserProfileVO toOrgUserProfile(Member in);
 
     UserDetailsResponse toUserDetails(SysUser in);
 
-    UserDetailsResponse toUserDetails(AppUser in);
+    UserDetailsResponse toUserDetails(Member in);
 }

@@ -7,11 +7,11 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
 import com.ingot.cloud.pms.service.biz.SupportUserDetailsService;
 import com.ingot.cloud.pms.service.domain.AppRoleService;
-import com.ingot.cloud.pms.service.domain.AppUserService;
+import com.ingot.cloud.pms.service.domain.MemberService;
 import com.ingot.cloud.pms.service.domain.AppUserTenantService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.social.SocialProcessorManager;
@@ -32,9 +32,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AppSupportUserDetailsService implements SupportUserDetailsService<AppUser> {
+public class AppSupportUserDetailsService implements SupportUserDetailsService<Member> {
     private final SysTenantService sysTenantService;
-    private final AppUserService appUserService;
+    private final MemberService memberService;
     private final AppRoleService appRoleService;
     private final AppUserTenantService appUserTenantService;
 
@@ -54,19 +54,19 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
     public UserDetailsResponse getUserAuthDetails(UserDetailsRequest request) {
         String username = request.getUsername();
         // 1.作为手机号查询
-        AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
-                .eq(AppUser::getPhone, username));
+        Member user = memberService.getOne(Wrappers.<Member>lambdaQuery()
+                .eq(Member::getPhone, username));
         if (user != null) {
             return map(user, request.getUserType(), request.getTenant());
         }
         // 2.作为用户名
-        user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
-                .eq(AppUser::getUsername, username));
+        user = memberService.getOne(Wrappers.<Member>lambdaQuery()
+                .eq(Member::getUsername, username));
         return map(user, request.getUserType(), request.getTenant());
     }
 
     @Override
-    public List<AllowTenantDTO> getAllowTenants(AppUser user) {
+    public List<AllowTenantDTO> getAllowTenants(Member user) {
         // 1.获取可以访问的租户列表
         List<AppUserTenant> userTenantList = appUserTenantService.list(
                 Wrappers.<AppUserTenant>lambdaQuery()
@@ -75,12 +75,12 @@ public class AppSupportUserDetailsService implements SupportUserDetailsService<A
     }
 
     @Override
-    public UserDetailsResponse userToUserDetailsResponse(AppUser user) {
+    public UserDetailsResponse userToUserDetailsResponse(Member user) {
         return userConvert.toUserDetails(user);
     }
 
     @Override
-    public List<String> getScopes(Long tenant, AppUser user) {
+    public List<String> getScopes(Long tenant, Member user) {
         List<AppRole> roles = appRoleService.getRolesOfUser(user.getId());
         if (CollUtil.isEmpty(roles)) {
             return ListUtil.empty();

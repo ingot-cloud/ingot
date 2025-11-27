@@ -1,10 +1,10 @@
 package com.ingot.cloud.pms.social.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.domain.AppUserSocial;
 import com.ingot.cloud.pms.core.BizSocialUtils;
-import com.ingot.cloud.pms.service.domain.AppUserService;
+import com.ingot.cloud.pms.service.domain.MemberService;
 import com.ingot.cloud.pms.service.domain.AppUserSocialService;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.social.SocialProcessor;
@@ -23,9 +23,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
+public class AppMiniProgramSocialProcessor implements SocialProcessor<Member> {
     private final SysSocialDetailsService sysSocialDetailsService;
-    private final AppUserService appUserService;
+    private final MemberService memberService;
     private final AppUserSocialService appUserSocialService;
 
     @Override
@@ -39,7 +39,7 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
     }
 
     @Override
-    public AppUser getUserInfo(String uniqueID) {
+    public Member getUserInfo(String uniqueID) {
         AppUserSocial userSocial = appUserSocialService.getOne(Wrappers.<AppUserSocial>lambdaQuery()
                 .eq(AppUserSocial::getType, SocialTypeEnum.APP_MINI_PROGRAM)
                 .eq(AppUserSocial::getUniqueId, uniqueID));
@@ -48,11 +48,11 @@ public class AppMiniProgramSocialProcessor implements SocialProcessor<AppUser> {
             return null;
         }
 
-        return appUserService.getById(userSocial.getUserId());
+        return memberService.getById(userSocial.getUserId());
     }
 
     @Override
-    public void bind(AppUser user, String uniqueID) {
+    public void bind(Member user, String uniqueID) {
         AppUserSocial current = appUserSocialService.getOne(Wrappers.<AppUserSocial>lambdaQuery()
                 .eq(AppUserSocial::getType, SocialTypeEnum.APP_MINI_PROGRAM)
                 .eq(AppUserSocial::getUniqueId, uniqueID)

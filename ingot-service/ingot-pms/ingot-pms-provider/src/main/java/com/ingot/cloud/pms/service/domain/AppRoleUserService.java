@@ -5,7 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
@@ -58,8 +58,8 @@ public interface AppRoleUserService extends BaseService<AppRoleUser> {
      * @param condition 查询条件
      * @return 分页用户
      */
-    IPage<AppUser> getRoleUsers(long roleId,
-                                Page<?> page,
-                                boolean isBind,
-                                AppUser condition);
+    IPage<Member> getRoleUsers(long roleId,
+                               Page<?> page,
+                               boolean isBind,
+                               Member condition);
 }

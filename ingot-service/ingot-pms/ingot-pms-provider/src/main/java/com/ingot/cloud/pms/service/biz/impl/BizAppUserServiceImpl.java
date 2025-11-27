@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BizAppUserServiceImpl implements BizAppUserService {
-    private final AppUserService appUserService;
+    private final MemberService memberService;
     private final AppRoleService appRoleService;
     private final AppRoleUserService appRoleUserService;
     private final AppUserTenantService appUserTenantService;
@@ -57,18 +57,18 @@ public class BizAppUserServiceImpl implements BizAppUserService {
     private final UserConvert userConvert;
 
     @Override
-    public IPage<AppUser> page(Page<AppUser> page, AppUser filter) {
-        return appUserService.page(page, Wrappers.lambdaQuery(filter));
+    public IPage<Member> page(Page<Member> page, Member filter) {
+        return memberService.page(page, Wrappers.lambdaQuery(filter));
     }
 
     @Override
-    public IPage<AppUser> pageTenant(Page<AppUser> page, AppUser filter) {
-        return appUserService.conditionPageWithTenant(page, filter, TenantContextHolder.get());
+    public IPage<Member> pageTenant(Page<Member> page, Member filter) {
+        return memberService.conditionPageWithTenant(page, filter, TenantContextHolder.get());
     }
 
     @Override
     public UserProfileVO getUserProfile(long id) {
-        AppUser user = appUserService.getById(id);
+        Member user = memberService.getById(id);
         assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
@@ -82,38 +82,38 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public void updateUserBaseInfo(long id, UserBaseInfoDTO params) {
-        AppUser current = appUserService.getById(id);
+        Member current = memberService.getById(id);
         assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
-        AppUser user = userConvert.toAppUser(params);
+        Member user = userConvert.toAppUser(params);
         if (StrUtil.isNotEmpty(user.getPhone())
                 && !StrUtil.equals(user.getPhone(), current.getPhone())) {
-            assertionChecker.checkOperation(appUserService.count(Wrappers.<AppUser>lambdaQuery()
-                            .eq(AppUser::getPhone, user.getPhone())) == 0,
+            assertionChecker.checkOperation(memberService.count(Wrappers.<Member>lambdaQuery()
+                            .eq(Member::getPhone, user.getPhone())) == 0,
                     "SysUserServiceImpl.PhoneExist");
         }
 
         if (StrUtil.isNotEmpty(user.getEmail())
                 && !StrUtil.equals(user.getEmail(), current.getEmail())) {
-            assertionChecker.checkOperation(appUserService.count(Wrappers.<AppUser>lambdaQuery()
-                            .eq(AppUser::getEmail, user.getEmail())) == 0,
+            assertionChecker.checkOperation(memberService.count(Wrappers.<Member>lambdaQuery()
+                            .eq(Member::getEmail, user.getEmail())) == 0,
                     "SysUserServiceImpl.EmailExist");
         }
 
         user.setUpdatedAt(DateUtil.now());
-        assertionChecker.checkOperation(appUserService.updateById(user),
+        assertionChecker.checkOperation(memberService.updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AppUser createIfPhoneNotUsed(AppUserCreateDTO params) {
-        AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
-                .eq(AppUser::getPhone, params.getPhone()));
+    public Member createIfPhoneNotUsed(AppUserCreateDTO params) {
+        Member user = memberService.getOne(Wrappers.<Member>lambdaQuery()
+                .eq(Member::getPhone, params.getPhone()));
         if (user == null) {
-            user = new AppUser();
+            user = new Member();
             user.setUsername(params.getPhone());
             user.setPassword(passwordEncoder.encode(UUIDUtil.generateShortUuid()));
             user.setAvatar(params.getAvatar());
@@ -122,7 +122,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
             user.setStatus(UserStatusEnum.ENABLE);
             user.setInitPwd(Boolean.TRUE);
             user.setCreatedAt(DateUtil.now());
-            appUserService.save(user);
+            memberService.save(user);
         }
 
         // bind role
@@ -145,7 +145,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public ResetPwdVO createUser(AppUserCreateDTO params) {
-        AppUser user = userConvert.to(params);
+        Member user = userConvert.to(params);
 
         // 默认初始化密码
         String initPwd = RandomUtil.randomString(6);
@@ -154,7 +154,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
         user.setStatus(UserStatusEnum.ENABLE);
-        appUserService.createUser(user);
+        memberService.createUser(user);
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
@@ -162,29 +162,29 @@ public class BizAppUserServiceImpl implements BizAppUserService {
     }
 
     @Override
-    public void updateUser(AppUser params) {
-        AppUser current = appUserService.getById(params.getId());
+    public void updateUser(Member params) {
+        Member current = memberService.getById(params.getId());
 
         if (StrUtil.isNotEmpty(params.getPassword())) {
             params.setPassword(passwordEncoder.encode(params.getPassword()));
             params.setInitPwd(false);
         }
 
-        appUserService.checkUserUniqueField(params, current);
+        memberService.checkUserUniqueField(params, current);
 
         params.setUpdatedAt(DateUtil.now());
-        assertionChecker.checkOperation(appUserService.updateById(params),
+        assertionChecker.checkOperation(memberService.updateById(params),
                 "SysUserServiceImpl.UpdateFailed");
     }
 
     @Override
     public void deleteUser(long id) {
-        appUserService.removeUserById(id);
+        memberService.removeUserById(id);
     }
 
     @Override
     public ResetPwdVO resetPwd(long userId) {
-        AppUser user = appUserService.getById(userId);
+        Member user = memberService.getById(userId);
         assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
@@ -238,7 +238,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public OrgUserProfileVO getOrgUserProfile(long id) {
-        AppUser user = appUserService.getById(id);
+        Member user = memberService.getById(id);
         assertionChecker.checkOperation(user != null,
                 "SysUserServiceImpl.UserNonExist");
         assert user != null;
@@ -254,15 +254,15 @@ public class BizAppUserServiceImpl implements BizAppUserService {
         assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getNickname()), "SysUser.nickname");
 
         // 如果已经存在注册用户，那么直接关联新组织信息
-        AppUser user = appUserService.getOne(Wrappers.<AppUser>lambdaQuery()
-                .eq(AppUser::getPhone, params.getPhone()));
+        Member user = memberService.getOne(Wrappers.<Member>lambdaQuery()
+                .eq(Member::getPhone, params.getPhone()));
         if (user == null) {
             // 密码默认为手机号
             user = userConvert.toAppUser(params);
             user.setUsername(params.getPhone());
             user.setPassword(params.getPhone());
             user.setInitPwd(Boolean.TRUE);
-            appUserService.createUser(user);
+            memberService.createUser(user);
         }
 
         // 加入租户
@@ -273,9 +273,9 @@ public class BizAppUserServiceImpl implements BizAppUserService {
     public void orgUpdateUser(OrgUserDTO params) {
         assertionChecker.checkOperation(params.getId() != null, "Common.IDNonNull");
 
-        AppUser user = userConvert.toAppUser(params);
+        Member user = userConvert.toAppUser(params);
         // 更新用户
-        appUserService.updateUser(user);
+        memberService.updateUser(user);
     }
 
     @Override
@@ -293,14 +293,14 @@ public class BizAppUserServiceImpl implements BizAppUserService {
     @Override
     public void orgPasswordInit(UserPasswordDTO params) {
         long id = SecurityAuthContext.getUser().getId();
-        AppUser current = appUserService.getById(id);
+        Member current = memberService.getById(id);
         assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         if (!BooleanUtil.isTrue(current.getInitPwd())) {
             return;
         }
 
-        AppUser user = new AppUser();
+        Member user = new Member();
         user.setId(id);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setInitPwd(false);
@@ -310,7 +310,7 @@ public class BizAppUserServiceImpl implements BizAppUserService {
 
     @Override
     public void fixPassword(UserPasswordDTO params) {
-        appUserService.fixPassword(SecurityAuthContext.getUser().getId(), params);
+        memberService.fixPassword(SecurityAuthContext.getUser().getId(), params);
     }
 
 }

@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.web.v1.platform.system;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.AppUserCreateDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
@@ -33,7 +33,7 @@ public class SystemAppUserAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"app:user"})
     @GetMapping("/page")
-    public R<?> userPage(Page<AppUser> page, AppUser filter) {
+    public R<?> userPage(Page<Member> page, Member filter) {
         return ok(bizAppUserService.page(page, filter));
     }
 
@@ -45,7 +45,7 @@ public class SystemAppUserAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"app:user:w"})
     @PutMapping
-    public R<?> update(@RequestBody AppUser params) {
+    public R<?> update(@RequestBody Member params) {
         params.setPassword(null);
         params.setInitPwd(null);
         bizAppUserService.updateUser(params);

@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.mapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -35,9 +35,9 @@ public interface AppRoleUserMapper extends BaseMapper<AppRoleUser> {
      * @param isBind 是否绑定
      * @return 分页信息
      */
-    IPage<AppUser> getRoleUsers(Page<?> page,
-                                @Param("roleId") long roleId,
-                                @Param("isBind") boolean isBind,
-                                @Param("condition") AppUser condition);
+    IPage<Member> getRoleUsers(Page<?> page,
+                               @Param("roleId") long roleId,
+                               @Param("isBind") boolean isBind,
+                               @Param("condition") Member condition);
 
 }

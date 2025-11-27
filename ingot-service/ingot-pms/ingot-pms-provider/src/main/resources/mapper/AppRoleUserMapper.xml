@@ -7,7 +7,7 @@
         VALUES (#{roleId}, #{userId})
     </insert>
 
-    <select id="getRoleUsers" resultType="com.ingot.cloud.pms.api.model.domain.AppUser">
+    <select id="getRoleUsers" resultType="com.ingot.cloud.pms.api.model.domain.Member">
         SELECT u.*
         FROM app_user AS u
         <choose>

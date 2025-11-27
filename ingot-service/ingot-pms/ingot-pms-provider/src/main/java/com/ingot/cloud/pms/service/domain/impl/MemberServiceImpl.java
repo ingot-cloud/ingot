@@ -9,14 +9,14 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.AppRole;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.api.model.domain.AppUserSocial;
 import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserPasswordDTO;
 import com.ingot.cloud.pms.api.model.status.PmsErrorCode;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.mapper.AppUserMapper;
+import com.ingot.cloud.pms.mapper.MemberMapper;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
@@ -41,7 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> implements AppUserService {
+public class MemberServiceImpl extends BaseServiceImpl<MemberMapper, Member> implements MemberService {
     private final AppRoleService appRoleService;
     private final AppUserTenantService appUserTenantService;
     private final SysTenantService sysTenantService;
@@ -53,7 +53,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     private final AssertionChecker assertionChecker;
 
     @Override
-    public IPage<AppUser> conditionPageWithTenant(Page<AppUser> page, AppUser condition, Long tenantId) {
+    public IPage<Member> conditionPageWithTenant(Page<Member> page, Member condition, Long tenantId) {
         return getBaseMapper().conditionPageWithTenant(page, condition, tenantId);
     }
 
@@ -61,7 +61,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     public UserInfoDTO getUserInfo(InUser user) {
         // 使用当前用户 tenant 进行操作
         return TenantEnv.applyAs(user.getTenantId(), () -> {
-            AppUser userInfo = getById(user.getId());
+            Member userInfo = getById(user.getId());
             if (userInfo == null) {
                 OAuth2ErrorUtils.throwInvalidRequest("用户异常");
             }
@@ -91,7 +91,7 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     }
 
     @Override
-    public void createUser(AppUser user) {
+    public void createUser(Member user) {
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreatedAt(DateUtil.now());
@@ -124,8 +124,8 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     }
 
     @Override
-    public void updateUser(AppUser user) {
-        AppUser current = getById(user.getId());
+    public void updateUser(Member user) {
+        Member current = getById(user.getId());
 
         if (StrUtil.isNotEmpty(user.getPassword())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -148,14 +148,14 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
                         && StrUtil.isNotEmpty(params.getNewPassword()),
                 "SysUserServiceImpl.IncorrectPassword");
 
-        AppUser current = getById(id);
+        Member current = getById(id);
         assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
         assertionChecker.checkOperation(passwordEncoder.matches(params.getPassword(), current.getPassword()),
                 "SysUserServiceImpl.IncorrectPassword");
-        AppUser user = new AppUser();
+        Member user = new Member();
         user.setId(id);
         user.setPassword(passwordEncoder.encode(params.getNewPassword()));
         user.setInitPwd(false);
@@ -164,28 +164,28 @@ public class AppUserServiceImpl extends BaseServiceImpl<AppUserMapper, AppUser> 
     }
 
     @Override
-    public void checkUserUniqueField(AppUser update, AppUser current) {
+    public void checkUserUniqueField(Member update, Member current) {
         // 更新字段不为空，并且不等于当前值
         if (StrUtil.isNotEmpty(update.getUsername())
                 && (current == null || !StrUtil.equals(update.getUsername(), current.getUsername()))) {
-            assertionChecker.checkBiz(count(Wrappers.<AppUser>lambdaQuery()
-                            .eq(AppUser::getUsername, update.getUsername())) == 0,
+            assertionChecker.checkBiz(count(Wrappers.<Member>lambdaQuery()
+                            .eq(Member::getUsername, update.getUsername())) == 0,
                     PmsErrorCode.ExistUsername.getCode(),
                     "SysUserServiceImpl.UsernameExist");
         }
 
         if (StrUtil.isNotEmpty(update.getPhone())
                 && (current == null || !StrUtil.equals(update.getPhone(), current.getPhone()))) {
-            assertionChecker.checkBiz(count(Wrappers.<AppUser>lambdaQuery()
-                            .eq(AppUser::getPhone, update.getPhone())) == 0,
+            assertionChecker.checkBiz(count(Wrappers.<Member>lambdaQuery()
+                            .eq(Member::getPhone, update.getPhone())) == 0,
                     PmsErrorCode.ExistPhone.getCode(),
                     "SysUserServiceImpl.PhoneExist");
         }
 
         if (StrUtil.isNotEmpty(update.getEmail())
                 && (current == null || !StrUtil.equals(update.getEmail(), current.getEmail()))) {
-            assertionChecker.checkBiz(count(Wrappers.<AppUser>lambdaQuery()
-                            .eq(AppUser::getEmail, update.getEmail())) == 0,
+            assertionChecker.checkBiz(count(Wrappers.<Member>lambdaQuery()
+                            .eq(Member::getEmail, update.getEmail())) == 0,
                     PmsErrorCode.ExistEmail.getCode(),
                     "SysUserServiceImpl.EmailExist");
         }

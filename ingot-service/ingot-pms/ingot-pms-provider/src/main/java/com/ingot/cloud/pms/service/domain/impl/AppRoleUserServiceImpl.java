@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.AppRoleUser;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.common.CommonRoleRelationService;
 import com.ingot.cloud.pms.mapper.AppRoleUserMapper;
 import com.ingot.cloud.pms.service.domain.AppRoleUserService;
@@ -132,7 +132,7 @@ public class AppRoleUserServiceImpl extends CommonRoleRelationService<AppRoleUse
     }
 
     @Override
-    public IPage<AppUser> getRoleUsers(long roleId, Page<?> page, boolean isBind, AppUser condition) {
+    public IPage<Member> getRoleUsers(long roleId, Page<?> page, boolean isBind, Member condition) {
         return baseMapper.getRoleUsers(page, roleId, isBind, condition);
     }
 }

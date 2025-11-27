@@ -1,7 +1,7 @@
 package com.ingot.cloud.pms.web.v1.org;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.AppUser;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.cloud.pms.service.biz.BizAppUserService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
@@ -27,13 +27,13 @@ public class OrgAppUserAPI implements RShortcuts {
 
     @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
-    public R<?> page(Page<AppUser> page, AppUser condition) {
+    public R<?> page(Page<Member> page, Member condition) {
         return ok(bizAppUserService.pageTenant(page, condition));
     }
 
     @Operation(summary = "更新", description = "更新")
     @PutMapping
-    public R<?> update(@RequestBody AppUser params) {
+    public R<?> update(@RequestBody Member params) {
         bizAppUserService.updateUser(params);
         return ok();
     }

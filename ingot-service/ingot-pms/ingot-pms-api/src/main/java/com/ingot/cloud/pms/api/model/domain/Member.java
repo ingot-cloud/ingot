@@ -25,8 +25,8 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName("app_user")
-public class AppUser extends BaseModel<AppUser> implements UserType {
+@TableName("member")
+public class Member extends BaseModel<Member> implements UserType {
     @Serial
     private static final long serialVersionUID = 1L;
 
