@@ -310,7 +310,9 @@ public class BizRoleServiceImpl implements BizRoleService {
         RoleType role = getRole(params.getId());
         assertionChecker.checkOperation(role != null, "BizRoleServiceImpl.RoleNonNul");
         assert role != null;
-        assertionChecker.checkOperation(BooleanUtil.isFalse(role.getFilterDept()) || deptId != null,
+        // 如果需要分配用户，那么需要判断是否传递了部门ID
+        assertionChecker.checkOperation(CollUtil.isNotEmpty(params.getAssignIds()),
+                BooleanUtil.isFalse(role.getFilterDept()) || deptId != null,
                 "BizRoleServiceImpl.BindDeptRoleDeptNonNull");
         assertionChecker.checkOperation(role.getType() != RoleTypeEnum.GROUP,
                 "BizRoleServiceImpl.CantBindRoleGroup");

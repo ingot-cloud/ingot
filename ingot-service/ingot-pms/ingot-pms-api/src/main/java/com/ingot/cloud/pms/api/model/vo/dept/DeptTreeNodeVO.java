@@ -1,8 +1,5 @@
 package com.ingot.cloud.pms.api.model.vo.dept;
 
-import java.util.List;
-
-import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
@@ -10,9 +7,9 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>Description  : DeptTreeNodeVO.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/3/25.</p>
- * <p>Time         : 10:14 下午.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/27.</p>
+ * <p>Time         : 14:40.</p>
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -37,14 +34,4 @@ public class DeptTreeNodeVO extends TreeNode<Long> {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
-
-    /**
-     * 部门主管
-     */
-    private List<SimpleUserVO> managerUsers;
-
-    /**
-     * 部门人员数量
-     */
-    private Long memberCount;
 }

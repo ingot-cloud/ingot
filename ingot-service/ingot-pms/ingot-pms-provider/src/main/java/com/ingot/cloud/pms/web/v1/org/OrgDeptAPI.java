@@ -41,6 +41,13 @@ public class OrgDeptAPI implements RShortcuts {
         return ok(bizDeptService.orgTree());
     }
 
+    @Operation(summary = "基础结构部门树", description = "基础结构部门树")
+    @AdminOrHasAnyAuthority({"contacts:member:query", "contacts:dept:query"})
+    @GetMapping("/simpleTree")
+    public R<?> simpleTree() {
+        return ok(bizDeptService.orgSimpleTree());
+    }
+
     @Operation(summary = "创建部门", description = "创建部门")
     @AdminOrHasAnyAuthority({"contacts:dept:create"})
     @PostMapping

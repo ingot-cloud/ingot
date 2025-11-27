@@ -35,6 +35,6 @@ public class SystemDeptAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"platform:system:dept:query"})
     @GetMapping("/tree/{orgId}")
     public R<List<DeptTreeNodeVO>> tree(@PathVariable Long orgId) {
-        return ok(TenantEnv.applyAs(orgId, bizDeptService::orgList));
+        return ok(TenantEnv.applyAs(orgId, bizDeptService::orgSimpleTree));
     }
 }

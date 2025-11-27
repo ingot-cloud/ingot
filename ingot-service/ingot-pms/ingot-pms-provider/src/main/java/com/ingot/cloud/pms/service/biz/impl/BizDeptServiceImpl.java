@@ -14,6 +14,7 @@ import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
@@ -125,32 +126,37 @@ public class BizDeptServiceImpl implements BizDeptService {
     }
 
     @Override
-    public List<DeptTreeNodeVO> orgList() {
+    public List<DeptTreeNodeWithManagerVO> orgList() {
         List<DeptWithManagerVO> all = listWithManager();
-        List<DeptTreeNodeVO> allNode = all.stream()
+        List<DeptTreeNodeWithManagerVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(DeptWithManagerVO::getSort))
                 .map(deptConvert::to).toList();
 
-        List<DeptTreeNodeVO> childNode = allNode.stream().filter(item -> !item.getMainFlag()).toList();
-        DeptTreeNodeVO mainNode = allNode.stream().filter(DeptTreeNodeVO::getMainFlag).findFirst().orElse(null);
+        List<DeptTreeNodeWithManagerVO> childNode = allNode.stream().filter(item -> !item.getMainFlag()).toList();
+        DeptTreeNodeWithManagerVO mainNode = allNode.stream().filter(DeptTreeNodeWithManagerVO::getMainFlag).findFirst().orElse(null);
         if (mainNode == null) {
             return ListUtil.empty();
         }
-        List<DeptTreeNodeVO> childTree = TreeUtil.build(childNode, mainNode.getId());
-        List<DeptTreeNodeVO> result = new ArrayList<>(childTree.size() + 1);
+        List<DeptTreeNodeWithManagerVO> childTree = TreeUtil.build(childNode, mainNode.getId());
+        List<DeptTreeNodeWithManagerVO> result = new ArrayList<>(childTree.size() + 1);
         result.add(mainNode);
         result.addAll(childTree);
         return result;
     }
 
     @Override
-    public List<DeptTreeNodeVO> orgTree() {
+    public List<DeptTreeNodeWithManagerVO> orgTree() {
         List<DeptWithManagerVO> all = listWithManager();
-        List<DeptTreeNodeVO> allNode = all.stream()
+        List<DeptTreeNodeWithManagerVO> allNode = all.stream()
                 .sorted(Comparator.comparingInt(DeptWithManagerVO::getSort))
                 .map(deptConvert::to).toList();
 
         return TreeUtil.build(allNode);
+    }
+
+    @Override
+    public List<DeptTreeNodeVO> orgSimpleTree() {
+        return tenantDeptService.treeList();
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.List;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.dept.DeptWithManagerDTO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.dept.DeptTreeNodeWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.framework.commons.constants.IDConstants;
 
@@ -38,16 +39,23 @@ public interface BizDeptService {
      * 测试部门下面有两个部门：A部门和B部门<br>
      * 那么列表返回：测试部门，A部门，B部门
      *
-     * @return {@link DeptTreeNodeVO}
+     * @return {@link DeptTreeNodeWithManagerVO}
      */
-    List<DeptTreeNodeVO> orgList();
+    List<DeptTreeNodeWithManagerVO> orgList();
 
     /**
      * 组织部门树，一级部门在主部门之下
      *
+     * @return {@link DeptTreeNodeWithManagerVO}
+     */
+    List<DeptTreeNodeWithManagerVO> orgTree();
+
+    /**
+     * 部门树
+     *
      * @return {@link DeptTreeNodeVO}
      */
-    List<DeptTreeNodeVO> orgTree();
+    List<DeptTreeNodeVO> orgSimpleTree();
 
     /**
      * 设置部门主管
