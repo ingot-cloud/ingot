@@ -63,7 +63,7 @@ public interface BizRoleService {
     RoleType getByCode(String code);
 
     /**
-     * 角色下拉列表
+     * 角色下拉列表，不包含角色组
      *
      * @param condition {@link TenantRolePrivate}
      * @return {@link Option}

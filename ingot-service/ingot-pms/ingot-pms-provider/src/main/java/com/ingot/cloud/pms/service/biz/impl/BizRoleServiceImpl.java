@@ -129,6 +129,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         // meta
         List<Option<Long>> options = new ArrayList<>(metaRoleService.list(
                         Wrappers.<MetaRole>lambdaQuery()
+                                .eq(MetaRole::getType, RoleTypeEnum.ROLE)
                                 .eq(MetaRole::getOrgType, OrgTypeEnum.Tenant)
                                 .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE))
                 .stream()
@@ -139,6 +140,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         // tenant
         List<Option<Long>> tenantOptions = tenantRolePrivateService.list(
                         Wrappers.<TenantRolePrivate>lambdaQuery()
+                                .eq(TenantRolePrivate::getType, RoleTypeEnum.ROLE)
                                 .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
                 )
                 .stream()
