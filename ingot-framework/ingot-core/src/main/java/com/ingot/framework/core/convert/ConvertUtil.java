@@ -3,6 +3,7 @@ package com.ingot.framework.core.convert;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,11 +31,12 @@ public class ConvertUtil {
     }
 
     /**
-     * 查找被 @EnumDeserializeMethod 标记的静态方法
+     * 查找被 @EnumDeserializeMethod 或 {@link JsonCreator} 标记的静态方法
      */
     static Method findAnnotatedMethod(Class<?> clazz) {
         return Arrays.stream(clazz.getDeclaredMethods())
-                .filter(m -> m.isAnnotationPresent(EnumDeserializeMethod.class))
+                .filter(m -> m.isAnnotationPresent(EnumDeserializeMethod.class)
+                        || m.isAnnotationPresent(JsonCreator.class))
                 .filter(m -> java.lang.reflect.Modifier.isStatic(m.getModifiers()))
                 .filter(m -> m.getParameterCount() == 1)
                 .findFirst()
