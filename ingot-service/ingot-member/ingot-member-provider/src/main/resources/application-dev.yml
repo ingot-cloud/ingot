@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    username: ${MYSQL_USERNAME:dev}
+    password: ${MYSQL_PASSWORD:123456}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:ingotredis}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_HOST1:ingot-nacos}:${NACOS_PORT1:8848},${NACOS_HOST2:ingot-nacos}:${NACOS_PORT2:8849},${NACOS_HOST3:ingot-nacos}:${NACOS_PORT3:8850}
+        namespace: ingot
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+        group: DEV_GROUP
+  config:
+    import:
+      - optional:nacos:application-common.yml
+      - optional:nacos:application-mysql.yml
+      - optional:nacos:${spring.application.name}.yml
+
+springdoc:
+  api-docs:
+    enabled: true
+
+logs:
+  path: /ingot-data/logs
+  mybatisMapper: com.ingot.cloud.member.mapper
+
+ingot:
+  mybatis:
+    show-sql-log: true
+
+# 日志等级
+logging:
+  level:
+    org.springframework.web: trace
+    org.springframework.security: trace
+    org.springframework.security.oauth2: debug
+    com.alibaba.nacos.client.naming: info

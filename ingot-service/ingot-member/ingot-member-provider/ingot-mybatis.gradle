@@ -9,7 +9,7 @@ ingotMybatis {
     /**
      * 连接池连接地址
      */
-    jdbcUrl = "jdbc:mysql://localhost:3306/ingot_core_refactor?useUnicode=true&characterEncoding=UTF-8"
+    jdbcUrl = "jdbc:mysql://localhost:3306/ingot_member?useUnicode=true&characterEncoding=UTF-8"
 
     /**
      * 连接池连接账号
@@ -35,12 +35,13 @@ ingotMybatis {
         /**
          * 需要生成的表
          */
-        tables = ["tenant_user_dept_role"]
+        tables = ["member_permission", "member_role", "member_role_permission", "member_role_user",
+                  "member_social_details", "member_user", "member_user_social", "member_user_tenant"]
 
         /**
          * 包名
          */
-        basePackage = "com.ingot.cloud.pms"
+        basePackage = "com.ingot.cloud.member"
     }
 
 }

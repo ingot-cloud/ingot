@@ -1,0 +1,6 @@
+server:
+  port: 5300
+
+spring:
+  application:
+    name: ingot-service-member

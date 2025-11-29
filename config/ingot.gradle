@@ -22,5 +22,6 @@ ingot.framework_openapi = ":ingot-framework:ingot-openapi"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
+ingot.member_api = ":ingot-service:ingot-member:ingot-member-api"
 
 ext.ingot = ingot
