@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.web.v1.platform.meta;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaPermission;
-import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
+import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizMetaPermissionService;
 import com.ingot.framework.commons.model.support.R;

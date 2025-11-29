@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.enums;
+package com.ingot.framework.commons.model.enums;
 
 import java.util.HashMap;
 import java.util.Map;

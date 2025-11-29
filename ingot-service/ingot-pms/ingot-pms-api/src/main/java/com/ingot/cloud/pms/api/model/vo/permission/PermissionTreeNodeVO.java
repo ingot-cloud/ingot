@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.permission;
 
-import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
+import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
