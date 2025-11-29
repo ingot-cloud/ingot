@@ -37,15 +37,15 @@ public class MenuTreeNodeVO extends TreeNode<Long> {
     /**
      * 是否开启权限
      */
-    private Boolean enableAuthority;
+    private Boolean enablePermission;
     /**
      * 权限ID
      */
-    private Long authorityId;
+    private Long permissionId;
     /**
      * 权限编码
      */
-    private String authorityCode;
+    private String permissionCode;
     /**
      * 是否自定义视图路径
      */

@@ -40,7 +40,7 @@ public class TenantEngine {
 
     private final TenantAppConfigService tenantAppConfigService;
     private final TenantDeptService tenantDeptService;
-    private final TenantRoleAuthorityPrivateService tenantRoleAuthorityPrivateService;
+    private final TenantRolePermissionPrivateService tenantRolePermissionPrivateService;
     private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
     private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
@@ -127,7 +127,7 @@ public class TenantEngine {
             // 清空部门
             tenantDeptService.clearByTenantId(id);
             // 清空角色权限配置
-            tenantRoleAuthorityPrivateService.clearByTenantId(id);
+            tenantRolePermissionPrivateService.clearByTenantId(id);
             // 清空角色
             tenantRolePrivateService.clearByTenantId(id);
             // 清空用户角色关联关系

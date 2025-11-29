@@ -7,15 +7,15 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
+import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
-import com.ingot.cloud.pms.service.biz.BizMetaAuthorityService;
+import com.ingot.cloud.pms.service.biz.BizMetaPermissionService;
 import com.ingot.cloud.pms.service.domain.MetaAppService;
-import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
-import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.MetaPermissionService;
+import com.ingot.cloud.pms.service.domain.MetaRolePermissionService;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
@@ -31,35 +31,35 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
-    private final MetaAuthorityService authorityService;
-    private final MetaRoleAuthorityService roleAuthorityService;
+public class BizMetaPermissionServiceImpl implements BizMetaPermissionService {
+    private final MetaPermissionService authorityService;
+    private final MetaRolePermissionService roleAuthorityService;
     private final MetaAppService appService;
 
     private final AuthorityConvert authorityConvert;
     private final AssertionChecker assertionChecker;
 
     @Override
-    public List<AuthorityTreeNodeVO> treeList(MetaAuthority filter) {
-        List<AuthorityTreeNodeVO> nodeList = authorityService.list()
+    public List<PermissionTreeNodeVO> treeList(MetaPermission filter) {
+        List<PermissionTreeNodeVO> nodeList = authorityService.list()
                 .stream()
                 .filter(BizFilter.authorityFilter(filter))
-                .sorted(Comparator.comparing(AuthorityType::getOrgType)
-                        .thenComparing(AuthorityType::getId))
+                .sorted(Comparator.comparing(PermissionType::getOrgType)
+                        .thenComparing(PermissionType::getId))
                 .map(authorityConvert::toTreeNode).collect(Collectors.toList());
 
-        List<AuthorityTreeNodeVO> tree = TreeUtil.build(nodeList);
+        List<PermissionTreeNodeVO> tree = TreeUtil.build(nodeList);
         TreeUtil.compensate(tree, nodeList);
         return tree;
     }
 
     @Override
-    public void createNonMenuAuthority(MetaAuthority authority) {
-        assertionChecker.checkOperation(authority.getType() != AuthorityTypeEnum.MENU,
+    public void createNonMenuPermission(MetaPermission authority) {
+        assertionChecker.checkOperation(authority.getType() != PermissionTypeEnum.MENU,
                 "BizMetaAuthorityServiceImpl.CantCreateMenuAuthority");
 
         if (authority.getPid() != null) {
-            MetaAuthority parent = authorityService.getById(authority.getPid());
+            MetaPermission parent = authorityService.getById(authority.getPid());
             assertionChecker.checkOperation(parent != null, "BizMetaAuthorityServiceImpl.ParentNotExist");
             assert parent != null;
             authority.setType(parent.getType());
@@ -70,22 +70,22 @@ public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
     }
 
     @Override
-    public void updateNonMenuAuthority(MetaAuthority authority) {
-        MetaAuthority current = authorityService.getById(authority.getId());
+    public void updateNonMenuPermission(MetaPermission authority) {
+        MetaPermission current = authorityService.getById(authority.getId());
         assertionChecker.checkOperation(current != null, "BizMetaAuthorityServiceImpl.NotExist");
         assert current != null;
-        assertionChecker.checkOperation(current.getType() != AuthorityTypeEnum.MENU,
+        assertionChecker.checkOperation(current.getType() != PermissionTypeEnum.MENU,
                 "BizMetaAuthorityServiceImpl.CantUpdateMenuAuthority");
 
         authorityService.update(authority);
     }
 
     @Override
-    public void deleteNonMenuAuthority(long id) {
-        MetaAuthority current = authorityService.getById(id);
+    public void deleteNonMenuPermission(long id) {
+        MetaPermission current = authorityService.getById(id);
         assertionChecker.checkOperation(current != null, "BizMetaAuthorityServiceImpl.NotExist");
         assert current != null;
-        assertionChecker.checkOperation(current.getType() != AuthorityTypeEnum.MENU,
+        assertionChecker.checkOperation(current.getType() != PermissionTypeEnum.MENU,
                 "BizMetaAuthorityServiceImpl.CantDeleteMenuAuthority");
 
         // 判断是否为应用，如果是应用那么不可删除
@@ -94,7 +94,7 @@ public class BizMetaAuthorityServiceImpl implements BizMetaAuthorityService {
                 "BizMetaAuthorityServiceImpl.IsApplication");
 
         // 清空角色权限关联
-        roleAuthorityService.clearByAuthorityId(id);
+        roleAuthorityService.clearByPermissionId(id);
         // 删除权限
         authorityService.delete(id);
     }

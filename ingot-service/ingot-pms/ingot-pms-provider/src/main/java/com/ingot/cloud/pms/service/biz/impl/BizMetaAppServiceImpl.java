@@ -50,7 +50,7 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
                 "BizMetaAppServiceImpl.MenuNonNull");
         assert menu != null;
 
-        params.setAuthorityId(menu.getAuthorityId());
+        params.setPermissionId(menu.getPermissionId());
         if (StrUtil.isEmpty(params.getName())) {
             params.setName(menu.getName());
         }
@@ -61,7 +61,7 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
         appService.create(params);
 
         // 创建一个应用，就需要给组织管理员角色绑定相关权限
-        bizRoleService.orgManagerAssignAuthorities(List.of(params.getAuthorityId()), true);
+        bizRoleService.orgManagerAssignPermissions(List.of(params.getPermissionId()), true);
     }
 
     @Override
@@ -86,6 +86,6 @@ public class BizMetaAppServiceImpl implements BizMetaAppService {
         appService.delete(id);
         tenantAppConfigService.clearByAppId(id);
         // 删除一个应用，要给组织管理员取消相关权限
-        bizRoleService.orgManagerAssignAuthorities(List.of(app.getAuthorityId()), false);
+        bizRoleService.orgManagerAssignPermissions(List.of(app.getPermissionId()), false);
     }
 }

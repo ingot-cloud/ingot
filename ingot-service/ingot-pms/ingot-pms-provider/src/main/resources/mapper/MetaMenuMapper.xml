@@ -3,9 +3,9 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.MetaMenuMapper">
 
     <select id="getAll" resultType="com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO">
-        SELECT menu.*, authority.code as authority_code
+        SELECT menu.*, permission.code as permission_code
         FROM meta_menu AS menu
-                 LEFT JOIN meta_authority AS authority ON authority.id = menu.authority_id
+                 LEFT JOIN meta_permission AS permission ON permission.id = menu.permission_id
         WHERE menu.deleted_at IS NULL
     </select>
 </mapper>

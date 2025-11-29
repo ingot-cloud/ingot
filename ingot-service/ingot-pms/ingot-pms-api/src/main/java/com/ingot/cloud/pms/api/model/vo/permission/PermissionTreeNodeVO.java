@@ -1,8 +1,8 @@
-package com.ingot.cloud.pms.api.model.vo.authority;
+package com.ingot.cloud.pms.api.model.vo.permission;
 
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class AuthorityTreeNodeVO extends TreeNode<Long> implements AuthorityType {
+public class PermissionTreeNodeVO extends TreeNode<Long> implements PermissionType {
 
     /**
      * 权限名称
@@ -31,7 +31,7 @@ public class AuthorityTreeNodeVO extends TreeNode<Long> implements AuthorityType
     /**
      * 权限类型
      */
-    private AuthorityTypeEnum type;
+    private PermissionTypeEnum type;
 
     /**
      * 组织类型

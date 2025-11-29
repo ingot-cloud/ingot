@@ -1,16 +1,16 @@
 package com.ingot.cloud.pms.api.model.types;
 
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 
 /**
- * <p>Description  : AuthorityType.</p>
+ * <p>Description  : 权限类型.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2023/11/25.</p>
  * <p>Time         : 10:49.</p>
  */
-public interface AuthorityType {
+public interface PermissionType {
     /**
      * ID
      */
@@ -42,9 +42,9 @@ public interface AuthorityType {
     /**
      * 权限类型
      */
-    AuthorityTypeEnum getType();
+    PermissionTypeEnum getType();
 
-    void setType(AuthorityTypeEnum type);
+    void setType(PermissionTypeEnum type);
 
     /**
      * 组织类型

@@ -7,11 +7,11 @@ import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.core.BizAuthorityUtils;
+import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.service.biz.*;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
@@ -75,11 +75,11 @@ public class BizAuthServiceImpl implements BizAuthService {
     public List<MenuTreeNodeVO> getUserMenus(InUser user) {
         List<String> roleCodeList = user.getRoleCodeList();
         List<RoleType> roles = bizRoleService.getRolesByCodes(roleCodeList);
-        List<AuthorityType> authorities = bizRoleService.getRolesAuthoritiesAndChildren(roles);
+        List<PermissionType> authorities = bizRoleService.getRolesPermissionsAndChildren(roles);
 
         // 过滤禁用App
-        List<AuthorityType> finallyAuthorities = BizAuthorityUtils.filterOrgLockAuthority(
+        List<PermissionType> finallyAuthorities = BizPermissionUtils.filterOrgLockAuthority(
                 authorities, bizAppService);
-        return bizMetaMenuService.getMenuByAuthorities(finallyAuthorities);
+        return bizMetaMenuService.getMenuByPermissions(finallyAuthorities);
     }
 }

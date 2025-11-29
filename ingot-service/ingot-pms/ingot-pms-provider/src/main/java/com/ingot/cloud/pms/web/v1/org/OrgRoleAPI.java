@@ -2,12 +2,12 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.IdsDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.framework.commons.model.common.SetDTO;
@@ -96,20 +96,20 @@ public class OrgRoleAPI implements RShortcuts {
     }
 
     @Operation(summary = "设置角色权限", description = "设置角色权限")
-    @AdminOrHasAnyAuthority("contacts:role:authorities:set")
-    @PutMapping("/{id}/authorities")
-    public R<Void> setAuthorities(@PathVariable Long id,
+    @AdminOrHasAnyAuthority("contacts:role:permissions:set")
+    @PutMapping("/{id}/permissions")
+    public R<Void> setPermissions(@PathVariable Long id,
                                   @RequestBody SetDTO<Long, Long> params) {
         params.setId(id);
-        bizRoleService.setAuthorities(params);
+        bizRoleService.setPermissions(params);
         return ok();
     }
 
     @Operation(summary = "获取角色权限树", description = "获取角色权限树")
-    @AdminOrHasAnyAuthority("contacts:role:authorities:query")
-    @GetMapping("/{id}/authorities")
-    public R<List<BizAuthorityTreeNodeVO>> getRoleAuthoritiesTree(@PathVariable Long id,
-                                                                  MetaAuthority condition) {
-        return ok(bizRoleService.getRoleAuthoritiesTree(id, condition));
+    @AdminOrHasAnyAuthority("contacts:role:permissions:query")
+    @GetMapping("/{id}/permissions")
+    public R<List<BizPermissionTreeNodeVO>> getRolePermissionsTree(@PathVariable Long id,
+                                                                   MetaPermission condition) {
+        return ok(bizRoleService.getRolePermissionsTree(id, condition));
     }
 }

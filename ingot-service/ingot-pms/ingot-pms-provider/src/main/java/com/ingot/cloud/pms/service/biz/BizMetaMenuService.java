@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.service.biz;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 
 /**
@@ -17,10 +17,10 @@ public interface BizMetaMenuService {
     /**
      * 根据权限获取菜单
      *
-     * @param authorities 权限列表
+     * @param permissions 权限列表
      * @return {@link MenuTreeNodeVO} list
      */
-    List<MenuTreeNodeVO> getMenuByAuthorities(List<? extends AuthorityType> authorities);
+    List<MenuTreeNodeVO> getMenuByPermissions(List<? extends PermissionType> permissions);
 
     /**
      * 菜单tree

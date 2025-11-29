@@ -10,24 +10,26 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.bo.permission.PermissionIdBO;
 import com.ingot.cloud.pms.api.model.bo.role.BizRoleAssignUsersBO;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.convert.RoleConvert;
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.domain.TenantRolePermissionPrivate;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.BizBindDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
+import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.core.BizAuthorityUtils;
+import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
@@ -55,12 +57,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BizRoleServiceImpl implements BizRoleService {
     private final MetaRoleService metaRoleService;
-    private final MetaAuthorityService authorityService;
-    private final MetaRoleAuthorityService roleAuthorityService;
+    private final MetaPermissionService authorityService;
+    private final MetaRolePermissionService roleAuthorityService;
 
     private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
-    private final TenantRoleAuthorityPrivateService tenantRoleAuthorityPrivateService;
+    private final TenantRolePermissionPrivateService tenantRolePermissionPrivateService;
 
     private final BizAppService bizAppService;
 
@@ -174,40 +176,65 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
-    public List<BizAuthorityVO> getRoleAuthorities(long roleId) {
+    public List<PermissionIdBO> getRolePermissionIds(long roleId) {
         // private
-        List<Long> tenantIds = tenantRoleAuthorityPrivateService.getRoleBindAuthorityIds(roleId);
-        Set<Long> ids = new HashSet<>(tenantIds);
+        List<TenantRolePermissionPrivate> tenant = tenantRolePermissionPrivateService.getRoleBindPermissionIds(roleId);
+        Set<Long> ids = new HashSet<>(tenant.stream().map(TenantRolePermissionPrivate::getPermissionId).toList());
         // meta
-        List<Long> metaIds = roleAuthorityService.getRoleBindAuthorityIds(roleId);
+        List<Long> metaIds = roleAuthorityService.getRoleBindPermissionIds(roleId);
         ids.addAll(metaIds);
 
+        List<PermissionIdBO> permissions = new ArrayList<>(tenant.stream()
+                .map(item ->
+                        PermissionIdBO.of(item.getPermissionId(), item.getMetaRole()))
+                .toList());
+        permissions.addAll(metaIds.stream().map(id -> PermissionIdBO.of(id, true)).toList());
+
+        return ids.stream()
+                .map(id -> permissions.stream()
+                        .filter(item -> item.getId().equals(id)).findFirst()
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    public List<BizPermissionVO> getRolePermissions(long roleId) {
+        List<PermissionIdBO> ids = getRolePermissionIds(roleId);
         if (CollUtil.isEmpty(ids)) {
             return ListUtil.empty();
         }
-        return authorityService.list(Wrappers.<MetaAuthority>lambdaQuery()
-                        .in(MetaAuthority::getId, ids))
+        if (CollUtil.size(ids) == 1) {
+            MetaPermission permission = authorityService.getById(ids.get(0).getId());
+            BizPermissionVO result = authorityConvert.to(permission);
+            result.setMetaRoleBind(ids.get(0).getMetaRoleBind());
+            return List.of(result);
+        }
+
+        return authorityService.list(Wrappers.<MetaPermission>lambdaQuery()
+                        .in(MetaPermission::getId, ids.stream().map(PermissionIdBO::getId).toList()))
                 .stream()
                 .map(item -> {
-                    BizAuthorityVO vo = authorityConvert.to(item);
-                    vo.setMetaRoleBind(metaIds.stream()
-                            .anyMatch(id -> id.equals(item.getId())));
+                    BizPermissionVO vo = authorityConvert.to(item);
+                    vo.setMetaRoleBind(ids.stream()
+                            .anyMatch(id ->
+                                    id.getId().equals(item.getId()) && id.getMetaRoleBind()));
                     return vo;
                 })
                 .toList();
     }
 
     @Override
-    public List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId, MetaAuthority condition) {
-        List<BizAuthorityVO> authorities = getRoleAuthorities(roleId);
-        List<BizAuthorityVO> finallyAuthorities = BizAuthorityUtils.filterOrgLockAuthority(
+    public List<BizPermissionTreeNodeVO> getRolePermissionsTree(long roleId, MetaPermission condition) {
+        List<BizPermissionVO> authorities = getRolePermissions(roleId);
+        List<BizPermissionVO> finallyAuthorities = BizPermissionUtils.filterOrgLockAuthority(
                 authorities, bizAppService);
-        return BizAuthorityUtils.bizMapTree(finallyAuthorities, authorityConvert, condition);
+        return BizPermissionUtils.bizMapTree(finallyAuthorities, authorityConvert, condition);
     }
 
     @Override
-    public List<AuthorityType> getRolesAuthorities(List<RoleType> roles) {
-        List<MetaAuthority> enabledAuthorities = authorityService.list()
+    public List<PermissionType> getRolesPermissions(List<RoleType> roles) {
+        List<MetaPermission> enabledAuthorities = authorityService.list()
                 .stream()
                 .filter(auth -> auth.getStatus() == CommonStatusEnum.ENABLE)
                 .toList();
@@ -215,14 +242,16 @@ public class BizRoleServiceImpl implements BizRoleService {
                 .flatMap(role -> {
                     OrgTypeEnum orgType = role.getOrgType();
                     if (orgType == OrgTypeEnum.Platform) {
-                        return roleAuthorityService.getRoleBindAuthorityIds(role.getId()).stream()
+                        return roleAuthorityService.getRoleBindPermissionIds(role.getId()).stream()
                                 .map(id -> enabledAuthorities.stream()
                                         .filter(item -> item.getId().equals(id))
                                         .findFirst()
                                         .orElse(null))
                                 .filter(Objects::nonNull);
                     }
-                    return tenantRoleAuthorityPrivateService.getRoleBindAuthorityIds(role.getId()).stream()
+                    return getRolePermissionIds(role.getId())
+                            .stream()
+                            .map(PermissionIdBO::getId)
                             .map(id -> enabledAuthorities.stream()
                                     .filter(item -> item.getId().equals(id))
                                     .findFirst()
@@ -233,10 +262,10 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
-    public List<AuthorityType> getRolesAuthoritiesAndChildren(List<RoleType> roles) {
-        List<MetaAuthority> all = authorityService.list();
-        CopyOnWriteArrayList<AuthorityType> authorities = new CopyOnWriteArrayList<>(getRolesAuthorities(roles));
-        authorities.forEach(item -> BizAuthorityUtils.fillChildren(authorities, all, item));
+    public List<PermissionType> getRolesPermissionsAndChildren(List<RoleType> roles) {
+        List<MetaPermission> all = authorityService.list();
+        CopyOnWriteArrayList<PermissionType> authorities = new CopyOnWriteArrayList<>(getRolesPermissions(roles));
+        authorities.forEach(item -> BizPermissionUtils.fillChildren(authorities, all, item));
         return authorities;
     }
 
@@ -254,7 +283,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(long id) {
         // 清除关联权限
-        tenantRoleAuthorityPrivateService.clearByRoleId(id);
+        tenantRolePermissionPrivateService.clearByRoleId(id);
         // 清除关联用户
         tenantRoleUserPrivateService.clearByRoleId(id);
         // 删除角色
@@ -280,7 +309,7 @@ public class BizRoleServiceImpl implements BizRoleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void setAuthorities(SetDTO<Long, Long> params) {
+    public void setPermissions(SetDTO<Long, Long> params) {
         MetaRole metaRole = metaRoleService.getById(params.getId());
         if (metaRole != null) {
             assertionChecker.checkOperation(!StrUtil.equals(metaRole.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
@@ -289,7 +318,7 @@ public class BizRoleServiceImpl implements BizRoleService {
 
         List<Long> bindList = params.getSetIds();
         if (CollUtil.isNotEmpty(bindList)) {
-            List<Long> authorities = CollUtil.emptyIfNull(BizAuthorityUtils.getTenantAuthorities(
+            List<Long> authorities = CollUtil.emptyIfNull(BizPermissionUtils.getTenantAuthorities(
                             TenantContextHolder.get(), bizAppService, authorityService, authorityConvert))
                     .stream().map(TreeNode::getId).toList();
             boolean canBind = new HashSet<>(authorities).containsAll(bindList);
@@ -301,7 +330,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         bindParams.setId(params.getId());
         bindParams.setMetaFlag(metaRole != null);
         bindParams.setAssignIds(bindList);
-        tenantRoleAuthorityPrivateService.roleSetAuthorities(bindParams);
+        tenantRolePermissionPrivateService.roleSetPermissions(bindParams);
     }
 
     @Override
@@ -327,7 +356,7 @@ public class BizRoleServiceImpl implements BizRoleService {
     }
 
     @Override
-    public void orgManagerAssignAuthorities(List<Long> ids, boolean assign) {
+    public void orgManagerAssignPermissions(List<Long> ids, boolean assign) {
         RoleType managerRole = getByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
 
         AssignDTO<Long, Long> bindParams = new AssignDTO<>();
@@ -337,6 +366,6 @@ public class BizRoleServiceImpl implements BizRoleService {
         } else {
             bindParams.setUnassignIds(ids);
         }
-        roleAuthorityService.roleAssignAuthorities(bindParams);
+        roleAuthorityService.roleAssignPermissions(bindParams);
     }
 }

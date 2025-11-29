@@ -4,9 +4,9 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
@@ -24,8 +24,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@TableName("meta_authority")
-public class MetaAuthority extends BaseModel<MetaAuthority> implements AuthorityType {
+@TableName("meta_permission")
+public class MetaPermission extends BaseModel<MetaPermission> implements PermissionType {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -56,7 +56,7 @@ public class MetaAuthority extends BaseModel<MetaAuthority> implements Authority
      * 权限类型
      */
     @TableField("`type`")
-    private AuthorityTypeEnum type;
+    private PermissionTypeEnum type;
 
     /**
      * 组织类型

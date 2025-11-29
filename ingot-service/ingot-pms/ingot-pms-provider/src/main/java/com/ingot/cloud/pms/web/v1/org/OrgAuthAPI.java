@@ -31,6 +31,6 @@ public class OrgAuthAPI implements RShortcuts {
     @AdminOrHasAnyAuthority("contacts:auth:query")
     @GetMapping("/tree")
     public R<?> getOrgAuthTree() {
-        return ok(bizOrgService.getTenantAuthorityTree(TenantContextHolder.get()));
+        return ok(bizOrgService.getTenantPermissionTree(TenantContextHolder.get()));
     }
 }

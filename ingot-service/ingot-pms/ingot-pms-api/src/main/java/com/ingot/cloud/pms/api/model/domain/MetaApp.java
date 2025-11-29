@@ -40,7 +40,7 @@ public class MetaApp extends BaseModel<MetaApp> {
     /**
      * 权限ID
      */
-    private Long authorityId;
+    private Long permissionId;
 
     /**
      * 应用名称

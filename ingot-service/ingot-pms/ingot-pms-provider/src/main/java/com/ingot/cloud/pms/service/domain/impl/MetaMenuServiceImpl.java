@@ -105,7 +105,7 @@ public class MetaMenuServiceImpl extends BaseServiceImpl<MetaMenuMapper, MetaMen
 
         // 菜单权限编码不可修改，菜单pid不可修改
         params.setPid(null);
-        params.setAuthorityId(null);
+        params.setPermissionId(null);
 
         // 路径不为空，需要判断是否重复
         if (StrUtil.isNotEmpty(params.getPath())) {

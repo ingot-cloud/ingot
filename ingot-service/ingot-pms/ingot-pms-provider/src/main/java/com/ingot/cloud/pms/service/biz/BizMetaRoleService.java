@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.common.SetDTO;
@@ -38,17 +38,17 @@ public interface BizMetaRoleService {
      * 获取角色权限
      *
      * @param roleId 角色ID
-     * @return {@link MetaAuthority}
+     * @return {@link MetaPermission}
      */
-    List<MetaAuthority> getRoleAuthorities(long roleId);
+    List<MetaPermission> getRolePermissions(long roleId);
 
     /**
      * 获取角色权限
      *
      * @param roleId 角色ID
-     * @return {@link AuthorityTreeNodeVO}
+     * @return {@link PermissionTreeNodeVO}
      */
-    List<AuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId);
+    List<PermissionTreeNodeVO> getRolePermissionsTree(long roleId);
 
     /**
      * 创建角色
@@ -76,5 +76,5 @@ public interface BizMetaRoleService {
      *
      * @param params {@link AssignDTO}
      */
-    void setAuthorities(SetDTO<Long, Long> params);
+    void setPermissions(SetDTO<Long, Long> params);
 }

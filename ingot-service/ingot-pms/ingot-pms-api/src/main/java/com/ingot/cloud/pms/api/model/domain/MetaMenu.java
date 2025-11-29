@@ -64,12 +64,12 @@ public class MetaMenu extends BaseModel<MetaMenu> implements MenuType {
     /**
      * 是否开启权限
      */
-    private Boolean enableAuthority;
+    private Boolean enablePermission;
 
     /**
      * 权限ID
      */
-    private Long authorityId;
+    private Long permissionId;
 
     /**
      * 是否自定义视图路径

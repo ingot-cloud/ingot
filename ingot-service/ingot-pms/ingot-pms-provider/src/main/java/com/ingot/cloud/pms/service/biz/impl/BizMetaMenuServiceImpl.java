@@ -6,18 +6,18 @@ import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
-import com.ingot.cloud.pms.api.model.enums.AuthorityTypeEnum;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.enums.PermissionTypeEnum;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.core.BizMenuUtils;
 import com.ingot.cloud.pms.service.biz.BizMetaMenuService;
 import com.ingot.cloud.pms.service.domain.MetaAppService;
-import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
+import com.ingot.cloud.pms.service.domain.MetaPermissionService;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
-import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.MetaRolePermissionService;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     private final MetaMenuService menuService;
-    private final MetaAuthorityService authorityService;
+    private final MetaPermissionService authorityService;
     private final MetaAppService appService;
-    private final MetaRoleAuthorityService roleAuthorityService;
+    private final MetaRolePermissionService roleAuthorityService;
 
     private final AssertionChecker assertionChecker;
 
     @Override
-    public List<MenuTreeNodeVO> getMenuByAuthorities(List<? extends AuthorityType> authorities) {
+    public List<MenuTreeNodeVO> getMenuByPermissions(List<? extends PermissionType> authorities) {
         List<MenuTreeNodeVO> allNodeList = menuService.nodeList();
         List<MenuTreeNodeVO> nodeList = BizMenuUtils.filterMenus(allNodeList, authorities);
         return TreeUtil.build(nodeList)
@@ -64,8 +64,8 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void create(MetaMenu params) {
-        Long authorityId = createAuthority(params);
-        params.setAuthorityId(authorityId);
+        Long permissionId = createAuthority(params);
+        params.setPermissionId(permissionId);
         menuService.create(params);
     }
 
@@ -74,8 +74,8 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
     public void update(MetaMenu menu) {
         MetaMenu current = menuService.getById(menu.getId());
 
-        MetaAuthority authority = new MetaAuthority();
-        authority.setId(current.getAuthorityId());
+        MetaPermission authority = new MetaPermission();
+        authority.setId(current.getPermissionId());
         authority.setName(menu.getName());
         authority.setStatus(menu.getStatus());
         authority.setOrgType(menu.getOrgType());
@@ -94,26 +94,26 @@ public class BizMetaMenuServiceImpl implements BizMetaMenuService {
                 "BizMetaMenuServiceImpl.IsApplication");
 
         // 删除权限
-        authorityService.delete(current.getAuthorityId());
+        authorityService.delete(current.getPermissionId());
         // 清空角色权限关联
-        roleAuthorityService.clearByAuthorityId(current.getAuthorityId());
+        roleAuthorityService.clearByPermissionId(current.getPermissionId());
 
         menuService.delete(id);
     }
 
     private Long createAuthority(MetaMenu menu) {
         // 创建权限
-        MetaAuthority authority = new MetaAuthority();
+        MetaPermission authority = new MetaPermission();
         authority.setName(menu.getName());
         authority.setCode(BizMenuUtils.getMenuAuthorityCode(menu));
         authority.setStatus(menu.getStatus());
-        authority.setType(AuthorityTypeEnum.MENU);
+        authority.setType(PermissionTypeEnum.MENU);
         authority.setOrgType(menu.getOrgType());
 
         if (menu.getPid() != null && menu.getPid() > 0) {
             MetaMenu parent = menuService.getById(menu.getPid());
             if (parent != null) {
-                authority.setPid(parent.getAuthorityId());
+                authority.setPid(parent.getPermissionId());
                 authority.setOrgType(parent.getOrgType());
             }
         }

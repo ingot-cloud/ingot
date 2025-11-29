@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 
 /**
  * <p>Description  : BizOrgService.</p>
@@ -30,9 +30,9 @@ public interface BizOrgService {
      * 获取组织权限树
      *
      * @param tenantID 租户权限
-     * @return {@link AuthorityTreeNodeVO}
+     * @return {@link PermissionTreeNodeVO}
      */
-    List<AuthorityTreeNodeVO> getTenantAuthorityTree(long tenantID);
+    List<PermissionTreeNodeVO> getTenantPermissionTree(long tenantID);
 
     /**
      * 搜索

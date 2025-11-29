@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.service.domain;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaRoleAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaRolePermission;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
@@ -15,21 +15,21 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
  * @author jymot
  * @since 2025-11-12
  */
-public interface MetaRoleAuthorityService extends BaseService<MetaRoleAuthority> {
+public interface MetaRolePermissionService extends BaseService<MetaRolePermission> {
 
     /**
      * 角色设置权限
      *
      * @param params {@link AssignDTO}
      */
-    void roleSetAuthorities(SetDTO<Long, Long> params);
+    void roleSetPermissions(SetDTO<Long, Long> params);
 
     /**
      * 角色分配权限
      *
      * @param params {@link AssignDTO}
      */
-    void roleAssignAuthorities(AssignDTO<Long, Long> params);
+    void roleAssignPermissions(AssignDTO<Long, Long> params);
 
     /**
      * 获取角色绑定的权限ID列表
@@ -37,14 +37,14 @@ public interface MetaRoleAuthorityService extends BaseService<MetaRoleAuthority>
      * @param id 角色ID
      * @return 权限ID列表
      */
-    List<Long> getRoleBindAuthorityIds(long id);
+    List<Long> getRoleBindPermissionIds(long id);
 
     /**
      * 根据权限ID清理角色权限关系
      *
-     * @param authorityId 权限ID
+     * @param permissionId 权限ID
      */
-    void clearByAuthorityId(long authorityId);
+    void clearByPermissionId(long permissionId);
 
     /**
      * 更具角色ID清理角色权限关系

@@ -4,9 +4,9 @@ import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.MetaRoleAuthority;
-import com.ingot.cloud.pms.mapper.MetaRoleAuthorityMapper;
-import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
+import com.ingot.cloud.pms.api.model.domain.MetaRolePermission;
+import com.ingot.cloud.pms.mapper.MetaRolePermissionMapper;
+import com.ingot.cloud.pms.service.domain.MetaRolePermissionService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.common.AssignDTO;
 import com.ingot.framework.commons.model.common.SetDTO;
@@ -25,95 +25,95 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2025-11-12
  */
 @Service
-public class MetaRoleAuthorityServiceImpl extends BaseServiceImpl<MetaRoleAuthorityMapper, MetaRoleAuthority> implements MetaRoleAuthorityService {
+public class MetaRolePermissionServiceImpl extends BaseServiceImpl<MetaRolePermissionMapper, MetaRolePermission> implements MetaRolePermissionService {
 
     @Override
     @CacheEvict(
-            value = CacheConstants.META_ROLE_AUTHORITIES,
+            value = CacheConstants.META_ROLE_PERMISSIONS,
             key = "'role-' + #params.id"
     )
     @Transactional(rollbackFor = Exception.class)
-    public void roleSetAuthorities(SetDTO<Long, Long> params) {
+    public void roleSetPermissions(SetDTO<Long, Long> params) {
         Long roleId = params.getId();
         List<Long> bindIds = params.getSetIds();
 
         // 清空当前权限
-        remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
-                .eq(MetaRoleAuthority::getRoleId, roleId));
+        remove(Wrappers.<MetaRolePermission>lambdaQuery()
+                .eq(MetaRolePermission::getRoleId, roleId));
 
         if (CollUtil.isNotEmpty(bindIds)) {
-            List<MetaRoleAuthority> bindList = getBindList(roleId, bindIds);
+            List<MetaRolePermission> bindList = getBindList(roleId, bindIds);
             saveBatch(bindList);
         }
     }
 
     @Override
     @CacheEvict(
-            value = CacheConstants.META_ROLE_AUTHORITIES,
+            value = CacheConstants.META_ROLE_PERMISSIONS,
             key = "'role-' + #params.id"
     )
     @Transactional(rollbackFor = Exception.class)
-    public void roleAssignAuthorities(AssignDTO<Long, Long> params) {
+    public void roleAssignPermissions(AssignDTO<Long, Long> params) {
         Long roleId = params.getId();
         List<Long> bindIds = params.getAssignIds();
         List<Long> unbindIds = params.getUnassignIds();
 
         if (CollUtil.isNotEmpty(unbindIds)) {
-            remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
-                    .eq(MetaRoleAuthority::getRoleId, roleId)
-                    .in(MetaRoleAuthority::getAuthorityId, unbindIds));
+            remove(Wrappers.<MetaRolePermission>lambdaQuery()
+                    .eq(MetaRolePermission::getRoleId, roleId)
+                    .in(MetaRolePermission::getPermissionId, unbindIds));
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {
-            List<MetaRoleAuthority> bindList = getBindList(roleId, bindIds);
+            List<MetaRolePermission> bindList = getBindList(roleId, bindIds);
             saveBatch(bindList);
         }
     }
 
-    private List<MetaRoleAuthority> getBindList(long roleId, List<Long> bindIds) {
+    private List<MetaRolePermission> getBindList(long roleId, List<Long> bindIds) {
         return CollUtil.emptyIfNull(bindIds).stream()
-                .map(authorityId -> {
-                    MetaRoleAuthority bind = new MetaRoleAuthority();
+                .map(permissionId -> {
+                    MetaRolePermission bind = new MetaRolePermission();
                     bind.setRoleId(roleId);
-                    bind.setAuthorityId(authorityId);
+                    bind.setPermissionId(permissionId);
                     return bind;
                 }).toList();
     }
 
     @Override
     @Cacheable(
-            value = CacheConstants.META_ROLE_AUTHORITIES,
+            value = CacheConstants.META_ROLE_PERMISSIONS,
             key = "'role-' + #id",
             unless = "#result.isEmpty()"
     )
-    public List<Long> getRoleBindAuthorityIds(long id) {
+    public List<Long> getRoleBindPermissionIds(long id) {
         return CollUtil.emptyIfNull(
-                list(Wrappers.<MetaRoleAuthority>lambdaQuery()
-                        .eq(MetaRoleAuthority::getRoleId, id))
+                list(Wrappers.<MetaRolePermission>lambdaQuery()
+                        .eq(MetaRolePermission::getRoleId, id))
                         .stream()
-                        .map(MetaRoleAuthority::getAuthorityId)
+                        .map(MetaRolePermission::getPermissionId)
                         .toList()
         );
     }
 
     @Override
     @CacheEvict(
-            value = CacheConstants.META_ROLE_AUTHORITIES,
+            value = CacheConstants.META_ROLE_PERMISSIONS,
             allEntries = true
     )
-    public void clearByAuthorityId(long authorityId) {
-        remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
-                .eq(MetaRoleAuthority::getAuthorityId, authorityId));
+    public void clearByPermissionId(long permissionId) {
+        remove(Wrappers.<MetaRolePermission>lambdaQuery()
+                .eq(MetaRolePermission::getPermissionId, permissionId));
     }
 
     @Override
     @CacheEvict(
-            value = CacheConstants.META_ROLE_AUTHORITIES,
+            value = CacheConstants.META_ROLE_PERMISSIONS,
             allEntries = true
     )
     public void clearByRoleId(long roleId) {
-        remove(Wrappers.<MetaRoleAuthority>lambdaQuery()
-                .eq(MetaRoleAuthority::getRoleId, roleId));
+        remove(Wrappers.<MetaRolePermission>lambdaQuery()
+                .eq(MetaRolePermission::getRoleId, roleId));
     }
 
 

@@ -16,8 +16,8 @@ import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
-import com.ingot.cloud.pms.core.BizAuthorityUtils;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
+import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
@@ -49,7 +49,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final AssertionChecker assertionChecker;
 
     private final MetaAppService metaAppService;
-    private final MetaAuthorityService metaAuthorityService;
+    private final MetaPermissionService metaPermissionService;
     private final TenantAppConfigService tenantAppConfigService;
 
     private final BizAppService bizAppService;
@@ -61,10 +61,10 @@ public class BizOrgServiceImpl implements BizOrgService {
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getTenantAuthorityTree(long tenantID) {
+    public List<PermissionTreeNodeVO> getTenantPermissionTree(long tenantID) {
         return TenantEnv.applyAs(tenantID, () -> {
-            List<AuthorityTreeNodeVO> authorities = BizAuthorityUtils.getTenantAuthorities(
-                    tenantID, bizAppService, metaAuthorityService, authorityConvert);
+            List<PermissionTreeNodeVO> authorities = BizPermissionUtils.getTenantAuthorities(
+                    tenantID, bizAppService, metaPermissionService, authorityConvert);
             return TreeUtil.build(authorities);
         });
     }

@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.web.v1.platform.meta;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
 import com.ingot.framework.commons.model.common.SetDTO;
@@ -69,21 +69,21 @@ public class MetaRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:meta:role:authorities:assign"})
-    @PutMapping(value = "/{id}/authorities")
+    @AdminOrHasAnyAuthority({"platform:meta:role:permissions:assign"})
+    @PutMapping(value = "/{id}/permissions")
     @Operation(summary = "绑定权限", description = "绑定权限")
     public R<Void> bindAuthorities(@PathVariable Long id,
                                    @RequestBody SetDTO<Long, Long> params) {
         params.setId(id);
-        bizMetaRoleService.setAuthorities(params);
+        bizMetaRoleService.setPermissions(params);
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:meta:role:authorities:query"})
-    @GetMapping(value = "/{id}/authorities")
+    @AdminOrHasAnyAuthority({"platform:meta:role:permissions:query"})
+    @GetMapping(value = "/{id}/permissions")
     @Operation(summary = "获取角色权限", description = "获取角色权限")
-    public R<List<AuthorityTreeNodeVO>> getAuthorities(@PathVariable Long id) {
-        return ok(bizMetaRoleService.getRoleAuthoritiesTree(id));
+    public R<List<PermissionTreeNodeVO>> getPermissions(@PathVariable Long id) {
+        return ok(bizMetaRoleService.getRolePermissionsTree(id));
     }
 
 }

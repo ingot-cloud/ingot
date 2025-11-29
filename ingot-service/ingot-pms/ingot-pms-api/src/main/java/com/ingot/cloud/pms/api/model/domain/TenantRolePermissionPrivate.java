@@ -5,6 +5,7 @@ import java.io.Serial;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,8 +22,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@TableName("meta_role_authority")
-public class MetaRoleAuthority extends BaseModel<MetaRoleAuthority> {
+@TenantTable
+@TableName("tenant_role_permission_private")
+public class TenantRolePermissionPrivate extends BaseModel<TenantRolePermissionPrivate> {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -33,12 +36,22 @@ public class MetaRoleAuthority extends BaseModel<MetaRoleAuthority> {
     private Long id;
 
     /**
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
      * 角色ID
      */
     private Long roleId;
 
     /**
+     * 是否为元数据角色
+     */
+    private Boolean metaRole;
+
+    /**
      * 权限ID
      */
-    private Long authorityId;
+    private Long permissionId;
 }

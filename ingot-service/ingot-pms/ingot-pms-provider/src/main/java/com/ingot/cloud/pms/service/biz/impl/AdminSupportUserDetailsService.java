@@ -98,9 +98,9 @@ public class AdminSupportUserDetailsService implements SupportUserDetailsService
         List<String> scopes = new ArrayList<>(getRoleCodes(roles, tenant));
         // 查询组织不可用应用
         List<MetaApp> disabledApps = bizAppService.getDisabledApps();
-        List<String> authorities = bizRoleService.getRolesAuthorities(roles).stream()
+        List<String> authorities = bizRoleService.getRolesPermissions(roles).stream()
                 .filter(auth -> disabledApps.stream()
-                        .noneMatch(app -> Objects.equals(auth.getId(), app.getAuthorityId())))
+                        .noneMatch(app -> Objects.equals(auth.getId(), app.getPermissionId())))
                 .map(auth -> InAuthorityUtils.authorityWithTenant(auth.getCode(), tenant))
                 .toList();
         scopes.addAll(authorities);

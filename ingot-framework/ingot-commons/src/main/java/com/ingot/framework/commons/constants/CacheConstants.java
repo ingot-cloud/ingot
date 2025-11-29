@@ -32,7 +32,7 @@ public interface CacheConstants {
     /**
      * 元数据-权限
      */
-    String META_AUTHORITIES = IGNORE_TENANT_PREFIX + ":meta:authorities";
+    String META_PERMISSIONS = IGNORE_TENANT_PREFIX + ":meta:permissions";
 
     /**
      * 元数据-角色
@@ -42,7 +42,7 @@ public interface CacheConstants {
     /**
      * 元数据-角色权限
      */
-    String META_ROLE_AUTHORITIES = IGNORE_TENANT_PREFIX + ":meta:role_authorities";
+    String META_ROLE_PERMISSIONS = IGNORE_TENANT_PREFIX + ":meta:role_permissions";
 
     /**
      * 元数据-菜单
@@ -63,7 +63,7 @@ public interface CacheConstants {
     /**
      * 组织角色权限
      */
-    String TENANT_ROLE_AUTHORITIES = "role_authorities";
+    String TENANT_ROLE_PERMISSIONS = "role_permissions";
 
     /**
      * 授权信息

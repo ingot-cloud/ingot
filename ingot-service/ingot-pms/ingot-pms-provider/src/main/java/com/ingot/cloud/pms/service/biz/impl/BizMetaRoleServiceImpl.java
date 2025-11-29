@@ -7,16 +7,16 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.convert.RoleConvert;
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
-import com.ingot.cloud.pms.api.model.vo.authority.AuthorityTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.core.BizAuthorityUtils;
+import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.service.biz.BizMetaRoleService;
-import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
-import com.ingot.cloud.pms.service.domain.MetaRoleAuthorityService;
+import com.ingot.cloud.pms.service.domain.MetaPermissionService;
+import com.ingot.cloud.pms.service.domain.MetaRolePermissionService;
 import com.ingot.cloud.pms.service.domain.MetaRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.model.common.SetDTO;
@@ -36,8 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     private final MetaRoleService roleService;
-    private final MetaRoleAuthorityService roleAuthorityService;
-    private final MetaAuthorityService authorityService;
+    private final MetaRolePermissionService roleAuthorityService;
+    private final MetaPermissionService authorityService;
     private final TenantRoleUserPrivateService roleUserPrivateService;
 
     private final RoleConvert roleConvert;
@@ -63,19 +63,19 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     }
 
     @Override
-    public List<MetaAuthority> getRoleAuthorities(long roleId) {
-        List<Long> ids = roleAuthorityService.getRoleBindAuthorityIds(roleId);
+    public List<MetaPermission> getRolePermissions(long roleId) {
+        List<Long> ids = roleAuthorityService.getRoleBindPermissionIds(roleId);
         if (CollUtil.isEmpty(ids)) {
             return ListUtil.empty();
         }
-        return authorityService.list(Wrappers.<MetaAuthority>lambdaQuery()
-                .in(MetaAuthority::getId, ids));
+        return authorityService.list(Wrappers.<MetaPermission>lambdaQuery()
+                .in(MetaPermission::getId, ids));
     }
 
     @Override
-    public List<AuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId) {
-        List<MetaAuthority> authorities = getRoleAuthorities(roleId);
-        return BizAuthorityUtils.mapTree(authorities, authorityConvert, null);
+    public List<PermissionTreeNodeVO> getRolePermissionsTree(long roleId) {
+        List<MetaPermission> authorities = getRolePermissions(roleId);
+        return BizPermissionUtils.mapTree(authorities, authorityConvert, null);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class BizMetaRoleServiceImpl implements BizMetaRoleService {
     }
 
     @Override
-    public void setAuthorities(SetDTO<Long, Long> params) {
-        roleAuthorityService.roleSetAuthorities(params);
+    public void setPermissions(SetDTO<Long, Long> params) {
+        roleAuthorityService.roleSetPermissions(params);
     }
 }

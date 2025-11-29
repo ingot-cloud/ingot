@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.mapper;
 
-import com.ingot.cloud.pms.api.model.domain.TenantRoleAuthorityPrivate;
+import com.ingot.cloud.pms.api.model.domain.MetaRolePermission;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 
 
@@ -15,6 +15,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2025-11-12
  */
 @Mapper
-public interface TenantRoleAuthorityPrivateMapper extends BaseMapper<TenantRoleAuthorityPrivate> {
+public interface MetaRolePermissionMapper extends BaseMapper<MetaRolePermission> {
 
 }

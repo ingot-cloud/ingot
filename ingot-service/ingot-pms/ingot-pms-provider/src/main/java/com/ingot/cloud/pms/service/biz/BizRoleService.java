@@ -2,14 +2,15 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.bo.permission.PermissionIdBO;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.domain.MetaRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.authority.BizAuthorityVO;
+import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
+import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
@@ -73,27 +74,35 @@ public interface BizRoleService {
     /**
      * 角色条件查询
      *
-     * @param condition        {@link TenantRolePrivate}
+     * @param condition {@link TenantRolePrivate}
      * @return {@link RoleTreeNodeVO}
      */
     List<RoleTreeNodeVO> conditionTree(TenantRolePrivate condition);
 
     /**
+     * 获取角色权限ID列表，包含私有配置以及meta配置
+     *
+     * @param roleId 角色ID
+     * @return 权限ID列表
+     */
+    List<PermissionIdBO> getRolePermissionIds(long roleId);
+
+    /**
      * 获取角色权限
      *
      * @param roleId 角色ID
-     * @return {@link BizAuthorityVO}
+     * @return {@link BizPermissionVO}
      */
-    List<BizAuthorityVO> getRoleAuthorities(long roleId);
+    List<BizPermissionVO> getRolePermissions(long roleId);
 
     /**
      * 获取角色权限
      *
      * @param roleId    角色ID
      * @param condition 查询条件
-     * @return {@link BizAuthorityTreeNodeVO}
+     * @return {@link BizPermissionTreeNodeVO}
      */
-    List<BizAuthorityTreeNodeVO> getRoleAuthoritiesTree(long roleId, MetaAuthority condition);
+    List<BizPermissionTreeNodeVO> getRolePermissionsTree(long roleId, MetaPermission condition);
 
     /**
      * 获取角色列表的权限
@@ -101,7 +110,7 @@ public interface BizRoleService {
      * @param roles 角色列表
      * @return 权限列表
      */
-    List<AuthorityType> getRolesAuthorities(List<RoleType> roles);
+    List<PermissionType> getRolesPermissions(List<RoleType> roles);
 
     /**
      * 获取角色列表的权限及子权限
@@ -109,7 +118,7 @@ public interface BizRoleService {
      * @param roles 角色列表
      * @return 权限列表
      */
-    List<AuthorityType> getRolesAuthoritiesAndChildren(List<RoleType> roles);
+    List<PermissionType> getRolesPermissionsAndChildren(List<RoleType> roles);
 
     /**
      * 创建角色
@@ -142,7 +151,7 @@ public interface BizRoleService {
      *
      * @param params {@link SetDTO}
      */
-    void setAuthorities(SetDTO<Long, Long> params);
+    void setPermissions(SetDTO<Long, Long> params);
 
     /**
      * 角色分配用户
@@ -157,5 +166,5 @@ public interface BizRoleService {
      * @param ids    权限ID列表
      * @param assign 是否分配，true:分配，false:取消分配
      */
-    void orgManagerAssignAuthorities(List<Long> ids, boolean assign);
+    void orgManagerAssignPermissions(List<Long> ids, boolean assign);
 }

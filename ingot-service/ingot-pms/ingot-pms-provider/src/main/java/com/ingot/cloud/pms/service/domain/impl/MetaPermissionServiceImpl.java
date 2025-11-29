@@ -6,10 +6,10 @@ import java.util.Optional;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.MetaAuthority;
+import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.common.CacheKey;
-import com.ingot.cloud.pms.mapper.MetaAuthorityMapper;
-import com.ingot.cloud.pms.service.domain.MetaAuthorityService;
+import com.ingot.cloud.pms.mapper.MetaPermissionMapper;
+import com.ingot.cloud.pms.service.domain.MetaPermissionService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
@@ -31,30 +31,30 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMapper, MetaAuthority> implements MetaAuthorityService {
+public class MetaPermissionServiceImpl extends BaseServiceImpl<MetaPermissionMapper, MetaPermission> implements MetaPermissionService {
     private final AssertionChecker assertionChecker;
 
     @Override
-    @Cacheable(value = CacheConstants.META_AUTHORITIES, key = CacheKey.ListKey, unless = "#result.isEmpty()")
-    public List<MetaAuthority> list() {
+    @Cacheable(value = CacheConstants.META_PERMISSIONS, key = CacheKey.ListKey, unless = "#result.isEmpty()")
+    public List<MetaPermission> list() {
         return super.list();
     }
 
     @Override
-    @Cacheable(value = CacheConstants.META_AUTHORITIES, key = CacheKey.ItemKey, unless = "#result == null")
-    public MetaAuthority getById(Serializable id) {
+    @Cacheable(value = CacheConstants.META_PERMISSIONS, key = CacheKey.ItemKey, unless = "#result == null")
+    public MetaPermission getById(Serializable id) {
         return super.getById(id);
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
-    public void create(MetaAuthority authority, boolean fillParentCode) {
+    @CacheEvict(value = CacheConstants.META_PERMISSIONS, allEntries = true)
+    public void create(MetaPermission authority, boolean fillParentCode) {
         createAndReturnId(authority, fillParentCode);
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
-    public Long createAndReturnId(MetaAuthority authority, boolean fillParentCode) {
+    @CacheEvict(value = CacheConstants.META_PERMISSIONS, allEntries = true)
+    public Long createAndReturnId(MetaPermission authority, boolean fillParentCode) {
         assertionChecker.checkOperation(authority.getType() != null,
                 "MetaAuthorityServiceImpl.TypeNonNull");
         assertionChecker.checkOperation(authority.getOrgType() != null,
@@ -66,8 +66,8 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
         }
 
         // code 不能重复
-        assertionChecker.checkOperation(count(Wrappers.<MetaAuthority>lambdaQuery()
-                        .eq(MetaAuthority::getCode, authority.getCode())) == 0,
+        assertionChecker.checkOperation(count(Wrappers.<MetaPermission>lambdaQuery()
+                        .eq(MetaPermission::getCode, authority.getCode())) == 0,
                 "MetaAuthorityServiceImpl.ExistCode");
 
         if (authority.getStatus() == null) {
@@ -82,8 +82,8 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
-    public void update(MetaAuthority authority) {
+    @CacheEvict(value = CacheConstants.META_PERMISSIONS, allEntries = true)
+    public void update(MetaPermission authority) {
         // 权限编码不可更新
         authority.setCode(null);
         authority.setUpdatedAt(DateUtil.now());
@@ -91,11 +91,11 @@ public class MetaAuthorityServiceImpl extends BaseServiceImpl<MetaAuthorityMappe
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.META_AUTHORITIES, allEntries = true)
+    @CacheEvict(value = CacheConstants.META_PERMISSIONS, allEntries = true)
     public void delete(long id) {
         // 叶子才可以删除
-        boolean result = count(Wrappers.<MetaAuthority>lambdaQuery()
-                .eq(MetaAuthority::getPid, id)) == 0;
+        boolean result = count(Wrappers.<MetaPermission>lambdaQuery()
+                .eq(MetaPermission::getPid, id)) == 0;
         assertionChecker.checkOperation(result,
                 "MetaAuthorityServiceImpl.RemoveFailedMustLeaf");
 

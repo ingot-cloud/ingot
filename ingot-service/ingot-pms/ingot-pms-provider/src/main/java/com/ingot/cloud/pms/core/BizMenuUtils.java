@@ -9,7 +9,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.MetaMenu;
-import com.ingot.cloud.pms.api.model.types.AuthorityType;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.MetaMenuService;
 import com.ingot.framework.commons.constants.IDConstants;
@@ -32,15 +32,15 @@ public class BizMenuUtils {
      * @return {@link MenuTreeNodeVO}
      */
     public static List<MenuTreeNodeVO> filterMenus(List<MenuTreeNodeVO> allNodeList,
-                                                   List<? extends AuthorityType> authorities) {
+                                                   List<? extends PermissionType> authorities) {
 
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
                 // 1.菜单未开启权限的内容
                 // 2.菜单开启权限并且拥有该权限，且权限可用
-                .filter(node -> node.getEnableAuthority() == null || BooleanUtil.isFalse(node.getEnableAuthority()) ||
+                .filter(node -> node.getEnablePermission() == null || BooleanUtil.isFalse(node.getEnablePermission()) ||
                         authorities.stream()
                                 .anyMatch(authority ->
-                                        node.getAuthorityId().equals(authority.getId())
+                                        node.getPermissionId().equals(authority.getId())
                                                 && authority.getStatus() == CommonStatusEnum.ENABLE))
                 .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))
