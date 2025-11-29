@@ -1,5 +1,7 @@
 package com.ingot.cloud.member.api.model.domain;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
@@ -20,6 +22,7 @@ import lombok.ToString;
 @TableName("member_role_permission")
 public class MemberRolePermission extends BaseModel {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

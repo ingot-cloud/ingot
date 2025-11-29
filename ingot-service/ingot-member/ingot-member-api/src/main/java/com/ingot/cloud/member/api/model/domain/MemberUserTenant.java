@@ -1,10 +1,11 @@
 package com.ingot.cloud.member.api.model.domain;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
-
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -23,6 +24,7 @@ import lombok.ToString;
 @TableName("member_user_tenant")
 public class MemberUserTenant extends BaseModel {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

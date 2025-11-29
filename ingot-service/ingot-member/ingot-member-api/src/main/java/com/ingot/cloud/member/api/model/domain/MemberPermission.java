@@ -1,5 +1,6 @@
 package com.ingot.cloud.member.api.model.domain;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -23,6 +24,7 @@ import lombok.ToString;
 @TableName("member_permission")
 public class MemberPermission extends BaseModel {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
