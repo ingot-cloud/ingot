@@ -3,8 +3,11 @@ package com.ingot.cloud.member.api.model.domain;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +15,7 @@ import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -22,7 +25,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @TableName("member_user_social")
-public class MemberUserSocial extends BaseModel {
+public class MemberUserSocial extends BaseModel<MemberUserSocial> {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -30,6 +33,7 @@ public class MemberUserSocial extends BaseModel {
     /**
      * ID
      */
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -46,7 +50,7 @@ public class MemberUserSocial extends BaseModel {
      * 渠道类型
      */
     @TableField("`type`")
-    private String type;
+    private SocialTypeEnum type;
 
     /**
      * 渠道唯一ID

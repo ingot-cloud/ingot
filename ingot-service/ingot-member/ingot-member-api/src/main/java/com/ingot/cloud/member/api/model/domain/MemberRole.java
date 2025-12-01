@@ -3,8 +3,7 @@ package com.ingot.cloud.member.api.model.domain;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +21,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @TableName("member_role")
-public class MemberRole extends BaseModel {
+public class MemberRole extends BaseModel<MemberRole> {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -30,6 +29,7 @@ public class MemberRole extends BaseModel {
     /**
      * ID
      */
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -50,10 +50,10 @@ public class MemberRole extends BaseModel {
     private String code;
 
     /**
-     * 角色类型
+     * 是否为内置角色
      */
-    @TableField("`type`")
-    private String type;
+    @TableField("`built_in`")
+    private Boolean builtIn;
 
     /**
      * 状态, 0:正常，9:禁用
@@ -74,5 +74,6 @@ public class MemberRole extends BaseModel {
     /**
      * 删除日期
      */
+    @TableLogic
     private LocalDateTime deletedAt;
 }

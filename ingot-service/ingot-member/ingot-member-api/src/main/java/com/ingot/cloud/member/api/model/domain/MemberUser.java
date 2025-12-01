@@ -3,8 +3,9 @@ package com.ingot.cloud.member.api.model.domain;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +13,7 @@ import lombok.ToString;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author jymot
@@ -22,7 +23,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @TableName("member_user")
-public class MemberUser extends BaseModel {
+public class MemberUser extends BaseModel<MemberUser> {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -30,6 +31,7 @@ public class MemberUser extends BaseModel {
     /**
      * ID
      */
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -40,12 +42,14 @@ public class MemberUser extends BaseModel {
     /**
      * 密码
      */
+    @JsonIgnore
     @TableField("`password`")
     private String password;
 
     /**
      * 初始化密码标识
      */
+    @JsonIgnore
     private Boolean initPwd;
 
     /**
@@ -72,7 +76,7 @@ public class MemberUser extends BaseModel {
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 创建日期
@@ -87,5 +91,6 @@ public class MemberUser extends BaseModel {
     /**
      * 删除日期
      */
+    @TableLogic
     private LocalDateTime deletedAt;
 }
