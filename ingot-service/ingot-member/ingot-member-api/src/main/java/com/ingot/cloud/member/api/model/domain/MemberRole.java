@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,7 +60,7 @@ public class MemberRole extends BaseModel<MemberRole> {
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
-    private String status;
+    private CommonStatusEnum status;
 
     /**
      * 创建日期
