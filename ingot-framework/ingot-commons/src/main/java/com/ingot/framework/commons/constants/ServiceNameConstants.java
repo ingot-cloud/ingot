@@ -9,14 +9,14 @@ package com.ingot.framework.commons.constants;
 public interface ServiceNameConstants {
 
     /**
-     * 鉴权中心
-     */
-    String AC_SERVICE = "ingot-service-acs";
-
-    /**
      * 权限管理系统
      */
     String PMS_SERVICE = "ingot-service-pms";
+
+    /**
+     * 会员系统
+     */
+    String MEMBER_SERVICE = "ingot-service-member";
 
     /**
      * 任务调度中心
