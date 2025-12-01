@@ -48,7 +48,7 @@ public class OrgUserAPI implements RShortcuts {
                                    @PathVariable Long roleId) {
         Long tenantId = TenantContextHolder.get();
         condition.setRoleId(null);
-        return ok(bizUserService.conditionPage(page, condition, tenantId, roleId));
+        return ok(bizUserService.conditionPageWithRole(page, condition, tenantId, roleId));
     }
 
     @Operation(summary = "组织用户创建", description = "组织用户创建")

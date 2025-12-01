@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
+import com.ingot.framework.commons.model.security.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
@@ -32,7 +32,7 @@ public interface BizUserService {
      * @param roleId    指定角色ID
      * @return {@link UserPageItemWithBindRoleStatusVO}
      */
-    IPage<UserPageItemWithBindRoleStatusVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId, Long roleId);
+    IPage<UserPageItemWithBindRoleStatusVO> conditionPageWithRole(Page<SysUser> page, UserQueryDTO condition, Long orgId, Long roleId);
 
     /**
      * 获取用户所在部门ID列表

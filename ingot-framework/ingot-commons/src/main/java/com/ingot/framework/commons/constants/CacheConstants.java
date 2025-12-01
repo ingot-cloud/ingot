@@ -54,6 +54,21 @@ public interface CacheConstants {
      */
     String META_APPS = IGNORE_TENANT_PREFIX + ":meta:apps";
 
+    /**
+     * 客户端用户角色
+     */
+    String MEMBER_ROLES = "member:roles";
+
+    /**
+     * 客户端用户权限
+     */
+    String MEMBER_PERMISSIONS = "member:permissions";
+
+    /**
+     * 客户端角色权限
+     */
+    String MEMBER_ROLE_PERMISSIONS = "member:role_permissions";
+
     /* 组织 */
     /**
      * 组织角色

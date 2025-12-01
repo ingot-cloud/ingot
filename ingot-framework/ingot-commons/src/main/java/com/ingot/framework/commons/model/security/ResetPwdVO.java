@@ -1,7 +1,8 @@
-package com.ingot.cloud.pms.api.model.vo.biz;
+package com.ingot.framework.commons.model.security;
 
 import java.io.Serializable;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -11,13 +12,16 @@ import lombok.Data;
  * <p>Time         : 10:44 AM.</p>
  */
 @Data
+@Schema(description = "重置密码")
 public class ResetPwdVO implements Serializable {
     /**
      * 用户ID
      */
-    private long id;
+    @Schema(description = "用户ID")
+    private Long id;
     /**
      * 初始化随机验证码
      */
+    @Schema(description = "初始化随机验证码")
     private String random;
 }

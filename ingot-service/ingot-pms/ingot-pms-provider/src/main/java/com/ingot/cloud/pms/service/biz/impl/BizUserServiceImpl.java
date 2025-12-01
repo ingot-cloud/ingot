@@ -19,7 +19,7 @@ import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.model.vo.biz.ResetPwdVO;
+import com.ingot.framework.commons.model.security.ResetPwdVO;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
@@ -72,10 +72,10 @@ public class BizUserServiceImpl implements BizUserService {
     private final UserConvert userConvert;
 
     @Override
-    public IPage<UserPageItemWithBindRoleStatusVO> conditionPage(Page<SysUser> page,
-                                                                 UserQueryDTO condition,
-                                                                 Long orgId,
-                                                                 Long roleId) {
+    public IPage<UserPageItemWithBindRoleStatusVO> conditionPageWithRole(Page<SysUser> page,
+                                                                         UserQueryDTO condition,
+                                                                         Long orgId,
+                                                                         Long roleId) {
         List<Long> userIds = tenantRoleUserPrivateService.listRoleUsers(roleId)
                 .stream()
                 .map(TenantRoleUserPrivate::getUserId)

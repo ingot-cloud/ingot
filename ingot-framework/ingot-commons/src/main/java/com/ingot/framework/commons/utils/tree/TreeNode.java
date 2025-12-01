@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -17,16 +18,19 @@ public class TreeNode<IdType> implements Serializable {
     /**
      * ID
      */
+    @Schema(description = "ID")
     private IdType id;
 
     /**
      * 父ID
      */
+    @Schema(description = "父ID")
     private IdType pid;
 
     /**
      * 子节点
      */
+    @Schema(description = "子列表")
     private List<TreeNode<IdType>> children;
 
     /**
