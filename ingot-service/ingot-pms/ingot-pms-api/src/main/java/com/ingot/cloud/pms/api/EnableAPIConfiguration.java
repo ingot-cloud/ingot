@@ -14,5 +14,5 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @AutoConfiguration
 @EnableFeignClients
 @ConditionalOnClass(Feign.class)
-public class EnableApiAutoConfiguration {
+public class EnableAPIConfiguration {
 }
