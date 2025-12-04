@@ -29,3 +29,36 @@ spring:
       - optional:nacos:${spring.application.name}.yml
 
 
+  kafka:
+    bootstrap-servers: 127.0.0.1:19092,127.0.0.1:29092,127.0.0.1:39092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # ---- 高吞吐写入优化 ----
+      acks: all
+      compression-type: lz4     # lz4最适合20GB/天吞吐,LZ4 是 Kafka 官方推荐的高吞吐压缩，CPU开销小
+      batch-size: 65536         # 64KB批次,大批次提高吞吐
+      linger-ms: 10             # 增加批次积累，提升吞吐, 延迟 10ms 等待更多消息一起发送，提高吞吐
+      buffer-memory: 67108864    # 64MB,防止快速生产者阻塞
+      # 避免发送大消息失败
+      max-request-size: 20000000  # 20MB, 最大20M
+    properties:
+      retries: 5
+      retry.backoff.ms: 200
+
+    # 消费端配置
+    consumer:
+      group-id: test-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ---- 强一致性 ----
+      enable-auto-commit: false
+      auto-offset-reset: latest
+      # ---- 大消息支持 ----
+      max-partition-fetch-bytes: 20000000  # 20MB
+      # ---- 消费端吞吐参数 ----
+      fetch-min-bytes: 1
+      fetch-max-wait-ms: 500
+    listener:
+      ack-mode: manual   # 企业级：手动提交 offset
+

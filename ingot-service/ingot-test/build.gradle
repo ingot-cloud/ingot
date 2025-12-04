@@ -11,4 +11,6 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_security)
     implementation project(ingot.framework_tenant)
+
+    implementation("org.springframework.kafka:spring-kafka")
 }
