@@ -111,6 +111,12 @@ public class R<T> implements Serializable {
         return this;
     }
 
+    public R<T> ifError(Consumer<R<T>> consumer) {
+        if (!isSuccess()) {
+            consumer.accept(this);
+        }
+        return this;
+    }
 
     // 实例方法
     // =============================================================
