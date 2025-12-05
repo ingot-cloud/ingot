@@ -21,5 +21,7 @@ dependencies {
     implementation project(ingot.framework_crypto)
 
     implementation(deps.weixin_java_miniapp)
+
+    implementation project(ingot.pms_api)
 }
 

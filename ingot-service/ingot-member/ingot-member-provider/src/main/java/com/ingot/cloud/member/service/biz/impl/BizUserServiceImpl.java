@@ -2,8 +2,7 @@ package com.ingot.cloud.member.service.biz.impl;
 
 import java.util.List;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,16 +11,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.model.convert.MemberUserConvert;
 import com.ingot.cloud.member.api.model.domain.*;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
+import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.*;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.ResetPwdVO;
 import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.UUIDUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,7 +43,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final MemberUserSocialService userSocialService;
 
     private final MemberRoleService roleService;
-    private final MemberRoleUserService roleUserPrivateService;
+    private final MemberRoleUserService roleUserService;
 
     private final PasswordEncoder passwordEncoder;
     private final AssertionChecker assertionChecker;
@@ -55,20 +57,23 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public List<MemberRole> getUserRoles(long userId) {
-        List<Long> roleIds = roleUserPrivateService.listRoleUsers(userId)
+        List<Long> roleIds = roleUserService.getUserRoles(userId)
                 .stream().map(MemberRoleUser::getRoleId).toList();
-        if (CollUtil.isEmpty(roleIds)) {
-            return ListUtil.empty();
-        }
+        // 内置角色以及绑定角色
         return roleService.list().stream()
-                .filter(item -> roleIds.stream()
+                .filter(item -> BooleanUtil.isTrue(item.getBuiltIn()) || roleIds.stream()
                         .anyMatch(id -> item.getId().equals(id)))
                 .toList();
     }
 
     @Override
     public void setUserRoles(long userId, List<Long> roleIds) {
-        roleUserPrivateService.setRoles(userId, roleIds);
+        List<Long> filterIds = roleService.list(Wrappers.<MemberRole>lambdaQuery()
+                        .in(MemberRole::getId, roleIds))
+                .stream().filter(role -> BooleanUtil.isFalse(role.getBuiltIn()))
+                .map(MemberRole::getId)
+                .toList();
+        roleUserService.setRoles(userId, filterIds);
     }
 
     @Override
@@ -111,6 +116,28 @@ public class BizUserServiceImpl implements BizUserService {
     }
 
     @Override
+    public MemberUser createIfPhoneNotUsed(MemberUserCreateByPhoneDTO params) {
+        MemberUser user = userService.getOne(Wrappers.<MemberUser>lambdaQuery()
+                .eq(MemberUser::getPhone, params.getPhone()));
+        if (user == null) {
+            user = new MemberUser();
+            user.setUsername(params.getPhone());
+            user.setPassword(passwordEncoder.encode(UUIDUtil.generateShortUuid()));
+            user.setAvatar(params.getAvatar());
+            user.setNickname(params.getNickname());
+            user.setPhone(params.getPhone());
+            user.setStatus(UserStatusEnum.ENABLE);
+            user.setInitPwd(Boolean.TRUE);
+            user.setCreatedAt(DateUtil.now());
+            userService.save(user);
+        }
+
+        // join tenant
+        userTenantService.joinTenant(user.getId(), TenantContextHolder.get());
+        return user;
+    }
+
+    @Override
     public ResetPwdVO createUser(MemberUserDTO params) {
         MemberUser user = MemberUserConvert.INSTANCE.toEntity(params);
 
@@ -120,7 +147,7 @@ public class BizUserServiceImpl implements BizUserService {
         user.setUsername(params.getPhone());
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
-        user.setStatus(CommonStatusEnum.ENABLE);
+        user.setStatus(UserStatusEnum.ENABLE);
         userService.create(user);
 
         ResetPwdVO result = new ResetPwdVO();
@@ -139,7 +166,7 @@ public class BizUserServiceImpl implements BizUserService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteUser(long id) {
         // 取消关联角色
-        roleUserPrivateService.clearByUserId(id);
+        roleUserService.clearByUserId(id);
 
         // 取消关联社交信息
         userSocialService.remove(

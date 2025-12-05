@@ -1,7 +1,7 @@
-package com.ingot.cloud.pms.web.v1.app;
+package com.ingot.cloud.member.web.v1.app;
 
+import com.ingot.cloud.member.service.biz.LoginService;
 import com.ingot.cloud.pms.api.model.dto.auth.MiniProgramRegisterDTO;
-import com.ingot.cloud.pms.service.biz.LoginService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
@@ -32,7 +32,7 @@ public class AppAuthAPI implements RShortcuts {
     @Permit
     @PostMapping("/register/social")
     public R<?> register(@RequestBody MiniProgramRegisterDTO params) {
-        loginService.appMiniProgramRegister(params);
+        loginService.miniProgramRegister(params);
         return ok();
     }
 }

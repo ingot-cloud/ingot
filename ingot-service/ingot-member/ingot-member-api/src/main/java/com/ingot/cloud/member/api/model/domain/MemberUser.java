@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
+import com.ingot.framework.core.utils.sensitive.Sensitive;
+import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
+import com.ingot.framework.oss.common.OssUrl;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -60,23 +63,26 @@ public class MemberUser extends BaseModel<MemberUser> {
     /**
      * 手机号
      */
+    @Sensitive(mode = SensitiveMode.MOBILE_PHONE)
     private String phone;
 
     /**
      * 邮件地址
      */
+    @Sensitive(mode = SensitiveMode.EMAIL)
     private String email;
 
     /**
      * 头像
      */
+    @OssUrl
     private String avatar;
 
     /**
      * 状态, 0:正常，9:禁用
      */
     @TableField("`status`")
-    private CommonStatusEnum status;
+    private UserStatusEnum status;
 
     /**
      * 创建日期

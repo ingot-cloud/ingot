@@ -4,6 +4,7 @@ import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
+import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -23,4 +24,8 @@ public interface MemberUserConvert {
     MemberUser toEntity(MemberUserBaseInfoDTO params);
 
     MemberUser toEntity(MemberUserDTO params);
+
+    UserDetailsResponse toUserDetails(MemberUser in);
+
+    MemberUserBaseInfoDTO toUserBaseInfo(MemberUser in);
 }

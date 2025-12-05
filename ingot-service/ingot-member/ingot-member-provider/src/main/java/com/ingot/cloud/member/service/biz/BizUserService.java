@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.model.domain.MemberRole;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
+import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
+import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.framework.commons.model.security.ResetPwdVO;
 
 /**
@@ -59,6 +61,14 @@ public interface BizUserService {
      * @param params 基本信息参数
      */
     void updateUserBaseInfo(long id, MemberUserBaseInfoDTO params);
+
+    /**
+     * 创建用户, 如果手机号已经创建用户那么不处理
+     *
+     * @param params {@link MemberUserCreateByPhoneDTO}
+     * @return {@link Member}
+     */
+    MemberUser createIfPhoneNotUsed(MemberUserCreateByPhoneDTO params);
 
     /**
      * 创建用户

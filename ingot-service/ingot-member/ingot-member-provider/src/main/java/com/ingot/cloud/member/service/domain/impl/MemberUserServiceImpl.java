@@ -7,7 +7,7 @@ import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.enums.MemberErrorCode;
 import com.ingot.cloud.member.mapper.MemberUserMapper;
 import com.ingot.cloud.member.service.domain.MemberUserService;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
@@ -35,7 +35,7 @@ public class MemberUserServiceImpl extends BaseServiceImpl<MemberUserMapper, Mem
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreatedAt(DateUtil.now());
         if (user.getStatus() == null) {
-            user.setStatus(CommonStatusEnum.ENABLE);
+            user.setStatus(UserStatusEnum.ENABLE);
         }
 
         checkUserUniqueField(user, null);
