@@ -17,10 +17,9 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.IssuerUriCondition;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.ConditionalOnIssuerLocationJwtDecoder;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -42,7 +41,7 @@ public class CustomOAuth2ResourceServerJwtConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(JwtDecoder.class)
-    @Conditional(IssuerUriCondition.class)
+    @ConditionalOnIssuerLocationJwtDecoder
     JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties,
                                      InSecurityProperties inSecurityProperties) {
         log.info("[CustomOAuth2ResourceServerJwtConfiguration] jwtDecoderByIssuerUri, 使用CustomJwtValidators.createDefaultWithIssuer");
