@@ -13,6 +13,14 @@ import com.ingot.framework.commons.model.support.R;
 public interface RemoteUserDetailsService {
 
     /**
+     * 判断是否支持
+     *
+     * @param params {@link UserDetailsRequest}
+     * @return Boolean
+     */
+    boolean supports(UserDetailsRequest params);
+
+    /**
      * 获取用户详情
      *
      * @param params 详情请求参数

@@ -18,13 +18,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum SocialTypeEnum {
-    ADMIN_SMS("admin_sms", "短信登录"),
-    ADMIN_WECHAT("admin_wechat", "微信登录"),
-    ADMIN_MINI_PROGRAM("admin_miniprogram", "微信小程序"),
-
-    APP_SMS("app_sms", "短信登录"),
-    APP_WECHAT("app_wechat", "微信登录"),
-    APP_MINI_PROGRAM("app_miniprogram", "微信小程序");
+    WECHAT_MINI_PROGRAM("wechat_miniprogram", "微信小程序");
 
     @JsonValue
     @EnumValue

@@ -3,6 +3,7 @@ package com.ingot.cloud.auth.service;
 import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,13 @@ import lombok.RequiredArgsConstructor;
  * <p>Time         : 4:05 PM.</p>
  */
 @RequiredArgsConstructor
-public class DefaultRemoteUserDetailsService implements RemoteUserDetailsService {
+public class DefaultPmsRemoteUserDetailsService implements RemoteUserDetailsService {
     private final PmsUserDetailsService pmsApi;
+
+    @Override
+    public boolean supports(UserDetailsRequest params) {
+        return params.getUserType() == UserTypeEnum.ADMIN;
+    }
 
     @Override
     public R<UserDetailsResponse> fetchUserDetails(UserDetailsRequest params) {

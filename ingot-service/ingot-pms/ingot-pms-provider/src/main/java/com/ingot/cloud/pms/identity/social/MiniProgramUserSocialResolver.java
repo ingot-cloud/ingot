@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.social.impl;
+package com.ingot.cloud.pms.identity.social;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -7,41 +7,41 @@ import com.ingot.cloud.pms.core.BizSocialUtils;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserSocialService;
-import com.ingot.cloud.pms.social.SocialProcessor;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.security.core.identity.social.UserSocialResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
- * <p>Description  : AdminMiniProgramSocialProcessor.</p>
+ * <p>Description  : MiniProgramUserSocialResolver.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2024/1/18.</p>
- * <p>Time         : 13:32.</p>
+ * <p>Date         : 2025/12/3.</p>
+ * <p>Time         : 15:59.</p>
  */
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
-public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser> {
+public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser> {
     private final SysUserService sysUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysSocialDetailsService sysSocialDetailsService;
 
     @Override
-    public boolean support(SocialTypeEnum socialType) {
-        return socialType == SocialTypeEnum.ADMIN_MINI_PROGRAM;
+    public boolean supports(SocialTypeEnum socialType) {
+        return socialType == SocialTypeEnum.WECHAT_MINI_PROGRAM;
     }
 
     @Override
     public String getUniqueID(String code) {
-        return BizSocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.ADMIN_MINI_PROGRAM, code);
+        return BizSocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.WECHAT_MINI_PROGRAM, code);
     }
 
     @Override
     public SysUser getUserInfo(String uniqueID) {
         SysUserSocial userSocial = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnum.WECHAT_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID));
         if (userSocial == null) {
             log.debug("微信小程序未绑定openId={}", uniqueID);
@@ -54,7 +54,7 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
     @Override
     public void bind(SysUser user, String uniqueID) {
         SysUserSocial current = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
-                .eq(SysUserSocial::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM)
+                .eq(SysUserSocial::getType, SocialTypeEnum.WECHAT_MINI_PROGRAM)
                 .eq(SysUserSocial::getUniqueId, uniqueID)
                 .eq(SysUserSocial::getUserId, user.getId()));
         // 如果当前存在绑定关系，那么更新绑定关系
@@ -67,10 +67,9 @@ public class AdminMiniProgramSocialProcessor implements SocialProcessor<SysUser>
 
         SysUserSocial userSocial = new SysUserSocial();
         userSocial.setUserId(user.getId());
-        userSocial.setType(SocialTypeEnum.ADMIN_MINI_PROGRAM);
+        userSocial.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
         userSocial.setBindAt(DateUtil.now());
         sysUserSocialService.save(userSocial);
     }
 }
-

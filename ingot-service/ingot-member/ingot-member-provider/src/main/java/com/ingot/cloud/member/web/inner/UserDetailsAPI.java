@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Permit(mode = PermitMode.INNER)
 @RestController
-@RequestMapping(value = "/user/details")
+@RequestMapping(value = "/inner/user/details")
 @RequiredArgsConstructor
 public class UserDetailsAPI implements RShortcuts {
     private final UserIdentityService userIdentityService;

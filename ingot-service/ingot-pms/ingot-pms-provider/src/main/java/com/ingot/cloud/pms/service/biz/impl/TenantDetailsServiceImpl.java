@@ -1,10 +1,14 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.common.BizUtils;
@@ -49,4 +53,24 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
         response.setAllows(allows);
         return response;
     }
+
+    @Override
+    public TenantDetailsResponse getTenantByIds(List<Long> ids) {
+        TenantDetailsResponse response = new TenantDetailsResponse();
+        if (CollUtil.isEmpty(ids)) {
+            response.setAllows(ListUtil.empty());
+            return response;
+        }
+        List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService, new HashSet<>(ids),
+                (item) -> item.setMain(false));
+        response.setAllows(allows);
+        return response;
+    }
+
+    @Override
+    public SysTenant getTenantById(Long id) {
+        return sysTenantService.getById(id);
+    }
+
+
 }

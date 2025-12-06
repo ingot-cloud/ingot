@@ -55,7 +55,10 @@ public class InOAuth2AuthorizationServerConfiguration {
                             .clientAuthentication(new OAuth2ClientAuthenticationCustomizer())
                             .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer());
                 })
-                .with(enhanceConfigurer, Customizer.withDefaults());
+                .with(enhanceConfigurer, (configurer) -> {
+                    // 自定义配置
+                    configurer.preAuthorizationEndpoint(new OAuth2PreAuthorizationEndpointCustomizer());
+                });
     }
     // @formatter:on
 

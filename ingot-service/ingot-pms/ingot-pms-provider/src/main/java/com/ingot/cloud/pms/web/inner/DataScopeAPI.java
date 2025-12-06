@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Permit(mode = PermitMode.INNER)
 @RestController
-@RequestMapping(value = "/dataScope")
+@RequestMapping(value = "/inner/dataScope")
 @RequiredArgsConstructor
 public class DataScopeAPI implements RShortcuts {
     private final BizRoleService bizRoleService;

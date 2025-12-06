@@ -10,6 +10,7 @@ import com.ingot.cloud.member.mapper.MemberUserTenantMapper;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.framework.commons.model.common.TenantBaseDTO;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
@@ -85,6 +86,16 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
 
         update(entity, Wrappers.<MemberUserTenant>lambdaUpdate()
                 .eq(MemberUserTenant::getTenantId, tenantId));
+    }
+
+    @Override
+    public void updateBase(TenantBaseDTO params) {
+        MemberUserTenant entity = new MemberUserTenant();
+        entity.setName(params.getName());
+        entity.setAvatar(params.getAvatar());
+
+        update(entity, Wrappers.<MemberUserTenant>lambdaUpdate()
+                .eq(MemberUserTenant::getTenantId, params.getId()));
     }
 
     @Override

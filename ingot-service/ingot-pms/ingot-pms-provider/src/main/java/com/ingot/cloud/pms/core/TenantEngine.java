@@ -4,7 +4,7 @@ import java.util.List;
 
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.AppUserTenant;
+import com.ingot.cloud.member.api.rpc.RemoteMemberTenantService;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
@@ -33,10 +33,6 @@ public class TenantEngine {
     private final SysTenantService sysTenantService;
     private final SysUserService sysUserService;
     private final SysUserTenantService sysUserTenantService;
-    private final AppUserTenantService appUserTenantService;
-    private final AppRoleService appRoleService;
-    private final AppRoleUserService appRoleUserService;
-
 
     private final TenantAppConfigService tenantAppConfigService;
     private final TenantDeptService tenantDeptService;
@@ -47,6 +43,8 @@ public class TenantEngine {
 
     private final BizUserService bizUserService;
     private final BizRoleService bizRoleService;
+
+    private final RemoteMemberTenantService remoteMemberTenantService;
 
     private final BizIdGen bizIdGen;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -135,14 +133,8 @@ public class TenantEngine {
             // 清空用户部门关联关系
             tenantUserDeptPrivateService.clearByTenantId(id);
 
-            // app用户取消关联组织信息
-            appUserTenantService.remove(Wrappers.<AppUserTenant>lambdaQuery()
-                    .eq(AppUserTenant::getTenantId, id));
-
-            // 取消关联角色
-            appRoleUserService.remove(Wrappers.lambdaQuery());
-
-            appRoleService.remove(Wrappers.lambdaQuery());
+            // 删除member服务关联数据
+            remoteMemberTenantService.deleteTenant(id);
 
             // clear cache
             RedisUtils.deleteKeys(redisTemplate, ListUtil.list(false, "*"));

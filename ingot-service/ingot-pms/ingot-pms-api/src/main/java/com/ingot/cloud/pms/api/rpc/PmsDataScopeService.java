@@ -26,7 +26,7 @@ public interface PmsDataScopeService {
      *
      * @param roleCodeList 角色编码
      */
-    @PostMapping("/dataScope/role/roleListByCodes")
+    @PostMapping("/inner/dataScope/role/roleListByCodes")
     R<List<RoleType>> getRoleListByCodes(@RequestBody List<String> roleCodeList);
 
     /**
@@ -34,7 +34,7 @@ public interface PmsDataScopeService {
      *
      * @param deptId 部门ID
      */
-    @GetMapping("/dataScope/dept/selfAndDescendantList/{deptId}")
+    @GetMapping("/inner/dataScope/dept/selfAndDescendantList/{deptId}")
     R<List<TenantDept>> getSelfAndDescendantList(@PathVariable("deptId") Long deptId);
 
     /**
@@ -42,9 +42,9 @@ public interface PmsDataScopeService {
      *
      * @param userId 用户ID
      */
-    @GetMapping("/dept/userSelfAndDescendantDeptList/{userId}")
+    @GetMapping("/inner/dept/userSelfAndDescendantDeptList/{userId}")
     R<List<TenantDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId);
 
-    @GetMapping("/dataScope/dept/userDeptIds/{userId}")
+    @GetMapping("/inner/dataScope/dept/userDeptIds/{userId}")
     R<List<Long>> getUserDeptIds(@PathVariable("userId") Long userId);
 }

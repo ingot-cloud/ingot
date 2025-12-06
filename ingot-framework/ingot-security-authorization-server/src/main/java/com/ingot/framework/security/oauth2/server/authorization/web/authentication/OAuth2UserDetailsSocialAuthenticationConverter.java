@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.web.authentication;
 
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.SocialUtil;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
@@ -38,7 +39,8 @@ public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDe
 
         String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
         String principal = UsernameUri.of(
-                SocialUtil.uniqueCode(socialType, code), userTypeValue, getGrantType().getValue(), tenant).getValue();
+                SocialUtil.uniqueCode(socialType, code), userTypeValue,
+                getGrantType().getValue(), tenant, UserIdentityTypeEnum.SOCIAL.getValue()).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         null, getGrantType(), clientPrincipal);

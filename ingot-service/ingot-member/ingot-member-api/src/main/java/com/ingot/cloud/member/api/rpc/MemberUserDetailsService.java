@@ -17,6 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(contextId = "memberUserDetailsService", value = ServiceNameConstants.MEMBER_SERVICE)
 public interface MemberUserDetailsService {
 
-    @PostMapping(value = "/user/details")
+    @PostMapping(value = "/inner/user/details")
     R<UserDetailsResponse> getUserAuthDetails(@RequestBody UserDetailsRequest params);
 }

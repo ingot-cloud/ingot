@@ -5,6 +5,14 @@ import java.util.List;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.InTokenAuthConfigurer;
 import com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2InnerResourceConfigurer;
+import com.ingot.framework.security.core.identity.DefaultUserIdentityResolver;
+import com.ingot.framework.security.core.identity.DefaultUserIdentityService;
+import com.ingot.framework.security.core.identity.UserIdentityResolver;
+import com.ingot.framework.security.core.identity.UserIdentityService;
+import com.ingot.framework.security.core.identity.social.DefaultUserSocialResolver;
+import com.ingot.framework.security.core.identity.social.DefaultUserSocialService;
+import com.ingot.framework.security.core.identity.social.UserSocialResolver;
+import com.ingot.framework.security.core.identity.social.UserSocialService;
 import com.ingot.framework.security.core.tenantdetails.DefaultTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
@@ -123,8 +131,8 @@ public class InOAuth2ResourceServerConfiguration {
     @Bean
     @ConditionalOnBean(RemoteUserDetailsService.class)
     @ConditionalOnMissingBean(UserDetailsService.class)
-    public OAuth2UserDetailsService passwordUserDetailsService(RemoteUserDetailsService remoteUserDetailsService) {
-        return new RemoteOAuth2UserDetailsService(remoteUserDetailsService);
+    public OAuth2UserDetailsService primaryUserDetailsService(List<RemoteUserDetailsService> remoteUserDetailsServices) {
+        return new RemoteOAuth2UserDetailsService(remoteUserDetailsServices);
     }
 
     @Bean
@@ -168,4 +176,27 @@ public class InOAuth2ResourceServerConfiguration {
         return new AnnotationTemplateExpressionDefaults();
     }
 
+    @Bean
+    @ConditionalOnMissingBean(UserIdentityService.class)
+    public UserIdentityService userIdentityService(List<UserIdentityResolver> resolvers) {
+        return new DefaultUserIdentityService(resolvers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserSocialService.class)
+    public UserSocialService socialResolverService(List<UserSocialResolver<?>> resolvers) {
+        return new DefaultUserSocialService(resolvers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserSocialResolver.class)
+    public UserSocialResolver<?> userSocialResolver() {
+        return new DefaultUserSocialResolver();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserIdentityResolver.class)
+    public UserIdentityResolver userIdentityResolver() {
+        return new DefaultUserIdentityResolver();
+    }
 }

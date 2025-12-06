@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.types;
+package com.ingot.framework.commons.model.types;
 
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 

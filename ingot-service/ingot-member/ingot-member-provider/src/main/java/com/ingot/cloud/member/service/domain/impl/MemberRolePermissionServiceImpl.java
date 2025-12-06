@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author jymot
@@ -113,5 +113,15 @@ public class MemberRolePermissionServiceImpl extends BaseServiceImpl<MemberRoleP
     public void clearByRoleId(long roleId) {
         remove(Wrappers.<MemberRolePermission>lambdaQuery()
                 .eq(MemberRolePermission::getRoleId, roleId));
+    }
+
+    @Override
+    @CacheEvict(
+            value = CacheConstants.MEMBER_ROLE_PERMISSIONS,
+            allEntries = true
+    )
+    public void clearByTenantId(long tenantId) {
+        remove(Wrappers.<MemberRolePermission>lambdaQuery()
+                .eq(MemberRolePermission::getTenantId, tenantId));
     }
 }

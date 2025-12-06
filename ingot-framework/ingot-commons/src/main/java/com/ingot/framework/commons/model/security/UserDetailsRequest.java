@@ -14,6 +14,10 @@ import lombok.Data;
 @Data
 public class UserDetailsRequest implements Serializable {
     /**
+     * 身份类型
+     */
+    private UserIdentityTypeEnum type;
+    /**
      * 唯一编码，根据类型判断，可以是用户名或手机号或社交openId等
      */
     private String username;

@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.member.api.rpc.RemoteMemberTenantService;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
@@ -23,6 +24,7 @@ import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizOrgService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.OrgConstants;
+import com.ingot.framework.commons.model.common.TenantBaseDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -45,7 +47,6 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final TenantEngine tenantEngine;
     private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
-    private final AppUserTenantService appUserTenantService;
     private final AssertionChecker assertionChecker;
 
     private final MetaAppService metaAppService;
@@ -54,6 +55,7 @@ public class BizOrgServiceImpl implements BizOrgService {
 
     private final BizAppService bizAppService;
     private final AuthorityConvert authorityConvert;
+    private final RemoteMemberTenantService remoteMemberTenantService;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -153,9 +155,13 @@ public class BizOrgServiceImpl implements BizOrgService {
         params.setEndAt(null);
         sysTenantService.updateTenantById(params);
 
-        if (StrUtil.isNotEmpty(params.getName())) {
+        if (StrUtil.isNotEmpty(params.getName()) || StrUtil.isNotEmpty(params.getAvatar())) {
             sysUserTenantService.updateBase(params);
-            appUserTenantService.updateBase(params);
+
+            TenantBaseDTO dto = new TenantBaseDTO();
+            dto.setId(params.getId());
+            dto.setName(params.getName());
+            remoteMemberTenantService.updateTenantBase(dto);
         }
     }
 

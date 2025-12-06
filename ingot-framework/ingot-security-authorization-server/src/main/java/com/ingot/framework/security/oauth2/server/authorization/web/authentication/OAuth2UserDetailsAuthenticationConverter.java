@@ -2,6 +2,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.UsernameUri;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
@@ -48,7 +49,8 @@ public abstract class OAuth2UserDetailsAuthenticationConverter implements Authen
         }
 
         String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
-        String principal = UsernameUri.of(username, userTypeValue, getGrantType().getValue(), tenant).getValue();
+        String principal = UsernameUri.of(username, userTypeValue,
+                getGrantType().getValue(), tenant, UserIdentityTypeEnum.USERNAME.getValue()).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         password, getGrantType(), clientPrincipal);

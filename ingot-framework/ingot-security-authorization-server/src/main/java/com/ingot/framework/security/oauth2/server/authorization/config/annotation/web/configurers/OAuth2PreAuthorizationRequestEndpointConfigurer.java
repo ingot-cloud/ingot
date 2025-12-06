@@ -13,9 +13,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2ClientAuthenticationConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationServerMetadataEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationClientAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.context.RedisSecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -30,9 +33,24 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
     private static final String DEFAULT_PRE_AUTHORIZATION_ENDPOINT_URI = SecurityConstants.PRE_AUTHORIZE_URI;
 
     private RequestMatcher requestMatcher;
+    private AuthenticationFailureHandler errorResponseHandler;
 
     OAuth2PreAuthorizationRequestEndpointConfigurer(ObjectPostProcessor<Object> objectPostProcessor) {
         super(objectPostProcessor);
+    }
+
+    /**
+     * Sets the {@link AuthenticationFailureHandler} used for handling a failed client
+     * authentication and returning the {@link OAuth2Error Error Response}.
+     *
+     * @param errorResponseHandler the {@link AuthenticationFailureHandler} used for
+     *                             handling a failed client authentication
+     * @return the {@link OAuth2ClientAuthenticationConfigurer} for further configuration
+     */
+    public OAuth2PreAuthorizationRequestEndpointConfigurer errorResponseHandler(
+            AuthenticationFailureHandler errorResponseHandler) {
+        this.errorResponseHandler = errorResponseHandler;
+        return this;
     }
 
     @Override
@@ -60,12 +78,18 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
         // user details
         OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter userDetailsFilter =
                 new OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter(authenticationManager, this.requestMatcher);
+        if (errorResponseHandler != null) {
+            userDetailsFilter.setAuthenticationFailureHandler(errorResponseHandler);
+        }
         httpSecurity.addFilterBefore(
                 postProcess(userDetailsFilter), OAuth2PreAuthorizationCodeRequestEndpointFilter.class);
 
         // 增加处理client认证
         OAuth2PreAuthorizationClientAuthenticationFilter clientFilter =
                 new OAuth2PreAuthorizationClientAuthenticationFilter(authenticationManager, this.requestMatcher);
+        if (errorResponseHandler != null) {
+            clientFilter.setAuthenticationFailureHandler(errorResponseHandler);
+        }
         httpSecurity.addFilterBefore(
                 postProcess(clientFilter), OAuth2PreAuthorizationCodeRequestUserDetailsAuthenticationFilter.class);
     }

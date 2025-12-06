@@ -11,7 +11,6 @@ import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
-import com.ingot.cloud.pms.api.model.domain.Member;
 import com.ingot.framework.commons.model.security.ResetPwdVO;
 
 /**
@@ -66,7 +65,7 @@ public interface BizUserService {
      * 创建用户, 如果手机号已经创建用户那么不处理
      *
      * @param params {@link MemberUserCreateByPhoneDTO}
-     * @return {@link Member}
+     * @return {@link MemberUser}
      */
     MemberUser createIfPhoneNotUsed(MemberUserCreateByPhoneDTO params);
 

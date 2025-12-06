@@ -54,7 +54,7 @@ public class WechatConfiguration implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         // 获取所有小程序配置
         List<SysSocialDetails> list = sysSocialDetailsService.list(Wrappers.<SysSocialDetails>lambdaQuery()
-                .in(SysSocialDetails::getType, SocialTypeEnum.ADMIN_MINI_PROGRAM, SocialTypeEnum.APP_MINI_PROGRAM));
+                .in(SysSocialDetails::getType, SocialTypeEnum.WECHAT_MINI_PROGRAM));
         if (CollUtil.isEmpty(list)) {
             return;
         }

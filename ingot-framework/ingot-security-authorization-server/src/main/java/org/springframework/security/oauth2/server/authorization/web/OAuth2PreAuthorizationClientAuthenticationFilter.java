@@ -11,9 +11,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretBasicAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.ClientSecretPostAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.JwtClientAssertionAuthenticationConverter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.DelegatingAuthenticationConverter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -44,5 +46,16 @@ public final class OAuth2PreAuthorizationClientAuthenticationFilter extends Once
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         proxy.doFilterInternal(request, response, filterChain);
+    }
+
+    /**
+     * Sets the {@link AuthenticationFailureHandler} used for handling a failed client
+     * authentication and returning the {@link OAuth2Error Error Response}.
+     *
+     * @param authenticationFailureHandler the {@link AuthenticationFailureHandler} used
+     *                                     for handling a failed client authentication
+     */
+    public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
+        proxy.setAuthenticationFailureHandler(authenticationFailureHandler);
     }
 }

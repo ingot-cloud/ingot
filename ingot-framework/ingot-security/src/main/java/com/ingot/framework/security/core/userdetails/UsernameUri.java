@@ -2,6 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -18,18 +19,19 @@ public class UsernameUri {
     private static final String PRINCIPAL = "principal";
     private static final String USER_TYPE = "userType";
     private static final String TENANT = "tenant";
+    private static final String USER_IDENTITY_TYPE = "userIdentityType";
 
     private final UriComponents uri;
 
-    public static UsernameUri of(String value, String userType, String grantType, String tenant) {
-        return new UsernameUri(value, userType, grantType, tenant);
+    public static UsernameUri of(String value, String userType, String grantType, String tenant, String userIdentityType) {
+        return new UsernameUri(value, userType, grantType, tenant, userIdentityType);
     }
 
     public static UsernameUri of(String uriValue) {
         return new UsernameUri(uriValue);
     }
 
-    private UsernameUri(String value, String userType, String grantType, String tenant) {
+    private UsernameUri(String value, String userType, String grantType, String tenant, String userIdentityType) {
         this.uri = UriComponentsBuilder.newInstance()
                 .scheme(SCHEME)
                 .host(HOST)
@@ -37,6 +39,7 @@ public class UsernameUri {
                 .queryParam(PRINCIPAL, value)
                 .queryParam(USER_TYPE, userType)
                 .queryParam(TENANT, tenant)
+                .queryParam(USER_IDENTITY_TYPE, userIdentityType)
                 .build();
     }
 
@@ -69,5 +72,10 @@ public class UsernameUri {
     public long getTenant() {
         String tenant = this.uri.getQueryParams().getFirst(TENANT);
         return StrUtil.isEmpty(tenant) ? 0 : NumberUtil.parseLong(tenant, 0L);
+    }
+
+    public UserIdentityTypeEnum getUserIdentityType() {
+        UserIdentityTypeEnum userIdentityType = UserIdentityTypeEnum.getEnum(this.uri.getQueryParams().getFirst(USER_IDENTITY_TYPE));
+        return userIdentityType == null ? UserIdentityTypeEnum.USERNAME : userIdentityType;
     }
 }

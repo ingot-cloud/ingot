@@ -3,6 +3,7 @@ package com.ingot.cloud.member.service.domain;
 import java.util.List;
 
 import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
+import com.ingot.framework.commons.model.common.TenantBaseDTO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
@@ -42,6 +43,13 @@ public interface MemberUserTenantService extends BaseService<MemberUserTenant> {
      * @param tenant 租户ID
      */
     void updateBase(long tenant);
+
+    /**
+     * 更新基本信息
+     *
+     * @param params {@link TenantBaseDTO}
+     */
+    void updateBase(TenantBaseDTO params);
 
     /**
      * 获取用户组织

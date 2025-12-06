@@ -1,7 +1,10 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.util.List;
+
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
+import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.SocialUtil;
 import com.ingot.framework.security.oauth2.core.InAuthorizationGrantType;
@@ -20,7 +23,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 @Slf4j
 @RequiredArgsConstructor
 public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService {
-    private final RemoteUserDetailsService remoteUserDetailsService;
+    private final List<RemoteUserDetailsService> remoteUserDetailsServices;
 
     @Override
     public boolean supports(AuthorizationGrantType grantType) {
@@ -43,8 +46,10 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
         String grantType = uri.getGrantType();
         UserTypeEnum userType = uri.getUserType();
         long tenant = uri.getTenant();
+        UserIdentityTypeEnum userIdentityType = uri.getUserIdentityType();
 
         UserDetailsRequest params = new UserDetailsRequest();
+        params.setType(userIdentityType);
         params.setUsername(uri.getPrincipal());
         params.setGrantType(grantType);
         params.setUserType(userType);
@@ -65,6 +70,21 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
             params.setSocialCode(socialCode);
         }
 
+        RemoteUserDetailsService remoteUserDetailsService = getService(params);
+        if (remoteUserDetailsService == null) {
+            log.error("[RemoteOAuth2UserDetailsService] 未找到指定用户类型的RemoteUserDetailsService实现类");
+            return null;
+        }
+
         return parse(remoteUserDetailsService.fetchUserDetails(params));
+    }
+
+    private RemoteUserDetailsService getService(UserDetailsRequest params) {
+        for (RemoteUserDetailsService service : remoteUserDetailsServices) {
+            if (service.supports(params)) {
+                return service;
+            }
+        }
+        return null;
     }
 }

@@ -114,7 +114,7 @@ public class SystemUserAPI implements RShortcuts {
     }
 
     @AdminOrHasAnyAuthority({"platform:system:user:reset"})
-    @PutMapping("/pwd/{userId}")
+    @PutMapping("/{userId}/reset-password")
     @Operation(summary = "重置密码", description = "重置密码")
     public R<?> resetPwd(@PathVariable Long userId) {
         return ok(bizUserService.resetPwd(userId));

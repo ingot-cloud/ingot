@@ -8,6 +8,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
@@ -17,7 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 /**
  * <p>Description  : 由于{@link InOAuth2ResourceServerConfiguration}注入了
  * 多个{@link UserDetailsService}，所以Spring默认的
- * InitializeUserDetailsBeanManagerConfigurer无法提供{@link DaoAuthenticationProvider}
+ * org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer
+ * 无法提供{@link DaoAuthenticationProvider}
  * 导致无法认证{@link UsernamePasswordAuthenticationToken}.
  * 因为Spring默认配置中，在获取{@link UserDetailsService}时，如果注入了多个会返回null，从而
  * 使得{@link DaoAuthenticationProvider}无法实例成功</p>
@@ -61,13 +63,16 @@ public class InitializeUserDetailsBeanManagerConfigurer extends GlobalAuthentica
             }
             PasswordEncoder passwordEncoder = getBeanOrNull(PasswordEncoder.class);
             UserDetailsPasswordService passwordManager = getBeanOrNull(UserDetailsPasswordService.class);
-            InDaoAuthenticationProvider provider = new InDaoAuthenticationProvider();
-            provider.setUserDetailsService(userDetailsService);
+            CompromisedPasswordChecker passwordChecker = getBeanOrNull(CompromisedPasswordChecker.class);
+            InDaoAuthenticationProvider provider = new InDaoAuthenticationProvider(userDetailsService);
             if (passwordEncoder != null) {
                 provider.setPasswordEncoder(passwordEncoder);
             }
             if (passwordManager != null) {
                 provider.setUserDetailsPasswordService(passwordManager);
+            }
+            if (passwordChecker != null) {
+                provider.setCompromisedPasswordChecker(passwordChecker);
             }
             provider.afterPropertiesSet();
             auth.authenticationProvider(provider);

@@ -9,7 +9,7 @@ import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author jymot
@@ -51,4 +51,11 @@ public interface MemberRolePermissionService extends BaseService<MemberRolePermi
      * @param roleId 角色ID
      */
     void clearByRoleId(long roleId);
+
+    /**
+     * 根据租户ID清理角色权限关系
+     *
+     * @param tenantId 租户ID
+     */
+    void clearByTenantId(long tenantId);
 }

@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.service.biz;
 
+import java.util.List;
+
+import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 
 /**
@@ -17,4 +20,20 @@ public interface TenantDetailsService {
      * @return {@link TenantDetailsResponse}
      */
     TenantDetailsResponse getUserTenantDetails(String username);
+
+    /**
+     * 获取租户详情
+     *
+     * @param ids id列表
+     * @return {@link TenantDetailsResponse}
+     */
+    TenantDetailsResponse getTenantByIds(List<Long> ids);
+
+    /**
+     * 获取指定租户详情
+     *
+     * @param id 租户ID
+     * @return {@link SysTenant}
+     */
+    SysTenant getTenantById(Long id);
 }
