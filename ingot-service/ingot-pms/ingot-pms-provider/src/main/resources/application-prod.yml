@@ -17,7 +17,7 @@ spring:
         namespace: ${spring.cloud.nacos.discovery.namespace}
         username: ${spring.cloud.nacos.discovery.username}
         password: ${spring.cloud.nacos.discovery.password}
-        group: DEFAULT_GROUP
+        group: PROD_GROUP
   config:
     import:
       - optional:nacos:application-common.yml
