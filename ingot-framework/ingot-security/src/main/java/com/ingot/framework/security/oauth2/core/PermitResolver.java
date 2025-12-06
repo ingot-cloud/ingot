@@ -18,7 +18,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
@@ -62,7 +62,7 @@ public class PermitResolver implements InitializingBean {
      * 内部资源 RequestMatcher
      */
     public RequestMatcher innerRequestMatcher() {
-        List<AntPathRequestMatcher> matchers = getMatchers(properties.getInnerUrls());
+        List<PathPatternRequestMatcher> matchers = getMatchers(properties.getInnerUrls());
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -70,7 +70,7 @@ public class PermitResolver implements InitializingBean {
      * public资源 RequestMatcher
      */
     public RequestMatcher publicRequestMatcher() {
-        List<AntPathRequestMatcher> matchers = getMatchers(properties.getPublicUrls());
+        List<PathPatternRequestMatcher> matchers = getMatchers(properties.getPublicUrls());
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -81,7 +81,7 @@ public class PermitResolver implements InitializingBean {
         List<String> all = new ArrayList<>();
         all.addAll(properties.getInnerUrls());
         all.addAll(properties.getPublicUrls());
-        List<AntPathRequestMatcher> matchers = getMatchers(all);
+        List<PathPatternRequestMatcher> matchers = getMatchers(all);
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -189,7 +189,7 @@ public class PermitResolver implements InitializingBean {
         }
     }
 
-    private List<AntPathRequestMatcher> getMatchers(List<String> urls) {
+    private List<PathPatternRequestMatcher> getMatchers(List<String> urls) {
         return urls.stream()
                 .filter(url -> {
                     List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
@@ -199,14 +199,18 @@ public class PermitResolver implements InitializingBean {
                     List<String> urlAndMethod = StrUtil.split(url, StrUtil.COMMA);
                     // 长度为1，默认method为*
                     if (urlAndMethod.size() == 1 || StrUtil.equals(urlAndMethod.get(1), "*")) {
-                        AntPathRequestMatcher[] antPathRequestMatchers =
-                                {new AntPathRequestMatcher(urlAndMethod.get(0))};
-                        return Arrays.stream(antPathRequestMatchers);
+                        PathPatternRequestMatcher matcher = PathPatternRequestMatcher
+                                .withDefaults()
+                                .matcher(urlAndMethod.get(0));
+                        PathPatternRequestMatcher[] matchers = {matcher};
+                        return Arrays.stream(matchers);
                     }
                     List<String> methods = StrUtil.split(urlAndMethod.get(1), VERTICAL_LINE);
                     return Arrays.stream(methods.stream()
-                            .map(method -> new AntPathRequestMatcher(urlAndMethod.get(0), method))
-                            .toList().toArray(new AntPathRequestMatcher[methods.size()]));
+                            .map(method -> PathPatternRequestMatcher
+                                    .withDefaults()
+                                    .matcher(HttpMethod.valueOf(method), urlAndMethod.get(0)))
+                            .toList().toArray(new PathPatternRequestMatcher[methods.size()]));
                 }).collect(Collectors.toList());
     }
 }

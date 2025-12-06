@@ -26,7 +26,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2ClientAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
@@ -50,8 +50,9 @@ public final class OAuth2TokenEndpointEnhanceConfigurer extends AbstractOAuth2Co
         }
 
         AuthorizationServerSettings providerSettings = OAuth2ConfigurerUtils.getAuthorizationServerSettings(httpSecurity);
-        this.requestMatcher = new AntPathRequestMatcher(
-                providerSettings.getTokenEndpoint(), HttpMethod.POST.name());
+        this.requestMatcher = PathPatternRequestMatcher
+                .withDefaults()
+                .matcher(HttpMethod.POST, providerSettings.getTokenEndpoint());
 
         List<AuthenticationProvider> authenticationProviders = createAuthenticationProviders(httpSecurity);
         authenticationProviders.forEach(authenticationProvider ->

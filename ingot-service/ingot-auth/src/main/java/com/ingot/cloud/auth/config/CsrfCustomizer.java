@@ -6,7 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 /**
  * <p>Description  : CsrfCustomizer.</p>
@@ -16,10 +16,10 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  */
 @RequiredArgsConstructor
 public class CsrfCustomizer implements Customizer<CsrfConfigurer<HttpSecurity>> {
-    private static final AntPathRequestMatcher LOGIN_MATCHER
-            = new AntPathRequestMatcher(
-            FormLoginCustomizer.LOGIN_PROCESSING_URL,
-            HttpMethod.POST.name());
+    private static final PathPatternRequestMatcher LOGIN_MATCHER
+            = PathPatternRequestMatcher
+            .withDefaults()
+            .matcher(HttpMethod.POST, FormLoginCustomizer.LOGIN_PROCESSING_URL);
 
     private final PermitResolver permitResolver;
 

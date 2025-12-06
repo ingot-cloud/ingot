@@ -20,7 +20,7 @@ import org.springframework.security.oauth2.server.authorization.web.OAuth2Author
 import org.springframework.security.oauth2.server.authorization.web.OAuth2PreAuthorizationClientAuthenticationFilter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.context.RedisSecurityContextRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
@@ -55,8 +55,9 @@ public class OAuth2PreAuthorizationRequestEndpointConfigurer extends AbstractOAu
 
     @Override
     void init(HttpSecurity httpSecurity) {
-        this.requestMatcher = new AntPathRequestMatcher(
-                DEFAULT_PRE_AUTHORIZATION_ENDPOINT_URI, HttpMethod.POST.name());
+        this.requestMatcher = PathPatternRequestMatcher
+                .withDefaults()
+                .matcher(HttpMethod.POST, DEFAULT_PRE_AUTHORIZATION_ENDPOINT_URI);
 
         List<AuthenticationProvider> providers =
                 createProviders(httpSecurity);

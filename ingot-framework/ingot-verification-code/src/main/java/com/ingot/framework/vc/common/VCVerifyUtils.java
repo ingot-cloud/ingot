@@ -10,7 +10,7 @@ import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import reactor.core.publisher.Mono;
 
@@ -32,7 +32,7 @@ public class VCVerifyUtils {
      * @return {@link RequestMatcher}
      */
     public static RequestMatcher getMatcher(VCType type, List<String> urls) {
-        List<AntPathRequestMatcher> matchers = getMatchers(type, urls);
+        List<PathPatternRequestMatcher> matchers = getMatchers(type, urls);
         return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
@@ -70,7 +70,7 @@ public class VCVerifyUtils {
                 type.getValue(), StrUtil.COMMA, resultUrl, StrUtil.COMMA, method);
     }
 
-    private static List<AntPathRequestMatcher> getMatchers(VCType type, List<String> urls) {
+    private static List<PathPatternRequestMatcher> getMatchers(VCType type, List<String> urls) {
         return urls.stream()
                 .filter(url -> {
                     List<String> typeAndUrlAndMethod = StrUtil.split(url, StrUtil.COMMA);
@@ -81,14 +81,18 @@ public class VCVerifyUtils {
                     String requestMethod = typeAndUrlAndMethod.get(2);
                     // method
                     if (StrUtil.equals(requestMethod, "*")) {
-                        AntPathRequestMatcher[] antPathRequestMatchers =
-                                {new AntPathRequestMatcher(requestUrl)};
-                        return Arrays.stream(antPathRequestMatchers);
+                        PathPatternRequestMatcher matcher = PathPatternRequestMatcher
+                                .withDefaults()
+                                .matcher(requestUrl);
+                        PathPatternRequestMatcher[] pathPatternRequestMatchers = {matcher};
+                        return Arrays.stream(pathPatternRequestMatchers);
                     }
                     List<String> methods = StrUtil.split(requestMethod, VERTICAL_LINE);
                     return Arrays.stream(methods.stream()
-                            .map(method -> new AntPathRequestMatcher(requestUrl, method))
-                            .collect(Collectors.toList()).toArray(new AntPathRequestMatcher[methods.size()]));
+                            .map(method -> PathPatternRequestMatcher
+                                    .withDefaults()
+                                    .matcher(HttpMethod.valueOf(method), requestUrl))
+                            .toList().toArray(new PathPatternRequestMatcher[methods.size()]));
                 }).collect(Collectors.toList());
     }
 
