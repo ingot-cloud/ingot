@@ -28,15 +28,14 @@ springdoc:
   api-docs:
     enabled: true
 
-logs:
-  path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.auth.mapper
-
 ingot:
   security:
     oauth2:
       auth:
         loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
+    jwk:
+      master-key: ${INGOT_JWK_MASTER_KEY:a7A7FJ9KdQutfjbQh8sZSt2kcNtl/JUkmEI73aCR080=}
+      enable-encryption: true
 
 # 日志等级
 logging:

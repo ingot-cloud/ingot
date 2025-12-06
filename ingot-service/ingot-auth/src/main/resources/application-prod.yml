@@ -17,7 +17,7 @@ spring:
         namespace: ${spring.cloud.nacos.discovery.namespace}
         username: ${spring.cloud.nacos.discovery.username}
         password: ${spring.cloud.nacos.discovery.password}
-        group: DEFAULT_GROUP
+        group: PROD_GROUP
   config:
     import:
       - optional:nacos:application-common.yml
@@ -28,12 +28,11 @@ springdoc:
   api-docs:
     enabled: false
 
-logs:
-  path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.auth.mapper
-
 ingot:
   security:
     oauth2:
       auth:
         loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
+    jwk:
+      master-key: ${INGOT_JWK_MASTER_KEY}
+      enable-encryption: true

@@ -87,17 +87,20 @@ public interface CacheConstants {
 
     interface Security {
         String PREFIX = IGNORE_TENANT_PREFIX + ":security";
+        
         /**
-         * 授权私钥
+         * JWK 密钥前缀（新版，支持多密钥和轮换）
          */
-        String AUTHORIZATION_PRI = PREFIX + ":key_pri";
+        String AUTHORIZATION_KEY_PREFIX = PREFIX + ":jwk:key:";
+        
         /**
-         * 公钥
+         * 活跃的密钥 ID 集合
          */
-        String AUTHORIZATION_PUB = PREFIX + ":key_pub";
+        String AUTHORIZATION_KEY_IDS = PREFIX + ":jwk:key-ids";
+        
         /**
-         * Key ID
+         * 当前用于签名的密钥 ID
          */
-        String AUTHORIZATION_KEY_ID = PREFIX + ":key_id";
+        String AUTHORIZATION_CURRENT_KEY_ID = PREFIX + ":jwk:current-key-id";
     }
 }

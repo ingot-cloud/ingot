@@ -195,18 +195,15 @@ public final class AESUtil {
         return new String(decrypted, StandardCharsets.UTF_8);
     }
 
-//    public static void main(String[] args) throws Exception {
-//        String key = "ingotingotingot1";
-//        String plainText = "test1";
-//
-//        String cipherText = encryptCBC(plainText, key);
-//        System.out.println("CBC cipherText=" + cipherText);
-//        String text = decryptCBC(cipherText, key);
-//        System.out.println("CBC text=" + text);
-//
-//        cipherText = encryptGCM(plainText, key);
-//        System.out.println("GCM cipherText=" + cipherText);
-//        text = decryptGCM(cipherText, key);
-//        System.out.println("GCM text=" + text);
-//    }
+    /**
+     * 生成随机主密钥（用于 JWK 密钥加密）
+     * 
+     * @return Base64 编码的随机密钥（256 位）
+     */
+    public static String generateMasterKey() {
+        byte[] key = new byte[32];  // 256 位
+        random.nextBytes(key);
+        return Base64.encode(key);
+    }
+
 }

@@ -4,3 +4,7 @@ server:
 spring:
   application:
     name: ingot-service-auth
+
+logs:
+  path: /ingot-data/logs
+  mybatisMapper: com.ingot.cloud.auth.mapper

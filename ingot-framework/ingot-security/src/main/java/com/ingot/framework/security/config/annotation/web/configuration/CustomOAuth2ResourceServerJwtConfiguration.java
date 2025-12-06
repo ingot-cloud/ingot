@@ -6,7 +6,7 @@ import java.util.Set;
 import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.jwt.CustomJwtValidators;
 import com.ingot.framework.security.oauth2.jwt.JwkSupplier;
-import com.ingot.framework.security.oauth2.jwt.RedisJwkSupplier;
+import com.ingot.framework.security.oauth2.jwt.ResourceServerJwkSupplier;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -79,15 +79,19 @@ public class CustomOAuth2ResourceServerJwtConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(JwkSupplier.class)
-    JwkSupplier jwkSupplier(StringRedisTemplate template) {
-        log.info("[CustomOAuth2ResourceServerJwtConfiguration] default jwkSupplier");
-        return new RedisJwkSupplier(template);
+    JwkSupplier jwkSupplier(StringRedisTemplate template, InSecurityProperties properties) {
+        log.info("[CustomOAuth2ResourceServerJwtConfiguration] default jwkSupplier - ResourceServerJwkSupplier");
+        // 资源服务器默认使用只读公钥的 Supplier
+        return new ResourceServerJwkSupplier(template, properties);
     }
 
     @Bean
     @ConditionalOnMissingBean(JWKSource.class)
     JWKSource<SecurityContext> jwkSource(JwkSupplier service) {
-        JWKSet jwkSet = service.get();
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+        // 每次都动态获取 JWKSet，支持密钥轮换
+        return (jwkSelector, securityContext) -> {
+            JWKSet jwkSet = service.get();
+            return jwkSelector.select(jwkSet);
+        };
     }
 }

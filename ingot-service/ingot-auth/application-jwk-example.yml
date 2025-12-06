@@ -1,0 +1,174 @@
+# JWK 密钥管理配置示例
+# 将此配置添加到您的 application.yml 或 application-dev.yml 中
+
+ingot:
+  security:
+    jwk:
+      # ========================================
+      # 主密钥配置（重要！）
+      # ========================================
+      # 方式 1：从环境变量读取（推荐）
+      master-key: ${INGOT_JWK_MASTER_KEY}
+      
+      # 方式 2：从配置中心读取（推荐）
+      # master-key: ${nacos.config.ingot.security.jwk.master-key}
+      
+      # 方式 3：硬编码（不推荐，仅用于开发环境）
+      # master-key: "your-base64-encoded-master-key-here"
+      
+      # ========================================
+      # 加密开关
+      # ========================================
+      # 是否启用私钥加密（默认 true）
+      # 生产环境强烈建议启用
+      enable-encryption: true
+      
+      # ========================================
+      # 密钥轮换配置
+      # ========================================
+      # 密钥生命周期（默认 90 天）
+      # 支持格式：90d, 3m, 2160h
+      key-lifetime: 90d
+      
+      # 密钥轮换宽限期（默认 2 小时）
+      # 在此期间，旧密钥仍可用于验证 JWT
+      # 建议设置为 JWT 的最大有效期
+      key-grace-period: 2h
+      
+      # 最大活跃密钥数量（默认 3 个）
+      # 包含当前密钥和历史密钥
+      max-active-keys: 3
+      
+      # ========================================
+      # 资源服务器配置
+      # ========================================
+      # 资源服务器 JWK 缓存刷新间隔（默认 5 分钟）
+      # 值越小，密钥轮换生效越快，但 Redis 访问频率越高
+      cache-refresh-interval: 5m
+
+# ========================================
+# 完整示例配置（包含其他相关配置）
+# ========================================
+spring:
+  application:
+    name: ingot-auth
+  
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+# OAuth2 授权服务器配置
+ingot:
+  security:
+    oauth2:
+      auth:
+        issuer: http://localhost:8080
+        loginFormUrl: http://localhost:1798/oauth2/challenge
+
+# ========================================
+# 环境变量示例
+# ========================================
+# 在启动应用时设置以下环境变量：
+#
+# export INGOT_JWK_MASTER_KEY="your-random-base64-key"
+# export REDIS_HOST="localhost"
+# export REDIS_PORT="6379"
+# export REDIS_PASSWORD="your-redis-password"
+#
+# 然后启动应用：
+# java -jar ingot-auth.jar
+
+# ========================================
+# Docker 部署示例
+# ========================================
+# docker run -d \
+#   --name ingot-auth \
+#   -e INGOT_JWK_MASTER_KEY="your-random-base64-key" \
+#   -e REDIS_HOST="redis-server" \
+#   -e REDIS_PORT="6379" \
+#   -e REDIS_PASSWORD="your-redis-password" \
+#   -p 8080:8080 \
+#   ingot-auth:latest
+
+# ========================================
+# Kubernetes 部署示例
+# ========================================
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: ingot-auth-secrets
+# type: Opaque
+# data:
+#   jwk-master-key: <base64-encoded-master-key>
+#   redis-password: <base64-encoded-redis-password>
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: ingot-auth
+# spec:
+#   replicas: 3
+#   template:
+#     spec:
+#       containers:
+#       - name: ingot-auth
+#         image: ingot-auth:latest
+#         env:
+#         - name: INGOT_JWK_MASTER_KEY
+#           valueFrom:
+#             secretKeyRef:
+#               name: ingot-auth-secrets
+#               key: jwk-master-key
+#         - name: REDIS_PASSWORD
+#           valueFrom:
+#             secretKeyRef:
+#               name: ingot-auth-secrets
+#               key: redis-password
+
+# ========================================
+# 生成 Master Key 的方法
+# ========================================
+# 方法 1：使用 OpenSSL
+# openssl rand -base64 32
+#
+# 方法 2：使用 Java 代码（参考 AESUtil.generateMasterKey()）
+# String masterKey = AESUtil.generateMasterKey();
+# System.out.println("Generated Master Key: " + masterKey);
+
+# ========================================
+# 不同环境的配置建议
+# ========================================
+
+# 开发环境（application-dev.yml）
+# ingot:
+#   security:
+#     jwk:
+#       master-key: ${INGOT_JWK_MASTER_KEY:dev-test-key-only-for-development}
+#       enable-encryption: true  # 开发环境也建议启用，测试加密功能
+#       key-lifetime: 1d  # 开发环境可以设置短一些，方便测试密钥轮换
+#       cache-refresh-interval: 1m  # 开发环境可以设置短一些，快速生效
+
+# 测试环境（application-test.yml）
+# ingot:
+#   security:
+#     jwk:
+#       master-key: ${INGOT_JWK_MASTER_KEY}
+#       enable-encryption: true
+#       key-lifetime: 7d
+#       cache-refresh-interval: 5m
+
+# 生产环境（application-prod.yml）
+# ingot:
+#   security:
+#     jwk:
+#       master-key: ${INGOT_JWK_MASTER_KEY}  # 必须从环境变量或配置中心读取
+#       enable-encryption: true
+#       key-lifetime: 90d
+#       key-grace-period: 7d
+#       max-active-keys: 3
+#       cache-refresh-interval: 5m
+
