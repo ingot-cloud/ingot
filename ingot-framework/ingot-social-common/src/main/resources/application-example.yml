@@ -1,0 +1,40 @@
+# 社交模块配置示例
+
+ingot:
+  social:
+    # 消息队列类型：redis（默认）, kafka
+    # 如果项目中依赖了spring-kafka，可以切换到kafka
+    message-queue: redis
+    
+    # Redis配置（默认使用Redis）
+    redis:
+      # Redis频道主题（所有服务需保持一致）
+      topic: in:social:config:changed
+    
+    # Kafka配置（当message-queue=kafka时生效）
+    kafka:
+      # Kafka主题
+      topic: in-social-config-changed
+      # Kafka消费组
+      group-id: in-social-config-group
+
+# ==================== 使用说明 ====================
+# 
+# 1. 默认使用Redis（推荐）
+#    只需要确保项目中有spring-boot-starter-data-redis依赖
+#
+# 2. 使用Kafka
+#    - 添加spring-kafka依赖
+#    - 设置 message-queue: kafka
+#    - 配置kafka连接信息
+#
+# 3. 所有服务都支持消息发布和接收
+#    - 不需要enable-publisher配置
+#    - 所有依赖social模块的服务都可以发布和接收消息
+#
+# 4. 环境隔离
+#    不同环境使用不同的topic：
+#    - dev: dev:ingot:social:config:changed
+#    - test: test:ingot:social:config:changed
+#    - prod: prod:ingot:social:config:changed
+

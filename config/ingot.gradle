@@ -19,6 +19,7 @@ ingot.framework_id = ":ingot-framework:ingot-id"
 ingot.framework_vc = ":ingot-framework:ingot-verification-code"
 ingot.framework_crypto = ":ingot-framework:ingot-crypto"
 ingot.framework_openapi = ":ingot-framework:ingot-openapi"
+ingot.framework_social_common = ":ingot-framework:ingot-social-common"
 ingot.framework_social_wechat = ":ingot-framework:ingot-social-wechat"
 
 // service api
