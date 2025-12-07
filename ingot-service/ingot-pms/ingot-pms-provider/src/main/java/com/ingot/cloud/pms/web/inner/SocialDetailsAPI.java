@@ -34,4 +34,9 @@ public class SocialDetailsAPI implements RShortcuts {
     public R<List<SysSocialDetails>> getSocialDetailsByType(@PathVariable String type) {
         return ok(socialDetailsService.getSocialDetailsByType(SocialTypeEnum.get(type)));
     }
+
+    @GetMapping("/appId/{appId}")
+    public R<SysSocialDetails> getDetailsByAppId(@PathVariable String appId) {
+        return ok(socialDetailsService.getSocialDetailsByAppId(appId));
+    }
 }

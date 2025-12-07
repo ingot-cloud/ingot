@@ -20,4 +20,7 @@ public interface RemotePmsSocialDetailsService {
 
     @GetMapping("/inner/social/detailList/{type}")
     R<List<SysSocialDetails>> getSocialDetailsByType(@PathVariable String type);
+
+    @GetMapping("/inner/social/appId/{appId}")
+    R<SysSocialDetails> getDetailsByAppId(@PathVariable String appId);
 }

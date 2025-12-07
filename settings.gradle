@@ -37,6 +37,8 @@ include 'ingot-framework:ingot-verification-code'
 findProject(':ingot-framework:ingot-verification-code')?.name = 'ingot-verification-code'
 include 'ingot-framework:ingot-openapi'
 findProject(':ingot-framework:ingot-openapi')?.name = 'ingot-openapi'
+include 'ingot-framework:ingot-social-common'
+findProject(':ingot-framework:ingot-social-common')?.name = 'ingot-social-common'
 include 'ingot-framework:ingot-social-wechat'
 findProject(':ingot-framework:ingot-social-wechat')?.name = 'ingot-social-wechat'
 

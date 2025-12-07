@@ -1,5 +1,7 @@
 package com.ingot.framework.social.wechat.event;
 
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
+import com.ingot.framework.social.common.event.SocialConfigChangedEvent;
 import com.ingot.framework.social.wechat.core.WxMaConfigManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,25 +9,31 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 
 /**
- * <p>Description  : 社交配置变更事件监听器.</p>
+ * <p>Description  : 微信配置变更事件监听器.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2025/12/6.</p>
- * <p>Time         : 17:15.</p>
+ * <p>Date         : 2025/12/7.</p>
+ * <p>Time         : 16:20.</p>
  */
 @Slf4j
 @RequiredArgsConstructor
-public class SocialConfigChangedListener {
+public class WechatConfigChangedListener {
     private final WxMaConfigManager wxMaConfigManager;
 
     /**
      * 监听配置变更事件
+     * 只处理微信小程序类型的配置
      *
      * @param event 配置变更事件
      */
     @Async
     @EventListener
     public void onConfigChanged(SocialConfigChangedEvent event) {
-        log.info("SocialConfigChangedListener - 接收到配置变更事件: type={}, appId={}",
+        // 只处理微信小程序类型
+        if (event.getSocialType() != SocialTypeEnum.WECHAT_MINI_PROGRAM) {
+            return;
+        }
+        
+        log.info("WechatConfigChangedListener - 接收到微信配置变更事件: changeType={}, appId={}",
                 event.getChangeType(), event.getAppId());
 
         try {
@@ -45,12 +53,11 @@ public class SocialConfigChangedListener {
                     wxMaConfigManager.refreshAllConfigs();
                     break;
                 default:
-                    log.warn("SocialConfigChangedListener - 未知的变更类型: {}", event.getChangeType());
+                    log.warn("WechatConfigChangedListener - 未知的变更类型: {}", event.getChangeType());
             }
         } catch (Exception e) {
-            log.error("SocialConfigChangedListener - 处理配置变更事件失败", e);
+            log.error("WechatConfigChangedListener - 处理配置变更事件失败", e);
         }
     }
 }
-
 

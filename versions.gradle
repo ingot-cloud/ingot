@@ -84,6 +84,7 @@ spring.framework_webmvc = "org.springframework:spring-webmvc"
 spring.framework_context = "org.springframework:spring-context"
 spring.framework_jdbc = "org.springframework:spring-jdbc"
 spring.framework_context_support = "org.springframework:spring-context-support"
+spring.kafka = "org.springframework.kafka:spring-kafka"
 
 spring.spring_boot = spring_boot
 spring.spring_cloud = spring_cloud

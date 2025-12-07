@@ -1,14 +1,16 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
-
+    // 依赖公共社交模块
+    api project(ingot.framework_social_common)
+    
+    // 微信SDK
+    api(deps.weixin_java_miniapp)
+    
+    // 其他依赖
     implementation project(ingot.framework_commons)
     implementation project(ingot.framework_data_mybatis_common)
-    implementation project(ingot.framework_data_redis)
     implementation project(ingot.pms_api)
-
-    api(deps.weixin_java_miniapp)
 
     compileOnly(deps.spring.framework_spring_web)
 }

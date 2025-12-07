@@ -9,7 +9,7 @@ import com.ingot.cloud.pms.mapper.SysSocialDetailsMapper;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
-import com.ingot.framework.social.wechat.publisher.SocialConfigMessagePublisher;
+import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,8 +32,9 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     public boolean save(SysSocialDetails entity) {
         boolean result = super.save(entity);
         if (result && shouldNotify(entity)) {
-            log.info("SysSocialDetailsServiceImpl - 社交配置新增成功，通知配置变更: appId={}", entity.getAppId());
-            publishAdd(entity.getAppId());
+            log.info("SysSocialDetailsServiceImpl - 社交配置新增成功，通知配置变更: type={}, appId={}", 
+                    entity.getType(), entity.getAppId());
+            publishAdd(entity);
         }
         return result;
     }
@@ -42,20 +43,22 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     public boolean updateById(SysSocialDetails entity) {
         boolean result = super.updateById(entity);
         if (result && shouldNotify(entity)) {
-            log.info("SysSocialDetailsServiceImpl - 社交配置更新成功，通知配置变更: appId={}", entity.getAppId());
-            publishUpdate(entity.getAppId());
+            log.info("SysSocialDetailsServiceImpl - 社交配置更新成功，通知配置变更: type={}, appId={}", 
+                    entity.getType(), entity.getAppId());
+            publishUpdate(entity);
         }
         return result;
     }
 
     @Override
     public boolean removeById(Serializable id) {
-        // 先获取entity以便获取appId
+        // 先获取entity以便获取appId和type
         SysSocialDetails entity = getById(id);
         boolean result = super.removeById(id);
         if (result && shouldNotify(entity)) {
-            log.info("SysSocialDetailsServiceImpl - 社交配置删除成功，通知配置变更: appId={}", entity.getAppId());
-            publishDelete(entity.getAppId());
+            log.info("SysSocialDetailsServiceImpl - 社交配置删除成功，通知配置变更: type={}, appId={}", 
+                    entity.getType(), entity.getAppId());
+            publishDelete(entity);
         }
         return result;
     }
@@ -63,9 +66,9 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     @Override
     public boolean saveBatch(Collection<SysSocialDetails> entityList, int batchSize) {
         boolean result = super.saveBatch(entityList, batchSize);
-        if (result && hasWechatMiniProgram(entityList)) {
-            log.info("SysSocialDetailsServiceImpl - 批量新增社交配置成功，通知刷新所有配置");
-            publishRefreshAll();
+        if (result) {
+            // 按社交类型分组通知
+            notifyBatchChange(entityList, "批量新增");
         }
         return result;
     }
@@ -73,9 +76,9 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     @Override
     public boolean updateBatchById(Collection<SysSocialDetails> entityList, int batchSize) {
         boolean result = super.updateBatchById(entityList, batchSize);
-        if (result && hasWechatMiniProgram(entityList)) {
-            log.info("SysSocialDetailsServiceImpl - 批量更新社交配置成功，通知刷新所有配置");
-            publishRefreshAll();
+        if (result) {
+            // 按社交类型分组通知
+            notifyBatchChange(entityList, "批量更新");
         }
         return result;
     }
@@ -85,18 +88,40 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
         boolean result = super.removeByIds(list);
         if (result) {
             log.info("SysSocialDetailsServiceImpl - 批量删除社交配置成功，通知刷新所有配置");
-            publishRefreshAll();
+            // 删除时不知道具体类型，通知所有类型刷新
+            for (SocialTypeEnum type : SocialTypeEnum.values()) {
+                publishRefreshAll(type);
+            }
         }
         return result;
+    }
+    
+    /**
+     * 批量变更时按社交类型通知
+     */
+    private void notifyBatchChange(Collection<SysSocialDetails> entityList, String operation) {
+        if (entityList == null || entityList.isEmpty()) {
+            return;
+        }
+        
+        // 按社交类型分组
+        entityList.stream()
+                .filter(this::shouldNotify)
+                .map(SysSocialDetails::getType)
+                .distinct()
+                .forEach(type -> {
+                    log.info("SysSocialDetailsServiceImpl - {}社交配置成功，通知刷新配置: type={}", operation, type);
+                    publishRefreshAll(type);
+                });
     }
 
     /**
      * 发布添加配置的消息
      */
-    private void publishAdd(String appId) {
+    private void publishAdd(SysSocialDetails entity) {
         if (configMessagePublisher != null) {
             try {
-                configMessagePublisher.publishAdd(appId);
+                configMessagePublisher.publishAdd(entity.getType(), entity.getAppId());
             } catch (Exception e) {
                 log.warn("SysSocialDetailsServiceImpl - 发布配置变更消息失败", e);
             }
@@ -106,10 +131,10 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     /**
      * 发布更新配置的消息
      */
-    private void publishUpdate(String appId) {
+    private void publishUpdate(SysSocialDetails entity) {
         if (configMessagePublisher != null) {
             try {
-                configMessagePublisher.publishUpdate(appId);
+                configMessagePublisher.publishUpdate(entity.getType(), entity.getAppId());
             } catch (Exception e) {
                 log.warn("SysSocialDetailsServiceImpl - 发布配置变更消息失败", e);
             }
@@ -119,10 +144,10 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     /**
      * 发布删除配置的消息
      */
-    private void publishDelete(String appId) {
+    private void publishDelete(SysSocialDetails entity) {
         if (configMessagePublisher != null) {
             try {
-                configMessagePublisher.publishDelete(appId);
+                configMessagePublisher.publishDelete(entity.getType(), entity.getAppId());
             } catch (Exception e) {
                 log.warn("SysSocialDetailsServiceImpl - 发布配置变更消息失败", e);
             }
@@ -132,10 +157,10 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     /**
      * 发布刷新所有配置的消息
      */
-    private void publishRefreshAll() {
+    private void publishRefreshAll(SocialTypeEnum socialType) {
         if (configMessagePublisher != null) {
             try {
-                configMessagePublisher.publishRefreshAll();
+                configMessagePublisher.publishRefreshAll(socialType);
             } catch (Exception e) {
                 log.warn("SysSocialDetailsServiceImpl - 发布配置变更消息失败", e);
             }
@@ -143,21 +168,11 @@ public class SysSocialDetailsServiceImpl extends BaseServiceImpl<SysSocialDetail
     }
 
     /**
-     * 判断是否需要通知（仅微信小程序类型需要通知）
+     * 判断是否需要通知
      */
     private boolean shouldNotify(SysSocialDetails entity) {
         return entity != null
-                && entity.getType() == SocialTypeEnum.WECHAT_MINI_PROGRAM
+                && entity.getType() != null
                 && StrUtil.isNotBlank(entity.getAppId());
-    }
-
-    /**
-     * 判断集合中是否包含微信小程序配置
-     */
-    private boolean hasWechatMiniProgram(Collection<SysSocialDetails> entityList) {
-        if (entityList == null || entityList.isEmpty()) {
-            return false;
-        }
-        return entityList.stream().anyMatch(this::shouldNotify);
     }
 }

@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
 import com.ingot.framework.social.wechat.core.WxMaConfigManager;
-import com.ingot.framework.social.wechat.publisher.SocialConfigMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * <p>Description  : 微信小程序配置刷新API.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2025/12/6.</p>
- * <p>Time         : 17:45.</p>
+ * <p>Date         : 2025/12/7.</p>
+ * <p>Time         : 16:40.</p>
  */
 @Slf4j
 @RestController
@@ -51,7 +52,7 @@ public class WxMaConfigRefreshAPI implements RShortcuts {
     public R<?> refreshAll() {
         try {
             log.info("WxMaConfigRefreshAPI - 开始广播刷新所有服务实例的微信小程序配置");
-            configMessagePublisher.publishRefreshAll();
+            configMessagePublisher.publishRefreshAll(SocialTypeEnum.WECHAT_MINI_PROGRAM);
             return ok("配置刷新广播已发送");
         } catch (Exception e) {
             log.error("WxMaConfigRefreshAPI - 广播刷新配置失败", e);
@@ -67,13 +68,18 @@ public class WxMaConfigRefreshAPI implements RShortcuts {
         try {
             List<String> appIds = wxMaConfigManager.getAllAppIds();
             int count = wxMaConfigManager.getConfigCount();
+            boolean initialized = wxMaConfigManager.isInitialized();
+            boolean providerAvailable = wxMaConfigManager.isProviderAvailable();
 
             Map<String, Object> status = new HashMap<>();
             status.put("count", count);
             status.put("appIds", appIds);
+            status.put("initialized", initialized);
+            status.put("providerAvailable", providerAvailable);
             status.put("timestamp", System.currentTimeMillis());
 
-            log.debug("WxMaConfigRefreshAPI - 当前配置数量: {}", count);
+            log.debug("WxMaConfigRefreshAPI - 当前配置数量: {}, 初始化状态: {}, 提供者可用: {}", 
+                    count, initialized, providerAvailable);
             return ok(status);
         } catch (Exception e) {
             log.error("WxMaConfigRefreshAPI - 获取配置状态失败", e);
@@ -81,5 +87,3 @@ public class WxMaConfigRefreshAPI implements RShortcuts {
         }
     }
 }
-
-

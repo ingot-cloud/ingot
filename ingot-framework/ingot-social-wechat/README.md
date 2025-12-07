@@ -2,288 +2,185 @@
 
 ## 概述
 
-`ingot-social-wechat` 是一个微信社交功能的集成模块，主要用于封装微信小程序相关的API。该模块支持**多租户、多应用**的微信小程序配置，并提供**动态配置更新**能力，无需重启服务即可感知配置变更。
+`ingot-social-wechat` 是微信社交功能的集成模块，依赖于 `ingot-social-common` 公共模块。
 
 ## 核心特性
 
-### 1. 统一配置管理
-- 使用 PMS 服务的 `SysSocialDetails` 作为唯一配置数据源
-- 所有服务统一从 PMS 获取社交配置
+### 1. 基于 ingot-social-common
+- 依赖公共社交模块
+- 只监听微信类型的配置变更
+- 自动过滤其他社交平台的消息
 
 ### 2. 动态配置更新
 - 支持配置的热更新，无需重启服务
-- 当 PMS 中新增/修改/删除社交配置时，自动通知所有服务实例
-- 默认基于 Redis 发布订阅机制，支持扩展到 Kafka 等消息队列
+- 配置变更后自动通知（延迟<100ms）
+- 支持Redis/Kafka多种消息队列
 
 ### 3. 多租户支持
 - 支持同时配置多个微信小程序应用
 - 每个租户可以有独立的小程序配置
-- 通过 `appId` 自动切换不同的微信小程序服务
+- 通过 `appId` 自动切换配置
 
-### 4. 灵活可扩展
-- 统一在 `WechatConfiguration` 中注册所有Bean
-- 支持多种消息队列（Redis、Kafka等）
-- 通过配置区分发布者（PMS）和消费者（其他服务）
-
-## 架构设计
-
-### 整体架构图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         PMS Service                          │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │          SysSocialDetailsServiceImpl                   │  │
-│  │  - save/update/delete 操作后发布Redis消息              │  │
-│  └───────────────────┬───────────────────────────────────┘  │
-└────────────────────────┼─────────────────────────────────────┘
-                         │ publish
-                         ▼
-              ┌──────────────────────┐
-              │   Redis Pub/Sub      │
-              │  Channel: ingot:     │
-              │  social:config:      │
-              │  changed             │
-              └──────────┬───────────┘
-                         │ subscribe
-        ┌────────────────┼────────────────┐
-        │                │                │
-        ▼                ▼                ▼
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│   Member    │  │     PMS     │  │   Gateway   │
-│  Service    │  │   Service   │  │   Service   │
-│             │  │             │  │             │
-│ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │
-│ │WxMaConfig││  │ │WxMaConfig││  │ │WxMaConfig││
-│ │ Manager  ││  │ │ Manager  ││  │ │ Manager  ││
-│ │          ││  │ │          ││  │ │          ││
-│ │- init    ││  │ │- init    ││  │ │- init    ││
-│ │- refresh ││  │ │- refresh ││  │ │- refresh ││
-│ │- add/    ││  │ │- add/    ││  │ │- add/    ││
-│ │  update/ ││  │ │  update/ ││  │ │  update/ ││
-│ │  remove  ││  │ │  remove  ││  │ │  remove  ││
-│ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │
-└─────────────┘  └─────────────┘  └─────────────┘
-```
-
-### 核心组件
-
-#### 1. WxMaConfigManager（配置管理器）
-负责微信小程序配置的生命周期管理：
-- `initConfigs()` - 初始化加载配置
-- `refreshAllConfigs()` - 刷新所有配置
-- `addOrUpdateConfig()` - 添加或更新单个配置
-- `removeConfig()` - 移除配置
-- `hasConfig()` - 检查配置是否存在
-
-#### 2. 事件驱动机制
-
-##### 本地事件
-- `SocialConfigChangedEvent` - 本地配置变更事件
-- `SocialConfigChangedListener` - 本地事件监听器
-
-##### Redis消息
-- `SocialConfigRedisMessage` - Redis消息体
-- `SocialConfigRedisMessageListener` - Redis消息监听器
-- `SocialConfigChangePublisher` - 消息发布器
-
-#### 3. 配置通知流程
-
-```
-PMS数据库操作 → SysSocialDetailsServiceImpl
-                     ↓
-            发布Redis消息 (publish)
-                     ↓
-              Redis Pub/Sub
-                     ↓
-     所有服务实例接收消息 (subscribe)
-                     ↓
-       SocialConfigRedisMessageListener
-                     ↓
-       转换为本地事件并发布
-                     ↓
-       SocialConfigChangedListener
-                     ↓
-          WxMaConfigManager
-                     ↓
-          更新WxMaService配置
-```
-
-## 使用指南
-
-### 1. 依赖配置
-
-在需要使用微信小程序功能的服务中添加依赖：
+## 依赖配置
 
 ```gradle
 dependencies {
+    // 会自动依赖 ingot-social-common
     implementation project(':ingot-framework:ingot-social-wechat')
 }
 ```
 
-### 2. 服务配置
-
-#### PMS服务（配置发布者）
+## 配置示例
 
 ```yaml
-# application.yml
 ingot:
   social:
-    message-queue: redis
+    message-queue: redis  # 或 kafka
     redis:
       topic: in:social:config:changed
 ```
 
-#### Member服务（配置消费者）
+## 使用方式
 
-```yaml
-# application.yml
-ingot:
-  social:
-    message-queue: redis
-    redis:
-      topic: in:social:config:changed
-```
-
-### 3. 配置管理
-
-#### 添加社交配置
-在 PMS 服务中通过 `SysSocialDetailsService` 管理配置：
-
-```java
-SysSocialDetails socialDetails = new SysSocialDetails();
-socialDetails.setAppId("wx1234567890");
-socialDetails.setAppSecret("your_app_secret");
-socialDetails.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
-socialDetails.setName("测试小程序");
-socialDetails.setTenantId(1L);
-
-// 保存后会自动通知所有服务实例
-sysSocialDetailsService.save(socialDetails);
-```
-
-#### 更新配置
-```java
-SysSocialDetails socialDetails = sysSocialDetailsService.getById(id);
-socialDetails.setAppSecret("new_app_secret");
-
-// 更新后会自动通知所有服务实例
-sysSocialDetailsService.updateById(socialDetails);
-```
-
-#### 删除配置
-```java
-// 删除后会自动通知所有服务实例
-sysSocialDetailsService.removeById(id);
-```
-
-### 3. 使用WxMaService
-
-在业务代码中注入并使用 `WxMaService`：
+### 1. 注入 WxMaService
 
 ```java
 @Service
 @RequiredArgsConstructor
-public class WechatBusinessService {
+public class WechatLoginService {
     private final WxMaService wxMaService;
     
-    public void doSomething(String appId) {
-        // 切换到指定的小程序配置
+    public String login(String appId, String code) {
+        // 切换到指定小程序
         WxMaService service = wxMaService.switchoverTo(appId);
         
-        // 使用微信API
+        // 调用微信API
         WxMaJscode2SessionResult session = service.getUserService()
             .getSessionInfo(code);
+        
+        return session.getOpenid();
     }
 }
 ```
 
-### 4. 手动刷新配置
+### 2. 手动刷新配置
 
-#### 刷新本地配置（仅当前服务实例）
 ```bash
-POST /social/wechat/config/refresh/local
-```
-
-#### 刷新所有服务实例配置（通过Redis广播）
-```bash
+# 刷新所有服务实例（广播）
 POST /social/wechat/config/refresh/all
-```
 
-#### 查看配置状态
-```bash
+# 刷新当前服务实例
+POST /social/wechat/config/refresh/local
+
+# 查看配置状态
 GET /social/wechat/config/status
 ```
 
-返回示例：
-```json
-{
-  "code": "0000",
-  "data": {
-    "count": 3,
-    "appIds": [
-      "wx1234567890",
-      "wx0987654321",
-      "wx1111111111"
-    ],
-    "timestamp": 1638888888888
-  }
-}
-```
+## 事件监听
 
-## 架构设计
-
-### 角色区分
-
-- **PMS服务（发布者）**：
-  - 当数据库配置变更时，发布消息到消息队列
-  - 其他服务接收消息后自动更新配置
-
-- **Member/Gateway服务（消费者）**：
-  - 只监听消息队列，不发布消息
-  - 接收到消息后自动更新本地配置
-
-### 消息队列支持
-
-- **默认**：Redis Pub/Sub
-- **扩展**：支持 Kafka 等（通过实现 `SocialConfigMessagePublisher` 接口）
-
-### 配置变更类型
+微信模块的监听器只处理微信类型的配置变更：
 
 ```java
-public enum ConfigChangeType {
-    ADD,         // 添加配置
-    UPDATE,      // 更新配置
-    DELETE,      // 删除配置
-    REFRESH_ALL  // 刷新所有配置
+@EventListener
+public void onConfigChanged(SocialConfigChangedEvent event) {
+    // 只处理微信小程序类型
+    if (event.getSocialType() != SocialTypeEnum.WECHAT_MINI_PROGRAM) {
+        return;
+    }
+    
+    // 处理微信配置变更
+    switch (event.getChangeType()) {
+        case ADD:
+        case UPDATE:
+            wxMaConfigManager.refreshAllConfigs();
+            break;
+        case DELETE:
+            wxMaConfigManager.removeConfig(event.getAppId());
+            break;
+        case REFRESH_ALL:
+            wxMaConfigManager.refreshAllConfigs();
+            break;
+    }
 }
 ```
 
-### Redis频道
-配置变更消息发布到以下Redis频道（可配置）：
+## 与其他社交模块协同
+
+### 同时使用微信和QQ
+
+```gradle
+dependencies {
+    implementation project(':ingot-framework:ingot-social-wechat')
+    implementation project(':ingot-framework:ingot-social-qq')
+}
 ```
-in:social:config:changed
+
+**效果**：
+- 微信配置变更 → 只有微信模块响应
+- QQ配置变更 → 只有QQ模块响应
+- 互不干扰
+
+### 在PMS中管理配置
+
+```java
+@Service
+@RequiredArgsConstructor
+public class SocialConfigManagementService {
+    private final SysSocialDetailsService socialDetailsService;
+    
+    // 添加微信配置 - 自动通知微信模块
+    public void addWechatConfig(SysSocialDetails config) {
+        config.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
+        socialDetailsService.save(config);
+        // 保存后自动发布消息，微信模块自动更新
+    }
+    
+    // 添加QQ配置 - 自动通知QQ模块
+    public void addQqConfig(SysSocialDetails config) {
+        config.setType(SocialTypeEnum.QQ);
+        socialDetailsService.save(config);
+        // 保存后自动发布消息，QQ模块自动更新
+    }
+}
 ```
 
-### 线程安全
-- `WxMaConfigManager` 使用 `ConcurrentHashMap` 存储配置，保证线程安全
-- 配置的添加、更新、删除操作使用 `synchronized` 关键字保证原子性
+## 核心组件
 
-### 异步处理
-配置变更事件监听器使用 `@Async` 注解，异步处理配置更新，不阻塞主流程。
+### WxMaConfigManager
 
-### Bean注册
-所有Bean都在 `WechatConfiguration` 中统一注册，通过条件注解控制创建：
-- `@ConditionalOnProperty` - 根据配置决定是否创建
-- `@ConditionalOnBean` - 根据依赖Bean是否存在决定是否创建
+微信小程序配置管理器：
+- `initConfigs()` - 初始化配置
+- `refreshAllConfigs()` - 刷新所有配置
+- `addOrUpdateConfig()` - 添加或更新配置
+- `removeConfig()` - 移除配置
+
+### WechatConfigChangedListener
+
+微信配置变更监听器：
+- 只监听 `SocialTypeEnum.WECHAT_MINI_PROGRAM` 类型
+- 自动过滤其他社交平台的消息
+- 异步处理，不阻塞主流程
 
 ## 注意事项
 
-1. **Redis依赖**：该模块依赖Redis，请确保Redis服务正常运行
-2. **配置延迟**：通过Redis通知的配置更新有轻微延迟（通常<100ms）
-3. **配置一致性**：如果Redis不可用，新增服务实例会在启动时从PMS加载配置
-4. **权限控制**：手动刷新配置接口应添加适当的权限控制
-5. **监控建议**：建议监控配置更新失败的情况，必要时手动触发刷新
-6. **Topic一致性**：所有服务的 `redis.topic` 配置必须保持一致
+1. **类型过滤**
+   - 监听器会自动过滤非微信类型的事件
+   - 只处理 `WECHAT_MINI_PROGRAM` 类型
 
+2. **配置同步**
+   - 所有服务的 `redis.topic` 必须一致
+   - 建议在配置中心统一管理
 
+3. **依赖关系**
+   - 自动依赖 `ingot-social-common`
+   - 无需手动添加common依赖
+
+## 相关文档
+
+- [ingot-social-common/README.md](../ingot-social-common/README.md) - 公共模块说明
+
+---
+
+**版本**：v2.0.0  
+**创建时间**：2025-12-07  
+**作者**：jy

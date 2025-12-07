@@ -20,4 +20,12 @@ public interface SocialDetailsService {
      * @return {@link SysSocialDetails}
      */
     List<SysSocialDetails> getSocialDetailsByType(SocialTypeEnum type);
+
+    /**
+     * 根据appId获取社交信息
+     *
+     * @param appId appId
+     * @return {@link SysSocialDetails}
+     */
+    SysSocialDetails getSocialDetailsByAppId(String appId);
 }

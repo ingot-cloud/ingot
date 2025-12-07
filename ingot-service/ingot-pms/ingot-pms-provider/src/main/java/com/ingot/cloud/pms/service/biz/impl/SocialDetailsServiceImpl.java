@@ -27,4 +27,10 @@ public class SocialDetailsServiceImpl implements SocialDetailsService {
         return CollUtil.emptyIfNull(sysSocialDetailsService.list(Wrappers.<SysSocialDetails>lambdaQuery()
                 .in(SysSocialDetails::getType, type)));
     }
+
+    @Override
+    public SysSocialDetails getSocialDetailsByAppId(String appId) {
+        return sysSocialDetailsService.getOne(Wrappers.<SysSocialDetails>lambdaQuery()
+                .eq(SysSocialDetails::getAppId, appId));
+    }
 }

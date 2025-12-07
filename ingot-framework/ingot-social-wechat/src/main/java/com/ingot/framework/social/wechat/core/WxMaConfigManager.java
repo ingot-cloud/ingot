@@ -3,17 +3,22 @@ package com.ingot.framework.social.wechat.core;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.config.WxMaConfig;
 import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
-import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
-import lombok.RequiredArgsConstructor;
+import com.ingot.framework.social.common.provider.SocialDetailsProvider;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Time         : 17:00.</p>
  */
 @Slf4j
-@RequiredArgsConstructor
 public class WxMaConfigManager {
     /**
      * 存储所有配置的Map，key为appId
@@ -31,73 +35,170 @@ public class WxMaConfigManager {
     private final Map<String, WxMaConfig> configMap = new ConcurrentHashMap<>();
 
     private final WxMaService wxMaService;
-    private final RemotePmsSocialDetailsService remotePmsSocialDetailsService;
+    private final SocialDetailsProvider socialDetailsProvider;
 
     /**
-     * 初始化加载所有配置
+     * 配置是否已初始化
+     */
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /**
+     * 重试次数计数器
+     */
+    private final AtomicInteger retryCount = new AtomicInteger(0);
+
+    /**
+     * 最大重试次数
+     */
+    private static final int MAX_RETRY_TIMES = 10;
+
+    /**
+     * 重试间隔（秒）
+     */
+    private static final int RETRY_INTERVAL_SECONDS = 30;
+
+    /**
+     * 定时任务执行器
+     */
+    private ScheduledExecutorService scheduler;
+
+    public WxMaConfigManager(WxMaService wxMaService, SocialDetailsProvider socialDetailsProvider) {
+        this.wxMaService = wxMaService;
+        this.socialDetailsProvider = socialDetailsProvider;
+    }
+
+    /**
+     * 初始化加载所有配置（异步，非阻塞）
      */
     public void initConfigs() {
-        log.info("WxMaConfigManager - 开始初始化微信小程序配置");
-        loadConfigsFromRemote();
-        log.info("WxMaConfigManager - 初始化完成，共加载{}个配置", configMap.size());
+        log.info("WxMaConfigManager - 开始异步初始化微信小程序配置");
+        
+        // 异步加载配置，不阻塞服务启动
+        tryLoadConfigs();
     }
 
     /**
-     * 从远程服务加载配置
+     * 尝试加载配置（带重试机制）
      */
-    private void loadConfigsFromRemote() {
-        List<SysSocialDetails> list = remotePmsSocialDetailsService
-                .getSocialDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM.getValue())
-                .ifError(response -> {
-                    log.error("WxMaConfigManager - 获取远程社交信息失败 - {}", response.getMessage());
-                    throw new RuntimeException("获取微信小程序配置失败: " + response.getMessage());
-                }).getData();
-
-        if (CollUtil.isEmpty(list)) {
-            log.warn("WxMaConfigManager - 未获取到任何微信小程序配置");
+    private void tryLoadConfigs() {
+        // 如果已经初始化成功，不再重试
+        if (initialized.get()) {
+            log.debug("WxMaConfigManager - 配置已初始化，跳过重试");
+            stopRetryScheduler();
             return;
         }
-
-        list.forEach(this::addOrUpdateConfig);
+        
+        try {
+            List<SysSocialDetails> details = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
+            
+            if (CollUtil.isNotEmpty(details)) {
+                details.forEach(this::addOrUpdateConfig);
+                initialized.set(true);
+                retryCount.set(0);
+                log.info("WxMaConfigManager - 初始化成功，共加载{}个配置", configMap.size());
+                
+                // 停止重试任务
+                stopRetryScheduler();
+            } else {
+                log.warn("WxMaConfigManager - 未获取到任何配置");
+                handleLoadFailure();
+            }
+            
+        } catch (Exception e) {
+            log.warn("WxMaConfigManager - 初始化配置失败: {}", e.getMessage());
+            handleLoadFailure();
+        }
     }
 
     /**
-     * 刷新所有配置（从远程重新加载）
+     * 处理加载失败，启动重试机制
+     */
+    private void handleLoadFailure() {
+        int currentRetry = retryCount.incrementAndGet();
+        
+        if (currentRetry <= MAX_RETRY_TIMES) {
+            log.info("WxMaConfigManager - 将在{}秒后进行第{}次重试（最多{}次）", 
+                    RETRY_INTERVAL_SECONDS, currentRetry, MAX_RETRY_TIMES);
+            scheduleRetry();
+        } else {
+            log.warn("WxMaConfigManager - 已达到最大重试次数{}，停止主动重试", MAX_RETRY_TIMES);
+            log.info("WxMaConfigManager - 配置将在以下情况下自动同步：");
+            log.info("  1. PMS服务启动时会广播同步消息");
+            log.info("  2. 配置变更时会收到通知消息");
+            log.info("  3. 手动调用刷新API: POST /social/wechat/config/refresh/local");
+            stopRetryScheduler();
+        }
+    }
+
+    /**
+     * 调度重试任务
+     */
+    private synchronized void scheduleRetry() {
+        if (scheduler == null || scheduler.isShutdown()) {
+            scheduler = new ScheduledThreadPoolExecutor(1, 
+                ThreadFactoryBuilder.create()
+                    .setNamePrefix("wx-config-retry-")
+                    .setDaemon(true)
+                    .build()
+            );
+        }
+        
+        scheduler.schedule(this::tryLoadConfigs, RETRY_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 停止重试调度器
+     */
+    private synchronized void stopRetryScheduler() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+            log.debug("WxMaConfigManager - 重试调度器已停止");
+        }
+    }
+
+    /**
+     * 刷新所有配置（从提供者重新加载）
      */
     public synchronized void refreshAllConfigs() {
         log.info("WxMaConfigManager - 开始刷新所有配置");
         
-        // 获取最新配置
-        List<SysSocialDetails> remoteConfigs = remotePmsSocialDetailsService
-                .getSocialDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM.getValue())
-                .ifError(response -> {
-                    log.error("WxMaConfigManager - 刷新配置失败 - {}", response.getMessage());
-                    throw new RuntimeException("刷新微信小程序配置失败: " + response.getMessage());
-                }).getData();
+        try {
+            // 获取最新配置
+            List<SysSocialDetails> remoteConfigs = socialDetailsProvider.getDetailsByType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
 
-        if (CollUtil.isEmpty(remoteConfigs)) {
-            log.warn("WxMaConfigManager - 远程配置为空，清除所有本地配置");
-            clearAllConfigs();
-            return;
-        }
-
-        // 获取远程配置的appId集合
-        Map<String, SysSocialDetails> remoteConfigMap = remoteConfigs.stream()
-                .collect(Collectors.toMap(SysSocialDetails::getAppId, detail -> detail));
-
-        // 移除本地存在但远程不存在的配置
-        configMap.keySet().removeIf(appId -> {
-            if (!remoteConfigMap.containsKey(appId)) {
-                removeConfig(appId);
-                return true;
+            if (CollUtil.isEmpty(remoteConfigs)) {
+                log.warn("WxMaConfigManager - 配置为空，清除所有本地配置");
+                clearAllConfigs();
+                return;
             }
-            return false;
-        });
 
-        // 添加或更新配置
-        remoteConfigs.forEach(this::addOrUpdateConfig);
+            // 获取配置的appId集合
+            Map<String, SysSocialDetails> remoteConfigMap = remoteConfigs.stream()
+                    .collect(Collectors.toMap(SysSocialDetails::getAppId, detail -> detail));
 
-        log.info("WxMaConfigManager - 配置刷新完成，当前共{}个配置", configMap.size());
+            // 移除本地存在但远程不存在的配置
+            configMap.keySet().removeIf(appId -> {
+                if (!remoteConfigMap.containsKey(appId)) {
+                    removeConfig(appId);
+                    return true;
+                }
+                return false;
+            });
+
+            // 添加或更新配置
+            remoteConfigs.forEach(this::addOrUpdateConfig);
+
+            initialized.set(true);
+            retryCount.set(0);
+            
+            // 停止重试任务（如果正在重试中）
+            stopRetryScheduler();
+            
+            log.info("WxMaConfigManager - 配置刷新完成，当前共{}个配置", configMap.size());
+            
+        } catch (Exception e) {
+            log.error("WxMaConfigManager - 刷新配置失败", e);
+        }
     }
 
     /**
@@ -188,6 +289,32 @@ public class WxMaConfigManager {
     public int getConfigCount() {
         return configMap.size();
     }
-}
 
+    /**
+     * 检查配置是否已初始化
+     *
+     * @return 是否已初始化
+     */
+    public boolean isInitialized() {
+        return initialized.get();
+    }
+
+    /**
+     * 检查提供者是否可用
+     *
+     * @return 是否可用
+     */
+    public boolean isProviderAvailable() {
+        return socialDetailsProvider.isAvailable();
+    }
+
+    /**
+     * 销毁资源
+     */
+    public void destroy() {
+        stopRetryScheduler();
+        clearAllConfigs();
+        log.info("WxMaConfigManager - 资源已释放");
+    }
+}
 
