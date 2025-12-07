@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/inner/tenant")
 @RequiredArgsConstructor
-public class TenantDetailsAPI implements RShortcuts {
+public class InnerTenantDetailsAPI implements RShortcuts {
     private final TenantDetailsService tenantDetailsService;
 
     @PostMapping("/details/{username}")

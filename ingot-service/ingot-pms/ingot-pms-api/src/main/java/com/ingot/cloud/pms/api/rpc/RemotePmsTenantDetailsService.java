@@ -27,6 +27,6 @@ public interface RemotePmsTenantDetailsService {
     @PostMapping("/inner/tenant/detailsList")
     R<TenantDetailsResponse> getTenantByIds(@RequestBody List<Long> ids);
 
-    @GetMapping("/{id}")
+    @GetMapping("/inner/tenant/{id}")
     R<SysTenant> getTenantById(@PathVariable Long id);
 }

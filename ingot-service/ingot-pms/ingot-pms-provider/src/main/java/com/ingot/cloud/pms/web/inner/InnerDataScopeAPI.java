@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/inner/dataScope")
 @RequiredArgsConstructor
-public class DataScopeAPI implements RShortcuts {
+public class InnerDataScopeAPI implements RShortcuts {
     private final BizRoleService bizRoleService;
     private final BizDeptService bizDeptService;
     private final BizUserService bizUserService;

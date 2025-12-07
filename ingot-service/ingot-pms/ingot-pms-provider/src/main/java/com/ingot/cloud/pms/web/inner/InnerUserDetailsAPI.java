@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/inner/user/details")
 @RequiredArgsConstructor
-public class UserDetailsAPI implements RShortcuts {
+public class InnerUserDetailsAPI implements RShortcuts {
     private final UserIdentityService userIdentityService;
 
     @PostMapping

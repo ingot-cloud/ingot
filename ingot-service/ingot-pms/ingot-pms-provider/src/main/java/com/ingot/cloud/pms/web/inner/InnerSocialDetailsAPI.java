@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/inner/social")
 @RequiredArgsConstructor
-public class SocialDetailsAPI implements RShortcuts {
+public class InnerSocialDetailsAPI implements RShortcuts {
     private final SocialDetailsService socialDetailsService;
 
     @GetMapping("/detailList/{type}")
