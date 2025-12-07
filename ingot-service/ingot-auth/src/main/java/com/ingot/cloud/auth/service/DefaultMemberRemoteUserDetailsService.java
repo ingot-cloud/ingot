@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.service;
 
-import com.ingot.cloud.member.api.rpc.MemberUserDetailsService;
+import com.ingot.cloud.member.api.rpc.RemoteMemberUserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultMemberRemoteUserDetailsService implements RemoteUserDetailsService {
-    private final MemberUserDetailsService memberApi;
+    private final RemoteMemberUserDetailsService memberApi;
 
     @Override
     public boolean supports(UserDetailsRequest params) {

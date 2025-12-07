@@ -5,7 +5,7 @@ import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
@@ -26,7 +26,7 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
     private final MemberUserTenantService userTenantService;
 
     private final BizUserService bizUserService;
-    private final PmsTenantDetailsService pmsTenantDetailsService;
+    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -41,13 +41,13 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
                 .eq(MemberUser::getPhone, username));
         if (user != null) {
             return IdentityUtil.map(user, request.getUserType(), request.getTenant(),
-                    userTenantService, bizUserService, pmsTenantDetailsService);
+                    userTenantService, bizUserService, remotePmsTenantDetailsService);
         }
         // 2.作为用户名查询
         user = memberUserService.getOne(Wrappers.<MemberUser>lambdaQuery()
                 .eq(MemberUser::getUsername, username));
         return IdentityUtil.map(user, request.getUserType(), request.getTenant(),
-                userTenantService, bizUserService, pmsTenantDetailsService);
+                userTenantService, bizUserService, remotePmsTenantDetailsService);
     }
 
 

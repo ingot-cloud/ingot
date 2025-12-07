@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.service;
 
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.security.TenantDetailsRequest;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultRemoteTenantDetailsService implements RemoteTenantDetailsService {
-    private final PmsTenantDetailsService pmsTenantDetailsService;
+    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
 
     @Override
     public R<TenantDetailsResponse> getAllowList(TenantDetailsRequest params) {
-        return pmsTenantDetailsService.getUserTenantDetails(params.getUsername());
+        return remotePmsTenantDetailsService.getUserTenantDetails(params.getUsername());
     }
 }

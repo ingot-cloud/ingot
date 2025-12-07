@@ -3,9 +3,9 @@ package com.ingot.cloud.auth.config;
 import com.ingot.cloud.auth.service.DefaultMemberRemoteUserDetailsService;
 import com.ingot.cloud.auth.service.DefaultRemoteTenantDetailsService;
 import com.ingot.cloud.auth.service.DefaultPmsRemoteUserDetailsService;
-import com.ingot.cloud.member.api.rpc.MemberUserDetailsService;
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
-import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
+import com.ingot.cloud.member.api.rpc.RemoteMemberUserDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
 import com.ingot.framework.security.core.userdetails.RemoteUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -21,17 +21,17 @@ import org.springframework.context.annotation.Configuration;
 public class DefaultSecurityConfig {
 
     @Bean
-    public RemoteUserDetailsService pmsRemoteUserDetailsService(PmsUserDetailsService pmsUserDetailsService) {
-        return new DefaultPmsRemoteUserDetailsService(pmsUserDetailsService);
+    public RemoteUserDetailsService pmsRemoteUserDetailsService(RemotePmsUserDetailsService remotePmsUserDetailsService) {
+        return new DefaultPmsRemoteUserDetailsService(remotePmsUserDetailsService);
     }
 
     @Bean
-    public RemoteUserDetailsService memberRemoteUserDetailsService(MemberUserDetailsService memberUserDetailsService) {
-        return new DefaultMemberRemoteUserDetailsService(memberUserDetailsService);
+    public RemoteUserDetailsService memberRemoteUserDetailsService(RemoteMemberUserDetailsService remoteMemberUserDetailsService) {
+        return new DefaultMemberRemoteUserDetailsService(remoteMemberUserDetailsService);
     }
 
     @Bean
-    public RemoteTenantDetailsService remoteTenantDetailsService(PmsTenantDetailsService pmsTenantDetailsService) {
-        return new DefaultRemoteTenantDetailsService(pmsTenantDetailsService);
+    public RemoteTenantDetailsService remoteTenantDetailsService(RemotePmsTenantDetailsService remotePmsTenantDetailsService) {
+        return new DefaultRemoteTenantDetailsService(remotePmsTenantDetailsService);
     }
 }

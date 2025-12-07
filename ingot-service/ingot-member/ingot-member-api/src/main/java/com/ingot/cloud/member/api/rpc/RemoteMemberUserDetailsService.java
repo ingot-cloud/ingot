@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * <p>Time         : 14:22.</p>
  */
 @FeignClient(contextId = "memberUserDetailsService", value = ServiceNameConstants.MEMBER_SERVICE)
-public interface MemberUserDetailsService {
+public interface RemoteMemberUserDetailsService {
 
     @PostMapping(value = "/inner/user/details")
     R<UserDetailsResponse> getUserAuthDetails(@RequestBody UserDetailsRequest params);

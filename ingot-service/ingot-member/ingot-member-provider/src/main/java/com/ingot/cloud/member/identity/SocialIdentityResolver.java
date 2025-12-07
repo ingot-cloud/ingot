@@ -2,7 +2,7 @@ package com.ingot.cloud.member.identity;
 
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
@@ -26,7 +26,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
     private final MemberUserTenantService userTenantService;
 
     private final BizUserService bizUserService;
-    private final PmsTenantDetailsService pmsTenantDetailsService;
+    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -41,7 +41,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             String uniqueID = userSocialService.getUniqueID(socialType, socialCode);
             return IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
                     request.getUserType(), request.getTenant(),
-                    userTenantService, bizUserService, pmsTenantDetailsService);
+                    userTenantService, bizUserService, remotePmsTenantDetailsService);
         });
     }
 }

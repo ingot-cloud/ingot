@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.service;
 
-import com.ingot.cloud.pms.api.rpc.PmsUserDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class DefaultPmsRemoteUserDetailsService implements RemoteUserDetailsService {
-    private final PmsUserDetailsService pmsApi;
+    private final RemotePmsUserDetailsService pmsApi;
 
     @Override
     public boolean supports(UserDetailsRequest params) {

@@ -15,7 +15,7 @@ import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
 import com.ingot.cloud.member.common.BizUtils;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.common.AllowTenantDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
@@ -40,7 +40,7 @@ public class IdentityUtil {
      * @param tenant                  租户ID
      * @param userTenantService       用户组织服务
      * @param bizUserService          用户服务
-     * @param pmsTenantDetailsService 租户服务
+     * @param remotePmsTenantDetailsService 租户服务
      * @return 用户信息
      */
     public static UserDetailsResponse map(MemberUser user,
@@ -48,10 +48,10 @@ public class IdentityUtil {
                                           Long tenant,
                                           MemberUserTenantService userTenantService,
                                           BizUserService bizUserService,
-                                          PmsTenantDetailsService pmsTenantDetailsService) {
+                                          RemotePmsTenantDetailsService remotePmsTenantDetailsService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
-                    List<AllowTenantDTO> allows = getAllowTenants(user, pmsTenantDetailsService, userTenantService);
+                    List<AllowTenantDTO> allows = getAllowTenants(user, remotePmsTenantDetailsService, userTenantService);
                     UserStatusEnum userStatus = BizUtils.getUserStatus(allows, value.getStatus(), tenant);
                     value.setStatus(userStatus);
 
@@ -86,7 +86,7 @@ public class IdentityUtil {
     }
 
     private static List<AllowTenantDTO> getAllowTenants(MemberUser user,
-                                                        PmsTenantDetailsService pmsTenantDetailsService,
+                                                        RemotePmsTenantDetailsService remotePmsTenantDetailsService,
                                                         MemberUserTenantService userTenantService) {
         // 1.获取可以访问的租户列表
         List<MemberUserTenant> userTenantList = userTenantService.getUserOrgs(user.getId());
@@ -94,7 +94,7 @@ public class IdentityUtil {
             return ListUtil.empty();
         }
 
-        TenantDetailsResponse response = pmsTenantDetailsService.getTenantByIds(userTenantList.stream()
+        TenantDetailsResponse response = remotePmsTenantDetailsService.getTenantByIds(userTenantList.stream()
                         .map(MemberUserTenant::getTenantId).collect(Collectors.toList()))
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();

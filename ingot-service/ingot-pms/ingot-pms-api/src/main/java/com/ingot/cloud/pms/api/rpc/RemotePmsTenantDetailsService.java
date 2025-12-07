@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * <p>Time         : 16:38.</p>
  */
 @FeignClient(contextId = "pmsTenantDetailsService", value = ServiceNameConstants.PMS_SERVICE)
-public interface PmsTenantDetailsService {
+public interface RemotePmsTenantDetailsService {
 
     @PostMapping(value = "/inner/tenant/details/{username}")
     R<TenantDetailsResponse> getUserTenantDetails(@PathVariable("username") String username);

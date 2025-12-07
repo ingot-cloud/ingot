@@ -2,7 +2,7 @@ package com.ingot.framework.data.mybatis.scope.config;
 
 import javax.sql.DataSource;
 
-import com.ingot.cloud.pms.api.rpc.PmsDataScopeService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsDataScopeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -30,7 +30,7 @@ public class InDataScopeConfig {
     }
 
     @Bean
-    public DataScopeAOP dataScopeAOP(PmsDataScopeService pmsDataScopeService) {
-        return new DataScopeAOP(pmsDataScopeService);
+    public DataScopeAOP dataScopeAOP(RemotePmsDataScopeService remotePmsDataScopeService) {
+        return new DataScopeAOP(remotePmsDataScopeService);
     }
 }

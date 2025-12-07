@@ -6,7 +6,7 @@ import java.util.List;
 import cn.hutool.core.collection.CollUtil;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.types.RoleType;
-import com.ingot.cloud.pms.api.rpc.PmsDataScopeService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsDataScopeService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.data.mybatis.scope.context.DataScopeContextHolder;
 import com.ingot.framework.data.mybatis.scope.error.DataScopeErrorCode;
@@ -30,7 +30,7 @@ import org.aspectj.lang.annotation.Pointcut;
 @Aspect
 @RequiredArgsConstructor
 public class DataScopeAOP {
-    private final PmsDataScopeService dataScopeService;
+    private final RemotePmsDataScopeService dataScopeService;
 
     @Pointcut("@annotation(com.ingot.framework.data.mybatis.scope.config.DataScope)")
     public void dataScope() {

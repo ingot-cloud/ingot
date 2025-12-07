@@ -9,7 +9,7 @@ import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
 import com.ingot.cloud.member.mapper.MemberUserTenantMapper;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.api.rpc.PmsTenantDetailsService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.common.TenantBaseDTO;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenantMapper, MemberUserTenant> implements MemberUserTenantService {
-    private final PmsTenantDetailsService pmsTenantDetailsService;
+    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
     private final AssertionChecker assertionChecker;
 
     @Override
@@ -43,7 +43,7 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
             return;
         }
 
-        SysTenant tenant = pmsTenantDetailsService.getTenantById(tenantId)
+        SysTenant tenant = remotePmsTenantDetailsService.getTenantById(tenantId)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         assertionChecker.checkOperation(tenant != null, "MemberUserTenantServiceImpl.TenantNonNull");
@@ -74,7 +74,7 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
 
     @Override
     public void updateBase(long tenantId) {
-        SysTenant tenant = pmsTenantDetailsService.getTenantById(tenantId)
+        SysTenant tenant = remotePmsTenantDetailsService.getTenantById(tenantId)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         assertionChecker.checkOperation(tenant != null, "MemberUserTenantServiceImpl.TenantNonNull");

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * <p>Time         : 15:17.</p>
  */
 @FeignClient(contextId = "pmsDataScopeService", value = ServiceNameConstants.PMS_SERVICE)
-public interface PmsDataScopeService {
+public interface RemotePmsDataScopeService {
 
     /**
      * 通过角色编码查询角色列表
