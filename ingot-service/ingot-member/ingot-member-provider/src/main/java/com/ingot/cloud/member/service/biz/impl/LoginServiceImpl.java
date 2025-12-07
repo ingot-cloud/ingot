@@ -4,7 +4,6 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
-import com.ingot.cloud.member.common.wechat.WechatProperties;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.biz.LoginService;
 import com.ingot.cloud.pms.api.model.dto.auth.MiniProgramRegisterDTO;
@@ -12,6 +11,7 @@ import com.ingot.cloud.pms.api.model.dto.auth.SocialRegisterDTO;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
+import com.ingot.framework.social.wechat.core.WxMaServiceHelper;
 import lombok.RequiredArgsConstructor;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.stereotype.Service;
@@ -28,8 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LoginServiceImpl implements LoginService {
     private final BizUserService bizUserService;
     private final UserSocialService userSocialService;
-    private final WechatProperties wechatProperties;
-    private final WxMaService wxMaService;
+    private final WxMaServiceHelper wxMaServiceHelper;
     private final AssertionChecker assertionChecker;
 
     @Override
@@ -59,10 +58,7 @@ public class LoginServiceImpl implements LoginService {
     public void miniProgramRegister(MiniProgramRegisterDTO params) {
         // 如果存在phoneCode，那么需要进行数据填充
         if (StrUtil.isNotEmpty(params.getPhoneCode())) {
-            String appId = wechatProperties.getAppMiniProgramAppId();
-            assertionChecker.checkOperation(StrUtil.isNotEmpty(appId), "LoginServiceImpl.WechatMiniProgramAppID");
-
-            WxMaService service = wxMaService.switchoverTo(appId);
+            WxMaService service = wxMaServiceHelper.getActiveService();
             fillWechatData(service, params);
         }
 

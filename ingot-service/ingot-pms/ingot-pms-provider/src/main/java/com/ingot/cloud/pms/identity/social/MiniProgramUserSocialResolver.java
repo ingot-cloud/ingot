@@ -1,15 +1,18 @@
 package com.ingot.cloud.pms.identity.social;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserSocial;
-import com.ingot.cloud.pms.core.BizSocialUtils;
 import com.ingot.cloud.pms.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserSocialService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.core.identity.social.UserSocialResolver;
+import com.ingot.framework.social.wechat.properties.SocialWechatProperties;
+import com.ingot.framework.social.wechat.utils.BizSocialUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
     private final SysUserService sysUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysSocialDetailsService sysSocialDetailsService;
+    private final SocialWechatProperties socialWechatProperties;
 
     @Override
     public boolean supports(SocialTypeEnum socialType) {
@@ -35,7 +39,13 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
 
     @Override
     public String getUniqueID(String code) {
-        return BizSocialUtils.getMiniProgramOpenId(sysSocialDetailsService, SocialTypeEnum.WECHAT_MINI_PROGRAM, code);
+        return BizSocialUtil.getMiniProgramOpenId(
+                () -> CollUtil.emptyIfNull(sysSocialDetailsService.list(Wrappers.<SysSocialDetails>lambdaQuery()
+                                .eq(SysSocialDetails::getType, SocialTypeEnum.WECHAT_MINI_PROGRAM)))
+                        .stream()
+                        .filter(item -> item.getAppId().equals(socialWechatProperties.getMiniProgramAppId()))
+                        .findFirst().orElse(null),
+                code);
     }
 
     @Override

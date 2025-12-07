@@ -16,10 +16,8 @@ dependencies {
     implementation project(ingot.framework_id)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_openapi)
-
     implementation project(ingot.framework_crypto)
-
-    implementation(deps.weixin_java_miniapp)
+    implementation project(ingot.framework_social_wechat)
 
     implementation project(ingot.member_api)
     implementation project(ingot.pms_api)

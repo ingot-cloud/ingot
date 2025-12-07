@@ -3,13 +3,14 @@ package com.ingot.cloud.member.identity.social;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.domain.MemberUserSocial;
-import com.ingot.cloud.member.common.BizSocialUtils;
-import com.ingot.cloud.member.service.domain.MemberSocialDetailsService;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserSocialService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.core.identity.social.UserSocialResolver;
+import com.ingot.framework.social.wechat.properties.SocialWechatProperties;
+import com.ingot.framework.social.wechat.utils.BizSocialUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,8 @@ import org.springframework.stereotype.Service;
 public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberUser> {
     private final MemberUserService userService;
     private final MemberUserSocialService userSocialService;
-    private final MemberSocialDetailsService socialDetailsService;
+    private final RemotePmsSocialDetailsService remotePmsSocialDetailsService;
+    private final SocialWechatProperties socialWechatProperties;
 
     @Override
     public boolean supports(SocialTypeEnum socialType) {
@@ -35,7 +37,8 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberU
 
     @Override
     public String getUniqueID(String code) {
-        return BizSocialUtils.getMiniProgramOpenId(socialDetailsService, SocialTypeEnum.WECHAT_MINI_PROGRAM, code);
+        return BizSocialUtil.getMiniProgramOpenId(remotePmsSocialDetailsService,
+                SocialTypeEnum.WECHAT_MINI_PROGRAM, socialWechatProperties.getMiniProgramAppId(), code);
     }
 
     @Override

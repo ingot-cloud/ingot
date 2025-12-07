@@ -1,0 +1,17 @@
+# 微信社交模块配置示例
+
+ingot:
+  social:
+    # 消息队列类型：redis（默认）, kafka
+    message-queue: redis
+    
+    # Redis配置
+    redis:
+      # Redis频道主题（所有服务需保持一致）
+      topic: in:social:config:changed
+    
+    # Kafka配置（未来扩展）
+    kafka:
+      topic: in.social.config.changed
+      group-id: in-social-config-group
+
