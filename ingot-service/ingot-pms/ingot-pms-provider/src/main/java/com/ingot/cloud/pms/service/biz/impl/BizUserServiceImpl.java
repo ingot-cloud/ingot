@@ -187,7 +187,11 @@ public class BizUserServiceImpl implements BizUserService {
         // 默认初始化密码
         String initPwd = RandomUtil.randomString(6);
 
-        user.setUsername(params.getPhone());
+        if (StrUtil.isNotEmpty(params.getUsername())) {
+            user.setUsername(params.getUsername());
+        } else {
+            user.setUsername(params.getPhone());
+        }
         user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
         user.setStatus(UserStatusEnum.ENABLE);
