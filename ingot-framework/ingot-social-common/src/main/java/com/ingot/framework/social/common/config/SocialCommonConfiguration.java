@@ -1,17 +1,14 @@
 package com.ingot.framework.social.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.social.common.event.SocialConfigKafkaMessageListener;
 import com.ingot.framework.social.common.event.SocialConfigMessageHandler;
 import com.ingot.framework.social.common.event.SocialConfigRedisMessageListener;
 import com.ingot.framework.social.common.properties.SocialConfigProperties;
-import com.ingot.framework.social.common.publisher.KafkaSocialConfigMessagePublisher;
 import com.ingot.framework.social.common.publisher.RedisSocialConfigMessagePublisher;
 import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +17,6 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.kafka.core.KafkaTemplate;
 
 /**
  * <p>Description  : 社交公共配置.</p>
@@ -39,7 +35,7 @@ public class SocialCommonConfiguration {
 
     /**
      * 社交配置消息处理器
-     * 用于处理Redis和Kafka消息的公共逻辑
+     * 用于处理消息的公共逻辑
      */
     @Bean
     public SocialConfigMessageHandler socialConfigMessageHandler(
@@ -48,42 +44,36 @@ public class SocialCommonConfiguration {
         return new SocialConfigMessageHandler(eventPublisher, objectMapper);
     }
 
-    // ==================== Redis 消息发布器 ====================
+    // ==================== Redis 实现（默认） ====================
 
     /**
-     * Redis消息发布器
-     * 条件：1. 使用Redis作为消息队列 2. 类路径中存在Redis
+     * Redis消息发布器（默认实现）
+     * 如果服务没有自定义实现，则使用此默认实现
      */
     @Bean
-    @ConditionalOnProperty(prefix = "ingot.social", name = "message-queue", havingValue = "redis", matchIfMissing = true)
-    @ConditionalOnClass(StringRedisTemplate.class)
+    @ConditionalOnMissingBean(SocialConfigMessagePublisher.class)
     public SocialConfigMessagePublisher redisSocialConfigMessagePublisher(
             StringRedisTemplate stringRedisTemplate,
             ObjectMapper objectMapper) {
         String topic = socialConfigProperties.getRedis().getTopic();
-        log.info("SocialCommonConfiguration - 初始化Redis消息发布器，主题: {}", topic);
+        log.info("SocialCommonConfiguration - 初始化Redis消息发布器（默认），主题: {}", topic);
         return new RedisSocialConfigMessagePublisher(stringRedisTemplate, objectMapper, topic);
     }
 
     /**
      * Redis消息监听器
-     * 条件：使用Redis作为消息队列且类路径中存在Redis
      */
     @Bean
-    @ConditionalOnProperty(prefix = "ingot.social", name = "message-queue", havingValue = "redis", matchIfMissing = true)
-    @ConditionalOnClass(RedisConnectionFactory.class)
     public SocialConfigRedisMessageListener socialConfigRedisMessageListener(
             SocialConfigMessageHandler messageHandler) {
+        log.info("SocialCommonConfiguration - 注册Redis消息监听器");
         return new SocialConfigRedisMessageListener(messageHandler);
     }
 
     /**
      * Redis消息监听容器
-     * 条件：使用Redis作为消息队列且Redis可用
      */
     @Bean
-    @ConditionalOnProperty(prefix = "ingot.social", name = "message-queue", havingValue = "redis", matchIfMissing = true)
-    @ConditionalOnClass(RedisConnectionFactory.class)
     public RedisMessageListenerContainer socialConfigRedisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
             SocialConfigRedisMessageListener messageListener) {
@@ -96,35 +86,5 @@ public class SocialCommonConfiguration {
         
         log.info("SocialCommonConfiguration - Redis消息监听器已配置，主题: {}", topic);
         return container;
-    }
-
-    // ==================== Kafka 消息发布器 ====================
-
-    /**
-     * Kafka消息发布器
-     * 条件：1. 使用Kafka作为消息队列 2. 类路径中存在Kafka
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ingot.social", name = "message-queue", havingValue = "kafka")
-    @ConditionalOnClass(KafkaTemplate.class)
-    public SocialConfigMessagePublisher kafkaSocialConfigMessagePublisher(
-            KafkaTemplate<String, String> kafkaTemplate,
-            ObjectMapper objectMapper) {
-        String topic = socialConfigProperties.getKafka().getTopic();
-        log.info("SocialCommonConfiguration - 初始化Kafka消息发布器，主题: {}", topic);
-        return new KafkaSocialConfigMessagePublisher(kafkaTemplate, objectMapper, topic);
-    }
-
-    /**
-     * Kafka消息监听器
-     * 条件：使用Kafka作为消息队列且类路径中存在Kafka
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ingot.social", name = "message-queue", havingValue = "kafka")
-    @ConditionalOnClass(KafkaTemplate.class)
-    public SocialConfigKafkaMessageListener socialConfigKafkaMessageListener(
-            SocialConfigMessageHandler messageHandler) {
-        log.info("SocialCommonConfiguration - Kafka消息监听器已配置");
-        return new SocialConfigKafkaMessageListener(messageHandler);
     }
 }

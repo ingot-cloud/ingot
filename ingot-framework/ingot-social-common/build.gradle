@@ -9,5 +9,4 @@ dependencies {
     api project(ingot.pms_api)
     
     compileOnly(deps.spring.framework_spring_web)
-    compileOnlyApi(deps.spring.kafka)
 }
