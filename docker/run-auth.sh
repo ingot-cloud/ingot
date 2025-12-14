@@ -33,5 +33,6 @@ docker run -d --name ${serviceName} --restart always \
     -e MYSQL_USERNAME=${MYSQL_USERNAME} \
     -e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
     -e REDIS_PASSWORD=${REDIS_PASSWORD} \
+    -e INGOT_JWK_MASTER_KEY=${INGOT_JWK_MASTER_KEY} \
     -v /ingot-data:/ingot-data \
     ${imageName}
