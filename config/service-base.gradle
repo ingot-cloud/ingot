@@ -26,6 +26,7 @@ dependencies {
     // lombok
     implementation(deps.lombok)
     annotationProcessor(deps.lombok)
+    annotationProcessor(deps.lombok_mapstruct_binding)
 }
 
 test {
