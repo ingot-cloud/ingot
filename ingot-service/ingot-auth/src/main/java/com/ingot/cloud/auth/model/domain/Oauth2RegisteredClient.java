@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.domain;
+package com.ingot.cloud.auth.model.domain;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ingot.cloud.pms.api.handlers.CustomOAuth2TypeHandler;
+import com.ingot.cloud.auth.common.CustomOAuth2TypeHandler;
 import com.ingot.framework.core.utils.validation.Group;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import jakarta.validation.constraints.NotBlank;

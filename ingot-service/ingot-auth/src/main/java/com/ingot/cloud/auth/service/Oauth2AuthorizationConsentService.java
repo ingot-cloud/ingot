@@ -1,6 +1,6 @@
-package com.ingot.cloud.pms.service.domain;
+package com.ingot.cloud.auth.service;
 
-import com.ingot.cloud.pms.api.model.domain.Oauth2AuthorizationConsent;
+import com.ingot.cloud.auth.model.domain.Oauth2AuthorizationConsent;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**

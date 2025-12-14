@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.service.domain.impl;
+package com.ingot.cloud.auth.service.impl;
 
 import java.time.Duration;
 import java.util.List;
@@ -8,16 +8,16 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.convert.ClientConvert;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
-import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
-import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
-import com.ingot.cloud.pms.common.BizFilter;
-import com.ingot.cloud.pms.common.CacheKey;
-import com.ingot.cloud.pms.core.BizIdGen;
-import com.ingot.cloud.pms.mapper.Oauth2RegisteredClientMapper;
-import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
+import com.ingot.cloud.auth.common.BizFilter;
+import com.ingot.cloud.auth.common.CacheKey;
+import com.ingot.cloud.auth.mapper.Oauth2RegisteredClientMapper;
+import com.ingot.cloud.auth.model.convert.ClientConvert;
+import com.ingot.cloud.auth.model.domain.Oauth2RegisteredClient;
+import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
+import com.ingot.cloud.auth.model.vo.AppSecretVO;
+import com.ingot.cloud.auth.model.vo.OAuth2RegisteredClientVO;
+import com.ingot.cloud.auth.service.Oauth2RegisteredClientService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsIdService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
@@ -25,6 +25,7 @@ import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.context.SpringContextHolder;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final AssertionChecker assertI18nService;
     private final PasswordEncoder passwordEncoder;
     private final ClientConvert clientConvert;
-    private final BizIdGen bizIdGen;
+    private final RemotePmsIdService remotePmsIdService;
 
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
@@ -102,7 +103,9 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         Oauth2RegisteredClient client = clientConvert.to(params);
         // id 和 clientId 保持一致
-        String id = bizIdGen.genAppIdCode();
+        String id = remotePmsIdService.genAppId()
+                .ifError(OAuth2ErrorUtils::checkResponse)
+                .getData();
         String secret = StrUtil.uuid().replaceAll("-", "");
         AppSecretVO result = new AppSecretVO();
         result.setAppId(id);

@@ -1,6 +1,6 @@
-package com.ingot.cloud.pms.mapper;
+package com.ingot.cloud.auth.mapper;
 
-import com.ingot.cloud.pms.api.model.domain.Oauth2AuthorizationConsent;
+import com.ingot.cloud.auth.model.domain.Oauth2AuthorizationConsent;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

@@ -1,8 +1,8 @@
-package com.ingot.cloud.pms.service.domain.impl;
+package com.ingot.cloud.auth.service.impl;
 
-import com.ingot.cloud.pms.api.model.domain.Oauth2Authorization;
-import com.ingot.cloud.pms.mapper.Oauth2AuthorizationMapper;
-import com.ingot.cloud.pms.service.domain.Oauth2AuthorizationService;
+import com.ingot.cloud.auth.mapper.Oauth2AuthorizationMapper;
+import com.ingot.cloud.auth.model.domain.Oauth2Authorization;
+import com.ingot.cloud.auth.service.Oauth2AuthorizationService;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 

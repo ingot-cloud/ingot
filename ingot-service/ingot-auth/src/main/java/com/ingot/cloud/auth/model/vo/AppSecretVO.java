@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.vo.client;
+package com.ingot.cloud.auth.model.vo;
 
 import java.io.Serializable;
 

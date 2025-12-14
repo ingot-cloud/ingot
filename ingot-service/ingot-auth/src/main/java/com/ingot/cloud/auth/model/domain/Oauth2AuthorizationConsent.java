@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.model.domain;
+package com.ingot.cloud.auth.model.domain;
 
 import java.io.Serial;
 

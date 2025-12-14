@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.api.handlers;
+package com.ingot.cloud.auth.common;
 
 import java.io.IOException;
 import java.util.List;

@@ -1,9 +1,6 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-    // 为了使用 OAuth2AuthorizationServerJackson2Module
-    implementation(deps.spring.security_oauth2_authorization_server)
-
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_crypto)

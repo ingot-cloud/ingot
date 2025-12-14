@@ -1,13 +1,13 @@
-package com.ingot.cloud.pms.service.domain;
+package com.ingot.cloud.auth.service;
 
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
-import com.ingot.cloud.pms.api.model.vo.client.AppSecretVO;
-import com.ingot.cloud.pms.api.model.vo.client.OAuth2RegisteredClientVO;
+import com.ingot.cloud.auth.model.domain.Oauth2RegisteredClient;
+import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
+import com.ingot.cloud.auth.model.vo.AppSecretVO;
+import com.ingot.cloud.auth.model.vo.OAuth2RegisteredClientVO;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**

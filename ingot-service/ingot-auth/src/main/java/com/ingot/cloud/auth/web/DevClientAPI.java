@@ -1,9 +1,9 @@
-package com.ingot.cloud.pms.web.v1.platform.dev;
+package com.ingot.cloud.auth.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.Oauth2RegisteredClient;
-import com.ingot.cloud.pms.api.model.dto.client.OAuth2RegisteredClientDTO;
-import com.ingot.cloud.pms.service.domain.Oauth2RegisteredClientService;
+import com.ingot.cloud.auth.model.domain.Oauth2RegisteredClient;
+import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
+import com.ingot.cloud.auth.service.Oauth2RegisteredClientService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(description = "client", name = "OAuth2客户端管理模块")
-@RequestMapping(value = "/v1/platform/dev/client")
+@RequestMapping(value = "/client")
 @RequiredArgsConstructor
 public class DevClientAPI implements RShortcuts {
     private final Oauth2RegisteredClientService oauth2RegisteredClientService;

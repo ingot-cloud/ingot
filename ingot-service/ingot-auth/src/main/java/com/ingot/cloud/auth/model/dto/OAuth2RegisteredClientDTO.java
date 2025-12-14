@@ -1,20 +1,21 @@
-package com.ingot.cloud.pms.api.model.vo.client;
+package com.ingot.cloud.auth.model.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.core.utils.validation.Group;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
- * <p>Description  : OAuth2RegisteredClientVO.</p>
+ * <p>Description  : OAuth2RegisteredClientDTO.</p>
  * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/10/14.</p>
- * <p>Time         : 5:28 下午.</p>
+ * <p>Date         : 2021/10/11.</p>
+ * <p>Time         : 2:16 下午.</p>
  */
 @Data
-public class OAuth2RegisteredClientVO implements Serializable {
+public class OAuth2RegisteredClientDTO implements Serializable {
     /**
      * ID
      */
@@ -26,19 +27,19 @@ public class OAuth2RegisteredClientVO implements Serializable {
     private String clientId;
 
     /**
-     * client id 发布时间
-     */
-    private LocalDateTime clientIdIssuedAt;
-
-    /**
      * 客户端秘钥
      */
-    @JsonIgnore
     private String clientSecret;
+
+    /**
+     * 秘钥过期时间
+     */
+    private LocalDateTime clientSecretExpiresAt;
 
     /**
      * 客户端名称
      */
+    @NotBlank(message = "{Oauth2RegisteredClient.clientName}", groups = Group.Create.class)
     private String clientName;
 
     /**
@@ -57,11 +58,6 @@ public class OAuth2RegisteredClientVO implements Serializable {
     private String redirectUris;
 
     /**
-     * logout重定向url
-     */
-    private String postLogoutRedirectUris;
-
-    /**
      * 客户端的访问范围
      */
     private String scopes;
@@ -75,6 +71,11 @@ public class OAuth2RegisteredClientVO implements Serializable {
      * 客户端请求访问时需要授权同意，则设置为true。
      */
     private Boolean requireAuthorizationConsent;
+
+    /**
+     * 设置授权代码的有效时间
+     */
+    private String authorizationCodeTimeToLive;
 
     /**
      * Token存活时间
@@ -105,6 +106,4 @@ public class OAuth2RegisteredClientVO implements Serializable {
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
-
-
 }
