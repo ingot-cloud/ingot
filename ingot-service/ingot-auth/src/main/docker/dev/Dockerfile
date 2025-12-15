@@ -1,5 +1,5 @@
 # ====================================
-# 开发环境 Dockerfile - ingot-auth
+# 开发环境 Dockerfile
 # ====================================
 # 特点：
 # - 使用 jdk-slim 镜像（包含完整调试工具）
@@ -29,14 +29,12 @@ COPY *.jar app.jar
 
 # 暴露端口
 EXPOSE 5100
-EXPOSE 5005
 
 # 环境变量
 ENV TZ=Asia/Shanghai
 ENV JAVA_OPTS="-Xmx512m \
                -Xms256m \
                -Xdebug \
-               -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005 \
                -Dspring.profiles.active=dev \
                -Djava.security.egd=file:/dev/./urandom"
 
