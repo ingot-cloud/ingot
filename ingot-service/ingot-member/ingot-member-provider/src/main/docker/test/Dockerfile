@@ -17,10 +17,8 @@ VOLUME ["/ingot-data"]
 # 设置工作目录
 WORKDIR /app
 
-# 安装必要工具并设置时区
-RUN yum install -y curl tzdata && \
-    yum clean all && \
-    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+# 设置时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 # 创建数据目录和日志目录
 RUN mkdir -p /ingot-data /app/logs
