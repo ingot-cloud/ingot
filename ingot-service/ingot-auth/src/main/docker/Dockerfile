@@ -10,4 +10,4 @@ RUN mkdir -p /ingot-data
 
 ENV TZ=Asia/Shanghai JAVA_OPTS="-Xms128m -Xmx256m -Djava.security.egd=file:/dev/./urandom"
 
-CMD java $JAVA_OPTS -jar app.jar
+CMD ["java", "$JAVA_OPTS", "-jar", "app.jar"]
