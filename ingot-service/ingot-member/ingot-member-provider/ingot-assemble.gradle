@@ -5,6 +5,5 @@ ingotAssemble {
         registry "docker-registry.ingotcloud.top"
         username JY_DOCKER_REGISTRY_USERNAME
         password JY_DOCKER_REGISTRY_PASSWORD
-        name "ingot/pms"
     }
 }

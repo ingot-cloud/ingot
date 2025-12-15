@@ -1,0 +1,122 @@
+// ========================================
+// 高级配置示例 - 多仓库配置
+// ========================================
+// 适用场景：不同环境需要推送到不同的镜像仓库
+// 例如：开发环境推送到内网仓库，生产环境推送到公网仓库
+// ========================================
+
+apply plugin: 'com.ingot.plugin.assemble'
+
+ingotAssemble {
+    docker {
+        // ====================================
+        // 全局默认配置（可选）
+        // ====================================
+        dockerCmd "docker"
+        platform "linux/amd64"
+        
+        // ====================================
+        // 多环境 + 多仓库配置
+        // ====================================
+        
+        envs = [
+            // -------------------------------------
+            // 开发环境 - 内网开发仓库
+            // -------------------------------------
+            "dev": [
+                name: "ingot/gateway-dev",
+                
+                // 开发环境使用内网仓库
+                registry: "dev-registry.internal.company.com",
+                username: DEV_DOCKER_USERNAME,
+                password: DEV_DOCKER_PASSWORD,
+                
+                platform: "linux/amd64"
+            ],
+            
+            // -------------------------------------
+            // 测试环境 - 测试专用仓库
+            // -------------------------------------
+            "test": [
+                name: "ingot/gateway-test",
+                
+                // 测试环境使用测试仓库（可能是 Harbor）
+                registry: "test-harbor.company.com",
+                username: TEST_DOCKER_USERNAME,
+                password: TEST_DOCKER_PASSWORD,
+                
+                platform: "linux/amd64",
+                saveName: "gateway-test.tar"
+            ],
+            
+            // -------------------------------------
+            // 预发布环境 - 使用生产仓库的预发布项目
+            // -------------------------------------
+            "staging": [
+                name: "ingot/gateway-staging",
+                
+                // 预发布环境使用生产仓库
+                registry: "prod-harbor.company.com",
+                username: PROD_DOCKER_USERNAME,
+                password: PROD_DOCKER_PASSWORD,
+                
+                // 预发布环境通常与生产配置一致
+                platform: "linux/amd64,linux/arm64"
+            ],
+            
+            // -------------------------------------
+            // 生产环境 - 公网生产仓库
+            // -------------------------------------
+            "prod": [
+                name: "ingot/gateway",
+                
+                // 生产环境使用公网仓库
+                registry: "prod-harbor.company.com",
+                username: PROD_DOCKER_USERNAME,
+                password: PROD_DOCKER_PASSWORD,
+                
+                // 生产环境支持多平台
+                platform: "linux/amd64,linux/arm64",
+                saveName: "gateway-prod.tar"
+            ]
+        ]
+    }
+}
+
+// ========================================
+// 环境变量配置建议
+// ========================================
+// 在 gradle.properties 或环境变量中配置：
+//
+// # 开发环境
+// DEV_DOCKER_USERNAME=dev-user
+// DEV_DOCKER_PASSWORD=dev-password
+//
+// # 测试环境
+// TEST_DOCKER_USERNAME=test-user
+// TEST_DOCKER_PASSWORD=test-password
+//
+// # 生产环境
+// PROD_DOCKER_USERNAME=prod-user
+// PROD_DOCKER_PASSWORD=prod-password
+//
+// ========================================
+// CI/CD 集成建议
+// ========================================
+//
+// Jenkins/GitLab CI 示例：
+//
+// # 开发分支自动部署到开发环境
+// if [ "$BRANCH" = "develop" ]; then
+//   ./gradlew clean build dockerPushDev
+// fi
+//
+// # 测试分支自动部署到测试环境
+// if [ "$BRANCH" = "test" ]; then
+//   ./gradlew clean build dockerPushTest
+// fi
+//
+// # 主分支部署到生产环境（需要手动触发）
+// if [ "$BRANCH" = "main" ] && [ "$MANUAL_DEPLOY" = "true" ]; then
+//   ./gradlew clean build dockerPushProd
+// fi

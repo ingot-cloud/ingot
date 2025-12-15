@@ -37,24 +37,14 @@ class DockerExtension {
     String password = ""
 
     /**
-     * dockerfile 存储目录
+     * dockerfile 存储目录（默认目录，通常不需要设置）
      */
     String dockerfileDir = ""
 
     /**
-     * 存储库名称
+     * 环境配置（必填）
      */
-    String name = ""
-
-    /**
-     * 保存名称
-     */
-    String saveName = ""
-
-    /**
-     * 多个Tag打包
-     */
-    Map<String, Tag> tags = new HashMap<>()
+    Map<String, Env> envs = new HashMap<>()
 
     DockerExtension() {}
 
@@ -106,19 +96,24 @@ class DockerExtension {
         this.dockerfileDir = dockerfileDir
     }
 
-    String getName() {
-        return name
+    Map<String, Env> getEnvs() {
+        return envs
     }
 
-    void setName(String name) {
-        this.name = name
+    void setEnvs(Map<String, Env> envs) {
+        this.envs = envs
     }
 
-    Map<String, Tag> getTags() {
-        return tags
-    }
-
-    void setTags(Map<String, Tag> tags) {
-        this.tags = tags
+    /**
+     * 添加单个环境配置（支持 Gradle DSL 风格）
+     * @param envName 环境名称（如 dev、test、prod）
+     * @param action 环境配置闭包
+     */
+    void env(String envName, Closure action) {
+        Env env = new Env()
+        action.delegate = env
+        action.resolveStrategy = Closure.DELEGATE_FIRST
+        action.call()
+        envs.put(envName, env)
     }
 }

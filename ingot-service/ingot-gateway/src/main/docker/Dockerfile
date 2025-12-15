@@ -2,7 +2,7 @@ FROM alibabadragonwell/dragonwell:17-anolis
 
 VOLUME ["/ingot-data"]
 
-ADD ingot-gateway.jar app.jar
+ADD *.jar app.jar
 
 RUN sh -c 'touch ./app.jar'
 

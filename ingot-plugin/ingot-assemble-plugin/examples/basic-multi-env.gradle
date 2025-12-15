@@ -1,0 +1,91 @@
+// ========================================
+// 基础配置示例 - 多环境（推荐）
+// ========================================
+// 适用场景：需要为多个环境构建不同的镜像
+// ========================================
+
+apply plugin: 'com.ingot.plugin.assemble'
+
+ingotAssemble {
+    docker {
+        // ====================================
+        // 全局配置（可被环境覆盖）
+        // ====================================
+        
+        // 镜像仓库地址（所有环境共享）
+        registry "docker-registry.ingotcloud.top"
+        
+        // 仓库认证信息（从 gradle.properties 或环境变量读取）
+        username JY_DOCKER_REGISTRY_USERNAME
+        password JY_DOCKER_REGISTRY_PASSWORD
+        
+        // Docker 命令路径（默认 docker）
+        dockerCmd "docker"
+        
+        // 默认构建平台
+        platform "linux/amd64"
+        
+        // ====================================
+        // 环境配置（必填）
+        // ====================================
+        
+        envs = [
+            // 开发环境
+            "dev": [
+                name: "ingot/gateway-dev"  // 必填：镜像名称
+                // dockerfileDir 自动使用 src/main/docker/dev
+            ],
+            
+            // 测试环境
+            "test": [
+                name: "ingot/gateway-test",  // 必填：镜像名称
+                saveName: "gateway-test.tar"  // 可选：保存文件名
+            ],
+            
+            // 生产环境
+            "prod": [
+                name: "ingot/gateway",  // 必填：镜像名称
+                platform: "linux/amd64,linux/arm64",  // 覆盖全局配置：多平台
+                saveName: "gateway-prod.tar"
+            ]
+        ]
+    }
+}
+
+// ========================================
+// 生成的任务
+// ========================================
+//
+// 开发环境：
+// - shiftDockerfileDev   # 复制 Dockerfile
+// - dockerBuildDev       # 构建镜像
+// - dockerPushDev        # 推送镜像
+// - dockerSaveDev        # 保存镜像
+//
+// 测试环境：
+// - shiftDockerfileTest
+// - dockerBuildTest
+// - dockerPushTest
+// - dockerSaveTest
+//
+// 生产环境：
+// - shiftDockerfileProd
+// - dockerBuildProd
+// - dockerPushProd
+// - dockerSaveProd
+//
+// ========================================
+// 使用命令
+// ========================================
+//
+// # 查看所有 Docker 相关任务
+// ./gradlew tasks --group=ingot
+//
+// # 构建开发环境镜像
+// ./gradlew dockerBuildDev
+//
+// # 构建并推送测试环境镜像
+// ./gradlew dockerPushTest
+//
+// # 构建并保存生产环境镜像
+// ./gradlew dockerSaveProd

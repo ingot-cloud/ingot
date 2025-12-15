@@ -5,6 +5,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
 
 /**
  * <p>Description  : DockerSaveTask.</p>
@@ -13,6 +16,9 @@ import org.gradle.api.tasks.TaskAction
  * <p>Time         : 15:21.</p>
  */
 class DockerSaveTask extends DefaultTask {
+
+    private final ExecOperations execOperations
+
     /**
      * docker registry
      */
@@ -39,7 +45,9 @@ class DockerSaveTask extends DefaultTask {
     @Internal
     private String saveName
 
-    DockerSaveTask() {
+    @Inject
+    DockerSaveTask(ExecOperations execOperations) {
+        this.execOperations = execOperations
         setGroup("ingot")
     }
 
@@ -55,7 +63,7 @@ class DockerSaveTask extends DefaultTask {
 
         project.logger.lifecycle(dockerCmd + " save -o " + saveName + " " + tag)
 
-        project.exec {
+        execOperations.exec {
             workingDir buildDirPath
             commandLine dockerCmd, 'save', '-o', saveName, tag
             logging.captureStandardOutput LogLevel.INFO

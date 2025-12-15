@@ -30,13 +30,22 @@ class AssembleTask extends DefaultTask {
         project.logger.lifecycle("Assemble release task running.")
         outputDirPath = Utils.getOutputDirPathOrDefault(project, outputDirPath)
 
-        // assemble 生成的 jar 包文件夹
-        String libsPath = project.buildDir.path + "/libs"
+        // assemble 生成的 jar 包文件夹（使用新 API）
+        String libsPath = project.layout.buildDirectory.dir("libs").get().asFile.path
         // 输出文件目录
         String outputPath = Utils.projectOutputPath(outputDirPath, project)
         // 输出文件名字
         String outputFileName = project.name + ".jar"
-        project.logger.lifecycle(">>> copy to: " + outputPath)
+        
+        project.logger.lifecycle("AssembleTask - source: ${libsPath}")
+        project.logger.lifecycle("AssembleTask - target: ${outputPath}")
+        project.logger.lifecycle("AssembleTask - output file: ${outputFileName}")
+
+        // 确保输出目录存在
+        File outputDir = new File(outputPath)
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
 
         // copy jar
         project.copy {
@@ -49,7 +58,8 @@ class AssembleTask extends DefaultTask {
                 outputFileName
             }
         }
-
+        
+        project.logger.lifecycle("AssembleTask - copy completed")
     }
 
     String getOutputDirPath() {

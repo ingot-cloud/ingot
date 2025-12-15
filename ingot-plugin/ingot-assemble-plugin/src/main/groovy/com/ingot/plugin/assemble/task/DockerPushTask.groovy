@@ -6,6 +6,10 @@ import org.gradle.api.GradleException
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
+
 /**
  * <p>Description  : DockerPushTask.</p>
  * <p>Author       : wangchao.</p>
@@ -13,6 +17,9 @@ import org.gradle.api.tasks.TaskAction
  * <p>Time         : 1:06 下午.</p>
  */
 class DockerPushTask extends DefaultTask {
+
+    private final ExecOperations execOperations
+
     /**
      * docker registry
      */
@@ -39,7 +46,9 @@ class DockerPushTask extends DefaultTask {
     @Internal
     private String imageName
 
-    DockerPushTask() {
+    @Inject
+    DockerPushTask(ExecOperations execOperations) {
+        this.execOperations = execOperations
         setGroup("ingot")
     }
 
@@ -58,7 +67,7 @@ class DockerPushTask extends DefaultTask {
         // login
         if (!Utils.isEmpty(username) && !Utils.isEmpty(password)) {
             project.logger.lifecycle("ShiftDockerfileTask - docker login")
-            project.exec {
+            execOperations.exec {
                 commandLine dockerCmd, "login", "-u", username, "-p", password, registry
                 logging.captureStandardOutput LogLevel.INFO
                 logging.captureStandardError LogLevel.ERROR
@@ -67,7 +76,7 @@ class DockerPushTask extends DefaultTask {
         }
 
         project.logger.lifecycle("DockerPushTask - docker image push: " + tag)
-        project.exec {
+        execOperations.exec {
             commandLine dockerCmd, 'push', tag
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR

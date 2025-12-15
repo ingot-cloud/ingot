@@ -5,6 +5,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
+
 /**
  * <p>Description  : DockerBuildTask.</p>
  * <p>Author       : wangchao.</p>
@@ -12,6 +16,9 @@ import org.gradle.api.tasks.TaskAction
  * <p>Time         : 9:23 AM.</p>
  */
 class DockerBuildTask extends DefaultTask {
+
+    private final ExecOperations execOperations
+
     /**
      * docker registry
      */
@@ -36,7 +43,9 @@ class DockerBuildTask extends DefaultTask {
     @Internal
     private String platform
 
-    DockerBuildTask() {
+    @Inject
+    DockerBuildTask(ExecOperations execOperations) {
+        this.execOperations = execOperations
         setGroup("ingot")
     }
 
@@ -50,11 +59,14 @@ class DockerBuildTask extends DefaultTask {
         String buildDirPath = Utils.projectOutputPath(outputDirPath, project)
         String tag = Utils.getTag(project, imageName, registry)
 
-        project.logger.lifecycle(dockerCmd + " buildx build --platform " + platform + " -t " + tag + " .")
+        project.logger.lifecycle(dockerCmd + " buildx build --platform " + platform +
+                " -t " + tag +
+                " --load" +
+                " .")
 
-        project.exec {
+        execOperations.exec {
             workingDir buildDirPath
-            commandLine dockerCmd, 'buildx', 'build', '--platform', platform, '-t', tag, '.'
+            commandLine dockerCmd, 'buildx', 'build', '--platform', platform, '-t', tag, '--load', '.'
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
         }

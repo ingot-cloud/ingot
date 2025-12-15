@@ -60,12 +60,13 @@ class Utils {
 
     /**
      * 项目输出目录，相对于outputDirPath
+     * 不再包含版本号，避免每次构建都创建新目录
      * @param outputDirPath
      * @param project
      * @return
      */
     static String projectOutputPath(String outputDirPath, Project project) {
-        return outputDirPath + "/" + project.name + "/" + project.version
+        return outputDirPath + "/" + project.name
     }
 
     /**

@@ -20,7 +20,7 @@ class MybatisPlugin implements Plugin<Project> {
         project.extensions.create('ingotMybatis', IngotMybatisExtension, project.objects)
 
         project.afterEvaluate {
-            project.tasks.create("mybatisPlusGenerator", MybatisPlusGeneratorTask)
+            project.tasks.register("mybatisPlusGenerator", MybatisPlusGeneratorTask)
         }
     }
 }

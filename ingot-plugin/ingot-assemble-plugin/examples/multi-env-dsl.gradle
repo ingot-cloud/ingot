@@ -1,0 +1,78 @@
+// ========================================
+// 多环境配置示例 - DSL 方式
+// ========================================
+// 适用场景：更符合 Gradle 风格的配置方式
+// ========================================
+
+apply plugin: 'com.ingot.plugin.assemble'
+
+ingotAssemble {
+    outputDirPath "build/ingot-assemble"
+    
+    docker {
+        // ====================================
+        // 全局配置
+        // ====================================
+        
+        registry "docker-registry.ingotcloud.top"
+        username JY_DOCKER_REGISTRY_USERNAME
+        password JY_DOCKER_REGISTRY_PASSWORD
+        dockerCmd "docker"
+        platform "linux/amd64"
+        
+        // ====================================
+        // 环境配置（DSL 方式）
+        // ====================================
+        
+        // 开发环境
+        env("dev") {
+            name = "ingot/gateway-dev"  // 必填
+            // dockerfileDir 自动使用 src/main/docker/dev
+        }
+        
+        // 测试环境
+        env("test") {
+            name = "ingot/gateway-test"  // 必填
+            saveName = "gateway-test.tar"
+        }
+        
+        // 生产环境
+        env("prod") {
+            name = "ingot/gateway"  // 必填
+            platform = "linux/amd64,linux/arm64"  // 覆盖全局配置
+            saveName = "gateway-prod.tar"
+        }
+    }
+}
+
+// ========================================
+// DSL 方式的优势
+// ========================================
+// 1. 更符合 Gradle 的配置风格
+// 2. 支持代码补全和类型检查
+// 3. 可以在闭包中使用更复杂的逻辑
+// 4. 更容易扩展和维护
+//
+// ========================================
+// 配置对比
+// ========================================
+//
+// Map 方式：
+// envs = [
+//     "dev": [name: "ingot/gateway-dev"]
+// ]
+//
+// DSL 方式：
+// env("dev") {
+//     name = "ingot/gateway-dev"
+// }
+//
+// ========================================
+// 使用命令
+// ========================================
+//
+// # 构建开发环境
+// ./gradlew dockerBuildDev
+//
+// # 构建并推送生产环境
+// ./gradlew dockerPushProd
