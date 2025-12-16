@@ -4,8 +4,8 @@ source ./config.properties
 
 # 客户端版本信息配置
 VERSION=0.1.0
-ServiceName=ingot-auth
-ImageName=docker-registry.ingotcloud.top/ingot/auth:${VERSION}
+ServiceName=ingot-member
+ImageName=docker-registry.ingotcloud.top/ingot/member:${VERSION}
 
 # 停止运行当前容器
 docker ps -q --filter name="${ServiceName}" | xargs -r docker rm -f
@@ -27,6 +27,5 @@ docker run -d --name ${ServiceName} --restart always \
     -e MYSQL_USERNAME=${MYSQL_USERNAME} \
     -e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
     -e REDIS_PASSWORD=${REDIS_PASSWORD} \
-    -e AUTH_JWK_MASTER_KEY=${AUTH_JWK_MASTER_KEY} \
     -v ${DOCKER_VOLUME}:${DOCKER_VOLUME} \
     ${ImageName}

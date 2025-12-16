@@ -34,5 +34,5 @@ ingot:
       auth:
         loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
     jwk:
-      master-key: ${INGOT_JWK_MASTER_KEY}
+      master-key: ${AUTH_JWK_MASTER_KEY}
       enable-encryption: true

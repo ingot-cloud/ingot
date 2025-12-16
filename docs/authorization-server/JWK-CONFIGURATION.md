@@ -16,7 +16,7 @@
 
 ```bash
 # 生成一个随机的 master key（首次部署时）
-export INGOT_JWK_MASTER_KEY="your-random-base64-key-here"
+export AUTH_JWK_MASTER_KEY="your-random-base64-key-here"
 
 # 启动授权服务器
 java -jar ingot-service-auth.jar
@@ -46,7 +46,7 @@ ingot:
     jwk:
       # 主密钥（用于加密 Redis 中的私钥）
       # 建议从环境变量读取，不要硬编码
-      master-key: ${INGOT_JWK_MASTER_KEY}
+      master-key: ${AUTH_JWK_MASTER_KEY}
       
       # 是否启用私钥加密（默认 true）
       enable-encryption: true
@@ -76,7 +76,7 @@ ingot:
 ingot:
   security:
     jwk:
-      master-key: ${INGOT_JWK_MASTER_KEY}  # 从环境变量读取
+      master-key: ${AUTH_JWK_MASTER_KEY}  # 从环境变量读取
       enable-encryption: true
 ```
 
@@ -138,7 +138,7 @@ spring:
 2. **配置 Master Key**
    ```bash
    # 所有节点使用相同的 master key
-   export INGOT_JWK_MASTER_KEY="your-master-key"
+   export AUTH_JWK_MASTER_KEY="your-master-key"
    ```
 
 3. **启动授权服务器集群**

@@ -12,8 +12,8 @@ variables:
   NACOS_PORT: 8848
   REDIS_HOST: 172.88.0.90
   # Ingot Host配置
-  INGOT_AUTH_SERVER: 172.88.0.110
-  INGOT_GATEWAY: 172.88.0.100
+  SERVICE_AUTH_HOST: 172.88.0.110
+  SERVICE_GATEWAY_HOST: 172.88.0.100
   # 账号配置
   MYSQL_USERNAME: ${CI_INGOT_MYSQL_USERNAME}
   MYSQL_PASSWORD: ${CI_INGOT_MYSQL_PASSWORD}
@@ -133,11 +133,11 @@ auth-docker-run:
     - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
     - docker pull ${IMAGE_NAME}
     - docker run -d --name ${SERVICE_NAME} --restart always
-      --network ingot-net --ip ${INGOT_AUTH_SERVER}
+      --network ingot-net --ip ${SERVICE_AUTH_HOST}
       --add-host ingot-db-redis:${REDIS_HOST}
       --add-host ingot-db-mysql:${MYSQL_HOST}
-      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
-      --add-host ingot-gateway:${INGOT_GATEWAY}
+      --add-host ingot-auth-server:${SERVICE_AUTH_HOST}
+      --add-host ingot-gateway:${SERVICE_GATEWAY_HOST}
       -e NACOS_HOST=${NACOS_HOST}
       -e NACOS_PORT=${NACOS_PORT}
       -e REDIS_HOST=${REDIS_HOST}
@@ -168,8 +168,8 @@ pms-docker-run:
       --network ingot-net
       --add-host ingot-db-redis:${REDIS_HOST}
       --add-host ingot-db-mysql:${MYSQL_HOST}
-      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
-      --add-host ingot-gateway:${INGOT_GATEWAY}
+      --add-host ingot-auth-server:${SERVICE_AUTH_HOST}
+      --add-host ingot-gateway:${SERVICE_GATEWAY_HOST}
       -e NACOS_HOST=${NACOS_HOST}
       -e NACOS_PORT=${NACOS_PORT}
       -e REDIS_HOST=${REDIS_HOST}
@@ -197,11 +197,11 @@ gateway-docker-run:
     - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
     - docker pull ${IMAGE_NAME}
     - docker run -d --name ${SERVICE_NAME} --restart always
-      --network ingot-net --ip ${INGOT_GATEWAY}
+      --network ingot-net --ip ${SERVICE_GATEWAY_HOST}
       --add-host ingot-db-redis:${REDIS_HOST}
       --add-host ingot-db-mysql:${MYSQL_HOST}
-      --add-host ingot-auth-server:${INGOT_AUTH_SERVER}
-      --add-host ingot-gateway:${INGOT_GATEWAY}
+      --add-host ingot-auth-server:${SERVICE_AUTH_HOST}
+      --add-host ingot-gateway:${SERVICE_GATEWAY_HOST}
       -e NACOS_HOST=${NACOS_HOST}
       -e NACOS_PORT=${NACOS_PORT}
       -e REDIS_HOST=${REDIS_HOST}

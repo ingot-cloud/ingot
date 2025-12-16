@@ -8,7 +8,7 @@ ingot:
       # 主密钥配置（重要！）
       # ========================================
       # 方式 1：从环境变量读取（推荐）
-      master-key: ${INGOT_JWK_MASTER_KEY}
+      master-key: ${AUTH_JWK_MASTER_KEY}
       
       # 方式 2：从配置中心读取（推荐）
       # master-key: ${nacos.config.ingot.security.jwk.master-key}
@@ -74,7 +74,7 @@ ingot:
 # ========================================
 # 在启动应用时设置以下环境变量：
 #
-# export INGOT_JWK_MASTER_KEY="your-random-base64-key"
+# export AUTH_JWK_MASTER_KEY="your-random-base64-key"
 # export REDIS_HOST="localhost"
 # export REDIS_PORT="6379"
 # export REDIS_PASSWORD="your-redis-password"
@@ -87,7 +87,7 @@ ingot:
 # ========================================
 # docker run -d \
 #   --name ingot-auth \
-#   -e INGOT_JWK_MASTER_KEY="your-random-base64-key" \
+#   -e AUTH_JWK_MASTER_KEY="your-random-base64-key" \
 #   -e REDIS_HOST="redis-server" \
 #   -e REDIS_PORT="6379" \
 #   -e REDIS_PASSWORD="your-redis-password" \
@@ -118,7 +118,7 @@ ingot:
 #       - name: ingot-auth
 #         image: ingot-auth:latest
 #         env:
-#         - name: INGOT_JWK_MASTER_KEY
+#         - name: AUTH_JWK_MASTER_KEY
 #           valueFrom:
 #             secretKeyRef:
 #               name: ingot-auth-secrets
@@ -147,7 +147,7 @@ ingot:
 # ingot:
 #   security:
 #     jwk:
-#       master-key: ${INGOT_JWK_MASTER_KEY:dev-test-key-only-for-development}
+#       master-key: ${AUTH_JWK_MASTER_KEY:dev-test-key-only-for-development}
 #       enable-encryption: true  # 开发环境也建议启用，测试加密功能
 #       key-lifetime: 1d  # 开发环境可以设置短一些，方便测试密钥轮换
 #       cache-refresh-interval: 1m  # 开发环境可以设置短一些，快速生效
@@ -156,7 +156,7 @@ ingot:
 # ingot:
 #   security:
 #     jwk:
-#       master-key: ${INGOT_JWK_MASTER_KEY}
+#       master-key: ${AUTH_JWK_MASTER_KEY}
 #       enable-encryption: true
 #       key-lifetime: 7d
 #       cache-refresh-interval: 5m
@@ -165,7 +165,7 @@ ingot:
 # ingot:
 #   security:
 #     jwk:
-#       master-key: ${INGOT_JWK_MASTER_KEY}  # 必须从环境变量或配置中心读取
+#       master-key: ${AUTH_JWK_MASTER_KEY}  # 必须从环境变量或配置中心读取
 #       enable-encryption: true
 #       key-lifetime: 90d
 #       key-grace-period: 7d

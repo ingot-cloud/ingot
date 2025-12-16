@@ -44,16 +44,16 @@ echo ""
 echo "📖 使用方法："
 echo ""
 echo "1️⃣  设置环境变量（推荐）："
-echo "   export INGOT_JWK_MASTER_KEY=\"$MASTER_KEY\""
+echo "   export AUTH_JWK_MASTER_KEY=\"$MASTER_KEY\""
 echo ""
 echo "2️⃣  添加到配置文件："
 echo "   ingot:"
 echo "     security:"
 echo "       jwk:"
-echo "         master-key: \${INGOT_JWK_MASTER_KEY}"
+echo "         master-key: \${AUTH_JWK_MASTER_KEY}"
 echo ""
 echo "3️⃣  Docker 部署："
-echo "   docker run -e INGOT_JWK_MASTER_KEY=\"$MASTER_KEY\" ..."
+echo "   docker run -e AUTH_JWK_MASTER_KEY=\"$MASTER_KEY\" ..."
 echo ""
 echo "4️⃣  Kubernetes Secret："
 echo "   kubectl create secret generic ingot-jwk-secret \\"
@@ -81,7 +81,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     cat > "$ENV_FILE" << EOF
 # JWK Master Key (自动生成 - $(date))
 # ⚠️ 重要：请勿将此文件提交到版本控制系统！
-INGOT_JWK_MASTER_KEY=$MASTER_KEY
+AUTH_JWK_MASTER_KEY=$MASTER_KEY
 
 # Redis 配置（根据实际情况修改）
 REDIS_HOST=localhost

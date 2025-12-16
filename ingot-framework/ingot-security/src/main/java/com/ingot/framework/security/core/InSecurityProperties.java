@@ -34,7 +34,7 @@ public class InSecurityProperties {
         /**
          * 主密钥，用于加密 Redis 中的私钥
          * 建议从环境变量或配置中心获取，不要硬编码在配置文件中
-         * 可以通过 ${INGOT_JWK_MASTER_KEY} 从环境变量读取
+         * 可以通过 ${AUTH_JWK_MASTER_KEY} 从环境变量读取
          */
         private String masterKey;
         

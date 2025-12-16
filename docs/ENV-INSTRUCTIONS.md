@@ -1,9 +1,9 @@
 # 环境变量说明
 
 ## 配置说明
- - INGOT_JWK_MASTER_KEY: 用于加密 Redis 中的JWK的私钥
- - INGOT_AUTH_SERVER: Ingot Auth Server Host
- - INGOT_GATEWAY: Ingot Gateway Host
+ - AUTH_JWK_MASTER_KEY: 用于加密 Redis 中的JWK的私钥
+ - SERVICE_AUTH_HOST: Ingot Auth Server Host
+ - SERVICE_GATEWAY_HOST: Ingot Gateway Host
  - NACOS_HOST1: Nacos Host
  - NACOS_PORT1: Nacos Port
  - NACOS_HOST2: Nacos Host
