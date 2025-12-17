@@ -12,13 +12,13 @@ spring:
         namespace: ingot
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
-        group: PROD_GROUP
+        group: TEST_GROUP
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         namespace: ${spring.cloud.nacos.discovery.namespace}
         username: ${spring.cloud.nacos.discovery.username}
         password: ${spring.cloud.nacos.discovery.password}
-        group: PROD_GROUP
+        group: TEST_GROUP
   config:
     import:
       - optional:nacos:application-common.yml
@@ -27,13 +27,20 @@ spring:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
+
+logs:
+  path: /ingot-data/logs
+  mybatisMapper: com.ingot.cloud.pms.mapper
 
 ingot:
-  security:
-    oauth2:
-      auth:
-        loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
-    jwk:
-      master-key: ${AUTH_JWK_MASTER_KEY}
-      enable-encryption: true
+  mybatis:
+    show-sql-log: true
+
+# 日志等级
+logging:
+  level:
+    org.springframework.web: trace
+    org.springframework.security: trace
+    org.springframework.security.oauth2: debug
+    com.alibaba.nacos.client.naming: info
