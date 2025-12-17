@@ -3,15 +3,15 @@
 
  Source Server         : localhost
  Source Server Type    : MySQL
- Source Server Version : 80032 (8.0.32)
+ Source Server Version : 80044 (8.0.44)
  Source Host           : localhost:3306
  Source Schema         : ingot_member
 
  Target Server Type    : MySQL
- Target Server Version : 80032 (8.0.32)
+ Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 05/12/2025 18:13:00
+ Date: 17/12/2025 09:01:30
 */
 
 SET NAMES utf8mb4;
