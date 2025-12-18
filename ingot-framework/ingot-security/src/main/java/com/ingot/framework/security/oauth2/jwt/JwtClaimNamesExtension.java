@@ -58,8 +58,17 @@ public interface JwtClaimNamesExtension {
      * ID
      */
     String ID = "i";
+    /**
+     * 租户 ID
+     */
     String TENANT = "org";
+    /**
+     * 认证类型
+     */
     String AUTH_TYPE = "tat";
+    /**
+     * 用户类型
+     */
     String USER_TYPE = "ut";
     String SCOPE = OAuth2ParameterNames.SCOPE;
 
