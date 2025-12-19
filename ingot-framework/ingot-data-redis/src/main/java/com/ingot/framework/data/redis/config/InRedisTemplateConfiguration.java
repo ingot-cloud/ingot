@@ -1,10 +1,10 @@
 package com.ingot.framework.data.redis.config;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ingot.framework.commons.jackson.InJavaTimeModule;
 import com.ingot.framework.commons.jackson.InModule;
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import static com.ingot.framework.commons.constants.BeanIds.REDIS_TEMPLATE;
@@ -31,8 +31,8 @@ import static com.ingot.framework.commons.constants.BeanIds.REDIS_TEMPLATE;
  */
 @EnableCaching
 @Configuration
-@AutoConfigureBefore(name = { "org.redisson.spring.starter.RedissonAutoConfigurationV2",
-        "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration" })
+@AutoConfigureBefore(name = {"org.redisson.spring.starter.RedissonAutoConfigurationV2",
+        "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration"})
 public class InRedisTemplateConfiguration {
 
     @Bean
@@ -52,20 +52,25 @@ public class InRedisTemplateConfiguration {
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
 
-        ObjectMapper om = new ObjectMapper();
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        om.activateDefaultTyping(om.getPolymorphicTypeValidator(),
-                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_ARRAY);
-        om.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        om.registerModules(new InModule(), new JavaTimeModule(), new InJavaTimeModule());
+        ObjectMapper mapper = new ObjectMapper();
+        // 仅 Redis 中的 ObjectMapper 才配置
+        // 启用「类型信息」反序列化
+        mapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.registerModules(new InModule(), new JavaTimeModule(), new InJavaTimeModule());
 
-        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
-                new Jackson2JsonRedisSerializer<>(om, Object.class);
+        GenericJackson2JsonRedisSerializer jsonSerializer =
+                new GenericJackson2JsonRedisSerializer(mapper);
 
         template.setKeySerializer(stringRedisSerializer());
         template.setHashKeySerializer(stringRedisSerializer());
-        template.setValueSerializer(jackson2JsonRedisSerializer);
-        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
 
         template.setConnectionFactory(factory);
         template.afterPropertiesSet();
