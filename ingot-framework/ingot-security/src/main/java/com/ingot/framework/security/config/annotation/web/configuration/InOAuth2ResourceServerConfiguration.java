@@ -19,8 +19,8 @@ import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
 import com.ingot.framework.security.core.userdetails.*;
 import com.ingot.framework.security.oauth2.core.InOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
-import com.ingot.framework.security.oauth2.server.authorization.AuthorizationCacheService;
-import com.ingot.framework.security.oauth2.server.authorization.DefaultAuthorizationCacheService;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
+import com.ingot.framework.security.oauth2.server.authorization.RedisOnlineTokenService;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.InSecurityExpression;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -60,12 +61,14 @@ public class InOAuth2ResourceServerConfiguration {
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
     public static void applyDefaultSecurity(PermitResolver permitResolver,
+                                            OnlineTokenService onlineTokenService,
                                             HttpSecurity http) throws Exception {
-        applyDefaultSecurity(null, permitResolver, http);
+        applyDefaultSecurity(null, permitResolver, onlineTokenService, http);
     }
 
     public static void applyDefaultSecurity(InHttpConfigurersAdapter httpConfigurersAdapter,
                                             PermitResolver permitResolver,
+                                            OnlineTokenService onlineTokenService,
                                             HttpSecurity http) throws Exception {
         if (httpConfigurersAdapter != null) {
             httpConfigurersAdapter.apply(http);
@@ -75,8 +78,9 @@ public class InOAuth2ResourceServerConfiguration {
                     authorizeRequests.anyRequest().authenticated();
                 })
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
-                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver))
-                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher()), Customizer.withDefaults());
+                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver, onlineTokenService))
+                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher(), onlineTokenService),
+                        Customizer.withDefaults());
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -84,8 +88,9 @@ public class InOAuth2ResourceServerConfiguration {
     @ConditionalOnMissingBean(name = {SECURITY_FILTER_CHAIN_NAME})
     public SecurityFilterChain resourceServerSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
+                                                                 OnlineTokenService onlineTokenService,
                                                                  HttpSecurity http) throws Exception {
-        applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
+        applyDefaultSecurity(httpConfigurersAdapter, permitResolver, onlineTokenService, http);
         return http.build();
     }
 
@@ -149,10 +154,15 @@ public class InOAuth2ResourceServerConfiguration {
         return new DefaultTenantDetailsService(remoteTenantDetailsService);
     }
 
+    /**
+     * OnlineTokenService - 在线Token服务
+     * 管理当前在线的Token信息，支持唯一登录和强制下线
+     */
     @Bean
-    @ConditionalOnMissingBean(AuthorizationCacheService.class)
-    public AuthorizationCacheService authorizationCacheService() {
-        return new DefaultAuthorizationCacheService();
+    @ConditionalOnMissingBean(OnlineTokenService.class)
+    public OnlineTokenService onlineTokenService(RedisTemplate<String, Object> redisTemplate) {
+        log.info("[InOAuth2ResourceServerConfiguration] Creating RedisOnlineTokenService");
+        return new RedisOnlineTokenService(redisTemplate);
     }
 
     @Bean

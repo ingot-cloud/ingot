@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -13,20 +14,27 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.util.Assert;
 
 /**
- * <p>Description  : InJwtAuthenticationConverter.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/9/17.</p>
- * <p>Time         : 5:27 下午.</p>
+ * JWT认证转换器（优化版）
+ * 集成OnlineTokenService，从Redis获取Token扩展信息
+ *
+ * <p>Author: wangchao</p>
+ * <p>Date: 2021/9/17</p>
  */
 public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     public static final String AUTHORITY_PREFIX = "SCOPE_";
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter;
-    private final Converter<Jwt, InUser> jwtInUserConverter = new JwtInUserConverter();
+    private final Converter<Jwt, InUser> jwtInUserConverter;
 
     private String principalClaimName;
 
-    public InJwtAuthenticationConverter() {
+    public InJwtAuthenticationConverter(OnlineTokenService onlineTokenService) {
+        Assert.notNull(onlineTokenService, "onlineTokenService cannot be null");
+
+        // 初始化 JwtInUserConverter
+        this.jwtInUserConverter = new JwtInUserConverter(onlineTokenService);
+        
+        // 初始化 JwtGrantedAuthoritiesConverter
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         ((JwtGrantedAuthoritiesConverter) jwtGrantedAuthoritiesConverter)
                 .setAuthoritiesClaimName(JwtClaimNamesExtension.SCOPE);
@@ -36,8 +44,12 @@ public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuth
 
     @Override
     public final AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
-        Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
+        // 使用 JwtInUserConverte r转换（包含 Redis 中完整信息）
         InUser principal = this.jwtInUserConverter.convert(jwt);
+        
+        // 使用用户的完整权限（已从Redis获取并合并）
+        Collection<GrantedAuthority> authorities = principal.getAuthorities();
+        
         if (this.principalClaimName == null) {
             return new InJwtAuthenticationToken(jwt, principal, authorities);
         }

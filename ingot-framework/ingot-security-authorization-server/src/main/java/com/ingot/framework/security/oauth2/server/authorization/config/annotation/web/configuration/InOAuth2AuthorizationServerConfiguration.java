@@ -1,5 +1,8 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
+import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationConsentService;
+import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +11,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
@@ -70,9 +77,43 @@ public class InOAuth2AuthorizationServerConfiguration {
         return http.formLogin(Customizer.withDefaults()).build();
     }
 
+    /**
+     * JWT Token定制器
+     */
     @Bean
     @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
-    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
-        return new JwtOAuth2TokenCustomizer();
+    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer(OnlineTokenService onlineTokenService) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating JwtOAuth2TokenCustomizer with IdGenerator");
+        return new JwtOAuth2TokenCustomizer(onlineTokenService);
+    }
+
+    /**
+     * Redis模式的OAuth2AuthorizationService
+     * 使用 AuthorizationSnapshot 避免序列化问题
+     */
+    @Bean
+    @ConditionalOnMissingBean(OAuth2AuthorizationService.class)
+    public OAuth2AuthorizationService authorizationService(
+            RedisTemplate<String, Object> redisTemplate,
+            OnlineTokenService onlineTokenService,
+            RegisteredClientRepository registeredClientRepository) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating RedisOAuth2AuthorizationService with AuthorizationSnapshot");
+        return new RedisOAuth2AuthorizationService(
+                redisTemplate, onlineTokenService, registeredClientRepository
+        );
+    }
+
+    /**
+     * Redis模式的OAuth2AuthorizationConsentService
+     */
+    @Bean
+    @ConditionalOnMissingBean(OAuth2AuthorizationConsentService.class)
+    public OAuth2AuthorizationConsentService authorizationConsentService(
+            RedisTemplate<String, Object> redisTemplate,
+            RegisteredClientRepository registeredClientRepository) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating RedisOAuth2AuthorizationConsentService");
+        return new RedisOAuth2AuthorizationConsentService(
+                redisTemplate, registeredClientRepository
+        );
     }
 }

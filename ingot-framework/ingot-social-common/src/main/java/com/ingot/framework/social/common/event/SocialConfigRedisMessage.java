@@ -1,10 +1,10 @@
 package com.ingot.framework.social.common.event;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 /**
  * <p>Description  : 社交配置变更Redis消息.</p>

@@ -2,12 +2,11 @@ package com.ingot.cloud.auth.config;
 
 import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.auth.client.InJdbcRegisteredClientRepository;
-import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationConsentService;
-import com.ingot.cloud.auth.service.InJdbcOAuth2AuthorizationService;
 import com.ingot.framework.security.config.annotation.web.configuration.InOAuth2ResourceServerConfiguration;
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
 import com.ingot.framework.security.oauth2.core.InOAuth2AuthProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.InOAuth2AuthorizationServerConfiguration;
 import com.ingot.framework.tenant.TenantHttpConfigurer;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
@@ -57,25 +54,14 @@ public class AuthorizationServerConfig {
     @ConditionalOnMissingBean(name = {InOAuth2ResourceServerConfiguration.SECURITY_FILTER_CHAIN_NAME})
     public SecurityFilterChain resourceServerSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
+                                                                 OnlineTokenService onlineTokenService,
                                                                  HttpSecurity http) throws Exception {
         InOAuth2ResourceServerConfiguration
-                .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, http);
+                .applyDefaultSecurity(httpConfigurersAdapter, permitResolver, onlineTokenService, http);
         http.csrf(new CsrfCustomizer(permitResolver))
                 .formLogin(new FormLoginCustomizer())
                 .logout(new LogoutCustomizer());
         return http.build();
-    }
-
-    @Bean
-    public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate,
-                                                           RegisteredClientRepository registeredClientRepository) {
-        return new InJdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
-    }
-
-    @Bean
-    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate,
-                                                                         RegisteredClientRepository registeredClientRepository) {
-        return new InJdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
     }
 
     @Bean

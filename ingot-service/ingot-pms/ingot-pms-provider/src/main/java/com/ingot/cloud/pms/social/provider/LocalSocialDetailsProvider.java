@@ -1,5 +1,8 @@
 package com.ingot.cloud.pms.social.provider;
 
+import java.util.Collections;
+import java.util.List;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
@@ -8,9 +11,6 @@ import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.social.common.provider.SocialDetailsProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * <p>Description  : 本地社交详情提供者（直接调用本地Service）.</p>

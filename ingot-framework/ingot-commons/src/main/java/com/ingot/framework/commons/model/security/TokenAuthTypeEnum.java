@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TokenAuthTypeEnum {
     /**
-     * 登录类型，默认标准类型，单点登录不互踢
+     * 登录类型，默认标准类型，登录不互踢
      */
     STANDARD("0"),
     /**

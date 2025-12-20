@@ -4,10 +4,10 @@ import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.convert.RoleConvert;
-import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.bo.role.BizAssignRoleBO;
 import com.ingot.cloud.pms.api.model.bo.role.BizRoleAssignUsersBO;
+import com.ingot.cloud.pms.api.model.convert.RoleConvert;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.mapper.TenantRoleUserPrivateMapper;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;

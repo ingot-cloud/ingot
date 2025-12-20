@@ -2,9 +2,9 @@ package com.ingot.cloud.pms.service.domain;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.bo.role.BizAssignRoleBO;
 import com.ingot.cloud.pms.api.model.bo.role.BizRoleAssignUsersBO;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.framework.data.mybatis.common.service.BaseService;
 
 /**

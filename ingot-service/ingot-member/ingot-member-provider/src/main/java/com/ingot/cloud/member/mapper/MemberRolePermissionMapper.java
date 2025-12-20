@@ -2,8 +2,6 @@ package com.ingot.cloud.member.mapper;
 
 import com.ingot.cloud.member.api.model.domain.MemberRolePermission;
 import com.ingot.framework.data.mybatis.common.mapper.BaseMapper;
-
-
 import org.apache.ibatis.annotations.Mapper;
 
 /**

@@ -3,8 +3,8 @@ package com.ingot.cloud.pms.api.model.convert;
 import com.ingot.cloud.pms.api.model.domain.MetaPermission;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
-import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
+import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import org.mapstruct.Mapper;
 

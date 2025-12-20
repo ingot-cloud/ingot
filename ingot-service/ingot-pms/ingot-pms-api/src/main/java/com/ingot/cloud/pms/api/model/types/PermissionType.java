@@ -1,8 +1,8 @@
 package com.ingot.cloud.pms.api.model.types;
 
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 
 /**
  * <p>Description  : 权限类型.</p>
