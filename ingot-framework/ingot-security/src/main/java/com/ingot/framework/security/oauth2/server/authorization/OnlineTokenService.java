@@ -92,7 +92,14 @@ public interface OnlineTokenService {
      */
     long getOnlineUserCount(Long tenantId, String clientId);
 
-
+    /**
+     * 获取用户所有在线 Token
+     *
+     * @param userId   用户ID
+     * @param tenantId 租户ID
+     * @param clientId 客户端ID
+     * @return Token列表
+     */
     List<OnlineToken> getUserAllTokens(Long userId, Long tenantId, String clientId);
 
     /**
