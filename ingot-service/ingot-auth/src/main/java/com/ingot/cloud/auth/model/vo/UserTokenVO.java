@@ -1,8 +1,10 @@
 package com.ingot.cloud.auth.model.vo;
 
+import java.io.Serializable;
+import java.util.List;
+
 import com.ingot.framework.security.oauth2.server.authorization.OnlineToken;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * <p>Description  : UserTokenVO.</p>
@@ -10,9 +12,12 @@ import lombok.EqualsAndHashCode;
  * <p>Date         : 2025/12/21.</p>
  * <p>Time         : 12:09.</p>
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UserTokenVO extends OnlineToken {
+public class UserTokenVO implements Serializable {
+    /**
+     * 用户ID
+     */
+    private Long userId;
     /**
      * 昵称
      */
@@ -33,4 +38,8 @@ public class UserTokenVO extends OnlineToken {
      * 租户 Logo
      */
     private String tenantLogo;
+    /**
+     * 用户当前token列表
+     */
+    private List<OnlineToken> tokens;
 }

@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.service.impl;
+package com.ingot.cloud.auth.service.domain.impl;
 
 import java.time.Duration;
 import java.util.List;
@@ -16,7 +16,7 @@ import com.ingot.cloud.auth.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.auth.model.vo.AppSecretVO;
 import com.ingot.cloud.auth.model.vo.OAuth2RegisteredClientVO;
-import com.ingot.cloud.auth.service.Oauth2RegisteredClientService;
+import com.ingot.cloud.auth.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsIdService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;

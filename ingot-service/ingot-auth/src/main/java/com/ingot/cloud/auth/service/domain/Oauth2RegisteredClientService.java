@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.service;
+package com.ingot.cloud.auth.service.domain;
 
 import java.util.List;
 

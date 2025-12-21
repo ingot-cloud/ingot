@@ -1,8 +1,8 @@
 package com.ingot.cloud.auth.config;
 
-import com.ingot.cloud.auth.service.DefaultMemberRemoteUserDetailsService;
-import com.ingot.cloud.auth.service.DefaultPmsRemoteUserDetailsService;
-import com.ingot.cloud.auth.service.DefaultRemoteTenantDetailsService;
+import com.ingot.cloud.auth.service.biz.impl.DefaultMemberRemoteUserDetailsService;
+import com.ingot.cloud.auth.service.biz.impl.DefaultPmsRemoteUserDetailsService;
+import com.ingot.cloud.auth.service.biz.impl.DefaultRemoteTenantDetailsService;
 import com.ingot.cloud.member.api.rpc.RemoteMemberUserDetailsService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;

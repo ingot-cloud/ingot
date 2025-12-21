@@ -1,4 +1,4 @@
-package com.ingot.cloud.auth.service;
+package com.ingot.cloud.auth.service.biz.impl;
 
 import com.ingot.cloud.member.api.rpc.RemoteMemberUserDetailsService;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;

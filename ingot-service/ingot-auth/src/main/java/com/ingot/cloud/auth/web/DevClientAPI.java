@@ -3,7 +3,7 @@ package com.ingot.cloud.auth.web;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.domain.Oauth2RegisteredClient;
 import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
-import com.ingot.cloud.auth.service.Oauth2RegisteredClientService;
+import com.ingot.cloud.auth.service.domain.Oauth2RegisteredClientService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.core.utils.validation.Group;
