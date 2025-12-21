@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 
 /**
  * <p>Description  : Tenant.</p>
@@ -16,14 +16,14 @@ public class Tenant implements TenantDetails {
 
     public static final Tenant EMPTY = new Tenant(ListUtil.empty());
 
-    private final List<AllowTenantDTO> allows;
+    private final List<TenantMainDTO> allows;
 
-    public Tenant(List<AllowTenantDTO> allows) {
+    public Tenant(List<TenantMainDTO> allows) {
         this.allows = Collections.unmodifiableList(allows);
     }
 
     @Override
-    public List<AllowTenantDTO> getAllow() {
+    public List<TenantMainDTO> getAllow() {
         return allows;
     }
 }

@@ -16,7 +16,7 @@ import com.ingot.cloud.pms.service.biz.TenantDetailsService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService,
+        List<TenantMainDTO> allows = BizUtils.getAllows(sysTenantService,
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
@@ -61,7 +61,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
             response.setAllows(ListUtil.empty());
             return response;
         }
-        List<AllowTenantDTO> allows = BizUtils.getAllows(sysTenantService, new HashSet<>(ids),
+        List<TenantMainDTO> allows = BizUtils.getAllows(sysTenantService, new HashSet<>(ids),
                 (item) -> item.setMain(false));
         response.setAllows(allows);
         return response;

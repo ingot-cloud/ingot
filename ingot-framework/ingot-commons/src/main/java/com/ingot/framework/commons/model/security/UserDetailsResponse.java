@@ -3,7 +3,7 @@ package com.ingot.framework.commons.model.security;
 import java.io.Serializable;
 import java.util.List;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import lombok.Data;
 
@@ -46,5 +46,5 @@ public class UserDetailsResponse implements Serializable {
     /**
      * 可以访问的租户列表
      */
-    private List<AllowTenantDTO> allows;
+    private List<TenantMainDTO> allows;
 }

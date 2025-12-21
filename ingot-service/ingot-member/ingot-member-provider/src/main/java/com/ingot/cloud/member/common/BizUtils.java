@@ -7,7 +7,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.ingot.cloud.member.api.model.convert.MemberPermissionConvert;
 import com.ingot.cloud.member.api.model.domain.MemberPermission;
 import com.ingot.cloud.member.api.model.vo.permission.MemberPermissionTreeNodeVO;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 
@@ -39,7 +39,7 @@ public class BizUtils {
     /**
      * 根据当前用户状态和可访问租户列表，返回用户最终状态
      */
-    public static UserStatusEnum getUserStatus(List<AllowTenantDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
+    public static UserStatusEnum getUserStatus(List<TenantMainDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
         // 没有允许访问的租户，那么直接返回不可用
         if (CollUtil.isEmpty(allows)) {
             return UserStatusEnum.LOCK;

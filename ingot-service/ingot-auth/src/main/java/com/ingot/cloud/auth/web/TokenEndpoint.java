@@ -60,4 +60,6 @@ public class TokenEndpoint implements RShortcuts {
         return ok();
     }
 
+    // todo token mamager
+
 }

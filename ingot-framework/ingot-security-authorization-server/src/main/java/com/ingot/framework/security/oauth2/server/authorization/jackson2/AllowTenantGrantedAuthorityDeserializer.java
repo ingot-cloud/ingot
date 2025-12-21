@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.authority.AllowTenantGrantedAuthority;
 
 /**
@@ -31,7 +31,7 @@ public class AllowTenantGrantedAuthorityDeserializer extends JsonDeserializer<Al
     private AllowTenantGrantedAuthority deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonProcessingException {
         String authority = JsonNodeUtils.findStringValue(root, "authority");
-        AllowTenantDTO allow = mapper.readValue(authority, new TypeReference<>() {
+        TenantMainDTO allow = mapper.readValue(authority, new TypeReference<>() {
         });
         return new AllowTenantGrantedAuthority(allow);
     }

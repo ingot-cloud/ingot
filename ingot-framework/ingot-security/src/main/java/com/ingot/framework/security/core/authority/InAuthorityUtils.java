@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
@@ -56,9 +56,9 @@ public final class InAuthorityUtils {
      * @param authorities the authorities to convert
      * @return a List of GrantedAuthority objects
      */
-    public static List<GrantedAuthority> createAllowTenantAuthorityList(AllowTenantDTO... authorities) {
+    public static List<GrantedAuthority> createAllowTenantAuthorityList(TenantMainDTO... authorities) {
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>(authorities.length);
-        for (AllowTenantDTO authority : authorities) {
+        for (TenantMainDTO authority : authorities) {
             grantedAuthorities.add(new AllowTenantGrantedAuthority(authority));
         }
         return grantedAuthorities;
@@ -70,7 +70,7 @@ public final class InAuthorityUtils {
      * @param userAuthorities 用户权限
      * @return 客户端ID集合
      */
-    public static Set<AllowTenantDTO> extractAllowTenants(Collection<? extends GrantedAuthority> userAuthorities) {
+    public static Set<TenantMainDTO> extractAllowTenants(Collection<? extends GrantedAuthority> userAuthorities) {
         Assert.notNull(userAuthorities, "userAuthorities cannot be null");
         return userAuthorities.stream()
                 .filter(authority -> authority instanceof AllowTenantGrantedAuthority)

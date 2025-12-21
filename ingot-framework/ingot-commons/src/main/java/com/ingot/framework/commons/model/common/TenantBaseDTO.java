@@ -1,5 +1,6 @@
 package com.ingot.framework.commons.model.common;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import lombok.Data;
@@ -12,6 +13,9 @@ import lombok.Data;
  */
 @Data
 public class TenantBaseDTO implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /**
      * 租户ID
      */

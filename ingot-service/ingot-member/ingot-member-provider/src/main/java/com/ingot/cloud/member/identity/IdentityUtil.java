@@ -16,7 +16,7 @@ import com.ingot.cloud.member.common.BizUtils;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
@@ -51,7 +51,7 @@ public class IdentityUtil {
                                           RemotePmsTenantDetailsService remotePmsTenantDetailsService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
-                    List<AllowTenantDTO> allows = getAllowTenants(user, remotePmsTenantDetailsService, userTenantService);
+                    List<TenantMainDTO> allows = getAllowTenants(user, remotePmsTenantDetailsService, userTenantService);
                     UserStatusEnum userStatus = BizUtils.getUserStatus(allows, value.getStatus(), tenant);
                     value.setStatus(userStatus);
 
@@ -85,9 +85,9 @@ public class IdentityUtil {
                 }).orElse(null));
     }
 
-    private static List<AllowTenantDTO> getAllowTenants(MemberUser user,
-                                                        RemotePmsTenantDetailsService remotePmsTenantDetailsService,
-                                                        MemberUserTenantService userTenantService) {
+    private static List<TenantMainDTO> getAllowTenants(MemberUser user,
+                                                       RemotePmsTenantDetailsService remotePmsTenantDetailsService,
+                                                       MemberUserTenantService userTenantService) {
         // 1.获取可以访问的租户列表
         List<MemberUserTenant> userTenantList = userTenantService.getUserOrgs(user.getId());
         if (CollUtil.isEmpty(userTenantList)) {

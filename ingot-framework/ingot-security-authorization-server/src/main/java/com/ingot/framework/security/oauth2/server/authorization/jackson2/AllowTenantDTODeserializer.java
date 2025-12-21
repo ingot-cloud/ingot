@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,21 +19,21 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Time         : 9:59 AM.</p>
  */
 @Slf4j
-final class AllowTenantDTODeserializer extends JsonDeserializer<AllowTenantDTO> {
+final class AllowTenantDTODeserializer extends JsonDeserializer<TenantMainDTO> {
     @Override
-    public AllowTenantDTO deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public TenantMainDTO deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();
         JsonNode root = mapper.readTree(parser);
         return deserialize(parser, mapper, root);
     }
 
-    private AllowTenantDTO deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
+    private TenantMainDTO deserialize(JsonParser parser, ObjectMapper mapper, JsonNode root)
             throws JsonParseException {
         String id = JsonNodeUtils.findStringValue(root, "id");
         String name = JsonNodeUtils.findStringValue(root, "name");
         String avatar = JsonNodeUtils.findStringValue(root, "avatar");
         Boolean main = JsonNodeUtils.findBooleanValue(root, "main");
-        AllowTenantDTO result = new AllowTenantDTO();
+        TenantMainDTO result = new TenantMainDTO();
         result.setId(id);
         result.setName(name);
         result.setAvatar(avatar);

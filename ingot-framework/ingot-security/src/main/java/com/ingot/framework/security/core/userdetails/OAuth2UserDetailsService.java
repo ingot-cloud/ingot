@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
@@ -51,10 +51,10 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                 })
                 .map(data -> {
                     List<String> scopes = Optional.ofNullable(data.getScopes()).orElse(ListUtil.empty());
-                    List<AllowTenantDTO> allowTenants = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
+                    List<TenantMainDTO> allowTenants = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
                     List<GrantedAuthority> authorities = new ArrayList<>(CollUtil.size(scopes) + CollUtil.size(allowTenants));
                     authorities.addAll(AuthorityUtils.createAuthorityList(scopes.toArray(new String[0])));
-                    authorities.addAll(InAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new AllowTenantDTO[0])));
+                    authorities.addAll(InAuthorityUtils.createAllowTenantAuthorityList(allowTenants.toArray(new TenantMainDTO[0])));
 
                     boolean enabled = data.getStatus() == UserStatusEnum.ENABLE;
                     boolean nonLocked = data.getStatus() != UserStatusEnum.LOCK;

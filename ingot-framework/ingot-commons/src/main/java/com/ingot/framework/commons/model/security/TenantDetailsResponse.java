@@ -3,7 +3,7 @@ package com.ingot.framework.commons.model.security;
 import java.io.Serializable;
 import java.util.List;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import lombok.Data;
 
 /**
@@ -14,5 +14,5 @@ import lombok.Data;
  */
 @Data
 public class TenantDetailsResponse implements Serializable {
-    private List<AllowTenantDTO> allows;
+    private List<TenantMainDTO> allows;
 }

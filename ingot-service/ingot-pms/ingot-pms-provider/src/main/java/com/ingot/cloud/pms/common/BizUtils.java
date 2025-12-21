@@ -11,7 +11,7 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 
@@ -24,18 +24,18 @@ import com.ingot.framework.commons.model.enums.UserStatusEnum;
 public class BizUtils {
 
     /**
-     * 获取 {@link AllowTenantDTO} 列表
+     * 获取 {@link TenantMainDTO} 列表
      */
-    public static List<AllowTenantDTO> getAllows(SysTenantService sysTenantService,
-                                                 Set<Long> userTenantList,
-                                                 Consumer<AllowTenantDTO> mainConsumer) {
+    public static List<TenantMainDTO> getAllows(SysTenantService sysTenantService,
+                                                Set<Long> userTenantList,
+                                                Consumer<TenantMainDTO> mainConsumer) {
         return sysTenantService.list(
                         Wrappers.<SysTenant>lambdaQuery()
                                 .in(SysTenant::getId, userTenantList))
                 .stream()
                 .filter(item -> item.getStatus() == CommonStatusEnum.ENABLE)
                 .map(item -> {
-                    AllowTenantDTO dto = new AllowTenantDTO();
+                    TenantMainDTO dto = new TenantMainDTO();
                     dto.setId(String.valueOf(item.getId()));
                     dto.setName(item.getName());
                     dto.setAvatar(item.getAvatar());
@@ -48,7 +48,7 @@ public class BizUtils {
     /**
      * 根据当前用户状态和可访问租户列表，返回用户最终状态
      */
-    public static UserStatusEnum getUserStatus(List<AllowTenantDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
+    public static UserStatusEnum getUserStatus(List<TenantMainDTO> allows, UserStatusEnum userStatus, Long loginTenant) {
         // 没有允许访问的租户，那么直接返回不可用
         if (CollUtil.isEmpty(allows)) {
             return UserStatusEnum.LOCK;

@@ -2,7 +2,7 @@ package com.ingot.framework.security.core.tenantdetails;
 
 import java.util.List;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 
 /**
  * <p>Description  : TenantDetails.</p>
@@ -15,7 +15,7 @@ public interface TenantDetails {
     /**
      * 获取允许的访问的租户列表
      *
-     * @return {@link AllowTenantDTO}
+     * @return {@link TenantMainDTO}
      */
-    List<AllowTenantDTO> getAllow();
+    List<TenantMainDTO> getAllow();
 }

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import cn.hutool.core.collection.ListUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.security.TenantDetailsRequest;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.support.R;
@@ -35,7 +35,7 @@ public class DefaultTenantDetailsService implements TenantDetailsService {
                     return r.getData();
                 })
                 .map(data -> {
-                    List<AllowTenantDTO> allowList = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
+                    List<TenantMainDTO> allowList = Optional.ofNullable(data.getAllows()).orElse(ListUtil.empty());
                     return new Tenant(allowList);
                 })
                 .orElse(Tenant.EMPTY);

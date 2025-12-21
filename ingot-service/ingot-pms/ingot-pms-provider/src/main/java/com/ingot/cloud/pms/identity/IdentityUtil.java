@@ -20,7 +20,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -57,7 +57,7 @@ public class IdentityUtil {
                                           BizRoleService bizRoleService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
-                    List<AllowTenantDTO> allows = getAllowTenants(user, sysTenantService, sysUserTenantService);
+                    List<TenantMainDTO> allows = getAllowTenants(user, sysTenantService, sysUserTenantService);
                     UserStatusEnum userStatus = BizUtils.getUserStatus(allows, value.getStatus(), tenant);
                     value.setStatus(userStatus);
 
@@ -91,9 +91,9 @@ public class IdentityUtil {
                 }).orElse(null));
     }
 
-    private static List<AllowTenantDTO> getAllowTenants(SysUser user,
-                                                        SysTenantService sysTenantService,
-                                                        SysUserTenantService sysUserTenantService) {
+    private static List<TenantMainDTO> getAllowTenants(SysUser user,
+                                                       SysTenantService sysTenantService,
+                                                       SysUserTenantService sysUserTenantService) {
         // 1.获取可以访问的租户列表
         List<SysUserTenant> userTenantList = sysUserTenantService.getUserOrgs(user.getId());
         if (CollUtil.isEmpty(userTenantList)) {

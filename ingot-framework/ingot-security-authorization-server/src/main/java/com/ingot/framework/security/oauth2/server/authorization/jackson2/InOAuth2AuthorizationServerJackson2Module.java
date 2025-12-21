@@ -1,6 +1,6 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.authority.AllowTenantGrantedAuthority;
 import com.ingot.framework.security.core.authority.ClientGrantedAuthority;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -26,7 +26,7 @@ public class InOAuth2AuthorizationServerJackson2Module extends OAuth2Authorizati
                 OAuth2UserDetailsAuthenticationTokenMixin.class);
         context.setMixInAnnotations(OAuth2PreAuthorizationCodeRequestAuthenticationToken.class,
                 OAuth2PreAuthorizationCodeRequestAuthenticationTokenMixin.class);
-        context.setMixInAnnotations(AllowTenantDTO.class, AllowTenantDTOMixin.class);
+        context.setMixInAnnotations(TenantMainDTO.class, AllowTenantDTOMixin.class);
         context.setMixInAnnotations(ClientGrantedAuthority.class, ClientGrantedAuthorityMixin.class);
         context.setMixInAnnotations(AllowTenantGrantedAuthority.class, AllowTenantGrantedAuthorityMixin.class);
     }

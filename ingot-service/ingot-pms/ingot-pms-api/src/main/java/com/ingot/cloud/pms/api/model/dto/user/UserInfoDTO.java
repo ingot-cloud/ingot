@@ -3,7 +3,7 @@ package com.ingot.cloud.pms.api.model.dto.user;
 import java.io.Serializable;
 import java.util.List;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.crypto.annotation.InFieldEncrypt;
 import com.ingot.framework.crypto.model.CryptoType;
 import lombok.Data;
@@ -28,5 +28,5 @@ public class UserInfoDTO implements Serializable {
     /**
      * 可以访问的租户
      */
-    private List<AllowTenantDTO> allows;
+    private List<TenantMainDTO> allows;
 }

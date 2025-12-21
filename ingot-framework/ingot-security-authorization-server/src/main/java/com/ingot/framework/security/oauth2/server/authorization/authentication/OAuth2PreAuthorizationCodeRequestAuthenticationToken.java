@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import lombok.Getter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -25,7 +25,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
     @Getter
     private final String preAuthorization;
     @Getter
-    private final List<AllowTenantDTO> allowList;
+    private final List<TenantMainDTO> allowList;
     @Getter
     private final long timeToLive;
 
@@ -43,7 +43,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
     }
 
     public static OAuth2PreAuthorizationCodeRequestAuthenticationToken authenticated(Object userPrincipal,
-                                                                                     List<AllowTenantDTO> allowList,
+                                                                                     List<TenantMainDTO> allowList,
                                                                                      Map<String, Object> additionalParameters,
                                                                                      long timeToLive) {
         return new OAuth2PreAuthorizationCodeRequestAuthenticationToken(userPrincipal,
@@ -74,7 +74,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationToken extends Abstra
      */
     public OAuth2PreAuthorizationCodeRequestAuthenticationToken(Object userPrincipal,
                                                                 Map<String, Object> additionalParameters,
-                                                                List<AllowTenantDTO> allowList,
+                                                                List<TenantMainDTO> allowList,
                                                                 long timeToLive) {
         super(null);
         this.principal = userPrincipal;

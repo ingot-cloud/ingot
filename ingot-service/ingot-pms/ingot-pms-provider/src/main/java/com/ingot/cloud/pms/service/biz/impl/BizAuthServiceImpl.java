@@ -19,7 +19,7 @@ import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantEnv;
@@ -58,7 +58,7 @@ public class BizAuthServiceImpl implements BizAuthService {
 
             // 获取可以访问的租户列表
             List<SysUserTenant> userTenantList = userTenantService.getUserOrgs(userId);
-            List<AllowTenantDTO> allows = BizUtils.getAllows(tenantService,
+            List<TenantMainDTO> allows = BizUtils.getAllows(tenantService,
                     userTenantList.stream()
                             .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                     (item) -> {

@@ -6,7 +6,7 @@ import java.util.Set;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -81,7 +81,7 @@ public class OAuth2PreAuthorizationCodeRequestAuthenticationProvider implements 
 
         // 保存会话时长，使用刷新token持续时间
         long timeToLive = registeredClient.getTokenSettings().getRefreshTokenTimeToLive().getSeconds();
-        List<AllowTenantDTO> allows = ListUtil.list(false, InAuthorityUtils.extractAllowTenants(user.getAuthorities()));
+        List<TenantMainDTO> allows = ListUtil.list(false, InAuthorityUtils.extractAllowTenants(user.getAuthorities()));
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken
                 .authenticated(user, allows, additionalParameters, timeToLive);
     }

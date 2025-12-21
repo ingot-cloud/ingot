@@ -12,7 +12,7 @@ import com.ingot.cloud.member.service.biz.BizAuthService;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
-import com.ingot.framework.commons.model.common.AllowTenantDTO;
+import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantEnv;
@@ -45,7 +45,7 @@ public class BizAuthServiceImpl implements BizAuthService {
 
             // 获取可以访问的租户列表
             List<MemberUserTenant> userTenantList = userTenantService.getUserOrgs(userId);
-            List<AllowTenantDTO> allows = remotePmsTenantDetailsService.getTenantByIds(userTenantList.stream()
+            List<TenantMainDTO> allows = remotePmsTenantDetailsService.getTenantByIds(userTenantList.stream()
                             .map(MemberUserTenant::getTenantId)
                             .distinct()
                             .collect(Collectors.toList()))
