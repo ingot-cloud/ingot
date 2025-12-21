@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.api.model.convert;
 
 import com.ingot.cloud.pms.api.model.domain.SysUser;
+import com.ingot.cloud.pms.api.model.dto.user.InnerUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.OrgUserDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserBaseInfoDTO;
 import com.ingot.cloud.pms.api.model.dto.user.UserDTO;
@@ -34,4 +35,6 @@ public interface UserConvert {
     OrgUserProfileVO toOrgUserProfile(SysUser in);
 
     UserDetailsResponse toUserDetails(SysUser in);
+
+    InnerUserDTO toInnerUser(SysUser in);
 }
