@@ -99,7 +99,7 @@ public class IdentityUtil {
         if (CollUtil.isEmpty(userTenantList)) {
             return ListUtil.empty();
         }
-        return BizUtils.getAllows(sysTenantService,
+        return BizUtils.getTenants(sysTenantService,
                 userTenantList.stream()
                         .map(UserTenantType::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()

@@ -58,7 +58,7 @@ public class BizAuthServiceImpl implements BizAuthService {
 
             // 获取可以访问的租户列表
             List<SysUserTenant> userTenantList = userTenantService.getUserOrgs(userId);
-            List<TenantMainDTO> allows = BizUtils.getAllows(tenantService,
+            List<TenantMainDTO> allows = BizUtils.getTenants(tenantService,
                     userTenantList.stream()
                             .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                     (item) -> {

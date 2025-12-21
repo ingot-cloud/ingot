@@ -26,9 +26,9 @@ public class BizUtils {
     /**
      * 获取 {@link TenantMainDTO} 列表
      */
-    public static List<TenantMainDTO> getAllows(SysTenantService sysTenantService,
-                                                Set<Long> userTenantList,
-                                                Consumer<TenantMainDTO> mainConsumer) {
+    public static List<TenantMainDTO> getTenants(SysTenantService sysTenantService,
+                                                 Set<Long> userTenantList,
+                                                 Consumer<TenantMainDTO> mainConsumer) {
         return sysTenantService.list(
                         Wrappers.<SysTenant>lambdaQuery()
                                 .in(SysTenant::getId, userTenantList))

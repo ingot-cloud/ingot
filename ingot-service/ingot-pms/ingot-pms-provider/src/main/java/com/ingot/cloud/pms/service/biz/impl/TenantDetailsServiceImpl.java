@@ -45,7 +45,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
                 Wrappers.<SysUserTenant>lambdaQuery()
                         .eq(SysUserTenant::getUserId, user.getId()));
 
-        List<TenantMainDTO> allows = BizUtils.getAllows(sysTenantService,
+        List<TenantMainDTO> allows = BizUtils.getTenants(sysTenantService,
                 userTenantList.stream()
                         .map(SysUserTenant::getTenantId).collect(Collectors.toSet()),
                 (item) -> item.setMain(userTenantList.stream()
@@ -61,7 +61,7 @@ public class TenantDetailsServiceImpl implements TenantDetailsService {
             response.setAllows(ListUtil.empty());
             return response;
         }
-        List<TenantMainDTO> allows = BizUtils.getAllows(sysTenantService, new HashSet<>(ids),
+        List<TenantMainDTO> allows = BizUtils.getTenants(sysTenantService, new HashSet<>(ids),
                 (item) -> item.setMain(false));
         response.setAllows(allows);
         return response;
