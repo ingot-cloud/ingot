@@ -11,6 +11,9 @@ dependencies {
 
     implementation(deps.spring.framework_webmvc)
     implementation(deps.spring.spring_boot.data_redis_starter)
+    
+    // User-Agent 解析库
+    implementation(deps.useragent_parse)
 
     compileOnly(deps.jakarta_servlet_api)
 }

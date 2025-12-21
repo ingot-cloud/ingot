@@ -81,8 +81,38 @@ public class OnlineToken implements Serializable {
 	 */
 	private Instant issuedAt;
 
-	/**
-	 * 过期时间
-	 */
-	private Instant expiresAt;
+    /**
+     * 过期时间
+     */
+    private Instant expiresAt;
+
+    /**
+     * 登录IP地址
+     */
+    private String ipAddress;
+
+    /**
+     * User-Agent
+     */
+    private String userAgent;
+
+    /**
+     * 登录设备类型（PC、Mobile、Tablet等）
+     */
+    private String deviceType;
+
+    /**
+     * 操作系统
+     */
+    private String os;
+
+    /**
+     * 浏览器
+     */
+    private String browser;
+
+    /**
+     * 登录地理位置（可选）
+     */
+    private String location;
 }

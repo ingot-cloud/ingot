@@ -206,6 +206,7 @@ deps.rx_java = "io.reactivex.rxjava3:rxjava:3.0.7"
 deps.ltgt_apt_plugin = "net.ltgt.gradle:gradle-apt-plugin:0.21"
 deps.groovy = "org.codehaus.groovy:groovy:2.5.7"
 deps.netty = "io.netty:netty-all:4.1.55.Final"
+deps.useragent_parse = "nl.basjes.parse.useragent:yauaa:7.26.1"
 
 def plugins = [:]
 plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:${versions.ingot_plugin_mybatis}"

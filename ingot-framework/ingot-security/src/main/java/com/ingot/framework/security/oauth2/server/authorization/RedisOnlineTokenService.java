@@ -67,6 +67,10 @@ public class RedisOnlineTokenService implements OnlineTokenService {
                 user.getAuthorities(), user.getTenantId()
         ));
 
+        // 提取登录信息（IP、User-Agent等）
+        // 注意：传入 null，LoginInfoExtractor 会自动从 Spring RequestContextHolder 获取
+        LoginInfoExtractor.LoginInfo loginInfo = LoginInfoExtractor.extract(null);
+
         // 构建 OnlineToken
         OnlineToken onlineToken = OnlineToken.builder()
                 .jti(jti)
@@ -79,6 +83,13 @@ public class RedisOnlineTokenService implements OnlineTokenService {
                 .authorities(authorities)
                 .issuedAt(Instant.now())
                 .expiresAt(expiresAt)
+                // 登录信息
+                .ipAddress(loginInfo.getIpAddress())
+                .userAgent(loginInfo.getUserAgent())
+                .deviceType(loginInfo.getDeviceType())
+                .os(loginInfo.getOs())
+                .browser(loginInfo.getBrowser())
+                .location(loginInfo.getLocation())
                 .build();
 
         // 判断登录类型
@@ -112,8 +123,8 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         double score = expiresAt.toEpochMilli();
         redisTemplate.opsForZSet().add(onlineKey, user.getId(), score);
 
-        log.debug("[RedisOnlineTokenService] Saved online token: userId={}, jti={}, authType={}, ttl={}s",
-                user.getId(), jti, authType, ttl);
+        log.debug("[RedisOnlineTokenService] Saved online token: userId={}, jti={}, authType={}, ttl={}s, ip={}, device={}",
+                user.getId(), jti, authType, ttl, onlineToken.getIpAddress(), onlineToken.getDeviceType());
     }
 
     @Override
