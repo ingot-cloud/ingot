@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
@@ -293,8 +294,10 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
             // 过滤掉已过期的用户
             if (tuple.getScore() != null && tuple.getScore() > now) {
-                if (tuple.getValue() instanceof Long userId) {
-                    userIds.add(userId);
+                Object userId = tuple.getValue();
+                Long value = NumberUtil.parseLong(StrUtil.toString(userId), -1L);
+                if (value > -1) {
+                    userIds.add(value);
                 }
             }
         }
@@ -311,7 +314,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      */
     public long getOnlineUserCount(Long tenantId, String clientId) {
         String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
-        
+
         // 只统计未过期的用户
         long now = Instant.now().toEpochMilli();
         Long count = redisTemplate.opsForZSet().count(onlineKey, now, Double.MAX_VALUE);
@@ -327,22 +330,22 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      */
     public long cleanExpiredOnlineUsers(Long tenantId, String clientId) {
         String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
-        
+
         // 删除所有已过期的用户（score < now）
         long now = Instant.now().toEpochMilli();
         Long removed = redisTemplate.opsForZSet().removeRangeByScore(onlineKey, 0, now);
-        
+
         if (removed != null && removed > 0) {
             log.info("[RedisOnlineTokenService] Cleaned expired online users: tenantId={}, clientId={}, count={}",
                     tenantId, clientId, removed);
         }
-        
+
         return removed != null ? removed : 0;
     }
 
     /**
      * 清理所有租户的过期在线用户（定时任务调用）
-     * 
+     *
      * @return 清理的总用户数
      */
     public long cleanAllExpiredOnlineUsers() {
@@ -351,21 +354,21 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         if (keys == null || keys.isEmpty()) {
             return 0;
         }
-        
+
         long totalRemoved = 0;
         long now = Instant.now().toEpochMilli();
-        
+
         for (String key : keys) {
             Long removed = redisTemplate.opsForZSet().removeRangeByScore(key, 0, now);
             if (removed != null) {
                 totalRemoved += removed;
             }
         }
-        
+
         if (totalRemoved > 0) {
             log.info("[RedisOnlineTokenService] Cleaned all expired online users: total={}", totalRemoved);
         }
-        
+
         return totalRemoved;
     }
 

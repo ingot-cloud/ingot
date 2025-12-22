@@ -11,7 +11,7 @@ import com.ingot.cloud.auth.service.biz.BizUserTokenService;
 import com.ingot.cloud.auth.service.domain.Oauth2RegisteredClientService;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsUserService;
+import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BizUserTokenServiceImpl implements BizUserTokenService {
     private final OnlineTokenService onlineTokenService;
-    private final RemotePmsUserService remotePmsUserService;
+    private final RemotePmsUserDetailsService remotePmsUserService;
     private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
 
     private final Oauth2RegisteredClientService clientService;
