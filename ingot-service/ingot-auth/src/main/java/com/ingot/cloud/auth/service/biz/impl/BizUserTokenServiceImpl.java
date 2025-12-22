@@ -3,7 +3,8 @@ package com.ingot.cloud.auth.service.biz.impl;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.auth.model.dto.UserTokenQueryDTO;
 import com.ingot.cloud.auth.model.vo.OAuth2RegisteredClientVO;
 import com.ingot.cloud.auth.model.vo.UserTokenVO;
@@ -33,21 +34,29 @@ public class BizUserTokenServiceImpl implements BizUserTokenService {
     private final Oauth2RegisteredClientService clientService;
 
     @Override
-    public List<UserTokenVO> userTokenPage(UserTokenQueryDTO params) {
+    public IPage<UserTokenVO> userTokenPage(UserTokenQueryDTO params) {
         long limit = (params.getCurrent() - 1) * params.getSize();
         long tenantId = params.getTenantId();
         String clientId = params.getClientId();
 
+        long total = onlineTokenService.getOnlineUserCount(tenantId, clientId);
+        if (total == 0) {
+            return Page.of(params.getCurrent(), params.getSize());
+        }
+        Page<UserTokenVO> page = Page.of(params.getCurrent(), params.getSize(), total);
+
         List<Long> userIds = onlineTokenService.getOnlineUsers(
                 tenantId, clientId, limit, params.getSize());
         if (CollUtil.isEmpty(userIds)) {
-            return ListUtil.empty();
+            return page;
         }
+
         SysTenant tenant = remotePmsTenantDetailsService.getTenantById(tenantId)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         OAuth2RegisteredClientVO client = clientService.getByClientId(clientId);
-        return remotePmsUserService.getAllUserInfo(userIds)
+
+        page.setRecords(remotePmsUserService.getAllUserInfo(userIds)
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData()
                 .stream()
@@ -61,6 +70,7 @@ public class BizUserTokenServiceImpl implements BizUserTokenService {
                     vo.setClientName(client.getClientName());
                     vo.setTokens(onlineTokenService.getUserAllTokens(user.getId(), tenantId, clientId));
                     return vo;
-                }).toList();
+                }).toList());
+        return page;
     }
 }

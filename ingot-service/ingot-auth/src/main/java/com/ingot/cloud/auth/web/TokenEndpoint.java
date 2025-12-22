@@ -1,12 +1,11 @@
 package com.ingot.cloud.auth.web;
 
-import java.util.List;
-
-import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ingot.cloud.auth.model.dto.UserRevokeDTO;
 import com.ingot.cloud.auth.model.dto.UserTokenQueryDTO;
 import com.ingot.cloud.auth.model.vo.UserTokenVO;
 import com.ingot.cloud.auth.service.biz.BizUserTokenService;
+import com.ingot.framework.commons.model.common.SinglePayloadDTO;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.CookieUtil;
@@ -68,21 +67,21 @@ public class TokenEndpoint implements RShortcuts {
 
     @RequiredAdmin
     @GetMapping("/tokens")
-    public R<List<UserTokenVO>> userTokens(UserTokenQueryDTO params) {
+    public R<IPage<UserTokenVO>> userTokens(UserTokenQueryDTO params) {
         return ok(bizUserTokenService.userTokenPage(params));
     }
 
     @RequiredAdmin
-    @DeleteMapping("/jti/{jit}")
-    public R<?> revoke(@PathVariable String jti) {
-        onlineTokenService.removeByJti(jti);
+    @DeleteMapping("/jti")
+    public R<?> revoke(@RequestBody SinglePayloadDTO<String> params) {
+        onlineTokenService.removeByJti(params.getPayload());
         return ok();
     }
 
     @RequiredAdmin
     @DeleteMapping("/user")
     public R<?> revokeUser(@RequestBody UserRevokeDTO params) {
-        onlineTokenService.removeByUser(params.getUserId(), params.getTenantId(), StrUtil.toString(params.getClientId()));
+        onlineTokenService.removeByUser(params.getUserId(), params.getTenantId(), params.getClientId());
         return ok();
     }
 }

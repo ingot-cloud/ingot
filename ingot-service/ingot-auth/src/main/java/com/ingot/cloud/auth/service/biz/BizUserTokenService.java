@@ -1,7 +1,6 @@
 package com.ingot.cloud.auth.service.biz;
 
-import java.util.List;
-
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ingot.cloud.auth.model.dto.UserTokenQueryDTO;
 import com.ingot.cloud.auth.model.vo.UserTokenVO;
 
@@ -19,5 +18,5 @@ public interface BizUserTokenService {
      * @param params {@link UserTokenQueryDTO}
      * @return {@link UserTokenVO}
      */
-    List<UserTokenVO> userTokenPage(UserTokenQueryDTO params);
+    IPage<UserTokenVO> userTokenPage(UserTokenQueryDTO params);
 }

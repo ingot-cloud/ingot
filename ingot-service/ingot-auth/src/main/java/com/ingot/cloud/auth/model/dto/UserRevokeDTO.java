@@ -19,7 +19,7 @@ public class UserRevokeDTO implements Serializable {
     /**
      * 客户端ID
      */
-    private Long clientId;
+    private String clientId;
     /**
      * 组织ID
      */
