@@ -2,7 +2,6 @@
 # 生产环境 Dockerfile - 优化版本
 # ====================================
 # 优化重点：
-# - 增加堆内存到 6G
 # - 优化 G1 GC 参数
 # - 增强诊断能力
 # - 添加健康检查
@@ -35,35 +34,62 @@ EXPOSE 5200
 ENV TZ=Asia/Shanghai
 ENV JAVA_OPTS="-server \
                # ========== 内存配置 ========== \
-               -Xms6g \
-               -Xmx6g \
+               # 堆 + Metaspace + DirectBuffer 总内存 ≤ 宿主机可用内存 × 70~75%
+               # JVM 初始堆大小
+               -Xms2g \
+               # JVM 最大堆大小
+               -Xmx2g \
+               # Metaspace 初始大小，类元数据、JVM 类加载信息占用内存
                -XX:MetaspaceSize=256m \
+               # Metaspace 最大大小，防止 Metaspace 无限增长引发 OOM
                -XX:MaxMetaspaceSize=512m \
+               # DirectBuffer 最大内存，Netty、NIO Buffer 等使用，避免 native 内存耗尽
                -XX:MaxDirectMemorySize=1g \
                \
                # ========== GC 配置 ========== \
+               # G1 GC + 低 MaxGCPauseMillis + 并发线程调优，可支撑大堆且减少 STW 停顿。
+               # 启用 G1 GC
                -XX:+UseG1GC \
+               # GC 暂停目标, 期望每次 GC 停顿 ≤200ms
                -XX:MaxGCPauseMillis=200 \
+               # G1 堆分区大小, 堆分为 16MB 小块，便于 GC 回收和分区整理
                -XX:G1HeapRegionSize=16m \
+               # 并发标记开始阈值, 堆使用达到 40% 时启动并发标记周期，提前 GC
                -XX:InitiatingHeapOccupancyPercent=40 \
+               # 空闲保留比例, 保留 15% 堆空闲，防止 OldGen 满导致 Full GC
                -XX:G1ReservePercent=15 \
-               -XX:ConcGCThreads=2 \
-               -XX:ParallelGCThreads=6 \
+               # 并发 GC 线程数, 并发标记阶段线程数，CPU 核数小的情况下适合调小，ConcGCThreads ≈ max(1, Docker CPU / 2)
+               -XX:ConcGCThreads=1 \
+               # 并行 GC 线程数, 用于 Stop-the-world 阶段，通常和 CPU 核数匹配，ParallelGCThreads ≈ Docker CPU
+               -XX:ParallelGCThreads=2 \
                \
                # ========== 容器支持 ========== \
+               # 建议 Docker / K8s 生产环境必加，避免内存占满容器导致 OOMKilled。
+               # JVM 按容器限制计算内存, 避免 JVM 使用宿主机全部内存
                -XX:+UseContainerSupport \
+               # 最大堆占容器内存百分比, 防止 Xmx 不明确时堆太小或太大
                -XX:MaxRAMPercentage=75.0 \
                \
                # ========== 性能优化 ========== \
+               # 这些优化适合 高并发微服务，尤其是大量 String 拼接 / 内存频繁分配的场景
+               # JVM 启动时预分配堆页，避免运行时 page fault，减少启动抖动
                -XX:+AlwaysPreTouch \
+               # 禁用偏向锁, 高并发下减少锁撤销成本
                -XX:-UseBiasedLocking \
+               # 优化字符串拼接, 编译期尽量使用 StringBuilder，减少对象生成
                -XX:+OptimizeStringConcat \
+               # G1 GC 下字符串去重, 减少重复字符串占用堆空间
                -XX:+UseStringDeduplication \
                \
                # ========== 诊断配置 ========== \
+               # Heap Dump 大小接近 Xmx，请保证磁盘空间充足
+               # OOM 时生成堆快照, 用于排查内存泄漏
                -XX:+HeapDumpOnOutOfMemoryError \
+               # Heap Dump 文件路径, 默认覆盖文件，可用 %t 时间戳保留历史
                -XX:HeapDumpPath=/app/logs/heapdump.hprof \
+               # OOM 后 JVM 退出, 避免假死，便于容器重启
                -XX:+ExitOnOutOfMemoryError \
+               # JVM 崩溃日志, %p 表示 PID，记录 crash dump
                -XX:ErrorFile=/app/logs/hs_err_pid%p.log \
                \
                # ========== GC 日志 ========== \
