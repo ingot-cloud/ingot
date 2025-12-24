@@ -15,6 +15,8 @@ docker images -q --filter reference="${ImageName}" | xargs -r docker rmi -f
 docker pull ${ImageName}
 # run
 docker run -d --name ${ServiceName} --restart always \
+    --memory=4g \
+    --cpus=2 \
     --network ${DOCKER_NETWORK} --ip ${SERVICE_AUTH_HOST} \
     -e SERVICE_GATEWAY_HOST=${SERVICE_GATEWAY_HOST} \
     -e SERVICE_AUTH_HOST=${SERVICE_AUTH_HOST} \
