@@ -1,0 +1,255 @@
+# ====================================
+# 生产环境配置文件 - 优化版本
+# ====================================
+# 适用场景：8C16G 服务器，1000 并发用户
+# 主要优化：
+# - 数据库连接池
+# - Web 容器线程池
+# - 日志配置
+# - 监控配置
+# ====================================
+
+server:
+  port: 5200
+  
+  # ========== Undertow 配置（微服务多实例共存场景）==========
+  undertow:
+    threads:
+      # IO 线程数（微服务场景适度降低）
+      io: 4
+      # 工作线程数（考虑多服务共存，适度配置）
+      worker: 120
+    # 每个 buffer 的大小
+    buffer-size: 1024
+    # 使用直接内存
+    direct-buffers: true
+    # 最大 HTTP POST 内容大小（10MB）
+    max-http-post-size: 10485760
+  
+  # ========== 连接超时 ==========
+  connection-timeout: 30000
+  
+  # ========== 压缩配置 ==========
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    min-response-size: 1024
+
+spring:
+  application:
+    name: ingot-service-pms
+  
+  # ========== 数据源配置 ==========
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_pms}?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
+    type: com.alibaba.druid.pool.DruidDataSource
+    
+    druid:
+      # ========== 连接池大小（微服务多实例共存，适度配置）==========
+      initial-size: 10
+      min-idle: 10
+      max-active: 50
+      
+      # ========== 连接等待 ==========
+      max-wait: 5000
+      
+      # ========== 连接检测 ==========
+      test-on-borrow: false
+      test-on-return: false
+      test-while-idle: true
+      validation-query: SELECT 1
+      validation-query-timeout: 3
+      
+      # ========== 连接回收 ==========
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      max-evictable-idle-time-millis: 900000
+      
+      # ========== 泄漏检测 ==========
+      remove-abandoned: true
+      remove-abandoned-timeout: 60
+      log-abandoned: true
+      
+      # ========== 性能优化 ==========
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      
+      # ========== 过滤器配置 ==========
+      filters: stat,wall,slf4j
+      
+      # ========== 慢SQL监控 ==========
+      filter:
+        stat:
+          enabled: true
+          slow-sql-millis: 1000
+          log-slow-sql: true
+          merge-sql: true
+        wall:
+          enabled: true
+          config:
+            multi-statement-allow: true
+      
+      # ========== 监控配置 ==========
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        allow: 127.0.0.1,192.168.0.0/16
+        login-username: ${DRUID_USERNAME:admin}
+        login-password: ${DRUID_PASSWORD:admin}
+        reset-enable: false
+      
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+        session-stat-enable: true
+        session-stat-max-count: 1000
+      
+      # ========== 连接参数 ==========
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+      connect-properties:
+        socketTimeout: 30000
+        connectTimeout: 10000
+        useUnicode: true
+        characterEncoding: utf8mb4
+        useServerPrepStmts: true
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        tcpKeepAlive: true
+        serverTimezone: Asia/Shanghai
+
+  # ========== Redis 配置 ==========
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 30
+        max-idle: 15
+        min-idle: 5
+        max-wait: 3000
+      shutdown-timeout: 5000
+
+  # ========== 线程池配置（微服务多实例共存）==========
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 50
+        queue-capacity: 200
+        keep-alive: 60s
+      thread-name-prefix: async-task-
+
+# ========== MyBatis Plus 配置 ==========
+mybatis-plus:
+  configuration:
+    # 日志输出
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    # 驼峰转换
+    map-underscore-to-camel-case: true
+    # 缓存
+    cache-enabled: true
+    # 懒加载
+    lazy-loading-enabled: false
+  global-config:
+    db-config:
+      # 逻辑删除
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ========== 监控配置 ==========
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露端点
+        include: health,info,metrics,prometheus,env,loggers,threaddump,heapdump
+      base-path: /actuator
+  
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+  
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# ========== 日志配置 ==========
+logging:
+  level:
+    root: INFO
+    com.ingot: DEBUG
+    # SQL 日志
+    com.ingot.pms.mapper: DEBUG
+    # Druid SQL
+    druid.sql.Statement: ERROR
+  
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId}] [%thread] %-5level %logger{50} - %msg%n'
+  
+  file:
+    name: /app/logs/application.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 10GB
+
+# ========== Feign 配置 ==========
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 10000
+        loggerLevel: basic
+  # 压缩
+  compression:
+    request:
+      enabled: true
+      mime-types: text/xml,application/xml,application/json
+      min-request-size: 1024
+    response:
+      enabled: true
+  # 熔断
+  circuitbreaker:
+    enabled: true
+
+# ========== Sentinel 配置 ==========
+spring:
+  cloud:
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8080}
+      # 饥饿加载
+      eager: true
+      # 控制台连接超时
+      client-ip: ${spring.cloud.client.ip-address}
+
+# ========== 业务配置 ==========
+ingot:
+  # 应用配置
+  app:
+    # 环境
+    env: prod
+    # 版本
+    version: @project.version@
+

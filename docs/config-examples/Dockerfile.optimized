@@ -1,0 +1,87 @@
+# ====================================
+# 生产环境 Dockerfile - 优化版本
+# ====================================
+# 优化重点：
+# - 增加堆内存到 6G
+# - 优化 G1 GC 参数
+# - 增强诊断能力
+# - 添加健康检查
+# ====================================
+
+FROM amazoncorretto:17
+
+# 数据卷
+VOLUME ["/ingot-data"]
+
+# 设置工作目录
+WORKDIR /app
+
+# 设置时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+# 创建数据目录和日志目录
+RUN mkdir -p /ingot-data /app/logs
+
+# 安装诊断工具（可选）
+RUN yum install -y curl net-tools procps || true
+
+# 复制 jar 文件
+COPY *.jar app.jar
+
+# 暴露端口
+EXPOSE 5200
+
+# 环境变量 - 8C16G 服务器优化配置
+ENV TZ=Asia/Shanghai
+ENV JAVA_OPTS="-server \
+               # ========== 内存配置 ========== \
+               -Xms6g \
+               -Xmx6g \
+               -XX:MetaspaceSize=256m \
+               -XX:MaxMetaspaceSize=512m \
+               -XX:MaxDirectMemorySize=1g \
+               \
+               # ========== GC 配置 ========== \
+               -XX:+UseG1GC \
+               -XX:MaxGCPauseMillis=200 \
+               -XX:G1HeapRegionSize=16m \
+               -XX:InitiatingHeapOccupancyPercent=40 \
+               -XX:G1ReservePercent=15 \
+               -XX:ConcGCThreads=2 \
+               -XX:ParallelGCThreads=6 \
+               \
+               # ========== 容器支持 ========== \
+               -XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               \
+               # ========== 性能优化 ========== \
+               -XX:+AlwaysPreTouch \
+               -XX:-UseBiasedLocking \
+               -XX:+OptimizeStringConcat \
+               -XX:+UseStringDeduplication \
+               \
+               # ========== 诊断配置 ========== \
+               -XX:+HeapDumpOnOutOfMemoryError \
+               -XX:HeapDumpPath=/app/logs/heapdump.hprof \
+               -XX:+ExitOnOutOfMemoryError \
+               -XX:ErrorFile=/app/logs/hs_err_pid%p.log \
+               \
+               # ========== GC 日志 ========== \
+               -Xlog:gc*,gc+heap=info,gc+age=trace,safepoint:file=/app/logs/gc_%t.log:time,level,tags:filecount=10,filesize=20M \
+               \
+               # ========== 应用配置 ========== \
+               -Dspring.profiles.active=prod \
+               -Duser.timezone=Asia/Shanghai \
+               -Djava.security.egd=file:/dev/./urandom \
+               -Dfile.encoding=UTF-8"
+
+# 健康检查
+HEALTHCHECK --interval=30s \
+            --timeout=10s \
+            --retries=3 \
+            --start-period=90s \
+  CMD curl -f http://localhost:5200/actuator/health/liveness || exit 1
+
+# 启动命令
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+

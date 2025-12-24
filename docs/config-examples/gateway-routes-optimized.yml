@@ -1,0 +1,216 @@
+# ====================================
+# 网关路由配置 - 优化版本
+# ====================================
+# 适用场景：1000 并发用户
+# 主要优化：
+# - 限流配置
+# - 熔断配置
+# - 超时配置
+# - 重试策略
+# ====================================
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: ingot-service-pms
+          uri: lb://ingot-service-pms
+          predicates:
+            - Path=/pms/**
+          filters:
+            # ========== 路径重写 ==========
+            - StripPrefix=1
+            
+            # ========== 限流配置 ==========
+            - name: RequestRateLimiter
+              args:
+                # Key 解析器：基于 IP 地址
+                key-resolver: '#{@remoteAddrKeyResolver}'
+                # 稳定速率：每秒放入令牌数（考虑多服务共存，适度配置）
+                redis-rate-limiter.replenishRate: 300
+                # 突发容量：令牌桶大小（1.5-2 倍稳定速率）
+                redis-rate-limiter.burstCapacity: 500
+                # 每次请求消费令牌数
+                redis-rate-limiter.requestedTokens: 1
+            
+            # ========== 熔断配置 ==========
+            - name: CircuitBreaker
+              args:
+                name: pmsFallback
+                fallbackUri: forward:/fallback/pms
+                # 滑动窗口类型（COUNT_BASED 或 TIME_BASED）
+                slidingWindowType: TIME_BASED
+                # 滑动窗口大小（秒）
+                slidingWindowSize: 60
+                # 最小调用次数
+                minimumNumberOfCalls: 10
+                # 失败率阈值（50%）
+                failureRateThreshold: 50
+                # 慢调用阈值（秒）
+                slowCallDurationThreshold: 5
+                # 慢调用率阈值（50%）
+                slowCallRateThreshold: 50
+                # 等待时长（从打开到半打开状态，秒）
+                waitDurationInOpenState: 30
+                # 半打开状态允许的调用次数
+                permittedNumberOfCallsInHalfOpenState: 5
+            
+            # ========== 重试配置 ==========
+            - name: Retry
+              args:
+                # 重试次数
+                retries: 2
+                # 触发重试的状态码
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
+                # 触发重试的 HTTP 方法（只对幂等方法重试）
+                methods: GET
+                # 触发重试的异常
+                exceptions: java.io.IOException,java.util.concurrent.TimeoutException
+                # 退避策略
+                backoff:
+                  # 首次退避时间
+                  firstBackoff: 50ms
+                  # 最大退避时间
+                  maxBackoff: 500ms
+                  # 退避因子
+                  factor: 2
+                  # 是否基于前一次时间
+                  basedOnPreviousValue: false
+            
+            # ========== 请求大小限制 ==========
+            - name: RequestSize
+              args:
+                maxSize: 10MB
+      
+      # ========== 全局配置 ==========
+      # HTTP 客户端配置
+      httpclient:
+        # 连接超时（毫秒）
+        connect-timeout: 3000
+        # 响应超时
+        response-timeout: 30s
+        # 连接池配置（微服务多实例共存场景）
+        pool:
+          # 连接池类型（elastic 或 fixed）
+          type: elastic
+          # 最大连接数（适度配置）
+          max-connections: 500
+          # 最大空闲时间
+          max-idle-time: 30s
+          # 最大生命周期
+          max-life-time: 60s
+          # 连接回收间隔
+          eviction-interval: 30s
+      
+      # ========== 全局过滤器 ==========
+      default-filters:
+        # 添加请求头
+        - AddRequestHeader=X-Gateway, ingot-gateway
+        # 添加响应头
+        - AddResponseHeader=X-Response-Time, ${responseTime}
+      
+      # ========== 跨域配置 ==========
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+# ========== Redis 限流键解析器 ==========
+# 需要在代码中实现以下 Bean
+# @Bean
+# public KeyResolver remoteAddrKeyResolver() {
+#     return exchange -> Mono.just(
+#         Objects.requireNonNull(exchange.getRequest().getRemoteAddress())
+#             .getAddress().getHostAddress()
+#     );
+# }
+
+# ========== Resilience4j 熔断器配置 ==========
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # 滑动窗口类型
+        sliding-window-type: TIME_BASED
+        # 滑动窗口大小（秒）
+        sliding-window-size: 60
+        # 最小调用次数
+        minimum-number-of-calls: 10
+        # 失败率阈值
+        failure-rate-threshold: 50
+        # 慢调用阈值（秒）
+        slow-call-duration-threshold: 5s
+        # 慢调用率阈值
+        slow-call-rate-threshold: 50
+        # 等待时长（打开到半打开）
+        wait-duration-in-open-state: 30s
+        # 半打开状态允许的调用次数
+        permitted-number-of-calls-in-half-open-state: 5
+        # 自动从打开到半打开
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 记录的异常
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+    instances:
+      pmsFallback:
+        base-config: default
+  
+  # ========== 限流配置 ==========
+  ratelimiter:
+    configs:
+      default:
+        # 限流周期（纳秒）
+        limit-refresh-period: 1s
+        # 周期内允许的请求数
+        limit-for-period: 500
+        # 超时等待时间
+        timeout-duration: 5s
+    instances:
+      pmsRateLimiter:
+        base-config: default
+  
+  # ========== 超时配置 ==========
+  timelimiter:
+    configs:
+      default:
+        # 超时时间
+        timeout-duration: 30s
+        # 是否取消正在运行的 Future
+        cancel-running-future: true
+    instances:
+      pmsTimeout:
+        base-config: default
+
+# ========== 监控配置 ==========
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# ========== 日志配置 ==========
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    # 查看路由详情
+    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
+    # 查看限流详情
+    org.springframework.cloud.gateway.filter.ratelimit: DEBUG
+
