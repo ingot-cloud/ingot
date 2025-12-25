@@ -38,7 +38,8 @@ ENV JAVA_OPTS="-server \
                -XX:MaxGCPauseMillis=200 \
                -XX:InitiatingHeapOccupancyPercent=45 \
                -XX:MetaspaceSize=256m \
-               -XX:MaxMetaspaceSize=256m \
+               -XX:MaxMetaspaceSize=384m \
+               -XX:MaxDirectMemorySize=256m \
                -XX:+UseContainerSupport \
                -XX:MaxRAMPercentage=75 \
                -XX:+AlwaysPreTouch \
@@ -47,7 +48,8 @@ ENV JAVA_OPTS="-server \
                -XX:+ExitOnOutOfMemoryError \
                -Xlog:gc*,gc+heap=info,gc+age=trace:file=/app/logs/gc.log:time,level,tags:filecount=5,filesize=10M \
                -Dspring.profiles.active=prod \
-               -Duser.timezone=Asia/Shanghai"
+               -Duser.timezone=Asia/Shanghai \
+               -Djava.security.egd=file:/dev/./urandom"
 
 # 健康检查
 # HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=90s \
