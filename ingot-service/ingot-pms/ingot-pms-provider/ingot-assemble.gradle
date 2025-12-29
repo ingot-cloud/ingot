@@ -5,5 +5,20 @@ ingotAssemble {
         registry "docker-registry.ingotcloud.top"
         username JY_DOCKER_REGISTRY_USERNAME
         password JY_DOCKER_REGISTRY_PASSWORD
+        platform "linux/amd64"
+
+        env("dev") {
+            name = "ingot/pms"
+            saveName = "ingot-pms.tar"
+        }
+        env("test") {
+            name = "ingot/pms"
+            saveName = "ingot-pms.tar"
+        }
+        env("prod") {
+            name = "ingot/pms"
+            saveName = "ingot-pms.tar"
+            platform = "linux/arm64"
+        }
     }
 }
