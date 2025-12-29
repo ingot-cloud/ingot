@@ -3,8 +3,9 @@ apply from: "${project.getRootDir().path}/config/database.gradle"
 apply from: 'ingot-assemble.gradle'
 
 dependencies {
-    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.actuator_starter)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_boot.thymeleaf_starter)
 
     implementation project(ingot.framework_security_auth_server)

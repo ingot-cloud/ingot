@@ -2,7 +2,7 @@ apply from: "${project.getRootDir().path}/config/service-base.gradle"
 apply from: 'ingot-assemble.gradle'
 
 dependencies {
-//    implementation(deps.spring.spring_boot.actuator_starter)
+    implementation(deps.spring.spring_boot.actuator_starter)
     implementation(deps.spring.spring_boot.data_redis_reactive_starter)
 
     implementation(deps.spring.spring_cloud.gateway)
