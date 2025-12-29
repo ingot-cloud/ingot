@@ -42,7 +42,7 @@ ENV JAVA_OPTS="-Xmx1g \
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
-    CMD curl -f http://localhost:5300/actuator/health || exit 1
+    CMD curl -f http://localhost:6300/actuator/health || exit 1
 
 # 启动命令
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

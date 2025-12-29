@@ -52,8 +52,8 @@ ENV JAVA_OPTS="-server \
                -Djava.security.egd=file:/dev/./urandom"
 
 # 健康检查
-# HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=90s \
-#     CMD curl -f http://localhost:5200/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=90s \
+    CMD curl -f http://localhost:6200/actuator/health || exit 1
 
 # 启动命令
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
