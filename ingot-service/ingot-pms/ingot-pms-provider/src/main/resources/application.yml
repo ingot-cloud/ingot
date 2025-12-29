@@ -7,5 +7,5 @@ spring:
 
 management:
   server:
-    port: ${MANAGEMENT_PORT:15200}
+    port: ${MANAGEMENT_PORT:6200}
     address: 127.0.0.1
