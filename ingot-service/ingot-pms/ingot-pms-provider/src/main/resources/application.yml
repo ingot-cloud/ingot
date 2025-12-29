@@ -4,3 +4,8 @@ server:
 spring:
   application:
     name: ingot-service-pms
+
+management:
+  server:
+    port: ${MANAGEMENT_PORT:15200}
+    address: 127.0.0.1

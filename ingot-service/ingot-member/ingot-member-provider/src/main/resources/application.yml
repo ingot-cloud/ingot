@@ -4,3 +4,8 @@ server:
 spring:
   application:
     name: ingot-service-member
+
+management:
+  server:
+    port: ${MANAGEMENT_PORT:15300}
+    address: 127.0.0.1

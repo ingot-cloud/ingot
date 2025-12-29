@@ -1,38 +1,23 @@
 spring:
   datasource:
-    username: ${MYSQL_USERNAME:dev}
-    password: ${MYSQL_PASSWORD:123456}
+    username: ${MYSQL_USERNAME}  # 生产环境必须配置
+    password: ${MYSQL_PASSWORD}  # 生产环境必须配置
   data:
     redis:
-      password: ${REDIS_PASSWORD:ingotredis}
+      password: ${REDIS_PASSWORD}  # 生产环境必须配置
   cloud:
     nacos:
+      server-addr: ${NACOS_SERVER_ADDR}  # 生产环境必须配置
+      username: ${NACOS_USERNAME}  # 生产环境必须配置
+      password: ${NACOS_PASSWORD}  # 生产环境必须配置
       discovery:
-        server-addr: ${NACOS_HOST1:ingot-nacos}:${NACOS_PORT1:8848},${NACOS_HOST2:ingot-nacos}:${NACOS_PORT2:18848},${NACOS_HOST3:ingot-nacos}:${NACOS_PORT3:28848}
-        namespace: ingot
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:nacos}
-        group: PROD_GROUP
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:PROD_GROUP}
       config:
-        server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        namespace: ${spring.cloud.nacos.discovery.namespace}
-        username: ${spring.cloud.nacos.discovery.username}
-        password: ${spring.cloud.nacos.discovery.password}
-        group: PROD_GROUP
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:PROD_GROUP}
   config:
     import:
       - optional:nacos:application-common.yml
       - optional:nacos:application-mysql.yml
-      - optional:nacos:${spring.application.name}.yml
-
-springdoc:
-  api-docs:
-    enabled: false
-
-logs:
-  path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.member.mapper
-
-ingot:
-  mybatis:
-    show-sql-log: true
+      - optional:nacos:${spring.application.name}.yml?refreshEnabled=true

@@ -5,6 +5,7 @@ spring:
   application:
     name: ingot-service-auth
 
-logs:
-  path: /ingot-data/logs
-  mybatisMapper: com.ingot.cloud.auth.mapper
+management:
+  server:
+    port: ${MANAGEMENT_PORT:15100}
+    address: 127.0.0.1

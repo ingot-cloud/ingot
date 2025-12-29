@@ -7,41 +7,17 @@ spring:
       password: ${REDIS_PASSWORD:ingotredis}
   cloud:
     nacos:
+      server-addr: ${NACOS_SERVER_ADDR:localhost:8848,localhost:18848,localhost:28848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        server-addr: ${NACOS_HOST1:ingot-nacos}:${NACOS_PORT1:8848},${NACOS_HOST2:ingot-nacos}:${NACOS_PORT2:18848},${NACOS_HOST3:ingot-nacos}:${NACOS_PORT3:28848}
-        namespace: ingot
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:nacos}
-        group: DEV_GROUP
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:DEV_GROUP}
       config:
-        server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        namespace: ${spring.cloud.nacos.discovery.namespace}
-        username: ${spring.cloud.nacos.discovery.username}
-        password: ${spring.cloud.nacos.discovery.password}
-        group: DEV_GROUP
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:DEV_GROUP}
   config:
     import:
       - optional:nacos:application-common.yml
       - optional:nacos:application-mysql.yml
-      - optional:nacos:${spring.application.name}.yml
-
-springdoc:
-  api-docs:
-    enabled: true
-
-ingot:
-  security:
-    oauth2:
-      auth:
-        loginFormUrl: http://127.0.0.1:1798/oauth2/challenge
-    jwk:
-      master-key: ${AUTH_JWK_MASTER_KEY:a7A7FJ9KdQutfjbQh8sZSt2kcNtl/JUkmEI73aCR080=}
-      enable-encryption: true
-
-# 日志等级
-logging:
-  level:
-    org.springframework.web: trace
-    org.springframework.security: trace
-    org.springframework.security.oauth2: trace
-    com.alibaba.nacos.client.naming: info
+      - optional:nacos:${spring.application.name}.yml?refreshEnabled=true

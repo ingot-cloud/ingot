@@ -1,90 +1,193 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    ​
+
+    <!-- ==================== Spring属性引用 ==================== -->
+    <!-- 从application.yml中读取配置 -->
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
-    <springProperty scope="context" name="logPath" source="logs.path"/>
+    <springProperty scope="context" name="logPath" source="logs.path" defaultValue="/ingot-data/logs"/>
     <springProperty scope="context" name="mybatisMapper" source="logs.mybatisMapper"/>
-    <!-- Example for logging into the build folder of your project -->
-    <property name="LOG_FILE" value="${logPath}/${springAppName}/${springAppName}"/>
-    ​
+    <springProperty scope="context" name="springProfile" source="spring.profiles.active" defaultValue="dev"/>
+
+    <!-- 从环境变量读取配置（优先级更高） -->
+    <springProperty scope="context" name="logLevel" source="logging.level.root" defaultValue="INFO"/>
+    <springProperty scope="context" name="maxFileSize" source="logging.file.max-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="maxHistory" source="logging.file.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="totalSizeCap" source="logging.file.total-size-cap" defaultValue="20GB"/>
+
+    <!-- 日志文件路径 -->
+    <property name="LOG_FILE" value="${logPath}/${springAppName}"/>
+
+    <!-- ==================== 日志格式定义 ==================== -->
+    <!-- 控制台日志格式（彩色） -->
     <property name="CONSOLE_LOG_PATTERN"
-              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-B3-ParentSpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{traceId:-},%X{spanId:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
-    <!-- Appender to log to console -->
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <!-- Minimum logging level to be presented in the console logs -->
-            <level>DEBUG</level>
-        </filter>
+    <!-- 文件日志格式（纯文本，包含TraceId） -->
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} [${springAppName:-},%X{traceId:-},%X{spanId:-}] ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <!-- ==================== Appender定义 ==================== -->
+
+    <!-- 1. 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 不在这里过滤级别，让yml中的配置生效 -->
         <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <!-- Appender to log to file -->
-    <appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+    <!-- 2. 普通文件输出（按日期+大小滚动） -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 每天滚动 + 超过大小也滚动 -->
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- 单个文件最大大小（从yml读取） -->
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <!-- 保留天数（从yml读取） -->
+            <maxHistory>${maxHistory}</maxHistory>
+            <!-- 总大小限制（从yml读取） -->
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
         </rollingPolicy>
-        <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
-        </encoder>
     </appender>
-    ​
-    <!-- Appender to log to file in a JSON format -->
-    <appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <!-- 3. JSON格式日志（用于ELK/Loki等日志系统） -->
+    <appender name="JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}.json</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <timestamp>
-                    <timeZone>UTC</timeZone>
+                    <timeZone>Asia/Shanghai</timeZone>
                 </timestamp>
                 <pattern>
                     <pattern>
                         {
-                        "severity": "%level",
+                        "timestamp": "%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}",
+                        "level": "%level",
                         "service": "${springAppName:-}",
-                        "trace": "%X{X-B3-TraceId:-}",
-                        "span": "%X{X-B3-SpanId:-}",
-                        "parent": "%X{X-B3-ParentSpanId:-}",
-                        "exportable": "%X{X-Span-Export:-}",
+                        "env": "${springProfile:-}",
+                        "traceId": "%X{traceId:-}",
+                        "spanId": "%X{spanId:-}",
                         "pid": "${PID:-}",
                         "thread": "%thread",
-                        "class": "%logger{40}",
-                        "rest": "%message"
+                        "logger": "%logger",
+                        "message": "%message",
+                        "exception": "%exception{full}"
                         }
                     </pattern>
                 </pattern>
             </providers>
         </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <maxHistory>${maxHistory}</maxHistory>
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
+        </rollingPolicy>
     </appender>
-    ​
-    <appender name="MyBatisStatistics" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <!-- 4. 错误日志单独输出 -->
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.error.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 5. MyBatis SQL日志单独输出 -->
+    <appender name="SQL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.sql.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_FILE}.sql.%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <maxHistory>10</maxHistory>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
         </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}-%msg%n</pattern>
-        </encoder>
     </appender>
 
-    <logger name="${mybatisMapper}" level="DEBUG">
-        <appender-ref ref="MyBatisStatistics"/>
+    <!-- ==================== 异步日志（提高性能）==================== -->
+
+    <!-- 异步文件日志 -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>512</queueSize>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <!-- 异步JSON日志 -->
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>512</queueSize>
+        <appender-ref ref="JSON"/>
+    </appender>
+
+    <!-- 异步错误日志 -->
+    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="ERROR"/>
+    </appender>
+
+    <!-- ==================== Logger配置 ==================== -->
+
+    <!-- MyBatis Mapper日志（级别由yml中的logging.level控制） -->
+    <logger name="${mybatisMapper}" additivity="false">
+        <appender-ref ref="SQL"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <root level="INFO">
-        <appender-ref ref="console"/>
-        <appender-ref ref="logstash"/>
-        <appender-ref ref="flatfile"/>
+    <!-- Druid SQL日志 -->
+    <logger name="druid.sql.Statement" additivity="false">
+        <appender-ref ref="SQL"/>
+    </logger>
+
+    <!-- Spring框架日志（级别由yml中的logging.level控制） -->
+    <!-- 不在这里设置level，使用yml中的配置 -->
+
+    <!-- ==================== Root Logger ==================== -->
+    <!--
+        注意：不在这里设置level，使用yml中的logging.level.root配置
+        这样可以通过环境变量动态调整日志级别
+    -->
+    <root>
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_JSON"/>
+        <appender-ref ref="ASYNC_ERROR"/>
     </root>
+
+    <!-- ==================== 环境特定配置 ==================== -->
+
+    <!-- 开发环境：输出更多日志到控制台 -->
+    <springProfile name="dev">
+        <logger name="com.ingot" level="DEBUG"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+    </springProfile>
+
+    <!-- 生产环境：减少日志输出 -->
+    <springProfile name="prod">
+        <!-- 生产环境的日志级别由yml中的logging.level配置控制 -->
+    </springProfile>
+
 </configuration>
