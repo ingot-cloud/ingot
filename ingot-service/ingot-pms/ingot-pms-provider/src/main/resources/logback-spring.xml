@@ -11,9 +11,9 @@
 
     <!-- 从环境变量读取配置（优先级更高） -->
     <springProperty scope="context" name="logLevel" source="logging.level.root" defaultValue="INFO"/>
-    <springProperty scope="context" name="maxFileSize" source="logging.file.max-size" defaultValue="100MB"/>
-    <springProperty scope="context" name="maxHistory" source="logging.file.max-history" defaultValue="30"/>
-    <springProperty scope="context" name="totalSizeCap" source="logging.file.total-size-cap" defaultValue="20GB"/>
+    <springProperty scope="context" name="maxFileSize" source="logging.logback.rollingpolicy.max-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="maxHistory" source="logging.logback.rollingpolicy.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="totalSizeCap" source="logging.logback.rollingpolicy.total-size-cap" defaultValue="20GB"/>
 
     <!-- 日志文件路径 -->
     <property name="LOG_FILE" value="${logPath}/${springAppName}"/>
