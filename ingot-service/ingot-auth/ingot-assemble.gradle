@@ -18,7 +18,7 @@ ingotAssemble {
         env("prod") {
             name = "ingot/auth"
             saveName = "ingot-auth.tar"
-            platform = "linux/arm64"
+//            platform = "linux/arm64"
         }
     }
 }

@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 17/12/2025 09:01:21
+ Date: 30/12/2025 16:52:03
 */
 
 SET NAMES utf8mb4;
@@ -266,7 +266,7 @@ INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permi
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (968455189648703489, 968448105293086721, '阿里云', '1', '/link/ulahCLJw', b'1', 969898113037041666, 1, '@/layouts/InIFrameLayout.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '1', '1', 'http://www.aliyun.com', '0', '2024-05-14 10:01:11', '2024-05-19 10:23:59', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (968555619909173250, 968448105293086721, '百度', '1', '/link/CtA3FqHR', b'1', 969898113037041666, 1, '@/layouts/InExtLinkLayout.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '1', '2', 'https://www.baidu.com', '0', '2024-05-14 16:40:16', '2024-05-19 10:24:02', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (969900188395438082, 968448105293086721, '阿里云测试2', '1', '/link/NgEObclX', b'1', 970014721428488193, 1, '@/layouts/InIFrameLayout.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '1', '1', 'https://www.aliyun.com', '0', '2024-05-18 09:43:06', '2024-05-19 10:37:18', NULL);
-INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075465479671361538, 782579756306313217, '系统用户管理', '1', '/platform/system/user', b'1', 1075465479608446977, 0, '@/pages/platform/system/user/IndexPage.vue', NULL, NULL, NULL, 5, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-03-05 17:01:53', '2025-11-26 10:00:05', NULL);
+INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075465479671361538, 782579756306313217, '用户管理', '1', '/platform/system/user', b'1', 1075465479608446977, 0, '@/pages/platform/system/user/IndexPage.vue', NULL, NULL, NULL, 5, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-03-05 17:01:53', '2025-12-21 14:11:52', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1098553864240046081, 881187162883403778, '组织架构', '1', '/org/contacts/structure', b'1', 1098553864210685954, 0, '@/pages/org/contacts/structure/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '1', '0', NULL, '0', '2025-05-08 10:06:52', '2025-11-25 17:15:45', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171383124115320834, 0, '元数据管理', '0', '/platform/meta', b'1', 1171383124023046146, 1, '@/layouts/InAppLayout.vue', NULL, '/platform/meta/menu', 'bi:meta', 1, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 09:24:21', '2025-11-25 17:19:05', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171384799689437186, 1171383124115320834, '菜单管理', '1', '/platform/meta/menu', b'1', 1171384799576190978, 0, '@/pages/platform/meta/menu/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 09:31:01', '2025-11-25 17:19:32', NULL);
@@ -276,6 +276,7 @@ INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permi
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377827807234, 0, '组织管理', '0', '/platform/org', b'1', 1171506377735532545, 0, '@/layouts/InAppLayout.vue', NULL, '/platform/org/manage', 'clarity:organization-line', 3, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 17:34:07', '2025-11-25 17:34:54', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506495809384449, 1171506377827807234, '组织管理', '1', '/platform/org/tenant', b'1', 1171506495763247105, 0, '@/pages/platform/org/tenant/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 17:34:35', '2025-11-25 17:34:35', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175028897327607810, 881182442898894850, '权限管理', '1', '/platform/member/permission', b'1', 1175028897264693250, 0, '@/pages/platform/member/permission/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-12-05 10:51:21', '2025-12-05 11:01:57', NULL);
+INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1180877894980829185, 782579756306313217, '在线用户', '1', '/platform/system/onlinetoken', b'1', 1180877894834028546, 0, '@/pages/platform/system/onlinetoken/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-12-21 14:13:11', '2025-12-21 14:14:31', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -319,7 +320,7 @@ INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, 
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (908756155371945986, 881187314109034498, '权限管理', 'org:contacts:auth', '0', '1', '0', '', '2023-12-01 16:18:32', '2025-05-08 10:05:50', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (969898113037041666, 0, '链接', 'link', '0', '1', '0', '', '2024-05-18 09:34:51', '2025-02-01 19:31:13', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (970014721428488193, 969898113037041666, '阿里云测试2', 'link:asdasd', '0', '1', '0', '', '2024-05-18 17:18:13', '2024-05-19 10:37:18', NULL);
-INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075465479608446977, 782647310861250562, '系统用户管理', 'platform:system:user', '0', '0', '0', '', '2025-03-05 17:01:53', '2025-11-26 10:00:05', NULL);
+INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075465479608446977, 782647310861250562, '用户管理', 'platform:system:user', '0', '0', '0', '', '2025-03-05 17:01:53', '2025-12-21 14:11:52', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1098553864210685954, 881187314109034498, '组织架构', 'org:contacts:structure', '0', '1', '0', '', '2025-05-08 10:06:52', '2025-11-25 17:15:45', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171383124023046146, 0, '元数据管理', 'platform:meta', '0', '0', '0', '', '2025-11-25 09:24:21', '2025-11-25 17:19:05', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171384799576190978, 1171383124023046146, '菜单管理', 'platform:meta:menu', '0', '0', '0', '', '2025-11-25 09:31:01', '2025-11-25 17:19:32', NULL);
@@ -329,6 +330,7 @@ INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, 
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377735532545, 0, '组织管理', 'platform:org', '0', '0', '0', '', '2025-11-25 17:34:07', '2025-11-25 17:34:54', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506495763247105, 1171506377735532545, '组织管理', 'platform:org:tenant', '0', '0', '0', '', '2025-11-25 17:34:35', '2025-11-25 17:34:35', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175028897264693250, 881181673671929858, '权限管理', 'platform:member:permission', '0', '0', '0', '', '2025-12-05 10:51:21', '2025-12-05 11:01:57', NULL);
+INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1180877894834028546, 782647310861250562, '在线用户', 'system:onlientoken', '0', '0', '0', '', '2025-12-21 14:13:11', '2025-12-21 14:14:31', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -618,7 +620,7 @@ CREATE TABLE `tenant_dept` (
 BEGIN;
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 1, 0, '英格特云', 0, b'1', '1', '2025-11-24 16:36:06', '2025-11-24 16:36:08', NULL);
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171513454902112258, 1171513454855974913, 0, '测试组织', 0, b'1', '0', '2025-11-25 18:02:14', NULL, '2025-11-25 10:06:58');
-INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171517787697836033, 1, 1, '测试部门', 999, b'0', '0', '2025-11-25 18:19:27', '2025-11-29 11:04:49', NULL);
+INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171517787697836033, 1, 1, '测试部门', 999, b'0', '0', '2025-11-25 18:19:27', '2025-12-23 09:33:41', NULL);
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171520634774614018, 1, 1171517787697836033, '测试小组', 999, b'0', '0', '2025-11-25 18:30:46', NULL, NULL);
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171766486592122882, 1171766486562762754, 0, '测试组织', 0, b'1', '0', '2025-11-26 10:47:42', NULL, NULL);
 COMMIT;
@@ -698,10 +700,10 @@ CREATE TABLE `tenant_role_user_private` (
 BEGIN;
 INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1171818434175430657, 1171766486562762754, 3, b'1', 883383523896766465, NULL);
 INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1171818508146176001, 1171766486562762754, 3, b'1', 968109737946447873, NULL);
-INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1171818620092149761, 1, 3, b'1', 883383523896766465, NULL);
 INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1172813477321371650, 1, 1, b'1', 1, NULL);
 INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1172813477325565954, 1, 2, b'1', 1, NULL);
-INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1172857958464745473, 1, 1075807902184353794, b'1', 883383523896766465, 1171517787697836033);
+INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1181257390797959170, 1, 3, b'1', 883383523896766465, NULL);
+INSERT INTO `tenant_role_user_private` (`id`, `tenant_id`, `role_id`, `meta_role`, `user_id`, `dept_id`) VALUES (1181532332944863234, 1, 1075807902184353794, b'1', 883383523896766465, 1171517787697836033);
 COMMIT;
 
 -- ----------------------------
@@ -714,7 +716,8 @@ CREATE TABLE `tenant_user_dept_private` (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `dept_id` bigint NOT NULL COMMENT '部门ID',
   PRIMARY KEY (`id`),
-  KEY `idx_tenant_dept` (`tenant_id`,`dept_id`) USING BTREE
+  KEY `idx_tenant_dept` (`tenant_id`,`dept_id`) USING BTREE,
+  KEY `idx_tenant_user` (`tenant_id`,`user_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
