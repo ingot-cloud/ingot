@@ -1,15 +1,8 @@
 # ====================================
 # 测试环境 Dockerfile
 # ====================================
-# 特点：
-# - 使用 jdk-slim 镜像
-# - 中等内存配置
-# - 启用基本的 JVM 调优
-# - 使用 test profile
-# - 包含健康检查
-# ====================================
 
-FROM amazoncorretto:17
+FROM docker-registry.ingotcloud.top/amazoncorretto:17
 
 # 数据卷
 VOLUME ["/ingot-data"]

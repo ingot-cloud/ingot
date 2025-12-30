@@ -1,14 +1,8 @@
 # ====================================
 # 开发环境 Dockerfile
 # ====================================
-# 特点：
-# - 使用 jdk-slim 镜像（包含完整调试工具）
-# - 较小的内存配置
-# - 启用远程调试
-# - 使用 dev profile
-# ====================================
 
-FROM amazoncorretto:17
+FROM docker-registry.ingotcloud.top/amazoncorretto:17
 
 # 数据卷
 VOLUME ["/ingot-data"]

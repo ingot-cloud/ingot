@@ -1,15 +1,8 @@
 # ====================================
 # 生产环境 Dockerfile
 # ====================================
-# 特点：
-# - 较大的内存配置
-# - 完整的 JVM 性能调优
-# - 使用 prod profile
-# - 完善的健康检查
-# - 支持多架构（amd64/arm64）
-# ====================================
 
-FROM amazoncorretto:17
+FROM docker-registry.ingotcloud.top/amazoncorretto:17
 
 # 数据卷
 VOLUME ["/ingot-data"]
