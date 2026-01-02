@@ -20,8 +20,7 @@ docker run -d --name ${ServiceName} --restart always \
     --network ${DOCKER_NETWORK} --ip ${SERVICE_AUTH_HOST} \
     -e SERVICE_GATEWAY_HOST=${SERVICE_GATEWAY_HOST} \
     -e SERVICE_AUTH_HOST=${SERVICE_AUTH_HOST} \
-    -e NACOS_HOST=${NACOS_HOST} \
-    -e NACOS_PORT=${NACOS_PORT} \
+    -e NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR} \
     -e NACOS_USERNAME=${NACOS_USERNAME} \
     -e NACOS_PASSWORD=${NACOS_PASSWORD} \
     -e REDIS_HOST=${REDIS_HOST} \
