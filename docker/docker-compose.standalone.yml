@@ -6,7 +6,7 @@
 services:
   # ========== Auth 服务 ==========
   ingot-auth:
-    image: ${REGISTRY_URL}/ingot/auth:${VERSION}
+    image: ${REGISTRY_URL}/ingot/auth:${AUTH_VERSION}
     restart: always
     networks:
       - extnet
@@ -29,7 +29,7 @@ services:
 
   # ========== Gateway 服务 ==========
   ingot-gateway:
-    image: ${REGISTRY_URL}/ingot/gateway:${VERSION}
+    image: ${REGISTRY_URL}/ingot/gateway:${GATEWAY_VERSION}
     restart: always
     networks:
       - extnet
@@ -58,7 +58,7 @@ services:
 
   # ========== Member 服务 ==========
   ingot-member:
-    image: ${REGISTRY_URL}/ingot/member:${VERSION}
+    image: ${REGISTRY_URL}/ingot/member:${MEMBER_VERSION}
     restart: always
     networks:
       - extnet
@@ -81,7 +81,7 @@ services:
 
   # ========== PMS 服务 ==========
   ingot-pms:
-    image: ${REGISTRY_URL}/ingot/pms:${VERSION}
+    image: ${REGISTRY_URL}/ingot/pms:${PMS_VERSION}
     restart: always
     networks:
       - extnet
