@@ -196,10 +196,10 @@ deploy_services() {
     fi
 
     log_info "拉取最新镜像..."
-    docker-compose -f "$compose_file" pull
+    docker compose -f "$compose_file" pull
 
     log_info "启动服务..."
-    docker-compose -f "$compose_file" up -d
+    docker compose -f "$compose_file" up -d
 
     echo ""
     log_success "服务部署完成！"
@@ -235,11 +235,11 @@ start_services() {
 
     if [ -n "$service" ]; then
         log_info "启动服务: $service"
-        docker-compose -f "$compose_file" start "$service"
+        docker compose -f "$compose_file" start "$service"
         log_success "服务 $service 已启动"
     else
         log_info "启动所有服务..."
-        docker-compose -f "$compose_file" start
+        docker compose -f "$compose_file" start
         log_success "所有服务已启动"
     fi
 }
@@ -268,11 +268,11 @@ stop_services() {
 
     if [ -n "$service" ]; then
         log_info "停止服务: $service"
-        docker-compose -f "$compose_file" stop "$service"
+        docker compose -f "$compose_file" stop "$service"
         log_success "服务 $service 已停止"
     else
         log_info "停止所有服务..."
-        docker-compose -f "$compose_file" stop
+        docker compose -f "$compose_file" stop
         log_success "所有服务已停止"
     fi
 }
@@ -301,11 +301,11 @@ restart_services() {
 
     if [ -n "$service" ]; then
         log_info "重启服务: $service"
-        docker-compose -f "$compose_file" restart "$service"
+        docker compose -f "$compose_file" restart "$service"
         log_success "服务 $service 已重启"
     else
         log_info "重启所有服务..."
-        docker-compose -f "$compose_file" restart
+        docker compose -f "$compose_file" restart
         log_success "所有服务已重启"
     fi
 }
@@ -318,7 +318,7 @@ show_status() {
     echo ""
 
     if [ -f "$compose_file" ]; then
-        docker-compose -f "$compose_file" ps
+        docker compose -f "$compose_file" ps
     else
         docker ps --filter "name=ingot-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     fi
@@ -344,7 +344,7 @@ show_logs() {
     log_info "查看服务日志: $service"
     check_required_files "$compose_file"
 
-    docker-compose -f "$compose_file" logs -f "$service"
+    docker compose -f "$compose_file" logs -f "$service"
 }
 
 # 查看运行的容器
@@ -355,7 +355,7 @@ show_ps() {
     echo ""
     check_required_files "$compose_file"
 
-    docker-compose -f "$compose_file" ps -a
+    docker compose -f "$compose_file" ps -a
 }
 
 # 停止并移除服务
@@ -365,7 +365,7 @@ down_services() {
     log_info "停止并移除服务..."
     check_required_files "$compose_file"
 
-    docker-compose -f "$compose_file" down
+    docker compose -f "$compose_file" down
     log_success "服务已移除"
 }
 
@@ -385,7 +385,7 @@ clean_services() {
     log_info "清理服务和数据..."
     check_required_files "$compose_file"
 
-    docker-compose -f "$compose_file" down -v
+    docker compose -f "$compose_file" down -v
     log_success "服务和数据已清理"
 }
 
