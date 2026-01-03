@@ -1,0 +1,110 @@
+# ====================================
+# Ingot Cloud 微服务 Docker Compose
+# 单机部署
+# ====================================
+
+services:
+  # ========== Auth 服务 ==========
+  ingot-auth:
+    image: ${REGISTRY_URL}/ingot/auth:${VERSION}
+    restart: always
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/auth.env      # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5100
+      - MANAGEMENT_PORT=6100
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    mem_limit: ${AUTH_MEMORY:-2g}
+    cpus: ${AUTH_CPUS:-1}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6100/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== Gateway 服务 ==========
+  ingot-gateway:
+    image: ${REGISTRY_URL}/ingot/gateway:${VERSION}
+    restart: always
+    networks:
+      - extnet
+    ports:
+      - target: 7980
+        published: ${GATEWAY_PORT}
+    env_file:
+      - ./services-env/gateway.env   # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=7980
+      - MANAGEMENT_PORT=8980
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_PORT=7980
+      - LETSENCRYPT_HOST=${VIRTUAL_HOST}
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    mem_limit: ${GATEWAY_MEMORY:-2g}
+    cpus: ${GATEWAY_CPUS:-1}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8980/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== Member 服务 ==========
+  ingot-member:
+    image: ${REGISTRY_URL}/ingot/member:${VERSION}
+    restart: always
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/member.env    # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5300
+      - MANAGEMENT_PORT=6300
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    mem_limit: ${MEMBER_MEMORY:-2g}
+    cpus: ${MEMBER_CPUS:-2}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6300/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== PMS 服务 ==========
+  ingot-pms:
+    image: ${REGISTRY_URL}/ingot/pms:${VERSION}
+    restart: always
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/pms.env       # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5200
+      - MANAGEMENT_PORT=6200
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    mem_limit: ${PMS_MEMORY:-2g}
+    cpus: ${PMS_CPUS:-2}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6200/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+# ========== 网络配置 ==========
+networks:
+  extnet:
+    name: ingot-net
+    external: true
+

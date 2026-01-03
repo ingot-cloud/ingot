@@ -1,0 +1,190 @@
+# ====================================
+# Ingot Cloud 微服务 Docker Compose
+# Docker Swarm部署
+# ====================================
+
+services:
+  # ========== Auth 服务 ==========
+  ingot-auth:
+    image: ${REGISTRY_URL}/ingot/auth:${VERSION}
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/auth.env      # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5100
+      - MANAGEMENT_PORT=6100
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    deploy:
+      mode: replicated
+      replicas: ${AUTH_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '${AUTH_CPUS:-2}'
+          memory: ${AUTH_MEMORY:-3g}
+        reservations:
+          cpus: '1'
+          memory: 2g
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6100/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== Gateway 服务 ==========
+  ingot-gateway:
+    image: ${REGISTRY_URL}/ingot/gateway:${VERSION}
+    networks:
+      - extnet
+    ports:
+      - target: 7980
+        published: ${GATEWAY_PORT:-7980}
+        protocol: tcp
+        mode: ingress
+    env_file:
+      - ./services-env/gateway.env   # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=7980
+      - MANAGEMENT_PORT=8980
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_PORT=7980
+      - LETSENCRYPT_HOST=${VIRTUAL_HOST}
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    deploy:
+      mode: replicated
+      replicas: ${GATEWAY_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '${GATEWAY_CPUS:-1.5}'
+          memory: ${GATEWAY_MEMORY:-2.5g}
+        reservations:
+          cpus: '1'
+          memory: 2g
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.gateway.rule=Host(`${VIRTUAL_HOST}`)"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8980/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== Member 服务 ==========
+  ingot-member:
+    image: ${REGISTRY_URL}/ingot/member:${VERSION}
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/member.env    # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5300
+      - MANAGEMENT_PORT=6300
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    deploy:
+      mode: replicated
+      replicas: ${MEMBER_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '${MEMBER_CPUS:-2}'
+          memory: ${MEMBER_MEMORY:-3g}
+        reservations:
+          cpus: '1'
+          memory: 2g
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6300/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ========== PMS 服务 ==========
+  ingot-pms:
+    image: ${REGISTRY_URL}/ingot/pms:${VERSION}
+    networks:
+      - extnet
+    env_file:
+      - ./services-env/pms.env       # 服务专用环境变量
+      - ./services-env/common.env    # 公共环境变量
+    environment:
+      - SERVER_PORT=5200
+      - MANAGEMENT_PORT=6200
+    volumes:
+      - ${DOCKER_VOLUME}:/ingot-data
+    deploy:
+      mode: replicated
+      replicas: ${PMS_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '${PMS_CPUS:-2}'
+          memory: ${PMS_MEMORY:-3g}
+        reservations:
+          cpus: '1'
+          memory: 2g
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6200/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+# ========== 网络配置 ==========
+networks:
+  extnet:
+    name: ingot-overlay
+    external: true
