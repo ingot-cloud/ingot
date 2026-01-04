@@ -121,6 +121,9 @@ ensure_mount_dir() {
     mkdir -p ${WORK_DIR}/redis/data
     mkdir -p ${WORK_DIR}/redis/conf
     cp ./redis/redis.conf ${WORK_DIR}/redis/conf/redis.conf
+
+    # Minio
+    mkdir -p ${WORK_DIR}/minio/data
 }
 
 # 检查环境变量文件

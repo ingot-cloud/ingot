@@ -33,6 +33,24 @@ services:
       - ${WORK_DIR}/redis/data:/data
       - ${WORK_DIR}/redis/conf/redis.conf:/etc/redis/redis.conf
 
+  # ========== Minio 服务 ==========
+  minio-11:
+    image: ${MINIO_IMAGE}:${MINIO_VERSION}
+    restart: always
+    command: ["server", "/data", "--console-address", ':5001', '-address', ':9000']
+    networks:
+      - extnet
+    ports:
+      - target: 5001
+        published: ${MINIO_CONSOLE_PORT:-5001}
+      - target: 9000
+        published: ${MINIO_API_PORT:-9000}
+    volumes:
+      - ${WORK_DIR}/minio/data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+
 # ========== 网络配置 ==========
 networks:
   extnet:
