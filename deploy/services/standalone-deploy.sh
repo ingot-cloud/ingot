@@ -189,9 +189,12 @@ deploy_services() {
         echo ""
         log_info "当前配置："
         echo "  - 镜像仓库: ${REGISTRY_URL:-docker-registry.ingotcloud.top}"
-        echo "  - 版本: ${VERSION:-0.1.0}"
-        echo "  - Gateway端口: ${GATEWAY_PORT:-7980}"
         echo "  - 数据卷: ${DOCKER_VOLUME:-/ingot-data}"
+        echo "  - Gateway版本: ${GATEWAY_VERSION:-0.1.0}"
+        echo "  - Gateway端口: ${GATEWAY_PORT:-7980}"
+        echo "  - Auth版本: ${AUTH_VERSION:-0.1.0}"
+        echo "  - PMS版本: ${PMS_VERSION:-0.1.0}"
+        echo "  - Member版本: ${MEMBER_VERSION:-0.1.0}"
         echo ""
     fi
 
