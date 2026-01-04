@@ -34,7 +34,7 @@ services:
       - ${WORK_DIR}/redis/conf/redis.conf:/etc/redis/redis.conf
 
   # ========== Minio 服务 ==========
-  minio-11:
+  minio:
     image: ${MINIO_IMAGE}:${MINIO_VERSION}
     restart: always
     command: ["server", "/data", "--console-address", ':5001', '-address', ':9000']
@@ -50,6 +50,28 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+
+  # ========== Nacos 服务 ==========
+  nacos:
+    image: ${NACOS_IMAGE}:${NACOS_VERSION}
+    restart: always
+    networks:
+      - extnet
+    ports:
+      - target: 8080
+        published: ${NACOS_CONSOLE_PORT:-8181}
+      - target: 8848
+        published: ${NACOS_SERVER_PORT:-8848}
+      - target: 9848
+        published: ${NACOS_GRPC_CLIENT_PORT:-9848}
+      - target: 9849
+        published: ${NACOS_GRPC_SERVER_PORT:-9849}
+    volumes:
+      - ${WORK_DIR}/nacos/logs:/home/nacos/logs
+    environment:
+      - NACOS_SERVER_PORT=${NACOS_SERVER_PORT}
+    env_file:
+      - nacos/standalone.env
 
 # ========== 网络配置 ==========
 networks:

@@ -124,6 +124,9 @@ ensure_mount_dir() {
 
     # Minio
     mkdir -p ${WORK_DIR}/minio/data
+
+    # Nacos
+    mkdir -p ${WORK_DIR}/nacos/logs
 }
 
 # 检查环境变量文件
