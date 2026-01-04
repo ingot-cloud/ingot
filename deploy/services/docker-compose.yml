@@ -10,8 +10,8 @@ services:
     networks:
       - extnet
     env_file:
-      - ./services-env/auth.env      # 服务专用环境变量
-      - ./services-env/common.env    # 公共环境变量
+      - services-env/auth.env      # 服务专用环境变量
+      - services-env/common.env    # 公共环境变量
     environment:
       - SERVER_PORT=5100
       - MANAGEMENT_PORT=6100
@@ -57,8 +57,8 @@ services:
         protocol: tcp
         mode: ingress
     env_file:
-      - ./services-env/gateway.env   # 服务专用环境变量
-      - ./services-env/common.env    # 公共环境变量
+      - services-env/gateway.env   # 服务专用环境变量
+      - services-env/common.env    # 公共环境变量
     environment:
       - SERVER_PORT=7980
       - MANAGEMENT_PORT=8980
@@ -105,8 +105,8 @@ services:
     networks:
       - extnet
     env_file:
-      - ./services-env/member.env    # 服务专用环境变量
-      - ./services-env/common.env    # 公共环境变量
+      - services-env/member.env    # 服务专用环境变量
+      - services-env/common.env    # 公共环境变量
     environment:
       - SERVER_PORT=5300
       - MANAGEMENT_PORT=6300
@@ -147,8 +147,8 @@ services:
     networks:
       - extnet
     env_file:
-      - ./services-env/pms.env       # 服务专用环境变量
-      - ./services-env/common.env    # 公共环境变量
+      - services-env/pms.env       # 服务专用环境变量
+      - services-env/common.env    # 公共环境变量
     environment:
       - SERVER_PORT=5200
       - MANAGEMENT_PORT=6200
