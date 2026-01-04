@@ -54,10 +54,9 @@ Docker Compose 单机部署脚本
     help                               显示此帮助信息
 
 可用服务名称：
-    ingot-auth      # Auth 服务
-    ingot-gateway   # Gateway 服务
-    ingot-member    # Member 服务
-    ingot-pms       # PMS 服务
+    mysql-db      # MySQL 服务
+    redis         # Redis 服务
+    nacos         # Nacos 服务
 
 示例：
     # ========== 网络管理 ==========
@@ -75,42 +74,53 @@ Docker Compose 单机部署脚本
     # 启动所有服务
     $0 start
 
-    # 启动单个服务（Gateway）
-    $0 start ingot-gateway
+    # 启动单个服务（MySQL）
+    $0 start mysql-db
 
     # ========== 服务停止 ==========
     # 停止所有服务
     $0 stop
 
-    # 停止单个服务（Auth）
-    $0 stop ingot-auth
+    # 停止单个服务（Redis）
+    $0 stop redis
 
     # ========== 服务重启 ==========
     # 重启所有服务
     $0 restart
 
-    # 重启单个服务（Member）
-    $0 restart ingot-member
+    # 重启单个服务（Nacos）
+    $0 restart nacos
 
     # ========== 状态查看 ==========
     # 查看服务状态
     $0 status
 
     # 查看Gateway日志
-    $0 logs ingot-gateway
+    $0 logs nacos
 
     # ========== 清理 ==========
     # 清理所有服务和数据
     $0 clean
 
 环境变量配置：
-    1. 复制环境变量模板：
-       cp env-templates/env.8c16g.template .env
+    1. 编辑 .env 文件，修改配置参数
 
-    2. 编辑 .env 文件，修改配置参数
-
-    3. 运行部署命令
+    2. 运行部署命令
 EOF
+}
+
+# 确保挂载目录存在
+ensure_mount_dir() {
+    source ./.env
+    # MySQL
+    mkdir -p ${WORK_DIR}/mysql/data
+    mkdir -p ${WORK_DIR}/mysql/init
+    cp ./mysql/* ${WORK_DIR}/mysql/init/
+
+    # Redis
+    mkdir -p ${WORK_DIR}/redis/data
+    mkdir -p ${WORK_DIR}/redis/conf
+    cp ./redis/redis.conf ${WORK_DIR}/redis/conf/redis.conf
 }
 
 # 检查环境变量文件
@@ -136,11 +146,6 @@ check_required_files() {
 
     if [ ! -f "$compose_file" ]; then
         log_error "配置文件 $compose_file 不存在"
-        exit 1
-    fi
-
-    if [ ! -d "services-env" ]; then
-        log_error "services-env 目录不存在"
         exit 1
     fi
 
@@ -179,6 +184,8 @@ deploy_services() {
     log_info "开始部署 Ingot Cloud 服务..."
     log_info "使用配置文件: $compose_file"
 
+    ensure_mount_dir
+
     check_env_file
     check_required_files "$compose_file"
     create_network
@@ -189,12 +196,9 @@ deploy_services() {
         echo ""
         log_info "当前配置："
         echo "  - 镜像仓库: ${REGISTRY_URL:-docker-registry.ingotcloud.top}"
+        echo "  - Redis版本: ${REDIS_VERSION}"
+        echo "  - MySQL版本: ${MYSQL_VERSION}"
         echo "  - 数据卷: ${DOCKER_VOLUME:-/ingot-data}"
-        echo "  - Gateway版本: ${GATEWAY_VERSION:-0.1.0}"
-        echo "  - Gateway端口: ${GATEWAY_PORT:-7980}"
-        echo "  - Auth版本: ${AUTH_VERSION:-0.1.0}"
-        echo "  - PMS版本: ${PMS_VERSION:-0.1.0}"
-        echo "  - Member版本: ${MEMBER_VERSION:-0.1.0}"
         echo ""
     fi
 
@@ -216,6 +220,8 @@ deploy_services() {
 
 # 启动服务
 start_services() {
+    ensure_mount_dir
+
     local service=""
     local compose_file="docker-compose.standalone.yml"
 
@@ -282,6 +288,8 @@ stop_services() {
 
 # 重启服务
 restart_services() {
+    ensure_mount_dir
+
     local service=""
     local compose_file="docker-compose.standalone.yml"
 

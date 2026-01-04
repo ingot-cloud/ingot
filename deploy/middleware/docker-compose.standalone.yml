@@ -1,0 +1,40 @@
+# ====================================
+# MySQL & Redis
+# ====================================
+
+services:
+  # ========== MySQL 服务 ==========
+  mysql-db:
+    image: ${MYSQL_IMAGE}:${MYSQL_VERSION:-8.0.44}
+    restart: always
+    networks:
+      - extnet
+    ports:
+      - target: 3306
+        published: ${MYSQL_PORT:-3306}
+    environment:
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ${WORK_DIR}/mysql/data:/var/lib/mysql
+      - ${WORK_DIR}/mysql/init:/docker-entrypoint-initdb.d
+
+  # ========== Redis 服务 ==========
+  redis:
+    image: ${REDIS_IMAGE}:${REDIS_VERSION:-8.2.0}
+    restart: always
+    command: ["redis-server", "/etc/redis/redis.conf", "--appendonly", "yes"]
+    networks:
+      - extnet
+    ports:
+      - target: 6379
+        published: ${REDIS_PORT:-6379}
+    volumes:
+      - ${WORK_DIR}/redis/data:/data
+      - ${WORK_DIR}/redis/conf/redis.conf:/etc/redis/redis.conf
+
+# ========== 网络配置 ==========
+networks:
+  extnet:
+    name: ${DOCKER_NETWORK}
+    external: true
