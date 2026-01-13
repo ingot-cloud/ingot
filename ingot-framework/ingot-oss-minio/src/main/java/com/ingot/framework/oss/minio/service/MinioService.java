@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import com.ingot.framework.oss.common.S3Client;
 import com.ingot.framework.oss.minio.common.MinioItem;
 import io.minio.*;
 import io.minio.http.Method;
@@ -22,22 +23,27 @@ import org.springframework.util.Assert;
  * <p>Time         : 14:34.</p>
  */
 @RequiredArgsConstructor
-public class MinioService implements InitializingBean {
+public class MinioService implements S3Client, InitializingBean {
     private final String endpoint;
     private final String accessKey;
     private final String secretKey;
     private MinioClient client;
 
-    /**
-     * 创建bucket
-     *
-     * @param bucketName bucket名称
-     */
+    @Override
     public void createBucket(String bucketName) {
         try {
             if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean bucketExists(String bucketName) {
+        try {
+            return client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -67,9 +73,7 @@ public class MinioService implements InitializingBean {
         }
     }
 
-    /**
-     * @param bucketName bucket名称
-     */
+    @Override
     public void removeBucket(String bucketName) {
         try {
             client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -102,16 +106,8 @@ public class MinioService implements InitializingBean {
         return objectList;
     }
 
-    /**
-     * 获取文件外链
-     *
-     * @param bucketName bucket名称
-     * @param objectName 文件名称
-     * @param duration   过期时间
-     * @param unit       单位
-     * @return url
-     */
-    public String getObjectURL(String bucketName, String objectName, int duration, TimeUnit unit) {
+    @Override
+    public String getPresignedObjectUrl(String bucketName, String objectName, int duration, TimeUnit unit) {
         try {
             return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
@@ -123,12 +119,19 @@ public class MinioService implements InitializingBean {
     }
 
     /**
-     * 获取文件
+     * 获取文件外链（兼容旧方法名）
      *
      * @param bucketName bucket名称
      * @param objectName 文件名称
-     * @return 二进制流
+     * @param duration   过期时间
+     * @param unit       单位
+     * @return url
      */
+    public String getObjectURL(String bucketName, String objectName, int duration, TimeUnit unit) {
+        return getPresignedObjectUrl(bucketName, objectName, duration, unit);
+    }
+
+    @Override
     public InputStream getObject(String bucketName, String objectName) {
         try {
             return client.getObject(GetObjectArgs.builder()
@@ -138,14 +141,7 @@ public class MinioService implements InitializingBean {
         }
     }
 
-    /**
-     * 上传文件
-     *
-     * @param bucketName bucket名称
-     * @param objectName 文件名称
-     * @param stream     文件流
-     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#putObject">putObject</a>
-     */
+    @Override
     public void putObject(String bucketName, String objectName, InputStream stream) throws Exception {
         client.putObject(PutObjectArgs.builder()
                 .bucket(bucketName)
@@ -154,22 +150,13 @@ public class MinioService implements InitializingBean {
                 .contentType("application/octet-stream").build());
     }
 
-    /**
-     * 上传文件
-     *
-     * @param bucketName  bucket名称
-     * @param objectName  文件名称
-     * @param stream      文件流
-     * @param size        大小
-     * @param contextType 类型
-     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#putObject">putObject</a>
-     */
-    public void putObject(String bucketName, String objectName, InputStream stream, long size, String contextType) throws Exception {
+    @Override
+    public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType) throws Exception {
         client.putObject(PutObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .stream(stream, size, -1)
-                .contentType(contextType).build());
+                .contentType(contentType).build());
     }
 
     /**
@@ -184,13 +171,7 @@ public class MinioService implements InitializingBean {
                 .bucket(bucketName).object(objectName).build());
     }
 
-    /**
-     * 删除文件
-     *
-     * @param bucketName bucket名称
-     * @param objectName 文件名称
-     * @throws Exception <a href="https://docs.minio.io/cn/java-client-api-reference.html#removeObject">removeObject</a>
-     */
+    @Override
     public void removeObject(String bucketName, String objectName) throws Exception {
         client.removeObject(RemoveObjectArgs.builder()
                 .bucket(bucketName).object(objectName).build());

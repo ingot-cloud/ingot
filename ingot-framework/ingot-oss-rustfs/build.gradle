@@ -1,0 +1,12 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation project(ingot.framework_core)
+    implementation(deps.amazon_awssdk)
+
+    api project(ingot.framework_oss_common)
+
+    compileOnly(deps.jakarta_servlet_api)
+    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
+    compileOnly(deps.spring.framework_spring_web)
+}
