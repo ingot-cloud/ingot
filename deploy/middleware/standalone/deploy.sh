@@ -127,6 +127,9 @@ ensure_mount_dir() {
 
     # Nacos
     mkdir -p ${WORK_DIR}/nacos/logs
+
+    # XXL Job
+    mkdir -p ${WORK_DIR}/xxl-job/logs
 }
 
 # 检查环境变量文件

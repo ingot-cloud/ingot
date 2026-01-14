@@ -73,6 +73,24 @@ services:
     env_file:
       - nacos/standalone.env
 
+  # ========== XXL JOB 服务 ==========
+  xxl-job-admin:
+    image: ${XXL_JOB_IMAGE}:${XXL_JOB_VERSION:-3.3.2}
+    restart: always
+    networks:
+      - extnet
+    ports:
+      - target: 8080
+        published: ${XXL_JOB_PORT:-8282}
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:mysql://${XXL_JOB_MYSQL_HOST}:${XXL_JOB_MYSQL_PORT}/${XXL_JOB_MYSQL_DATABASE}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+        --spring.datasource.username=${XXL_JOB_MYSQL_USER} 
+        --spring.datasource.password=${XXL_JOB_MYSQL_PASSWORD}
+        --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN}
+    volumes:
+      - ${WORK_DIR}/xxl-job/logs:/data/applogs
+
 # ========== 网络配置 ==========
 networks:
   extnet:
