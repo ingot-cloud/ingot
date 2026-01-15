@@ -218,7 +218,7 @@ ingot:
 
 ## 相关文档
 
-- [Spring 实现文档](../ingot-tss-spring/README.md)
-- [XXL-Job 实现文档](../ingot-tss-xxljob/README.md)
-- [使用示例](../../docs/tss-usage-example.md)
-- [架构设计](../../docs/tss-architecture.md)
+- [Spring 实现文档](../../ingot-tss-spring/README.md)
+- [XXL-Job 实现文档](../../ingot-tss-xxljob/README.md)
+- [使用示例](../../../docs/tss-usage-example.md)
+- [架构设计](../../../docs/tss-architecture.md)

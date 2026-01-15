@@ -208,14 +208,14 @@ ingot:
 
 ## 更多资源
 
-- [完整架构设计](../../docs/tss-architecture.md)
-- [详细使用示例](../../docs/tss-usage-example.md)
-- [Spring 实现文档](../ingot-tss-spring/README.md)
-- [XXL-Job 实现文档](../ingot-tss-xxljob/README.md)
+- [完整架构设计](../../../docs/tss-architecture.md)
+- [详细使用示例](../../../docs/tss-usage-example.md)
+- [Spring 实现文档](../../ingot-tss-spring/README.md)
+- [XXL-Job 实现文档](../../ingot-tss-xxljob/README.md)
 
 ## 获取帮助
 
 如有问题，请查看：
-- [架构文档](../../docs/tss-architecture.md)
+- [架构文档](../../../docs/tss-architecture.md)
 - 项目 README
 - 或联系开发团队

@@ -345,5 +345,5 @@ ingot:
 - [Common 抽象层](../ingot-tss-common/README.md)
 - [Spring 实现](../ingot-tss-spring/README.md)
 - [XXL-Job 官方文档](https://www.xuxueli.com/xxl-job/)
-- [使用示例](../../docs/tss-usage-example.md)
-- [架构设计](../../docs/tss-architecture.md)
+- [使用示例](../../../docs/tss-usage-example.md)
+- [架构设计](../../../docs/tss-architecture.md)

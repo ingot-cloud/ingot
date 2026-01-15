@@ -210,10 +210,10 @@ ingot:
 
 ## 更多资源
 
-- [完整架构设计](../../docs/oss-architecture.md)
-- [详细使用示例](../../docs/oss-usage-example.md)
-- [迁移指南](../../docs/oss-migration-guide.md)
-- [重构总结](../../docs/oss-refactoring-summary.md)
+- [完整架构设计](../../../docs/oss-architecture.md)
+- [详细使用示例](../../../docs/oss-usage-example.md)
+- [迁移指南](../../../docs/oss-migration-guide.md)
+- [重构总结](../../../docs/oss-refactoring-summary.md)
 
 ## 常用 API
 
@@ -271,6 +271,6 @@ void removeObject(String bucketName, String objectName)
 ## 获取帮助
 
 如有问题，请查看：
-- [FAQ](../../docs/oss-architecture.md#故障排查)
+- [FAQ](../../../docs/oss-architecture.md#故障排查)
 - 项目文档
 - 或联系开发团队

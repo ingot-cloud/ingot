@@ -254,6 +254,6 @@ ingot:
 ## 相关文档
 
 - [Common 抽象层](../ingot-tss-common/README.md)
-- [XXL-Job 实现](../ingot-tss-xxljob/README.md)
-- [使用示例](../../docs/tss-usage-example.md)
-- [架构设计](../../docs/tss-architecture.md)
+- [XXL-Job 实现](../../ingot-tss-xxljob/README.md)
+- [使用示例](../../../docs/tss-usage-example.md)
+- [架构设计](../../../docs/tss-architecture.md)
