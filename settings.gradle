@@ -43,6 +43,12 @@ include 'ingot-framework:ingot-social-common'
 findProject(':ingot-framework:ingot-social-common')?.name = 'ingot-social-common'
 include 'ingot-framework:ingot-social-wechat'
 findProject(':ingot-framework:ingot-social-wechat')?.name = 'ingot-social-wechat'
+include 'ingot-framework:ingot-tss-common'
+findProject(':ingot-framework:ingot-tss-common')?.name = 'ingot-tss-common'
+include 'ingot-framework:ingot-tss-spring'
+findProject(':ingot-framework:ingot-tss-spring')?.name = 'ingot-tss-spring'
+include 'ingot-framework:ingot-tss-xxljob'
+findProject(':ingot-framework:ingot-tss-xxljob')?.name = 'ingot-tss-xxljob'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'

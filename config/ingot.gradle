@@ -22,6 +22,9 @@ ingot.framework_crypto = ":ingot-framework:ingot-crypto"
 ingot.framework_openapi = ":ingot-framework:ingot-openapi"
 ingot.framework_social_common = ":ingot-framework:ingot-social-common"
 ingot.framework_social_wechat = ":ingot-framework:ingot-social-wechat"
+ingot.framework_tss_common = ":ingot-framework:ingot-tss-common"
+ingot.framework_tss_spring = ":ingot-framework:ingot-tss-spring"
+ingot.framework_tss_xxljob = ":ingot-framework:ingot-tss-xxljob"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
