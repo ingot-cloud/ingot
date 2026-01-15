@@ -40,7 +40,7 @@ ingot:
         address:   # 执行器地址（可选，自动注册）
         ip:        # 执行器IP（可选）
         port: 9999 # 执行器端口
-        log-path: ./logs/xxl-job
+        log-path: /ingot-data/xxl-job
         log-retention-days: 30
 ```
 
