@@ -44,18 +44,26 @@ ingot:
         log-retention-days: 30
 ```
 
+## 重要说明
+
+**每个 @ScheduledTask 任务会自动注册为独立的 XXL-Job Handler**
+
+- Handler 名称 = 任务名称（@ScheduledTask 的 name 属性）
+- 在 XXL-Job Admin 中，JobHandler 直接填写任务名称
+- 参数通过 Admin 的"任务参数"功能传递
+
 ## 使用方式
 
 ### 方式1：使用 @ScheduledTask 注解（推荐）
 
-业务代码使用抽象层注解，框架自动注册到 XXL-Job：
+业务代码使用抽象层注解，框架自动为每个任务创建独立的 XXL-Job Handler：
 
 ```java
 @Service
 public class OrderTask {
     
     @ScheduledTask(
-        name = "order-cleanup-task",      // JobHandler 名称
+        name = "order-cleanup-task",      // 任务名称 = Handler 名称
         description = "订单清理任务"
     )
     public TaskResult cleanupOrders(TaskContext context) {
@@ -86,19 +94,27 @@ public class OrderTask {
 }
 ```
 
-在 XXL-Job Admin 中配置：
+**在 XXL-Job Admin 中配置：**
 
-**任务1：**
-- 执行器：选择你的应用名称
-- JobHandler：`order-cleanup-task`
+**任务1：订单清理**
+- 执行器：选择你的应用名称（如：pms-service）
+- **JobHandler：`order-cleanup-task`**（与代码中的 name 一致）
+- **任务参数：**（可选，如果需要传参数）
 - Cron：`0 0 2 * * ?`（每天凌晨2点）
 - 运行模式：BEAN
-- 路由策略：分片广播（如需分片）
+- 路由策略：第一个（单机）或分片广播（分片）
 
-**任务2：**
-- JobHandler：`order-sync-task`
+**任务2：订单同步**
+- 执行器：选择你的应用名称
+- **JobHandler：`order-sync-task`**（与代码中的 name 一致）
+- **任务参数：`{"type": "daily"}`**（可选参数，JSON 格式）
 - Cron：`0 */10 * * * ?`（每10分钟）
 - 运行模式：BEAN
+
+> ⚠️ **关键点：**
+> - **JobHandler 填写任务名称**（与代码中 @ScheduledTask 的 name 属性一致）
+> - **每个任务都是独立的 Handler**，灵活性最高
+> - **参数通过"任务参数"字段传递**，不是放在 JobHandler 里
 
 ### 方式2：使用原生 @XxlJob 注解
 
@@ -128,9 +144,12 @@ public class ReportTask {
 ```
 
 在 XXL-Job Admin 中配置：
-- JobHandler：`reportGenerateHandler`
+- JobHandler：`reportGenerateHandler`（原生注解的名称）
+- 任务参数：可选参数
 - Cron：`0 0 1 * * ?`
 - 运行模式：BEAN
+
+> 注意：使用原生 @XxlJob 注解时，JobHandler 填写注解中定义的名称，参数通过 XxlJobHelper.getJobParam() 获取
 
 ### 方式3：GLUE 模式
 
@@ -179,10 +198,21 @@ public class TaskService {
 }
 ```
 
-在 XXL-Job Admin 中会看到：
-- `task1` - BEAN模式（通过抽象层注册）
-- `task2Handler` - BEAN模式（原生注册）
-- `glueTask` - GLUE模式（后台编写）
+在 XXL-Job Admin 中配置：
+- `task1` - JobHandler: `task1`（抽象层，独立 Handler）
+- `task2Handler` - JobHandler: `task2Handler`（原生注解名）
+- `glueTask` - GLUE 模式（后台编写，无需代码）
+
+**参数传递示例：**
+```
+任务1：
+- JobHandler: task1
+- 任务参数: {"param1": "value1"}
+
+任务2（原生）：
+- JobHandler: task2Handler  
+- 任务参数: some-param-value
+```
 
 ## 高级特性
 

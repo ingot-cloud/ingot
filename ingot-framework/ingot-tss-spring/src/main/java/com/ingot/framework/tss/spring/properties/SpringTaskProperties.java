@@ -4,22 +4,24 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * <p>Description  : SpringTaskProperties.</p>
+ * <p>Description  : Spring 任务调度配置属性.</p>
  * <p>Author       : jy.</p>
- * <p>Date         : 2026/1/14.</p>
- * <p>Time         : 18:02.</p>
+ * <p>Date         : 2026/1/13.</p>
+ * <p>Time         : 10:00.</p>
  */
 @Data
 @ConfigurationProperties(prefix = "ingot.tss.spring")
 public class SpringTaskProperties {
+
     /**
      * 线程池配置
      */
-    private ThreadPool threadPool;
+    private ThreadPool threadPool = new ThreadPool();
+
     /**
-     * 最大历史记录条数
+     * 执行历史最大保留数量
      */
-    private int maxHistorySize = 100;
+    private int maxHistorySize = 1000;
 
     @Data
     public static class ThreadPool {
@@ -27,16 +29,19 @@ public class SpringTaskProperties {
          * 线程池大小
          */
         private int size = 10;
+
         /**
-         * 执行器前缀
+         * 线程名称前缀
          */
         private String threadNamePrefix = "tss-task-";
+
         /**
-         * 设置此执行器在关闭时应该阻塞的最大秒数
+         * 等待终止时间（秒）
          */
         private int awaitTerminationSeconds = 60;
+
         /**
-         * 设置是否在关机时等待计划任务完成，不中断正在运行的任务，并执行队列中的所有任务。
+         * 关闭时是否等待任务完成
          */
         private boolean waitForTasksToCompleteOnShutdown = true;
     }

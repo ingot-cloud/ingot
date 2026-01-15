@@ -37,7 +37,7 @@ public class XxlJobTaskAutoConfiguration {
         return new DefaultTaskRegistry();
     }
     
-    @Bean
+    @Bean(initMethod = "start", destroyMethod = "destroy")
     @ConditionalOnMissingBean(XxlJobSpringExecutor.class)
     public XxlJobSpringExecutor xxlJobExecutor(XxlJobTaskProperties properties) {
         log.info("初始化 XXL-Job 执行器");

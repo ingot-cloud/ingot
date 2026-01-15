@@ -76,9 +76,10 @@ public class MyFirstTask {
 **Spring 环境：** 任务会自动按 Cron 执行
 
 **XXL-Job 环境：** 需要在 Admin 中配置任务
-- JobHandler: `ingotTaskHandler`
-- 任务参数: `hello-world-task`
+- JobHandler: `hello-world-task`（任务名称）
+- 任务参数: 可选参数（如需传参）
 - Cron: `0 */1 * * * ?`
+- 运行模式: BEAN
 
 ### 5. 查看日志
 
@@ -107,10 +108,16 @@ public TaskResult cleanup(TaskContext context) {
 }
 ```
 
-手动触发时传递参数：
+**传递参数方式：**
+
+**代码触发：**
 ```java
 taskManagement.triggerTask("cleanup-task", "{\"days\": 30}");
 ```
+
+**XXL-Job Admin 配置：**
+- JobHandler: `cleanup-task`
+- 任务参数: `{"days": 30}`（在这里填写参数）
 
 ### 2. 使用接口方式
 
@@ -181,6 +188,10 @@ ingot:
 ```
 
 **步骤3：** 在 XXL-Job Admin 中配置任务
+- JobHandler: 填写任务名称（与代码中 @ScheduledTask 的 name 一致）
+- 任务参数: 填写业务参数（可选）
+- Cron: 配置执行时间
+- 运行模式: BEAN
 
 **业务代码完全不用改！** ✅
 
