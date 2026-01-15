@@ -1,0 +1,16 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    // 依赖 common 模块
+    api project(ingot.framework_tss_common)
+    
+    // 依赖 core 模块（包含 slf4j）
+    implementation project(ingot.framework_core)
+    
+    // Spring 相关依赖
+    implementation(deps.spring.framework_context)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    
+    // Servlet API（可选）
+    compileOnly(deps.jakarta_servlet_api)
+}

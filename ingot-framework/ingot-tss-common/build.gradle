@@ -1,0 +1,9 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    // Spring 自动配置（可选依赖）
+    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
+    
+    // Jakarta Servlet API（用于 HttpServletResponse）
+    compileOnly(deps.jakarta_servlet_api)
+}
