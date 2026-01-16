@@ -278,6 +278,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      * @param limit    数量
      * @return 用户ID列表
      */
+    @Override
     public List<Long> getOnlineUsers(Long tenantId, String clientId, long offset, long limit) {
         String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
 
@@ -312,6 +313,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      * @param clientId 客户端ID
      * @return 在线用户数
      */
+    @Override
     public long getOnlineUserCount(Long tenantId, String clientId) {
         String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
 
@@ -328,6 +330,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      * @param clientId 客户端ID
      * @return 清理的用户数
      */
+    @Override
     public long cleanExpiredOnlineUsers(Long tenantId, String clientId) {
         String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
 
@@ -348,6 +351,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      *
      * @return 清理的总用户数
      */
+    @Override
     public long cleanAllExpiredOnlineUsers() {
         // 扫描所有 online:user:* 的 key
         Set<String> keys = redisTemplate.keys(ONLINE_USER_PREFIX + "*");
@@ -380,6 +384,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
      * @param clientId 客户端ID
      * @return Token列表
      */
+    @Override
     public List<OnlineToken> getUserAllTokens(Long userId, Long tenantId, String clientId) {
         String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(userId, tenantId, clientId);
         Set<Object> jtis = redisTemplate.opsForSet().members(userSetKey);

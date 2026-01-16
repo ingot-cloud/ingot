@@ -13,6 +13,7 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_tenant)
     implementation project(ingot.framework_openapi)
+    implementation project(ingot.framework_tss_spring)
 
     implementation project(ingot.pms_api)
     implementation project(ingot.member_api)
