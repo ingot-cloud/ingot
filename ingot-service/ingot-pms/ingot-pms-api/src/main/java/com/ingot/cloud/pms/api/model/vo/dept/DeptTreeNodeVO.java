@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptTreeNodeVO extends TreeNode<Long> {
+public class DeptTreeNodeVO extends TreeNode<Long, DeptTreeNodeVO> {
 
     /**
      * 部门名称

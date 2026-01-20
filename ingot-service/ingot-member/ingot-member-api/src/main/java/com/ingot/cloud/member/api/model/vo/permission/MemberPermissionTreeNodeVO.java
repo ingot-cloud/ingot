@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "会员权限树节点VO")
-public class MemberPermissionTreeNodeVO extends TreeNode<Long> {
+public class MemberPermissionTreeNodeVO extends TreeNode<Long, MemberPermissionTreeNodeVO> {
     /**
      * 权限名称
      */

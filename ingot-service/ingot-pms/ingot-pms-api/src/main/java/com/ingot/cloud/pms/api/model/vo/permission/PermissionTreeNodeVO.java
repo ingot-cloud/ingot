@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class PermissionTreeNodeVO extends TreeNode<Long> implements PermissionType {
+public class PermissionTreeNodeVO extends TreeNode<Long, PermissionTreeNodeVO> implements PermissionType {
 
     /**
      * 权限名称

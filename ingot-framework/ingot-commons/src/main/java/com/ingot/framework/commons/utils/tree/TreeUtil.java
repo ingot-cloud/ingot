@@ -15,7 +15,7 @@ import com.ingot.framework.commons.constants.IDConstants;
  */
 public class TreeUtil {
 
-    public static <T extends TreeNode<Long>> List<T> build(List<T> all) {
+    public static <T extends TreeNode<Long, T>> List<T> build(List<T> all) {
         return build(all, IDConstants.ROOT_TREE_ID);
     }
 
@@ -27,7 +27,7 @@ public class TreeUtil {
      * @param <T>    子类型
      * @return 树节点列表
      */
-    public static <ID, T extends TreeNode<ID>> List<T> build(List<T> all, ID rootId) {
+    public static <ID, T extends TreeNode<ID, T>> List<T> build(List<T> all, ID rootId) {
         List<T> trees = new ArrayList<>();
 
         for (T node : all) {
@@ -55,7 +55,7 @@ public class TreeUtil {
      * @return 展开列表
      */
     @SuppressWarnings("unchecked")
-    public static <ID, T extends TreeNode<ID>> List<T> stretch(List<T> tree) {
+    public static <ID, T extends TreeNode<ID, T>> List<T> stretch(List<T> tree) {
         List<T> list = new ArrayList<>();
 
         for (T node : tree) {

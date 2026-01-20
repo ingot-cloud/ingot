@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "会员角色树节点VO")
-public class MemberRoleTreeNodeVO extends TreeNode<Long> {
+public class MemberRoleTreeNodeVO extends TreeNode<Long, MemberRoleTreeNodeVO> {
 
     /**
      * 角色名称

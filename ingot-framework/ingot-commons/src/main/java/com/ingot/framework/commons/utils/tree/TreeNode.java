@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>Time         : 10:37 下午.</p>
  */
 @Data
-public class TreeNode<IdType> implements Serializable {
+public class TreeNode<IdType, T extends TreeNode<IdType, T>> implements Serializable {
     /**
      * ID
      */
@@ -31,14 +31,14 @@ public class TreeNode<IdType> implements Serializable {
      * 子节点
      */
     @Schema(description = "子列表")
-    private List<TreeNode<IdType>> children;
+    private List<T> children;
 
     /**
      * 添加子节点
      *
      * @param node {@link TreeNode}
      */
-    public void add(TreeNode<IdType> node) {
+    public void add(T node) {
         if (children == null) {
             children = new ArrayList<>();
         }

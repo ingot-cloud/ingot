@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class RoleTreeNodeVO extends TreeNode<Long> implements RoleType {
+public class RoleTreeNodeVO extends TreeNode<Long, RoleTreeNodeVO> implements RoleType {
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -3,6 +3,8 @@ package com.ingot.cloud.pms.api.model.vo.dept;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +16,27 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class DeptTreeNodeWithManagerVO extends DeptTreeNodeVO {
+public class DeptTreeNodeWithManagerVO extends TreeNode<Long, DeptTreeNodeWithManagerVO> {
+
+    /**
+     * 部门名称
+     */
+    private String name;
+
+    /**
+     * 排序
+     */
+    private Integer sort;
+
+    /**
+     * 主部门标识
+     */
+    private Boolean mainFlag;
+
+    /**
+     * 状态, 0:正常，9:禁用
+     */
+    private CommonStatusEnum status;
 
     /**
      * 部门主管

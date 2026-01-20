@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class MenuTreeNodeVO extends TreeNode<Long> {
+public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
     @Serial
     private static final long serialVersionUID = 1L;
 
