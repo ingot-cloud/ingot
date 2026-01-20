@@ -2,7 +2,7 @@
 # 测试环境 Dockerfile
 # ====================================
 
-FROM docker-registry.ingotcloud.top/amazoncorretto:17
+FROM docker-registry.ingotcloud.top/amazoncorretto:21
 
 # 数据卷
 VOLUME ["/ingot-data"]
