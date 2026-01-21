@@ -68,22 +68,21 @@ public class TenantEngine {
      * 创建租户部门<br>
      * 创建以租户名称命名的部门<br>
      */
-    public TenantDept createTenantDept(SysTenant tenant) {
-        return TenantEnv.applyAs(tenant.getId(), () -> {
+    public void createTenantDept(SysTenant tenant) {
+        TenantEnv.runAs(tenant.getId(), () -> {
             // 1. 创建主部门(当前组织名称的部门)
             TenantDept main = new TenantDept();
             main.setName(tenant.getName());
             main.setMainFlag(Boolean.TRUE);
             main.setSort(0);
             tenantDeptService.create(main);
-            return main;
         });
     }
 
     /**
      * 初始化租户管理员
      */
-    public void initTenantManager(CreateOrgDTO params, SysTenant tenant, TenantDept dept) {
+    public void initTenantManager(CreateOrgDTO params, SysTenant tenant) {
         TenantEnv.runAs(tenant.getId(), () -> {
             // 如果已经存在注册用户，那么直接关联新组织信息
             SysUser user = sysUserService.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getPhone, params.getPhone()));
@@ -101,8 +100,6 @@ public class TenantEngine {
 
             // 加入租户
             sysUserTenantService.joinTenant(user.getId(), tenant);
-            // 设置部门
-            tenantUserDeptPrivateService.setDepartments(user.getId(), List.of(dept.getId()));
             // 设置主角色
             bizUserService.setUserRoles(user.getId(), List.of(managerRole.getId()));
         });

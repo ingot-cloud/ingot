@@ -87,10 +87,10 @@ public interface BizDeptService {
     void orgDeleteDept(long id);
 
     /**
-     * 设置用户部门, 确保包含主要部门
+     * 设置用户部门
      *
      * @param userId  用户ID
      * @param deptIds 待设置的部门，非主要部门
      */
-    void setUserDeptsEnsureMainDept(long userId, List<Long> deptIds);
+    void setUserDepts(long userId, List<Long> deptIds);
 }

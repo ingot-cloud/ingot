@@ -260,7 +260,7 @@ public class BizUserServiceImpl implements BizUserService {
             SysTenant tenant = sysTenantService.getById(params.getOrgId());
 
             sysUserTenantService.joinTenant(userId, tenant);
-            bizDeptService.setUserDeptsEnsureMainDept(userId, params.getDeptIds());
+            bizDeptService.setUserDepts(userId, params.getDeptIds());
 
             // 直接给组织人员配置角色，不能配置部门角色
             if (CollUtil.isNotEmpty(roleIds)) {
@@ -348,7 +348,7 @@ public class BizUserServiceImpl implements BizUserService {
         SysTenant tenant = sysTenantService.getById(TenantContextHolder.get());
         sysUserTenantService.joinTenant(user.getId(), tenant);
         // 设置部门
-        bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
+        bizDeptService.setUserDepts(user.getId(), params.getDeptIds());
     }
 
     @Override
@@ -362,7 +362,7 @@ public class BizUserServiceImpl implements BizUserService {
 
         if (CollUtil.isNotEmpty(params.getDeptIds())) {
             // 更新部门
-            bizDeptService.setUserDeptsEnsureMainDept(user.getId(), params.getDeptIds());
+            bizDeptService.setUserDepts(user.getId(), params.getDeptIds());
         }
     }
 

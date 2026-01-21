@@ -14,7 +14,6 @@ import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
 import com.ingot.cloud.pms.api.model.domain.MetaApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
-import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
@@ -132,10 +131,10 @@ public class BizOrgServiceImpl implements BizOrgService {
         SysTenant tenant = tenantEngine.createTenant(params);
 
         // 2. 创建部门
-        TenantDept dept = tenantEngine.createTenantDept(tenant);
+        tenantEngine.createTenantDept(tenant);
 
         // 3. 初始化组织管理员
-        tenantEngine.initTenantManager(params, tenant, dept);
+        tenantEngine.initTenantManager(params, tenant);
     }
 
     @Override

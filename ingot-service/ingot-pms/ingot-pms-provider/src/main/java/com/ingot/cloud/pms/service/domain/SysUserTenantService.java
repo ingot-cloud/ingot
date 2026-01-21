@@ -49,4 +49,11 @@ public interface SysUserTenantService extends BaseService<SysUserTenant> {
      * @return {@link SysUserTenant}
      */
     List<SysUserTenant> getUserOrgs(long userId);
+
+    /**
+     * 组织人员数量
+     * @param tenantId 组织ID
+     * @return 数量
+     */
+    long count(long tenantId);
 }

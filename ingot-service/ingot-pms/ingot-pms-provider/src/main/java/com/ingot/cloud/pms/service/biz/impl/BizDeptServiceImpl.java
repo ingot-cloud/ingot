@@ -5,6 +5,7 @@ import java.util.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.DeptConvert;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
@@ -19,13 +20,11 @@ import com.ingot.cloud.pms.api.model.vo.dept.DeptWithManagerVO;
 import com.ingot.cloud.pms.api.model.vo.user.SimpleUserVO;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.domain.SysUserService;
-import com.ingot.cloud.pms.service.domain.TenantDeptService;
-import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
-import com.ingot.cloud.pms.service.domain.TenantUserDeptPrivateService;
+import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.RoleConstants;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BizDeptServiceImpl implements BizDeptService {
     private final SysUserService sysUserService;
+    private final SysUserTenantService sysUserTenantService;
 
     private final TenantDeptService tenantDeptService;
     private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
@@ -97,10 +97,15 @@ public class BizDeptServiceImpl implements BizDeptService {
                     .in(SysUser::getId, roleUsers.stream()
                             .map(TenantRoleUserPrivate::getUserId).toList())));
         }
+
+        long count = sysUserTenantService.count(TenantContextHolder.get());
         return tenantDeptService.listWithMemberCount().stream()
                 .map(dept -> {
                     DeptWithManagerVO item = new DeptWithManagerVO();
                     BeanUtil.copyProperties(dept, item);
+                    if (BooleanUtil.isTrue(item.getMainFlag())) {
+                        item.setMemberCount(count);
+                    }
 
                     // 如果当前组织没有设置过主管，那么直接返回
                     if (CollUtil.isEmpty(roleUsers)) {
@@ -234,14 +239,10 @@ public class BizDeptServiceImpl implements BizDeptService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void setUserDeptsEnsureMainDept(long userId, List<Long> deptIds) {
+    public void setUserDepts(long userId, List<Long> deptIds) {
         TenantDept main = tenantDeptService.getMainDept();
-        if (main != null) {
-            if (CollUtil.isEmpty(deptIds)) {
-                deptIds = ListUtil.list(false, main.getId());
-            } else {
-                deptIds.add(main.getId());
-            }
+        if (main != null && CollUtil.isNotEmpty(deptIds)) {
+            deptIds.remove(main.getId());
         }
 
         Set<Long> temp = new HashSet<>(deptIds);

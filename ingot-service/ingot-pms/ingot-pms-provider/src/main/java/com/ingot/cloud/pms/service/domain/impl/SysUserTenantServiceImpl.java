@@ -85,4 +85,10 @@ public class SysUserTenantServiceImpl extends BaseServiceImpl<SysUserTenantMappe
         return list(Wrappers.<SysUserTenant>lambdaQuery()
                 .eq(SysUserTenant::getUserId, userId));
     }
+
+    @Override
+    public long count(long tenantId) {
+        return count(Wrappers.<SysUserTenant>lambdaQuery()
+                .eq(SysUserTenant::getTenantId, tenantId));
+    }
 }
