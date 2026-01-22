@@ -271,6 +271,6 @@ void removeObject(String bucketName, String objectName)
 ## 获取帮助
 
 如有问题，请查看：
-- [FAQ](../../../docs/oss-architecture.md#故障排查)
+- [FAQ](../../../docs/object-storage-service/oss-architecture.md#故障排查)
 - 项目文档
 - 或联系开发团队
