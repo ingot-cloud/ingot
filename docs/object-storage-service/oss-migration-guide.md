@@ -380,9 +380,9 @@ public class MonitoredFileService {
 如果在迁移过程中遇到问题，可以：
 
 1. 查看相关文档：
-   - [OSS 架构设计](./oss-architecture.md)
-   - [OSS 使用示例](./oss-usage-example.md)
-   - [重构总结](./oss-refactoring-summary.md)
+   - [OSS 架构设计](oss-architecture.md)
+   - [OSS 使用示例](oss-usage-example.md)
+   - [重构总结](oss-refactoring-summary.md)
 
 2. 检查配置是否正确
 3. 查看应用日志

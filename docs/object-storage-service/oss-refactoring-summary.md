@@ -247,8 +247,8 @@ public class FileService {
 
 ## 相关文档
 
-- [OSS 架构设计](./oss-architecture.md)
-- [OSS 使用示例](./oss-usage-example.md)
+- [OSS 架构设计](oss-architecture.md)
+- [OSS 使用示例](oss-usage-example.md)
 - [ingot-oss-common README](../ingot-framework/ingot-oss-common/README.md)
 - [ingot-oss-rustfs README](../ingot-framework/ingot-oss-rustfs/README.md)
 

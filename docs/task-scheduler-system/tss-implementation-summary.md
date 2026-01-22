@@ -84,9 +84,9 @@
 
 ### 4. 文档
 
-- ✅ [架构设计](./tss-architecture.md) - 完整的架构说明和类图
-- ✅ [使用示例](./tss-usage-example.md) - 详细的代码示例
-- ✅ [迁移指南](./tss-migration-guide.md) - 迁移和切换指南
+- ✅ [架构设计](tss-architecture.md) - 完整的架构说明和类图
+- ✅ [使用示例](tss-usage-example.md) - 详细的代码示例
+- ✅ [迁移指南](tss-migration-guide.md) - 迁移和切换指南
 - ✅ [快速开始](../ingot-framework/ingot-tss-common/QUICK_START.md) - 5 分钟上手
 - ✅ [实现总结](./tss-implementation-summary.md) - 本文档
 
@@ -267,7 +267,7 @@ public class TaskService {
 3. 实现 `TaskManagement` 接口
 4. 创建自动配置类
 
-详见：[架构设计文档](./tss-architecture.md)
+详见：[架构设计文档](tss-architecture.md)
 
 ## 总结
 
