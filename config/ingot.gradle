@@ -25,9 +25,12 @@ ingot.framework_social_wechat = ":ingot-framework:ingot-social:ingot-social-wech
 ingot.framework_tss_common = ":ingot-framework:ingot-tss:ingot-tss-common"
 ingot.framework_tss_spring = ":ingot-framework:ingot-tss:ingot-tss-spring"
 ingot.framework_tss_xxljob = ":ingot-framework:ingot-tss:ingot-tss-xxljob"
+ingot.framework_security_credential = ":ingot-framework:ingot-security-credential"
+ingot.framework_security_credential_data = ":ingot-framework:ingot-security-credential-data"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
 ingot.member_api = ":ingot-service:ingot-member:ingot-member-api"
+ingot.credential_api = ":ingot-service:ingot-credential:ingot-credential-api"
 
 ext.ingot = ingot

@@ -1,0 +1,22 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.spring_boot.data_redis_starter)
+    implementation project(ingot.framework_commons)
+    api project(ingot.credential_api)
+
+    compileOnly(deps.spring.security_crypto)
+    compileOnly(deps.log.logback_classic)
+    compileOnly(deps.jackson.annotation)
+    compileOnly(deps.mybatis.plus_extension)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.security_crypto)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
+}

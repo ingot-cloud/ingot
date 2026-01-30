@@ -28,6 +28,8 @@ versions.junit = "5.7.0"
 versions.lombok = "1.18.36"
 versions.amazon_awssdk = "2.25.27"
 versions.xxl_job = "3.3.2"
+versions.logback = "1.5.20"
+versions.logstash_logback_encoder = "9.0"
 
 versions.ingot_plugin_mybatis = "0.2.4"
 versions.ingot_plugin_assemble = "0.6.0.0"
@@ -56,6 +58,7 @@ spring_boot.actuator_starter = "org.springframework.boot:spring-boot-starter-act
 spring_boot.actuator_autoconfigure = "org.springframework.boot:spring-boot-actuator-autoconfigure"
 spring_boot.validation_starter = "org.springframework.boot:spring-boot-starter-validation"
 spring_boot.aop_starter = "org.springframework.boot:spring-boot-starter-aop"
+spring_boot.logging_start = "org.springframework.boot:spring-boot-starter-logging"
 
 spring_cloud.dependencies = "org.springframework.cloud:spring-cloud-dependencies:${versions.spring_cloud}"
 spring_cloud.openfeign_starter = "org.springframework.cloud:spring-cloud-starter-openfeign"
@@ -71,6 +74,7 @@ spring_cloud.context = "org.springframework.cloud:spring-cloud-context"
 
 // security
 spring.security_config = "org.springframework.security:spring-security-config"
+spring.security_crypto = "org.springframework.security:spring-security-crypto"
 spring.security_core = "org.springframework.security:spring-security-core"
 spring.security_web = "org.springframework.security:spring-security-web"
 spring.security_oauth2_authorization_server = "org.springframework.security:spring-security-oauth2-authorization-server:${versions.spring_authorization_server}"
@@ -86,6 +90,7 @@ spring.framework_webmvc = "org.springframework:spring-webmvc"
 spring.framework_context = "org.springframework:spring-context"
 spring.framework_jdbc = "org.springframework:spring-jdbc"
 spring.framework_context_support = "org.springframework:spring-context-support"
+spring.framework_tx = "org.springframework:spring-tx"
 spring.kafka = "org.springframework.kafka:spring-kafka"
 
 spring.spring_boot = spring_boot
@@ -155,8 +160,8 @@ codecentric.spring_boot_admin_starter_server = "de.codecentric:spring-boot-admin
 deps.codecentric = codecentric
 
 def log = [:]
-log.logstash_logback_encoder = "net.logstash.logback:logstash-logback-encoder:5.2"
-log.logback_classic = "ch.qos.logback:logback-classic:1.2.3"
+log.logstash_logback_encoder = "net.logstash.logback:logstash-logback-encoder:${versions.logstash_logback_encoder}"
+log.logback_classic = "ch.qos.logback:logback-classic:${versions.logback}"
 deps.log = log
 
 def jetty = [:]

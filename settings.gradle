@@ -49,8 +49,10 @@ include 'ingot-framework:ingot-tss:ingot-tss-spring'
 findProject(':ingot-framework:ingot-tss:ingot-tss-spring')?.name = 'ingot-tss-spring'
 include 'ingot-framework:ingot-tss:ingot-tss-xxljob'
 findProject(':ingot-framework:ingot-tss:ingot-tss-xxljob')?.name = 'ingot-tss-xxljob'
-include 'ingot-framework:ingot-credential-security'
-findProject(':ingot-framework:ingot-credential-security')?.name = 'ingot-credential-security'
+include 'ingot-framework:ingot-security-credential'
+findProject(':ingot-framework:ingot-security-credential')?.name = 'ingot-security-credential'
+include 'ingot-framework:ingot-security-credential-data'
+findProject(':ingot-framework:ingot-security-credential-data')?.name = 'ingot-security-credential-data'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'
@@ -67,6 +69,10 @@ include 'ingot-service:ingot-member:ingot-member-provider'
 findProject(':ingot-service:ingot-member:ingot-member-provider')?.name = 'ingot-member-provider'
 include 'ingot-service:ingot-test'
 findProject(':ingot-service:ingot-test')?.name = 'ingot-test'
+include 'ingot-service:ingot-credential:ingot-credential-api'
+findProject(':ingot-service:ingot-credential:ingot-credential-api')?.name = 'ingot-credential-api'
+include 'ingot-service:ingot-credential:ingot-credential-provider'
+findProject(':ingot-service:ingot-credential:ingot-credential-provider')?.name = 'ingot-credential-provider'
 
 // Plugin
 include 'ingot-plugin:ingot-mybatisplus-plugin'

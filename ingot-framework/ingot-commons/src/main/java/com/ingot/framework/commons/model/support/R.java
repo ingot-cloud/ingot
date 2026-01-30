@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.status.ErrorCode;
 import lombok.ToString;
@@ -114,6 +115,13 @@ public class R<T> implements Serializable {
     public R<T> ifError(Consumer<R<T>> consumer) {
         if (!isSuccess()) {
             consumer.accept(this);
+        }
+        return this;
+    }
+
+    public R<T> ifErrorThrow() {
+        if (!isSuccess()) {
+            throw new BizException(getCode(), getMessage());
         }
         return this;
     }

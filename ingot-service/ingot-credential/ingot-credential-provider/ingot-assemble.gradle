@@ -1,0 +1,24 @@
+apply plugin: 'com.ingot.plugin.assemble'
+
+ingotAssemble {
+    docker {
+        registry "docker-registry.ingotcloud.top"
+        username JY_DOCKER_REGISTRY_USERNAME
+        password JY_DOCKER_REGISTRY_PASSWORD
+        platform "linux/amd64"
+
+        env("dev") {
+            name = "ingot/credential"
+            saveName = "ingot-credential.tar"
+        }
+        env("test") {
+            name = "ingot/credential"
+            saveName = "ingot-credential.tar"
+        }
+        env("prod") {
+            name = "ingot/credential"
+            saveName = "ingot-credential.tar"
+            platform = "linux/arm64"
+        }
+    }
+}

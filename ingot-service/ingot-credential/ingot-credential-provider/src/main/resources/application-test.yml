@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    username: ${MYSQL_USERNAME:dev}
+    password: ${MYSQL_PASSWORD:123456}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:ingotredis}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+      discovery:
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:TEST_GROUP}
+      config:
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:TEST_GROUP}
+  config:
+    import:
+      - optional:nacos:application-common.yml
+      - optional:nacos:application-mysql.yml
+      - optional:nacos:${spring.application.name}.yml?refreshEnabled=true

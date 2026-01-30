@@ -23,4 +23,9 @@ public interface ServiceNameConstants {
      */
     String TMC_SERVICE = "ingot-service-tmc";
 
+    /**
+     * 凭证安全服务
+     */
+    String CREDENTIAL_SERVICE = "ingot-service-credential";
+
 }

@@ -1,0 +1,6 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_core)
+}

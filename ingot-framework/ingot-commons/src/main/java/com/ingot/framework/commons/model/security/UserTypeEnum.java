@@ -3,6 +3,7 @@ package com.ingot.framework.commons.model.security;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
@@ -18,9 +19,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum UserTypeEnum {
     ADMIN("0", "管理用户"),
-    APP("1", "app用户");
+    APP("1", "C端用户");
 
     @JsonValue
+    @EnumValue
     private final String value;
     private final String text;
 
