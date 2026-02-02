@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -32,14 +31,13 @@ public class InnerCredentialAPI implements RShortcuts {
      * 获取密码策略列表
      */
     @GetMapping("/policy-configs")
-    public R<List<CredentialPolicyConfigVO>> getPolicyConfigs(@RequestParam(value = "tenantId", required = false) Long tenantId) {
-        List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs(tenantId);
+    public R<List<CredentialPolicyConfigVO>> getPolicyConfigs() {
+        List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs();
         return ok(CollUtil.emptyIfNull(configs)
                 .stream()
                 .map(config -> {
                     CredentialPolicyConfigVO vo = new CredentialPolicyConfigVO();
                     vo.setId(config.getId());
-                    vo.setTenantId(config.getTenantId());
                     vo.setPolicyType(config.getPolicyType().getValue());
                     vo.setPolicyConfig(config.getPolicyConfig());
                     vo.setPriority(config.getPriority());

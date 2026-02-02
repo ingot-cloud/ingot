@@ -1,15 +1,12 @@
 package com.ingot.framework.security.credential.policy;
 
-import com.ingot.framework.security.credential.exception.PasswordExpiredException;
-import com.ingot.framework.security.credential.model.CredentialScene;
-import com.ingot.framework.security.credential.model.PasswordCheckResult;
-import com.ingot.framework.security.credential.model.PolicyCheckContext;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
+
+import com.ingot.framework.security.credential.model.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 密码过期策略
@@ -53,8 +50,8 @@ public class PasswordExpirationPolicy implements PasswordPolicy {
     private int priority = 20;
 
     @Override
-    public String getName() {
-        return "EXPIRATION";
+    public CredentialPolicyType getType() {
+        return CredentialPolicyType.EXPIRATION;
     }
 
     @Override
@@ -97,14 +94,14 @@ public class PasswordExpirationPolicy implements PasswordPolicy {
             if (graceRemaining != null && graceRemaining > 0) {
                 // 还有宽限期登录次数
                 return PasswordCheckResult.warning(
-                    String.format("密码已过期，剩余%d次宽限登录机会", graceRemaining),
-                    "EXPIRED_WITH_GRACE"
-                );
+                        String.format("密码已过期，剩余%d次宽限登录机会", graceRemaining),
+                        CredentialErrorCode.EXPIRED_WITH_GRACE
+                ).addMetadata("graceRemaining", graceRemaining);
             } else {
                 // 宽限期已用完
                 return PasswordCheckResult.fail(
-                    "密码已过期，请立即修改密码",
-                    new PasswordExpiredException("密码已过期")
+                        "密码已过期，请立即修改密码",
+                        CredentialErrorCode.EXPIRED
                 );
             }
         }
@@ -114,18 +111,9 @@ public class PasswordExpirationPolicy implements PasswordPolicy {
         if (now.isAfter(warningStartAt)) {
             long daysLeft = ChronoUnit.DAYS.between(now, expiresAt);
             return PasswordCheckResult.warning(
-                String.format("密码将在%d天后过期，请及时修改", daysLeft),
-                "EXPIRING_SOON"
-            );
-        }
-
-        // 检查是否强制修改
-        Boolean forceChange = context.getForcePasswordChange();
-        if (Boolean.TRUE.equals(forceChange)) {
-            return PasswordCheckResult.fail(
-                "管理员已重置您的密码，请立即修改",
-                new PasswordExpiredException("强制修改密码")
-            );
+                    String.format("密码将在%d天后过期，请及时修改", daysLeft),
+                    CredentialErrorCode.EXPIRING_SOON
+            ).addMetadata("daysLeft", daysLeft);
         }
 
         return PasswordCheckResult.pass();

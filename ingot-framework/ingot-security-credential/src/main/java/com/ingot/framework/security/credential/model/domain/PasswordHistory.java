@@ -1,9 +1,10 @@
 package com.ingot.framework.security.credential.model.domain;
 
-import lombok.Data;
-
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 密码历史记录（通用模型）
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Data
 public class PasswordHistory implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

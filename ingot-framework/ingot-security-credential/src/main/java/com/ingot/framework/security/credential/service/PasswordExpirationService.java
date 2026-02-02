@@ -22,12 +22,11 @@ public interface PasswordExpirationService {
     /**
      * 初始化用户的密码过期信息
      *
-     * @param userId       用户ID
-     * @param maxDays      密码有效天数
-     * @param forceChange  是否强制修改
-     * @param graceLogins  宽限登录次数
+     * @param userId      用户ID
+     * @param maxDays     密码有效天数
+     * @param graceLogins 宽限登录次数
      */
-    void initExpiration(Long userId, int maxDays, boolean forceChange, int graceLogins);
+    void initExpiration(Long userId, int maxDays, int graceLogins);
 
     /**
      * 更新密码修改时间（重置过期时间）
@@ -56,7 +55,7 @@ public interface PasswordExpirationService {
     /**
      * 检查密码是否需要提醒
      *
-     * @param userId         用户ID
+     * @param userId            用户ID
      * @param warningDaysBefore 提前N天提醒
      * @return true-需要提醒，false-不需要提醒
      */

@@ -80,11 +80,6 @@ public class CredentialSecurityProperties {
         private boolean enabled = true;
 
         /**
-         * 保留最近N次密码
-         */
-        private int keepRecentCount = 5;
-
-        /**
          * 检查最近N次密码
          */
         private int checkCount = 5;

@@ -44,11 +44,6 @@ public class PolicyCheckContext {
     private String email;
 
     /**
-     * 租户ID
-     */
-    private Long tenantId;
-
-    /**
      * 用户类型
      */
     private UserTypeEnum userType;
@@ -69,12 +64,6 @@ public class PolicyCheckContext {
      * <p>场景：登录</p>
      */
     private LocalDateTime lastPasswordChangedAt;
-
-    /**
-     * 是否强制修改密码
-     * <p>场景：登录</p>
-     */
-    private Boolean forcePasswordChange;
 
     /**
      * 剩余宽限登录次数

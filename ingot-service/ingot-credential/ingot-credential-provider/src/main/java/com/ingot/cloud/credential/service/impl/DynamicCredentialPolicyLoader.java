@@ -7,7 +7,8 @@ import java.util.Map;
 
 import com.ingot.cloud.credential.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.credential.service.PolicyConfigService;
-import com.ingot.framework.security.credential.policy.*;
+import com.ingot.framework.security.credential.policy.PasswordPolicy;
+import com.ingot.framework.security.credential.policy.PasswordPolicyUtil;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +31,12 @@ public class DynamicCredentialPolicyLoader implements CredentialPolicyLoader {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'", unless = "#result.isEmpty()")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        log.debug("加载策略 - 租户ID: {}", tenantId);
-        List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs(tenantId);
+    @Cacheable(value = CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
+    public List<PasswordPolicy> loadPolicies() {
+        log.debug("凭证策略 - 加载策略");
+        List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs();
         List<PasswordPolicy> policies = loadPolicies(configs);
-        log.info("策略加载完成 - 租户ID: {}, 策略数量: {}", tenantId, policies.size());
+        log.info("凭证策略 - 策略加载完成 - 策略数量: {}", policies.size());
         return policies;
     }
 
@@ -72,12 +73,6 @@ public class DynamicCredentialPolicyLoader implements CredentialPolicyLoader {
             case HISTORY -> PasswordPolicyUtil.createHistoryPolicy(policyConfig, config.getPriority(), passwordEncoder);
             case EXPIRATION -> PasswordPolicyUtil.createExpirationPolicy(policyConfig, config.getPriority());
         };
-    }
-
-    @Override
-    @CacheEvict(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public void reloadPolicies(Long tenantId) {
-        log.info("重新加载策略 - 租户ID: {}", tenantId);
     }
 
     @Override

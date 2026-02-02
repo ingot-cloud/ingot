@@ -1,11 +1,11 @@
 package com.ingot.framework.security.credential.model;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 密码校验结果
@@ -15,6 +15,8 @@ import java.util.Map;
  */
 @Data
 public class PasswordCheckResult {
+    private static final String METADATA_KEY_FAILURE_CODE = "failureCode";
+    private static final String METADATA_KEY_WARNING_CODE = "warningCode";
 
     /**
      * 是否通过校验
@@ -36,6 +38,9 @@ public class PasswordCheckResult {
      */
     private Map<String, Object> metadata = new HashMap<>();
 
+    private PasswordCheckResult() {
+    }
+
     /**
      * 创建一个通过的结果
      */
@@ -48,66 +53,77 @@ public class PasswordCheckResult {
     /**
      * 创建一个失败的结果
      */
-    public static PasswordCheckResult fail(String reason) {
+    public static PasswordCheckResult fail(String reason, CredentialErrorCode errorCode) {
         PasswordCheckResult result = new PasswordCheckResult();
         result.passed = false;
         result.failureReasons.add(reason);
-        return result;
-    }
-
-    /**
-     * 创建一个失败的结果（带异常信息）
-     */
-    public static PasswordCheckResult fail(String reason, Exception exception) {
-        PasswordCheckResult result = new PasswordCheckResult();
-        result.passed = false;
-        result.failureReasons.add(reason);
-        result.addMetadata("exception", exception.getClass().getSimpleName());
-        result.addMetadata("exceptionMessage", exception.getMessage());
+        result.addMetadata(METADATA_KEY_FAILURE_CODE, errorCode);
         return result;
     }
 
     /**
      * 创建一个失败的结果（多个原因）
      */
-    public static PasswordCheckResult fail(List<String> reasons) {
+    public static PasswordCheckResult fail(List<String> reasons, CredentialErrorCode errorCode) {
         PasswordCheckResult result = new PasswordCheckResult();
         result.passed = false;
         result.failureReasons.addAll(reasons);
+        result.addMetadata(METADATA_KEY_FAILURE_CODE, errorCode);
         return result;
     }
 
     /**
      * 创建一个有警告的通过结果
      */
-    public static PasswordCheckResult warning(String warningMessage, String warningCode) {
+    public static PasswordCheckResult warning(String warningMessage, CredentialErrorCode warningCode) {
         PasswordCheckResult result = new PasswordCheckResult();
         result.passed = true; // 通过但有警告
         result.warnings.add(warningMessage);
-        result.addMetadata("warningCode", warningCode);
+        result.addMetadata(METADATA_KEY_WARNING_CODE, warningCode);
         return result;
     }
 
     /**
      * 添加失败原因
      */
-    public void addFailureReason(String reason) {
+    public PasswordCheckResult addFailureReason(String reason) {
         this.passed = false;
         this.failureReasons.add(reason);
+        return this;
     }
 
     /**
      * 添加警告信息
      */
-    public void addWarning(String warning) {
+    public PasswordCheckResult addWarning(String warning) {
         this.warnings.add(warning);
+        return this;
     }
 
     /**
      * 添加元数据
      */
-    public void addMetadata(String key, Object value) {
+    public PasswordCheckResult addMetadata(String key, Object value) {
         this.metadata.put(key, value);
+        return this;
+    }
+
+    /**
+     * 获取警告码
+     *
+     * @return 警告码
+     */
+    public CredentialErrorCode getWarningCode() {
+        return (CredentialErrorCode) metadata.get(METADATA_KEY_WARNING_CODE);
+    }
+
+    /**
+     * 获取失败码
+     *
+     * @return 失败码
+     */
+    public CredentialErrorCode getFailureCode() {
+        return (CredentialErrorCode) metadata.get(METADATA_KEY_FAILURE_CODE);
     }
 
     /**

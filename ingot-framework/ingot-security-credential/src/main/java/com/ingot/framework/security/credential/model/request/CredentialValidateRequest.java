@@ -47,11 +47,6 @@ public class CredentialValidateRequest {
     private String email;
 
     /**
-     * 租户ID（可选）
-     */
-    private Long tenantId;
-
-    /**
      * 用户类型（可选）
      */
     private UserTypeEnum userType;

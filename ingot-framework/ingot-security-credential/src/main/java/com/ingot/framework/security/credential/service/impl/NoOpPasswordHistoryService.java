@@ -1,11 +1,11 @@
 package com.ingot.framework.security.credential.service.impl;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.ingot.framework.security.credential.model.domain.PasswordHistory;
 import com.ingot.framework.security.credential.service.PasswordHistoryService;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 默认密码历史服务实现（空实现）
@@ -30,9 +30,9 @@ public class NoOpPasswordHistoryService implements PasswordHistoryService {
     }
 
     @Override
-    public boolean isPasswordUsed(Long userId, String passwordHash, int checkCount) {
+    public boolean isPasswordUsed(Long userId, String password, int checkCount) {
         log.debug("使用默认空实现，密码未使用过");
-        return false; // 永远返回未使用
+        return false;
     }
 
     @Override

@@ -3,9 +3,7 @@ package com.ingot.framework.security.credential.policy;
 import java.util.List;
 import java.util.Set;
 
-import com.ingot.framework.security.credential.model.CredentialScene;
-import com.ingot.framework.security.credential.model.PasswordCheckResult;
-import com.ingot.framework.security.credential.model.PolicyCheckContext;
+import com.ingot.framework.security.credential.model.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +20,6 @@ import org.springframework.util.CollectionUtils;
 @Setter
 @Getter
 public class PasswordHistoryPolicy implements PasswordPolicy {
-
-    private static final String NAME = "PASSWORD_HISTORY";
     private static final int DEFAULT_PRIORITY = 30;
 
     private final PasswordEncoder passwordEncoder;
@@ -35,8 +31,8 @@ public class PasswordHistoryPolicy implements PasswordPolicy {
     }
 
     @Override
-    public String getName() {
-        return NAME;
+    public CredentialPolicyType getType() {
+        return CredentialPolicyType.HISTORY;
     }
 
     @Override
@@ -74,8 +70,9 @@ public class PasswordHistoryPolicy implements PasswordPolicy {
         for (String oldHash : oldPasswordHashes) {
             if (passwordEncoder.matches(newPassword, oldHash)) {
                 return PasswordCheckResult.fail(
-                        String.format("该密码已在最近%d次使用过，请更换新密码", checkCount)
-                );
+                        String.format("该密码已在最近%d次使用过，请更换新密码", checkCount),
+                        CredentialErrorCode.HISTORY_REUSE
+                ).addMetadata("checkCount", checkCount);
             }
         }
 

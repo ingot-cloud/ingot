@@ -16,19 +16,17 @@ public interface PolicyConfigService {
     /**
      * 获取租户的策略配置（如果没有租户级配置，返回全局默认配置）
      *
-     * @param tenantId   租户ID（null表示全局）
      * @param policyType 策略类型
      * @return 策略配置
      */
-    CredentialPolicyConfig getPolicyConfig(Long tenantId, String policyType);
+    CredentialPolicyConfig getPolicyConfig(String policyType);
 
     /**
      * 获取租户的所有策略配置
      *
-     * @param tenantId 租户ID（null表示全局）
      * @return 策略配置列表
      */
-    List<CredentialPolicyConfig> getAllPolicyConfigs(Long tenantId);
+    List<CredentialPolicyConfig> getAllPolicyConfigs();
 
     /**
      * 保存或更新策略配置
@@ -37,6 +35,14 @@ public interface PolicyConfigService {
      * @return 保存的配置
      */
     CredentialPolicyConfig savePolicyConfig(CredentialPolicyConfig config);
+
+    /**
+     * 更新策略配置
+     *
+     * @param config 策略配置
+     * @return 更新的配置
+     */
+    CredentialPolicyConfig updatePolicyConfig(CredentialPolicyConfig config);
 
     /**
      * 删除策略配置
@@ -48,10 +54,9 @@ public interface PolicyConfigService {
     /**
      * 刷新策略缓存
      *
-     * @param tenantId   租户ID
      * @param policyType 策略类型
      */
-    void refreshCache(Long tenantId, CredentialPolicyType policyType);
+    void refreshCache(CredentialPolicyType policyType);
 
     /**
      * 清空所有缓存

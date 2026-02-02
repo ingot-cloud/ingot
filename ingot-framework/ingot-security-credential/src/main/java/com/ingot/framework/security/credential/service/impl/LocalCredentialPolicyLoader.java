@@ -29,8 +29,8 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'", unless = "#result.isEmpty()")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
+    @Cacheable(value = CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
+    public List<PasswordPolicy> loadPolicies() {
         List<PasswordPolicy> policies = new ArrayList<>();
 
         // 密码强度策略
@@ -63,12 +63,6 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
         policies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
         log.info("本地兜底策略加载完成，策略数量: {}", policies.size());
         return policies;
-    }
-
-    @Override
-    @CacheEvict(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public void reloadPolicies(Long tenantId) {
-
     }
 
     @Override
@@ -122,7 +116,7 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
             }
         };
 
-        policy.setEnabled(config.isEnabled());
+        policy.setEnabled(true);
         policy.setCheckCount(config.getCheckCount());
 
         return policy;

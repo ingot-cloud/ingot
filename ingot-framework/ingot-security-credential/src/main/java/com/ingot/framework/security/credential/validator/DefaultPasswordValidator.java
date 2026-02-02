@@ -26,7 +26,7 @@ public class DefaultPasswordValidator implements PasswordValidator {
     @Override
     public PasswordCheckResult validate(PolicyCheckContext context) {
         // 按优先级排序策略
-        List<PasswordPolicy> sortedPolicies = new ArrayList<>(loader.loadPolicies(context.getTenantId()));
+        List<PasswordPolicy> sortedPolicies = new ArrayList<>(loader.loadPolicies());
         sortedPolicies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
 
         PasswordCheckResult finalResult = PasswordCheckResult.pass();
@@ -34,11 +34,11 @@ public class DefaultPasswordValidator implements PasswordValidator {
         for (PasswordPolicy policy : sortedPolicies) {
             // 检查策略是否适用于当前场景
             if (!policy.isApplicableToScene(context.getScene())) {
-                log.debug("策略 {} 不适用于场景 {}", policy.getName(), context.getScene());
+                log.debug("策略 {} 不适用于场景 {}", policy.getType().getText(), context.getScene());
                 continue;
             }
 
-            log.debug("执行策略 {} - 场景: {}", policy.getName(), context.getScene());
+            log.debug("执行策略 {} - 场景: {}", policy.getType().getText(), context.getScene());
 
             // 执行策略校验
             PasswordCheckResult policyResult = policy.check(context);
@@ -48,11 +48,11 @@ public class DefaultPasswordValidator implements PasswordValidator {
                 finalResult.setPassed(false);
                 finalResult.getFailureReasons().addAll(policyResult.getFailureReasons());
 
-                log.warn("策略 {} 校验失败: {}", policy.getName(), policyResult.getFailureMessage());
+                log.warn("策略 {} 校验失败: {}", policy.getType().getText(), policyResult.getFailureMessage());
 
                 // 如果是阻断式策略且失败，停止后续校验
                 if (policy.isBlocking()) {
-                    log.debug("策略 {} 为阻断式策略，停止后续校验", policy.getName());
+                    log.debug("策略 {} 为阻断式策略，停止后续校验", policy.getType().getText());
                     break;
                 }
             }

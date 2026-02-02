@@ -8,7 +8,8 @@ import java.util.Map;
 import com.ingot.cloud.credential.api.model.vo.CredentialPolicyConfigVO;
 import com.ingot.cloud.credential.api.rpc.RemoteCredentialService;
 import com.ingot.framework.security.credential.model.CredentialPolicyType;
-import com.ingot.framework.security.credential.policy.*;
+import com.ingot.framework.security.credential.policy.PasswordPolicy;
+import com.ingot.framework.security.credential.policy.PasswordPolicyUtil;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,13 +30,12 @@ public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'", unless = "#result.isEmpty()")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        log.debug("加载策略 - 租户ID: {}", tenantId);
-        List<CredentialPolicyConfigVO> configs = remoteCredentialService.getPolicyConfigs(tenantId)
+    @Cacheable(value = CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
+    public List<PasswordPolicy> loadPolicies() {
+        List<CredentialPolicyConfigVO> configs = remoteCredentialService.getPolicyConfigs()
                 .ifErrorThrow().getData();
         List<PasswordPolicy> policies = loadPolicies(configs);
-        log.info("策略加载完成 - 租户ID: {}, 策略数量: {}", tenantId, policies.size());
+        log.info("策略加载完成 - 策略数量: {}", policies.size());
         return policies;
     }
 
@@ -72,12 +72,6 @@ public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
             case HISTORY -> PasswordPolicyUtil.createHistoryPolicy(policyConfig, config.getPriority(), passwordEncoder);
             case EXPIRATION -> PasswordPolicyUtil.createExpirationPolicy(policyConfig, config.getPriority());
         };
-    }
-
-    @Override
-    @CacheEvict(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public void reloadPolicies(Long tenantId) {
-        log.info("重新加载策略 - 租户ID: {}", tenantId);
     }
 
     @Override

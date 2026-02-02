@@ -1,9 +1,10 @@
 package com.ingot.framework.security.credential.model.domain;
 
-import lombok.Data;
-
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 密码过期信息（通用模型）
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Data
 public class PasswordExpiration implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -35,11 +37,6 @@ public class PasswordExpiration implements Serializable {
      * 密码过期时间
      */
     private LocalDateTime expiresAt;
-
-    /**
-     * 是否强制修改
-     */
-    private Boolean forceChange;
 
     /**
      * 剩余宽限登录次数

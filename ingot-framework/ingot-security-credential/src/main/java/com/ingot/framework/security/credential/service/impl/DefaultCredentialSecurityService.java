@@ -10,6 +10,9 @@ import com.ingot.framework.security.credential.model.PolicyCheckContext;
 import com.ingot.framework.security.credential.model.domain.PasswordExpiration;
 import com.ingot.framework.security.credential.model.domain.PasswordHistory;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
+import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
+import com.ingot.framework.security.credential.policy.PasswordHistoryPolicy;
+import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import com.ingot.framework.security.credential.service.PasswordExpirationService;
 import com.ingot.framework.security.credential.service.PasswordHistoryService;
@@ -31,6 +34,7 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
     private final PasswordHistoryService passwordHistoryService;
     private final PasswordExpirationService passwordExpirationService;
     private final CredentialSecurityProperties properties;
+    private final CredentialPolicyLoader credentialPolicyLoader;
 
     @Override
     public PasswordCheckResult validate(CredentialValidateRequest request) {
@@ -43,7 +47,6 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
                 .username(request.getUsername())
                 .phone(request.getPhone())
                 .email(request.getEmail())
-                .tenantId(request.getTenantId())
                 .userType(request.getUserType())
                 .userId(request.getUserId());
 
@@ -86,7 +89,6 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
             if (expiration != null) {
                 contextBuilder
                         .lastPasswordChangedAt(expiration.getLastChangedAt())
-                        .forcePasswordChange(expiration.getForceChange())
                         .graceLoginRemaining(expiration.getGraceLoginRemaining());
                 log.debug("查询到过期信息 - 最后修改时间: {}", expiration.getLastChangedAt());
             }
@@ -97,15 +99,27 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
     public void savePasswordHistory(Long userId, String passwordHash) {
         log.debug("保存密码历史 - 用户ID: {}", userId);
 
-        int maxRecords = properties.getPolicy().getHistory().getKeepRecentCount();
-        passwordHistoryService.saveHistory(userId, passwordHash, maxRecords);
+        credentialPolicyLoader.loadPolicies().stream()
+                .filter(policy -> policy instanceof PasswordHistoryPolicy)
+                .map(policy -> (PasswordHistoryPolicy) policy)
+                .findFirst()
+                .ifPresent(policy -> {
+                    int maxRecords = policy.getCheckCount();
+                    passwordHistoryService.saveHistory(userId, passwordHash, maxRecords);
+                });
     }
 
     @Override
     public void updatePasswordExpiration(Long userId) {
         log.debug("更新密码过期时间 - 用户ID: {}", userId);
 
-        int maxDays = properties.getPolicy().getExpiration().getMaxDays();
-        passwordExpirationService.updateLastChanged(userId, maxDays);
+        credentialPolicyLoader.loadPolicies().stream()
+                .filter(policy -> policy instanceof PasswordExpirationPolicy)
+                .map(policy -> (PasswordExpirationPolicy) policy)
+                .findFirst()
+                .ifPresent(policy -> {
+                    int maxDays = policy.getMaxDays();
+                    passwordExpirationService.updateLastChanged(userId, maxDays);
+                });
     }
 }

@@ -1,8 +1,8 @@
 package com.ingot.framework.security.credential.service;
 
-import com.ingot.framework.security.credential.model.domain.PasswordHistory;
-
 import java.util.List;
+
+import com.ingot.framework.security.credential.model.domain.PasswordHistory;
 
 /**
  * 密码历史服务接口（通用）
@@ -35,12 +35,12 @@ public interface PasswordHistoryService {
     /**
      * 检查密码是否在历史中使用过
      *
-     * @param userId       用户ID
-     * @param passwordHash 密码哈希值
-     * @param checkCount   检查最近N条记录
+     * @param userId     用户ID
+     * @param password   密码
+     * @param checkCount 检查最近N条记录
      * @return true-已使用过，false-未使用过
      */
-    boolean isPasswordUsed(Long userId, String passwordHash, int checkCount);
+    boolean isPasswordUsed(Long userId, String password, int checkCount);
 
     /**
      * 删除用户的所有密码历史

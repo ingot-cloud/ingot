@@ -1,10 +1,11 @@
 package com.ingot.framework.security.credential.policy;
 
+import java.util.Set;
+
+import com.ingot.framework.security.credential.model.CredentialPolicyType;
 import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.PasswordCheckResult;
 import com.ingot.framework.security.credential.model.PolicyCheckContext;
-
-import java.util.Set;
 
 /**
  * 密码策略接口
@@ -16,9 +17,9 @@ import java.util.Set;
 public interface PasswordPolicy {
 
     /**
-     * 获取策略名称
+     * 获取策略类型
      */
-    String getName();
+    CredentialPolicyType getType();
 
     /**
      * 获取策略优先级（数字越小优先级越高）

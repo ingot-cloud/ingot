@@ -65,12 +65,14 @@ public class CredentialSecurityAutoConfiguration {
             PasswordValidator passwordValidator,
             PasswordHistoryService passwordHistoryService,
             PasswordExpirationService passwordExpirationService,
-            CredentialSecurityProperties properties) {
+            CredentialSecurityProperties properties,
+            CredentialPolicyLoader credentialPolicyLoader) {
         return new DefaultCredentialSecurityService(
                 passwordValidator,
                 passwordHistoryService,
                 passwordExpirationService,
-                properties
+                properties,
+                credentialPolicyLoader
         );
     }
 }

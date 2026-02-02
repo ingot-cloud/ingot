@@ -28,11 +28,6 @@ public class CredentialPolicyConfig implements Serializable {
     private Long id;
 
     /**
-     * 租户ID，NULL表示全局默认策略
-     */
-    private Long tenantId;
-
-    /**
      * 策略类型: STRENGTH(强度), EXPIRATION(过期), HISTORY(历史)
      */
     private CredentialPolicyType policyType;

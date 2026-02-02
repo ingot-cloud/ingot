@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.ingot.framework.security.credential.model.CredentialScene;
-import com.ingot.framework.security.credential.model.PasswordCheckResult;
-import com.ingot.framework.security.credential.model.PolicyCheckContext;
+import com.ingot.framework.security.credential.model.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.StringUtils;
@@ -47,8 +45,8 @@ public class PasswordStrengthPolicy implements PasswordPolicy {
     private static final Pattern DIGIT_PATTERN = Pattern.compile(".*[0-9].*");
 
     @Override
-    public String getName() {
-        return NAME;
+    public CredentialPolicyType getType() {
+        return CredentialPolicyType.STRENGTH;
     }
 
     @Override
@@ -76,7 +74,7 @@ public class PasswordStrengthPolicy implements PasswordPolicy {
         String password = context.getPassword();
 
         if (!StringUtils.hasText(password)) {
-            return PasswordCheckResult.fail("密码不能为空");
+            return PasswordCheckResult.fail("密码不能为空", CredentialErrorCode.EMPTY);
         }
 
         List<String> failureReasons = new ArrayList<>();
@@ -136,7 +134,7 @@ public class PasswordStrengthPolicy implements PasswordPolicy {
         }
 
         if (!failureReasons.isEmpty()) {
-            return PasswordCheckResult.fail(failureReasons);
+            return PasswordCheckResult.fail(failureReasons, CredentialErrorCode.STRENGTH);
         }
 
         return PasswordCheckResult.pass();
