@@ -1,4 +1,4 @@
-package com.ingot.cloud.credential.web.security;
+package com.ingot.cloud.credential.web.platform.security;
 
 import java.util.List;
 
@@ -22,10 +22,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/policy-config")
+@RequestMapping("/platform/security/credential/policy-config")
 @RequiredArgsConstructor
-@Tag(name = "策略配置管理")
-public class PolicyConfigAPI implements RShortcuts {
+@Tag(name = "凭证策略配置管理")
+public class CredentialPolicyConfigAPI implements RShortcuts {
     private final PolicyConfigService policyConfigService;
     private final CredentialPolicyLoader policyLoader;
 
