@@ -34,7 +34,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @GetMapping("/{policyType}")
     @Operation(summary = "获取策略配置")
-    @AdminOrHasAnyAuthority({"security:credential:policy:query"})
+    @AdminOrHasAnyAuthority({"platform:security:credential:policy:query"})
     public R<CredentialPolicyConfig> getPolicyConfig(
             @PathVariable String policyType) {
         try {
@@ -51,7 +51,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @GetMapping("/list")
     @Operation(summary = "获取所有策略配置")
-    @AdminOrHasAnyAuthority({"security:credential:policy:query"})
+    @AdminOrHasAnyAuthority({"platform:security:credential:policy:query"})
     public R<List<CredentialPolicyConfig>> getAllPolicyConfigs() {
         try {
             List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs();
@@ -67,7 +67,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @PostMapping
     @Operation(summary = "保存策略配置")
-    @AdminOrHasAnyAuthority({"security:credential:policy:create"})
+    @AdminOrHasAnyAuthority({"platform:security:credential:policy:create"})
     public R<Void> savePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
             CredentialPolicyConfig saved = policyConfigService.savePolicyConfig(config);
@@ -88,7 +88,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @PutMapping
     @Operation(summary = "更新策略配置")
-    @AdminOrHasAnyAuthority({"security:credential:policy:update"})
+    @AdminOrHasAnyAuthority({"platform:security:credential:policy:update"})
     public R<Void> updatePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
             CredentialPolicyConfig updated = policyConfigService.updatePolicyConfig(config);
@@ -109,7 +109,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除策略配置")
-    @AdminOrHasAnyAuthority({"security:credential:policy:delete"})
+    @AdminOrHasAnyAuthority({"platform:security:credential:policy:delete"})
     public R<Void> deletePolicyConfig(@PathVariable Long id) {
         try {
             policyConfigService.deletePolicyConfig(id);
