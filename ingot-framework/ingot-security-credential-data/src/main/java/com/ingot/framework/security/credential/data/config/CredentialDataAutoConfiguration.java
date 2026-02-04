@@ -1,15 +1,17 @@
 package com.ingot.framework.security.credential.data.config;
 
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 /**
- * 描组件和 Mapper，其他配置由依赖的模块提供
+ * CredentialDataAutoConfiguration
  *
- * @author jymot
- * @since 2026-01-24
+ * @author jy
+ * @since 2026/2/4
  */
-@Configuration
-@ComponentScan("com.ingot.framework.security.credential.data")
+@AutoConfiguration
+@MapperScan("com.ingot.framework.security.credential.data.mapper")
+@ComponentScan("com.ingot.framework.security.credential.data.service")
 public class CredentialDataAutoConfiguration {
 }

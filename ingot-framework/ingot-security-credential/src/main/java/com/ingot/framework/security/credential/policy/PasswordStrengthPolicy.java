@@ -64,8 +64,7 @@ public class PasswordStrengthPolicy implements PasswordPolicy {
         // 适用于注册、修改密码、重置密码场景
         return Set.of(
                 CredentialScene.REGISTER,
-                CredentialScene.CHANGE_PASSWORD,
-                CredentialScene.RESET_PASSWORD
+                CredentialScene.CHANGE_PASSWORD
         );
     }
 

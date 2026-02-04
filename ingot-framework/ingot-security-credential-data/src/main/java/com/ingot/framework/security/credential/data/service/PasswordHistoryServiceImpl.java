@@ -41,7 +41,7 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveHistory(Long userId, String passwordHash, int maxRecords) {
+    public void saveHistory(Long userId, String password, int maxRecords) {
         log.debug("保存密码历史 - userId: {}, maxRecords: {}", userId, maxRecords);
 
         // 查询当前用户的记录数量
@@ -64,7 +64,7 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
 
         if (existing != null) {
             // 更新现有记录（覆盖最旧的）
-            existing.setPasswordHash(passwordHash);
+            existing.setPasswordHash(passwordEncoder.encode(password));
             existing.setUpdatedAt(LocalDateTime.now());
             mapper.updateById(existing);
             log.debug("更新密码历史记录 - id: {}, seq: {}", existing.getId(), nextSeq);
@@ -72,7 +72,7 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
             // 插入新记录
             PasswordHistory history = new PasswordHistory();
             history.setUserId(userId);
-            history.setPasswordHash(passwordHash);
+            history.setPasswordHash(passwordEncoder.encode(password));
             history.setSequenceNumber(nextSeq);
             history.setCreatedAt(LocalDateTime.now());
             history.setUpdatedAt(LocalDateTime.now());

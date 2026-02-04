@@ -49,7 +49,7 @@ public interface SysUserService extends BaseService<SysUser> {
     IPage<SysUser> allOrgUserPage(Page<SysUser> page, AllOrgUserFilterDTO filter);
 
     /**
-     * 创建用户
+     * 创建用户，一般为初始化密码，首次登录的时候需要修改
      *
      * @param user {@link SysUser}
      */
@@ -77,4 +77,12 @@ public interface SysUserService extends BaseService<SysUser> {
      */
     void fixPassword(long id, UserPasswordDTO params);
 
+    /**
+     * 更新密码，所有涉及到更新密码的逻辑均调用该方法，保证密码更新逻辑的一致性
+     *
+     * @param id       用户ID
+     * @param password 新密码
+     * @param initFlag 是否为新的初始化密码
+     */
+    void updatePassword(long id, String password, boolean initFlag);
 }

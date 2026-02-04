@@ -58,6 +58,18 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
         PasswordCheckResult result = passwordValidator.validate(context);
 
         log.debug("凭证校验完成 - 场景: {}, 结果: {}", request.getScene(), result.isPassed());
+
+        // 注册和修改密码，如果校验通过，都需要保存历史密码，更新密码过期信息
+        if (result.isPassed()
+                && (request.getScene() == CredentialScene.CHANGE_PASSWORD
+                || request.getScene() == CredentialScene.REGISTER)) {
+            savePasswordHistory(request.getUserId(), request.getPassword());
+            updatePasswordExpiration(request.getUserId());
+        }
+
+        // 失败直接抛出异常
+        result.ifErrorThrow();
+
         return result;
     }
 
@@ -96,7 +108,7 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
     }
 
     @Override
-    public void savePasswordHistory(Long userId, String passwordHash) {
+    public void savePasswordHistory(Long userId, String password) {
         log.debug("保存密码历史 - 用户ID: {}", userId);
 
         credentialPolicyLoader.loadPolicies().stream()
@@ -105,7 +117,7 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
                 .findFirst()
                 .ifPresent(policy -> {
                     int maxRecords = policy.getCheckCount();
-                    passwordHistoryService.saveHistory(userId, passwordHash, maxRecords);
+                    passwordHistoryService.saveHistory(userId, password, maxRecords);
                 });
     }
 

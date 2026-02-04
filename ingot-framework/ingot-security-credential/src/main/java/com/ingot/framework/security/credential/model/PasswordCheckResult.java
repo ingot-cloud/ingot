@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ingot.framework.commons.error.BizException;
 import lombok.Data;
 
 /**
@@ -81,6 +82,16 @@ public class PasswordCheckResult {
         result.warnings.add(warningMessage);
         result.addMetadata(METADATA_KEY_WARNING_CODE, warningCode);
         return result;
+    }
+
+    /**
+     * 如果失败则抛出异常
+     */
+    public PasswordCheckResult ifErrorThrow() {
+        if (!isPassed()) {
+            throw new BizException(getFailureCode().getCode(), getFailureMessage());
+        }
+        return this;
     }
 
     /**

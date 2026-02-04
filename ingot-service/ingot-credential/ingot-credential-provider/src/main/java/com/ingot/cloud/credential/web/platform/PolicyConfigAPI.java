@@ -86,7 +86,7 @@ public class PolicyConfigAPI implements RShortcuts {
     /**
      * 保存或更新策略配置
      */
-    @PostMapping
+    @PutMapping
     @Operation(summary = "更新策略配置")
     @AdminOrHasAnyAuthority({"platform:credential:policy:update"})
     public R<Void> updatePolicyConfig(@RequestBody CredentialPolicyConfig config) {

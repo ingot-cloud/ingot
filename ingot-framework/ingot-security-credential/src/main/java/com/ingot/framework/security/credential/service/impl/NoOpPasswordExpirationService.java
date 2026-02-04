@@ -21,7 +21,7 @@ public class NoOpPasswordExpirationService implements PasswordExpirationService 
     }
 
     @Override
-    public void initExpiration(Long userId, int maxDays, boolean forceChange, int graceLogins) {
+    public void initExpiration(Long userId, int maxDays, int graceLogins) {
         log.debug("使用默认空实现，不初始化过期信息");
         // 空实现，不初始化
     }

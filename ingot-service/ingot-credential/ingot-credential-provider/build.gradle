@@ -12,7 +12,6 @@ dependencies {
     implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_security)
     implementation project(ingot.framework_tenant)
-    implementation project(ingot.framework_id)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_openapi)
     implementation project(ingot.framework_security_credential)

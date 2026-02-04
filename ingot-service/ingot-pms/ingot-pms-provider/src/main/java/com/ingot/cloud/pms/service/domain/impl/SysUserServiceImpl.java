@@ -1,5 +1,7 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.time.LocalDateTime;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -16,10 +18,14 @@ import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.security.credential.model.CredentialScene;
+import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
+import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -32,8 +38,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+    private final CredentialSecurityService credentialSecurityService;
     private final PasswordEncoder passwordEncoder;
-    private final AssertionChecker assertI18nService;
+    private final AssertionChecker assertionChecker;
 
     @Override
     public IPage<UserPageItemVO> conditionPage(Page<SysUser> page, UserQueryDTO condition, Long orgId) {
@@ -67,7 +74,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         checkUserUniqueField(user, null);
 
-        assertI18nService.checkOperation(save(user),
+        assertionChecker.checkOperation(save(user),
                 "SysUserServiceImpl.CreateFailed");
     }
 
@@ -75,24 +82,15 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     public void update(SysUser user) {
         SysUser current = getById(user.getId());
 
-        if (StrUtil.isNotEmpty(user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            // 如果没有传递init pwd，那么设置为false
-            if (user.getInitPwd() == null) {
-                user.setInitPwd(Boolean.FALSE);
-            }
-        }
-
         checkUserUniqueField(user, current);
-
         user.setUpdatedAt(DateUtil.now());
-        assertI18nService.checkOperation(updateById(user),
+        assertionChecker.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdateFailed");
     }
 
     @Override
     public void delete(long id) {
-        assertI18nService.checkOperation(removeById(id),
+        assertionChecker.checkOperation(removeById(id),
                 "SysUserServiceImpl.RemoveFailed");
     }
 
@@ -100,7 +98,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         // 更新字段不为空，并且不等于当前值
         if (StrUtil.isNotEmpty(update.getUsername())
                 && (current == null || !StrUtil.equals(update.getUsername(), current.getUsername()))) {
-            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+            assertionChecker.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getUsername, update.getUsername())) == 0,
                     PmsErrorCode.ExistUsername.getCode(),
                     "SysUserServiceImpl.UsernameExist");
@@ -108,7 +106,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         if (StrUtil.isNotEmpty(update.getPhone())
                 && (current == null || !StrUtil.equals(update.getPhone(), current.getPhone()))) {
-            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+            assertionChecker.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getPhone, update.getPhone())) == 0,
                     PmsErrorCode.ExistPhone.getCode(),
                     "SysUserServiceImpl.PhoneExist");
@@ -116,7 +114,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
 
         if (StrUtil.isNotEmpty(update.getEmail())
                 && (current == null || !StrUtil.equals(update.getEmail(), current.getEmail()))) {
-            assertI18nService.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
+            assertionChecker.checkBiz(count(Wrappers.<SysUser>lambdaQuery()
                             .eq(SysUser::getEmail, update.getEmail())) == 0,
                     PmsErrorCode.ExistEmail.getCode(),
                     "SysUserServiceImpl.EmailExist");
@@ -124,23 +122,37 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void fixPassword(long id, UserPasswordDTO params) {
-        assertI18nService.checkOperation(StrUtil.isNotEmpty(params.getPassword())
+        assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPassword())
                         && StrUtil.isNotEmpty(params.getNewPassword()),
                 "SysUserServiceImpl.IncorrectPassword");
 
         SysUser current = getById(id);
-        assertI18nService.checkOperation(current != null,
+        assertionChecker.checkOperation(current != null,
                 "SysUserServiceImpl.UserNonExist");
         assert current != null;
 
-        assertI18nService.checkOperation(passwordEncoder.matches(params.getPassword(), current.getPassword()),
+        assertionChecker.checkOperation(passwordEncoder.matches(params.getPassword(), current.getPassword()),
                 "SysUserServiceImpl.IncorrectPassword");
+
+        updatePassword(id, params.getNewPassword(), false);
+    }
+
+    @Override
+    public void updatePassword(long id, String password, boolean initFlag) {
+        credentialSecurityService.validate(CredentialValidateRequest.builder()
+                .scene(CredentialScene.CHANGE_PASSWORD)
+                .userId(id)
+                .password(password)
+                .build());
+
         SysUser user = new SysUser();
         user.setId(id);
-        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
-        user.setInitPwd(false);
-        assertI18nService.checkOperation(user.updateById(),
+        user.setPassword(passwordEncoder.encode(password));
+        user.setInitPwd(initFlag);
+        user.setUpdatedAt(LocalDateTime.now());
+        assertionChecker.checkOperation(updateById(user),
                 "SysUserServiceImpl.UpdatePasswordFailed");
     }
 

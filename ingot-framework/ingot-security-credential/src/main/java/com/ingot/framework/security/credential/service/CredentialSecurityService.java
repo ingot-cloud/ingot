@@ -25,10 +25,10 @@ public interface CredentialSecurityService {
      * 保存密码历史
      * <p>在修改密码成功后调用</p>
      *
-     * @param userId       用户ID
-     * @param passwordHash 密码哈希
+     * @param userId   用户ID
+     * @param password 密码
      */
-    void savePasswordHistory(Long userId, String passwordHash);
+    void savePasswordHistory(Long userId, String password);
 
     /**
      * 更新密码过期时间

@@ -244,8 +244,7 @@ public class BizUserServiceImpl implements BizUserService {
 
         // 重置密码
         String initPwd = RandomUtil.randomString(6);
-        user.setPassword(passwordEncoder.encode(initPwd));
-        user.updateById();
+        sysUserService.updatePassword(userId, initPwd, true);
 
         ResetPwdVO result = new ResetPwdVO();
         result.setRandom(initPwd);
@@ -398,12 +397,8 @@ public class BizUserServiceImpl implements BizUserService {
             return;
         }
 
-        SysUser user = new SysUser();
-        user.setId(id);
-        user.setPassword(passwordEncoder.encode(params.getNewPassword()));
-        user.setInitPwd(false);
-        assertionChecker.checkOperation(user.updateById(),
-                "SysUserServiceImpl.UpdatePasswordFailed");
+        // 更新密码
+        sysUserService.updatePassword(id, params.getNewPassword(), false);
     }
 
     @Override

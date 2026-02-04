@@ -26,12 +26,6 @@ public enum CredentialScene {
     CHANGE_PASSWORD("修改密码", "CHANGE_PASSWORD"),
 
     /**
-     * 重置密码（管理员重置）
-     * <p>校验：密码强度</p>
-     */
-    RESET_PASSWORD("重置密码", "RESET_PASSWORD"),
-
-    /**
      * 登录验证
      * <p>校验：密码过期</p>
      */

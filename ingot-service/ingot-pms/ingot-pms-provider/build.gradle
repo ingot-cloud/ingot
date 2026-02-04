@@ -18,7 +18,7 @@ dependencies {
     implementation project(ingot.framework_openapi)
     implementation project(ingot.framework_crypto)
     implementation project(ingot.framework_social_wechat)
-
+    implementation project(ingot.framework_security_credential_data)
     implementation project(ingot.member_api)
     implementation project(ingot.pms_api)
 }

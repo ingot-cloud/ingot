@@ -26,11 +26,11 @@ public interface PasswordHistoryService {
      * 保存密码历史（环形缓冲）
      * <p>当达到最大记录数时，会覆盖最旧的记录</p>
      *
-     * @param userId       用户ID
-     * @param passwordHash 密码哈希值
-     * @param maxRecords   最大保留记录数
+     * @param userId     用户ID
+     * @param password   密码原始值
+     * @param maxRecords 最大保留记录数
      */
-    void saveHistory(Long userId, String passwordHash, int maxRecords);
+    void saveHistory(Long userId, String password, int maxRecords);
 
     /**
      * 检查密码是否在历史中使用过
