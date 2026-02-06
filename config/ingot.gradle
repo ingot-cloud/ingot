@@ -31,6 +31,6 @@ ingot.framework_security_credential_data = ":ingot-framework:ingot-security-cred
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
 ingot.member_api = ":ingot-service:ingot-member:ingot-member-api"
-ingot.credential_api = ":ingot-service:ingot-credential:ingot-credential-api"
+ingot.security_api = ":ingot-service:ingot-security:ingot-security-api"
 
 ext.ingot = ingot

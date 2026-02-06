@@ -1,6 +1,6 @@
 package com.ingot.framework.security.credential.config;
 
-import com.ingot.cloud.credential.api.rpc.RemoteCredentialService;
+import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import com.ingot.framework.security.credential.service.PasswordExpirationService;
