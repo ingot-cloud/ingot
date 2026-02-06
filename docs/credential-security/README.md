@@ -305,7 +305,7 @@ CREATE TABLE password_expiration (
 ```
 
 **数据库脚本位置：**
-- `databases/ingot_credential.sql` - Credential Service 初始化
+- `databases/ingot_security.sql` - Credential Service 初始化
 - `databases/migrations/001_add_password_history_member.sql` - Member Service
 - `databases/migrations/add_password_history.sql` - PMS Service
 
@@ -490,7 +490,7 @@ PasswordCheckResult result = credentialSecurityService.validate(request);
 
 ```bash
 # Credential Service
-mysql -u root -p < databases/ingot_credential.sql
+mysql -u root -p < databases/ingot_security.sql
 
 # Member Service
 mysql -u root -p < databases/migrations/001_add_password_history_member.sql
@@ -1012,7 +1012,7 @@ CREATE TABLE password_expiration (
 ```
 
 **数据库脚本位置：**
-- `databases/ingot_credential.sql` - Credential Service 初始化
+- `databases/ingot_security.sql` - Credential Service 初始化
 - `databases/migrations/001_add_password_history_member.sql` - Member Service
 - `databases/migrations/add_password_history.sql` - PMS Service
 
@@ -1024,7 +1024,7 @@ CREATE TABLE password_expiration (
 
 ```bash
 # Credential Service
-mysql -u root -p < databases/ingot_credential.sql
+mysql -u root -p < databases/ingot_security.sql
 
 # Member Service
 mysql -u root -p < databases/migrations/001_add_password_history_member.sql
