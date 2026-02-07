@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 30/12/2025 16:52:03
+ Date: 07/02/2026 15:32:16
 */
 
 SET NAMES utf8mb4;
@@ -37,125 +37,6 @@ BEGIN;
 INSERT INTO `biz_leaf_alloc` (`biz_tag`, `max_id`, `step`, `description`, `update_time`) VALUES ('app_id', 1, 1000, 'AppID', '2024-01-10 10:44:38');
 INSERT INTO `biz_leaf_alloc` (`biz_tag`, `max_id`, `step`, `description`, `update_time`) VALUES ('org_code', 4001, 1000, '组织编码', '2025-11-26 02:47:41');
 INSERT INTO `biz_leaf_alloc` (`biz_tag`, `max_id`, `step`, `description`, `update_time`) VALUES ('org_role_code', 38001, 1000, '组织角色编码', '2025-11-26 01:19:25');
-COMMIT;
-
--- ----------------------------
--- Table structure for member_role
--- ----------------------------
-DROP TABLE IF EXISTS `member_role`;
-CREATE TABLE `member_role` (
-  `id` bigint unsigned NOT NULL COMMENT 'ID',
-  `pid` bigint NOT NULL COMMENT '组ID',
-  `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '角色名称',
-  `code` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '角色编码',
-  `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0' COMMENT '角色类型',
-  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
-  `created_at` datetime DEFAULT NULL COMMENT '创建日期',
-  `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
-  `deleted_at` datetime DEFAULT NULL COMMENT '删除日期',
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_code` (`code`) USING BTREE COMMENT '编码'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Records of member_role
--- ----------------------------
-BEGIN;
-INSERT INTO `member_role` (`id`, `pid`, `name`, `code`, `type`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (930517119423283201, 930516778518642689, '用户', 'role_user', '1', '0', '2024-01-30 17:28:51', NULL, NULL);
-COMMIT;
-
--- ----------------------------
--- Table structure for member_role_user
--- ----------------------------
-DROP TABLE IF EXISTS `member_role_user`;
-CREATE TABLE `member_role_user` (
-  `id` bigint NOT NULL COMMENT 'ID',
-  `role_id` bigint unsigned NOT NULL COMMENT '角色ID',
-  `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
-  `tenant_id` bigint NOT NULL COMMENT '租户ID',
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_user` (`user_id`) USING BTREE,
-  KEY `idx_role` (`role_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Records of member_role_user
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for member_user
--- ----------------------------
-DROP TABLE IF EXISTS `member_user`;
-CREATE TABLE `member_user` (
-  `id` bigint unsigned NOT NULL COMMENT 'ID',
-  `username` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '用户名',
-  `password` varchar(300) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '密码',
-  `init_pwd` tinyint(1) NOT NULL DEFAULT '1' COMMENT '初始化密码标识',
-  `nickname` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '昵称',
-  `phone` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '手机号',
-  `email` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '邮件地址',
-  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '头像',
-  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
-  `created_at` datetime DEFAULT NULL COMMENT '创建日期',
-  `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
-  `deleted_at` datetime DEFAULT NULL COMMENT '删除日期',
-  PRIMARY KEY (`id`),
-  KEY `idx_username` (`username`) USING BTREE COMMENT '用户名',
-  KEY `idx_phone` (`phone`) USING BTREE COMMENT '手机号',
-  KEY `idx_email` (`email`) USING BTREE COMMENT '邮箱'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Records of member_user
--- ----------------------------
-BEGIN;
-INSERT INTO `member_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (931155715964600322, '123123', '{bcrypt}$2a$10$Rek2iUR0EyBy79u06yfi0ec83N3zEicQPHvltWTlhCDjeWn4X7qRm', 1, 'test1', '123123', NULL, 'http://ingot-cloud:9090/ingot/public/user/avatar/tctools.png?t=1706772523411', '0', '2024-02-01 11:46:24', '2024-02-01 15:28:49', NULL);
-COMMIT;
-
--- ----------------------------
--- Table structure for member_user_social
--- ----------------------------
-DROP TABLE IF EXISTS `member_user_social`;
-CREATE TABLE `member_user_social` (
-  `id` bigint NOT NULL COMMENT 'ID',
-  `tenant_id` bigint NOT NULL COMMENT '组织ID',
-  `user_id` bigint NOT NULL COMMENT '用户ID',
-  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道类型',
-  `unique_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '渠道唯一ID',
-  `bind_at` datetime NOT NULL COMMENT '绑定时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_unique_type_user` (`unique_id`,`type`,`user_id`) USING BTREE COMMENT '渠道用户索引'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Records of member_user_social
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for member_user_tenant
--- ----------------------------
-DROP TABLE IF EXISTS `member_user_tenant`;
-CREATE TABLE `member_user_tenant` (
-  `id` bigint NOT NULL COMMENT 'ID',
-  `user_id` bigint NOT NULL COMMENT '用户ID',
-  `tenant_id` bigint NOT NULL COMMENT '租户ID',
-  `main` bit(1) NOT NULL COMMENT '是否为主要租户',
-  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '租户名称',
-  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '头像',
-  `created_at` datetime NOT NULL COMMENT '创建时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_user` (`user_id`) USING BTREE,
-  KEY `idx_tenant_user` (`tenant_id`,`user_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Records of member_user_tenant
--- ----------------------------
-BEGIN;
 COMMIT;
 
 -- ----------------------------
@@ -273,10 +154,12 @@ INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permi
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385137007947777, 1171383124115320834, '角色管理', '1', '/platform/meta/role', b'1', 1171385136957616129, 0, '@/pages/platform/meta/role/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 09:32:21', '2025-11-25 17:19:11', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385232201871361, 1171383124115320834, '权限管理', '1', '/platform/meta/permission', b'1', 1171385232147345409, 0, '@/pages/platform/meta/permission/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 09:32:44', '2025-11-25 17:19:15', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385548041351169, 1171383124115320834, '应用管理', '1', '/platform/meta/app', b'1', 1171385547961659394, 0, '@/pages/platform/meta/app/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 09:33:59', '2025-11-25 17:19:26', NULL);
-INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377827807234, 0, '组织管理', '0', '/platform/org', b'1', 1171506377735532545, 0, '@/layouts/InAppLayout.vue', NULL, '/platform/org/manage', 'clarity:organization-line', 3, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 17:34:07', '2025-11-25 17:34:54', NULL);
+INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377827807234, 0, '组织管理', '0', '/platform/org', b'1', 1171506377735532545, 0, '@/layouts/InAppLayout.vue', NULL, '/platform/org/tenant', 'clarity:organization-line', 3, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 17:34:07', '2026-02-06 15:55:06', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506495809384449, 1171506377827807234, '组织管理', '1', '/platform/org/tenant', b'1', 1171506495763247105, 0, '@/pages/platform/org/tenant/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-11-25 17:34:35', '2025-11-25 17:34:35', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175028897327607810, 881182442898894850, '权限管理', '1', '/platform/member/permission', b'1', 1175028897264693250, 0, '@/pages/platform/member/permission/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-12-05 10:51:21', '2025-12-05 11:01:57', NULL);
 INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1180877894980829185, 782579756306313217, '在线用户', '1', '/platform/system/onlinetoken', b'1', 1180877894834028546, 0, '@/pages/platform/system/onlinetoken/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2025-12-21 14:13:11', '2025-12-21 14:14:31', NULL);
+INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197222719172567042, 0, '安全中心', '0', '/platform/security', b'1', 1197222719055126529, 1, '@/layouts/InAppLayout.vue', NULL, '/platform/security/credential', 'ic:sharp-security', 5, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-02-04 16:41:41', '2026-02-06 15:52:06', NULL);
+INSERT INTO `meta_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197223040129097729, 1197222719172567042, '凭证策略', '1', '/platform/security/credential', b'1', 1197223040045211649, 0, '@/pages/platform/security/credential/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-02-04 16:42:57', '2026-02-04 17:17:50', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -327,10 +210,12 @@ INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, 
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385136957616129, 1171383124023046146, '角色管理', 'platform:meta:role', '0', '0', '0', '', '2025-11-25 09:32:21', '2025-11-25 17:19:11', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385232147345409, 1171383124023046146, '权限管理', 'platform:meta:permission', '0', '0', '0', '', '2025-11-25 09:32:44', '2025-11-25 17:19:15', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171385547961659394, 1171383124023046146, '应用管理', 'platform:meta:app', '0', '0', '0', '', '2025-11-25 09:33:59', '2025-11-25 17:19:26', NULL);
-INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377735532545, 0, '组织管理', 'platform:org', '0', '0', '0', '', '2025-11-25 17:34:07', '2025-11-25 17:34:54', NULL);
+INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506377735532545, 0, '组织管理', 'platform:org', '0', '0', '0', '', '2025-11-25 17:34:07', '2026-02-06 15:55:06', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171506495763247105, 1171506377735532545, '组织管理', 'platform:org:tenant', '0', '0', '0', '', '2025-11-25 17:34:35', '2025-11-25 17:34:35', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175028897264693250, 881181673671929858, '权限管理', 'platform:member:permission', '0', '0', '0', '', '2025-12-05 10:51:21', '2025-12-05 11:01:57', NULL);
 INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1180877894834028546, 782647310861250562, '在线用户', 'system:onlientoken', '0', '0', '0', '', '2025-12-21 14:13:11', '2025-12-21 14:14:31', NULL);
+INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197222719055126529, 0, '安全中心', 'platform:security', '0', '0', '0', '', '2026-02-04 16:41:41', '2026-02-06 15:52:06', NULL);
+INSERT INTO `meta_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197223040045211649, 1197222719055126529, '凭证策略', 'platform:security:credential', '0', '0', '0', '', '2026-02-04 16:42:57', '2026-02-04 17:17:50', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -385,12 +270,61 @@ CREATE TABLE `meta_role_permission` (
 -- Records of meta_role_permission
 -- ----------------------------
 BEGIN;
-INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172810250299371522, 1, 782647310861250562);
-INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172810250307760129, 1, 868163807997636610);
-INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172810250311954434, 1, 881181673671929858);
-INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172810250311954435, 1, 1171383124023046146);
-INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172810250316148737, 1, 1171506377735532545);
 INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172814842718318593, 2, 881187314109034498);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218911305729, 1, 782647310861250562);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218923888642, 1, 868163807997636610);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082945, 1, 881181673671929858);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082946, 1, 1171383124023046146);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082947, 1, 1171506377735532545);
+INSERT INTO `meta_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082948, 1, 1197222719055126529);
+COMMIT;
+
+-- ----------------------------
+-- Table structure for password_expiration
+-- ----------------------------
+DROP TABLE IF EXISTS `password_expiration`;
+CREATE TABLE `password_expiration` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `last_changed_at` datetime NOT NULL COMMENT '最后修改密码时间',
+  `expires_at` datetime NOT NULL COMMENT '密码过期时间',
+  `grace_login_remaining` int NOT NULL DEFAULT '0' COMMENT '剩余宽限登录次数',
+  `next_warning_at` datetime DEFAULT NULL COMMENT '下次提醒时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_id` (`user_id`),
+  KEY `idx_expires_at` (`expires_at`),
+  KEY `idx_next_warning_at` (`next_warning_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码过期信息';
+
+-- ----------------------------
+-- Records of password_expiration
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Table structure for password_history
+-- ----------------------------
+DROP TABLE IF EXISTS `password_history`;
+CREATE TABLE `password_history` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `password_hash` varchar(255) NOT NULL COMMENT '密码哈希值',
+  `sequence_number` int NOT NULL COMMENT '序号（用于环形缓冲，从1开始）',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_sequence` (`user_id`,`sequence_number`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='密码历史记录（环形缓冲）';
+
+-- ----------------------------
+-- Records of password_history
+-- ----------------------------
+BEGIN;
 COMMIT;
 
 -- ----------------------------
@@ -524,7 +458,7 @@ INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `p
 INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (883383523896766465, '18603243837', '{bcrypt}$2a$10$WklERpnX/5sqH.qkEDG9Kep9RfWC6hGgD7ksZQXHtxI/R5epa4zWO', 0, '王超', '18603243837', NULL, 'ingot/user/avatar/883383523896766465/logo.png', '0', '2023-09-22 15:56:46', '2025-09-05 07:45:50', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (968109737946447873, '11111111111', '{bcrypt}$2a$10$2Lu9D4.M/dTzoXFgbNh5cOMfQI.zCNY6sHym8ZnuYvs3R6oOv/Udu', 0, '测试用户', '11111111111', NULL, 'ingot/user/avatar/968109737946447873/logo.png', '0', '2024-05-13 11:08:29', '2025-11-26 14:18:11', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1009463137401110530, '12312312312', '{bcrypt}$2a$10$dWq5aNMSQJM2BP4bYPaCZuNK0APKrb0G3z8WVlMrUd3zfwc9pxpHO', 1, '1231233', '12312312312', NULL, 'ingot/user/avatar/1009463137401110530/ic_logo.png', '0', '2024-09-04 13:52:08', '2025-11-26 10:47:16', NULL);
-INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1095389297838202881, '18603243838', '{bcrypt}$2a$10$9wod3QviKn2YYzslhjeQhew98DoV4qfMb6HipqOPyMyCQQwk5XsBK', 1, '测试1人员', '18603243838', NULL, 'ingot/user/avatar/1095389297838202881/logo.png', '0', '2025-04-29 16:32:01', '2025-09-05 08:48:37', NULL);
+INSERT INTO `sys_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1095389297838202881, '18603243838', '{bcrypt}$2a$10$9wod3QviKn2YYzslhjeQhew98DoV4qfMb6HipqOPyMyCQQwk5XsBK', 1, '测试1人员', '18603243838', NULL, 'ingot/user/avatar/1095389297838202881/jiujiuqiuzhi.jpg', '0', '2025-04-29 16:32:01', '2026-01-12 17:41:57', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -619,7 +553,6 @@ CREATE TABLE `tenant_dept` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 1, 0, '英格特云', 0, b'1', '1', '2025-11-24 16:36:06', '2025-11-24 16:36:08', NULL);
-INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171513454902112258, 1171513454855974913, 0, '测试组织', 0, b'1', '0', '2025-11-25 18:02:14', NULL, '2025-11-25 10:06:58');
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171517787697836033, 1, 1, '测试部门', 999, b'0', '0', '2025-11-25 18:19:27', '2025-12-23 09:33:41', NULL);
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171520634774614018, 1, 1171517787697836033, '测试小组', 999, b'0', '0', '2025-11-25 18:30:46', NULL, NULL);
 INSERT INTO `tenant_dept` (`id`, `tenant_id`, `pid`, `name`, `sort`, `main_flag`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171766486592122882, 1171766486562762754, 0, '测试组织', 0, b'1', '0', '2025-11-26 10:47:42', NULL, NULL);
@@ -724,11 +657,7 @@ CREATE TABLE `tenant_user_dept_private` (
 -- Records of tenant_user_dept_private
 -- ----------------------------
 BEGIN;
-INSERT INTO `tenant_user_dept_private` (`id`, `tenant_id`, `user_id`, `dept_id`) VALUES (1171818434003464194, 1171766486562762754, 883383523896766465, 1171766486592122882);
-INSERT INTO `tenant_user_dept_private` (`id`, `tenant_id`, `user_id`, `dept_id`) VALUES (1171818508011958274, 1171766486562762754, 968109737946447873, 1171766486592122882);
-INSERT INTO `tenant_user_dept_private` (`id`, `tenant_id`, `user_id`, `dept_id`) VALUES (1171818619999875073, 1, 883383523896766465, 1);
 INSERT INTO `tenant_user_dept_private` (`id`, `tenant_id`, `user_id`, `dept_id`) VALUES (1171818619999875074, 1, 883383523896766465, 1171520634774614018);
-INSERT INTO `tenant_user_dept_private` (`id`, `tenant_id`, `user_id`, `dept_id`) VALUES (1172813477086490626, 1, 1, 1);
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
