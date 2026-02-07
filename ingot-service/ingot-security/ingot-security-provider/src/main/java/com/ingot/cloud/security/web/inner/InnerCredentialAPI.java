@@ -8,6 +8,8 @@ import com.ingot.cloud.security.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.security.service.PolicyConfigService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.config.annotation.web.configuration.Permit;
+import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2026-01-22
  */
 @Slf4j
+@Permit(mode = PermitMode.INNER)
 @RestController
 @RequestMapping("/inner/credential")
 @RequiredArgsConstructor
