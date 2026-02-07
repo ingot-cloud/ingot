@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class PolicyConfigServiceImpl implements PolicyConfigService {
-    private static final String CACHE_NAME = "credential:policy";
+    private static final String CACHE_NAME = "credential:config";
     private final CredentialPolicyConfigMapper policyConfigMapper;
     private final AssertionChecker assertionChecker;
 
@@ -41,6 +41,7 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
     }
 
     @Override
+    @Cacheable(value = CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
     public List<CredentialPolicyConfig> getAllPolicyConfigs() {
         return policyConfigMapper.selectList(
                 Wrappers.<CredentialPolicyConfig>lambdaQuery()
