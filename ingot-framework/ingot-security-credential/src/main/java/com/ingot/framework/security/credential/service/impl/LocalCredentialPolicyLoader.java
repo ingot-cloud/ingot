@@ -136,7 +136,6 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
         policy.setMaxDays(config.getMaxDays());
         policy.setWarningDaysBefore(config.getWarningDaysBefore());
         policy.setGraceLoginCount(config.getGraceLoginCount());
-        policy.setForceChangeAfterReset(config.isForceChangeAfterReset());
 
         return policy;
     }

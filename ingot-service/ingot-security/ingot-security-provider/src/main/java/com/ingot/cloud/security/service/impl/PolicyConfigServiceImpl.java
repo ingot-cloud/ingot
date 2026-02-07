@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.security.mapper.CredentialPolicyConfigMapper;
 import com.ingot.cloud.security.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.security.service.PolicyConfigService;
+import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.credential.model.CredentialPolicyType;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,9 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
     @CacheEvict(value = CACHE_NAME, key = "#config.policyType.value")
     public CredentialPolicyConfig savePolicyConfig(CredentialPolicyConfig config) {
         assertionChecker.checkOperation(config.getPolicyType() != null, "PolicyConfigServiceImpl.TypeNotNull");
+
+        config.setCreatedAt(DateUtil.now());
+        config.setUpdatedAt(config.getCreatedAt());
         policyConfigMapper.insert(config);
         return config;
     }
@@ -68,6 +72,7 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
         assertionChecker.checkOperation(current.getPolicyType() == config.getPolicyType(),
                 "PolicyConfigServiceImpl.TypeCantModified");
 
+        config.setUpdatedAt(DateUtil.now());
         policyConfigMapper.updateById(config);
         return config;
     }

@@ -65,11 +65,6 @@ public class CredentialSecurityProperties {
          * 宽限登录次数
          */
         private int graceLoginCount = 3;
-
-        /**
-         * 管理员重置后是否强制修改
-         */
-        private boolean forceChangeAfterReset = true;
     }
 
     @Data

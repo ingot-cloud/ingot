@@ -100,9 +100,6 @@ public class PasswordPolicyUtil {
         if (config.containsKey("graceLoginCount")) {
             policy.setGraceLoginCount(((Number) config.get("graceLoginCount")).intValue());
         }
-        if (config.containsKey("forceChangeAfterReset")) {
-            policy.setForceChangeAfterReset((Boolean) config.get("forceChangeAfterReset"));
-        }
 
         return policy;
     }

@@ -40,11 +40,6 @@ public class PasswordExpirationPolicy implements PasswordPolicy {
     private int graceLoginCount = 3;
 
     /**
-     * 强制修改密码后是否立即过期
-     */
-    private boolean forceChangeAfterReset = true;
-
-    /**
      * 优先级（可覆盖）
      */
     private int priority = 20;

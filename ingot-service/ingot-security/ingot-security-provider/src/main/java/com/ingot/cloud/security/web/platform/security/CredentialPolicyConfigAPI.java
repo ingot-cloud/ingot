@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -77,6 +78,9 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
             policyLoader.clearPolicyCache();
 
             return ok();
+        } catch (DuplicateKeyException e) {
+            log.error("保存策略配置失败", e);
+            return error("保存策略配置失败，相同的策略只能同时生效一个");
         } catch (Exception e) {
             log.error("保存策略配置失败", e);
             return error("保存策略配置失败: " + e.getMessage());
