@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author jymot
  * @since 2026-01-22
  */
-@FeignClient(contextId = "RemoteCredentialService", value = ServiceNameConstants.CREDENTIAL_SERVICE)
+@FeignClient(contextId = "RemoteCredentialService", value = ServiceNameConstants.SECURITY_SERVICE)
 public interface RemoteCredentialService {
 
     /**
