@@ -1,10 +1,7 @@
 package com.ingot.framework.security.credential.config;
 
 import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
-import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
-import com.ingot.framework.security.credential.service.CredentialSecurityService;
-import com.ingot.framework.security.credential.service.PasswordExpirationService;
-import com.ingot.framework.security.credential.service.PasswordHistoryService;
+import com.ingot.framework.security.credential.service.*;
 import com.ingot.framework.security.credential.service.impl.*;
 import com.ingot.framework.security.credential.validator.DefaultPasswordValidator;
 import com.ingot.framework.security.credential.validator.PasswordValidator;
@@ -74,5 +71,17 @@ public class CredentialSecurityAutoConfiguration {
                 properties,
                 credentialPolicyLoader
         );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ClearCredentialPolicyConfigCacheService.class)
+    public ClearCredentialPolicyConfigCacheService policyConfigCacheService() {
+        return new DefaultClearCredentialPolicyConfigCacheService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ClearPasswordPolicyCacheService.class)
+    public ClearPasswordPolicyCacheService passwordPolicyCacheService() {
+        return new DefaultClearPasswordPolicyCacheService();
     }
 }

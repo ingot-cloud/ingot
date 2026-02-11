@@ -3,6 +3,8 @@ package com.ingot.framework.security.credential.policy;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -26,10 +28,12 @@ public class PasswordPolicyUtil {
 
         // 设置配置参数
         if (config.containsKey("minLength")) {
-            policy.setMinLength(((Number) config.get("minLength")).intValue());
+            Object minLength = config.get("minLength");
+            policy.setMinLength(NumberUtil.parseInt(StrUtil.toString(minLength)));
         }
         if (config.containsKey("maxLength")) {
-            policy.setMaxLength(((Number) config.get("maxLength")).intValue());
+            Object maxLength = config.get("maxLength");
+            policy.setMaxLength(NumberUtil.parseInt(StrUtil.toString(maxLength)));
         }
         if (config.containsKey("requireUppercase")) {
             policy.setRequireUppercase((Boolean) config.get("requireUppercase"));
@@ -74,7 +78,8 @@ public class PasswordPolicyUtil {
             policy.setEnabled((Boolean) config.get("enabled"));
         }
         if (config.containsKey("checkCount")) {
-            policy.setCheckCount(((Number) config.get("checkCount")).intValue());
+            Object checkCount = config.get("checkCount");
+            policy.setCheckCount(NumberUtil.parseInt(StrUtil.toString(checkCount)));
         }
 
         return policy;
@@ -92,13 +97,13 @@ public class PasswordPolicyUtil {
             policy.setEnabled((Boolean) config.get("enabled"));
         }
         if (config.containsKey("maxDays")) {
-            policy.setMaxDays(((Number) config.get("maxDays")).intValue());
+            policy.setMaxDays(NumberUtil.parseInt(StrUtil.toString(config.get("maxDays"))));
         }
         if (config.containsKey("warningDaysBefore")) {
-            policy.setWarningDaysBefore(((Number) config.get("warningDaysBefore")).intValue());
+            policy.setWarningDaysBefore(NumberUtil.parseInt(StrUtil.toString(config.get("warningDaysBefore"))));
         }
         if (config.containsKey("graceLoginCount")) {
-            policy.setGraceLoginCount(((Number) config.get("graceLoginCount")).intValue());
+            policy.setGraceLoginCount(NumberUtil.parseInt(StrUtil.toString(config.get("graceLoginCount"))));
         }
 
         return policy;

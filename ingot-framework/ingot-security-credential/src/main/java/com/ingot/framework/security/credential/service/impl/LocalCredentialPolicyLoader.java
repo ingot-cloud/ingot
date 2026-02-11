@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.ingot.framework.core.config.LocalCacheConfig;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
 import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
 import com.ingot.framework.security.credential.policy.PasswordHistoryPolicy;
 import com.ingot.framework.security.credential.policy.PasswordPolicy;
 import com.ingot.framework.security.credential.policy.PasswordStrengthPolicy;
+import com.ingot.framework.security.credential.service.ClearPasswordPolicyCacheService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -28,9 +29,21 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
     private final CredentialSecurityProperties properties;
     private final PasswordEncoder passwordEncoder;
 
+    @Cacheable(
+            value = ClearPasswordPolicyCacheService.CACHE_NAME,
+            key = "'list'",
+            unless = "#result.isEmpty()",
+            cacheManager = LocalCacheConfig.CACHE_MANAGER
+    )
     @Override
-    @Cacheable(value = CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
     public List<PasswordPolicy> loadPolicies() {
+        return doLoadPolicies();
+    }
+
+    /**
+     * 实际加载策略（从配置创建实例）
+     */
+    private List<PasswordPolicy> doLoadPolicies() {
         List<PasswordPolicy> policies = new ArrayList<>();
 
         // 密码强度策略
@@ -61,14 +74,7 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
         }
 
         policies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
-        log.info("本地兜底策略加载完成，策略数量: {}", policies.size());
-        return policies;
-    }
-
-    @Override
-    @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void clearPolicyCache() {
-
+        return List.copyOf(policies);
     }
 
     /**

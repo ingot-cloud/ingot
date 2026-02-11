@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `password_history` (
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希值',
   `sequence_number` INT NOT NULL COMMENT '序号（用于环形缓冲，从1开始）',
+  `version` bigint NOT NULL DEFAULT '1' COMMENT '版本',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

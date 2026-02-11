@@ -7,7 +7,6 @@ import com.ingot.cloud.security.service.PolicyConfigService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
-import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,35 +27,16 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "凭证策略配置管理")
 public class CredentialPolicyConfigAPI implements RShortcuts {
     private final PolicyConfigService policyConfigService;
-    private final CredentialPolicyLoader policyLoader;
 
     /**
-     * 获取策略配置
-     */
-    @GetMapping("/{policyType}")
-    @Operation(summary = "获取策略配置")
-    @AdminOrHasAnyAuthority({"platform:security:credential:policy:query"})
-    public R<CredentialPolicyConfig> getPolicyConfig(
-            @PathVariable String policyType) {
-        try {
-            CredentialPolicyConfig config = policyConfigService.getPolicyConfig(policyType);
-            return ok(config);
-        } catch (Exception e) {
-            log.error("获取策略配置失败", e);
-            return error("获取策略配置失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取租户的所有策略配置
+     * 获所有策略配置
      */
     @GetMapping("/list")
     @Operation(summary = "获取所有策略配置")
     @AdminOrHasAnyAuthority({"platform:security:credential:policy:query"})
     public R<List<CredentialPolicyConfig>> getAllPolicyConfigs() {
         try {
-            List<CredentialPolicyConfig> configs = policyConfigService.getAllPolicyConfigs();
-            return ok(configs);
+            return ok(policyConfigService.getAllPolicyConfigs());
         } catch (Exception e) {
             log.error("获取策略配置列表失败", e);
             return error("获取策略配置列表失败: " + e.getMessage());
@@ -71,12 +51,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"platform:security:credential:policy:create"})
     public R<Void> savePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
-            CredentialPolicyConfig saved = policyConfigService.savePolicyConfig(config);
-
-            // 刷新缓存
-            policyConfigService.refreshCache(saved.getPolicyType());
-            policyLoader.clearPolicyCache();
-
+            policyConfigService.savePolicyConfig(config);
             return ok();
         } catch (DuplicateKeyException e) {
             log.error("保存策略配置失败", e);
@@ -95,12 +70,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"platform:security:credential:policy:update"})
     public R<Void> updatePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
-            CredentialPolicyConfig updated = policyConfigService.updatePolicyConfig(config);
-
-            // 刷新缓存
-            policyConfigService.refreshCache(updated.getPolicyType());
-            policyLoader.clearPolicyCache();
-
+            policyConfigService.updatePolicyConfig(config);
             return ok();
         } catch (Exception e) {
             log.error("保存策略配置失败", e);
@@ -117,7 +87,6 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
     public R<Void> deletePolicyConfig(@PathVariable Long id) {
         try {
             policyConfigService.deletePolicyConfig(id);
-            policyLoader.clearPolicyCache();
             return ok();
         } catch (Exception e) {
             log.error("删除策略配置失败", e);

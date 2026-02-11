@@ -29,6 +29,7 @@ versions.amazon_awssdk = "2.25.27"
 versions.xxl_job = "3.3.2"
 versions.logback = "1.5.20"
 versions.logstash_logback_encoder = "9.0"
+versions.caffeine = "3.2.3"
 
 versions.ingot_plugin_mybatis = "0.2.4"
 versions.ingot_plugin_assemble = "0.6.0.0"
@@ -67,7 +68,6 @@ spring_cloud.config_starter = "org.springframework.cloud:spring-cloud-starter-co
 spring_cloud.config_server = "org.springframework.cloud:spring-cloud-config-server"
 spring_cloud.bus_amqp_start = "org.springframework.cloud:spring-cloud-starter-bus-amqp"
 spring_cloud.zipkin_starter = "org.springframework.cloud:spring-cloud-starter-zipkin"
-spring_cloud.bootstrap_starter = "org.springframework.cloud:spring-cloud-starter-bootstrap"
 spring_cloud.commons = "org.springframework.cloud:spring-cloud-commons"
 spring_cloud.context = "org.springframework.cloud:spring-cloud-context"
 
@@ -215,6 +215,7 @@ deps.netty = "io.netty:netty-all:4.1.55.Final"
 deps.useragent_parse = "nl.basjes.parse.useragent:yauaa:7.26.1"
 deps.amazon_awssdk = "software.amazon.awssdk:s3:${versions.amazon_awssdk}"
 deps.xxl_job = "com.xuxueli:xxl-job-core:${versions.xxl_job}"
+deps.caffeine = "com.github.ben-manes.caffeine:caffeine:${versions.caffeine}"
 
 def plugins = [:]
 plugins.ingot_mybatis = "com.ingot:ingot-mybatisplus-plugin:${versions.ingot_plugin_mybatis}"

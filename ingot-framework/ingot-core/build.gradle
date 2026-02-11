@@ -22,10 +22,12 @@ dependencies {
     api project(ingot.framework_commons)
 
     implementation(deps.apache.common_codec)
+    implementation(deps.spring.framework_context_support)
     implementation(deps.spring.framework_spring_web)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_cloud.context)
     implementation(deps.mybatis.plus_extension)
+    implementation(deps.caffeine)
 
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)

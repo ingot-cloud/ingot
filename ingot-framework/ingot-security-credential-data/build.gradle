@@ -4,6 +4,7 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.mybatis.plus_extension)
     implementation(deps.mybatis.spring)
+    implementation(deps.hutool)
 
     compileOnly(deps.spring.framework_tx)
     compileOnly(deps.spring.security_crypto)

@@ -12,19 +12,9 @@ import com.ingot.framework.security.credential.policy.PasswordPolicy;
  */
 public interface CredentialPolicyLoader {
     /**
-     * 缓存 KEY
-     */
-    String CACHE_NAME = "credential:policies";
-
-    /**
      * 加载租户的策略列表
      *
      * @return 策略列表（已按优先级排序）
      */
     List<PasswordPolicy> loadPolicies();
-
-    /**
-     * 清空所有策略缓存
-     */
-    void clearPolicyCache();
 }

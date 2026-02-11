@@ -43,6 +43,16 @@ public class DefaultPasswordValidator implements PasswordValidator {
             // 执行策略校验
             PasswordCheckResult policyResult = policy.check(context);
 
+            // 合并警告信息
+            if (policyResult.hasWarnings()) {
+                finalResult.getWarnings().addAll(policyResult.getWarnings());
+            }
+
+            // 合并元数据
+            if (!policyResult.getMetadata().isEmpty()) {
+                finalResult.getMetadata().putAll(policyResult.getMetadata());
+            }
+
             if (!policyResult.isPassed()) {
                 // 合并失败原因
                 finalResult.setPassed(false);
@@ -55,16 +65,6 @@ public class DefaultPasswordValidator implements PasswordValidator {
                     log.debug("策略 {} 为阻断式策略，停止后续校验", policy.getType().getText());
                     break;
                 }
-            }
-
-            // 合并警告信息
-            if (policyResult.hasWarnings()) {
-                finalResult.getWarnings().addAll(policyResult.getWarnings());
-            }
-
-            // 合并元数据
-            if (!policyResult.getMetadata().isEmpty()) {
-                finalResult.getMetadata().putAll(policyResult.getMetadata());
             }
         }
 

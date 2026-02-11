@@ -3,6 +3,7 @@ package com.ingot.framework.security.credential.data.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.framework.security.credential.data.mapper.PasswordHistoryMapper;
 import com.ingot.framework.security.credential.model.domain.PasswordHistory;
@@ -44,28 +45,32 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
     public void saveHistory(Long userId, String password, int maxRecords) {
         log.debug("保存密码历史 - userId: {}, maxRecords: {}", userId, maxRecords);
 
-        // 查询当前用户的记录数量
-        long count = mapper.selectCount(
-                Wrappers.<PasswordHistory>lambdaQuery()
-                        .eq(PasswordHistory::getUserId, userId)
-        );
-
-        // 计算下一个序号（环形缓冲：1, 2, 3, ... maxRecords, 1, 2, ...）
-        int nextSeq = (int) ((count % maxRecords) + 1);
-
-        log.debug("环形缓冲序号 - count: {}, nextSeq: {}", count, nextSeq);
-
         // 查找是否已存在该序号的记录
-        PasswordHistory existing = mapper.selectOne(
+        List<PasswordHistory> existingList = mapper.selectList(
                 Wrappers.<PasswordHistory>lambdaQuery()
                         .eq(PasswordHistory::getUserId, userId)
-                        .eq(PasswordHistory::getSequenceNumber, nextSeq)
         );
+
+        long version = CollUtil.emptyIfNull(existingList)
+                .stream()
+                .map(PasswordHistory::getVersion)
+                .max(Long::compare)
+                .orElse(0L) + 1;
+        // 计算下一个序号（环形缓冲：1, 2, 3, ... maxRecords, 1, 2, ...）
+        int nextSeq = (int) (((version - 1) % maxRecords) + 1);
+        log.debug("环形缓冲序号 - version: {}, nextSeq: {}", version, nextSeq);
+
+        PasswordHistory existing = CollUtil.emptyIfNull(existingList)
+                .stream()
+                .filter(h -> h.getSequenceNumber() == nextSeq)
+                .findFirst()
+                .orElse(null);
 
         if (existing != null) {
             // 更新现有记录（覆盖最旧的）
             existing.setPasswordHash(passwordEncoder.encode(password));
             existing.setUpdatedAt(LocalDateTime.now());
+            existing.setVersion(version);
             mapper.updateById(existing);
             log.debug("更新密码历史记录 - id: {}, seq: {}", existing.getId(), nextSeq);
         } else {
@@ -74,6 +79,7 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
             history.setUserId(userId);
             history.setPasswordHash(passwordEncoder.encode(password));
             history.setSequenceNumber(nextSeq);
+            history.setVersion(version);
             history.setCreatedAt(LocalDateTime.now());
             history.setUpdatedAt(LocalDateTime.now());
             mapper.insert(history);
