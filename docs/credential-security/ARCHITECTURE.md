@@ -224,575 +224,83 @@ PMS Service
 
 ### 1. 策略模式 (Strategy Pattern)
 
-`PasswordPolicy` 接口定义了密码策略的统一行为，不同的具体策略实现不同的校验规则。
-
-```java
-// 策略接口
-public interface PasswordPolicy {
-    String getName();
-    int getPriority();
-    PolicyCheckResult check(PolicyCheckContext context);
-    boolean isEnabled(Tenant tenant);
-}
-
-// 具体策略 A - 强度策略
-public class PasswordStrengthPolicy implements PasswordPolicy {
-    @Override
-    public PolicyCheckResult check(PolicyCheckContext context) {
-        // 检查密码长度、复杂度等
-        if (context.getPassword().length() < minLength) {
-            return PolicyCheckResult.fail("密码长度不足");
-        }
-        return PolicyCheckResult.pass();
-    }
-}
-
-// 具体策略 B - 历史策略
-public class PasswordHistoryPolicy implements PasswordPolicy {
-    @Override
-    public PolicyCheckResult check(PolicyCheckContext context) {
-        // 检查是否与历史密码重复
-        if (isReused(context.getPassword())) {
-            return PolicyCheckResult.fail("密码已使用过");
-        }
-        return PolicyCheckResult.pass();
-    }
-}
-
-// 使用策略
-@Service
-public class PasswordValidator {
-    private final List<PasswordPolicy> policies;
-    
-    public PasswordCheckResult validate(PolicyCheckContext context) {
-        for (PasswordPolicy policy : policies) {
-            if (policy.isEnabled(context.getTenant())) {
-                PolicyCheckResult result = policy.check(context);
-                if (!result.isPassed()) {
-                    return result;
-                }
-            }
-        }
-        return PasswordCheckResult.pass();
-    }
-}
-```
+`PasswordPolicy` 接口定义了密码策略的统一行为，不同的具体策略实现不同的校验规则。通过策略模式，系统可以灵活地添加、删除或修改密码策略。
 
 ### 2. 责任链模式 (Chain of Responsibility)
 
-密码校验通过责任链传递，每个策略依次校验：
-
-```java
-public class ValidatorChain {
-    private List<PasswordPolicy> chain;
-    
-    public PasswordCheckResult validate(PolicyCheckContext context) {
-        PasswordCheckResult result = new PasswordCheckResult();
-        
-        // 按优先级排序
-        chain.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
-        
-        // 依次执行每个策略
-        for (PasswordPolicy policy : chain) {
-            PolicyCheckResult policyResult = policy.check(context);
-            
-            if (!policyResult.isPassed()) {
-                result.addFailure(policyResult);
-                if (policy.isBlocking()) {
-                    break;  // 阻断式策略失败后停止
-                }
-            } else if (policyResult.hasWarnings()) {
-                result.addWarnings(policyResult.getWarnings());
-            }
-        }
-        
-        return result;
-    }
-}
-```
+密码校验通过责任链传递，每个策略按优先级依次校验。责任链模式使得策略的执行顺序可配置，并支持阻断式策略。
 
 ### 3. 联邦式数据架构
 
-策略集中管理，数据分散存储：
-
-```java
-// Credential Security Service - 集中管理策略
-@Service
-public class PolicyConfigService {
-    @Cacheable(value = "credential:policy", key = "#tenantId + ':' + #policyType")
-    public PolicyConfig getPolicy(Long tenantId, String policyType) {
-        // 1. 查询租户级策略
-        PolicyConfig tenantPolicy = repository.findByTenantAndType(tenantId, policyType);
-        if (tenantPolicy != null) {
-            return tenantPolicy;
-        }
-        
-        // 2. 回退到全局默认策略
-        return repository.findDefaultPolicy(policyType);
-    }
-}
-
-// Member Service - 管理自己的密码历史
-@Service
-public class MemberPasswordHistoryService {
-    
-    @Transactional
-    public void addHistory(Long userId, String passwordHash) {
-        // 1. 插入新记录到本地数据库
-        MemberPasswordHistory history = new MemberPasswordHistory();
-        history.setUserId(userId);
-        history.setPasswordHash(passwordHash);
-        historyMapper.insert(history);
-        
-        // 2. 环形缓冲：删除超过限制的旧记录
-        long count = historyMapper.countByUserId(userId);
-        if (count > MAX_HISTORY_COUNT) {
-            historyMapper.deleteOldest(userId, count - MAX_HISTORY_COUNT);
-        }
-    }
-    
-    public boolean isPasswordReused(Long userId, String rawPassword) {
-        List<MemberPasswordHistory> histories = 
-            historyMapper.selectByUserId(userId, MAX_HISTORY_COUNT);
-        
-        return histories.stream()
-            .anyMatch(h -> passwordEncoder.matches(rawPassword, h.getPasswordHash()));
-    }
-}
-
-// PMS Service - 同样管理自己的密码历史（结构相同，数据独立）
-@Service
-public class SysPasswordHistoryService {
-    // 与 Member 类似的实现，但使用 sys_password_history 表
-}
-```
+策略集中管理（Credential Service），数据分散存储（各服务独立数据库）。这种架构实现了策略的统一管理和数据的服务自治。
 
 ## 数据模型设计
 
 ### 集中式：策略配置表
 
-```sql
--- Credential Security Service 数据库
-CREATE TABLE credential_policy_config (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    tenant_id BIGINT COMMENT '租户ID，NULL表示全局默认',
-    policy_type VARCHAR(50) NOT NULL COMMENT '策略类型: STRENGTH, EXPIRATION, HISTORY',
-    policy_config JSON NOT NULL COMMENT '策略配置JSON',
-    priority INT DEFAULT 0 COMMENT '优先级，数字越小优先级越高',
-    enabled BOOLEAN DEFAULT TRUE COMMENT '是否启用',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_tenant_type (tenant_id, policy_type),
-    INDEX idx_type_enabled (policy_type, enabled)
-) COMMENT '凭证策略配置表';
+Credential Service 数据库存储策略配置和审计日志，实现策略的集中管理。
 
--- 示例数据：全局默认强度策略
-INSERT INTO credential_policy_config 
-(tenant_id, policy_type, policy_config, priority, enabled) VALUES
-(NULL, 'STRENGTH', '{
-  "minLength": 8,
-  "maxLength": 32,
-  "requireUppercase": true,
-  "requireLowercase": true,
-  "requireDigit": true,
-  "requireSpecialChar": true,
-  "forbiddenPatterns": ["password", "123456", "admin"]
-}', 10, true);
+**核心表：**
+- `credential_policy_config` - 策略配置表（支持租户级和全局配置）
+- `credential_audit_log` - 审计日志表
 
--- 示例数据：全局默认过期策略
-INSERT INTO credential_policy_config 
-(tenant_id, policy_type, policy_config, priority, enabled) VALUES
-(NULL, 'EXPIRATION', '{
-  "enabled": true,
-  "maxDays": 90,
-  "graceLoginCount": 3,
-  "warningDaysBefore": 7
-}', 20, true);
-```
+### 联邦式：密码历史和过期表
 
-### 联邦式：密码历史表（PMS）
+各服务独立数据库存储密码历史和过期信息，实现数据的服务自治。
 
-```sql
--- PMS Service 数据库
-CREATE TABLE pms_password_history (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希值',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_created (user_id, created_at DESC)
-) COMMENT 'PMS用户密码历史记录（环形缓冲）';
+**核心表：**
+- `password_history` - 密码历史表（环形缓冲设计）
+- `password_expiration` - 密码过期表
 
-CREATE TABLE pms_password_expiration (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    password_set_at TIMESTAMP NOT NULL COMMENT '密码设置时间',
-    expire_at TIMESTAMP COMMENT '过期时间',
-    last_warned_at TIMESTAMP COMMENT '最后警告时间',
-    grace_login_count INT DEFAULT 0 COMMENT '宽限期登录次数',
-    force_change BOOLEAN DEFAULT FALSE COMMENT '是否强制修改',
-    UNIQUE KEY uk_user (user_id),
-    INDEX idx_expire (expire_at)
-) COMMENT 'PMS用户密码过期信息';
-```
-
-### 联邦式：密码历史表（Member）
-
-```sql
--- Member Service 数据库
-CREATE TABLE member_password_history (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希值',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_created (user_id, created_at DESC)
-) COMMENT 'Member用户密码历史记录（环形缓冲）';
-
-CREATE TABLE member_password_expiration (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    password_set_at TIMESTAMP NOT NULL COMMENT '密码设置时间',
-    expire_at TIMESTAMP COMMENT '过期时间',
-    last_warned_at TIMESTAMP COMMENT '最后警告时间',
-    grace_login_count INT DEFAULT 0 COMMENT '宽限期登录次数',
-    force_change BOOLEAN DEFAULT FALSE COMMENT '是否强制修改',
-    UNIQUE KEY uk_user (user_id),
-    INDEX idx_expire (expire_at)
-) COMMENT 'Member用户密码过期信息';
-```
-
-### 集中式：审计日志表
-
-```sql
--- Credential Security Service 数据库
-CREATE TABLE credential_audit_log (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    user_type VARCHAR(20) NOT NULL COMMENT '用户类型: PMS, MEMBER',
-    action VARCHAR(50) NOT NULL COMMENT '操作: PASSWORD_CHANGE, PASSWORD_RESET, PASSWORD_VALIDATE',
-    operator_id BIGINT COMMENT '操作人ID（管理员重置时）',
-    operator_type VARCHAR(20) COMMENT '操作人类型',
-    result VARCHAR(20) NOT NULL COMMENT '结果: SUCCESS, FAILURE',
-    failure_reason VARCHAR(500) COMMENT '失败原因',
-    ip_address VARCHAR(50) COMMENT 'IP地址',
-    user_agent VARCHAR(500) COMMENT 'User Agent',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_time (user_id, user_type, created_at DESC),
-    INDEX idx_action_time (action, created_at DESC),
-    INDEX idx_result_time (result, created_at DESC)
-) COMMENT '凭证操作审计日志';
-```
+**数据库脚本位置：**
+- `databases/ingot_security.sql` - Credential Service
+- `databases/migrations/add_password_history.sql` - 其他服务
 
 ## 扩展新的策略
 
-要支持新的密码策略（例如密码复杂度评分、基于机器学习的弱密码检测），只需：
+系统支持灵活地扩展新策略，只需：
 
-### 步骤1：定义新策略类
+1. 实现 `PasswordPolicy` 接口
+2. 注册为 Spring Bean
+3. 配置策略参数（数据库或配置文件）
 
-```java
-package com.ingot.framework.credential.policy;
+新策略会自动加入校验链，无需修改现有代码。详见技术文档。
 
-public class PasswordComplexityScorePolicy implements PasswordPolicy {
-    
-    private final int minScore;
-    
-    @Override
-    public String getName() {
-        return "PASSWORD_COMPLEXITY_SCORE";
-    }
-    
-    @Override
-    public int getPriority() {
-        return 15;  // 在强度策略之后执行
-    }
-    
-    @Override
-    public PolicyCheckResult check(PolicyCheckContext context) {
-        int score = calculateComplexityScore(context.getPassword());
-        
-        if (score < minScore) {
-            return PolicyCheckResult.fail(
-                String.format("密码复杂度不足，当前评分: %d，要求: %d", score, minScore)
-            );
-        }
-        
-        return PolicyCheckResult.pass();
-    }
-    
-    @Override
-    public boolean isEnabled(Tenant tenant) {
-        // 从配置中读取是否启用
-        return policyConfigService.isEnabled(tenant.getId(), getName());
-    }
-    
-    private int calculateComplexityScore(String password) {
-        int score = 0;
-        // 长度得分
-        score += Math.min(password.length() * 2, 20);
-        // 字符类型得分
-        if (hasUpperCase(password)) score += 10;
-        if (hasLowerCase(password)) score += 10;
-        if (hasDigit(password)) score += 10;
-        if (hasSpecialChar(password)) score += 15;
-        // 熵值得分
-        score += calculateEntropy(password) / 2;
-        return score;
-    }
-}
-```
-
-### 步骤2：注册策略
-
-```java
-@Configuration
-public class CredentialPolicyConfiguration {
-    
-    @Bean
-    public PasswordPolicy passwordComplexityScorePolicy() {
-        return new PasswordComplexityScorePolicy(60); // 最低评分60
-    }
-    
-    @Bean
-    public PasswordValidator passwordValidator(List<PasswordPolicy> policies) {
-        return new PasswordValidator(policies);
-    }
-}
-```
-
-### 步骤3：添加策略配置
-
-```sql
-INSERT INTO credential_policy_config 
-(tenant_id, policy_type, policy_config, priority, enabled) VALUES
-(NULL, 'COMPLEXITY_SCORE', '{
-  "minScore": 60,
-  "scoreWeights": {
-    "length": 2,
-    "uppercase": 10,
-    "lowercase": 10,
-    "digit": 10,
-    "specialChar": 15,
-    "entropy": 0.5
-  }
-}', 15, true);
-```
-
-**完成！** 新策略会自动加入校验链，无需修改现有代码。
-
-## 性能考虑
+## 性能优化
 
 ### 1. 策略配置缓存
 
-```java
-@Service
-public class PolicyConfigService {
-    
-    @Cacheable(
-        value = "credential:policy", 
-        key = "#tenantId + ':' + #policyType",
-        unless = "#result == null"
-    )
-    public PolicyConfig getPolicy(Long tenantId, String policyType) {
-        // 数据库查询（带缓存）
-        return repository.findPolicy(tenantId, policyType);
-    }
-    
-    @CacheEvict(value = "credential:policy", allEntries = true)
-    public void updatePolicy(PolicyConfig policy) {
-        repository.save(policy);
-    }
-}
-```
-
-**缓存策略：**
-- 使用 Redis 存储策略配置
-- TTL: 1小时
-- 策略更新时清除所有缓存
+使用 Redis 缓存策略配置（TTL: 1小时），策略更新时主动失效。
 
 ### 2. 密码历史查询优化
 
-```java
-// 使用索引优化查询
-CREATE INDEX idx_user_created ON pms_password_history(user_id, created_at DESC);
-
-// 只查询最近N条记录
-SELECT password_hash 
-FROM pms_password_history 
-WHERE user_id = ? 
-ORDER BY created_at DESC 
-LIMIT 5;
-
-// 环形缓冲：自动清理旧记录
-DELETE FROM pms_password_history 
-WHERE user_id = ? 
-AND created_at < (
-    SELECT created_at 
-    FROM pms_password_history 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC 
-    LIMIT 5, 1
-);
-```
+使用索引优化查询，环形缓冲自动清理旧记录，只保留最近N条。
 
 ### 3. 批量校验优化
 
-```java
-@Service
-public class BatchPasswordValidator {
-    
-    public List<PasswordCheckResult> validateBatch(List<PolicyCheckContext> contexts) {
-        // 1. 批量加载策略配置（避免N+1查询）
-        Set<Long> tenantIds = contexts.stream()
-            .map(PolicyCheckContext::getTenantId)
-            .collect(Collectors.toSet());
-        Map<Long, PolicyConfig> policyCache = 
-            policyService.batchLoadPolicies(tenantIds);
-        
-        // 2. 并行校验
-        return contexts.parallelStream()
-            .map(context -> {
-                context.setPolicyConfig(policyCache.get(context.getTenantId()));
-                return validator.validate(context);
-            })
-            .collect(Collectors.toList());
-    }
-}
-```
+批量加载策略配置避免N+1查询，支持并行校验提升性能。
 
 ### 4. 异步审计日志
 
-```java
-@Service
-public class AuditService {
-    
-    @Async("auditExecutor")
-    public CompletableFuture<Void> recordAudit(CredentialAuditDTO audit) {
-        try {
-            auditMapper.insert(audit);
-            return CompletableFuture.completedFuture(null);
-        } catch (Exception e) {
-            log.error("审计日志记录失败", e);
-            // 审计失败不影响主流程
-            return CompletableFuture.completedFuture(null);
-        }
-    }
-}
+审计日志异步记录，不影响主业务流程，使用独立线程池。
 
-// 配置异步线程池
-@Configuration
-public class AsyncConfiguration {
-    
-    @Bean("auditExecutor")
-    public ThreadPoolTaskExecutor auditExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(1000);
-        executor.setThreadNamePrefix("audit-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        return executor;
-    }
-}
-```
-
-## 安全考虑
+## 安全设计
 
 ### 1. 访问控制
 
-```java
-// 策略配置修改需要管理员权限
-@RestController
-@RequestMapping("/v1/credential/policy")
-public class PolicyAPI {
-    
-    @PutMapping("/{policyType}")
-    @AdminOrHasAnyAuthority({"platform:credential:policy:update"})
-    public R<Void> updatePolicy(
-        @PathVariable String policyType,
-        @RequestBody PolicyConfigDTO config
-    ) {
-        policyService.updatePolicy(config);
-        return R.ok();
-    }
-}
-```
+策略配置修改需要管理员权限，通过权限注解控制访问。
 
 ### 2. 审计日志保护
 
-```java
-// 审计日志只能查询，不能修改或删除
-@RestController
-@RequestMapping("/v1/credential/audit")
-public class AuditAPI {
-    
-    @GetMapping("/user/{userId}")
-    @AdminOrHasAnyAuthority({"platform:audit:query"})
-    public R<Page<AuditLogVO>> queryUserLogs(@PathVariable Long userId) {
-        // 只读操作
-        return R.ok(auditService.queryUserLogs(userId));
-    }
-    
-    // 不提供删除接口，通过数据库归档策略管理
-}
-
-// 定期归档历史审计日志
-@Scheduled(cron = "0 0 2 1 * ?")
-public void archiveOldAuditLogs() {
-    LocalDateTime cutoffDate = LocalDateTime.now().minusMonths(6);
-    auditService.archiveLogsBefore(cutoffDate);
-}
-```
+审计日志只读，不提供删除接口，通过定期归档管理历史数据。
 
 ### 3. 密码哈希保护
 
-```java
-// 历史密码存储时使用与用户表相同的加密方式
-@Service
-public class PasswordHistoryService {
-    
-    public void addHistory(Long userId, String rawPassword) {
-        // 使用 BCrypt 加密存储
-        String passwordHash = passwordEncoder.encode(rawPassword);
-        
-        PasswordHistory history = new PasswordHistory();
-        history.setUserId(userId);
-        history.setPasswordHash(passwordHash);
-        historyMapper.insert(history);
-    }
-    
-    public boolean isPasswordReused(Long userId, String rawPassword) {
-        List<PasswordHistory> histories = historyMapper.selectByUserId(userId, 5);
-        
-        // 使用安全的密码比对方法
-        return histories.stream()
-            .anyMatch(h -> passwordEncoder.matches(rawPassword, h.getPasswordHash()));
-    }
-}
-```
+历史密码使用 BCrypt 加密存储，使用安全的密码比对方法。
 
 ### 4. 防止暴力破解
 
-```java
-// 在 Auth Service 中限制密码校验频率
-@Service
-public class RateLimitService {
-    
-    @Autowired
-    private RedisTemplate<String, Integer> redisTemplate;
-    
-    public boolean checkRateLimit(String username) {
-        String key = "pwd:validate:" + username;
-        Integer attempts = redisTemplate.opsForValue().get(key);
-        
-        if (attempts != null && attempts >= 5) {
-            return false; // 超过限制
-        }
-        
-        redisTemplate.opsForValue().increment(key);
-        redisTemplate.expire(key, 15, TimeUnit.MINUTES);
-        return true;
-    }
-}
-```
+使用 Redis 限制密码校验频率，防止暴力破解攻击。
 
 ## 总结
 

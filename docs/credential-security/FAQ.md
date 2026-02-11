@@ -103,41 +103,10 @@ protected void additionalAuthenticationChecks(UserDetails user,
 
 **A:** 有两种方式：
 
-#### 方式 1：数据库配置（推荐）
+1. **数据库配置（推荐）** - 直接修改 credential_policy_config 表
+2. **代码扩展** - 实现 PasswordPolicy 接口并注册为 Spring Bean
 
-```sql
-INSERT INTO credential_policy_config VALUES
-(1, 'STRENGTH', '{
-  "minLength": 12,
-  "requireUppercase": true,
-  "requireLowercase": true,
-  "requireDigit": true,
-  "requireSpecialChar": true,
-  "customRule": "your-custom-rule"
-}', 10, true, NOW(), NOW());
-```
-
-#### 方式 2：代码扩展
-
-```java
-@Component
-public class CustomPasswordPolicy implements PasswordPolicy {
-    
-    @Override
-    public String getName() {
-        return "CUSTOM_COMPLEXITY_CHECK";
-    }
-    
-    @Override
-    public PolicyCheckResult check(PolicyCheckContext context) {
-        // 自定义校验逻辑
-        if (!isComplexEnough(context.getPassword())) {
-            return PolicyCheckResult.fail("密码复杂度不足");
-        }
-        return PolicyCheckResult.pass();
-    }
-}
-```
+详见技术文档。
 
 ---
 
@@ -188,58 +157,13 @@ public class CustomPasswordPolicy implements PasswordPolicy {
 
 ### Q7: 如何实现强制修改密码？
 
-**A:** 通过 `force_change` 标记实现：
+**A:** 通过以下步骤实现：
 
-#### 管理员重置密码
+1. 管理员重置密码时设置 `force_change` 标记
+2. Gateway 拦截请求，检查 Token 中的强制修改标记
+3. 前端登录后检查并跳转到修改密码页面
 
-```java
-// 1. 管理员重置
-public void resetPassword(Long userId) {
-    String tempPassword = RandomUtil.randomString(8);
-    userService.updatePassword(userId, tempPassword);
-    
-    // 2. 标记强制修改
-    passwordExpirationService.setForceChange(userId, true);
-}
-```
-
-#### Gateway 拦截
-
-```java
-// 检查 Token 中的强制修改标记
-public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-    String forceChange = extractClaim("force_change_password");
-    
-    if ("true".equals(forceChange)) {
-        String path = exchange.getRequest().getURI().getPath();
-        
-        // 只允许访问修改密码和登出接口
-        if (!isPasswordChangeOrLogout(path)) {
-            return unauthorized(exchange, "必须修改初始密码");
-        }
-    }
-    
-    return chain.filter(exchange);
-}
-```
-
-#### 前端处理
-
-```javascript
-// 登录后检查
-axios.post('/api/login', credentials)
-  .then(response => {
-    const { token, forceChangePassword } = response.data;
-    
-    if (forceChangePassword) {
-      // 跳转到修改密码页面
-      router.push('/change-password?force=true');
-    } else {
-      // 正常进入系统
-      router.push('/dashboard');
-    }
-  });
-```
+详见技术文档。
 
 ---
 
@@ -280,157 +204,23 @@ if (passwordEncoder.upgradeEncoding(user.getPassword())) {
 
 ### Q9: Auth Service 如何集成？
 
-**A:** Auth Service 只集成 Framework（本地调用，无远程依赖）：
-
-```java
-@Service
-@RequiredArgsConstructor
-public class OAuth2UserDetailsAuthenticationProvider {
-    
-    private final PasswordValidator passwordValidator;
-    private final PasswordExpirationChecker expirationChecker;
-    
-    @Override
-    protected void additionalAuthenticationChecks(UserDetails user, 
-        OAuth2UserDetailsAuthenticationToken token) {
-        
-        // 1. 密码正确性校验
-        if (!passwordEncoder.matches(presentedPassword, user.getPassword())) {
-            throw new BadCredentialsException("密码不正确");
-        }
-        
-        // 2. 构建校验上下文
-        PolicyCheckContext context = PolicyCheckContext.builder()
-            .password(presentedPassword)
-            .username(user.getUsername())
-            .tenantId(user.getTenantId())
-            .build();
-        
-        // 3. 本地策略校验
-        PasswordCheckResult result = passwordValidator.validate(context);
-        
-        // 4. 检查密码过期（本地 Framework）
-        ExpirationStatus status = expirationChecker.check(user.getId());
-        
-        if (status.isExpired()) {
-            if (status.getGraceLoginRemaining() > 0) {
-                // 允许登录但添加警告
-                token.setAdditionalParameter("force_change_password", true);
-            } else {
-                throw new PasswordExpiredException("密码已过期");
-            }
-        }
-    }
-}
-```
+**A:** Auth Service 只集成 Framework（本地调用，无远程依赖），在认证流程中增加密码策略校验和过期检查。
 
 **优势：**
 - ✅ 无远程调用，性能最优
 - ✅ 不依赖外部服务，可用性高
-- ✅ 策略可以通过配置文件快速调整
 
 ---
 
 ### Q10: 如何在 Gateway 控制路由？
 
-**A:** Gateway 检查 Token 中的凭证状态标记：
-
-```java
-@Component
-public class CredentialStatusFilter implements GlobalFilter, Ordered {
-    
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        
-        // 1. 从 JWT Token 中提取凭证状态
-        ServerHttpRequest request = exchange.getRequest();
-        String authorization = request.getHeaders().getFirst("Authorization");
-        
-        if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            Claims claims = jwtUtil.parseToken(token);
-            
-            // 2. 检查是否需要强制修改密码
-            Boolean forceChange = claims.get("force_change_password", Boolean.class);
-            
-            if (Boolean.TRUE.equals(forceChange)) {
-                String path = request.getURI().getPath();
-                
-                // 3. 只允许访问密码修改和登出接口
-                if (!isAllowedPath(path)) {
-                    return buildUnauthorizedResponse(exchange, 
-                        "FORCE_CHANGE_PASSWORD", 
-                        "必须修改密码后才能访问其他功能");
-                }
-            }
-        }
-        
-        return chain.filter(exchange);
-    }
-    
-    private boolean isAllowedPath(String path) {
-        return path.matches(".*/user/change-password") ||
-               path.matches(".*/auth/logout");
-    }
-    
-    @Override
-    public int getOrder() {
-        return -100; // 在认证过滤器之后执行
-    }
-}
-```
+**A:** Gateway 通过 GlobalFilter 检查 Token 中的凭证状态标记（如 force_change_password），限制用户只能访问修改密码和登出接口。
 
 ---
 
 ### Q11: 如何记录审计日志？
 
-**A:** 通过异步方式记录，不影响主流程：
-
-```java
-@Service
-@RequiredArgsConstructor
-public class PasswordChangeService {
-    
-    private final RemoteCredentialService credentialService;
-    
-    @Transactional(rollbackFor = Exception.class)
-    public void changePassword(ChangePasswordDTO dto) {
-        Long userId = SecurityContext.getUserId();
-        
-        try {
-            // 1. 执行业务逻辑
-            userService.updatePassword(userId, dto.getNewPassword());
-            
-            // 2. 异步记录审计日志（成功）
-            recordAuditAsync(userId, "PASSWORD_CHANGE", "SUCCESS", null);
-            
-        } catch (Exception e) {
-            // 3. 异步记录审计日志（失败）
-            recordAuditAsync(userId, "PASSWORD_CHANGE", "FAILURE", e.getMessage());
-            throw e;
-        }
-    }
-    
-    @Async("auditExecutor")
-    private void recordAuditAsync(Long userId, String action, String result, String reason) {
-        try {
-            CredentialAuditDTO audit = new CredentialAuditDTO();
-            audit.setUserId(userId);
-            audit.setUserType("MEMBER");
-            audit.setAction(action);
-            audit.setResult(result);
-            audit.setFailureReason(reason);
-            audit.setIpAddress(RequestUtil.getIpAddress());
-            audit.setUserAgent(RequestUtil.getUserAgent());
-            
-            credentialService.recordAudit(audit);
-        } catch (Exception e) {
-            // 审计失败不影响主流程
-            log.error("记录审计日志失败", e);
-        }
-    }
-}
-```
+**A:** 通过异步方式记录（使用 @Async），不影响主业务流程。审计记录失败不会影响主流程执行。
 
 ---
 
@@ -482,37 +272,11 @@ LIMIT 5;
 
 ### Q13: 如何优化历史密码查询？
 
-**A:** 使用环形缓冲策略：
-
-```java
-@Service
-public class PasswordHistoryService {
-    
-    private static final int MAX_HISTORY_COUNT = 5;
-    
-    /**
-     * 添加历史记录（自动清理旧记录）
-     */
-    @Transactional
-    public void addHistory(Long userId, String passwordHash) {
-        // 1. 插入新记录
-        PasswordHistory history = new PasswordHistory();
-        history.setUserId(userId);
-        history.setPasswordHash(passwordHash);
-        historyMapper.insert(history);
-        
-        // 2. 删除超过限制的旧记录
-        long count = historyMapper.countByUserId(userId);
-        if (count > MAX_HISTORY_COUNT) {
-            historyMapper.deleteOldest(userId, count - MAX_HISTORY_COUNT);
-        }
-    }
-}
-```
+**A:** 使用环形缓冲策略，固定存储数量，自动清理旧记录。
 
 **优势：**
 - ✅ 存储空间固定，不会无限增长
-- ✅ 查询效率高，只需扫描5条记录
+- ✅ 查询效率高，只需扫描固定条数
 - ✅ 无需定期清理任务
 
 ---
@@ -521,41 +285,9 @@ public class PasswordHistoryService {
 
 **A:** 多级缓存策略：
 
-#### 1. 策略配置缓存（Redis）
-
-```java
-@Cacheable(
-    value = "credential:policy", 
-    key = "#tenantId + ':' + #policyType",
-    unless = "#result == null"
-)
-public PolicyConfig getPolicy(Long tenantId, String policyType) {
-    return policyRepository.findPolicy(tenantId, policyType);
-}
-```
-
-**TTL:** 1小时  
-**失效策略:** 策略更新时主动失效
-
-#### 2. 密码过期状态缓存（本地缓存）
-
-```java
-@Cacheable(
-    value = "local:expiration", 
-    key = "#userId",
-    cacheManager = "localCacheManager"
-)
-public ExpirationStatus getExpirationStatus(Long userId) {
-    return expirationRepository.findByUserId(userId);
-}
-```
-
-**TTL:** 5分钟  
-**失效策略:** 密码修改时主动失效
-
-#### 3. 历史密码不缓存
-
-原因：历史密码每次修改都会变化，缓存意义不大。
+1. **策略配置缓存（Redis）** - TTL: 1小时，策略更新时主动失效
+2. **密码过期状态缓存（本地）** - TTL: 5分钟，密码修改时主动失效
+3. **历史密码不缓存** - 数据变化频繁，缓存意义不大
 
 ---
 
@@ -565,149 +297,29 @@ public ExpirationStatus getExpirationStatus(Long userId) {
 
 **A:** 多层防护：
 
-#### 1. 频率限制（Redis）
-
-```java
-@Service
-public class RateLimitService {
-    
-    public boolean checkRateLimit(String username) {
-        String key = "pwd:validate:" + username;
-        Integer attempts = redisTemplate.opsForValue().get(key);
-        
-        if (attempts != null && attempts >= 5) {
-            return false; // 超过限制
-        }
-        
-        redisTemplate.opsForValue().increment(key);
-        redisTemplate.expire(key, 15, TimeUnit.MINUTES);
-        return true;
-    }
-}
-```
-
-#### 2. 账号锁定
-
-```java
-public void handleFailedLogin(String username) {
-    int failedCount = getFailedLoginCount(username);
-    
-    if (failedCount >= 5) {
-        // 锁定账号30分钟
-        userService.lockAccount(username, 30, TimeUnit.MINUTES);
-        
-        // 发送安全警告邮件
-        emailService.sendSecurityAlert(username, "账号因多次登录失败被锁定");
-    }
-}
-```
-
-#### 3. 验证码
-
-```java
-if (failedLoginCount >= 3) {
-    // 要求输入验证码
-    if (!captchaService.validate(captchaCode)) {
-        throw new CaptchaInvalidException("验证码错误");
-    }
-}
-```
+1. **频率限制（Redis）** - 限制每个用户15分钟内最多尝试5次
+2. **账号锁定** - 失败5次后锁定账号30分钟，并发送安全警告邮件
+3. **验证码** - 失败3次后要求输入验证码
 
 ---
 
 ### Q16: 审计日志如何保护？
 
-**A:** 审计日志只读，通过定期归档管理：
+**A:** 三层保护：
 
-#### 1. 只读接口
-
-```java
-// ✅ 提供查询接口
-@GetMapping("/audit/user/{userId}")
-public R<List<AuditLog>> queryLogs(@PathVariable Long userId) {
-    return R.ok(auditService.queryLogs(userId));
-}
-
-// ❌ 不提供删除接口
-// @DeleteMapping("/audit/{id}")  // 不存在
-```
-
-#### 2. 数据库权限
-
-```sql
--- 审计日志表只授予 INSERT 和 SELECT 权限
-GRANT INSERT, SELECT ON credential_audit_log TO 'credential_service'@'%';
-
--- 不授予 UPDATE 和 DELETE 权限
-```
-
-#### 3. 定期归档
-
-```java
-@Scheduled(cron = "0 0 2 1 * ?")  // 每月1号凌晨2点
-public void archiveOldAuditLogs() {
-    LocalDateTime cutoffDate = LocalDateTime.now().minusMonths(6);
-    
-    // 1. 归档到历史表
-    auditService.archiveLogsBefore(cutoffDate);
-    
-    // 2. 删除已归档的数据
-    auditService.deleteLogsBefore(cutoffDate);
-}
-```
+1. **只读接口** - 只提供查询接口，不提供删除接口
+2. **数据库权限** - 只授予 INSERT 和 SELECT 权限
+3. **定期归档** - 每月归档6个月前的数据到历史表
 
 ---
 
 ### Q17: 如何处理敏感数据？
 
-**A:** 敏感数据加密和脱敏：
+**A:** 三层保护：
 
-#### 1. 密码哈希存储
-
-```java
-// 使用 BCrypt 单向加密
-String passwordHash = passwordEncoder.encode(rawPassword);
-
-// 历史密码也存储哈希值，而不是明文
-passwordHistoryService.addHistory(userId, passwordHash);
-```
-
-#### 2. 审计日志脱敏
-
-```java
-public class CredentialAuditDTO {
-    private String ipAddress;        // 脱敏：192.168.1.xxx
-    private String userAgent;        // 截取前100字符
-    private String failureReason;    // 不包含密码明文
-}
-
-// 脱敏处理
-public void recordAudit(CredentialAuditDTO audit) {
-    audit.setIpAddress(maskIpAddress(audit.getIpAddress()));
-    audit.setUserAgent(truncate(audit.getUserAgent(), 100));
-    auditMapper.insert(audit);
-}
-```
-
-#### 3. 日志过滤
-
-```java
-// logback-spring.xml
-<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <encoder>
-        <!-- 过滤敏感信息 -->
-        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-    
-    <!-- 不记录包含密码的日志 -->
-    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-        <evaluator>
-            <expression>message.contains("password=")</expression>
-        </evaluator>
-        <onMatch>DENY</onMatch>
-    </filter>
-</appender>
-```
+1. **密码哈希存储** - 使用 BCrypt 单向加密，历史密码也存储哈希值
+2. **审计日志脱敏** - IP地址脱敏，User Agent截取，不记录密码明文
+3. **日志过滤** - 过滤包含密码的日志内容
 
 ---
 
@@ -717,114 +329,18 @@ public void recordAudit(CredentialAuditDTO audit) {
 
 **A:** 通过定时任务和指标监控：
 
-#### 1. 密码过期监控
-
-```java
-@Scheduled(cron = "0 0 8 * * ?")  // 每天早上8点
-public void checkPasswordExpiration() {
-    // 统计即将过期的密码（7天内）
-    long expiringSoon = passwordExpirationService.countExpiringWithinDays(7);
-    
-    if (expiringSoon > 100) {
-        alertService.sendAlert(
-            "密码过期预警",
-            String.format("有 %d 个用户的密码将在7天内过期", expiringSoon)
-        );
-    }
-    
-    // 发送 Prometheus 指标
-    meterRegistry.gauge("password.expiring.count", expiringSoon);
-}
-```
-
-#### 2. 弱密码扫描
-
-```java
-@Scheduled(cron = "0 0 2 * * ?")  // 每天凌晨2点
-public void scanWeakPasswords() {
-    List<User> weakPasswordUsers = userService.findWeakPasswordUsers();
-    
-    if (!weakPasswordUsers.isEmpty()) {
-        // 记录指标
-        meterRegistry.gauge("password.weak.count", weakPasswordUsers.size());
-        
-        // 发送邮件提醒
-        emailService.sendWeakPasswordWarning(weakPasswordUsers);
-    }
-}
-```
-
-#### 3. Grafana 仪表盘
-
-```yaml
-# prometheus.yml
-- job_name: 'credential-security'
-  metrics_path: '/actuator/prometheus'
-  static_configs:
-    - targets: ['credential-service:9090']
-```
-
-**监控指标：**
-- `password_validation_total` - 密码校验总数
-- `password_validation_failure_rate` - 密码校验失败率
-- `password_expiring_count` - 即将过期密码数量
-- `password_weak_count` - 弱密码用户数量
+1. **密码过期监控** - 每天统计即将过期密码，超过阈值发送告警
+2. **弱密码扫描** - 每天扫描弱密码用户，发送提醒邮件
+3. **Grafana 仪表盘** - 展示密码安全相关指标（校验总数、失败率、过期数量等）
 
 ---
 
 ### Q19: 如何批量修改策略？
 
-**A:** 通过 SQL 脚本或管理接口：
+**A:** 有两种方式：
 
-#### 方式 1：SQL 批量更新
-
-```sql
--- 批量调整所有租户的密码最小长度
-UPDATE credential_policy_config 
-SET policy_config = JSON_SET(policy_config, '$.minLength', 10)
-WHERE policy_type = 'STRENGTH';
-
--- 批量启用密码过期策略
-UPDATE credential_policy_config 
-SET policy_config = JSON_SET(policy_config, '$.enabled', true)
-WHERE policy_type = 'EXPIRATION';
-```
-
-#### 方式 2：管理接口
-
-```java
-@RestController
-@RequestMapping("/api/admin/credential/policy")
-public class PolicyBatchAPI {
-    
-    /**
-     * 批量更新策略
-     */
-    @PostMapping("/batch-update")
-    @AdminOnly
-    public R<Void> batchUpdate(@RequestBody BatchUpdateDTO dto) {
-        for (Long tenantId : dto.getTenantIds()) {
-            policyService.updatePolicy(tenantId, dto.getPolicyType(), dto.getConfig());
-        }
-        return R.ok();
-    }
-    
-    /**
-     * 应用模板策略
-     */
-    @PostMapping("/apply-template")
-    @AdminOnly
-    public R<Void> applyTemplate(@RequestBody ApplyTemplateDTO dto) {
-        PolicyTemplate template = templateService.getTemplate(dto.getTemplateId());
-        
-        for (Long tenantId : dto.getTenantIds()) {
-            policyService.applyTemplate(tenantId, template);
-        }
-        
-        return R.ok();
-    }
-}
-```
+1. **SQL 批量更新** - 直接通过 SQL 批量修改 policy_config 字段
+2. **管理接口** - 通过批量更新接口或模板应用接口
 
 ---
 
@@ -832,52 +348,7 @@ public class PolicyBatchAPI {
 
 **A:** 分批处理，避免影响系统：
 
-```java
-@Service
-public class PasswordExpirationBatchService {
-    
-    /**
-     * 批量处理过期密码（分批执行）
-     */
-    @Scheduled(cron = "0 0 3 * * ?")  // 每天凌晨3点
-    public void processExpiredPasswords() {
-        int batchSize = 1000;
-        int processedCount = 0;
-        
-        while (true) {
-            // 1. 分批查询过期用户
-            List<PasswordExpiration> expired = expirationRepository
-                .findExpired(LocalDateTime.now(), batchSize);
-            
-            if (expired.isEmpty()) {
-                break;
-            }
-            
-            // 2. 批量处理
-            for (PasswordExpiration exp : expired) {
-                try {
-                    // 发送过期通知邮件
-                    notificationService.sendPasswordExpiredNotification(exp.getUserId());
-                    
-                    // 标记已通知
-                    exp.setLastWarned(LocalDateTime.now());
-                    expirationRepository.save(exp);
-                    
-                    processedCount++;
-                    
-                } catch (Exception e) {
-                    log.error("处理过期密码失败: userId={}", exp.getUserId(), e);
-                }
-            }
-            
-            // 3. 休息1秒，避免过载
-            Thread.sleep(1000);
-        }
-        
-        log.info("批量处理完成，共处理 {} 个过期密码", processedCount);
-    }
-}
-```
+每天凌晨3点执行定时任务，分批查询过期用户（每批1000条），逐个发送通知邮件，批次间休息1秒避免过载。
 
 ---
 
@@ -885,175 +356,35 @@ public class PasswordExpirationBatchService {
 
 ### Q21: 如何添加新的策略类型？
 
-**A:** 实现 `PasswordPolicy` 接口：
+**A:** 三步完成：
 
-```java
-@Component
-public class PasswordEntropyPolicy implements PasswordPolicy {
-    
-    @Override
-    public String getName() {
-        return "PASSWORD_ENTROPY";
-    }
-    
-    @Override
-    public int getPriority() {
-        return 25; // 在强度策略之后执行
-    }
-    
-    @Override
-    public PolicyCheckResult check(PolicyCheckContext context) {
-        double entropy = calculateEntropy(context.getPassword());
-        double minEntropy = getMinEntropy(context.getTenantId());
-        
-        if (entropy < minEntropy) {
-            return PolicyCheckResult.fail(
-                String.format("密码熵值不足: %.2f (要求: %.2f)", entropy, minEntropy)
-            );
-        }
-        
-        return PolicyCheckResult.pass();
-    }
-    
-    @Override
-    public boolean isEnabled(Tenant tenant) {
-        return policyConfigService.isEnabled(tenant.getId(), getName());
-    }
-    
-    private double calculateEntropy(String password) {
-        // 熵值计算逻辑
-        // ...
-    }
-}
-```
-
-**配置：**
-```sql
-INSERT INTO credential_policy_config VALUES
-(NULL, 'ENTROPY', '{"minEntropy": 3.5}', 25, true, NOW(), NOW());
-```
+1. 实现 `PasswordPolicy` 接口（定义策略名称、优先级、校验逻辑）
+2. 注册为 Spring Bean（使用 @Component）
+3. 配置策略参数（数据库或配置文件）
 
 ---
 
 ### Q22: 如何支持 MFA？
 
-**A:** 扩展 `CredentialAuthenticator` 接口（预留设计）：
+**A:** 通过扩展 `CredentialAuthenticator` 接口实现多因子认证：
 
-```java
-// 1. 定义 MFA 认证器接口
-public interface CredentialAuthenticator {
-    
-    /**
-     * 凭证类型
-     */
-    CredentialType getType();  // PASSWORD, OTP, WEBAUTHN
-    
-    /**
-     * 校验凭证
-     */
-    AuthenticationResult authenticate(AuthenticationContext context);
-    
-    /**
-     * 是否需要额外验证
-     */
-    boolean requiresAdditionalFactor();
-}
+1. 定义 MFA 认证器接口（凭证类型、校验方法）
+2. 实现具体认证器（OTP、WebAuthn等）
+3. 在认证流程中集成多因子校验
 
-// 2. 实现 OTP 认证器
-@Component
-public class OtpAuthenticator implements CredentialAuthenticator {
-    
-    @Override
-    public CredentialType getType() {
-        return CredentialType.OTP;
-    }
-    
-    @Override
-    public AuthenticationResult authenticate(AuthenticationContext context) {
-        String otpCode = context.getOtpCode();
-        String secret = userOtpService.getSecret(context.getUserId());
-        
-        if (totpUtil.verify(otpCode, secret)) {
-            return AuthenticationResult.success();
-        }
-        
-        return AuthenticationResult.failure("OTP验证失败");
-    }
-    
-    @Override
-    public boolean requiresAdditionalFactor() {
-        return false; // OTP 不需要额外因子
-    }
-}
-
-// 3. 在 Auth Service 中集成
-public Authentication authenticate(String username, String password, String otpCode) {
-    // 第一步：密码认证
-    passwordAuthenticator.authenticate(context);
-    
-    // 第二步：OTP 认证（如果启用）
-    if (mfaEnabled) {
-        otpAuthenticator.authenticate(context);
-    }
-    
-    return authentication;
-}
-```
+详见未来规划文档。
 
 ---
 
 ### Q23: 如何支持 Passkey？
 
-**A:** 扩展凭证类型，支持 WebAuthn：
+**A:** 通过扩展凭证类型支持 WebAuthn：
 
-```java
-// 1. 定义 Passkey 认证器
-@Component
-public class PasskeyAuthenticator implements CredentialAuthenticator {
-    
-    @Override
-    public CredentialType getType() {
-        return CredentialType.PASSKEY;
-    }
-    
-    @Override
-    public AuthenticationResult authenticate(AuthenticationContext context) {
-        // 1. 验证 WebAuthn 签名
-        PublicKeyCredential credential = context.getPublicKeyCredential();
-        AuthenticatorResponse response = credential.getResponse();
-        
-        // 2. 从数据库加载公钥
-        PasskeyCredential storedCredential = passkeyService
-            .getCredential(context.getUserId(), credential.getId());
-        
-        // 3. 验证签名
-        boolean verified = webAuthnService.verify(
-            storedCredential.getPublicKey(),
-            response.getClientDataJSON(),
-            response.getAuthenticatorData(),
-            response.getSignature()
-        );
-        
-        if (verified) {
-            return AuthenticationResult.success();
-        }
-        
-        return AuthenticationResult.failure("Passkey验证失败");
-    }
-}
+1. 定义 Passkey 认证器（实现 WebAuthn 签名验证）
+2. 创建数据模型存储公钥和凭证信息
+3. 实现注册和认证流程
 
-// 2. 数据模型
-@Entity
-public class PasskeyCredential {
-    private Long id;
-    private Long userId;
-    private String credentialId;
-    private byte[] publicKey;
-    private int signCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastUsedAt;
-}
-```
+详见未来规划文档。
 
 ---
 

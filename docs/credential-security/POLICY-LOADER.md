@@ -113,55 +113,9 @@ ingot:
         force-change-after-reset: true
 ```
 
-**实现逻辑：**
+**核心流程：**
 
-```java
-@RequiredArgsConstructor
-public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
-    private final CredentialSecurityProperties properties;
-    private final PasswordEncoder passwordEncoder;
-    
-    @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        List<PasswordPolicy> policies = new ArrayList<>();
-        
-        // 从配置创建策略
-        if (properties.getPolicy().getStrength().isEnabled()) {
-            policies.add(createStrengthPolicy());
-        }
-        if (properties.getPolicy().getHistory().isEnabled()) {
-            policies.add(createHistoryPolicy());
-        }
-        if (properties.getPolicy().getExpiration().isEnabled()) {
-            policies.add(createExpirationPolicy());
-        }
-        
-        // 按优先级排序
-        policies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
-        return policies;
-    }
-}
-```
-
-**工作流程：**
-
-```
-1. 应用启动
-   ↓
-2. 读取 CredentialSecurityProperties
-   ↓
-3. 根据配置创建策略实例
-   ├─ 强度策略（priority: 10）
-   ├─ 历史策略（priority: 30）
-   └─ 过期策略（priority: 20）
-   ↓
-4. 按优先级排序
-   ↓
-5. 缓存到 Redis（key: credential:policies:global）
-   ↓
-6. PasswordValidator 使用策略校验
-```
+应用启动时从配置文件读取策略参数，创建策略实例并缓存，供 PasswordValidator 使用。
 
 ---
 
@@ -192,79 +146,13 @@ dependencies {
 }
 ```
 
-**实现逻辑：**
+**核心流程：**
 
-```java
-@RequiredArgsConstructor
-public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
-    private final RemoteCredentialService remoteCredentialService;
-    private final PasswordEncoder passwordEncoder;
-    
-    @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        // 通过 RPC 获取策略配置
-        List<CredentialPolicyConfigVO> configs = 
-            remoteCredentialService.getPolicyConfigs(tenantId)
-                .ifErrorThrow()
-                .getData();
-        
-        // 转换为策略实例
-        List<PasswordPolicy> policies = new ArrayList<>();
-        for (CredentialPolicyConfigVO config : configs) {
-            PasswordPolicy policy = createPolicy(config);
-            if (policy != null) {
-                policies.add(policy);
-            }
-        }
-        
-        // 按优先级排序
-        policies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
-        return policies;
-    }
-    
-    private PasswordPolicy createPolicy(CredentialPolicyConfigVO config) {
-        return switch (config.getPolicyType()) {
-            case STRENGTH -> PasswordPolicyUtil.createStrengthPolicy(
-                config.getPolicyConfig(), config.getPriority());
-            case HISTORY -> PasswordPolicyUtil.createHistoryPolicy(
-                config.getPolicyConfig(), config.getPriority(), passwordEncoder);
-            case EXPIRATION -> PasswordPolicyUtil.createExpirationPolicy(
-                config.getPolicyConfig(), config.getPriority());
-        };
-    }
-}
-```
-
-**工作流程：**
-
-```
-1. PasswordValidator 调用 validate()
-   ↓
-2. RemoteCredentialPolicyLoader.loadPolicies(tenantId)
-   ↓
-3. 查询缓存（credential:policies:{tenantId}）
-   ├─ 缓存命中 → 返回
-   └─ 缓存未命中 ↓
-4. RPC 调用 → RemoteCredentialService.getPolicyConfigs(tenantId)
-   ↓
-5. Credential Service 返回策略配置列表
-   ↓
-6. 使用 PasswordPolicyUtil 创建策略实例
-   ↓
-7. 按优先级排序
-   ↓
-8. 缓存到 Redis（TTL: 5分钟）
-   ↓
-9. 返回策略列表
-   ↓
-10. PasswordValidator 执行校验
-```
+通过 RPC 从 Credential Service 获取策略配置，使用 PasswordPolicyUtil 创建策略实例，缓存5分钟。
 
 **优势：**
-- ✅ **动态更新** - 修改配置后实时生效（缓存过期后）
-- ✅ **多租户隔离** - 每个租户独立策略
-- ✅ **中心化管理** - 统一在 Credential Service 管理
+- ✅ 支持动态更新和多租户隔离
+- ✅ 中心化管理，统一配置
 
 ---
 
@@ -277,119 +165,15 @@ public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
 - ✅ 失败降级（本地配置兜底）
 - ✅ 高可用
 
-**实现逻辑：**
+**核心特点：**
 
-```java
-@Service
-@RequiredArgsConstructor
-public class DynamicCredentialPolicyLoader implements CredentialPolicyLoader {
-    private final PolicyConfigService policyConfigService;
-    private final PasswordEncoder passwordEncoder;
-    
-    @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        try {
-            // 1. 从数据库加载
-            List<CredentialPolicyConfig> configs = 
-                policyConfigService.getAllPolicyConfigs(tenantId);
-            return createPolicies(configs);
-        } catch (Exception e) {
-            log.error("数据库加载策略失败，使用本地配置兜底", e);
-            // 2. 失败时从配置文件兜底
-            return loadFallbackPolicies();
-        }
-    }
-    
-    private List<PasswordPolicy> loadFallbackPolicies() {
-        // 从 application.yml 加载默认策略
-        return localPolicyLoader.loadPolicies(null);
-    }
-}
-```
-
-**高可用设计：**
-
-```
-┌─────────────────┐
-│ loadPolicies()  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────┐
-│ 尝试从数据库加载     │
-└────────┬────────────┘
-         │
-    ┌────┴────┐
-    │ 成功？   │
-    └────┬────┘
-         │
-    ┌────┴─────┐
-    │Yes      No│
-    ▼          ▼
-┌────────┐ ┌──────────────────┐
-│ 返回   │ │ 日志错误          │
-└────────┘ │ 使用本地配置兜底  │
-           └────────┬──────────┘
-                    │
-                    ▼
-           ┌────────────────┐
-           │ 返回默认策略    │
-           └────────────────┘
-```
+从数据库加载策略，失败时自动降级到本地配置兜底，确保高可用。
 
 ---
 
 ## 🔄 策略工具类
 
-`PasswordPolicyUtil` 提供统一的策略创建方法：
-
-```java
-public class PasswordPolicyUtil {
-    
-    /**
-     * 创建密码强度策略
-     */
-    public static PasswordStrengthPolicy createStrengthPolicy(
-            Map<String, Object> config, int priority) {
-        
-        PasswordStrengthPolicy policy = new PasswordStrengthPolicy() {
-            @Override
-            public int getPriority() {
-                return priority;
-            }
-        };
-        
-        // 设置配置参数
-        if (config.containsKey("minLength")) {
-            policy.setMinLength(((Number) config.get("minLength")).intValue());
-        }
-        // ... 其他参数
-        
-        return policy;
-    }
-    
-    /**
-     * 创建密码历史策略
-     */
-    public static PasswordHistoryPolicy createHistoryPolicy(
-            Map<String, Object> config, int priority, PasswordEncoder encoder) {
-        // ...
-    }
-    
-    /**
-     * 创建密码过期策略
-     */
-    public static PasswordExpirationPolicy createExpirationPolicy(
-            Map<String, Object> config, int priority) {
-        // ...
-    }
-}
-```
-
-**使用场景：**
-- RemoteCredentialPolicyLoader - 从 RPC 返回的 Map 创建策略
-- DynamicCredentialPolicyLoader - 从数据库配置创建策略
+`PasswordPolicyUtil` 提供统一的策略创建方法，支持从 Map 配置创建策略实例，用于 Remote 和 Dynamic 加载器。
 
 ---
 
@@ -397,34 +181,7 @@ public class PasswordPolicyUtil {
 
 ### 自动配置逻辑
 
-```java
-@AutoConfiguration
-public class CredentialSecurityAutoConfiguration {
-    
-    // Local 模式（默认）
-    @Bean
-    @ConditionalOnMissingBean(CredentialPolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.credential.policy.mode", 
-                          havingValue = "local", 
-                          matchIfMissing = true)
-    public CredentialPolicyLoader localLoader(
-            CredentialSecurityProperties properties,
-            PasswordEncoder passwordEncoder) {
-        return new LocalCredentialPolicyLoader(properties, passwordEncoder);
-    }
-    
-    // Remote 模式
-    @Bean
-    @ConditionalOnMissingBean(CredentialPolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.credential.policy.mode", 
-                          havingValue = "remote")
-    public CredentialPolicyLoader remoteLoader(
-            RemoteCredentialService remoteService,
-            PasswordEncoder passwordEncoder) {
-        return new RemoteCredentialPolicyLoader(remoteService, passwordEncoder);
-    }
-}
-```
+通过 Spring Boot 自动配置，根据 `ingot.credential.policy.mode` 属性值自动选择对应的加载器实现（local 或 remote）。
 
 ### 配置示例
 
@@ -611,53 +368,7 @@ public class DynamicCredentialPolicyLoader implements CredentialPolicyLoader {
 
 ## 🔮 扩展性
 
-### 自定义策略加载器
-
-```java
-@Component
-public class EtcdPolicyLoader implements CredentialPolicyLoader {
-    
-    @Autowired
-    private EtcdClient etcdClient;
-    
-    @Override
-    @Cacheable(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public List<PasswordPolicy> loadPolicies(Long tenantId) {
-        // 从 Etcd 加载策略
-        String key = "/ingot/policies/" + (tenantId != null ? tenantId : "global");
-        String json = etcdClient.get(key);
-        
-        // 解析并创建策略
-        return parsePolicies(json);
-    }
-    
-    @Override
-    @CacheEvict(value = CACHE_NAME, key = "#tenantId ?: 'global'")
-    public void reloadPolicies(Long tenantId) {
-        // 刷新缓存
-    }
-    
-    @Override
-    @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void clearPolicyCache() {
-        // 清空所有缓存
-    }
-}
-```
-
-**使用自定义加载器：**
-
-```java
-@Configuration
-public class CustomPolicyLoaderConfig {
-    
-    @Bean
-    @Primary  // 优先使用
-    public CredentialPolicyLoader etcdPolicyLoader(EtcdClient etcdClient) {
-        return new EtcdPolicyLoader(etcdClient);
-    }
-}
-```
+支持自定义策略加载器，只需实现 `CredentialPolicyLoader` 接口并注册为 Spring Bean（使用 @Primary 优先）。系统会自动使用自定义加载器。
 
 ---
 
