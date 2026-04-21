@@ -50,10 +50,6 @@ public class JsonNodeUtils {
             new TypeReference<Collection<? extends GrantedAuthority>>() {
             };
 
-    static final TypeReference<Map<String, Object>> CREDENTIAL_META_COLL =
-            new TypeReference<>() {
-            };
-
     static String findStringValue(JsonNode jsonNode, String fieldName) {
         if (jsonNode == null) {
             return null;

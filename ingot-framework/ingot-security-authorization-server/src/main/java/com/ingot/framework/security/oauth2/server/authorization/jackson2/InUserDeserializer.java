@@ -2,7 +2,6 @@ package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,7 +15,6 @@ import com.ingot.framework.security.core.userdetails.InUserFieldNames;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 
-import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.CREDENTIAL_META_COLL;
 import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.GRANTED_AUTH_COLL;
 
 /**
@@ -24,6 +22,9 @@ import static com.ingot.framework.security.oauth2.server.authorization.jackson2.
  * <p>Author       : wangchao.</p>
  * <p>Date         : 2021/9/26.</p>
  * <p>Time         : 4:52 下午.</p>
+ * <p>
+ * 仅从 JSON 还原 {@link InUser} 的业务核心字段，meta 不参与序列化，
+ * 因此无状态会话恢复时 meta 为 {@code null}（符合预期：meta 只在登录流程生效）。
  */
 @Slf4j
 final class InUserDeserializer extends JsonDeserializer<InUser> {
@@ -46,11 +47,6 @@ final class InUserDeserializer extends JsonDeserializer<InUser> {
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, InUserFieldNames.AUTHORITIES, GRANTED_AUTH_COLL, mapper);
 
-        String credentialWarning = JsonNodeUtils.findStringValue(root, InUserFieldNames.CREDENTIAL_WARNING);
-        Map<String, Object> credentialMeta = JsonNodeUtils.findValue(
-                root, InUserFieldNames.CREDENTIAL_META, CREDENTIAL_META_COLL, mapper);
-
-        return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities,
-                credentialWarning, credentialMeta);
+        return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities);
     }
 }

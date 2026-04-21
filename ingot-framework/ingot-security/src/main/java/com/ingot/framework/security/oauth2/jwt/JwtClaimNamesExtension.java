@@ -72,36 +72,6 @@ public interface JwtClaimNamesExtension {
     String USER_TYPE = "ut";
     String SCOPE = OAuth2ParameterNames.SCOPE;
 
-    /**
-     * 凭证警告码（仅当密码即将过期或处于宽限期时写入）
-     * <p>值参考 {@code CredentialErrorCode.getCode()}：</p>
-     * <ul>
-     *   <li>{@code "pwd_expiring_soon"}：密码即将过期</li>
-     *   <li>{@code "pwd_expired_with_grace"}：密码已过期但处于宽限期</li>
-     * </ul>
-     */
-    String CREDENTIAL_WARNING = "cw";
-
-    /**
-     * 宽限期剩余登录次数（Integer，对应 {@code "pwd_expired_with_grace"}）
-     */
-    String CREDENTIAL_GRACE_REMAINING = "cgr";
-
-    /**
-     * 距密码过期剩余天数（Long，对应 {@code "pwd_expiring_soon"}）
-     */
-    String CREDENTIAL_EXPIRE_IN_DAYS = "ced";
-
-    /**
-     * credentialMeta Map 中：宽限期剩余次数的 key（与 {@code PasswordExpirationPolicy.META_GRACE_REMAINING} 保持一致）
-     */
-    String CREDENTIAL_META_KEY_GRACE_REMAINING = "graceRemaining";
-
-    /**
-     * credentialMeta Map 中：距过期剩余天数的 key（与 {@code PasswordExpirationPolicy.META_DAYS_LEFT} 保持一致）
-     */
-    String CREDENTIAL_META_KEY_DAYS_LEFT = "daysLeft";
-
     static String getUsername(Jwt source) {
         return MapUtil.get(source.getClaims(), SUB, String.class);
     }

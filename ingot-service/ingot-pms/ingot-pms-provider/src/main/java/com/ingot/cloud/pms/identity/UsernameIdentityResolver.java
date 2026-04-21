@@ -8,6 +8,8 @@ import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
+import com.ingot.framework.account.domain.config.AccountDomainProperties;
+import com.ingot.framework.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
@@ -33,6 +35,8 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
     private final BizRoleService bizRoleService;
     private final BizUserService bizUserService;
     private final CredentialSecurityService credentialSecurityService;
+    private final LockStatePort lockStatePort;
+    private final AccountDomainProperties accountProperties;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -52,12 +56,13 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
         }
         UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), request.getTenant(),
                 sysTenantService, sysUserTenantService, bizUserService, bizAppService, bizRoleService);
-        // 用户名/密码登录：由 PMS 填充凭证过期状态，避免 Auth 服务直接访问凭证数据库
+        // 用户名/密码登录：由 PMS 填充认证上下文
+        // - 硬过期位 credentialsNonExpired：用于阻断登录
+        // - meta：锁定到期时间 / 失败计数 / 阈值 / 提示节奏，用于 Auth 侧生成友好提示
         if (user != null) {
-            IdentityUtil.fillCredentialState(response, user.getId(), credentialSecurityService);
+            IdentityUtil.fillAuthContext(response, user.getId(), request.getUserType(),
+                    credentialSecurityService, lockStatePort, accountProperties);
         }
         return response;
     }
-
-
 }

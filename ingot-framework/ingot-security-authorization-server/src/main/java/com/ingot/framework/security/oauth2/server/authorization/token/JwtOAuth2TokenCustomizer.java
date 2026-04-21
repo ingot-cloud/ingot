@@ -2,7 +2,6 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -65,23 +64,6 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
                 claims.put(JwtClaimNamesExtension.TENANT, user.getTenantId());
                 jti.set(claims.get(JwtClaimNamesExtension.JTI));
                 exp.set(claims.get(JwtClaimNamesExtension.EXP));
-
-                // 凭证警告（仅认证流程有效，不影响后续请求）
-                // 写入 JWT 供前端自行组装提示语（过期状态码 + 宽限次数 / 剩余天数）
-                if (user.getCredentialWarning() != null) {
-                    claims.put(JwtClaimNamesExtension.CREDENTIAL_WARNING, user.getCredentialWarning());
-                    Map<String, Object> meta = user.getCredentialMeta();
-                    if (meta != null) {
-                        Object graceRemaining = meta.get(JwtClaimNamesExtension.CREDENTIAL_META_KEY_GRACE_REMAINING);
-                        if (graceRemaining != null) {
-                            claims.put(JwtClaimNamesExtension.CREDENTIAL_GRACE_REMAINING, graceRemaining);
-                        }
-                        Object daysLeft = meta.get(JwtClaimNamesExtension.CREDENTIAL_META_KEY_DAYS_LEFT);
-                        if (daysLeft != null) {
-                            claims.put(JwtClaimNamesExtension.CREDENTIAL_EXPIRE_IN_DAYS, daysLeft);
-                        }
-                    }
-                }
             });
 
             // 2. Scope简化：只保留客户端授权的scope

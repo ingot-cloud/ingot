@@ -1,6 +1,7 @@
 package com.ingot.cloud.pms.service.biz.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
@@ -21,9 +22,16 @@ import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.credential.model.CredentialErrorCode;
+import com.ingot.framework.security.credential.model.CredentialScene;
+import com.ingot.framework.security.credential.model.PasswordCheckResult;
+import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
+import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
+import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,6 +40,7 @@ import org.springframework.stereotype.Service;
  * <p>Date         : 2025/11/18.</p>
  * <p>Time         : 09:13.</p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BizAuthServiceImpl implements BizAuthService {
@@ -42,6 +51,7 @@ public class BizAuthServiceImpl implements BizAuthService {
     private final BizRoleService bizRoleService;
     private final BizAppService bizAppService;
     private final BizMetaMenuService bizMetaMenuService;
+    private final CredentialSecurityService credentialSecurityService;
 
     private final UserConvert userConvert;
 
@@ -71,8 +81,47 @@ public class BizAuthServiceImpl implements BizAuthService {
             result.setRoles(user.getRoleCodeList());
             result.setAllows(allows);
             result.setMustChangePwd(userInfo.getMustChangePwd());
+            fillCredentialStatus(result, userId);
             return result;
         });
+    }
+
+    /**
+     * 填充密码凭证软状态（即将过期 / 宽限期），供前端在登录后给出友好提示。
+     * <p>硬过期已在登录时被阻断，此处不会出现。</p>
+     */
+    private void fillCredentialStatus(UserInfoDTO result, Long userId) {
+        try {
+            PasswordCheckResult checkResult = credentialSecurityService.validate(
+                    CredentialValidateRequest.builder()
+                            .scene(CredentialScene.LOGIN)
+                            .userId(userId)
+                            .manualProcessError(true)
+                            .autoProcessUpdatePasswordLogic(false)
+                            .build());
+
+            if (!checkResult.hasWarnings() || checkResult.getWarningCode() == null) {
+                return;
+            }
+            CredentialErrorCode warningCode = checkResult.getWarningCode();
+            result.setCredentialStatus(warningCode);
+
+            Map<String, Object> metadata = checkResult.getMetadata();
+            if (warningCode == CredentialErrorCode.EXPIRING_SOON) {
+                Object daysLeft = metadata.get(PasswordExpirationPolicy.META_DAYS_LEFT);
+                if (daysLeft instanceof Number number) {
+                    result.setDaysLeft(number.longValue());
+                }
+            } else if (warningCode == CredentialErrorCode.EXPIRED_WITH_GRACE) {
+                Object graceRemaining = metadata.get(PasswordExpirationPolicy.META_GRACE_REMAINING);
+                if (graceRemaining instanceof Number number) {
+                    result.setGraceRemaining(number.intValue());
+                }
+            }
+        } catch (Exception e) {
+            // 凭证状态查询不应影响主流程
+            log.warn("[BizAuthService] 凭证状态查询失败 userId={}", userId, e);
+        }
     }
 
     @Override

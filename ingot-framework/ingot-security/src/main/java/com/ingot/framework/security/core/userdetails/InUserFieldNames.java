@@ -15,6 +15,4 @@ public interface InUserFieldNames {
     String USER_TYPE = "userType";
     String USERNAME = "username";
     String AUTHORITIES = "authorities";
-    String CREDENTIAL_WARNING = "credentialWarning";
-    String CREDENTIAL_META = "credentialMeta";
 }

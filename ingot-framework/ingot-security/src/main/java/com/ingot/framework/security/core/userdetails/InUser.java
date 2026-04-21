@@ -1,5 +1,9 @@
 package com.ingot.framework.security.core.userdetails;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +16,7 @@ import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
@@ -21,6 +26,7 @@ import org.springframework.security.core.userdetails.User;
  * <p>Date         : 2019/6/28.</p>
  * <p>Time         : 12:54 PM.</p>
  */
+@Slf4j
 @Getter
 public class InUser extends User implements InUserDetails {
     private static final String N_A = "N/A";
@@ -46,20 +52,12 @@ public class InUser extends User implements InUserDetails {
      */
     private final String userType;
     /**
-     * 凭证警告码
-     * <p>由 PMS/Member 在 getUserAuthDetails 时填充（如"pwd_expiring_soon"、"pwd_expired_with_grace"），
-     * 通过 {@code OAuth2UserDetailsService.parse()} 传入，后续请求中此字段为 null</p>
+     * 认证上下文元数据（仅登录流程使用，不序列化进 JWT）
+     * <p>key 定义见 {@link InUserMetaKeys}，值由 PMS/Member 在
+     * {@code UserDetailsResponse.meta} 中填充，后续请求复用 Token 时此字段为 null。</p>
      */
-    private final String credentialWarning;
-    /**
-     * 凭证警告附加数据
-     * <p>当 {@link #credentialWarning} 不为 null 时携带，由 PMS/Member 填充，由 JWT 定制器写入 claims：</p>
-     * <ul>
-     *   <li>{@code graceRemaining}（Integer）：宽限期剩余登录次数，对应 "pwd_expired_with_grace"</li>
-     *   <li>{@code daysLeft}（Long）：距过期剩余天数，对应 "pwd_expiring_soon"</li>
-     * </ul>
-     */
-    private final Map<String, Object> credentialMeta;
+    @Getter(onMethod_ = @JsonIgnore)
+    private final Map<String, Object> meta;
 
     @JsonCreator
     public InUser(Long id,
@@ -74,8 +72,7 @@ public class InUser extends User implements InUserDetails {
                   boolean credentialsNonExpired,
                   boolean accountNonLocked,
                   Collection<? extends GrantedAuthority> authorities,
-                  String credentialWarning,
-                  Map<String, Object> credentialMeta) {
+                  Map<String, Object> meta) {
         super(username, password, enabled,
                 accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
@@ -83,8 +80,113 @@ public class InUser extends User implements InUserDetails {
         this.tokenAuthType = tokenAuthType;
         this.clientId = clientId;
         this.userType = userType;
-        this.credentialWarning = credentialWarning;
-        this.credentialMeta = credentialMeta;
+        this.meta = meta;
+    }
+
+    /**
+     * 从 {@link #meta} 中按类型读取值，缺省返回 {@code null}。
+     * <p>
+     * 考虑到 meta 经过 RPC(Feign/Jackson) 反序列化后，{@code LocalDateTime} 会退化为 ISO 字符串、
+     * {@code Integer} 可能被识别为 {@code Long} 等情况，这里做了一层类型兼容转换：
+     * </p>
+     * <ul>
+     *   <li>目标类型已匹配：直接返回</li>
+     *   <li>{@link LocalDateTime} / {@link LocalDate} / {@link Instant}：支持从 ISO 字符串或 epoch 毫秒解析</li>
+     *   <li>数值类（Integer/Long/Double/Float/Short/Byte）：在 {@link Number} 之间互转</li>
+     *   <li>{@link Boolean}：支持 {@code "true"/"false"} 字符串</li>
+     *   <li>{@link String}：直接 {@link Object#toString()}</li>
+     * </ul>
+     * 其他类型或转换失败时返回 {@code null}。
+     *
+     * @param key   参见 {@link InUserMetaKeys}
+     * @param clazz 目标类型
+     */
+    @JsonIgnore
+    @SuppressWarnings("unchecked")
+    public <T> T getMetaValue(String key, Class<T> clazz) {
+        if (meta == null) {
+            return null;
+        }
+        Object value = meta.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (clazz.isInstance(value)) {
+            return clazz.cast(value);
+        }
+        try {
+            return (T) convert(value, clazz);
+        } catch (Exception e) {
+            log.warn("[InUser] meta 值类型转换失败, key={}, value={}, targetType={}, reason={}",
+                    key, value, clazz.getSimpleName(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static Object convert(Object value, Class<?> clazz) {
+        if (clazz == String.class) {
+            return value.toString();
+        }
+        if (clazz == LocalDateTime.class) {
+            if (value instanceof CharSequence cs) {
+                return LocalDateTime.parse(cs);
+            }
+            if (value instanceof Number n) {
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli(n.longValue()), ZoneId.systemDefault());
+            }
+            throw unsupported(value, clazz);
+        }
+        if (clazz == LocalDate.class) {
+            if (value instanceof CharSequence cs) {
+                return LocalDate.parse(cs);
+            }
+            throw unsupported(value, clazz);
+        }
+        if (clazz == Instant.class) {
+            if (value instanceof CharSequence cs) {
+                return Instant.parse(cs);
+            }
+            if (value instanceof Number n) {
+                return Instant.ofEpochMilli(n.longValue());
+            }
+            throw unsupported(value, clazz);
+        }
+        if (Number.class.isAssignableFrom(clazz)) {
+            Number number = toNumber(value);
+            if (clazz == Integer.class) return number.intValue();
+            if (clazz == Long.class) return number.longValue();
+            if (clazz == Double.class) return number.doubleValue();
+            if (clazz == Float.class) return number.floatValue();
+            if (clazz == Short.class) return number.shortValue();
+            if (clazz == Byte.class) return number.byteValue();
+            throw unsupported(value, clazz);
+        }
+        if (clazz == Boolean.class) {
+            if (value instanceof CharSequence cs) {
+                return Boolean.parseBoolean(cs.toString());
+            }
+            throw unsupported(value, clazz);
+        }
+        throw unsupported(value, clazz);
+    }
+
+    private static Number toNumber(Object value) {
+        if (value instanceof Number n) {
+            return n;
+        }
+        if (value instanceof CharSequence cs) {
+            String s = cs.toString();
+            if (s.indexOf('.') >= 0 || s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
+                return Double.parseDouble(s);
+            }
+            return Long.parseLong(s);
+        }
+        throw new IllegalArgumentException("cannot convert to Number: " + value.getClass());
+    }
+
+    private static IllegalArgumentException unsupported(Object value, Class<?> clazz) {
+        return new IllegalArgumentException(
+                "unsupported conversion from " + value.getClass().getName() + " to " + clazz.getName());
     }
 
     /**
@@ -97,17 +199,7 @@ public class InUser extends User implements InUserDetails {
                                    Collection<? extends GrantedAuthority> authorities) {
         return standard(id, tenantId, clientId, tokenAuthType, userType, username, N_A,
                 true, true, true, true,
-                authorities);
-    }
-
-    public static InUser stateless(Long id, Long tenantId, String clientId,
-                                   String tokenAuthType, String userType, String username,
-                                   Collection<? extends GrantedAuthority> authorities,
-                                   String credentialWarning,
-                                   Map<String, Object> credentialMeta) {
-        return standard(id, tenantId, clientId, tokenAuthType, userType, username, N_A,
-                true, true, true, true,
-                authorities, credentialWarning, credentialMeta);
+                authorities, null);
     }
 
     /**
@@ -123,7 +215,7 @@ public class InUser extends User implements InUserDetails {
                                      Collection<? extends GrantedAuthority> authorities) {
         return standard(id, defaultTenant, N_A, N_A, userType, username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, null, null);
+                authorities, null);
     }
 
     public static InUser userDetails(Long id, String userType, Long defaultTenant,
@@ -131,11 +223,10 @@ public class InUser extends User implements InUserDetails {
                                      boolean enabled, boolean accountNonExpired,
                                      boolean credentialsNonExpired, boolean accountNonLocked,
                                      Collection<? extends GrantedAuthority> authorities,
-                                     String credentialWarning,
-                                     Map<String, Object> credentialMeta) {
+                                     Map<String, Object> meta) {
         return standard(id, defaultTenant, N_A, N_A, userType, username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, credentialWarning, credentialMeta);
+                authorities, meta);
     }
 
     /**
@@ -152,7 +243,7 @@ public class InUser extends User implements InUserDetails {
         return new InUser(id, tenantId, clientId, tokenAuthType, userType,
                 username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, null, null);
+                authorities, null);
     }
 
     public static InUser standard(Long id, Long tenantId, String clientId,
@@ -161,12 +252,11 @@ public class InUser extends User implements InUserDetails {
                                   boolean enabled, boolean accountNonExpired,
                                   boolean credentialsNonExpired, boolean accountNonLocked,
                                   Collection<? extends GrantedAuthority> authorities,
-                                  String credentialWarning,
-                                  Map<String, Object> credentialMeta) {
+                                  Map<String, Object> meta) {
         return new InUser(id, tenantId, clientId, tokenAuthType, userType,
                 username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, credentialWarning, credentialMeta);
+                authorities, meta);
     }
 
     public Builder toBuilder() {
@@ -231,8 +321,7 @@ public class InUser extends User implements InUserDetails {
         private String clientId;
         private String tokenAuthType;
         private String userType;
-        private String credentialWarning;
-        private Map<String, Object> credentialMeta;
+        private Map<String, Object> meta;
 
         private Builder(InUser user) {
             this.password = user.getPassword();
@@ -248,8 +337,7 @@ public class InUser extends User implements InUserDetails {
             this.clientId = user.getClientId();
             this.tokenAuthType = user.getTokenAuthType();
             this.userType = user.getUserType();
-            this.credentialWarning = user.credentialWarning;
-            this.credentialMeta = user.credentialMeta;
+            this.meta = user.meta;
         }
 
         public Builder tenantId(Long id) {
@@ -272,13 +360,8 @@ public class InUser extends User implements InUserDetails {
             return this;
         }
 
-        public Builder credentialWarning(String credentialWarning) {
-            this.credentialWarning = credentialWarning;
-            return this;
-        }
-
-        public Builder credentialMeta(Map<String, Object> credentialMeta) {
-            this.credentialMeta = credentialMeta;
+        public Builder meta(Map<String, Object> meta) {
+            this.meta = meta;
             return this;
         }
 
@@ -287,7 +370,7 @@ public class InUser extends User implements InUserDetails {
                     this.userType,
                     this.username, this.password,
                     this.enabled, this.accountNonExpired, this.credentialsNonExpired, this.accountNonLocked,
-                    this.authorities, this.credentialWarning, this.credentialMeta);
+                    this.authorities, this.meta);
         }
     }
 }

@@ -6,7 +6,6 @@ import java.util.Optional;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 
 /**
  * <p>Description  : OAuth2Util.</p>
@@ -29,21 +28,6 @@ public class OAuth2Util {
                     if (target.getTenantId() != null) {
                         additionalParameters.put(InOAuth2ParameterNames.TENANT, target.getTenantId().toString());
                     }
-                    if (StrUtil.isNotEmpty(target.getCredentialWarning())) {
-                        additionalParameters.put(InOAuth2ParameterNames.CREDENTIAL_WARNING, target.getCredentialWarning());
-                        Map<String, Object> meta = user.getCredentialMeta();
-                        if (meta != null) {
-                            Object graceRemaining = meta.get(JwtClaimNamesExtension.CREDENTIAL_META_KEY_GRACE_REMAINING);
-                            if (graceRemaining != null) {
-                                additionalParameters.put(InOAuth2ParameterNames.CREDENTIAL_GRACE_REMAINING, graceRemaining);
-                            }
-                            Object daysLeft = meta.get(JwtClaimNamesExtension.CREDENTIAL_META_KEY_DAYS_LEFT);
-                            if (daysLeft != null) {
-                                additionalParameters.put(InOAuth2ParameterNames.CREDENTIAL_EXPIRE_IN_DAYS, daysLeft);
-                            }
-                        }
-                    }
-
                 });
         if (StrUtil.isNotEmpty(org)) {
             additionalParameters.put(InOAuth2ParameterNames.TENANT, org);

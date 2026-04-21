@@ -5,13 +5,13 @@ import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.credential.DefaultUserCredentialChecker;
 import com.ingot.framework.security.core.credential.UserCredentialChecker;
 import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.core.userdetails.InUserDetailsChecker;
 import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
 import com.ingot.framework.security.oauth2.server.authorization.client.DefaultRegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientChecker;
 import com.ingot.framework.security.oauth2.server.authorization.client.RegisteredClientOps;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
@@ -58,7 +58,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     private OAuth2UserDetailsServiceManager userDetailsServiceManager;
     private UserDetailsPasswordService userDetailsPasswordService;
     private PasswordEncoder passwordEncoder;
-    private UserDetailsChecker authenticationChecks = new AccountStatusUserDetailsChecker();
+    private UserDetailsChecker authenticationChecks = new InUserDetailsChecker();
     private RegisteredClientChecker clientChecker = new DefaultRegisteredClientChecker();
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
     private UserCredentialChecker credentialChecker = new DefaultUserCredentialChecker();
@@ -100,6 +100,10 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
         // 强制使用 InSecurityMessageSource，覆盖默认的以及MessageSourceAware接口注入的MessageSource
         InSecurityMessageSource messageSource = new InSecurityMessageSource();
         setMessageSource(messageSource);
+        // 同步 MessageSource 给定制化 checker，以便使用统一 i18n 资源
+        if (this.authenticationChecks instanceof InUserDetailsChecker checker) {
+            checker.setMessageSource(messageSource);
+        }
         // 使用相同 PasswordEncoder
         this.credentialChecker.setPasswordEncoder(this.passwordEncoder);
     }
