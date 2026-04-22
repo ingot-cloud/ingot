@@ -158,26 +158,34 @@ CREATE TABLE `member_user` (
   `id` bigint unsigned NOT NULL COMMENT 'ID',
   `username` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '用户名',
   `password` varchar(300) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '密码',
-  `init_pwd` tinyint(1) NOT NULL DEFAULT '1' COMMENT '初始化密码标识',
+  `must_change_pwd` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否必须修改密码（0-否 1-是）',
+  `password_changed_at` datetime DEFAULT NULL COMMENT '密码最后修改时间',
   `nickname` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '昵称',
   `phone` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '手机号',
   `email` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '邮件地址',
   `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '头像',
-  `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用（0-禁用 1-启用）',
+  `locked` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否锁定（冗余字段，详情见 account_lock_state）',
+  `last_login_at` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `last_login_ip` varchar(64) DEFAULT NULL COMMENT '最后登录IP',
+  `version` bigint NOT NULL DEFAULT '0' COMMENT '乐观锁版本号',
   `created_at` datetime DEFAULT NULL COMMENT '创建日期',
   `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
   `deleted_at` datetime DEFAULT NULL COMMENT '删除日期',
-  PRIMARY KEY (`id`),
-  KEY `idx_username` (`username`) USING BTREE COMMENT '用户名',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_username` (`username`,(coalesce(`deleted_at`,0))) COMMENT '用户名全局唯一（软删除友好）',
   KEY `idx_phone` (`phone`) USING BTREE COMMENT '手机号',
-  KEY `idx_email` (`email`) USING BTREE COMMENT '邮箱'
+  KEY `idx_email` (`email`) USING BTREE COMMENT '邮箱',
+  KEY `idx_enabled` (`enabled`) USING BTREE COMMENT '启用状态索引',
+  KEY `idx_locked` (`locked`) USING BTREE COMMENT '锁定状态索引',
+  KEY `idx_last_login` (`last_login_at`) USING BTREE COMMENT '最后登录时间索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of member_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `member_user` (`id`, `username`, `password`, `init_pwd`, `nickname`, `phone`, `email`, `avatar`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175075664995807234, '18612341234', '{bcrypt}$2a$10$Io6Sn3JN4MYrnqvLUoNpzeckRk9kkgymJLpRozuA8Ve9taCINbaYG', 1, '测试用户', '18612341234', NULL, 'ingot/user/avatar/ic_logo.png', '0', '2025-12-05 13:57:11', '2025-12-05 14:28:05', NULL);
+INSERT INTO `member_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175075664995807234, '18612341234', '{bcrypt}$2a$10$Io6Sn3JN4MYrnqvLUoNpzeckRk9kkgymJLpRozuA8Ve9taCINbaYG', 0, '2025-12-05 14:28:05', '测试用户', '18612341234', NULL, 'ingot/user/avatar/ic_logo.png', 1, 0, NULL, NULL, 0, '2025-12-05 13:57:11', '2025-12-05 14:28:05', NULL);
 COMMIT;
 
 -- ----------------------------

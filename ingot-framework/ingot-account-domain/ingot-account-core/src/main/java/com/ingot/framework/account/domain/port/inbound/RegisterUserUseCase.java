@@ -1,6 +1,7 @@
 package com.ingot.framework.account.domain.port.inbound;
 
 import com.ingot.framework.account.domain.model.UserAccount;
+import com.ingot.framework.account.domain.model.enums.EventSource;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import lombok.Builder;
 import lombok.Value;
@@ -101,5 +102,14 @@ public interface RegisterUserUseCase {
          * <p>默认强制修改</p>
          */
         Boolean mustChangePwd;
+
+        /**
+         * 账号创建事件来源（可选）
+         * <p>管理员创建场景通常传 {@link EventSource#PMS} / {@link EventSource#MEMBER}
+         * 等具体业务侧来源；为 {@code null} 时用例将按 {@code userType} 自动派生
+         * （{@code ADMIN} → {@link EventSource#PMS}、{@code APP} → {@link EventSource#MEMBER}），
+         * 自助注册场景一律落为 {@link EventSource#SYSTEM}。</p>
+         */
+        EventSource eventSource;
     }
 }

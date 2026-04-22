@@ -5,6 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.model.domain.MemberRole;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
+import com.ingot.cloud.member.api.model.dto.user.MemberAccountLockDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.service.biz.BizUserService;
@@ -98,6 +99,42 @@ public class MemberUserAPI implements RShortcuts {
                              @RequestBody SetDTO<Long, Long> params) {
         params.setId(id);
         bizUserService.setUserRoles(id, params.getSetIds());
+        return ok();
+    }
+
+    @Operation(summary = "启用账号", description = "启用指定会员用户账号")
+    @AdminOrHasAnyAuthority({"platform:member:user:update"})
+    @PutMapping("/{id}/enable")
+    public R<?> enableAccount(@PathVariable Long id,
+                              @RequestParam(required = false) String reason) {
+        bizUserService.enableAccount(id, reason);
+        return ok();
+    }
+
+    @Operation(summary = "禁用账号", description = "禁用指定会员用户账号")
+    @AdminOrHasAnyAuthority({"platform:member:user:update"})
+    @PutMapping("/{id}/disable")
+    public R<?> disableAccount(@PathVariable Long id,
+                               @RequestParam(required = false) String reason) {
+        bizUserService.disableAccount(id, reason);
+        return ok();
+    }
+
+    @Operation(summary = "锁定账号", description = "手动锁定指定会员用户账号，可指定锁定原因和到期时间")
+    @AdminOrHasAnyAuthority({"platform:member:user:lock"})
+    @PutMapping("/{id}/lock")
+    public R<?> lockAccount(@PathVariable Long id,
+                            @RequestBody MemberAccountLockDTO params) {
+        bizUserService.lockAccount(id, params);
+        return ok();
+    }
+
+    @Operation(summary = "解锁账号", description = "手动解锁指定会员用户账号")
+    @AdminOrHasAnyAuthority({"platform:member:user:lock"})
+    @PutMapping("/{id}/unlock")
+    public R<?> unlockAccount(@PathVariable Long id,
+                              @RequestBody MemberAccountLockDTO params) {
+        bizUserService.unlockAccount(id, params.getReasonDetail());
         return ok();
     }
 }

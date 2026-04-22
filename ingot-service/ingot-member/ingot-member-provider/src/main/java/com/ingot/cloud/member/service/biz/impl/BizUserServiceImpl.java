@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.model.convert.MemberUserConvert;
 import com.ingot.cloud.member.api.model.domain.*;
+import com.ingot.cloud.member.api.model.dto.user.MemberAccountLockDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
@@ -17,15 +18,24 @@ import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.*;
-import com.ingot.framework.commons.model.enums.UserStatusEnum;
+import com.ingot.framework.account.domain.model.UserAccount;
+import com.ingot.framework.account.domain.model.enums.EventSource;
+import com.ingot.framework.account.domain.model.enums.LockReason;
+import com.ingot.framework.account.domain.port.inbound.ChangePasswordUseCase;
+import com.ingot.framework.account.domain.port.inbound.LockAccountUseCase;
+import com.ingot.framework.account.domain.port.inbound.ManageAccountStatusUseCase;
+import com.ingot.framework.account.domain.port.inbound.RegisterUserUseCase;
+import com.ingot.framework.account.domain.port.inbound.UnlockAccountUseCase;
 import com.ingot.framework.commons.model.security.ResetPwdVO;
+import org.springframework.lang.Nullable;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.commons.utils.UUIDUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +55,11 @@ public class BizUserServiceImpl implements BizUserService {
     private final MemberRoleService roleService;
     private final MemberRoleUserService roleUserService;
 
-    private final PasswordEncoder passwordEncoder;
+    private final RegisterUserUseCase registerUserUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
+    private final ManageAccountStatusUseCase manageAccountStatusUseCase;
+    private final LockAccountUseCase lockAccountUseCase;
+    private final UnlockAccountUseCase unlockAccountUseCase;
     private final AssertionChecker assertionChecker;
 
     @Override
@@ -120,16 +134,20 @@ public class BizUserServiceImpl implements BizUserService {
         MemberUser user = userService.getOne(Wrappers.<MemberUser>lambdaQuery()
                 .eq(MemberUser::getPhone, params.getPhone()));
         if (user == null) {
-            user = new MemberUser();
-            user.setUsername(params.getPhone());
-            user.setPassword(passwordEncoder.encode(UUIDUtil.generateShortUuid()));
-            user.setAvatar(params.getAvatar());
-            user.setNickname(params.getNickname());
-            user.setPhone(params.getPhone());
-            user.setStatus(UserStatusEnum.ENABLE);
-            user.setInitPwd(Boolean.TRUE);
-            user.setCreatedAt(DateUtil.now());
-            userService.save(user);
+            // 首次以手机号登录 / 注册：走账号域 RegisterUserUseCase，
+            // 密码使用短 UUID 占位，强制用户首次登录修改密码。
+            UserAccount account = registerUserUseCase.register(RegisterUserUseCase.RegisterUserCommand.builder()
+                    .creationSource(RegisterUserUseCase.CreationSource.ADMIN_CREATE)
+                    .username(params.getPhone())
+                    .password(UUIDUtil.generateShortUuid())
+                    .userType(UserTypeEnum.APP)
+                    .phone(params.getPhone())
+                    .nickname(params.getNickname())
+                    .avatar(params.getAvatar())
+                    .mustChangePwd(Boolean.TRUE)
+                    .eventSource(EventSource.MEMBER)
+                    .build());
+            user = userService.getById(account.getId());
         }
 
         // join tenant
@@ -145,9 +163,7 @@ public class BizUserServiceImpl implements BizUserService {
         String initPwd = randomPwd();
 
         user.setUsername(params.getPhone());
-        user.setInitPwd(Boolean.TRUE);
         user.setPassword(initPwd);
-        user.setStatus(UserStatusEnum.ENABLE);
         userService.create(user);
 
         ResetPwdVO result = new ResetPwdVO();
@@ -181,24 +197,90 @@ public class BizUserServiceImpl implements BizUserService {
 
     @Override
     public ResetPwdVO resetPwd(long userId) {
-        MemberUser user = userService.getById(userId);
-        assertionChecker.checkOperation(user != null,
-                "MemberUserServiceImpl.UserNonExist");
-        assert user != null;
+        InUser operator = SecurityAuthContext.getUser();
+        String randomPwd = randomPwd();
 
-        // 重置密码
-        String initPwd = randomPwd();
-        user.setPassword(passwordEncoder.encode(initPwd));
-        user.updateById();
+        // 管理员重置密码：走账号域 ChangePasswordUseCase，自动更新 mustChangePwd/密码历史/过期记录
+        changePasswordUseCase.resetPassword(ChangePasswordUseCase.ResetPasswordCommand.builder()
+                .userId(userId)
+                .userType(UserTypeEnum.APP)
+                .newPassword(randomPwd)
+                .operatorId(operator.getId())
+                .operatorName(operator.getUsername())
+                .source(EventSource.MEMBER)
+                .build());
 
         ResetPwdVO result = new ResetPwdVO();
-        result.setRandom(initPwd);
+        result.setRandom(randomPwd);
         return result;
     }
 
     @Override
     public void fixPassword(MemberUserPasswordDTO params) {
-        userService.fixPassword(SecurityAuthContext.getUser().getId(), params);
+        long id = SecurityAuthContext.getUser().getId();
+        changePasswordUseCase.changePassword(ChangePasswordUseCase.ChangePasswordCommand.builder()
+                .userId(id)
+                .userType(UserTypeEnum.APP)
+                .oldPassword(params.getPassword())
+                .newPassword(params.getNewPassword())
+                .confirmPassword(params.getNewPassword())
+                .build());
+    }
+
+    @Override
+    public void enableAccount(long userId, @Nullable String reason) {
+        InUser operator = SecurityAuthContext.getUser();
+        manageAccountStatusUseCase.enableAccount(ManageAccountStatusUseCase.StatusCommand.builder()
+                .userId(userId)
+                .userType(UserTypeEnum.APP)
+                .targetStatus(Boolean.TRUE)
+                .reason(reason)
+                .operatorId(operator.getId())
+                .operatorName(operator.getUsername())
+                .source(EventSource.MEMBER)
+                .build());
+    }
+
+    @Override
+    public void disableAccount(long userId, @Nullable String reason) {
+        InUser operator = SecurityAuthContext.getUser();
+        manageAccountStatusUseCase.disableAccount(ManageAccountStatusUseCase.StatusCommand.builder()
+                .userId(userId)
+                .userType(UserTypeEnum.APP)
+                .targetStatus(Boolean.FALSE)
+                .reason(reason)
+                .operatorId(operator.getId())
+                .operatorName(operator.getUsername())
+                .source(EventSource.MEMBER)
+                .build());
+    }
+
+    @Override
+    public void lockAccount(long userId, MemberAccountLockDTO params) {
+        InUser operator = SecurityAuthContext.getUser();
+        lockAccountUseCase.lockManually(LockAccountUseCase.LockCommand.builder()
+                .userId(userId)
+                .userType(UserTypeEnum.APP)
+                .reason(LockReason.MANUAL_LOCK)
+                .reasonDetail(params.getReasonDetail())
+                .lockedUntil(params.getLockedUntil())
+                .operatorId(operator.getId())
+                .operatorName(operator.getUsername())
+                .source(EventSource.MEMBER)
+                .build());
+    }
+
+    @Override
+    public void unlockAccount(long userId, @Nullable String reason) {
+        InUser operator = SecurityAuthContext.getUser();
+        unlockAccountUseCase.unlockManually(UnlockAccountUseCase.UnlockCommand.builder()
+                .userId(userId)
+                .userType(UserTypeEnum.APP)
+                .reason(reason)
+                .operatorId(operator.getId())
+                .operatorName(operator.getUsername())
+                .source(EventSource.MEMBER)
+                .build());
     }
 
     private String randomPwd() {

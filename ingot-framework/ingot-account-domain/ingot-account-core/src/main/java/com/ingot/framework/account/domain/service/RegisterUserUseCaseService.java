@@ -106,12 +106,15 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
         credentialSecurityService.updatePasswordExpiration(userId);
 
         // 7. 发布账号创建事件
+        //    事件来源优先使用命令中显式指定的 eventSource；
+        //    未指定时，自助注册一律落为 SYSTEM；管理员创建按 userType 派生，避免硬编码到单一业务域。
+        EventSource source = resolveEventSource(command, isAdminCreate);
         securityEventPort.publishEvent(AccountSecurityEvent.builder()
                 .userId(userId)
                 .userType(command.getUserType())
                 .eventType(SecurityEventType.ACCOUNT_CREATED)
                 .result(true)
-                .source(isAdminCreate ? EventSource.PMS : EventSource.SYSTEM)
+                .source(source)
                 .operatorId(command.getCreatedBy())
                 .createdAt(now)
                 .build());
@@ -119,5 +122,30 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
         log.info("[RegisterUser] 账号创建成功 username={} userId={} mustChangePwd={}",
                 command.getUsername(), userId, mustChangePwd);
         return savedAccount;
+    }
+
+    /**
+     * 解析账号创建事件来源：
+     * <ol>
+     *   <li>命令显式传入的 {@code eventSource} 优先使用</li>
+     *   <li>自助注册统一落 {@link EventSource#SYSTEM}</li>
+     *   <li>管理员创建按 {@code userType} 派生：{@code ADMIN → PMS}、{@code APP → MEMBER}，
+     *       其余未识别类型降级为 {@link EventSource#SYSTEM}</li>
+     * </ol>
+     */
+    private EventSource resolveEventSource(RegisterUserCommand command, boolean isAdminCreate) {
+        if (command.getEventSource() != null) {
+            return command.getEventSource();
+        }
+        if (!isAdminCreate) {
+            return EventSource.SYSTEM;
+        }
+        if (command.getUserType() == null) {
+            return EventSource.SYSTEM;
+        }
+        return switch (command.getUserType()) {
+            case ADMIN -> EventSource.PMS;
+            case APP -> EventSource.MEMBER;
+        };
     }
 }

@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.model.domain.MemberRole;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
+import com.ingot.cloud.member.api.model.dto.user.MemberAccountLockDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserBaseInfoDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserCreateByPhoneDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserDTO;
 import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
 import com.ingot.framework.commons.model.security.ResetPwdVO;
+import org.springframework.lang.Nullable;
 
 /**
  * <p>Description  : BizUserService.</p>
@@ -105,4 +107,36 @@ public interface BizUserService {
      * @param params {@link MemberUserPasswordDTO}
      */
     void fixPassword(MemberUserPasswordDTO params);
+
+    /**
+     * 启用账号
+     *
+     * @param userId 用户ID
+     * @param reason 启用原因（可选）
+     */
+    void enableAccount(long userId, @Nullable String reason);
+
+    /**
+     * 禁用账号
+     *
+     * @param userId 用户ID
+     * @param reason 禁用原因（可选）
+     */
+    void disableAccount(long userId, @Nullable String reason);
+
+    /**
+     * 手动锁定账号
+     *
+     * @param userId 用户ID
+     * @param params 锁定参数
+     */
+    void lockAccount(long userId, MemberAccountLockDTO params);
+
+    /**
+     * 手动解锁账号
+     *
+     * @param userId 用户ID
+     * @param reason 解锁原因（可选）
+     */
+    void unlockAccount(long userId, @Nullable String reason);
 }

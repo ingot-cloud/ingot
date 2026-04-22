@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.ingot.cloud.member.api.model.domain.MemberRole;
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.core.utils.sensitive.Sensitive;
 import com.ingot.framework.core.utils.sensitive.SensitiveMode;
 import com.ingot.framework.oss.common.OssUrl;
@@ -60,10 +59,16 @@ public class MemberUserProfileVO implements Serializable {
     private String avatar;
 
     /**
-     * 状态, 0:正常，9:禁用
+     * 是否启用
      */
-    @Schema(description = "状态")
-    private CommonStatusEnum status;
+    @Schema(description = "是否启用")
+    private Boolean enabled;
+
+    /**
+     * 是否锁定
+     */
+    @Schema(description = "是否锁定")
+    private Boolean locked;
 
     /**
      * 用户角色列表

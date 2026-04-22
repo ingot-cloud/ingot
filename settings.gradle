@@ -57,6 +57,8 @@ include 'ingot-framework:ingot-account-domain:ingot-account-core'
 findProject(':ingot-framework:ingot-account-domain:ingot-account-core')?.name = 'ingot-account-core'
 include 'ingot-framework:ingot-account-domain:ingot-account-adapter'
 findProject(':ingot-framework:ingot-account-domain:ingot-account-adapter')?.name = 'ingot-account-adapter'
+include 'ingot-framework:ingot-account-domain:ingot-account-web-support'
+findProject(':ingot-framework:ingot-account-domain:ingot-account-web-support')?.name = 'ingot-account-web-support'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'

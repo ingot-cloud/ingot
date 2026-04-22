@@ -2,7 +2,6 @@ package com.ingot.cloud.member.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.oss.common.OssSaveUrl;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -45,11 +44,5 @@ public class MemberUserDTO implements Serializable {
     @Schema(description = "头像")
     @OssSaveUrl
     private String avatar;
-
-    /**
-     * 状态
-     */
-    @Schema(description = "状态")
-    private CommonStatusEnum status;
 }
 

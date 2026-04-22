@@ -8,16 +8,16 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.ingot.cloud.member.api.model.convert.MemberUserConvert;
 import com.ingot.cloud.member.api.model.domain.MemberRole;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
-import com.ingot.cloud.member.common.BizUtils;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
+import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
-import com.ingot.framework.commons.model.enums.UserStatusEnum;
 import com.ingot.framework.commons.model.security.TenantDetailsResponse;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -34,14 +34,6 @@ import com.ingot.framework.tenant.TenantEnv;
 public class IdentityUtil {
     /**
      * 映射用户信息
-     *
-     * @param user                    用户信息
-     * @param userType                用户类型
-     * @param tenant                  租户ID
-     * @param userTenantService       用户组织服务
-     * @param bizUserService          用户服务
-     * @param remotePmsTenantDetailsService 租户服务
-     * @return 用户信息
      */
     public static UserDetailsResponse map(MemberUser user,
                                           UserTypeEnum userType,
@@ -52,23 +44,36 @@ public class IdentityUtil {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<TenantMainDTO> allows = getAllowTenants(user, remotePmsTenantDetailsService, userTenantService);
-                    UserStatusEnum userStatus = BizUtils.getUserStatus(allows, value.getStatus(), tenant);
-                    value.setStatus(userStatus);
+
+                    // 租户维度可访问性：allows 不为空，且登录 tenant 在允许列表内
+                    boolean tenantAccessible = CollUtil.isNotEmpty(allows)
+                            && (tenant == null || allows.stream()
+                            .anyMatch(item -> Long.parseLong(item.getId()) == tenant));
+
+                    // 账号维度：来自 member_user.enabled / member_user.locked
+                    boolean userEnabled = Boolean.TRUE.equals(value.getEnabled()) && tenantAccessible;
+                    boolean userLocked = Boolean.TRUE.equals(value.getLocked());
 
                     UserDetailsResponse result = MemberUserConvert.INSTANCE.toUserDetails(value);
                     result.setTenant(tenant);
                     result.setUserType(userType.getValue());
                     result.setAllows(allows);
+                    result.setEnabled(userEnabled);
+                    result.setLocked(userLocked);
 
-                    // 如果已经被禁用那么直接返回
-                    if (userStatus == UserStatusEnum.LOCK) {
+                    // 账号不可用则无需查询 scope
+                    if (!userEnabled || userLocked) {
                         return result;
                     }
 
-                    // 设置用户Scope
                     List<String> scopes = new ArrayList<>();
+                    // 强制修改密码：仅下发初始密码修改权限
+                    if (BooleanUtil.isTrue(value.getMustChangePwd())) {
+                        scopes.add(PermissionConstants.INIT_PASSWORD);
+                        result.setScopes(scopes);
+                        return result;
+                    }
 
-                    // 确认登录的租户不为空，那么查询用户在当前租户下的Scope
                     if (tenant != null) {
                         scopes.addAll(getScopes(tenant, user, bizUserService));
                     } else {
@@ -88,7 +93,6 @@ public class IdentityUtil {
     private static List<TenantMainDTO> getAllowTenants(MemberUser user,
                                                        RemotePmsTenantDetailsService remotePmsTenantDetailsService,
                                                        MemberUserTenantService userTenantService) {
-        // 1.获取可以访问的租户列表
         List<MemberUserTenant> userTenantList = userTenantService.getUserOrgs(user.getId());
         if (CollUtil.isEmpty(userTenantList)) {
             return ListUtil.empty();

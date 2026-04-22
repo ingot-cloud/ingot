@@ -29,6 +29,7 @@ ingot.framework_security_credential = ":ingot-framework:ingot-security-credentia
 ingot.framework_security_credential_data = ":ingot-framework:ingot-security-credential-data"
 ingot.framework_account_core = ":ingot-framework:ingot-account-domain:ingot-account-core"
 ingot.framework_account_adapter = ":ingot-framework:ingot-account-domain:ingot-account-adapter"
+ingot.framework_account_web_support = ":ingot-framework:ingot-account-domain:ingot-account-web-support"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"

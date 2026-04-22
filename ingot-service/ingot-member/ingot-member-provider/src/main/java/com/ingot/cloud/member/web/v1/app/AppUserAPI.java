@@ -35,7 +35,6 @@ public class AppUserAPI implements RShortcuts {
     @PutMapping
     public R<?> updateUser(@RequestBody MemberUserDTO params) {
         params.setId(SecurityAuthContext.getUser().getId());
-        params.setStatus(null);
         bizUserService.updateUser(params);
         return ok();
     }

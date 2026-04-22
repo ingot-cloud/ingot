@@ -6,6 +6,7 @@ import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
+import com.ingot.framework.account.web.support.AuthContextSupport;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
@@ -27,6 +28,7 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
 
     private final BizUserService bizUserService;
     private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
+    private final AuthContextSupport authContextSupport;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -39,16 +41,18 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
         // 1.作为手机号查询
         MemberUser user = memberUserService.getOne(Wrappers.<MemberUser>lambdaQuery()
                 .eq(MemberUser::getPhone, username));
-        if (user != null) {
-            return IdentityUtil.map(user, request.getUserType(), request.getTenant(),
-                    userTenantService, bizUserService, remotePmsTenantDetailsService);
+        if (user == null) {
+            // 2.作为用户名查询
+            user = memberUserService.getOne(Wrappers.<MemberUser>lambdaQuery()
+                    .eq(MemberUser::getUsername, username));
         }
-        // 2.作为用户名查询
-        user = memberUserService.getOne(Wrappers.<MemberUser>lambdaQuery()
-                .eq(MemberUser::getUsername, username));
-        return IdentityUtil.map(user, request.getUserType(), request.getTenant(),
+        UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), request.getTenant(),
                 userTenantService, bizUserService, remotePmsTenantDetailsService);
+        // 用户名/密码登录：由账号域共享工具填充认证上下文
+        // Member 当前 baseline 未启用锁定 / 密码过期策略，AuthContextSupport 会自动降级
+        if (user != null) {
+            authContextSupport.fill(response, user.getId(), request.getUserType());
+        }
+        return response;
     }
-
-
 }
