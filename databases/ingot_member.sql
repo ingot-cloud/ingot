@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 07/02/2026 15:32:34
+ Date: 23/04/2026 16:37:37
 */
 
 SET NAMES utf8mb4;
@@ -172,7 +172,7 @@ CREATE TABLE `member_user` (
   `created_at` datetime DEFAULT NULL COMMENT '创建日期',
   `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
   `deleted_at` datetime DEFAULT NULL COMMENT '删除日期',
-  PRIMARY KEY (`id`) USING BTREE,
+  PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`,(coalesce(`deleted_at`,0))) COMMENT '用户名全局唯一（软删除友好）',
   KEY `idx_phone` (`phone`) USING BTREE COMMENT '手机号',
   KEY `idx_email` (`email`) USING BTREE COMMENT '邮箱',
@@ -185,7 +185,7 @@ CREATE TABLE `member_user` (
 -- Records of member_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `member_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175075664995807234, '18612341234', '{bcrypt}$2a$10$Io6Sn3JN4MYrnqvLUoNpzeckRk9kkgymJLpRozuA8Ve9taCINbaYG', 0, '2025-12-05 14:28:05', '测试用户', '18612341234', NULL, 'ingot/user/avatar/ic_logo.png', 1, 0, NULL, NULL, 0, '2025-12-05 13:57:11', '2025-12-05 14:28:05', NULL);
+INSERT INTO `member_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1175075664995807234, '18612341234', '{bcrypt}$2a$10$viYtEaHNRKgIUBFMMYQgmOihZiVNDHbZ7179dHL.OfzKX0NtSry9u', 1, '2026-04-22 15:40:33', '测试用户', '18612341234', NULL, 'ingot/user/avatar/ic_logo.png', 1, 0, NULL, NULL, 0, '2025-12-05 13:57:11', '2025-12-05 14:28:05', NULL);
 COMMIT;
 
 -- ----------------------------
