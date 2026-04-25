@@ -49,7 +49,7 @@ public class BizPermissionTreeNodeVO extends TreeNode<Long, BizPermissionTreeNod
     private String remark;
 
     /**
-     * 是否为元数据角色绑定的权限
+     * 是否为平台角色绑定的权限
      */
-    private boolean metaRoleBind;
+    private boolean platformRoleBind;
 }

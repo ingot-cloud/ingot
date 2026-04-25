@@ -35,14 +35,14 @@ public class TenantRolePermissionPrivateServiceImpl extends BaseServiceImpl<Tena
     public void roleSetPermissions(BizBindDTO params) {
         Long roleId = params.getId();
         List<Long> bindIds = params.getAssignIds();
-        boolean metaFlag = params.isMetaFlag();
+        boolean platformFlag = params.isPlatformFlag();
 
         // 清空当前权限
         remove(Wrappers.<TenantRolePermissionPrivate>lambdaQuery()
                 .eq(TenantRolePermissionPrivate::getRoleId, roleId));
 
         if (CollUtil.isNotEmpty(bindIds)) {
-            List<TenantRolePermissionPrivate> bindList = getBindList(roleId, bindIds, metaFlag);
+            List<TenantRolePermissionPrivate> bindList = getBindList(roleId, bindIds, platformFlag);
             saveBatch(bindList);
         }
     }
@@ -57,7 +57,7 @@ public class TenantRolePermissionPrivateServiceImpl extends BaseServiceImpl<Tena
         Long roleId = params.getId();
         List<Long> bindIds = params.getAssignIds();
         List<Long> unbindIds = params.getUnassignIds();
-        boolean metaFlag = params.isMetaFlag();
+        boolean platformFlag = params.isPlatformFlag();
 
         if (CollUtil.isNotEmpty(unbindIds)) {
             remove(Wrappers.<TenantRolePermissionPrivate>lambdaQuery()
@@ -66,18 +66,18 @@ public class TenantRolePermissionPrivateServiceImpl extends BaseServiceImpl<Tena
         }
 
         if (CollUtil.isNotEmpty(bindIds)) {
-            List<TenantRolePermissionPrivate> bindList = getBindList(roleId, bindIds, metaFlag);
+            List<TenantRolePermissionPrivate> bindList = getBindList(roleId, bindIds, platformFlag);
             saveBatch(bindList);
         }
     }
 
-    private List<TenantRolePermissionPrivate> getBindList(long roleId, List<Long> bindIds, boolean metaFlag) {
+    private List<TenantRolePermissionPrivate> getBindList(long roleId, List<Long> bindIds, boolean platformFlag) {
         return CollUtil.emptyIfNull(bindIds).stream()
                 .map(permissionId -> {
                     TenantRolePermissionPrivate bind = new TenantRolePermissionPrivate();
                     bind.setRoleId(roleId);
                     bind.setPermissionId(permissionId);
-                    bind.setMetaRole(metaFlag);
+                    bind.setPlatformRole(platformFlag);
                     return bind;
                 }).toList();
     }

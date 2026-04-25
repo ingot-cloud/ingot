@@ -10,15 +10,15 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
-import com.ingot.cloud.pms.api.model.domain.MetaPermission;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.service.biz.BizAppService;
-import com.ingot.cloud.pms.service.domain.MetaPermissionService;
+import com.ingot.cloud.pms.service.domain.PlatformPermissionService;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.tenant.TenantEnv;
 
@@ -35,15 +35,15 @@ public class BizPermissionUtils {
      *
      * @param orgId            组织ID
      * @param appService       {@link BizAppService}
-     * @param authorityService {@link MetaPermissionService}
+     * @param authorityService {@link PlatformPermissionService}
      * @param authorityConvert 转换器
      * @return {@link PermissionTreeNodeVO}
      */
     public static List<PermissionTreeNodeVO> getTenantAuthorities(long orgId,
                                                                   BizAppService appService,
-                                                                  MetaPermissionService authorityService,
+                                                                  PlatformPermissionService authorityService,
                                                                   AuthorityConvert authorityConvert) {
-        List<MetaApp> appList = appService.getEnabledApps();
+        List<PlatformApp> appList = appService.getEnabledApps();
         if (CollUtil.isEmpty(appList)) {
             return ListUtil.empty();
         }
@@ -66,7 +66,7 @@ public class BizPermissionUtils {
      */
     public static List<PermissionTreeNodeVO> getTargetAuthorities(long orgId,
                                                                   long permissionId,
-                                                                  MetaPermissionService service,
+                                                                  PlatformPermissionService service,
                                                                   AuthorityConvert authorityConvert) {
         return TenantEnv.applyAs(orgId, () -> {
             List<PermissionTreeNodeVO> list = new ArrayList<>();
@@ -74,8 +74,8 @@ public class BizPermissionUtils {
             PermissionType authority = service.getById(permissionId);
             list.add(authorityConvert.toTreeNode(authority));
 
-            List<MetaPermission> children = service.list(Wrappers.<MetaPermission>lambdaQuery()
-                    .eq(MetaPermission::getPid, authority.getId()));
+            List<PlatformPermission> children = service.list(Wrappers.<PlatformPermission>lambdaQuery()
+                    .eq(PlatformPermission::getPid, authority.getId()));
             if (CollUtil.isNotEmpty(children)) {
                 children.forEach(itemMenu ->
                         list.addAll(getTargetAuthorities(orgId, itemMenu.getId(), service, authorityConvert)));
@@ -92,7 +92,7 @@ public class BizPermissionUtils {
      */
     public static <T extends PermissionType> List<T> filterOrgLockAuthority(List<T> authorities,
                                                                             BizAppService appService) {
-        List<MetaApp> appList = CollUtil.emptyIfNull(appService.getDisabledApps());
+        List<PlatformApp> appList = CollUtil.emptyIfNull(appService.getDisabledApps());
 
         List<PermissionType> removeAuthorities = appList.stream()
                 .filter(app -> authorities.stream()

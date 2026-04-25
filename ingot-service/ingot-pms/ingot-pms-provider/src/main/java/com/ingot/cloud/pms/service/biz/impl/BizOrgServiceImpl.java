@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.member.api.rpc.RemoteMemberTenantService;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
@@ -48,8 +48,8 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final SysUserTenantService sysUserTenantService;
     private final AssertionChecker assertionChecker;
 
-    private final MetaAppService metaAppService;
-    private final MetaPermissionService metaPermissionService;
+    private final PlatformAppService platformAppService;
+    private final PlatformPermissionService platformPermissionService;
     private final TenantAppConfigService tenantAppConfigService;
 
     private final BizAppService bizAppService;
@@ -65,7 +65,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     public List<PermissionTreeNodeVO> getTenantPermissionTree(long tenantID) {
         return TenantEnv.applyAs(tenantID, () -> {
             List<PermissionTreeNodeVO> authorities = BizPermissionUtils.getTenantAuthorities(
-                    tenantID, bizAppService, metaPermissionService, authorityConvert);
+                    tenantID, bizAppService, platformPermissionService, authorityConvert);
             return TreeUtil.build(authorities);
         });
     }
@@ -89,9 +89,9 @@ public class BizOrgServiceImpl implements BizOrgService {
     }
 
     @Override
-    public List<MetaApp> getOrgApps(long tenantId) {
+    public List<PlatformApp> getOrgApps(long tenantId) {
         return TenantEnv.applyAs(tenantId, () -> {
-            List<MetaApp> list = metaAppService.list();
+            List<PlatformApp> list = platformAppService.list();
             if (CollUtil.isEmpty(list)) {
                 return ListUtil.empty();
             }
@@ -100,7 +100,7 @@ public class BizOrgServiceImpl implements BizOrgService {
 
             return list.stream().peek(item ->
                     appConfigs.stream()
-                            .filter(config -> Objects.equals(config.getMetaId(), item.getId()))
+                            .filter(config -> Objects.equals(config.getAppId(), item.getId()))
                             .findFirst()
                             .ifPresent(config ->
                                     item.setStatus(config.getEnabled()
@@ -111,10 +111,10 @@ public class BizOrgServiceImpl implements BizOrgService {
     @Override
     public void updateOrgAppStatus(AppEnabledDTO params) {
         TenantAppConfig tenantAppConfig = tenantAppConfigService.getOne(Wrappers.<TenantAppConfig>lambdaQuery()
-                .eq(TenantAppConfig::getMetaId, params.getId()));
+                .eq(TenantAppConfig::getAppId, params.getId()));
         if (tenantAppConfig == null) {
             tenantAppConfig = new TenantAppConfig();
-            tenantAppConfig.setMetaId(params.getId());
+            tenantAppConfig.setAppId(params.getId());
             tenantAppConfig.setEnabled(params.getEnabled());
             tenantAppConfigService.create(tenantAppConfig);
             return;

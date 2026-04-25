@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.web.v1.org;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaPermission;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.IdsDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
@@ -109,7 +109,7 @@ public class OrgRoleAPI implements RShortcuts {
     @AdminOrHasAnyAuthority("org:contacts:role:permissions:query")
     @GetMapping("/{id}/permissions")
     public R<List<BizPermissionTreeNodeVO>> getRolePermissionsTree(@PathVariable Long id,
-                                                                   MetaPermission condition) {
+                                                                   PlatformPermission condition) {
         return ok(bizRoleService.getRolePermissionsTree(id, condition));
     }
 }

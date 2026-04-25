@@ -2,7 +2,7 @@ package com.ingot.cloud.pms.service.biz;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 
 /**
  * <p>Description  : BizAppService.</p>
@@ -15,14 +15,14 @@ public interface BizAppService {
     /**
      * 获取当前可用的应用列表，受租户限制
      *
-     * @return {@link MetaApp}
+     * @return {@link PlatformApp}
      */
-    List<MetaApp> getEnabledApps();
+    List<PlatformApp> getEnabledApps();
 
     /**
      * 获取当前禁用列表，受租户限制
      *
-     * @return {@link MetaApp}
+     * @return {@link PlatformApp}
      */
-    List<MetaApp> getDisabledApps();
+    List<PlatformApp> getDisabledApps();
 }

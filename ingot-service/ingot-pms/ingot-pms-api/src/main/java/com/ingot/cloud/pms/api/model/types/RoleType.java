@@ -100,9 +100,9 @@ public interface RoleType {
     void setStatus(CommonStatusEnum status);
 
     /**
-     * 是否为元数据角色
+     * 是否为平台角色
      *
      * @return Boolean
      */
-    boolean getMetaRole();
+    boolean getPlatformRole();
 }

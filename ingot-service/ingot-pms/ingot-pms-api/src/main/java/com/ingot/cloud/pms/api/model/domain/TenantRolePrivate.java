@@ -113,7 +113,7 @@ public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements R
     private LocalDateTime deletedAt;
 
     @Override
-    public boolean getMetaRole() {
+    public boolean getPlatformRole() {
         return false;
     }
 }

@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class BizBindDTO extends AssignDTO<Long, Long> {
     /**
-     * 当前绑定ID是否为元数据
+     * 当前绑定是否为平台角色
      */
-    private boolean metaFlag;
+    private boolean platformFlag;
 }

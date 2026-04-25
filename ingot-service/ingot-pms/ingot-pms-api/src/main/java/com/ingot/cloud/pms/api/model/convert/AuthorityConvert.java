@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.convert;
 
-import com.ingot.cloud.pms.api.model.domain.MetaPermission;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
@@ -21,5 +21,5 @@ public interface AuthorityConvert {
 
     BizPermissionTreeNodeVO to(BizPermissionVO params);
 
-    BizPermissionVO to(MetaPermission in);
+    BizPermissionVO to(PlatformPermission in);
 }

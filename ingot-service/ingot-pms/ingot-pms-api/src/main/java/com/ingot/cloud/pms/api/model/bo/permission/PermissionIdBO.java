@@ -17,14 +17,14 @@ public class PermissionIdBO implements Serializable {
      */
     private Long id;
     /**
-     * 是否为元数据角色绑定的权限
+     * 是否为平台角色绑定的权限
      */
-    private Boolean metaRoleBind;
+    private Boolean platformRoleBind;
 
-    public static PermissionIdBO of(Long id, Boolean metaRoleBind) {
+    public static PermissionIdBO of(Long id, Boolean platformRoleBind) {
         PermissionIdBO bo = new PermissionIdBO();
         bo.setId(id);
-        bo.setMetaRoleBind(metaRoleBind);
+        bo.setPlatformRoleBind(platformRoleBind);
         return bo;
     }
 }

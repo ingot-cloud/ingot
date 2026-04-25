@@ -3,8 +3,8 @@ package com.ingot.cloud.pms.service.biz;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.bo.permission.PermissionIdBO;
-import com.ingot.cloud.pms.api.model.domain.MetaPermission;
-import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
+import com.ingot.cloud.pms.api.model.domain.PlatformRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
@@ -16,7 +16,7 @@ import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 
 /**
- * <p>Description  : 业务角色处理，包含元数据.</p>
+ * <p>Description  : 业务角色处理，包含平台角色.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2025/11/18.</p>
  * <p>Time         : 09:33.</p>
@@ -24,12 +24,12 @@ import com.ingot.framework.commons.model.support.Option;
 public interface BizRoleService {
 
     /**
-     * 获取元数据角色
+     * 获取平台角色
      *
      * @param id 角色ID
-     * @return {@link MetaRole}
+     * @return {@link PlatformRole}
      */
-    MetaRole getMetaRole(long id);
+    PlatformRole getPlatformRole(long id);
 
     /**
      * 获取角色
@@ -102,7 +102,7 @@ public interface BizRoleService {
      * @param condition 查询条件
      * @return {@link BizPermissionTreeNodeVO}
      */
-    List<BizPermissionTreeNodeVO> getRolePermissionsTree(long roleId, MetaPermission condition);
+    List<BizPermissionTreeNodeVO> getRolePermissionsTree(long roleId, PlatformPermission condition);
 
     /**
      * 获取角色列表的权限

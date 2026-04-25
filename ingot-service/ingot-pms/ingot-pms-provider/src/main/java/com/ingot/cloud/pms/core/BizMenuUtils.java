@@ -8,10 +8,10 @@ import java.util.stream.Collectors;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.pms.api.model.domain.MetaMenu;
+import com.ingot.cloud.pms.api.model.domain.PlatformMenu;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
-import com.ingot.cloud.pms.service.domain.MetaMenuService;
+import com.ingot.cloud.pms.service.domain.PlatformMenuService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.UUIDUtil;
@@ -66,10 +66,10 @@ public class BizMenuUtils {
     /**
      * 设置外部链接path
      */
-    public static void setMenuOuterLinkPath(MetaMenu params, Long pid, MetaMenuService menuService) {
+    public static void setMenuOuterLinkPath(PlatformMenu params, Long pid, PlatformMenuService menuService) {
         String pPath;
         if (pid != null && pid > 0) {
-            MetaMenu parent = menuService.getById(pid);
+            PlatformMenu parent = menuService.getById(pid);
             pPath = parent.getPath() + "/";
         } else {
             pPath = "/";
@@ -81,9 +81,9 @@ public class BizMenuUtils {
     /**
      * 根据path生成视图路径
      *
-     * @param menu {@link MetaMenu}
+     * @param menu {@link PlatformMenu}
      */
-    public static void setViewPathAccordingToPath(MetaMenu menu) {
+    public static void setViewPathAccordingToPath(PlatformMenu menu) {
         String path = menu.getPath();
         if (BooleanUtil.isTrue(menu.getProps())) {
             path = StrUtil.subBefore(path, "/", true);
@@ -95,10 +95,10 @@ public class BizMenuUtils {
      * 获取菜单权限code, 将菜单path替换为编码<br>
      * path：/a/b/c => a:b:c
      *
-     * @param menu {@link MetaMenu}
+     * @param menu {@link PlatformMenu}
      * @return code
      */
-    public static String getMenuAuthorityCode(MetaMenu menu) {
+    public static String getMenuAuthorityCode(PlatformMenu menu) {
         String path = menu.getPath();
         String r = StrUtil.replace(path, StrUtil.COLON, "");
         r = StrUtil.replace(r, StrUtil.SLASH, StrUtil.COLON);

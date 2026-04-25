@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
@@ -58,7 +58,7 @@ public class AdminTenantAPI implements RShortcuts {
     @Operation(summary = "组织应用列表", description = "组织应用列表")
     @AdminOrHasAnyAuthority({"platform:org:tenant:app:query"})
     @GetMapping("/apps")
-    public R<List<MetaApp>> getApps() {
+    public R<List<PlatformApp>> getApps() {
         return ok(bizOrgService.getOrgApps(TenantContextHolder.get()));
     }
 

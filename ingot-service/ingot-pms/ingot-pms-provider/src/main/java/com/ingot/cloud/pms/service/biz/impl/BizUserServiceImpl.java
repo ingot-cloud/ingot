@@ -63,7 +63,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final SysUserTenantService sysUserTenantService;
     private final SysUserSocialService sysUserSocialService;
 
-    private final MetaRoleService metaRoleService;
+    private final PlatformRoleService platformRoleService;
     private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
     private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
@@ -115,7 +115,7 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public List<RoleType> getUserRoles(long userId) {
         return BizRoleUtils.getUserRoles(userId,
-                metaRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
+                platformRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class BizUserServiceImpl implements BizUserService {
                 .map(item -> {
                     BizAssignRoleBO role = new BizAssignRoleBO();
                     role.setRoleId(item.getId());
-                    role.setMetaRole(item.getMetaRole());
+                    role.setPlatformRole(item.getPlatformRole());
                     return role;
                 }).toList();
 

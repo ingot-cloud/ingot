@@ -28,31 +28,31 @@ public interface CacheConstants {
      */
     String PRE_AUTHORIZATION = IGNORE_TENANT_PREFIX + ":pre_authorization";
 
-    /* 元数据 */
+    /* 平台级 */
     /**
-     * 元数据-权限
+     * 平台-权限
      */
-    String META_PERMISSIONS = IGNORE_TENANT_PREFIX + ":meta:permissions";
+    String PLATFORM_PERMISSIONS = IGNORE_TENANT_PREFIX + ":platform:permissions";
 
     /**
-     * 元数据-角色
+     * 平台-角色
      */
-    String META_ROLES = IGNORE_TENANT_PREFIX + ":meta:roles";
+    String PLATFORM_ROLES = IGNORE_TENANT_PREFIX + ":platform:roles";
 
     /**
-     * 元数据-角色权限
+     * 平台-角色权限
      */
-    String META_ROLE_PERMISSIONS = IGNORE_TENANT_PREFIX + ":meta:role_permissions";
+    String PLATFORM_ROLE_PERMISSIONS = IGNORE_TENANT_PREFIX + ":platform:role_permissions";
 
     /**
-     * 元数据-菜单
+     * 平台-菜单
      */
-    String META_MENUS = IGNORE_TENANT_PREFIX + ":meta:menus";
+    String PLATFORM_MENUS = IGNORE_TENANT_PREFIX + ":platform:menus";
 
     /**
-     * 元数据-应用
+     * 平台-应用
      */
-    String META_APPS = IGNORE_TENANT_PREFIX + ":meta:apps";
+    String PLATFORM_APPS = IGNORE_TENANT_PREFIX + ":platform:apps";
 
     /**
      * 客户端用户角色

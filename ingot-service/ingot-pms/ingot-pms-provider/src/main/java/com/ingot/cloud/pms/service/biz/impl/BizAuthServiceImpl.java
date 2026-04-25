@@ -15,7 +15,7 @@ import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizAuthService;
-import com.ingot.cloud.pms.service.biz.BizMetaMenuService;
+import com.ingot.cloud.pms.service.biz.BizPlatformMenuService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
@@ -50,7 +50,7 @@ public class BizAuthServiceImpl implements BizAuthService {
 
     private final BizRoleService bizRoleService;
     private final BizAppService bizAppService;
-    private final BizMetaMenuService bizMetaMenuService;
+    private final BizPlatformMenuService bizPlatformMenuService;
     private final CredentialSecurityService credentialSecurityService;
 
     private final UserConvert userConvert;
@@ -133,6 +133,6 @@ public class BizAuthServiceImpl implements BizAuthService {
         // 过滤禁用App
         List<PermissionType> finallyAuthorities = BizPermissionUtils.filterOrgLockAuthority(
                 authorities, bizAppService);
-        return bizMetaMenuService.getMenuByPermissions(finallyAuthorities);
+        return bizPlatformMenuService.getMenuByPermissions(finallyAuthorities);
     }
 }

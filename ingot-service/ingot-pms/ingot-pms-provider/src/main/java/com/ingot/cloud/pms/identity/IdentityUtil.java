@@ -10,7 +10,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.api.model.types.RoleType;
@@ -138,7 +138,7 @@ public class IdentityUtil {
         // InAuthorityUtils.authorityWithTenant 包装角色编码
         List<String> scopes = new ArrayList<>(getRoleCodes(roles, tenant));
         // 查询组织不可用应用
-        List<MetaApp> disabledApps = bizAppService.getDisabledApps();
+        List<PlatformApp> disabledApps = bizAppService.getDisabledApps();
         List<String> authorities = bizRoleService.getRolesPermissions(roles).stream()
                 .filter(auth -> disabledApps.stream()
                         .noneMatch(app -> Objects.equals(auth.getId(), app.getPermissionId())))

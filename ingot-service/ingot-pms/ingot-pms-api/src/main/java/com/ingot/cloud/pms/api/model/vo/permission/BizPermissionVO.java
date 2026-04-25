@@ -1,6 +1,6 @@
 package com.ingot.cloud.pms.api.model.vo.permission;
 
-import com.ingot.cloud.pms.api.model.domain.MetaPermission;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,9 +12,9 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BizPermissionVO extends MetaPermission {
+public class BizPermissionVO extends PlatformPermission {
     /**
-     * 是否为元数据角色绑定的权限
+     * 是否为平台角色绑定的权限
      */
-    private boolean metaRoleBind;
+    private boolean platformRoleBind;
 }

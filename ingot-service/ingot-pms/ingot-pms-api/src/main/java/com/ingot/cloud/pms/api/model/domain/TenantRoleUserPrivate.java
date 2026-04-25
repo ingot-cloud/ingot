@@ -46,9 +46,9 @@ public class TenantRoleUserPrivate extends BaseModel<TenantRoleUserPrivate> {
     private Long roleId;
 
     /**
-     * 是否为元数据角色
+     * 是否为平台角色
      */
-    private Boolean metaRole;
+    private Boolean platformRole;
 
     /**
      * 用户ID

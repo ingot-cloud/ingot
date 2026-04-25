@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ingot.cloud.pms.mapper.PlatformMenuMapper">
+
+    <select id="getAll" resultType="com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO">
+        SELECT menu.*, permission.code as permission_code
+        FROM platform_menu AS menu
+                 LEFT JOIN platform_permission AS permission ON permission.id = menu.permission_id
+        WHERE menu.deleted_at IS NULL
+    </select>
+</mapper>

@@ -8,7 +8,7 @@ import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.core.BizRoleUtils;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
-import com.ingot.cloud.pms.service.domain.MetaRoleService;
+import com.ingot.cloud.pms.service.domain.PlatformRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRolePrivateService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.utils.RoleUtil;
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserOpsCheckerImpl implements UserOpsChecker {
-    private final MetaRoleService metaRoleService;
+    private final PlatformRoleService platformRoleService;
     private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
 
@@ -71,7 +71,7 @@ public class UserOpsCheckerImpl implements UserOpsChecker {
 
     private Optional<RoleType> getAdmin(long userId) {
         List<RoleType> roles = BizRoleUtils.getUserRoles(userId,
-                metaRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
+                platformRoleService, tenantRoleUserPrivateService, tenantRolePrivateService);
         return roles.stream()
                 .filter(item -> RoleUtil.isAdmin(item.getCode()))
                 .findFirst();

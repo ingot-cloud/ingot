@@ -37,9 +37,9 @@ public class TenantAppConfig extends BaseModel<TenantAppConfig> {
     private Long id;
 
     /**
-     * 元数据ID
+     * 应用ID
      */
-    private Long metaId;
+    private Long appId;
 
     /**
      * 租户ID

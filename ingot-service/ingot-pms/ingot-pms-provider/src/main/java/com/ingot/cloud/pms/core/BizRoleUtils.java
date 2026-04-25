@@ -7,12 +7,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.pms.api.model.domain.MetaRole;
+import com.ingot.cloud.pms.api.model.domain.PlatformRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.domain.MetaRoleService;
+import com.ingot.cloud.pms.service.domain.PlatformRoleService;
 import com.ingot.cloud.pms.service.domain.TenantRolePrivateService;
 import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
@@ -55,12 +55,12 @@ public class BizRoleUtils {
      * 获取用户角色
      *
      * @param userId                       用户ID
-     * @param metaRoleService              Meta角色服务
+     * @param platformRoleService              Platform角色服务
      * @param tenantRoleUserPrivateService 角色用户服务
      * @param tenantRolePrivateService     角色组织服务
      * @return 角色列表
      */
-    public static List<RoleType> getUserRoles(long userId, MetaRoleService metaRoleService,
+    public static List<RoleType> getUserRoles(long userId, PlatformRoleService platformRoleService,
                                        TenantRoleUserPrivateService tenantRoleUserPrivateService,
                                        TenantRolePrivateService tenantRolePrivateService) {
         List<TenantRoleUserPrivate> roleUserPrivateList = tenantRoleUserPrivateService.getUserRoles(userId);
@@ -70,19 +70,19 @@ public class BizRoleUtils {
 
         List<RoleType> result = new ArrayList<>(roleUserPrivateList.size());
 
-        List<Long> metaRoleIds = roleUserPrivateList.stream()
-                .filter(item -> BooleanUtil.isTrue(item.getMetaRole()))
+        List<Long> platformRoleIds = roleUserPrivateList.stream()
+                .filter(item -> BooleanUtil.isTrue(item.getPlatformRole()))
                 .map(TenantRoleUserPrivate::getRoleId)
                 .toList();
-        if (CollUtil.isNotEmpty(metaRoleIds)) {
-            List<MetaRole> metaRoleList = metaRoleService.list(Wrappers.<MetaRole>lambdaQuery()
-                    .eq(MetaRole::getStatus, CommonStatusEnum.ENABLE)
-                    .in(MetaRole::getId, metaRoleIds));
-            result.addAll(metaRoleList);
+        if (CollUtil.isNotEmpty(platformRoleIds)) {
+            List<PlatformRole> platformRoleList = platformRoleService.list(Wrappers.<PlatformRole>lambdaQuery()
+                    .eq(PlatformRole::getStatus, CommonStatusEnum.ENABLE)
+                    .in(PlatformRole::getId, platformRoleIds));
+            result.addAll(platformRoleList);
         }
 
         List<Long> privateRoleIds = roleUserPrivateList.stream()
-                .filter(item -> BooleanUtil.isFalse(item.getMetaRole()))
+                .filter(item -> BooleanUtil.isFalse(item.getPlatformRole()))
                 .map(TenantRoleUserPrivate::getRoleId)
                 .toList();
         if (CollUtil.isNotEmpty(privateRoleIds)) {

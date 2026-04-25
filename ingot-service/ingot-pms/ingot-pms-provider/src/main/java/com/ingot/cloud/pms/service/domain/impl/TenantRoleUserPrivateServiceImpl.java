@@ -48,7 +48,7 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
         Long roleId = params.getId();
         List<Long> bindIds = params.getAssignIds();
         List<Long> removeIds = params.getUnassignIds();
-        boolean metaFlag = params.isMetaFlag();
+        boolean platformFlag = params.isPlatformFlag();
         Long deptId = params.getDeptId();
 
         if (CollUtil.isNotEmpty(removeIds)) {
@@ -74,7 +74,7 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
                     TenantRoleUserPrivate bind = new TenantRoleUserPrivate();
                     bind.setRoleId(roleId);
                     bind.setUserId(userId);
-                    bind.setMetaRole(metaFlag);
+                    bind.setPlatformRole(platformFlag);
                     bind.setDeptId(deptId);
                     return bind;
                 }).toList();

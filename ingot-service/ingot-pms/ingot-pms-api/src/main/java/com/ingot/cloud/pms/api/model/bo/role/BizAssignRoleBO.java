@@ -18,9 +18,9 @@ public class BizAssignRoleBO implements Serializable {
     private Long roleId;
 
     /**
-     * 是否为元数据角色
+     * 是否为平台角色
      */
-    private Boolean metaRole;
+    private Boolean platformRole;
 
     /**
      * 部门ID，可以为空，部门角色该字段不为空

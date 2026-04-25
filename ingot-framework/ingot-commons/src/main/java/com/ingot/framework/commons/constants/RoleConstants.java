@@ -10,7 +10,7 @@ public interface RoleConstants {
     /**
      * 角色前缀
      */
-    String META_ROLE_CODE_PREFIX = "role_";
+    String PLATFORM_ROLE_CODE_PREFIX = "role_";
     /**
      * 组织角色前缀
      */
@@ -20,7 +20,7 @@ public interface RoleConstants {
     /**
      * 超管角色编码
      */
-    String ROLE_ADMIN_CODE = META_ROLE_CODE_PREFIX + "admin";
+    String ROLE_ADMIN_CODE = PLATFORM_ROLE_CODE_PREFIX + "admin";
 
     /**
      * 管理员角色编码
@@ -40,5 +40,5 @@ public interface RoleConstants {
     /**
      * 用户角色编码
      */
-    String ROLE_USER_CODE = META_ROLE_CODE_PREFIX + "user";
+    String ROLE_USER_CODE = PLATFORM_ROLE_CODE_PREFIX + "user";
 }

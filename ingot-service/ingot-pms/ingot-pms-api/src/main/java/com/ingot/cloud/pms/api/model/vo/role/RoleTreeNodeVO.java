@@ -86,7 +86,7 @@ public class RoleTreeNodeVO extends TreeNode<Long, RoleTreeNodeVO> implements Ro
     private boolean custom;
 
     @Override
-    public boolean getMetaRole() {
+    public boolean getPlatformRole() {
         return false;
     }
 }

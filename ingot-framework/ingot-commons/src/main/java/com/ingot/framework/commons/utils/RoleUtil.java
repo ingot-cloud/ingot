@@ -34,13 +34,13 @@ public final class RoleUtil {
     }
 
     /**
-     * 判断是否为元角色编码
+     * 判断是否为平台角色编码
      *
      * @param scope 角色编码 | 权限编码
      * @return boolean
      */
-    public static boolean isMetaRoleCode(String scope) {
-        return scope.startsWith(RoleConstants.META_ROLE_CODE_PREFIX);
+    public static boolean isPlatformRoleCode(String scope) {
+        return scope.startsWith(RoleConstants.PLATFORM_ROLE_CODE_PREFIX);
     }
 
     /**
@@ -50,6 +50,6 @@ public final class RoleUtil {
      * @return boolean
      */
     public static boolean isRoleCode(String scope) {
-        return isOrgRoleCode(scope) || isMetaRoleCode(scope);
+        return isOrgRoleCode(scope) || isPlatformRoleCode(scope);
     }
 }

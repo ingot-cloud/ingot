@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ingot.cloud.pms.api.model.domain.MetaApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
@@ -54,9 +54,9 @@ public interface BizOrgService {
      * 获取组织应用
      *
      * @param tenantId 组织ID
-     * @return {@link MetaApp}
+     * @return {@link PlatformApp}
      */
-    List<MetaApp> getOrgApps(long tenantId);
+    List<PlatformApp> getOrgApps(long tenantId);
 
     /**
      * 更新组织应用状态
