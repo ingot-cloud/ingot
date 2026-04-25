@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 25/04/2026 11:03:21
+ Date: 25/04/2026 14:55:28
 */
 
 SET NAMES utf8mb4;
@@ -77,7 +77,7 @@ CREATE TABLE `account_security_event` (
   KEY `idx_created_at` (`created_at`) USING BTREE COMMENT '时间索引',
   KEY `idx_event_type` (`event_type`,`created_at`) USING BTREE COMMENT '事件类型索引',
   KEY `idx_tenant` (`tenant_id`,`created_at`) USING BTREE COMMENT '租户索引'
-) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号安全事件表';
+) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号安全事件表';
 
 -- ----------------------------
 -- Records of account_security_event
@@ -144,6 +144,7 @@ INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (85, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-24 10:44:13');
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (86, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-24 17:13:08');
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (87, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-25 10:16:18');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (88, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-25 13:18:10');
 COMMIT;
 
 -- ----------------------------
@@ -365,7 +366,6 @@ CREATE TABLE `platform_permission` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (782647310861250562, 0, '管理身份', 'platform:admin', '0', '0', '0', '', '2022-12-18 16:27:01', '2026-04-25 10:32:32', NULL);
-INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (782650139818635265, 782647310861250562, '租户管理', 'platform:system:tenant', '0', '0', '0', '', '2022-12-18 16:38:15', NULL, NULL);
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (868163807997636610, 0, '开发者平台', 'platform:develop', '0', '0', '0', '', '2023-08-11 15:59:03', '2026-04-25 10:24:09', NULL);
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (868164119483428866, 868163807997636610, '生成二维码', 'platform:develop:qrcode', '0', '0', '0', '', '2023-08-11 16:00:17', '2025-11-25 17:39:20', NULL);
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (881181673671929858, 0, '用户身份', 'platform:member', '0', '0', '0', '', '2023-09-16 14:07:24', '2026-04-25 10:23:47', NULL);
@@ -447,12 +447,13 @@ CREATE TABLE `platform_role_permission` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1172814842718318593, 2, 881187314109034498);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218911305729, 1, 782647310861250562);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218923888642, 1, 868163807997636610);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082945, 1, 881181673671929858);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082946, 1, 1171383124023046146);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082947, 1, 1171506377735532545);
-INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1197223218928082948, 1, 1197222719055126529);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594306215937, 1, 782647310861250562);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187458, 1, 868163807997636610);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187459, 1, 881181673671929858);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187460, 1, 1171383124023046146);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187461, 1, 1171506377735532545);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187462, 1, 1197222719055126529);
+INSERT INTO `platform_role_permission` (`id`, `role_id`, `permission_id`) VALUES (1226162594327187463, 1, 1225772359281954818);
 COMMIT;
 
 -- ----------------------------
@@ -587,7 +588,7 @@ CREATE TABLE `sys_user` (
 -- Records of sys_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 'admin', '{bcrypt}$2a$10$frVeEWrN5PRLZTheYoMw1uHNiylDcS3uvByYiYACJIvCkAMaoEfr2', 0, '2026-03-10 16:40:30', '超级管理员', '18888888888', 'admin@ingot.com', 'ingot/user/avatar/1/logo.png', 1, 0, '2026-04-25 10:16:18', '192.168.1.103', 0, '2021-01-03 11:02:46', '2026-02-11 14:12:44', NULL);
+INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 'admin', '{bcrypt}$2a$10$frVeEWrN5PRLZTheYoMw1uHNiylDcS3uvByYiYACJIvCkAMaoEfr2', 0, '2026-03-10 16:40:30', '超级管理员', '18888888888', 'admin@ingot.com', 'ingot/user/avatar/1/logo.png', 1, 0, '2026-04-25 13:18:10', '192.168.1.103', 0, '2021-01-03 11:02:46', '2026-02-11 14:12:44', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1221837466541903874, 'test', '{bcrypt}$2a$10$ks9PAjjnT3Dtz509tY6Pv.Kqk2EsV1jRLU.hBNNTEX2tKn8erbRtK', 1, '2026-04-13 14:51:54', '测试1', '18600000001', NULL, NULL, 1, 0, NULL, NULL, 0, '2026-04-13 14:51:54', '2026-04-13 15:03:36', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1221851150714556417, 'test1', '{bcrypt}$2a$10$I4Ps6HCGmYTFFTOGLiq79ezifWrIPdAAjIq4.DNCU95syA00qqu6K', 0, '2026-04-13 16:51:01', '测试初始化密码', '123', NULL, NULL, 1, 0, '2026-04-13 16:51:12', '192.168.1.148', 0, '2026-04-13 15:46:16', NULL, NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1222129624926801921, '4124124', '{bcrypt}$2a$10$O/cQ1FhmJzE3.KNXO2tDp.OwVRI8FwlkMvsOwrnsEfWzhLdle5YrG', 1, '2026-04-14 10:12:50', '123123', '4124124', NULL, NULL, 1, 0, NULL, NULL, 0, '2026-04-14 10:12:50', NULL, '2026-04-14 02:13:23');
