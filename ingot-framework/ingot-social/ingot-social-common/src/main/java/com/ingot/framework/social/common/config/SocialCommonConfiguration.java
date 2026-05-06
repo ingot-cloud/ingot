@@ -8,12 +8,12 @@ import com.ingot.framework.social.common.publisher.RedisSocialConfigMessagePubli
 import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -71,20 +71,26 @@ public class SocialCommonConfiguration {
     }
 
     /**
-     * Redis消息监听容器
+     * 把 social 配置变更监听器注册到框架统一的 {@link RedisMessageListenerContainer}
+     * （由 {@code InRedisMessageConfiguration#redisContainer} 提供）。
+     * <p>
+     * 不再自建独立容器，避免与全局唯一容器并存：
+     * <ul>
+     *     <li>消除 {@code RedisMessageListenerContainer} 多 bean 注入冲突
+     *         （如 {@code ingot-event-bus} 注入容器时报错）；</li>
+     *     <li>节省一条 Redis 订阅连接（每个 container 独占一条 PSUBSCRIBE）。</li>
+     * </ul>
+     * 后续 social 迁移到 {@code ingot-event-bus} 后，此处可整体下线。
+     * </p>
      */
     @Bean
-    public RedisMessageListenerContainer socialConfigRedisMessageListenerContainer(
-            RedisConnectionFactory connectionFactory,
+    public InitializingBean socialConfigListenerRegistrar(
+            RedisMessageListenerContainer container,
             SocialConfigRedisMessageListener messageListener) {
-        
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        
-        String topic = socialConfigProperties.getRedis().getTopic();
-        container.addMessageListener(messageListener, new ChannelTopic(topic));
-        
-        log.info("SocialCommonConfiguration - Redis消息监听器已配置，主题: {}", topic);
-        return container;
+        return () -> {
+            String topic = socialConfigProperties.getRedis().getTopic();
+            container.addMessageListener(messageListener, new ChannelTopic(topic));
+            log.info("SocialCommonConfiguration - 已向通用 RedisMessageListenerContainer 注册 social 监听，topic: {}", topic);
+        };
     }
 }

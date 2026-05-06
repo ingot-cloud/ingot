@@ -55,6 +55,11 @@ public interface CacheConstants {
     String PLATFORM_APPS = IGNORE_TENANT_PREFIX + ":platform:apps";
 
     /**
+     * 平台-字典
+     */
+    String PLATFORM_DICTS = IGNORE_TENANT_PREFIX + ":platform:dicts";
+
+    /**
      * 客户端用户角色
      */
     String MEMBER_ROLES = "member:roles";

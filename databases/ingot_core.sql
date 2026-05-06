@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 25/04/2026 14:55:28
+ Date: 06/05/2026 16:54:03
 */
 
 SET NAMES utf8mb4;
@@ -77,7 +77,7 @@ CREATE TABLE `account_security_event` (
   KEY `idx_created_at` (`created_at`) USING BTREE COMMENT '时间索引',
   KEY `idx_event_type` (`event_type`,`created_at`) USING BTREE COMMENT '事件类型索引',
   KEY `idx_tenant` (`tenant_id`,`created_at`) USING BTREE COMMENT '租户索引'
-) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号安全事件表';
+) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号安全事件表';
 
 -- ----------------------------
 -- Records of account_security_event
@@ -145,6 +145,14 @@ INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (86, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-24 17:13:08');
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (87, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-25 10:16:18');
 INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (88, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-25 13:18:10');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (89, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.103', NULL, NULL, NULL, '2026-04-25 15:39:25');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (90, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-28 17:05:36');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (91, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-29 09:22:41');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (92, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-29 16:18:15');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (93, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-30 09:09:23');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (94, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-30 13:44:38');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (95, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.124', NULL, NULL, NULL, '2026-04-30 16:23:18');
+INSERT INTO `account_security_event` (`id`, `user_id`, `user_type`, `event_type`, `event_category`, `reason_code`, `reason_detail`, `result`, `source`, `operator_id`, `operator_name`, `client_ip`, `user_agent`, `tenant_id`, `extra_data`, `created_at`) VALUES (96, 1, 'ADMIN', 'LOGIN_SUCCESS', 'AUTH', NULL, NULL, 'SUCCESS', 'AUTH', NULL, NULL, '192.168.1.101', NULL, NULL, NULL, '2026-05-06 15:28:38');
 COMMIT;
 
 -- ----------------------------
@@ -255,19 +263,35 @@ CREATE TABLE `platform_dict` (
   `pid` bigint NOT NULL DEFAULT '0' COMMENT '父ID',
   `code` varchar(64) NOT NULL COMMENT '编码',
   `name` varchar(128) NOT NULL COMMENT '名称',
+  `value` varchar(128) DEFAULT NULL COMMENT '字典项值（仅字典项有效）',
+  `label` varchar(128) DEFAULT NULL COMMENT '字典项展示文本（仅字典项有效）',
   `type` char(1) NOT NULL COMMENT '字典类型',
-  `org_type` char(1) NOT NULL COMMENT '组织类型',
+  `scope_type` char(1) NOT NULL DEFAULT '0' COMMENT '作用域, 0:平台,1:租户,2:应用',
+  `tenant_id` bigint DEFAULT NULL COMMENT '租户ID（scope_type=1时必填）',
+  `app_id` bigint DEFAULT NULL COMMENT '应用ID（scope_type=2时必填）',
+  `org_type` char(1) NOT NULL DEFAULT '0' COMMENT '组织类型',
+  `sort` int NOT NULL DEFAULT '0' COMMENT '排序权重',
+  `system_flag` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否内置字典',
   `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `extra` json DEFAULT NULL COMMENT '扩展属性',
+  `created_by` bigint DEFAULT NULL COMMENT '创建人',
+  `updated_by` bigint DEFAULT NULL COMMENT '更新人',
   `created_at` datetime DEFAULT NULL COMMENT '创建日期',
   `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
   `deleted_at` datetime DEFAULT NULL COMMENT '删除日期',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_dict_pid` (`pid`) USING BTREE,
+  KEY `idx_dict_code` (`code`) USING BTREE,
+  KEY `idx_dict_type_status` (`type`,`status`) USING BTREE,
+  KEY `idx_dict_scope` (`scope_type`,`tenant_id`,`app_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of platform_dict
 -- ----------------------------
 BEGIN;
+INSERT INTO `platform_dict` (`id`, `pid`, `code`, `name`, `value`, `label`, `type`, `scope_type`, `tenant_id`, `app_id`, `org_type`, `sort`, `system_flag`, `status`, `remark`, `extra`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES (1227552905319469058, 0, 'sys', '系统配置', NULL, NULL, '0', '0', NULL, NULL, '0', 0, b'0', '0', NULL, NULL, NULL, NULL, '2026-04-29 09:23:01', '2026-04-29 16:32:02', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -339,6 +363,7 @@ INSERT INTO `platform_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_p
 INSERT INTO `platform_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197223040129097729, 1197222719172567042, '凭证策略', '1', '/platform/security/credential', b'1', 1197223040045211649, 0, '@/pages/platform/security/credential/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-02-04 16:42:57', '2026-02-04 17:17:50', NULL);
 INSERT INTO `platform_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1225772359370035202, 0, '审计与日志', '0', '/platform/aam', b'1', 1225772359281954818, 1, '@/layouts/InAppLayout.vue', NULL, '/platform/aam/onlinetoken', 'solar:monitor-broken', 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-04-24 11:27:45', '2026-04-24 11:27:45', NULL);
 INSERT INTO `platform_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1225772508536262658, 1225772359370035202, '在线用户', '1', '/platform/aam/onlinetoken', b'1', 1225772508464959490, 0, '@/pages/platform/aam/onlinetoken/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-04-24 11:28:21', '2026-04-24 11:28:21', NULL);
+INSERT INTO `platform_menu` (`id`, `pid`, `name`, `menu_type`, `path`, `enable_permission`, `permission_id`, `custom_view_path`, `view_path`, `route_name`, `redirect`, `icon`, `sort`, `is_cache`, `hidden`, `hide_breadcrumb`, `props`, `org_type`, `link_type`, `link_url`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1227308051796643841, 1171383124115320834, '字典管理', '1', '/platform/base/dict', b'1', 1227308051679203330, 0, '@/pages/platform/base/dict/IndexPage.vue', NULL, NULL, NULL, 999, 0, 0, 0, 0, '0', '0', NULL, '0', '2026-04-28 17:10:03', '2026-04-28 17:10:03', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -395,6 +420,7 @@ INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_typ
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1197223040045211649, 1197222719055126529, '凭证策略', 'platform:security:credential', '0', '0', '0', '', '2026-02-04 16:42:57', '2026-02-04 17:17:50', NULL);
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1225772359281954818, 0, '审计与日志', 'platform:aam', '0', '0', '0', '', '2026-04-24 11:27:45', '2026-04-24 11:27:45', NULL);
 INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1225772508464959490, 1225772359281954818, '在线用户', 'platform:aam:onlinetoken', '0', '0', '0', '', '2026-04-24 11:28:21', '2026-04-24 11:28:21', NULL);
+INSERT INTO `platform_permission` (`id`, `pid`, `name`, `code`, `type`, `org_type`, `status`, `remark`, `created_at`, `updated_at`, `deleted_at`) VALUES (1227308051679203330, 1171383124023046146, '字典管理', 'platform:base:dict', '0', '0', '0', '', '2026-04-28 17:10:03', '2026-04-28 17:10:03', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -588,7 +614,7 @@ CREATE TABLE `sys_user` (
 -- Records of sys_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 'admin', '{bcrypt}$2a$10$frVeEWrN5PRLZTheYoMw1uHNiylDcS3uvByYiYACJIvCkAMaoEfr2', 0, '2026-03-10 16:40:30', '超级管理员', '18888888888', 'admin@ingot.com', 'ingot/user/avatar/1/logo.png', 1, 0, '2026-04-25 13:18:10', '192.168.1.103', 0, '2021-01-03 11:02:46', '2026-02-11 14:12:44', NULL);
+INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 'admin', '{bcrypt}$2a$10$frVeEWrN5PRLZTheYoMw1uHNiylDcS3uvByYiYACJIvCkAMaoEfr2', 0, '2026-03-10 16:40:30', '超级管理员', '18888888888', 'admin@ingot.com', 'ingot/user/avatar/1/logo.png', 1, 0, '2026-05-06 15:28:38', '192.168.1.101', 0, '2021-01-03 11:02:46', '2026-02-11 14:12:44', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1221837466541903874, 'test', '{bcrypt}$2a$10$ks9PAjjnT3Dtz509tY6Pv.Kqk2EsV1jRLU.hBNNTEX2tKn8erbRtK', 1, '2026-04-13 14:51:54', '测试1', '18600000001', NULL, NULL, 1, 0, NULL, NULL, 0, '2026-04-13 14:51:54', '2026-04-13 15:03:36', NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1221851150714556417, 'test1', '{bcrypt}$2a$10$I4Ps6HCGmYTFFTOGLiq79ezifWrIPdAAjIq4.DNCU95syA00qqu6K', 0, '2026-04-13 16:51:01', '测试初始化密码', '123', NULL, NULL, 1, 0, '2026-04-13 16:51:12', '192.168.1.148', 0, '2026-04-13 15:46:16', NULL, NULL);
 INSERT INTO `sys_user` (`id`, `username`, `password`, `must_change_pwd`, `password_changed_at`, `nickname`, `phone`, `email`, `avatar`, `enabled`, `locked`, `last_login_at`, `last_login_ip`, `version`, `created_at`, `updated_at`, `deleted_at`) VALUES (1222129624926801921, '4124124', '{bcrypt}$2a$10$O/cQ1FhmJzE3.KNXO2tDp.OwVRI8FwlkMvsOwrnsEfWzhLdle5YrG', 1, '2026-04-14 10:12:50', '123123', '4124124', NULL, NULL, 1, 0, NULL, NULL, 0, '2026-04-14 10:12:50', NULL, '2026-04-14 02:13:23');

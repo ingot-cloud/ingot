@@ -59,6 +59,10 @@ include 'ingot-framework:ingot-account-domain:ingot-account-adapter'
 findProject(':ingot-framework:ingot-account-domain:ingot-account-adapter')?.name = 'ingot-account-adapter'
 include 'ingot-framework:ingot-account-domain:ingot-account-web-support'
 findProject(':ingot-framework:ingot-account-domain:ingot-account-web-support')?.name = 'ingot-account-web-support'
+include 'ingot-framework:ingot-dict-client'
+findProject(':ingot-framework:ingot-dict-client')?.name = 'ingot-dict-client'
+include 'ingot-framework:ingot-event-bus'
+findProject(':ingot-framework:ingot-event-bus')?.name = 'ingot-event-bus'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'
