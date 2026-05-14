@@ -193,13 +193,13 @@ CREATE TABLE platform_dict (
 4. **失效粒度按 `dictCode`** — 所有 `evict(dictCode)` 都会沿装饰器链 L1 → L2 一并清除；批量排序等"全量"操作会走 `evictAll()`。
 5. **`InvalidationEvent` 必须标注 `@EventType`** — 类型字符串决定 Pub/Sub channel 名（`in:bus:<type>`）；同 domain 内事件类型唯一。
 6. **回环过滤** — `RedisInvalidationBus` 通过 `origin` 字段过滤本节点广播给自己的事件，避免重复清缓存。
+7. **社交配置同步** — `ingot-social-common` 使用同一套 `InvalidationBus`，事件为 `SocialInvalidationEvent`（channel：`in:bus:social.invalidate`，与 `topic-prefix` 同源）；说明见 [ingot-social-common README](../../ingot-framework/ingot-social/ingot-social-common/README.md)。
 
 ---
 
 ## 未来规划
 
 - 🚧 字典项 i18n 多语言展示（基于 `extra.i18n`）
-- 🚧 `social-common` 失效逻辑迁移至 `ingot-event-bus`，统一全局失效广播
 - 🚧 字典管理端前端组件（树形 + 拖拽排序 + 批量启停）
 - 🚧 Kafka 实现 `InvalidationBus`，用于跨地域多集群部署
 

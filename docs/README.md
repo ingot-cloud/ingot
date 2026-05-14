@@ -89,13 +89,16 @@
 - [字典使用指南](./dict/USAGE.md)
 - [字典 API / RPC / 配置参考](./dict/API-REFERENCE.md)
 
-#### 4.4 部署相关
+#### 4.4 社交模块（InvalidationBus 与字典共用约定）
+- [社交文档索引](./social/README.md)
+
+#### 4.5 部署相关
 - [Docker 多环境部署](./DOCKER-MULTI-ENVIRONMENT.md)
 - [Dockerfile 多环境配置](./DOCKERFILE-MULTI-ENV.md)
 - [Dockerfile 迁移指南](./DOCKERFILE-MIGRATION-GUIDE.md)
 - [环境变量说明](./ENV-INSTRUCTIONS.md)
 
-#### 4.5 升级指南
+#### 4.6 升级指南
 - [Spring Framework 6.x 升级](./Upgrading-to-Spring-Framework-6.x.md)
 - [开发路线图](./ROADMAP.md)
 

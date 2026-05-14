@@ -1,22 +1,19 @@
 package com.ingot.framework.social.common.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.eventbus.InvalidationBus;
+import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
 import com.ingot.framework.social.common.event.SocialConfigMessageHandler;
-import com.ingot.framework.social.common.event.SocialConfigRedisMessageListener;
-import com.ingot.framework.social.common.properties.SocialConfigProperties;
-import com.ingot.framework.social.common.publisher.RedisSocialConfigMessagePublisher;
+import com.ingot.framework.social.common.internal.SocialInvalidationCoordinator;
+import com.ingot.framework.social.common.publisher.InvalidationBusSocialConfigMessagePublisher;
 import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 /**
  * <p>Description  : 社交公共配置.</p>
@@ -25,72 +22,35 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
  * <p>Time         : 16:10.</p>
  */
 @Slf4j
-@Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(SocialConfigProperties.class)
-@RequiredArgsConstructor
+@AutoConfiguration
+@AutoConfigureAfter(EventBusAutoConfiguration.class)
 public class SocialCommonConfiguration {
-    private final SocialConfigProperties socialConfigProperties;
 
-    // ==================== 消息处理器 ====================
-
-    /**
-     * 社交配置消息处理器
-     * 用于处理消息的公共逻辑
-     */
     @Bean
     public SocialConfigMessageHandler socialConfigMessageHandler(
-            ApplicationEventPublisher eventPublisher,
-            ObjectMapper objectMapper) {
-        return new SocialConfigMessageHandler(eventPublisher, objectMapper);
+            ApplicationEventPublisher eventPublisher) {
+        return new SocialConfigMessageHandler(eventPublisher);
     }
 
-    // ==================== Redis 实现（默认） ====================
-
     /**
-     * Redis消息发布器（默认实现）
-     * 如果服务没有自定义实现，则使用此默认实现
+     * 默认通过 {@link InvalidationBus} 广播社交配置变更；本机先收到 {@link SocialConfigMessageHandler#handleInvalidation}，
+     * 再 {@code bus.publish}，其它节点由 {@link SocialInvalidationCoordinator} 订阅处理。
      */
     @Bean
     @ConditionalOnMissingBean(SocialConfigMessagePublisher.class)
-    public SocialConfigMessagePublisher redisSocialConfigMessagePublisher(
-            StringRedisTemplate stringRedisTemplate,
-            ObjectMapper objectMapper) {
-        String topic = socialConfigProperties.getRedis().getTopic();
-        log.info("SocialCommonConfiguration - 初始化Redis消息发布器（默认），主题: {}", topic);
-        return new RedisSocialConfigMessagePublisher(stringRedisTemplate, objectMapper, topic);
+    public SocialConfigMessagePublisher socialConfigMessagePublisher(
+            SocialConfigMessageHandler messageHandler,
+            ObjectProvider<InvalidationBus> invalidationBusProvider) {
+        log.info("SocialCommonConfiguration - 默认社交配置发布器: InvalidationBus（频道由 ingot.event-bus 的 topic-prefix + social.invalidate 推导）");
+        return new InvalidationBusSocialConfigMessagePublisher(messageHandler, invalidationBusProvider);
     }
 
-    /**
-     * Redis消息监听器
-     */
     @Bean
-    public SocialConfigRedisMessageListener socialConfigRedisMessageListener(
+    @ConditionalOnBean(InvalidationBus.class)
+    @ConditionalOnMissingBean(SocialInvalidationCoordinator.class)
+    public SocialInvalidationCoordinator socialInvalidationCoordinator(
+            InvalidationBus bus,
             SocialConfigMessageHandler messageHandler) {
-        log.info("SocialCommonConfiguration - 注册Redis消息监听器");
-        return new SocialConfigRedisMessageListener(messageHandler);
-    }
-
-    /**
-     * 把 social 配置变更监听器注册到框架统一的 {@link RedisMessageListenerContainer}
-     * （由 {@code InRedisMessageConfiguration#redisContainer} 提供）。
-     * <p>
-     * 不再自建独立容器，避免与全局唯一容器并存：
-     * <ul>
-     *     <li>消除 {@code RedisMessageListenerContainer} 多 bean 注入冲突
-     *         （如 {@code ingot-event-bus} 注入容器时报错）；</li>
-     *     <li>节省一条 Redis 订阅连接（每个 container 独占一条 PSUBSCRIBE）。</li>
-     * </ul>
-     * 后续 social 迁移到 {@code ingot-event-bus} 后，此处可整体下线。
-     * </p>
-     */
-    @Bean
-    public InitializingBean socialConfigListenerRegistrar(
-            RedisMessageListenerContainer container,
-            SocialConfigRedisMessageListener messageListener) {
-        return () -> {
-            String topic = socialConfigProperties.getRedis().getTopic();
-            container.addMessageListener(messageListener, new ChannelTopic(topic));
-            log.info("SocialCommonConfiguration - 已向通用 RedisMessageListenerContainer 注册 social 监听，topic: {}", topic);
-        };
+        return new SocialInvalidationCoordinator(bus, messageHandler);
     }
 }

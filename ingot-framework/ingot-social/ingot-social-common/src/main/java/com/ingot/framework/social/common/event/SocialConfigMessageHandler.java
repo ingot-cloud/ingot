@@ -1,6 +1,5 @@
 package com.ingot.framework.social.common.event;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,56 +15,32 @@ import org.springframework.context.ApplicationEventPublisher;
 @RequiredArgsConstructor
 public class SocialConfigMessageHandler {
     private final ApplicationEventPublisher eventPublisher;
-    private final ObjectMapper objectMapper;
 
     /**
-     * 处理消息字符串，转换为事件并发布
-     *
-     * @param messageBody 消息内容
-     * @param source 事件源（用于标识消息来源：Redis/Kafka）
+     * 处理经 {@link com.ingot.framework.eventbus.InvalidationBus} 反序列化后的失效事件，发布本地 {@link SocialConfigChangedEvent}。
      */
-    public void handleMessage(String messageBody, Object source) {
+    public void handleInvalidation(SocialInvalidationEvent invalidation, Object source) {
+        if (invalidation == null) {
+            return;
+        }
         try {
-            log.debug("SocialConfigMessageHandler - 接收到消息: {}", messageBody);
-
-            // 解析消息
-            SocialConfigRedisMessage message = objectMapper.readValue(messageBody, SocialConfigRedisMessage.class);
-
-            // 转换为本地事件
-            SocialConfigChangedEvent event = convertToEvent(message, source);
-
-            // 发布事件
+            SocialConfigChangedEvent event = convertToEvent(invalidation, source);
             eventPublisher.publishEvent(event);
-
             log.info("SocialConfigMessageHandler - 已发布本地事件: socialType={}, changeType={}, appId={}",
                     event.getSocialType(), event.getChangeType(), event.getAppId());
-
         } catch (Exception e) {
-            log.error("SocialConfigMessageHandler - 处理消息失败: {}", messageBody, e);
+            log.error("SocialConfigMessageHandler - 处理失效事件失败: {}", invalidation, e);
         }
     }
 
-    /**
-     * 将消息转换为事件
-     *
-     * @param message 消息对象
-     * @param source 事件源
-     * @return 配置变更事件
-     */
-    private SocialConfigChangedEvent convertToEvent(SocialConfigRedisMessage message, Object source) {
-        // 解析社交类型
+    private SocialConfigChangedEvent convertToEvent(SocialInvalidationEvent message, Object source) {
         SocialTypeEnum socialType = SocialTypeEnum.get(message.getSocialType());
-        
-        // 解析变更类型
         SocialConfigChangedEvent.ConfigChangeType changeType =
                 SocialConfigChangedEvent.ConfigChangeType.valueOf(message.getChangeType());
-
-        // 根据变更类型创建不同的事件
         if (changeType == SocialConfigChangedEvent.ConfigChangeType.REFRESH_ALL) {
             return new SocialConfigChangedEvent(source, socialType);
-        } else {
-            return new SocialConfigChangedEvent(source, socialType, changeType, message.getAppId());
         }
+        return new SocialConfigChangedEvent(source, socialType, changeType, message.getAppId());
     }
 }
 

@@ -2,42 +2,44 @@
 
 ## 概述
 
-`ingot-social-wechat` 是微信社交功能的集成模块，依赖于 `ingot-social-common` 公共模块。
+`ingot-social-wechat` 是微信小程序等微信能力的集成模块，依赖 `ingot-social-common`。配置变更通过 **`SocialConfigChangedEvent`** 驱动本地 `WxMaConfigManager` 热更新。
 
 ## 核心特性
 
 ### 1. 基于 ingot-social-common
-- 依赖公共社交模块
-- 只监听微信类型的配置变更
-- 自动过滤其他社交平台的消息
+
+- 公共跨节点通知由 **`InvalidationBus` + `SocialInvalidationEvent`** 完成（见 common 模块 README）。
+- 本模块**只处理** `SocialTypeEnum.WECHAT_MINI_PROGRAM`，忽略其它 `socialType`。
 
 ### 2. 动态配置更新
-- 支持配置的热更新，无需重启服务
-- 配置变更后自动通知（延迟<100ms）
-- 支持Redis/Kafka多种消息队列
 
-### 3. 多租户支持
-- 支持同时配置多个微信小程序应用
-- 每个租户可以有独立的小程序配置
-- 通过 `appId` 自动切换配置
+- 支持热更新，无需重启（实际延迟取决于总线与应用负载）。
+- 与字典等域共用 **`ingot.event-bus`**；请保证各实例 **`topic-prefix` 一致**。
 
-## 依赖配置
+### 3. 多应用 / 多租户
+
+- 支持多个 `appId`（小程序）并存；通过 `WxMaService.switchoverTo(appId)` 切换。
+
+## 依赖
 
 ```gradle
 dependencies {
-    // 会自动依赖 ingot-social-common
     implementation project(':ingot-framework:ingot-social-wechat')
 }
 ```
+
+会传递依赖 `ingot-social-common`（及 `ingot-event-bus` API）。运行环境仍需 **Redis + 统一 `RedisMessageListenerContainer`** 以装配 `InvalidationBus`（与平台其它服务一致）。
 
 ## 配置示例
 
 ```yaml
 ingot:
-  social:
-    message-queue: redis  # 或 kafka
+  event-bus:
     redis:
-      topic: in:social:config:changed
+      topic-prefix: in:bus   # 与 PMS、AUTH 等保持一致
+
+# 已废弃，勿再依赖：
+# ingot.social.redis.topic
 ```
 
 ## 使用方式
@@ -51,44 +53,35 @@ public class WechatLoginService {
     private final WxMaService wxMaService;
     
     public String login(String appId, String code) {
-        // 切换到指定小程序
         WxMaService service = wxMaService.switchoverTo(appId);
-        
-        // 调用微信API
-        WxMaJscode2SessionResult session = service.getUserService()
-            .getSessionInfo(code);
-        
+        WxMaJscode2SessionResult session = service.getUserService().getSessionInfo(code);
         return session.getOpenid();
     }
 }
 ```
 
-### 2. 手动刷新配置
+### 2. 手动刷新 HTTP API
 
 ```bash
-# 刷新所有服务实例（广播）
+# 广播刷新（依赖 SocialConfigMessagePublisher，默认走 InvalidationBus）
 POST /social/wechat/config/refresh/all
 
-# 刷新当前服务实例
+# 仅当前实例
 POST /social/wechat/config/refresh/local
 
-# 查看配置状态
 GET /social/wechat/config/status
 ```
 
-## 事件监听
+## 事件监听（本模块内部逻辑说明）
 
-微信模块的监听器只处理微信类型的配置变更：
+监听器仅处理微信小程序类型：
 
 ```java
 @EventListener
 public void onConfigChanged(SocialConfigChangedEvent event) {
-    // 只处理微信小程序类型
     if (event.getSocialType() != SocialTypeEnum.WECHAT_MINI_PROGRAM) {
         return;
     }
-    
-    // 处理微信配置变更
     switch (event.getChangeType()) {
         case ADD:
         case UPDATE:
@@ -104,83 +97,24 @@ public void onConfigChanged(SocialConfigChangedEvent event) {
 }
 ```
 
-## 与其他社交模块协同
+## 在 PMS 中维护配置
 
-### 同时使用微信和QQ
-
-```gradle
-dependencies {
-    implementation project(':ingot-framework:ingot-social-wechat')
-    implementation project(':ingot-framework:ingot-social-qq')
-}
-```
-
-**效果**：
-- 微信配置变更 → 只有微信模块响应
-- QQ配置变更 → 只有QQ模块响应
-- 互不干扰
-
-### 在PMS中管理配置
-
-```java
-@Service
-@RequiredArgsConstructor
-public class SocialConfigManagementService {
-    private final SysSocialDetailsService socialDetailsService;
-    
-    // 添加微信配置 - 自动通知微信模块
-    public void addWechatConfig(SysSocialDetails config) {
-        config.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
-        socialDetailsService.save(config);
-        // 保存后自动发布消息，微信模块自动更新
-    }
-    
-    // 添加QQ配置 - 自动通知QQ模块
-    public void addQqConfig(SysSocialDetails config) {
-        config.setType(SocialTypeEnum.QQ);
-        socialDetailsService.save(config);
-        // 保存后自动发布消息，QQ模块自动更新
-    }
-}
-```
-
-## 核心组件
-
-### WxMaConfigManager
-
-微信小程序配置管理器：
-- `initConfigs()` - 初始化配置
-- `refreshAllConfigs()` - 刷新所有配置
-- `addOrUpdateConfig()` - 添加或更新配置
-- `removeConfig()` - 移除配置
-
-### WechatConfigChangedListener
-
-微信配置变更监听器：
-- 只监听 `SocialTypeEnum.WECHAT_MINI_PROGRAM` 类型
-- 自动过滤其他社交平台的消息
-- 异步处理，不阻塞主流程
+`SysSocialDetailsServiceImpl` 在保存 / 更新 / 删除成功后会调用 **`SocialConfigMessagePublisher`**，默认实现会向 **`InvalidationBus`** 发布 `SocialInvalidationEvent`，各.consumer 再收到 `SocialConfigChangedEvent` 刷新内存配置。
 
 ## 注意事项
 
-1. **类型过滤**
-   - 监听器会自动过滤非微信类型的事件
-   - 只处理 `WECHAT_MINI_PROGRAM` 类型
-
-2. **配置同步**
-   - 所有服务的 `redis.topic` 必须一致
-   - 建议在配置中心统一管理
-
-3. **依赖关系**
-   - 自动依赖 `ingot-social-common`
-   - 无需手动添加common依赖
+1. **`topic-prefix` 集群一致**，否则收不到对端社交失效广播。
+2. **类型过滤**：本模块监听器已按 `WECHAT_MINI_PROGRAM` 过滤。
+3. **依赖**：一般无需再手写 `ingot-social-common` 依赖；引入 `ingot-social-wechat` 即可。
 
 ## 相关文档
 
-- [ingot-social-common/README.md](../ingot-social-common/README.md) - 公共模块说明
+- [ingot-social-common/README.md](../ingot-social-common/README.md)
+- [ingot-social-common/EXTENSION_GUIDE.md](../ingot-social-common/EXTENSION_GUIDE.md)
+- [docs/dict/ARCHITECTURE.md](../../../docs/dict/ARCHITECTURE.md)（失效总线通用说明）
 
 ---
 
-**版本**：v2.0.0  
+**版本**：v2.1（InvalidationBus 对齐）  
 **创建时间**：2025-12-07  
 **作者**：jy

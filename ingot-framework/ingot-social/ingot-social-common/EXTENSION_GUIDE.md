@@ -1,101 +1,52 @@
 # Social 模块扩展指南
 
-## 🎯 设计理念
+## 设计理念
 
-`ingot-social-common` 模块遵循 **接口抽象 + 默认实现** 的设计原则：
+`ingot-social-common` 采用 **接口抽象 + 默认实现**：
 
-```
-框架提供：
-  ├─ 核心接口（SocialConfigMessagePublisher）
-  ├─ 默认实现（Redis - 简单、常用）
-  └─ 扩展机制（@ConditionalOnMissingBean）
+- **接口**：`SocialConfigMessagePublisher`
+- **默认实现**：`InvalidationBusSocialConfigMessagePublisher` — 本机 `SocialConfigChangedEvent` + `InvalidationBus.publish(SocialInvalidationEvent)`，与 `ingot-dict-client` 的跨节点模式一致。
+- **扩展**：自定义 `@Bean SocialConfigMessagePublisher` 可覆盖默认实现（`@ConditionalOnMissingBean`）。
 
-服务扩展：
-  └─ 根据需要自定义实现（Kafka / RabbitMQ / RocketMQ 等）
-```
+## 默认实现：InvalidationBus（推荐）
 
-## 📦 默认实现：Redis
+### 行为摘要
 
-### 为什么选择 Redis 作为默认实现？
+1. 发布时先 `SocialConfigMessageHandler.handleInvalidation`，再 `InvalidationBus.publish`（**本机必须先走本地事件**：总线订阅端会忽略 `origin` 相同的回环消息）。
+2. 其它节点由 `SocialInvalidationCoordinator` 订阅 `SocialInvalidationEvent`（channel：`{topic-prefix}:social.invalidate`）。
+3. 各业务模块继续只监听 `SocialConfigChangedEvent`，按 `socialType` 过滤即可。
 
-✅ **配置简单**：只需要 Redis 连接信息，无需额外配置  
-✅ **广泛使用**：大多数项目已经使用 Redis  
-✅ **轻量级**：Pub/Sub 机制简单高效  
-✅ **零维护**：无需管理 Topic、Partition 等  
+### 配置
 
-### 默认配置
+与全局失效总线共用前缀：
 
 ```yaml
-# application.yml
-spring:
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: your-password
-
-# 可选：自定义 Topic
 ingot:
-  social:
+  event-bus:
     redis:
-      topic: in:social:config:changed  # 默认值
+      topic-prefix: in:bus   # 全集群一致
 ```
 
-## 🔧 自定义实现
+`ingot.social.redis.topic` **已废弃**，勿再依赖独立 Redis 频道。
 
-### 场景：使用 Kafka
+### 运维自检日志
 
-如果你的服务已经使用 Kafka，并且希望统一使用 Kafka 作为消息队列：
+- `[EventBus] subscribed channel=...social.invalidate`
+- `[Social] invalidation coordinator subscribed`
 
-#### 1️⃣ 添加 Kafka 依赖
+## 自定义实现：Kafka / MQ（可选）
 
-```gradle
-// build.gradle
-dependencies {
-    implementation project(ingot.framework_social_wechat)
-    
-    // 添加 Kafka 依赖
-    implementation("org.springframework.kafka:spring-kafka")
-}
-```
+当项目已统一使用 Kafka 等，且希望社交配置走独立 Topic 时，可提供自有 `SocialConfigMessagePublisher`。请注意：
 
-#### 2️⃣ 配置 Kafka
+1. **接口需实现全部方法**：`publishRefreshAll`、`publishAdd`、`publishUpdate`、`publishDelete`、`publish(SocialConfigRedisMessage)`。
+2. **消费侧**应把载荷 JSON 交给 `SocialConfigMessageHandler.handleMessage(String json, Object source)`，以复用「解析 → `SocialConfigChangedEvent`」逻辑。
+3. **自定义发布器时**：框架**不会**再注册默认的 `InvalidationBusSocialConfigMessagePublisher`，但 **`SocialInvalidationCoordinator` 仍可能随 `InvalidationBus` 存在而订阅 `social.invalidate`**。若你的实现**完全不**往该 channel 发消息，该订阅仅为空转，无副作用；若希望避免混淆，可在业务侧文档中说明「社交配置以 Kafka 为准，Redis 总线仅用于其它域」。
 
-```yaml
-# application.yml
-spring:
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: ${spring.application.name}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+### 示例：Kafka 发布器（节选）
 
-ingot:
-  social:
-    kafka:
-      topic: in-social-config-changed
-```
-
-#### 3️⃣ 实现消息发布器
+实现时注意与 **`DELETE`** 命名一致（接口为 `publishDelete`，消息工厂为 `SocialConfigRedisMessage.delete`）。
 
 ```java
-package com.yourcompany.service.social.kafka;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.social.common.event.SocialConfigRedisMessage;
-import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
-import com.ingot.framework.commons.model.enums.SocialTypeEnum;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
-
-/**
- * Kafka 消息发布器实现
- */
 @Slf4j
 @RequiredArgsConstructor
 public class KafkaSocialConfigMessagePublisher implements SocialConfigMessagePublisher {
@@ -105,351 +56,99 @@ public class KafkaSocialConfigMessagePublisher implements SocialConfigMessagePub
     private final String topic;
 
     @Override
-    public void publishUpdate(SocialTypeEnum socialType, String appId) {
-        try {
-            SocialConfigRedisMessage message = SocialConfigRedisMessage.update(
-                    socialType.getValue(), appId);
-            String messageJson = objectMapper.writeValueAsString(message);
-            
-            kafkaTemplate.send(topic, messageJson);
-            log.info("KafkaPublisher - 发送更新消息: type={}, appId={}", socialType, appId);
-        } catch (Exception e) {
-            log.error("KafkaPublisher - 发送更新消息失败", e);
-        }
-    }
-
-    @Override
-    public void publishRemove(SocialTypeEnum socialType, String appId) {
-        try {
-            SocialConfigRedisMessage message = SocialConfigRedisMessage.remove(
-                    socialType.getValue(), appId);
-            String messageJson = objectMapper.writeValueAsString(message);
-            
-            kafkaTemplate.send(topic, messageJson);
-            log.info("KafkaPublisher - 发送删除消息: type={}, appId={}", socialType, appId);
-        } catch (Exception e) {
-            log.error("KafkaPublisher - 发送删除消息失败", e);
-        }
-    }
-
-    @Override
     public void publishRefreshAll(SocialTypeEnum socialType) {
+        send(SocialConfigRedisMessage.refreshAll(socialType.getValue()));
+    }
+
+    @Override
+    public void publishAdd(SocialTypeEnum socialType, String appId) {
+        send(SocialConfigRedisMessage.add(socialType.getValue(), appId));
+    }
+
+    @Override
+    public void publishUpdate(SocialTypeEnum socialType, String appId) {
+        send(SocialConfigRedisMessage.update(socialType.getValue(), appId));
+    }
+
+    @Override
+    public void publishDelete(SocialTypeEnum socialType, String appId) {
+        send(SocialConfigRedisMessage.delete(socialType.getValue(), appId));
+    }
+
+    @Override
+    public void publish(SocialConfigRedisMessage message) {
+        send(message);
+    }
+
+    private void send(SocialConfigRedisMessage message) {
         try {
-            SocialConfigRedisMessage message = SocialConfigRedisMessage.refreshAll(
-                    socialType.getValue());
-            String messageJson = objectMapper.writeValueAsString(message);
-            
-            kafkaTemplate.send(topic, messageJson);
-            log.info("KafkaPublisher - 发送刷新消息: type={}", socialType);
+            kafkaTemplate.send(topic, objectMapper.writeValueAsString(message));
         } catch (Exception e) {
-            log.error("KafkaPublisher - 发送刷新消息失败", e);
+            log.error("Kafka social config publish failed", e);
         }
     }
 }
 ```
 
-#### 4️⃣ 实现消息监听器
+### 示例：Kafka 监听（复用 Handler）
 
 ```java
-package com.yourcompany.service.social.kafka;
-
-import com.ingot.framework.social.common.event.SocialConfigMessageHandler;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
-
-/**
- * Kafka 消息监听器
- */
 @Slf4j
 @RequiredArgsConstructor
 public class KafkaSocialConfigMessageListener {
 
     private final SocialConfigMessageHandler messageHandler;
 
-    @KafkaListener(
-        topics = "${ingot.social.kafka.topic}",
-        groupId = "${spring.application.name}"
-    )
+    @KafkaListener(topics = "${ingot.social.kafka.topic}", groupId = "${spring.application.name}")
     public void onMessage(String message) {
-        log.debug("KafkaListener - 接收到消息: {}", message);
         messageHandler.handleMessage(message, this);
     }
 }
 ```
 
-#### 5️⃣ 注册自定义实现
+注册自定义 Bean 时提供 `SocialConfigMessagePublisher`（及监听器）；框架默认 Redis 总线实现会被 `@ConditionalOnMissingBean` 跳过。
 
-```java
-package com.yourcompany.service.social.config;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.framework.social.common.event.SocialConfigMessageHandler;
-import com.ingot.framework.social.common.properties.SocialConfigProperties;
-import com.ingot.framework.social.common.publisher.SocialConfigMessagePublisher;
-import com.yourcompany.service.social.kafka.KafkaSocialConfigMessageListener;
-import com.yourcompany.service.social.kafka.KafkaSocialConfigMessagePublisher;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.core.KafkaTemplate;
-
-/**
- * 社交配置 - Kafka 实现
- */
-@Slf4j
-@Configuration(proxyBeanMethods = false)
-@RequiredArgsConstructor
-public class SocialKafkaConfiguration {
-
-    private final SocialConfigProperties socialConfigProperties;
-
-    /**
-     * Kafka 消息发布器
-     * 注意：此 Bean 会覆盖默认的 Redis 实现（因为 @ConditionalOnMissingBean）
-     */
-    @Bean
-    public SocialConfigMessagePublisher kafkaSocialConfigMessagePublisher(
-            KafkaTemplate<String, String> kafkaTemplate,
-            ObjectMapper objectMapper) {
-        String topic = socialConfigProperties.getKafka().getTopic();
-        log.info("SocialKafkaConfiguration - 初始化Kafka消息发布器，主题: {}", topic);
-        return new KafkaSocialConfigMessagePublisher(kafkaTemplate, objectMapper, topic);
-    }
-
-    /**
-     * Kafka 消息监听器
-     */
-    @Bean
-    public KafkaSocialConfigMessageListener kafkaSocialConfigMessageListener(
-            SocialConfigMessageHandler messageHandler) {
-        log.info("SocialKafkaConfiguration - 初始化Kafka消息监听器");
-        return new KafkaSocialConfigMessageListener(messageHandler);
-    }
-}
-```
-
-### 关键点
-
-1. **`@ConditionalOnMissingBean`**：框架使用此注解，如果服务自定义了 `SocialConfigMessagePublisher`，则不会创建默认的 Redis 实现。
-
-2. **复用 `SocialConfigMessageHandler`**：消息处理逻辑已经封装在此类中，自定义实现只需要调用它。
-
-3. **复用消息格式**：使用 `SocialConfigRedisMessage` 作为消息格式（虽然名字叫 Redis，但实际上是通用的）。
-
-## 🌟 其他消息队列
-
-### RabbitMQ 示例
-
-```java
-@Slf4j
-@RequiredArgsConstructor
-public class RabbitMQSocialConfigMessagePublisher implements SocialConfigMessagePublisher {
-
-    private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper;
-    private final String exchange;
-    private final String routingKey;
-
-    @Override
-    public void publishUpdate(SocialTypeEnum socialType, String appId) {
-        try {
-            SocialConfigRedisMessage message = SocialConfigRedisMessage.update(
-                    socialType.getValue(), appId);
-            String messageJson = objectMapper.writeValueAsString(message);
-            
-            rabbitTemplate.convertAndSend(exchange, routingKey, messageJson);
-            log.info("RabbitMQPublisher - 发送更新消息: type={}, appId={}", socialType, appId);
-        } catch (Exception e) {
-            log.error("RabbitMQPublisher - 发送更新消息失败", e);
-        }
-    }
-    
-    // ... 其他方法
-}
-```
-
-### RocketMQ 示例
-
-```java
-@Slf4j
-@RequiredArgsConstructor
-public class RocketMQSocialConfigMessagePublisher implements SocialConfigMessagePublisher {
-
-    private final RocketMQTemplate rocketMQTemplate;
-    private final ObjectMapper objectMapper;
-    private final String topic;
-
-    @Override
-    public void publishUpdate(SocialTypeEnum socialType, String appId) {
-        try {
-            SocialConfigRedisMessage message = SocialConfigRedisMessage.update(
-                    socialType.getValue(), appId);
-            String messageJson = objectMapper.writeValueAsString(message);
-            
-            rocketMQTemplate.convertAndSend(topic, messageJson);
-            log.info("RocketMQPublisher - 发送更新消息: type={}, appId={}", socialType, appId);
-        } catch (Exception e) {
-            log.error("RocketMQPublisher - 发送更新消息失败", e);
-        }
-    }
-    
-    // ... 其他方法
-}
-```
+如需 **同时在 Kafka 与 InvalidationBus 上双写**，可自行组合调用，一般不推荐以免重复刷新。
 
 ## 职责划分
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 框架层（ingot-social-common）                                │
-│   ├─ 定义接口（SocialConfigMessagePublisher）               │
-│   ├─ 定义消息格式（SocialConfigRedisMessage）               │
-│   ├─ 提供消息处理器（SocialConfigMessageHandler）           │
-│   └─ 提供默认实现（Redis - 简单常用）                       │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 服务层（ingot-pms-provider / other-service）                │
-│   ├─ 使用默认实现（Redis）✅                                │
-│   └─ 或自定义实现（Kafka / RabbitMQ / RocketMQ）           │
-│      ├─ 实现 SocialConfigMessagePublisher                   │
-│      ├─ 实现消息监听器                                       │
-│      └─ 注册为 Bean（自动覆盖默认实现）                      │
-└─────────────────────────────────────────────────────────────┘
+```text
+框架（ingot-social-common）
+  ├─ SocialConfigMessagePublisher（接口）
+  ├─ SocialInvalidationEvent + SocialInvalidationCoordinator（默认跨节点）
+  ├─ SocialConfigMessageHandler（JSON → SocialConfigChangedEvent）
+  └─ SocialConfigRedisMessage（载荷 DTO，兼容历史命名）
+
+业务服务
+  ├─ 默认：引入 data-redis + event-bus，使用 InvalidationBus
+  └─ 或：自定义 Publisher + MQ Listener（handleMessage）
 ```
 
-## 🎯 最佳实践
-
-### 1. 什么时候使用默认实现（Redis）？
-
-✅ 项目已经使用 Redis  
-✅ 不需要复杂的消息队列功能  
-✅ 追求简单和快速开发  
-
-### 2. 什么时候自定义实现？
-
-✅ 项目已经统一使用某个消息队列（如 Kafka）  
-✅ 需要消息持久化、高可靠性  
-✅ 需要与现有消息队列基础设施集成  
-✅ 需要特定的消息队列特性（如 Kafka 的分区、RabbitMQ 的路由）  
-
-### 3. 如何选择？
-
-```
-决策树：
-├─ 项目已使用 Kafka/RabbitMQ 等？
-│  ├─ 是 → 自定义实现，统一使用该消息队列
-│  └─ 否 → 使用默认 Redis 实现
-│
-└─ 需要高级消息队列特性？
-   ├─ 是 → 自定义实现
-   └─ 否 → 使用默认 Redis 实现
-```
-
-## 📝 接口说明
+## 接口说明
 
 ### SocialConfigMessagePublisher
 
 ```java
 public interface SocialConfigMessagePublisher {
-    
-    /**
-     * 发布配置更新消息
-     * 
-     * @param socialType 社交类型（如：微信小程序、QQ等）
-     * @param appId 应用ID
-     */
-    void publishUpdate(SocialTypeEnum socialType, String appId);
-    
-    /**
-     * 发布配置删除消息
-     * 
-     * @param socialType 社交类型
-     * @param appId 应用ID
-     */
-    void publishRemove(SocialTypeEnum socialType, String appId);
-    
-    /**
-     * 发布全量刷新消息
-     * 
-     * @param socialType 社交类型
-     */
     void publishRefreshAll(SocialTypeEnum socialType);
+    void publishAdd(SocialTypeEnum socialType, String appId);
+    void publishUpdate(SocialTypeEnum socialType, String appId);
+    void publishDelete(SocialTypeEnum socialType, String appId);
+    void publish(SocialConfigRedisMessage message);
 }
 ```
 
 ### SocialConfigMessageHandler
 
-框架已提供的消息处理器，自定义监听器可以直接使用：
-
-```java
-@RequiredArgsConstructor
-public class SocialConfigMessageHandler {
-    private final ApplicationEventPublisher eventPublisher;
-    private final ObjectMapper objectMapper;
-
-    /**
-     * 处理消息（反序列化 + 发布本地事件）
-     * 
-     * @param message JSON 格式的消息
-     * @param source 事件源
-     */
-    public void handleMessage(String message, Object source);
-}
-```
+- `handleMessage(String messageBody, Object source)` — 解析 JSON（`SocialConfigRedisMessage` 形态）并发布 `SocialConfigChangedEvent`。
+- `handleInvalidation(SocialInvalidationEvent invalidation, Object source)` — 由默认发布器与协调器在总线路径上调用。
 
 ### SocialConfigRedisMessage
 
-通用消息格式（虽然名字叫 Redis，但可用于任何消息队列）：
-
-```java
-@Data
-public class SocialConfigRedisMessage {
-    private String changeType;     // UPDATE / REMOVE / REFRESH_ALL
-    private String socialType;     // WECHAT_MINI_PROGRAM / QQ 等
-    private String appId;          // 应用ID（REFRESH_ALL 时为空）
-    
-    // 工厂方法
-    public static SocialConfigRedisMessage update(String socialType, String appId);
-    public static SocialConfigRedisMessage remove(String socialType, String appId);
-    public static SocialConfigRedisMessage refreshAll(String socialType);
-}
-```
-
-## 🎉 总结
-
-### 设计原则
-
-```
-简单优先：默认使用 Redis（配置简单、广泛使用）
-接口抽象：定义标准接口，支持多种实现
-按需扩展：服务根据需要自定义实现
-职责清晰：框架提供能力，服务选择方案
-```
-
-### 扩展步骤
-
-```
-1. 添加消息队列依赖（如 spring-kafka）
-2. 配置消息队列（如 bootstrap-servers）
-3. 实现 SocialConfigMessagePublisher 接口
-4. 实现消息监听器（复用 SocialConfigMessageHandler）
-5. 注册为 Bean（自动覆盖默认实现）
-```
-
-### 关键点
-
-✅ **自动覆盖**：框架使用 `@ConditionalOnMissingBean`，服务自定义会覆盖默认实现  
-✅ **消息复用**：使用统一的消息格式和处理器  
-✅ **零侵入**：不使用时，默认实现自动激活  
-✅ **完全控制**：自定义时，完全控制配置和实现  
+通用载荷（名称保留历史约定）：`socialType`、`changeType`、`appId`、`timestamp`；静态工厂 `refreshAll` / `add` / `update` / `delete`。
 
 ---
 
-**版本**：v1.0  
-**作者**：JY & Claude  
-**日期**：2025-12-07  
-**许可**：MIT
-
+**版本**：v2.0（InvalidationBus 迁移后）  
+**作者**：jy  
+**最近更新**：2026-05
