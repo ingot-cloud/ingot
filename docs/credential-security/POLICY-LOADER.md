@@ -87,30 +87,31 @@ CredentialPolicyLoader (接口)
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: local  # 使用本地模式
-      
-      strength:
-        enabled: true
-        min-length: 8
-        max-length: 32
-        require-uppercase: true
-        require-lowercase: true
-        require-digit: true
-        require-special-char: false
-      
-      history:
-        enabled: true
-        check-count: 5
-        keep-recent-count: 5
-      
-      expiration:
-        enabled: false
-        max-days: 90
-        warning-days-before: 7
-        grace-login-count: 3
-        force-change-after-reset: true
+  security:
+    credential:
+      policy:
+        mode: local  # 使用本地模式
+
+        strength:
+          enabled: true
+          min-length: 8
+          max-length: 32
+          require-uppercase: true
+          require-lowercase: true
+          require-digit: true
+          require-special-char: false
+
+        history:
+          enabled: true
+          check-count: 5
+          keep-recent-count: 5
+
+        expiration:
+          enabled: false
+          max-days: 90
+          warning-days-before: 7
+          grace-login-count: 3
+          force-change-after-reset: true
 ```
 
 **核心流程：**
@@ -133,9 +134,10 @@ ingot:
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 使用远程模式
+  security:
+    credential:
+      policy:
+        mode: remote  # 使用远程模式
 ```
 
 **依赖：**
@@ -181,7 +183,7 @@ dependencies {
 
 ### 自动配置逻辑
 
-通过 Spring Boot 自动配置，根据 `ingot.credential.policy.mode` 属性值自动选择对应的加载器实现（local 或 remote）。
+通过 Spring Boot 自动配置，根据 `ingot.security.credential.policy.mode` 属性值自动选择对应的加载器实现（local 或 remote）。
 
 ### 配置示例
 
@@ -190,12 +192,13 @@ dependencies {
 ```yaml
 # application-dev.yml
 ingot:
-  credential:
-    policy:
-      mode: local
-      strength:
-        enabled: true
-        min-length: 6  # 宽松要求
+  security:
+    credential:
+      policy:
+        mode: local
+        strength:
+          enabled: true
+          min-length: 6  # 宽松要求
 ```
 
 **生产环境（Remote）：**
@@ -203,9 +206,10 @@ ingot:
 ```yaml
 # application-prod.yml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 从 Credential Service 加载
+  security:
+    credential:
+      policy:
+        mode: remote  # 从 Credential Service 加载
 ```
 
 ---
@@ -216,11 +220,12 @@ ingot:
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: local  # 本地模式
-      strength:
-        min-length: 6  # 宽松策略，方便测试
+  security:
+    credential:
+      policy:
+        mode: local  # 本地模式
+        strength:
+          min-length: 6  # 宽松策略，方便测试
 ```
 
 **优势：**
@@ -234,9 +239,10 @@ ingot:
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 远程模式
+  security:
+    credential:
+      policy:
+        mode: remote  # 远程模式
 ```
 
 通过管理后台配置策略 → 实时生效
@@ -251,9 +257,10 @@ ingot:
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 远程模式
+  security:
+    credential:
+      policy:
+        mode: remote  # 远程模式
 ```
 
 每个租户独立策略配置：
@@ -285,9 +292,10 @@ Auth Service（无数据库）使用 Remote 模式：
 ```yaml
 # auth-service/application.yml
 ingot:
-  credential:
-    policy:
-      mode: remote
+  security:
+    credential:
+      policy:
+        mode: remote
 ```
 
 Member/PMS Service 可选择 Local 或 Remote：
@@ -295,9 +303,10 @@ Member/PMS Service 可选择 Local 或 Remote：
 ```yaml
 # member-service/application.yml
 ingot:
-  credential:
-    policy:
-      mode: local  # 或 remote
+  security:
+    credential:
+      policy:
+        mode: local  # 或 remote
 ```
 
 ---
@@ -395,9 +404,10 @@ public class DynamicCredentialPolicyLoader implements CredentialPolicyLoader {
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 改为 remote
+  security:
+    credential:
+      policy:
+        mode: remote  # 改为 remote
 ```
 
 如果切换到 remote，还需添加依赖：

@@ -101,22 +101,23 @@ INSERT INTO credential_policy_config
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      strength:
-        enabled: true
-        min-length: 8
-        max-length: 32
-        require-uppercase: true
-        require-lowercase: true
-        require-digit: true
-        require-special-char: true
-        special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
-        forbidden-patterns:
-          - password
-          - 123456
-          - admin
-          - qwerty
+  security:
+    credential:
+      policy:
+        strength:
+          enabled: true
+          min-length: 8
+          max-length: 32
+          require-uppercase: true
+          require-lowercase: true
+          require-digit: true
+          require-special-char: true
+          special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+          forbidden-patterns:
+            - password
+            - 123456
+            - admin
+            - qwerty
         forbid-user-attributes: true
 ```
 
@@ -270,14 +271,15 @@ INSERT INTO credential_policy_config
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      expiration:
-        enabled: true
-        max-days: 90
-        warning-days-before: 7
-        grace-login-count: 3
-        force-change-after-reset: true
+  security:
+    credential:
+      policy:
+        expiration:
+          enabled: true
+          max-days: 90
+          warning-days-before: 7
+          grace-login-count: 3
+          force-change-after-reset: true
 ```
 
 ### 使用场景
@@ -427,12 +429,13 @@ INSERT INTO credential_policy_config
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      history:
-        enabled: true
-        keep-recent-count: 5
-        check-count: 5
+  security:
+    credential:
+      policy:
+        history:
+          enabled: true
+          keep-recent-count: 5
+          check-count: 5
 ```
 
 ### 环形缓冲实现
@@ -782,24 +785,26 @@ INSERT INTO credential_policy_config VALUES
 ```yaml
 # application-dev.yml - 开发环境
 ingot:
-  credential:
-    policy:
-      strength:
-        min-length: 6
-        require-special-char: false
-      expiration:
-        enabled: false
+  security:
+    credential:
+      policy:
+        strength:
+          min-length: 6
+          require-special-char: false
+        expiration:
+          enabled: false
 
 # application-prod.yml - 生产环境
 ingot:
-  credential:
-    policy:
-      strength:
-        min-length: 8
-        require-special-char: true
-      expiration:
-        enabled: true
-        max-days: 90
+  security:
+    credential:
+      policy:
+        strength:
+          min-length: 8
+          require-special-char: true
+        expiration:
+          enabled: true
+          max-days: 90
 ```
 
 ### 3. 策略迁移步骤

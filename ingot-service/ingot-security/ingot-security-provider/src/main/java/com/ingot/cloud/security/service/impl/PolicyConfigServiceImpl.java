@@ -6,18 +6,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.security.mapper.CredentialPolicyConfigMapper;
 import com.ingot.cloud.security.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.security.service.PolicyConfigService;
+import com.ingot.cloud.security.service.credential.CredentialPolicyChangedSpringEvent;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
-import com.ingot.framework.security.credential.service.ClearCredentialPolicyConfigCacheService;
-import com.ingot.framework.security.credential.service.ClearPasswordPolicyCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 策略配置服务实现
+ * 策略配置服务实现。
  *
  * @author jymot
  * @since 2026-01-22
@@ -26,13 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class PolicyConfigServiceImpl implements PolicyConfigService {
-    private final ClearCredentialPolicyConfigCacheService clearCredentialPolicyConfigCacheService;
-    private final ClearPasswordPolicyCacheService clearPasswordPolicyCacheService;
     private final CredentialPolicyConfigMapper policyConfigMapper;
     private final AssertionChecker assertionChecker;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Cacheable(value = ClearCredentialPolicyConfigCacheService.CACHE_NAME, key = "'list'", unless = "#result.isEmpty()")
     public List<CredentialPolicyConfig> getAllPolicyConfigs() {
         return policyConfigMapper.selectList(
                 Wrappers.<CredentialPolicyConfig>lambdaQuery()
@@ -49,11 +46,12 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
         config.setUpdatedAt(config.getCreatedAt());
         policyConfigMapper.insert(config);
 
-        clearCache();
+        publishChanged();
         return config;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public CredentialPolicyConfig updatePolicyConfig(CredentialPolicyConfig config) {
         assertionChecker.checkOperation(config.getId() != null, "PolicyConfigServiceImpl.IdNotNull");
         assertionChecker.checkOperation(config.getPolicyType() != null, "PolicyConfigServiceImpl.TypeNotNull");
@@ -67,11 +65,12 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
         config.setUpdatedAt(DateUtil.now());
         policyConfigMapper.updateById(config);
 
-        clearCache();
+        publishChanged();
         return config;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePolicyConfig(Long id) {
         log.info("删除策略配置 - ID: {}", id);
 
@@ -81,13 +80,10 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
             log.info("策略配置删除成功 - ID: {}", id);
         }
 
-        clearCache();
+        publishChanged();
     }
 
-    @Override
-    public void clearCache() {
-        log.info("清空所有策略缓存以及密码策略缓存");
-        clearCredentialPolicyConfigCacheService.evict();
-        clearPasswordPolicyCacheService.evict();
+    private void publishChanged() {
+        eventPublisher.publishEvent(new CredentialPolicyChangedSpringEvent(this));
     }
 }

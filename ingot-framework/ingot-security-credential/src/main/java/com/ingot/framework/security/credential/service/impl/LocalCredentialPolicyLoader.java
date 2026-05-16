@@ -4,21 +4,23 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.ingot.framework.core.config.LocalCacheConfig;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
+import com.ingot.framework.security.credential.internal.LocalCompiledPolicyCache;
 import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
 import com.ingot.framework.security.credential.policy.PasswordHistoryPolicy;
 import com.ingot.framework.security.credential.policy.PasswordPolicy;
 import com.ingot.framework.security.credential.policy.PasswordStrengthPolicy;
-import com.ingot.framework.security.credential.service.ClearPasswordPolicyCacheService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * 本地凭证策略加载器，从配置文件中加载策略
+ * 本地凭证策略加载器，从 yaml 配置文件中加载策略。
+ * <p>
+ * 编译结果通过 {@link LocalCompiledPolicyCache} 在进程内缓存；
+ * yaml 静态变更需重启进程或手动调用 {@code LocalCompiledPolicyCache.evictAll()} 才会重新生效。
+ * </p>
  *
  * @author jy
  * @since 2026/1/30
@@ -26,18 +28,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Slf4j
 @RequiredArgsConstructor
 public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
+
     private final CredentialSecurityProperties properties;
+    private final LocalCompiledPolicyCache compiledPolicyCache;
     private final PasswordEncoder passwordEncoder;
 
-    @Cacheable(
-            value = ClearPasswordPolicyCacheService.CACHE_NAME,
-            key = "'list'",
-            unless = "#result.isEmpty()",
-            cacheManager = LocalCacheConfig.CACHE_MANAGER
-    )
     @Override
     public List<PasswordPolicy> loadPolicies() {
-        return doLoadPolicies();
+        return compiledPolicyCache.get(this::doLoadPolicies);
     }
 
     /**

@@ -31,26 +31,27 @@ dependencies {
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      # 策略加载模式：local（本地配置）或 remote（远程加载）
-      mode: local  # 默认
-      
-      # 本地策略配置
-      strength:
-        enabled: true
-        min-length: 8
-        require-uppercase: true
-        require-lowercase: true
-        require-digit: true
-      
-      history:
-        enabled: true
-        check-count: 5
-      
-      expiration:
-        enabled: false
-        max-days: 90
+  security:
+    credential:
+      policy:
+        # 策略加载模式：local（本地配置）或 remote（远程加载）
+        mode: local  # 默认
+
+        # 本地策略配置
+        strength:
+          enabled: true
+          min-length: 8
+          require-uppercase: true
+          require-lowercase: true
+          require-digit: true
+
+        history:
+          enabled: true
+          check-count: 5
+
+        expiration:
+          enabled: false
+          max-days: 90
 ```
 
 ### 步骤 3：使用统一服务
@@ -117,9 +118,10 @@ public class UserService {
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: local  # 从 application.yml 加载
+  security:
+    credential:
+      policy:
+        mode: local  # 从 application.yml 加载
 ```
 
 **特点：**
@@ -143,9 +145,10 @@ ingot:
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 通过 RPC 从 Credential Service 加载
+  security:
+    credential:
+      policy:
+        mode: remote  # 通过 RPC 从 Credential Service 加载
 ```
 
 **依赖：**
@@ -345,47 +348,50 @@ public class NoOpPasswordExpirationService implements PasswordExpirationService 
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      strength:
-        enabled: true
-        min-length: 8
-        max-length: 32
-        require-uppercase: true
-        require-lowercase: true
-        require-digit: true
-        require-special-char: false
-        special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
-        forbidden-patterns:
-          - "password"
-          - "123456"
-        forbid-user-attributes: true
+  security:
+    credential:
+      policy:
+        strength:
+          enabled: true
+          min-length: 8
+          max-length: 32
+          require-uppercase: true
+          require-lowercase: true
+          require-digit: true
+          require-special-char: false
+          special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+          forbidden-patterns:
+            - "password"
+            - "123456"
+          forbid-user-attributes: true
 ```
 
 ### 密码历史策略
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      history:
-        enabled: true
-        keep-recent-count: 5  # 保留最近5次
-        check-count: 5        # 检查最近5次
+  security:
+    credential:
+      policy:
+        history:
+          enabled: true
+          keep-recent-count: 5  # 保留最近5次
+          check-count: 5        # 检查最近5次
 ```
 
 ### 密码过期策略
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      expiration:
-        enabled: true
-        max-days: 90                    # 90天过期
-        warning-days-before: 7          # 提前7天警告
-        grace-login-count: 3            # 宽限登录3次
-        force-change-after-reset: true  # 重置后强制修改
+  security:
+    credential:
+      policy:
+        expiration:
+          enabled: true
+          max-days: 90                    # 90天过期
+          warning-days-before: 7          # 提前7天警告
+          grace-login-count: 3            # 宽限登录3次
+          force-change-after-reset: true  # 重置后强制修改
 ```
 
 ---

@@ -6,21 +6,23 @@ import java.util.List;
 import java.util.Map;
 
 import com.ingot.cloud.security.api.model.vo.CredentialPolicyConfigVO;
-import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
-import com.ingot.framework.core.config.LocalCacheConfig;
+import com.ingot.framework.security.credential.internal.LocalCompiledPolicyCache;
 import com.ingot.framework.security.credential.model.CredentialPolicyType;
 import com.ingot.framework.security.credential.policy.PasswordPolicy;
 import com.ingot.framework.security.credential.policy.PasswordPolicyUtil;
-import com.ingot.framework.security.credential.service.ClearPasswordPolicyCacheService;
+import com.ingot.framework.security.credential.service.CredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * 远程凭证策略加载器
- * <p>采用双层缓存：内存缓存策略实例 + Spring Cache 缓存配置数据</p>
+ * 远程凭证策略加载器。
+ * <p>
+ * 数据获取走 {@link CredentialPolicyConfigService}（L1 Caffeine -> L2 Redis -> Feign），
+ * 编译后的策略实例只在本进程通过 {@link LocalCompiledPolicyCache} 缓存（不可序列化）。
+ * 跨节点变更通过 {@code CredentialInvalidationEvent} 同步清空。
+ * </p>
  *
  * @author jy
  * @since 2026/1/30
@@ -28,28 +30,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Slf4j
 @RequiredArgsConstructor
 public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
-    private final RemoteCredentialService remoteCredentialService;
+
+    private final CredentialPolicyConfigService policyConfigService;
+    private final LocalCompiledPolicyCache compiledPolicyCache;
     private final PasswordEncoder passwordEncoder;
 
-    @Cacheable(
-            value = ClearPasswordPolicyCacheService.CACHE_NAME,
-            key = "'list'",
-            unless = "#result.isEmpty()",
-            cacheManager = LocalCacheConfig.CACHE_MANAGER
-    )
     @Override
     public List<PasswordPolicy> loadPolicies() {
-        List<CredentialPolicyConfigVO> configs = remoteCredentialService.getPolicyConfigs()
-                .ifErrorThrow().getData();
-        return buildPolicies(configs);
+        return compiledPolicyCache.get(() -> buildPolicies(policyConfigService.getAll()));
     }
 
     /**
      * 根据配置构建策略实例
      */
     private List<PasswordPolicy> buildPolicies(List<CredentialPolicyConfigVO> configs) {
-        List<PasswordPolicy> policies = new ArrayList<>();
-
+        if (configs == null || configs.isEmpty()) {
+            return List.of();
+        }
+        List<PasswordPolicy> policies = new ArrayList<>(configs.size());
         for (CredentialPolicyConfigVO config : configs) {
             try {
                 PasswordPolicy policy = createPolicy(config);
@@ -63,8 +61,6 @@ public class RemoteCredentialPolicyLoader implements CredentialPolicyLoader {
                         config.getPolicyType(), e.getMessage(), e);
             }
         }
-
-        // 按优先级排序
         policies.sort(Comparator.comparingInt(PasswordPolicy::getPriority));
         return List.copyOf(policies);
     }

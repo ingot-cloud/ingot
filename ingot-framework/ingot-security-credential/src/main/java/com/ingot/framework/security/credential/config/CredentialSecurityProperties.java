@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2026-01-21
  */
 @Data
-@ConfigurationProperties(prefix = "ingot.credential")
+@ConfigurationProperties(prefix = "ingot.security.credential")
 public class CredentialSecurityProperties {
 
     /**

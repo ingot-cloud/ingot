@@ -358,9 +358,10 @@ dependencies {
 **配置：**
 ```yaml
 ingot:
-  credential:
-    policy:
-      mode: remote  # 使用远程模式，无需本地数据库
+  security:
+    credential:
+      policy:
+        mode: remote  # 使用远程模式，无需本地数据库
 ```
 
 **工作流程：** 通过 RPC 调用 Credential Service 校验
@@ -453,10 +454,11 @@ dependencies {
 
 ```yaml
 ingot:
-  credential:
-    policy:
-      history:
-        keep-recent-count: 5  # 推荐 5-10
+  security:
+    credential:
+      policy:
+        history:
+          keep-recent-count: 5  # 推荐 5-10
 ```
 
 - 太少：安全性不足
@@ -467,24 +469,27 @@ ingot:
 ```yaml
 # 高安全场景
 ingot:
-  credential:
-    policy:
-      expiration:
-        max-days: 60
+  security:
+    credential:
+      policy:
+        expiration:
+          max-days: 60
 
 # 普通场景
 ingot:
-  credential:
-    policy:
-      expiration:
-        max-days: 90
+  security:
+    credential:
+      policy:
+        expiration:
+          max-days: 90
 
 # C端应用
 ingot:
-  credential:
-    policy:
-      expiration:
-        enabled: false  # 不过期
+  security:
+    credential:
+      policy:
+        expiration:
+          enabled: false  # 不过期
 ```
 
 ### 3. 定期清理无效数据
