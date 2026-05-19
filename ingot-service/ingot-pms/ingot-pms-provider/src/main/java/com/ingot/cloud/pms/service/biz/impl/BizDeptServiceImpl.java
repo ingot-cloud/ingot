@@ -42,7 +42,6 @@ public class BizDeptServiceImpl implements BizDeptService {
     private final SysUserTenantService sysUserTenantService;
 
     private final TenantDeptService tenantDeptService;
-    private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
 
     private final BizRoleService bizRoleService;
@@ -235,17 +234,5 @@ public class BizDeptServiceImpl implements BizDeptService {
 
         // 删除改部门关联数据
         tenantRoleUserPrivateService.clearByDeptId(id);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void setUserDepts(long userId, List<Long> deptIds) {
-        TenantDept main = tenantDeptService.getMainDept();
-        if (main != null && CollUtil.isNotEmpty(deptIds)) {
-            deptIds.remove(main.getId());
-        }
-
-        Set<Long> temp = new HashSet<>(deptIds);
-        tenantUserDeptPrivateService.setDepartments(userId, temp);
     }
 }

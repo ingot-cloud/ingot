@@ -86,6 +86,11 @@ public interface CacheConstants {
     String TENANT_ROLE_PERMISSIONS = "role_permissions";
 
     /**
+     * 组织用户部门关联
+     */
+    String TENANT_USER_DEPTS = "user:depts";
+
+    /**
      * 授权信息
      */
     String AUTHORIZATION_DETAILS = "auth_details";

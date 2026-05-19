@@ -6,7 +6,7 @@ import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
-import com.ingot.cloud.pms.service.biz.BizUserService;
+import com.ingot.cloud.pms.service.biz.BizUserDeptService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class InnerDataScopeAPI implements RShortcuts {
     private final BizRoleService bizRoleService;
     private final BizDeptService bizDeptService;
-    private final BizUserService bizUserService;
+    private final BizUserDeptService bizUserDeptService;
 
     @PostMapping("/role/roleListByCodes")
     public R<List<RoleType>> getRoleListByCodes(@RequestBody List<String> roleCodeList) {
@@ -43,11 +43,11 @@ public class InnerDataScopeAPI implements RShortcuts {
 
     @GetMapping("/dept/userSelfAndDescendantDeptList/{userId}")
     public R<List<TenantDept>> getUserSelfAndDescendantDeptList(@PathVariable("userId") Long userId) {
-        return ok(bizUserService.getUserDescendant(userId, true));
+        return ok(bizUserDeptService.getDescendantDepts(userId, true));
     }
 
     @GetMapping("/dataScope/dept/userDeptIds/{userId}")
     R<List<Long>> getUserDeptIds(@PathVariable("userId") Long userId) {
-        return ok(bizUserService.getUserDeptIds(userId));
+        return ok(bizUserDeptService.getDeptIds(userId));
     }
 }

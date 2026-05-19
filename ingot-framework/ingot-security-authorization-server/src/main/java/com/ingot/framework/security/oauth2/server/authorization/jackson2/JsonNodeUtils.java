@@ -16,6 +16,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,6 +50,13 @@ public class JsonNodeUtils {
     static final TypeReference<Collection<? extends GrantedAuthority>> GRANTED_AUTH_COLL =
             new TypeReference<Collection<? extends GrantedAuthority>>() {
             };
+
+    static final TypeReference<Map<Long, List<Long>>> LONG_LIST_MAP = new TypeReference<>() {
+    };
+
+
+    static final TypeReference<List<Long>> LONG_LIST = new TypeReference<>() {
+    };
 
     static String findStringValue(JsonNode jsonNode, String fieldName) {
         if (jsonNode == null) {

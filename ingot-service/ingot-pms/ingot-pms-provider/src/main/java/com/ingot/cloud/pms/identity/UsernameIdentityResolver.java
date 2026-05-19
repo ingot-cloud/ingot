@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
@@ -32,6 +33,7 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
     private final BizAppService bizAppService;
     private final BizRoleService bizRoleService;
     private final BizUserService bizUserService;
+    private final BizUserDeptService bizUserDeptService;
     private final AuthContextSupport authContextSupport;
 
     @Override
@@ -51,7 +53,8 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
                     .eq(SysUser::getUsername, username));
         }
         UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), request.getTenant(),
-                sysTenantService, sysUserTenantService, bizUserService, bizAppService, bizRoleService);
+                sysTenantService, sysUserTenantService,
+                bizUserService, bizAppService, bizRoleService, bizUserDeptService);
         // 用户名/密码登录：由账号域共享工具填充认证上下文
         // - 硬过期位 credentialsNonExpired：用于阻断登录
         // - meta：锁定到期时间 / 失败计数 / 阈值 / 提示节奏，用于 Auth 侧生成友好提示

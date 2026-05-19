@@ -5,7 +5,6 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
-import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.types.RoleType;
@@ -34,23 +33,6 @@ public interface BizUserService {
      * @return {@link UserPageItemWithBindRoleStatusVO}
      */
     IPage<UserPageItemWithBindRoleStatusVO> conditionPageWithRole(Page<SysUser> page, UserQueryDTO condition, Long orgId, Long roleId);
-
-    /**
-     * 获取用户所在部门ID列表
-     *
-     * @param userId 用户ID
-     * @return 部门ID列表
-     */
-    List<Long> getUserDeptIds(long userId);
-
-    /**
-     * 获取用户所在部门的所有子部门
-     *
-     * @param userId      用户ID
-     * @param includeSelf 是否包含当前部门
-     * @return 部门列表
-     */
-    List<TenantDept> getUserDescendant(long userId, boolean includeSelf);
 
     /**
      * 获取用户绑定的所有角色

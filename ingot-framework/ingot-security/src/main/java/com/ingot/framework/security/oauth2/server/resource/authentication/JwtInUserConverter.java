@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.resource.authentication;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.map.MapUtil;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineToken;
@@ -74,7 +75,9 @@ public class JwtInUserConverter implements Converter<Jwt, InUser> {
                 onlineToken.getAuthType(),
                 onlineToken.getUserType(),
                 username,
-                authorities
+                authorities,
+                onlineToken.getDeptIds(),
+                MapUtil.empty()
         );
     }
 
@@ -89,7 +92,8 @@ public class JwtInUserConverter implements Converter<Jwt, InUser> {
 
         log.warn("[JwtInUserConverter] Using fallback mode with JWT-only claims");
 
-        return InUser.stateless(id, tenantId, clientId, authType, userType, username, authorities);
+        return InUser.stateless(id, tenantId, clientId, authType, userType, username, authorities,
+                List.of(), MapUtil.empty());
     }
 
     /**

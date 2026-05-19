@@ -6,9 +6,13 @@ import java.util.List;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.TenantUserDeptPrivate;
+import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.mapper.TenantUserDeptPrivateMapper;
 import com.ingot.cloud.pms.service.domain.TenantUserDeptPrivateService;
+import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,7 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConstants.TENANT_USER_DEPTS, key = CacheKey.UserKey)
     public void setDepartments(long userId, Collection<Long> deptIds) {
         // 先清空部门
         remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
@@ -54,6 +59,7 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConstants.TENANT_USER_DEPTS, key = CacheKey.UserKey)
     public List<Long> getUserDepartmentIds(long userId) {
         return CollUtil.emptyIfNull(list(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
                         .eq(TenantUserDeptPrivate::getUserId, userId)))
@@ -63,12 +69,14 @@ public class TenantUserDeptPrivateServiceImpl extends BaseServiceImpl<TenantUser
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConstants.TENANT_USER_DEPTS, key = CacheKey.UserKey)
     public void clearByUserId(long userId) {
         remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
                 .eq(TenantUserDeptPrivate::getUserId, userId));
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConstants.TENANT_USER_DEPTS, allEntries = true)
     public void clearByTenantId(long tenantId) {
         remove(Wrappers.<TenantUserDeptPrivate>lambdaQuery()
                 .eq(TenantUserDeptPrivate::getTenantId, tenantId));

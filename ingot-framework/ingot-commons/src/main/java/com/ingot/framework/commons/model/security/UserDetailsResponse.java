@@ -75,4 +75,15 @@ public class UserDetailsResponse implements Serializable {
      * 可以访问的租户列表
      */
     private List<TenantMainDTO> allows;
+    /**
+     * 当前登录租户下用户所属部门 ID 列表。
+     * <p>仅当 {@link #tenant} 不为空时填充；为空时见 {@link #tenantDeptIds}。</p>
+     */
+    private List<Long> deptIds;
+    /**
+     * 各可访问租户下用户的部门 ID 列表（key=tenantId, value=该租户下的 dept_id 列表）。
+     * <p>仅当未指定登录租户（{@link #tenant} 为 null）时填充，等价于 {@link #scopes} 在未知租户场景把所有租户的 scope 串成扁平集合的逻辑。
+     * pre_authorization_code 选定租户后由 Auth 端切片消费，最终落地到 {@link #deptIds}。</p>
+     */
+    private Map<Long, List<Long>> tenantDeptIds;
 }

@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.identity;
 
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
@@ -31,6 +32,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
     private final BizAppService bizAppService;
     private final BizRoleService bizRoleService;
     private final BizUserService bizUserService;
+    private final BizUserDeptService bizUserDeptService;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -45,7 +47,8 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             String uniqueID = userSocialService.getUniqueID(socialType, socialCode);
             return IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
                     request.getUserType(), request.getTenant(),
-                    sysTenantService, sysUserTenantService, bizUserService, bizAppService, bizRoleService);
+                    sysTenantService, sysUserTenantService,
+                    bizUserService, bizAppService, bizRoleService, bizUserDeptService);
         });
     }
 }

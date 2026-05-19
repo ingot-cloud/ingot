@@ -85,12 +85,4 @@ public interface BizDeptService {
      * @param id 删除部门
      */
     void orgDeleteDept(long id);
-
-    /**
-     * 设置用户部门
-     *
-     * @param userId  用户ID
-     * @param deptIds 待设置的部门，非主要部门
-     */
-    void setUserDepts(long userId, List<Long> deptIds);
 }

@@ -58,6 +58,15 @@ public class InUser extends User implements InUserDetails {
      */
     @Getter(onMethod_ = @JsonIgnore)
     private final Map<String, Object> meta;
+    /**
+     * 当前登录租户下用户所属部门 ID 列表
+     */
+    private final List<Long> deptIds;
+    /**
+     * 各可访问租户下用户的部门 ID 列表（key=tenantId）。
+     * <p>仅在"未知租户登录 → pre_authorization_code 选定租户"短链路中存在，落 OnlineToken / JWT 时为 null。</p>
+     */
+    private final Map<Long, List<Long>> tenantDeptIds;
 
     @JsonCreator
     public InUser(Long id,
@@ -72,7 +81,9 @@ public class InUser extends User implements InUserDetails {
                   boolean credentialsNonExpired,
                   boolean accountNonLocked,
                   Collection<? extends GrantedAuthority> authorities,
-                  Map<String, Object> meta) {
+                  Map<String, Object> meta,
+                  List<Long> deptIds,
+                  Map<Long, List<Long>> tenantDeptIds) {
         super(username, password, enabled,
                 accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
@@ -81,6 +92,8 @@ public class InUser extends User implements InUserDetails {
         this.clientId = clientId;
         this.userType = userType;
         this.meta = meta;
+        this.deptIds = deptIds;
+        this.tenantDeptIds = tenantDeptIds;
     }
 
     /**
@@ -196,54 +209,27 @@ public class InUser extends User implements InUserDetails {
      */
     public static InUser stateless(Long id, Long tenantId, String clientId,
                                    String tokenAuthType, String userType, String username,
-                                   Collection<? extends GrantedAuthority> authorities) {
+                                   Collection<? extends GrantedAuthority> authorities,
+                                   List<Long> deptIds, Map<Long, List<Long>> tenantDeptIds) {
         return standard(id, tenantId, clientId, tokenAuthType, userType, username, N_A,
                 true, true, true, true,
-                authorities, null);
+                authorities, null, deptIds, tenantDeptIds);
     }
 
     /**
-     * 无客户端信息({@link #clientId}, {@link #tokenAuthType})，
-     * 如果可以访问的租户列表中存在主要租户，那么将TenantId设置为主要租户
-     *
-     * @return {@link InUser}
+     * 登录态构造：附带当前租户的部门 ID 列表，以及未知租户场景下的"按租户分组的部门"映射
      */
-    public static InUser userDetails(Long id, String userType, Long defaultTenant,
-                                     String username, String password,
-                                     boolean enabled, boolean accountNonExpired,
-                                     boolean credentialsNonExpired, boolean accountNonLocked,
-                                     Collection<? extends GrantedAuthority> authorities) {
-        return standard(id, defaultTenant, N_A, N_A, userType, username, password,
-                enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, null);
-    }
-
     public static InUser userDetails(Long id, String userType, Long defaultTenant,
                                      String username, String password,
                                      boolean enabled, boolean accountNonExpired,
                                      boolean credentialsNonExpired, boolean accountNonLocked,
                                      Collection<? extends GrantedAuthority> authorities,
-                                     Map<String, Object> meta) {
+                                     Map<String, Object> meta,
+                                     List<Long> deptIds,
+                                     Map<Long, List<Long>> tenantDeptIds) {
         return standard(id, defaultTenant, N_A, N_A, userType, username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, meta);
-    }
-
-    /**
-     * 标准实例化
-     *
-     * @return {@link InUser}
-     */
-    public static InUser standard(Long id, Long tenantId, String clientId,
-                                  String tokenAuthType, String userType,
-                                  String username, String password,
-                                  boolean enabled, boolean accountNonExpired,
-                                  boolean credentialsNonExpired, boolean accountNonLocked,
-                                  Collection<? extends GrantedAuthority> authorities) {
-        return new InUser(id, tenantId, clientId, tokenAuthType, userType,
-                username, password,
-                enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, null);
+                authorities, meta, deptIds, tenantDeptIds);
     }
 
     public static InUser standard(Long id, Long tenantId, String clientId,
@@ -252,11 +238,13 @@ public class InUser extends User implements InUserDetails {
                                   boolean enabled, boolean accountNonExpired,
                                   boolean credentialsNonExpired, boolean accountNonLocked,
                                   Collection<? extends GrantedAuthority> authorities,
-                                  Map<String, Object> meta) {
+                                  Map<String, Object> meta,
+                                  List<Long> deptIds,
+                                  Map<Long, List<Long>> tenantDeptIds) {
         return new InUser(id, tenantId, clientId, tokenAuthType, userType,
                 username, password,
                 enabled, accountNonExpired, credentialsNonExpired, accountNonLocked,
-                authorities, meta);
+                authorities, meta, deptIds, tenantDeptIds);
     }
 
     public Builder toBuilder() {
@@ -322,6 +310,8 @@ public class InUser extends User implements InUserDetails {
         private String tokenAuthType;
         private String userType;
         private Map<String, Object> meta;
+        private List<Long> deptIds;
+        private Map<Long, List<Long>> tenantDeptIds;
 
         private Builder(InUser user) {
             this.password = user.getPassword();
@@ -338,6 +328,8 @@ public class InUser extends User implements InUserDetails {
             this.tokenAuthType = user.getTokenAuthType();
             this.userType = user.getUserType();
             this.meta = user.meta;
+            this.deptIds = user.deptIds;
+            this.tenantDeptIds = user.tenantDeptIds;
         }
 
         public Builder tenantId(Long id) {
@@ -365,12 +357,22 @@ public class InUser extends User implements InUserDetails {
             return this;
         }
 
+        public Builder deptIds(List<Long> deptIds) {
+            this.deptIds = deptIds;
+            return this;
+        }
+
+        public Builder tenantDeptIds(Map<Long, List<Long>> tenantDeptIds) {
+            this.tenantDeptIds = tenantDeptIds;
+            return this;
+        }
+
         public InUser build() {
             return InUser.standard(this.id, this.tenantId, this.clientId, this.tokenAuthType,
                     this.userType,
                     this.username, this.password,
                     this.enabled, this.accountNonExpired, this.credentialsNonExpired, this.accountNonLocked,
-                    this.authorities, this.meta);
+                    this.authorities, this.meta, this.deptIds, this.tenantDeptIds);
         }
     }
 }

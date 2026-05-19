@@ -94,12 +94,10 @@ public class DataScopeAOP {
                             });
                     break;
                 case DEPT:
-                    dataScopeService.getUserDeptIds(user.getId())
-                            .ifSuccess(deptIds -> {
-                                if (CollUtil.isNotEmpty(deptIds)) {
-                                    scopes.addAll(deptIds);
-                                }
-                            });
+                    List<Long> deptIds = user.getDeptIds();
+                    if (CollUtil.isNotEmpty(deptIds)) {
+                        scopes.addAll(deptIds);
+                    }
                     break;
                 case SELF:
                     DataScopeContextHolder.setUserScope(user.getId());

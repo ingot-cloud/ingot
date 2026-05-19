@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,6 +70,13 @@ public class OnlineToken implements Serializable {
 	 * 权限列表
 	 */
 	private Set<String> authorities;
+
+	/**
+	 * 当前登录租户下用户所属部门 ID 列表
+	 * <p>语义对齐 {@link #authorities}：仅存"已切片到当前租户"的形态；
+	 * pre_authorization_code 切租户后由 {@code RedisOnlineTokenService.save} 重新落地。</p>
+	 */
+	private List<Long> deptIds;
 
 	/**
 	 * 其他扩展属性

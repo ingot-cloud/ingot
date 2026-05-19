@@ -2,6 +2,8 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,9 +49,16 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
             Long tenant = NumberUtil.parseLong(
                     String.valueOf(preAuthToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT)),
                     user.getTenantId());
+            // 切租户：从未知租户登录时缓存的 tenantDeptIds 中切片当前租户的部门列表，
+            // 若 map 不存在或没有命中则回退到原 user.deptIds（已知租户场景）
+            List<Long> pickedDeptIds = Optional.ofNullable(user.getTenantDeptIds())
+                    .map(m -> m.get(tenant))
+                    .orElseGet(user::getDeptIds);
             customizeWithUser(context,
                     user.toBuilder()
                             .tenantId(tenant)
+                            .deptIds(pickedDeptIds)
+                            .tenantDeptIds(null)
                             .build());
         }
     }

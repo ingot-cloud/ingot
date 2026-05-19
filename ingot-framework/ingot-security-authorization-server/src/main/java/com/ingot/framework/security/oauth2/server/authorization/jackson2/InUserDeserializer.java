@@ -2,6 +2,8 @@ package com.ingot.framework.security.oauth2.server.authorization.jackson2;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -15,7 +17,7 @@ import com.ingot.framework.security.core.userdetails.InUserFieldNames;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 
-import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.GRANTED_AUTH_COLL;
+import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.*;
 
 /**
  * <p>Description  : {@link InUser} Deserializer.</p>
@@ -47,6 +49,12 @@ final class InUserDeserializer extends JsonDeserializer<InUser> {
         Collection<? extends GrantedAuthority> authorities = JsonNodeUtils.findValue(
                 root, InUserFieldNames.AUTHORITIES, GRANTED_AUTH_COLL, mapper);
 
-        return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities);
+        List<Long> deptList = JsonNodeUtils.findValue(
+                root, InUserFieldNames.DEPT_IDS, LONG_LIST, mapper);
+        Map<Long, List<Long>> tenantDeptsList = JsonNodeUtils.findValue(
+                root, InUserFieldNames.TENANT_DEPT_IDS, LONG_LIST_MAP, mapper);
+
+        return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities,
+                deptList, tenantDeptsList);
     }
 }

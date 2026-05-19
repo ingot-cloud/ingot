@@ -67,6 +67,8 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         Set<String> authorities = new HashSet<>(InAuthorityUtils.authorityListToSet(
                 user.getAuthorities(), user.getTenantId()
         ));
+        // 当前登录租户下的部门 ID 列表（user.deptIds 已是切片后的形态，等同 authorities 的处理方式）
+        List<Long> deptIds = user.getDeptIds() == null ? List.of() : List.copyOf(user.getDeptIds());
 
         // 提取登录信息（IP、User-Agent等）
         // 注意：传入 null，LoginInfoExtractor 会自动从 Spring RequestContextHolder 获取
@@ -82,6 +84,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
                 .authType(user.getTokenAuthType())
                 .userType(user.getUserType())
                 .authorities(authorities)
+                .deptIds(deptIds)
                 .issuedAt(Instant.now())
                 .expiresAt(expiresAt)
                 // 登录信息

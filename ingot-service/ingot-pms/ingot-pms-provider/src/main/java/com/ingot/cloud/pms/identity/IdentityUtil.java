@@ -1,7 +1,9 @@
 package com.ingot.cloud.pms.identity;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +20,7 @@ import com.ingot.cloud.pms.api.model.types.UserTenantType;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
@@ -48,6 +51,7 @@ public class IdentityUtil {
      * @param bizUserService       用户服务
      * @param bizAppService        应用服务
      * @param bizRoleService       角色服务
+     * @param bizUserDeptService   用户部门服务
      * @return 用户信息
      */
     public static UserDetailsResponse map(SysUser user,
@@ -57,7 +61,8 @@ public class IdentityUtil {
                                           SysUserTenantService sysUserTenantService,
                                           BizUserService bizUserService,
                                           BizAppService bizAppService,
-                                          BizRoleService bizRoleService) {
+                                          BizRoleService bizRoleService,
+                                          BizUserDeptService bizUserDeptService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<TenantMainDTO> allows = getAllowTenants(user, sysTenantService, sysUserTenantService);
@@ -92,21 +97,31 @@ public class IdentityUtil {
                         return result;
                     }
 
-                    // 确认登录的租户不为空，那么查询用户在当前租户下的Scope
+                    // 确认登录的租户不为空，那么查询用户在当前租户下的 Scope 与部门
                     if (tenant != null) {
                         scopes.addAll(getScopes(tenant, user, bizUserService, bizAppService, bizRoleService));
+                        result.setDeptIds(getUserDeptIds(user, bizUserDeptService));
                     } else {
-                        scopes.addAll(allows.stream()
-                                .flatMap(org ->
-                                        TenantEnv.applyAs(Long.parseLong(org.getId()),
-                                                        () -> getScopes(Long.parseLong(org.getId()), user,
-                                                                bizUserService, bizAppService, bizRoleService))
-                                                .stream())
-                                .toList());
+                        // 未指定租户：把所有 allow 租户的 scope 串扁平，部门按租户聚合到 Map
+                        Map<Long, List<Long>> tenantDeptIds = new LinkedHashMap<>();
+                        for (TenantMainDTO org : allows) {
+                            Long t = Long.parseLong(org.getId());
+                            List<Long> deptIds = TenantEnv.applyAs(t, () -> {
+                                scopes.addAll(getScopes(t, user, bizUserService, bizAppService, bizRoleService));
+                                return getUserDeptIds(user, bizUserDeptService);
+                            });
+                            tenantDeptIds.put(t, deptIds);
+                        }
+                        result.setTenantDeptIds(tenantDeptIds);
                     }
                     result.setScopes(scopes);
                     return result;
                 }).orElse(null));
+    }
+
+    private static List<Long> getUserDeptIds(SysUser user, BizUserDeptService bizUserDeptService) {
+        List<Long> deptIds = bizUserDeptService.getDeptIds(user.getId());
+        return deptIds == null ? List.of() : deptIds;
     }
 
     private static List<TenantMainDTO> getAllowTenants(SysUser user,

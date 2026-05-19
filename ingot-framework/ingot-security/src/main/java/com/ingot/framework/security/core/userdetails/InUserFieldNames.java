@@ -15,4 +15,6 @@ public interface InUserFieldNames {
     String USER_TYPE = "userType";
     String USERNAME = "username";
     String AUTHORITIES = "authorities";
+    String DEPT_IDS = "deptIds";
+    String TENANT_DEPT_IDS = "tenantDeptIds";
 }

@@ -64,7 +64,8 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                     return InUser.userDetails(data.getId(), data.getUserType(), data.getTenant(),
                             data.getUsername(), data.getPassword(),
                             enabled, true, credentialsNonExpired, nonLocked, authorities,
-                            data.getMeta());
+                            data.getMeta(),
+                            data.getDeptIds(), data.getTenantDeptIds());
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }

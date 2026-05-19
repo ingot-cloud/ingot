@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -24,8 +23,8 @@ import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
 import com.ingot.cloud.pms.core.BizRoleUtils;
-import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.service.biz.BizUserDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.biz.UserOpsChecker;
 import com.ingot.cloud.pms.service.domain.*;
@@ -66,9 +65,8 @@ public class BizUserServiceImpl implements BizUserService {
     private final PlatformRoleService platformRoleService;
     private final TenantRolePrivateService tenantRolePrivateService;
     private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
-    private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
     private final BizRoleService bizRoleService;
-    private final BizDeptService bizDeptService;
+    private final BizUserDeptService bizUserDeptService;
 
     private final ChangePasswordUseCase changePasswordUseCase;
     private final ManageAccountStatusUseCase manageAccountStatusUseCase;
@@ -93,23 +91,6 @@ public class BizUserServiceImpl implements BizUserService {
             vo.setCanBind(userIds.stream().noneMatch(id -> Objects.equals(id, item.getUserId())));
             return vo;
         });
-    }
-
-    @Override
-    public List<Long> getUserDeptIds(long userId) {
-        return CollUtil.emptyIfNull(tenantUserDeptPrivateService.getUserDepartmentIds(userId));
-    }
-
-    @Override
-    public List<TenantDept> getUserDescendant(long userId, boolean includeSelf) {
-        List<Long> deptIds = getUserDeptIds(userId);
-        if (CollUtil.isEmpty(deptIds)) {
-            return ListUtil.empty();
-        }
-
-        return deptIds.stream()
-                .flatMap(deptId -> bizDeptService.getDescendantList(deptId, includeSelf).stream())
-                .toList();
     }
 
     @Override
@@ -229,7 +210,7 @@ public class BizUserServiceImpl implements BizUserService {
                 Wrappers.<SysUserTenant>lambdaQuery().eq(SysUserTenant::getUserId, id));
 
         // 取消关联部门
-        tenantUserDeptPrivateService.setDepartments(id, null);
+        bizUserDeptService.clear(id);
 
         sysUserService.delete(id);
     }
@@ -261,7 +242,7 @@ public class BizUserServiceImpl implements BizUserService {
             SysTenant tenant = sysTenantService.getById(params.getOrgId());
 
             sysUserTenantService.joinTenant(userId, tenant);
-            bizDeptService.setUserDepts(userId, params.getDeptIds());
+            bizUserDeptService.setDepts(userId, params.getDeptIds());
 
             // 直接给组织人员配置角色，不能配置部门角色
             if (CollUtil.isNotEmpty(roleIds)) {
@@ -289,7 +270,7 @@ public class BizUserServiceImpl implements BizUserService {
             long userId = params.getId();
             sysUserTenantService.leaveTenant(userId);
             // 取消关联部门
-            tenantUserDeptPrivateService.clearByUserId(userId);
+            bizUserDeptService.clear(userId);
             // 取消关联角色
             tenantRoleUserPrivateService.clearByUserId(userId);
         });
@@ -303,7 +284,7 @@ public class BizUserServiceImpl implements BizUserService {
                     UserOrgInfoVO item = new UserOrgInfoVO();
                     item.setOrgId(org.getTenantId());
 
-                    List<Long> deptIds = getUserDeptIds(userId);
+                    List<Long> deptIds = bizUserDeptService.getDeptIds(userId);
                     item.setDeptIds(deptIds);
 
                     List<Long> roleIds = CollUtil.emptyIfNull(getUserRoles(userId))
@@ -321,7 +302,7 @@ public class BizUserServiceImpl implements BizUserService {
         assert user != null;
 
         OrgUserProfileVO profile = userConvert.toOrgUserProfile(user);
-        profile.setDeptIds(getUserDeptIds(id));
+        profile.setDeptIds(bizUserDeptService.getDeptIds(id));
         return profile;
     }
 
@@ -348,7 +329,7 @@ public class BizUserServiceImpl implements BizUserService {
         SysTenant tenant = sysTenantService.getById(TenantContextHolder.get());
         sysUserTenantService.joinTenant(user.getId(), tenant);
         // 设置部门
-        bizDeptService.setUserDepts(user.getId(), params.getDeptIds());
+        bizUserDeptService.setDepts(user.getId(), params.getDeptIds());
     }
 
     @Override
@@ -362,7 +343,7 @@ public class BizUserServiceImpl implements BizUserService {
 
         if (CollUtil.isNotEmpty(params.getDeptIds())) {
             // 更新部门
-            bizDeptService.setUserDepts(user.getId(), params.getDeptIds());
+            bizUserDeptService.setDepts(user.getId(), params.getDeptIds());
         }
     }
 
@@ -382,7 +363,7 @@ public class BizUserServiceImpl implements BizUserService {
         // 取消关联组织
         sysUserTenantService.leaveTenant(id);
         // 取消关联部门
-        tenantUserDeptPrivateService.clearByUserId(id);
+        bizUserDeptService.clear(id);
         // 取消关联角色
         tenantRoleUserPrivateService.clearByUserId(id);
     }

@@ -21,4 +21,8 @@ public interface CacheKey {
     String ListKey = "'list'";
     String ItemKey = "'item-' + #id";
     String CodeKey = "'code-' + #code";
+    /**
+     * 用户维度缓存Key，要求方法签名包含名为 {@code userId} 的入参
+     */
+    String UserKey = "'user-' + #userId";
 }
