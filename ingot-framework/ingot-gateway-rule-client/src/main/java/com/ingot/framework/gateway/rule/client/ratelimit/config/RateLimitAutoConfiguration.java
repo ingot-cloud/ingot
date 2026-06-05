@@ -9,6 +9,7 @@ import com.ingot.framework.gateway.rule.client.ratelimit.internal.RemoteRateLimi
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -75,10 +76,10 @@ public class RateLimitAutoConfiguration {
     @RequiredArgsConstructor
     static class CoordinatorRegistrar {
 
-        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        @Autowired(required = false)
         private SecurityPolicyCacheCoordinator coordinator;
 
-        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        @Autowired(required = false)
         private RateLimitRuleService rateLimitRuleService;
 
         @PostConstruct
