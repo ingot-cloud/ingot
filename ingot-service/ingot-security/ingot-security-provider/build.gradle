@@ -16,6 +16,7 @@ dependencies {
     implementation project(ingot.framework_openapi)
     implementation project(ingot.framework_security_credential)
     implementation project(ingot.framework_data_redis)
+    implementation project(ingot.framework_event_bus)
 
     implementation project(ingot.security_api)
 }

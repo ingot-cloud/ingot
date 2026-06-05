@@ -32,6 +32,7 @@ ingot.framework_account_adapter = ":ingot-framework:ingot-account-domain:ingot-a
 ingot.framework_account_web_support = ":ingot-framework:ingot-account-domain:ingot-account-web-support"
 ingot.framework_dict_client = ":ingot-framework:ingot-dict-client"
 ingot.framework_event_bus = ":ingot-framework:ingot-event-bus"
+ingot.framework_gateway_rule_client = ":ingot-framework:ingot-gateway-rule-client"
 
 // service api
 ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"

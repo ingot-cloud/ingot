@@ -9,6 +9,7 @@ import com.ingot.framework.commons.constants.BffConstants;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.commons.constants.SecurityConstants;
+import com.ingot.cloud.gateway.filter.GatewayFilterOrders;
 import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
@@ -48,8 +49,8 @@ import reactor.core.publisher.Mono;
  *
  * @author jy
  * @implNote 使用 {@link ReactiveStringRedisTemplate} 异步查询 Redis，
- * 不阻塞 Gateway 的 Reactor 事件循环。Order 设为 {@code HIGHEST_PRECEDENCE + 10}，
- * 确保在 {@code RequestGlobalFilter} 之后执行。
+ * 不阻塞 Gateway 的 Reactor 事件循环。Order 为 {@link GatewayFilterOrders#SESSION_RELAY}，
+ * 确保在 {@code RequestGlobalFilter} 之后、{@code filter.auth.AuthContextRelayFilter} 之前执行。
  * @see BffSession
  * @see FingerprintUtil
  * @see CacheConstants#bffSessionKey(String)
@@ -127,7 +128,7 @@ public class SessionTokenRelayFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 10;
+        return GatewayFilterOrders.SESSION_RELAY;
     }
 
     private boolean isWhitelisted(String path) {

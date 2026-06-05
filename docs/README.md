@@ -89,16 +89,20 @@
 - [字典使用指南](./dict/USAGE.md)
 - [字典 API / RPC / 配置参考](./dict/API-REFERENCE.md)
 
-#### 4.4 社交模块（InvalidationBus 与字典共用约定）
+#### 4.4 安全策略中心（网关限流 / 黑白名单 / 挑战 / VC 动态配置）
+- **[网关限流与安全策略执行面](./security-center/GATEWAY-RATE-LIMIT.md)**
+- [端到端验证用例](../test-case/security-policy-e2e.md)
+
+#### 4.5 社交模块（InvalidationBus 与字典共用约定）
 - [社交文档索引](./social/README.md)
 
-#### 4.5 部署相关
+#### 4.6 部署相关
 - [Docker 多环境部署](./DOCKER-MULTI-ENVIRONMENT.md)
 - [Dockerfile 多环境配置](./DOCKERFILE-MULTI-ENV.md)
 - [Dockerfile 迁移指南](./DOCKERFILE-MIGRATION-GUIDE.md)
 - [环境变量说明](./ENV-INSTRUCTIONS.md)
 
-#### 4.6 升级指南
+#### 4.7 升级指南
 - [Spring Framework 6.x 升级](./Upgrading-to-Spring-Framework-6.x.md)
 - [开发路线图](./ROADMAP.md)
 

@@ -30,4 +30,21 @@ public interface HeaderConstants {
      * 确保同一请求在任何位置获取到的客户端 IP 一致。
      */
     String CLIENT_REAL_IP = "X-Client-Real-IP";
+
+    /**
+     * 当前请求用户 ID（网关内部 Header）。
+     * <p>由网关 IdentityResolveFilter 从 exchange attribute 回填，供 Sentinel USER 维度限流；
+     * 外部传入会在 RequestGlobalFilter 入口剥离。</p>
+     */
+    String X_USER_ID = "X-User-Id";
+
+    /**
+     * 仅允许网关链路写入的内部 Header；RequestGlobalFilter 入口统一 remove，
+     * 后续 Filter 按需 set。
+     */
+    String[] GATEWAY_INTERNAL_HEADERS = {
+            SECURITY_FROM,
+            CLIENT_REAL_IP,
+            X_USER_ID,
+    };
 }

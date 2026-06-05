@@ -1,0 +1,4 @@
+com.ingot.framework.gateway.rule.client.config.GatewayRuleClientAutoConfiguration
+com.ingot.framework.gateway.rule.client.ratelimit.config.RateLimitAutoConfiguration
+com.ingot.framework.gateway.rule.client.blacklist.config.BlacklistAutoConfiguration
+com.ingot.framework.gateway.rule.client.challenge.config.ChallengeAutoConfiguration

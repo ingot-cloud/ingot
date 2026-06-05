@@ -63,6 +63,8 @@ include 'ingot-framework:ingot-dict-client'
 findProject(':ingot-framework:ingot-dict-client')?.name = 'ingot-dict-client'
 include 'ingot-framework:ingot-event-bus'
 findProject(':ingot-framework:ingot-event-bus')?.name = 'ingot-event-bus'
+include 'ingot-framework:ingot-gateway-rule-client'
+findProject(':ingot-framework:ingot-gateway-rule-client')?.name = 'ingot-gateway-rule-client'
 
 // Cloud service
 include 'ingot-service:ingot-gateway'

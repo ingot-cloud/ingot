@@ -1,0 +1,16 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api project(ingot.framework_event_bus)
+    api project(ingot.security_api)
+
+    implementation project(ingot.framework_commons)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_context)
+    implementation(deps.caffeine)
+
+    compileOnly(deps.spring.spring_cloud.openfeign_starter)
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
+    compileOnly(deps.jackson.annotation)
+    compileOnly(deps.jackson.data_bind)
+}

@@ -99,6 +99,18 @@ public interface VCConstants {
      * 请求参数，验证码
      */
     String QUERY_PARAMS_CODE = "_vc_code";
+    /**
+     * 请求参数，挑战通过后下发的临时通行令牌（PassToken）。
+     *
+     * <p>由网关 ChallengeFilter 在限流命中后 / 强制挑战时下发，验证码校验成功后通过
+     * 此查询参数携带，下次同一 scope 内的请求可在 TTL 内免再次挑战。</p>
+     */
+    String QUERY_PARAMS_PASS_TOKEN = "_vc_pass_token";
+
+    /**
+     * 请求参数，412 挑战响应中的 scope，验码时回传以便签发 PassToken。
+     */
+    String QUERY_PARAMS_SCOPE = "_vc_scope";
 
     /**
      * 验证码类型
