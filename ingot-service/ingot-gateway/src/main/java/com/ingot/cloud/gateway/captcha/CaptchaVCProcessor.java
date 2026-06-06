@@ -17,6 +17,8 @@ import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProcessor;
 import com.ingot.framework.vc.module.reactive.ReactorUtils;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import com.ingot.cloud.gateway.security.PassTokenStore;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -32,25 +34,46 @@ import java.util.Map;
 /**
  * 网关 Captcha 处理器：保留原有登录验码逻辑，并在风控挑战场景下签发 PassToken。
  *
- * <p>当 {@code POST /vc/image/check?_vc_scope=...} 且挑战域开启时，验码成功后响应
- * {@code data._vc_pass_token}，供业务请求重试携带。</p>
+ * <p>注册为 VC 路由 {@code image}（bean 名 {@link VCConstants#BEAN_NAME_PROCESSOR_IMAGE}）。
+ * 当 {@code POST /vc/image/check?_vc_scope=...} 且挑战域开启时，验码成功后响应
+ * {@code data._vc_pass_token}，供业务请求重试携带 {@link VCConstants#QUERY_PARAMS_PASS_TOKEN}。</p>
+ *
+ * <h3>与挑战策略联动</h3>
+ * <ul>
+ *     <li>412 响应体中的 {@code vcType} 映射到 VC 路由（见 {@link com.ingot.framework.gateway.rule.client.challenge.internal.ChallengeTypes}）</li>
+ *     <li>PassToken 写入 Redis（{@link PassTokenStore}），scope 须与挑战策略 {@code scope} 一致</li>
+ * </ul>
+ *
+ * <h3>相关配置</h3>
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     challenge:
+ *       enabled: true
+ *       policy:
+ *         policies:
+ *           - challenge-type: SLIDER
+ *             scope: e2e-anon
+ *             pass-token-ttl-sec: 300
+ *             pass-token-remaining: 3
+ * }</pre>
+ *
+ * @author jy
+ * @since 2026/5/26
  */
 @Component(VCConstants.BEAN_NAME_PROCESSOR_IMAGE)
+@RequiredArgsConstructor
 public class CaptchaVCProcessor implements VCProcessor {
     private static final String TOKEN_ENDPOINT = "/auth" + SecurityConstants.TOKEN_ENDPOINT_URI;
     private static final String TOKEN_PRE_AUTHORIZE = "/auth" + SecurityConstants.PRE_AUTHORIZE_URI;
-    private final DefaultCaptchaVCProcessor defaultCaptchaVCProcessor;
     private final CaptchaService captchaService;
     private final ObjectProvider<ChallengePolicyService> challengeProvider;
     private final PassTokenStore passTokenStore;
+    private DefaultCaptchaVCProcessor defaultCaptchaVCProcessor;
 
-    public CaptchaVCProcessor(CaptchaService captchaService,
-                              ObjectProvider<ChallengePolicyService> challengeProvider,
-                              PassTokenStore passTokenStore) {
-        this.captchaService = captchaService;
-        this.defaultCaptchaVCProcessor = new DefaultCaptchaVCProcessor(captchaService);
-        this.challengeProvider = challengeProvider;
-        this.passTokenStore = passTokenStore;
+    @PostConstruct
+    void init() {
+        defaultCaptchaVCProcessor = new DefaultCaptchaVCProcessor(captchaService);
     }
 
     @Override

@@ -2,6 +2,10 @@ package com.ingot.framework.gateway.rule.client.blacklist.model;
 
 import java.util.Locale;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
+
 /**
  * 黑白名单匹配维度。
  *
@@ -21,6 +25,9 @@ import java.util.Locale;
  * @author jy
  * @since 2026/5/26
  */
+@Getter
+@RequiredArgsConstructor
+@Accessors(fluent = true)
 public enum IpKeyType {
 
     IP("IP"),
@@ -31,15 +38,6 @@ public enum IpKeyType {
     REFERER("RF");
 
     private final String dbCode;
-
-    IpKeyType(String dbCode) {
-        this.dbCode = dbCode;
-    }
-
-    /** DB 字段 {@code char(2)} 短码。 */
-    public String dbCode() {
-        return dbCode;
-    }
 
     /**
      * 解析维度字符串，同时兼容 DB 短码与枚举全名。

@@ -52,7 +52,6 @@ public class InnerSecurityPolicyAPI implements RShortcuts {
             RateLimitRuleVO v = new RateLimitRuleVO();
             BeanUtils.copyProperties(e, v);
             v.setEnabled(Boolean.TRUE.equals(e.getEnabled()));
-            v.setDryRun(Boolean.TRUE.equals(e.getDryRun()));
             v.setQps(orZero(e.getQps()));
             v.setBurst(orZero(e.getBurst()));
             v.setIntervalSec(orZero(e.getIntervalSec()));

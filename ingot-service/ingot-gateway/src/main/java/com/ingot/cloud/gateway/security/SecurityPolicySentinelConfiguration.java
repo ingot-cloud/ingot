@@ -24,6 +24,10 @@ import org.springframework.context.annotation.Configuration;
  * {@code SentinelSCGAutoConfiguration} 的同名 Bean（后者带
  * {@code @ConditionalOnMissingBean}，检测到已存在则跳过）。</p>
  *
+ * <p>限流拒绝后的 429 / 412 / 升级封禁由 {@link SentinelBlockHandler} 处理；
+ * 规则编译见 {@link SentinelGatewayConfiguration}（须
+ * {@code ingot.security.ratelimit.enabled=true}）。</p>
+ *
  * <h3>等效 yaml（仅供参考，通常无需手写）</h3>
  * <pre>{@code
  * spring:
@@ -31,7 +35,11 @@ import org.springframework.context.annotation.Configuration;
  *     sentinel:
  *       scg:
  *         enabled: true
- *         order: -2147483598   # HIGHEST_PRECEDENCE + 50，与 SecurityPolicyFilterOrder.SENTINEL 相同
+ *         order: -2147483598   # HIGHEST_PRECEDENCE + 50 = SecurityPolicyFilterOrder.SENTINEL
+ * ingot:
+ *   security:
+ *     ratelimit:
+ *       enabled: true
  * }</pre>
  *
  * @author jy

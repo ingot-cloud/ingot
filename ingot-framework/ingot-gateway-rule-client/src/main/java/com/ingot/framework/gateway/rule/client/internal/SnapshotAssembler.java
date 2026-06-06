@@ -18,17 +18,28 @@ import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot
 import java.util.Collections;
 import java.util.List;
 
+import lombok.experimental.UtilityClass;
+
 /**
- * 把 ingot-security-api 的 VO 转换成 SDK 内部模型。
+ * 远端快照 VO → SDK 内部模型的转换器。
+ *
+ * <p>仅在 {@code policy.mode=remote} 时由 {@link RemoteSnapshotFetcher} 拉取全量快照后调用；
+ * 负责把 ingot-security-api 的 {@link SecurityPolicySnapshotVO} 拆分为各域可用的强类型模型，
+ * 并统一解析 DB 短码（维度、名单类型、键类型等）。</p>
+ *
+ * <p>本类无状态、线程安全，所有方法均为静态。</p>
  *
  * @author jy
  * @since 2026/5/26
  */
-public final class SnapshotAssembler {
+@UtilityClass
+public class SnapshotAssembler {
 
-    private SnapshotAssembler() {
-    }
-
+    /**
+     * 从全量快照中提取限流域数据。
+     *
+     * @param vo 远端快照；为 null 时返回 {@link RateLimitSnapshot#empty()}
+     */
     public static RateLimitSnapshot toRateLimitSnapshot(SecurityPolicySnapshotVO vo) {
         if (vo == null) {
             return RateLimitSnapshot.empty();
@@ -40,6 +51,11 @@ public final class SnapshotAssembler {
         return new RateLimitSnapshot(rules, groups, vo.getVersion());
     }
 
+    /**
+     * 从全量快照中提取黑白名单域数据。
+     *
+     * @param vo 远端快照；为 null 或 {@code ipList} 为空时返回 {@link IpListSnapshot#empty()}
+     */
     public static IpListSnapshot toIpListSnapshot(SecurityPolicySnapshotVO vo) {
         if (vo == null || vo.getIpList() == null) {
             return IpListSnapshot.empty();
@@ -60,12 +76,14 @@ public final class SnapshotAssembler {
                 .intervalSec(v.getIntervalSec())
                 .controlBehavior(v.getControlBehavior())
                 .enabled(v.isEnabled())
-                .dryRun(v.isDryRun())
                 .priority(v.getPriority())
                 .remark(v.getRemark())
                 .build();
     }
 
+    /**
+     * 转换 API 路径分组 VO（限流 / 挑战域共用）。
+     */
     public static EndpointGroup toGroup(EndpointGroupVO v) {
         return EndpointGroup.builder()
                 .id(v.getId())
@@ -78,19 +96,19 @@ public final class SnapshotAssembler {
     }
 
     private static IpListItem toIpListItem(IpListItemVO v) {
-        IpListItem item = new IpListItem();
-        item.setId(v.getId());
-        item.setListType(IpListType.fromCode(v.getListType()));
-        item.setKeyType(IpKeyType.fromCode(v.getKeyType()));
-        item.setKeyValue(v.getKeyValue());
-        item.setReason(v.getReason());
-        item.setSource(v.getSource());
-        item.setEffectiveAt(v.getEffectiveAt());
-        item.setExpiresAt(v.getExpiresAt());
-        item.setEnabled(v.isEnabled());
-        item.setOperatorId(v.getOperatorId());
-        item.setOperatorName(v.getOperatorName());
-        return item;
+        return IpListItem.builder()
+                .id(v.getId())
+                .listType(IpListType.fromCode(v.getListType()))
+                .keyType(IpKeyType.fromCode(v.getKeyType()))
+                .keyValue(v.getKeyValue())
+                .reason(v.getReason())
+                .source(v.getSource())
+                .effectiveAt(v.getEffectiveAt())
+                .expiresAt(v.getExpiresAt())
+                .enabled(v.isEnabled())
+                .operatorId(v.getOperatorId())
+                .operatorName(v.getOperatorName())
+                .build();
     }
 
     private static List<EndpointPattern> toPatternList(List<EndpointPatternVO> raw) {

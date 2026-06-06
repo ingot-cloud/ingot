@@ -50,6 +50,7 @@ public class GatewayRuleClientProperties {
      *     <li>{@code false}：跳过整个 SDK 自动装配；各域子模块（ratelimit / blacklist 等）
      *         仍可独立装配，但无法接收跨节点失效事件。</li>
      * </ul>
+     * 对应 yaml 键：{@code ingot.security.policy.client.enabled}。
      */
     private boolean enabled = true;
 
@@ -64,6 +65,7 @@ public class GatewayRuleClientProperties {
      *         {@code POST /platform/security/policy/broadcast-invalidation} 触发。
      *         适用于单实例 + 纯 local 调试。</li>
      * </ul>
+     * 对应 yaml 键：{@code ingot.security.policy.client.invalidation-enabled}。
      */
     private boolean invalidationEnabled = true;
 }

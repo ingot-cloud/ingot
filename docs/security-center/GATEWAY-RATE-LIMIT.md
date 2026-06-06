@@ -121,14 +121,15 @@ ingot:
 - **路径**：`groupCode` 引用 `EndpointGroup`，或内联 `patternList`；**未配置的路径默认不限流**（白名单式限流）。
 - **维度** `RateLimitDimension`：`IP` / `DEVICE` / `USER`，对应 Header 见 `SentinelGatewayConfiguration.buildFlowRule`。
 - **Sentinel 参数**：`qps`、`burst`、`intervalSec`、`controlBehavior`（`F` 快速失败 / `Q` 排队）。
-- **灰度**：`dryRun=true` 的规则不编译进 Sentinel；`enabled=false` 同样跳过。
+- **`enabled=false`** 的规则不编译进 Sentinel。
 - **已知限制**：`EndpointPattern.method` 暂不参与 Sentinel 编译（`ApiPathPredicateItem` 不支持 HTTP method）。
 
-路径匹配策略（编译 `ApiDefinition` 时）：
+路径匹配策略（编译 `ApiDefinition` 时，见 `SentinelPathPredicateCompiler`）：
 
-- 以 `/**` 结尾 → 前缀匹配
-- 含 `*` 或 `?` → 正则
-- 否则 → 精确匹配
+- 含 `*` 或 `?`（Ant 风格，如 `/pms/**`、`/pms/*`）→ Sentinel **PREFIX** → `AntPathMatcher` 全 pattern 匹配（**不要**写成下游路径 `/test/**`，应写网关路径 `/pms/**`）
+- 否则 → **EXACT** 精确匹配
+
+> 注意：Sentinel SCG 适配器的 PREFIX 策略并非「去掉 `/**` 后的字符串前缀」；旧实现若把 `/pms/**` 截成 `/pms` 会导致永不匹配。
 
 ### 3.5 黑白名单模型
 

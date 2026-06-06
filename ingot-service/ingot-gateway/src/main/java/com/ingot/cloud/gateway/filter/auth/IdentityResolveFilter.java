@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.gateway.filter.GatewayFilterOrders;
 import com.ingot.cloud.gateway.filter.RequestGlobalFilter;
 import com.ingot.cloud.gateway.security.ClientIdentity;
+import com.ingot.cloud.gateway.security.GatewaySecurityConstants;
 import com.ingot.framework.commons.constants.HeaderConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -16,15 +17,27 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * 客户端身份解析过滤器（身份前置 pipeline 第二步）。
+ * 客户端身份解析过滤器（身份前置 pipeline 第三步）。
  *
- * <p>顺序：{@link GatewayFilterOrders#IDENTITY}，在 {@link AuthContextRelayFilter} 之后执行。</p>
+ * <p>在 {@link AuthContextRelayFilter} 解析 JWT 之后执行（order =
+ * {@link GatewayFilterOrders#IDENTITY}），聚合各维度并写入
+ * {@link GatewaySecurityConstants#ATTR_CLIENT_IDENTITY}，供
+ * {@link com.ingot.cloud.gateway.security.BlacklistFilter}、
+ * {@link com.ingot.cloud.gateway.security.ChallengeFilter}、Sentinel 限流共用。</p>
  *
+ * <h3>聚合规则</h3>
  * <ul>
- *     <li>IP / 设备 / UA / Referer：读网关标准化 Header（{@link RequestGlobalFilter}）</li>
- *     <li>userId：读 {@link AuthContextAttributes#USER_ID} attribute（{@link AuthContextRelayFilter}）</li>
- *     <li>聚合为 {@link ClientIdentity} 写入 attribute；若有 userId 则回填 {@code X-User-Id} 供 Sentinel USER 维度</li>
+ *     <li>IP / 设备 / UA / Referer — 读 {@link RequestGlobalFilter} 标准化后的 Header</li>
+ *     <li>userId — 读 {@link AuthContextAttributes#USER_ID}（{@link AuthContextRelayFilter} 写入）</li>
+ *     <li>非空 userId 时回填 {@code X-User-Id} Header，供 Sentinel {@code USER} 资源维度</li>
  * </ul>
+ *
+ * <h3>Pipeline 位置</h3>
+ * <pre>
+ * RequestGlobalFilter → SessionTokenRelayFilter → AuthContextRelayFilter → 本 Filter → BlacklistFilter
+ * </pre>
+ *
+ * <p>本 Filter 不做鉴权；JWT 签名校验由下游 Resource Server 负责。</p>
  */
 @Slf4j
 @Component
@@ -48,7 +61,7 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
                 .userAgent(ua)
                 .referer(StrUtil.blankToDefault(referer, null))
                 .build();
-        exchange.getAttributes().put(ClientIdentity.ATTR_KEY, identity);
+        exchange.getAttributes().put(GatewaySecurityConstants.ATTR_CLIENT_IDENTITY, identity);
 
         if (userId != null) {
             ServerHttpRequest mutated = exchange.getRequest().mutate()

@@ -39,7 +39,6 @@ import java.util.List;
  *             interval-sec: 1            # 统计窗口（秒）
  *             control-behavior: F        # F=快速失败，Q=排队等待
  *             enabled: true
- *             dry-run: false             # true 表示规则保存但暂不编译入 Sentinel（灰度准备）
  *             priority: 0                # 仅用于编译时排序，不影响运行期行为
  *           - code: anon-inline          # 不使用分组，直接内联路径
  *             pattern-list:
@@ -72,11 +71,7 @@ import java.util.List;
  * <ul>
  *     <li>未在 {@link Policy#getGroups()} 或 {@link Policy#getRules()} 中显式声明的路径
  *         <b>默认不限流</b>，遵循"白名单式限流"原则。</li>
- *     <li>{@link RateLimitRule#isDryRun()} 为 true 时规则不会写入 Sentinel；
- *         {@link RateLimitRule#isEnabled()} 为 false 时同样跳过。区别仅在于
- *         {@code enabled=false} 通常表示已下线，{@code dryRun=true} 表示灰度准备中。</li>
- *     <li>本类不提供"全局 shadow"开关 —— 若需批量进入观察期，直接将各规则
- *         {@code dryRun=true} 即可，避免双层开关语义重复。</li>
+ *     <li>{@link RateLimitRule#isEnabled()} 为 false 时规则不写入 Sentinel。</li>
  * </ul>
  *
  * @author jy
@@ -98,6 +93,7 @@ public class RateLimitProperties {
      */
     private boolean enabled = false;
 
+    /** 限流策略加载配置：模式 + local 模式下的分组与规则列表。 */
     private Policy policy = new Policy();
 
     /**
@@ -131,7 +127,19 @@ public class RateLimitProperties {
         private List<EndpointGroup> groups = new ArrayList<>();
     }
 
+    /**
+     * 限流规则加载模式。
+     */
     public enum Mode {
-        LOCAL, REMOTE
+        /**
+         * 从本机 yaml {@link Policy#getRules()} / {@link Policy#getGroups()} 加载。
+         * 适合本机调试、单实例或规则极简的场景；修改 yaml 后需重启或手动 evict。
+         */
+        LOCAL,
+        /**
+         * 从 ingot-service-security 远端快照加载（{@code GET /inner/security/policy/snapshot}）。
+         * 适合生产 / 多节点；配合 {@code invalidation-enabled=true} 实现 Platform 改规则后热更新。
+         */
+        REMOTE
     }
 }

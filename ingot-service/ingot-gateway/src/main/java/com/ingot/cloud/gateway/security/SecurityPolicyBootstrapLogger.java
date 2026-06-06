@@ -12,12 +12,30 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 网关启动期把当前生效的限流规则 / 黑白名单 快照打到日志，
- * 便于运维和测试快速确认 SDK 装配与 Mode（local/remote）是否正确。
+ * 网关启动期打印安全策略快照日志，便于运维与 E2E 测试确认 SDK 装配是否正确。
  *
- * <p>仅在对应域开关打开（{@code ingot.security.ratelimit.enabled=true} /
- * {@code ingot.security.blacklist.enabled=true}）时才会生效，否则 Bean 不存在、
- * ObjectProvider 取空、Runner 静默。</p>
+ * <p>通过 {@link ApplicationRunner} 在应用就绪后执行一次：</p>
+ * <ul>
+ *     <li>限流 — 输出规则数、分组数、版本号（{@link RateLimitRuleService#getSnapshot}）</li>
+ *     <li>黑白名单 — 输出条目数、版本号（{@link BlacklistService#getSnapshot}）</li>
+ * </ul>
+ *
+ * <h3>相关配置</h3>
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     ratelimit:
+ *       enabled: true          # 关闭时日志：[SecurityPolicy] ratelimit disabled
+ *     blacklist:
+ *       enabled: true          # 关闭时日志：[SecurityPolicy] blacklist disabled
+ * # SDK mode（local / remote）由 ingot-gateway-rule-client 自身配置决定
+ * }</pre>
+ *
+ * <h3>典型日志</h3>
+ * <pre>
+ * [SecurityPolicy] ratelimit snapshot: rules=12, groups=3, version=20260606120000
+ * [SecurityPolicy] blacklist snapshot: items=8, version=20260606120000
+ * </pre>
  *
  * @author jy
  * @since 2026/5/26

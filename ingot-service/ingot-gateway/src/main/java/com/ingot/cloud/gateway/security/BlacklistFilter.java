@@ -2,6 +2,7 @@ package com.ingot.cloud.gateway.security;
 
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.gateway.rule.client.blacklist.BlacklistService;
+import com.ingot.framework.gateway.rule.client.blacklist.model.IpKeyType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -14,22 +15,36 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * 黑白名单过滤器。
+ * 黑白名单过滤器：静态名单 + Redis 临时封禁，命中返回 HTTP 403。
  *
- * <p>顺序：{@link SecurityPolicyFilterOrder#BLACKLIST}，在 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter} 之后、
+ * <p>执行顺序 {@link SecurityPolicyFilterOrder#BLACKLIST}，位于
+ * {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter} 之后、
  * {@link ChallengeFilter} 与 Sentinel 限流之前。</p>
  *
  * <h3>处理逻辑</h3>
  * <ol>
- *     <li>读取 {@link ClientIdentity}；缺失时跳过（不应发生在正常链路）</li>
+ *     <li>读取 {@link ClientIdentity}；缺失时放行（异常链路兜底）</li>
  *     <li><b>白名单优先</b>：命中静态白名单 → 写入 {@link #ATTR_WHITELISTED}，
- *         后续 {@link ChallengeFilter} 与 {@link WhitelistAwareSentinelGatewayFilter} 会跳过</li>
- *     <li>检查 Redis 临时封禁（限流违规自动封禁产物，见 {@link TempBlockStore}）</li>
+ *         后续挑战与 Sentinel 跳过</li>
+ *     <li>检查 Redis 临时封禁（{@link TempBlockStore}，限流违规升级产物）</li>
  *     <li>检查 SDK 静态黑名单（IP / CIDR / 设备 / 用户 / UA / Referer）</li>
- *     <li>命中 → <b>403</b> + {@code FORBIDDEN_BLOCKED}</li>
+ *     <li>命中 → HTTP 403，{@code code={@link GatewaySecurityConstants#CODE_FORBIDDEN_BLOCKED}}</li>
  * </ol>
  *
- * <p>临时封禁 Key：{@code in:gw:bl:tmp:{keyType}:{keyValue}}，当前检查 IP 与 DEVICE 两个维度。</p>
+ * <h3>相关配置</h3>
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     blacklist:
+ *       enabled: true
+ *       policy:
+ *         mode: remote          # 或 local + items 内联
+ *         items:
+ *           - list-type: WHITE
+ *             key-type: IP
+ *             key-value: 10.0.0.0/8
+ *             enabled: true
+ * }</pre>
  *
  * @author jy
  * @since 2026/5/26
@@ -40,12 +55,11 @@ import reactor.core.publisher.Mono;
 public class BlacklistFilter implements GlobalFilter, Ordered {
 
     /**
-     * 白名单标记。值为 {@code true} 时表示当前请求命中静态白名单，
-     * 后续挑战与 Sentinel 限流应跳过。
+     * 白名单标记 attribute 键。值为 {@code true} 时跳过后续挑战与 Sentinel 限流。
+     *
+     * @see GatewaySecurityConstants#ATTR_WHITELISTED
      */
-    public static final String ATTR_WHITELISTED = "ingot.security.whitelisted";
-
-    private static final String BLOCKED_CODE = "FORBIDDEN_BLOCKED";
+    public static final String ATTR_WHITELISTED = GatewaySecurityConstants.ATTR_WHITELISTED;
 
     private final ObjectProvider<BlacklistService> blacklistProvider;
     private final TempBlockStore tempBlockStore;
@@ -53,7 +67,8 @@ public class BlacklistFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ClientIdentity identity = (ClientIdentity) exchange.getAttributes().get(ClientIdentity.ATTR_KEY);
+        ClientIdentity identity = (ClientIdentity) exchange.getAttributes()
+                .get(GatewaySecurityConstants.ATTR_CLIENT_IDENTITY);
         if (identity == null) {
             return chain.filter(exchange);
         }
@@ -65,10 +80,10 @@ public class BlacklistFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        Mono<Boolean> tempBlockedIp = tempBlockStore.isBlocked("IP", identity.getIp());
+        Mono<Boolean> tempBlockedIp = tempBlockStore.isBlocked(IpKeyType.IP.dbCode(), identity.getIp());
         Mono<Boolean> tempBlockedDevice = identity.getDevice() == null
                 ? Mono.just(false)
-                : tempBlockStore.isBlocked("DEVICE", identity.getDevice());
+                : tempBlockStore.isBlocked(IpKeyType.DEVICE.dbCode(), identity.getDevice());
 
         return Mono.zip(tempBlockedIp, tempBlockedDevice)
                 .flatMap(t -> {
@@ -81,7 +96,8 @@ public class BlacklistFilter implements GlobalFilter, Ordered {
                                 identity.getIp(), identity.getDevice(),
                                 blockedByTemp ? "temp" : "static");
                         return responseWriter.writeJson(exchange.getResponse(), HttpStatus.FORBIDDEN,
-                                R.error(BLOCKED_CODE, "Request blocked"));
+                                R.error(GatewaySecurityConstants.CODE_FORBIDDEN_BLOCKED,
+                                        GatewaySecurityConstants.MSG_REQUEST_BLOCKED));
                     }
                     return chain.filter(exchange);
                 });

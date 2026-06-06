@@ -2,6 +2,8 @@ package com.ingot.cloud.gateway.filter;
 
 import org.springframework.core.Ordered;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * 网关 GlobalFilter 执行顺序（order 越小越先执行）。
  *
@@ -15,13 +17,11 @@ import org.springframework.core.Ordered;
  *   → WhitelistAwareSentinelGatewayFilter (+50)
  * </pre>
  */
-public final class GatewayFilterOrders {
+@UtilityClass
+public class GatewayFilterOrders {
 
     public static final int REQUEST_GLOBAL = Ordered.HIGHEST_PRECEDENCE;
     public static final int SESSION_RELAY = Ordered.HIGHEST_PRECEDENCE + 10;
     public static final int AUTH_CONTEXT = Ordered.HIGHEST_PRECEDENCE + 15;
     public static final int IDENTITY = Ordered.HIGHEST_PRECEDENCE + 20;
-
-    private GatewayFilterOrders() {
-    }
 }

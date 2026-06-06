@@ -2,7 +2,6 @@ package com.ingot.cloud.gateway.security;
 
 import com.alibaba.csp.sentinel.adapter.gateway.common.SentinelGatewayConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
-import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPathPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.GatewayApiDefinitionManager;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
@@ -15,6 +14,7 @@ import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoord
 import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
+import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitControlBehavior;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitDimension;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
@@ -62,11 +62,10 @@ import java.util.Set;
  *     <li>{@link EndpointPattern#getMethod()} 暂不参与 Sentinel 编译 —
  *         Sentinel Gateway 的 {@link ApiPathPredicateItem} 不支持 HTTP method 过滤；
  *         字段保留供将来扩展（自定义 ApiPredicate 或 Filter 链）。</li>
+ *     <li>Ant 路径（如 {@code /pms/**}）由 {@link SentinelPathPredicateCompiler} 整 pattern
+ *         交给 Sentinel PREFIX / {@code AntPathMatcher}，勿截断为 {@code /pms}。</li>
  *     <li>规则 priority 仅用于编译时的稳定排序，不影响 Sentinel 运行期行为
  *         （Sentinel 同 path 多 rule 各自独立计数）。</li>
- *     <li>{@code dryRun=true} 的规则直接跳过加载，启动日志会显示
- *         "[Sentinel] dry-run rule {code} skipped"。该字段语义即
- *         "规则保存但暂不实施"，配合页面化管理用于灰度准备。</li>
  * </ul>
  *
  * @author jy
@@ -115,7 +114,6 @@ public class SentinelGatewayConfiguration {
 
             Set<ApiDefinition> apiDefinitions = new HashSet<>();
             Set<GatewayFlowRule> flowRules = new HashSet<>();
-            int dryRunSkipped = 0;
             int patternMissingSkipped = 0;
 
             List<RateLimitRule> ordered = snapshot.getRules() == null ? List.of()
@@ -126,12 +124,6 @@ public class SentinelGatewayConfiguration {
                     .toList();
 
             for (RateLimitRule rule : ordered) {
-                if (rule.isDryRun()) {
-                    dryRunSkipped++;
-                    log.info("[Sentinel] dry-run rule {} skipped (qps={}, burst={}, dim={})",
-                            rule.getCode(), rule.getQps(), rule.getBurst(), rule.getDimension());
-                    continue;
-                }
                 List<EndpointPattern> patterns = resolvePatterns(rule, groupMap);
                 if (patterns == null || patterns.isEmpty()) {
                     patternMissingSkipped++;
@@ -144,8 +136,8 @@ public class SentinelGatewayConfiguration {
 
             GatewayApiDefinitionManager.loadApiDefinitions(apiDefinitions);
             GatewayRuleManager.loadRules(flowRules);
-            log.info("[Sentinel] reloaded api={} rules={} dryRunSkipped={} patternSkipped={} (snapshot version={})",
-                    apiDefinitions.size(), flowRules.size(), dryRunSkipped, patternMissingSkipped,
+            log.info("[Sentinel] reloaded api={} rules={} patternSkipped={} (snapshot version={})",
+                    apiDefinitions.size(), flowRules.size(), patternMissingSkipped,
                     snapshot.getVersion());
         } catch (Exception e) {
             log.warn("[Sentinel] reload rules failed", e);
@@ -177,18 +169,8 @@ public class SentinelGatewayConfiguration {
     private static ApiDefinition buildApiDefinition(String code, List<EndpointPattern> patterns) {
         Set<ApiPredicateItem> items = new HashSet<>();
         for (EndpointPattern p : patterns) {
-            if (p == null || p.getPath() == null) continue;
-            ApiPathPredicateItem item = new ApiPathPredicateItem().setPattern(p.getPath());
-            String path = p.getPath();
-            if (path.endsWith("/**")) {
-                item.setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX);
-                item.setPattern(path.substring(0, path.length() - 3));
-            } else if (path.contains("*") || path.contains("?")) {
-                item.setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_REGEX);
-            } else {
-                item.setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_EXACT);
-            }
-            items.add(item);
+            if (p == null || p.getPath() == null || p.getPath().isBlank()) continue;
+            items.add(SentinelPathPredicateCompiler.compile(p.getPath()));
         }
         return new ApiDefinition(code).setPredicateItems(items);
     }
@@ -198,9 +180,9 @@ public class SentinelGatewayConfiguration {
         r.setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME);
         r.setGrade(RuleConstant.FLOW_GRADE_QPS);
         r.setCount(rule.getQps());
-        r.setIntervalSec(Math.max(1, rule.getIntervalSec()));
+        r.setIntervalSec(Math.max(GatewaySecurityConstants.MIN_RATE_LIMIT_INTERVAL_SEC, rule.getIntervalSec()));
         r.setBurst(rule.getBurst());
-        r.setControlBehavior("Q".equalsIgnoreCase(rule.getControlBehavior())
+        r.setControlBehavior(RateLimitControlBehavior.fromCode(rule.getControlBehavior()).isQueue()
                 ? RuleConstant.CONTROL_BEHAVIOR_RATE_LIMITER
                 : RuleConstant.CONTROL_BEHAVIOR_DEFAULT);
 

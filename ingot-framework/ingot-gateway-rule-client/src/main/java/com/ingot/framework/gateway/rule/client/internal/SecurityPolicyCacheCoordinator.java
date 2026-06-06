@@ -27,6 +27,24 @@ import java.util.Map;
  *
  * <p>本协调器不区分 origin 自身：{@code RedisInvalidationBus} 已按 origin 过滤回环。</p>
  *
+ * <h3>装配条件</h3>
+ * <ul>
+ *     <li>{@code ingot.security.policy.client.enabled=true}</li>
+ *     <li>{@code ingot.security.policy.client.invalidation-enabled=true}（默认）</li>
+ *     <li>classpath 存在 {@link InvalidationBus} Bean</li>
+ * </ul>
+ *
+ * <h3>典型配置</h3>
+ *
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     policy:
+ *       client:
+ *         enabled: true
+ *         invalidation-enabled: true
+ * }</pre>
+ *
  * @author jy
  * @since 2026/5/26
  */
@@ -57,12 +75,14 @@ public class SecurityPolicyCacheCoordinator {
                 domain, evictors.get(domain).size());
     }
 
+    /** 订阅 {@link SecurityPolicyInvalidationEvent}，启动后开始接收跨节点失效广播。 */
     @PostConstruct
     public void start() {
         this.subscription = bus.subscribe(SecurityPolicyInvalidationEvent.class, this::handle);
         log.info("[SecurityPolicy] cache coordinator subscribed");
     }
 
+    /** 取消 InvalidationBus 订阅，容器销毁时自动调用。 */
     @PreDestroy
     public void stop() {
         if (subscription != null) {
@@ -71,6 +91,10 @@ public class SecurityPolicyCacheCoordinator {
         }
     }
 
+    /**
+     * 处理失效事件：按 domain 分发到已注册的 evictor 列表。
+     * <p>{@link SecurityPolicyDomain#ALL} 时回调所有域；单个回调异常不影响其他回调。</p>
+     */
     void handle(SecurityPolicyInvalidationEvent event) {
         SecurityPolicyDomain domain = event.getDomain();
         log.info("[SecurityPolicy] cache invalidate, domain={} origin={}", domain, event.getOrigin());

@@ -3,26 +3,36 @@ package com.ingot.cloud.gateway.filter.auth.internal;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Base64;
 import java.util.Map;
 
 /**
- * 轻量读取 Bearer JWT payload（不验签，仅用于网关内部身份维度）。
+ * 轻量读取 Bearer JWT payload 的工具类（不验签）。
  *
- * <p>用户 ID 取自 claim {@code i}，与 ingot-security {@code JwtClaimNamesExtension.ID} 一致。</p>
+ * <p>仅供 {@link com.ingot.cloud.gateway.filter.auth.AuthContextRelayFilter} 提取网关内部
+ * 限流 / 黑白名单 {@code USER} 维度；token 真伪与权限由下游 Resource Server 校验。</p>
+ *
+ * <h3>解析规则</h3>
+ * <ul>
+ *     <li>从 {@code Authorization: Bearer &lt;token&gt;} 提取 JWT 字符串</li>
+ *     <li>Base64URL 解码 payload 段（第二段），不校验 header / signature</li>
+ *     <li>用户 ID 取自 claim {@link #CLAIM_USER_ID}（{@code i}），与 ingot-security
+ *         {@code JwtClaimNamesExtension.ID} 一致；支持数值与字符串类型</li>
+ * </ul>
+ *
+ * <p>解析失败（格式错误、claim 缺失等）返回 {@code null}，调用方不阻断请求。</p>
  */
 @Slf4j
-public final class BearerJwtPayloadReader {
+@UtilityClass
+public class BearerJwtPayloadReader {
 
-    /** 与 {@code JwtClaimNamesExtension.ID} 一致。 */
+    /** JWT payload 中用户 ID 的 claim 名；与 {@code JwtClaimNamesExtension.ID} 一致。 */
     public static final String CLAIM_USER_ID = "i";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    private BearerJwtPayloadReader() {
-    }
 
     /**
      * 从 {@code Authorization: Bearer ...} 值中提取 userId；解析失败返回 null。

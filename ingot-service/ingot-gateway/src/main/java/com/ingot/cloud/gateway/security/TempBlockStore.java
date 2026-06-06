@@ -1,5 +1,7 @@
 package com.ingot.cloud.gateway.security;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -11,43 +13,70 @@ import java.time.Duration;
 /**
  * 基于 Redis 的短期临时封禁存储。
  *
- * <p>Key 规范：{@code in:gw:bl:tmp:{keyType}:{keyValue}}，value 为触发的规则编码，
- * TTL 由触发方设定。</p>
+ * <p>当限流违规次数在滑动窗口内达到 {@link GatewaySecurityConstants#VIOLATION_BLOCK_THRESHOLD} 时，
+ * {@link SentinelBlockHandler} 调用 {@link #block} 写入临时封禁；{@link BlacklistFilter} 在静态名单
+ * 未命中时通过 {@link #isBlocked} 读取并返回 403。</p>
  *
- * <p>{@link ReactiveStringRedisTemplate} 不可用（无 Redis 配置）时，本类所有方法
- * 返回 {@code Mono.just(false)} / {@code Mono.empty()}，相当于禁用临时封禁能力。</p>
+ * <h3>Key 规范</h3>
+ * <p>{@link GatewaySecurityConstants#REDIS_KEY_TEMP_BLOCK_PREFIX}{@code {keyType}:{keyValue}}，
+ * value 为触发的规则编码（如 {@link GatewaySecurityConstants#RULE_CODE_RATE_LIMIT}），
+ * TTL 默认 {@link GatewaySecurityConstants#TEMP_BLOCK_TTL_MINUTES} 分钟。</p>
+ *
+ * <h3>相关配置</h3>
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     blacklist:
+ *       enabled: true          # BlacklistFilter 才会查询本 Store
+ * spring:
+ *   data:
+ *     redis:
+ *       host: localhost        # 未配置时本类静默降级，临时封禁不可用
+ * }</pre>
+ *
+ * <p>{@link ReactiveStringRedisTemplate} 不可用时，所有方法返回 {@code false} / {@code empty()}，
+ * 主链路不受影响。</p>
  *
  * @author jy
  * @since 2026/5/26
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TempBlockStore {
 
-    private static final String KEY_PREFIX = "in:gw:bl:tmp:";
+    private static final String KEY_PREFIX = GatewaySecurityConstants.REDIS_KEY_TEMP_BLOCK_PREFIX;
 
-    private final ReactiveStringRedisTemplate redisTemplate;
+    private final ObjectProvider<ReactiveStringRedisTemplate> redisProvider;
+    private ReactiveStringRedisTemplate redisTemplate;
 
-    public TempBlockStore(ObjectProvider<ReactiveStringRedisTemplate> redisProvider) {
-        this.redisTemplate = redisProvider.getIfAvailable();
-        if (this.redisTemplate == null) {
+    @PostConstruct
+    void init() {
+        redisTemplate = redisProvider.getIfAvailable();
+        if (redisTemplate == null) {
             log.info("[TempBlockStore] ReactiveStringRedisTemplate not available, temp-block disabled");
         }
     }
 
     public Mono<Boolean> isBlocked(String keyType, String keyValue) {
-        if (redisTemplate == null || keyValue == null) return Mono.just(false);
+        if (redisTemplate == null || keyValue == null) {
+            return Mono.just(false);
+        }
         return redisTemplate.hasKey(buildKey(keyType, keyValue));
     }
 
     public Mono<Boolean> block(String keyType, String keyValue, String ruleCode, Duration ttl) {
-        if (redisTemplate == null || keyValue == null) return Mono.just(false);
+        if (redisTemplate == null || keyValue == null) {
+            return Mono.just(false);
+        }
         return redisTemplate.opsForValue()
                 .set(buildKey(keyType, keyValue), ruleCode == null ? "" : ruleCode, ttl);
     }
 
     public Mono<Long> unblock(String keyType, String keyValue) {
-        if (redisTemplate == null || keyValue == null) return Mono.just(0L);
+        if (redisTemplate == null || keyValue == null) {
+            return Mono.just(0L);
+        }
         return redisTemplate.delete(buildKey(keyType, keyValue));
     }
 

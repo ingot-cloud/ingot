@@ -1,5 +1,7 @@
 package com.ingot.cloud.gateway.security;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -23,30 +25,36 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PassTokenStore {
 
-    private static final String KEY_PREFIX = "in:gw:vc:pass:";
+    private static final String KEY_PREFIX = GatewaySecurityConstants.REDIS_KEY_PASS_TOKEN_PREFIX;
 
     private static final RedisScript<Long> CONSUME_SCRIPT = RedisScript.of(
             "local v = redis.call('DECR', KEYS[1])\n" +
                     "if v <= 0 then redis.call('DEL', KEYS[1]) end\n" +
                     "return v", Long.class);
 
-    private final ReactiveStringRedisTemplate redisTemplate;
+    private final ObjectProvider<ReactiveStringRedisTemplate> redisProvider;
+    private ReactiveStringRedisTemplate redisTemplate;
 
-    public PassTokenStore(ObjectProvider<ReactiveStringRedisTemplate> redisProvider) {
-        this.redisTemplate = redisProvider.getIfAvailable();
-        if (this.redisTemplate == null) {
+    @PostConstruct
+    void init() {
+        redisTemplate = redisProvider.getIfAvailable();
+        if (redisTemplate == null) {
             log.info("[PassTokenStore] reactive redis not available, PassToken disabled");
         }
     }
 
     public Mono<String> issue(String scope, int ttlSec, int remaining) {
-        if (redisTemplate == null) return Mono.empty();
+        if (redisTemplate == null) {
+            return Mono.empty();
+        }
         String token = UUID.randomUUID().toString().replace("-", "");
         String key = buildKey(scope, token);
         return redisTemplate.opsForValue()
-                .set(key, String.valueOf(Math.max(1, remaining)), Duration.ofSeconds(Math.max(1, ttlSec)))
+                .set(key, String.valueOf(Math.max(GatewaySecurityConstants.MIN_PASS_TOKEN_REMAINING, remaining)),
+                        Duration.ofSeconds(Math.max(GatewaySecurityConstants.MIN_PASS_TOKEN_REMAINING, ttlSec)))
                 .thenReturn(token);
     }
 
@@ -54,7 +62,9 @@ public class PassTokenStore {
      * 消费一次：成功返回 true（包括剩余次数减 1 的情况）；token 不存在返回 false。
      */
     public Mono<Boolean> consume(String scope, String token) {
-        if (redisTemplate == null || token == null) return Mono.just(false);
+        if (redisTemplate == null || token == null) {
+            return Mono.just(false);
+        }
         String key = buildKey(scope, token);
         List<String> keys = Collections.singletonList(key);
         return redisTemplate.execute(CONSUME_SCRIPT, keys, Collections.emptyList())
@@ -67,6 +77,6 @@ public class PassTokenStore {
     }
 
     private static String buildKey(String scope, String token) {
-        return KEY_PREFIX + (scope == null ? "default" : scope) + ":" + token;
+        return KEY_PREFIX + (scope == null ? GatewaySecurityConstants.DEFAULT_PASS_TOKEN_SCOPE : scope) + ":" + token;
     }
 }

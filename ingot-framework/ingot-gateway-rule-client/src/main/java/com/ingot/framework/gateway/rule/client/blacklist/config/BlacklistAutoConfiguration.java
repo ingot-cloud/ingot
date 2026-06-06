@@ -31,6 +31,8 @@ import org.springframework.context.annotation.Bean;
  * <p>向 {@link SecurityPolicyCacheCoordinator} 注册 {@code IP_LIST} 域 evictor，
  * Platform 改名单后各节点 {@code evictAll()} 清空 L1 编译索引。</p>
  *
+ * <p>yaml 配置示例见 {@link BlacklistProperties}。</p>
+ *
  * @author jy
  * @since 2026/5/26
  */
@@ -41,6 +43,10 @@ import org.springframework.context.annotation.Bean;
         name = "enabled", havingValue = "true")
 public class BlacklistAutoConfiguration {
 
+    /**
+     * local 模式黑白名单服务。
+     * <p>激活条件：{@code policy.mode=local}（默认）且容器中尚无 {@link BlacklistService} Bean。</p>
+     */
     @Bean
     @ConditionalOnMissingBean(BlacklistService.class)
     @ConditionalOnProperty(prefix = "ingot.security.blacklist.policy",
@@ -50,6 +56,10 @@ public class BlacklistAutoConfiguration {
         return new LocalBlacklistService(properties);
     }
 
+    /**
+     * remote 模式黑白名单服务。
+     * <p>激活条件：{@code policy.mode=remote} 且存在 {@link RemoteSnapshotFetcher} Bean。</p>
+     */
     @Bean
     @ConditionalOnMissingBean(BlacklistService.class)
     @ConditionalOnProperty(prefix = "ingot.security.blacklist.policy",
@@ -59,11 +69,18 @@ public class BlacklistAutoConfiguration {
         return new RemoteBlacklistService(fetcher);
     }
 
+    /**
+     * 黑白名单域缓存失效注册器。
+     */
     @Bean
     static BlacklistCoordinatorRegistrar blacklistCoordinatorRegistrar() {
         return new BlacklistCoordinatorRegistrar();
     }
 
+    /**
+     * 在 {@link jakarta.annotation.PostConstruct} 阶段把
+     * {@link BlacklistService#evictAll()} 挂到 Coordinator 的 {@code IP_LIST} 域。
+     */
     @RequiredArgsConstructor
     static class BlacklistCoordinatorRegistrar {
 

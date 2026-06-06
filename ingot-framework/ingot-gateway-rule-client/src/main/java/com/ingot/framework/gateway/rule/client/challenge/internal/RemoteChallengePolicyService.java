@@ -21,7 +21,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * remote 模式挑战策略服务。
+ * 挑战策略服务 — remote 模式实现。
+ *
+ * <p>激活条件：{@code ingot.security.challenge.enabled=true} 且
+ * {@code ingot.security.challenge.policy.mode=remote}。</p>
+ *
+ * <p>通过 {@link RemoteSnapshotFetcher} 拉取全量快照中的 {@code challengePolicies} 与
+ * {@code groups}，转换为 {@link ChallengePolicy} 后编译为 {@link CompiledChallengePolicy}
+ * 并缓存到 {@link LocalCompiledCache}。不支持的 trigger 类型跳过并打 warn。</p>
  *
  * @author jy
  * @since 2026/5/26
@@ -33,16 +40,19 @@ public class RemoteChallengePolicyService implements ChallengePolicyService {
     private final RemoteSnapshotFetcher fetcher;
     private final LocalCompiledCache<Compiled> cache = new LocalCompiledCache<>();
 
+    /** 按路径 + 方法 + 触发类型匹配策略；cache miss 时拉取远端并编译。 */
     @Override
     public ChallengePolicy match(String requestPath, HttpMethod method, ChallengeTrigger trigger) {
         return resolve().compiled.match(requestPath, method, trigger);
     }
 
+    /** 返回远端快照原始策略列表 + 版本号。 */
     @Override
     public ChallengeSnapshot getSnapshot() {
         return resolve().snapshot;
     }
 
+    /** 清空 L1 缓存，下次 match 重新拉取远端并编译。 */
     @Override
     public void evictAll() {
         cache.evictAll();
@@ -104,6 +114,7 @@ public class RemoteChallengePolicyService implements ChallengePolicyService {
         return i == null ? 0 : i;
     }
 
+    /** 缓存条目：原始快照 + 编译后的策略索引。 */
     private record Compiled(ChallengeSnapshot snapshot, CompiledChallengePolicy compiled) {
     }
 }

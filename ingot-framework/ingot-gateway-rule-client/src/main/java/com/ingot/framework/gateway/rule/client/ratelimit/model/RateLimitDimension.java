@@ -2,6 +2,10 @@ package com.ingot.framework.gateway.rule.client.ratelimit.model;
 
 import java.util.Locale;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
+
 /**
  * 限流维度。
  *
@@ -21,25 +25,29 @@ import java.util.Locale;
  * yaml 配置（local 模式）习惯写枚举全名；本类同时支持两种写法，由
  * {@link #fromCode(String)} 统一解析。</p>
  *
+ * <h3>yaml 示例</h3>
+ * <pre>{@code
+ * dimension: IP      # 或 DEVICE / USER；remote 模式 DB 短码 IP/DV/UI 亦可
+ * }</pre>
+ *
  * @author jy
  * @since 2026/5/26
  */
+@Getter
+@RequiredArgsConstructor
+@Accessors(fluent = true)
 public enum RateLimitDimension {
 
+    /** 按客户端真实 IP 限流；Header {@code X-Client-Real-IP}；DB 短码 {@code IP}。 */
     IP("IP"),
+
+    /** 按设备指纹限流；Header {@code X-In-Ca-Sig}；DB 短码 {@code DV}。 */
     DEVICE("DV"),
+
+    /** 按用户 ID 限流；Header {@code X-User-Id}；匿名时退化为 API 整体限流；DB 短码 {@code UI}。 */
     USER("UI");
 
     private final String dbCode;
-
-    RateLimitDimension(String dbCode) {
-        this.dbCode = dbCode;
-    }
-
-    /** DB 字段（{@code char(2)}）短码：IP / DV / UI。 */
-    public String dbCode() {
-        return dbCode;
-    }
 
     /**
      * 解析维度字符串，同时兼容 DB 短码（IP/DV/UI）与枚举全名（IP/DEVICE/USER）。

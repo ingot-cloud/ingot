@@ -49,7 +49,6 @@ CREATE TABLE `gateway_rate_limit_rule` (
   `interval_sec`     int           NOT NULL DEFAULT 1      COMMENT '统计窗口（秒）',
   `control_behavior` char(1)       NOT NULL DEFAULT 'F'    COMMENT '控制行为: F=快速失败, Q=排队等待',
   `enabled`          tinyint(1)    NOT NULL DEFAULT 1      COMMENT '是否启用',
-  `dry_run`          tinyint(1)    NOT NULL DEFAULT 0      COMMENT '影子模式: 命中只统计不拒绝',
   `priority`         int           NOT NULL DEFAULT 0      COMMENT '优先级，数字越小越优先',
   `remark`           varchar(255)           DEFAULT NULL   COMMENT '备注',
   `created_at`       timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

@@ -2,15 +2,29 @@ package com.ingot.framework.gateway.rule.client.blacklist.model;
 
 import java.util.Locale;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
+
 /**
  * 名单类型：黑名单 / 白名单。
  *
  * <p>DB 表 {@code gateway_ip_list.list_type} 为 {@code char(1)}：{@code B} / {@code W}；
  * local yaml 可写 {@code BLACK} / {@code WHITE} 或短码，由 {@link #fromCode(String)} 解析。</p>
  *
+ * <h3>网关行为差异</h3>
+ * <ul>
+ *     <li>{@link #BLACK} — 命中后返回 403，阻断请求</li>
+ *     <li>{@link #WHITE} — 命中后写入 {@code ingot.security.whitelisted} 标记，
+ *         跳过后续黑名单检查、挑战策略与 Sentinel 限流</li>
+ * </ul>
+ *
  * @author jy
  * @since 2026/5/26
  */
+@Getter
+@RequiredArgsConstructor
+@Accessors(fluent = true)
 public enum IpListType {
 
     /** 黑名单。DB 短码 {@code B}。 */
@@ -20,14 +34,6 @@ public enum IpListType {
     WHITE("W");
 
     private final String dbCode;
-
-    IpListType(String dbCode) {
-        this.dbCode = dbCode;
-    }
-
-    public String dbCode() {
-        return dbCode;
-    }
 
     /**
      * 解析名单类型，兼容 {@code B/W} 短码与 {@code BLACK/WHITE} 全名。

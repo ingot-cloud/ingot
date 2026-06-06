@@ -3,6 +3,8 @@ package com.ingot.framework.gateway.rule.client.blacklist.internal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * CIDR 匹配工具：判断 IPv4/IPv6 是否在 CIDR 网段内。
  *
@@ -12,11 +14,16 @@ import java.net.UnknownHostException;
  * @author jy
  * @since 2026/5/26
  */
-public final class CidrMatcher {
+@UtilityClass
+public class CidrMatcher {
 
-    private CidrMatcher() {
-    }
-
+    /**
+     * 判断 IP 是否在 CIDR 网段内。
+     *
+     * @param cidr 标准 CIDR 表达式，如 {@code 192.168.1.0/24}、{@code fe80::/10}
+     * @param ip   待匹配 IP 地址
+     * @return 匹配返回 true；非法表达式、IP 形态不匹配（v4 vs v6）或解析失败返回 false
+     */
     public static boolean matches(String cidr, String ip) {
         if (cidr == null || ip == null) return false;
         int slash = cidr.indexOf('/');

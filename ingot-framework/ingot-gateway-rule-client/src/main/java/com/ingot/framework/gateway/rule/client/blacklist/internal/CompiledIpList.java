@@ -40,10 +40,17 @@ public class CompiledIpList {
     private final List<String> blackCidrs = new ArrayList<>();
     private final List<String> whiteCidrs = new ArrayList<>();
 
+    /** 空索引单例，无任何命中条目。 */
     public static CompiledIpList empty() {
         return EMPTY;
     }
 
+    /**
+     * 将原始名单条目编译为多维索引。
+     * <p>编译期过滤 {@code enabled=false}、生效时间未到、已过期条目；非法正则跳过并打 warn。</p>
+     *
+     * @param items 原始条目列表；null 或空时返回空索引
+     */
     public static CompiledIpList compile(List<IpListItem> items) {
         CompiledIpList compiled = new CompiledIpList();
         if (items == null || items.isEmpty()) {
@@ -73,14 +80,23 @@ public class CompiledIpList {
         return compiled;
     }
 
+    /**
+     * 黑名单匹配：IP / 设备 / 用户 / CIDR / UA / Referer 任一维度命中即 true。
+     */
     public boolean isBlocked(String ip, String device, String user, String ua, String referer) {
         return match(true, ip, device, user, ua, referer);
     }
 
+    /**
+     * 白名单匹配：逻辑同 {@link #isBlocked}，查 white 侧索引。
+     */
     public boolean isWhitelisted(String ip, String device, String user, String ua, String referer) {
         return match(false, ip, device, user, ua, referer);
     }
 
+    /**
+     * 精确键查询：判断指定 keyType + keyValue 是否在黑/白名单精确集合中（不含 CIDR / 正则）。
+     */
     public boolean contains(IpKeyType keyType, String keyValue, boolean blacklist) {
         Set<String> set = blacklist ? blackExact.get(keyType) : whiteExact.get(keyType);
         return set != null && set.contains(keyValue);
@@ -161,6 +177,7 @@ public class CompiledIpList {
         return s != null && !s.isBlank();
     }
 
+    /** 已编译条目总数（各维度集合 + CIDR + 正则之和）。 */
     public int size() {
         int total = 0;
         for (Set<String> set : blackExact.values()) {

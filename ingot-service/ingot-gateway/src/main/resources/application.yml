@@ -9,3 +9,69 @@ management:
   server:
     port: ${MANAGEMENT_PORT:8798}
     address: 127.0.0.1
+
+# ---------------------------------------------------------------------------
+# 网关安全策略（ingot-gateway-rule-client + Sentinel 执行面）
+#
+# 各域默认 enabled=false；以下为本地 E2E 调试示例，生产请改 mode: remote 并在 Platform 维护规则。
+# 须同时满足：ingot.security.ratelimit.enabled=true 且 spring.cloud.sentinel.scg.enabled=true（默认 true）
+#
+# policy.mode:
+#   local  — 规则写在下方 groups/rules/items/policies
+#   remote — 通过 Feign 拉取 ingot-service-security 快照，需 ingot.security.policy.client.enabled=true
+# ---------------------------------------------------------------------------
+ingot:
+  security:
+    # 限流域：编译为 Sentinel GatewayFlowRule；未配置的路径默认不限流（白名单式）
+    ratelimit:
+      enabled: true
+      policy:
+        mode: local
+        groups:
+          - code: e2e-pms
+            name: PMS 网关路径
+            enabled: true
+            pattern-list:
+              - path: /pms/**      # 网关对外路径（Ant 风格）；非下游 /test/**
+                method: ANY        # 当前 Sentinel 编译忽略 method，保留供扩展
+        rules:
+          - code: e2e-pms-ip
+            group-code: e2e-pms  # 引用上方分组；与 pattern-list 二选一
+            dimension: IP        # IP / DEVICE / USER
+            qps: 1               # 平均 QPS
+            burst: 1             # 突发容量
+            interval-sec: 1      # 统计窗口（秒）
+            control-behavior: F  # F=快速失败(429) Q=排队
+            enabled: true
+            priority: 0          # 编译排序，不影响 Sentinel 运行期
+    # 黑白名单：静态名单 + Redis 临时封禁（限流违规升级）
+    blacklist:
+      enabled: true
+      policy:
+        mode: local
+        items:
+          - list-type: BLACK     # BLACK / WHITE
+            key-type: IP         # IP / DEVICE / USER / CIDR / USER_AGENT / REFERER
+            key-value: 127.0.0.1
+            enabled: false       # E2E 示例默认关闭
+    # 挑战策略：ALWAYS → ChallengeFilter 412；ON_RATE_LIMIT → SentinelBlockHandler 412
+    challenge:
+      enabled: true
+      policy:
+        mode: local
+        policies:
+          - code: e2e-challenge-ratelimit
+            group-code: e2e-public
+            trigger: ON_RATE_LIMIT
+            challenge-type: SLIDER   # SLIDER / IMAGE / SMS / EMAIL
+            scope: e2e-anon        # PassToken 作用域，须与验码时一致
+            pass-token-ttl-sec: 300
+            pass-token-remaining: 3  # token 可放行次数
+            enabled: false
+        groups:
+          - code: e2e-public
+            name: PMS 网关路径
+            enabled: true
+            pattern-list:
+              - path: /pms/**
+                method: ANY

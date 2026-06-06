@@ -97,8 +97,12 @@ public class BlacklistProperties {
      */
     private boolean enabled = false;
 
+    /** 黑白名单加载配置：模式 + local 模式下的名单条目列表。 */
     private Policy policy = new Policy();
 
+    /**
+     * 黑白名单加载配置。
+     */
     @Getter
     @Setter
     public static class Policy {
@@ -119,7 +123,19 @@ public class BlacklistProperties {
         private List<IpListItem> items = new ArrayList<>();
     }
 
+    /**
+     * 黑白名单加载模式。
+     */
     public enum Mode {
-        LOCAL, REMOTE
+        /**
+         * 从本机 yaml {@link Policy#getItems()} 加载。
+         * 适合本机调试 / 单实例；DB 短码（B/W、IP/DV 等）在 local 模式下也可写枚举全名。
+         */
+        LOCAL,
+        /**
+         * 从 ingot-service-security 远端快照加载（快照字段 {@code ipList}）。
+         * 适合生产 / 多节点；DB {@code gateway_ip_list} 短码由 SDK {@code fromCode} 解析。
+         */
+        REMOTE
     }
 }

@@ -8,7 +8,13 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 编译后的挑战策略：path -> PathPattern 已预编译，匹配按 priority 排序。
+ * 编译后的挑战策略索引。
+ *
+ * <p>将每条启用策略的路径模式预编译为 Spring {@link org.springframework.web.util.pattern.PathPattern}，
+ * 按 {@link ChallengePolicy#getPriority()} 升序排列；匹配时遍历同 trigger 的策略，
+ * 返回首个路径命中的策略。</p>
+ *
+ * <p>路径来源：优先 {@code groupCode} 关联的分组 patternList，否则使用策略内联 patternList。</p>
  *
  * @author jy
  * @since 2026/5/26
@@ -23,10 +29,17 @@ public final class CompiledChallengePolicy {
         this.entries = entries;
     }
 
+    /** 空策略索引，match 恒返回 null。 */
     public static CompiledChallengePolicy empty() {
         return EMPTY;
     }
 
+    /**
+     * 编译策略列表为可匹配索引。
+     *
+     * @param policies      原始策略列表
+     * @param groupResolver groupCode → patternList 查找函数，来自 {@link com.ingot.framework.gateway.rule.client.internal.GroupPatternResolver}
+     */
     public static CompiledChallengePolicy compile(List<ChallengePolicy> policies,
                                                   java.util.function.Function<String, List<com.ingot.framework.gateway.rule.client.model.EndpointPattern>> groupResolver) {
         if (policies == null || policies.isEmpty()) return EMPTY;
@@ -44,6 +57,11 @@ public final class CompiledChallengePolicy {
         return new CompiledChallengePolicy(list);
     }
 
+    /**
+     * 按路径 + HTTP 方法 + 触发类型查找匹配策略。
+     *
+     * @return 首个命中的策略；无匹配返回 null
+     */
     public ChallengePolicy match(String path, org.springframework.http.HttpMethod method,
                                  ChallengeTrigger trigger) {
         for (Entry e : entries) {
@@ -55,6 +73,7 @@ public final class CompiledChallengePolicy {
         return null;
     }
 
+    /** 返回所有已编译（启用且有有效路径）的策略列表。 */
     public List<ChallengePolicy> all() {
         List<ChallengePolicy> result = new ArrayList<>(entries.size());
         for (Entry e : entries) result.add(e.policy);

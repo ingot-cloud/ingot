@@ -14,10 +14,35 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * 网关全局前置过滤器：统一剥离内部 Header，并标准化客户端 IP。
+ * 网关全局前置过滤器：剥离不可信内部 Header，并标准化客户端真实 IP。
+ *
+ * <p>作为安全策略链路的第一个 Filter（order = {@link GatewayFilterOrders#REQUEST_GLOBAL}），
+ * 后续 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter}、黑白名单、限流均依赖
+ * 本 Filter 写入的 {@link HeaderConstants#CLIENT_REAL_IP}（{@code X-Client-Real-IP}）。</p>
+ *
+ * <h3>IP 解析优先级（从高到低）</h3>
+ * <ol>
+ *     <li>{@code X-Forwarded-For} — 取多级代理链最左侧可信 IP（{@code getMultistageReverseProxyIp}）</li>
+ *     <li>{@code X-Real-IP}</li>
+ *     <li>{@code Proxy-Client-IP}</li>
+ *     <li>{@code WL-Proxy-Client-IP}</li>
+ *     <li>{@code request.getRemoteAddress()} — 直连网关时的 socket 地址</li>
+ * </ol>
+ * <p>每个候选值经 {@link com.ingot.framework.commons.utils.FingerprintUtil#normalizeIp} 标准化；
+ * 未知或空值跳过，全部缺失时写入空字符串。</p>
+ *
+ * <h3>Nginx 部署说明</h3>
+ * <p>网关通常位于 Nginx 之后。须在 Nginx 配置中正确传递客户端 IP，例如：</p>
+ * <pre>{@code
+ * proxy_set_header X-Real-IP        $remote_addr;
+ * proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
+ * }</pre>
+ * <p>若未配置代理头，将回退到网关与 Nginx 之间的连接地址（多为 Nginx 内网 IP），
+ * 导致黑白名单 / 限流的 IP 维度不准确。生产环境应确保仅信任一层反向代理写入的
+ * {@code X-Forwarded-For}，避免客户端伪造。</p>
  *
  * <p>内部 Header 清单见 {@link HeaderConstants#GATEWAY_INTERNAL_HEADERS}；
- * 后续 Filter 只负责写入可信值，不再各自 remove。</p>
+ * 本 Filter 统一 remove，后续 Filter 只写入可信值。</p>
  */
 @Slf4j
 @Component

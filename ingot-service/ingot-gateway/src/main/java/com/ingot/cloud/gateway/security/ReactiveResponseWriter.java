@@ -13,7 +13,24 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * 网关侧统一 JSON 响应工具：拒绝 / 限流 / 挑战均通过本类输出 {@link R} 结构体。
+ * 网关侧统一 JSON 响应写出工具。
+ *
+ * <p>安全策略拒绝路径均通过本类输出 {@link R} 结构体，保证前端与 BFF 解析一致：</p>
+ * <ul>
+ *     <li>{@link BlacklistFilter} — 403 + {@link GatewaySecurityConstants#CODE_FORBIDDEN_BLOCKED}</li>
+ *     <li>{@link ChallengeFilter} — 412 + {@link GatewaySecurityConstants#CODE_CHALLENGE_REQUIRED}</li>
+ *     <li>{@link SentinelBlockHandler} — 429 / 412 + 对应业务码</li>
+ * </ul>
+ *
+ * <p>若响应已提交（{@code response.isCommitted()}），直接返回 {@code Mono.empty()} 避免重复写出。</p>
+ *
+ * <h3>响应示例</h3>
+ * <pre>{@code
+ * // 403 黑名单
+ * { "code": "FORBIDDEN_BLOCKED", "msg": "Request blocked", "data": null }
+ * // 412 挑战
+ * { "code": "CHALLENGE_REQUIRED", "msg": "Captcha required", "data": { "vcType": "...", ... } }
+ * }</pre>
  *
  * @author jy
  * @since 2026/5/26

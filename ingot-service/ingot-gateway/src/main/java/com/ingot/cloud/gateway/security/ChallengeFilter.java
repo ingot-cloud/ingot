@@ -37,6 +37,25 @@ import java.util.Map;
  * 与验码失败次数无关。登录连续失败锁定由 account-domain 处理，不使用
  * {@code on_failure_threshold} 触发器。</p>
  *
+ * <h3>相关配置</h3>
+ * <pre>{@code
+ * ingot:
+ *   security:
+ *     challenge:
+ *       enabled: true
+ *       policy:
+ *         mode: local
+ *         policies:
+ *           - code: login-always
+ *             group-code: auth-api
+ *             trigger: ALWAYS
+ *             challenge-type: SLIDER
+ *             scope: login
+ *             pass-token-ttl-sec: 300
+ *             pass-token-remaining: 5
+ *             enabled: true
+ * }</pre>
+ *
  * @author jy
  * @since 2026/5/26
  */
@@ -45,8 +64,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChallengeFilter implements GlobalFilter, Ordered {
 
-    public static final String ATTR_PASS_TOKEN_OK = "ingot.security.passToken.ok";
-    public static final String CHALLENGE_CODE = "CHALLENGE_REQUIRED";
+    public static final String ATTR_PASS_TOKEN_OK = GatewaySecurityConstants.ATTR_PASS_TOKEN_OK;
+    public static final String CHALLENGE_CODE = GatewaySecurityConstants.CODE_CHALLENGE_REQUIRED;
 
     private final ObjectProvider<ChallengePolicyService> challengeProvider;
     private final PassTokenStore passTokenStore;
@@ -68,7 +87,7 @@ public class ChallengeFilter implements GlobalFilter, Ordered {
         String token = firstQueryParam(exchange, VCConstants.QUERY_PARAMS_PASS_TOKEN);
         if (token != null) {
             String scope = alwaysPolicy != null && alwaysPolicy.getScope() != null
-                    ? alwaysPolicy.getScope() : "default";
+                    ? alwaysPolicy.getScope() : GatewaySecurityConstants.DEFAULT_PASS_TOKEN_SCOPE;
             return passTokenStore.consume(scope, token)
                     .flatMap(ok -> {
                         if (Boolean.TRUE.equals(ok)) {
@@ -97,7 +116,7 @@ public class ChallengeFilter implements GlobalFilter, Ordered {
         exchange.getResponse().getHeaders().add(HttpHeaders.WWW_AUTHENTICATE,
                 "Captcha realm=\"" + data.get("vcType") + "\"");
         return responseWriter.writeJson(exchange.getResponse(), HttpStatus.PRECONDITION_FAILED,
-                R.error(data, CHALLENGE_CODE, "Captcha required"));
+                R.error(data, CHALLENGE_CODE, GatewaySecurityConstants.MSG_CAPTCHA_REQUIRED));
     }
 
     static String firstQueryParam(ServerWebExchange exchange, String key) {

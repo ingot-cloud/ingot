@@ -36,6 +36,8 @@ import org.springframework.context.annotation.Bean;
  * {@code SentinelGatewayConfiguration} 单独再注册一次回调（同域 List 串行，
  * 互不覆盖）。</p>
  *
+ * <p>yaml 配置示例见 {@link RateLimitProperties}。</p>
+ *
  * @author jy
  * @since 2026/5/26
  */
@@ -46,6 +48,10 @@ import org.springframework.context.annotation.Bean;
         name = "enabled", havingValue = "true")
 public class RateLimitAutoConfiguration {
 
+    /**
+     * local 模式限流规则服务。
+     * <p>激活条件：{@code policy.mode=local}（默认）且容器中尚无 {@link RateLimitRuleService} Bean。</p>
+     */
     @Bean
     @ConditionalOnMissingBean(RateLimitRuleService.class)
     @ConditionalOnProperty(prefix = "ingot.security.ratelimit.policy",
@@ -55,6 +61,10 @@ public class RateLimitAutoConfiguration {
         return new LocalRateLimitRuleService(properties);
     }
 
+    /**
+     * remote 模式限流规则服务。
+     * <p>激活条件：{@code policy.mode=remote} 且存在 {@link RemoteSnapshotFetcher} Bean。</p>
+     */
     @Bean
     @ConditionalOnMissingBean(RateLimitRuleService.class)
     @ConditionalOnProperty(prefix = "ingot.security.ratelimit.policy",
@@ -73,6 +83,11 @@ public class RateLimitAutoConfiguration {
         return new CoordinatorRegistrar();
     }
 
+    /**
+     * 限流域缓存失效注册器：在 {@link jakarta.annotation.PostConstruct} 阶段把
+     * {@link RateLimitRuleService#evictAll()} 挂到 Coordinator 的
+     * {@code RATE_LIMIT_RULE} 与 {@code ENDPOINT_GROUP} 域。
+     */
     @RequiredArgsConstructor
     static class CoordinatorRegistrar {
 
