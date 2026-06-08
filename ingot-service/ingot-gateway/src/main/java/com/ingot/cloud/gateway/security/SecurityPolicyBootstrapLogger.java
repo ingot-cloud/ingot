@@ -4,6 +4,8 @@ import com.ingot.framework.gateway.rule.client.blacklist.BlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListSnapshot;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
+import com.ingot.framework.gateway.rule.client.violation.ViolationEscalationService;
+import com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -28,6 +30,8 @@ import org.springframework.context.annotation.Configuration;
  *       enabled: true          # 关闭时日志：[SecurityPolicy] ratelimit disabled
  *     blacklist:
  *       enabled: true          # 关闭时日志：[SecurityPolicy] blacklist disabled
+ *     violation-escalation:
+ *       enabled: true          # 关闭时日志：[SecurityPolicy] violation-escalation disabled
  * # SDK mode（local / remote）由 ingot-gateway-rule-client 自身配置决定
  * }</pre>
  *
@@ -48,7 +52,8 @@ public class SecurityPolicyBootstrapLogger {
     @Bean
     public ApplicationRunner securityPolicyBootstrapRunner(
             ObjectProvider<RateLimitRuleService> rateLimitProvider,
-            ObjectProvider<BlacklistService> blacklistProvider) {
+            ObjectProvider<BlacklistService> blacklistProvider,
+            ObjectProvider<ViolationEscalationService> violationEscalationProvider) {
         return args -> {
             RateLimitRuleService rl = rateLimitProvider.getIfAvailable();
             if (rl == null) {
@@ -73,6 +78,20 @@ public class SecurityPolicyBootstrapLogger {
                             snap.getItems().size(), snap.getVersion());
                 } catch (Exception e) {
                     log.warn("[SecurityPolicy] blacklist snapshot load failed", e);
+                }
+            }
+
+            ViolationEscalationService ve = violationEscalationProvider.getIfAvailable();
+            if (ve == null) {
+                log.info("[SecurityPolicy] violation-escalation disabled (no ViolationEscalationService bean)");
+            } else {
+                try {
+                    ViolationEscalationConfig config = ve.getConfig();
+                    log.info("[SecurityPolicy] violation-escalation: enabled={}, windowSec={}, blockThreshold={}, tempBlockTtlSec={}, version={}",
+                            config.isEnabled(), config.getWindowSec(), config.getBlockThreshold(),
+                            config.getTempBlockTtlSec(), config.getVersion());
+                } catch (Exception e) {
+                    log.warn("[SecurityPolicy] violation-escalation load failed", e);
                 }
             }
         };

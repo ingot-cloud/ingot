@@ -13,19 +13,24 @@ import java.time.Duration;
 /**
  * 基于 Redis 的短期临时封禁存储。
  *
- * <p>当限流违规次数在滑动窗口内达到 {@link GatewaySecurityConstants#VIOLATION_BLOCK_THRESHOLD} 时，
+ * <p>当限流违规次数在滑动窗口内达到
+ * {@link com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig#getBlockThreshold()} 时，
  * {@link SentinelBlockHandler} 调用 {@link #block} 写入临时封禁；{@link BlacklistFilter} 在静态名单
  * 未命中时通过 {@link #isBlocked} 读取并返回 403。</p>
  *
  * <h3>Key 规范</h3>
  * <p>{@link GatewaySecurityConstants#REDIS_KEY_TEMP_BLOCK_PREFIX}{@code {keyType}:{keyValue}}，
  * value 为触发的规则编码（如 {@link GatewaySecurityConstants#RULE_CODE_RATE_LIMIT}），
- * TTL 默认 {@link GatewaySecurityConstants#TEMP_BLOCK_TTL_MINUTES} 分钟。</p>
+ * TTL 由 {@link com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig#getTempBlockTtlSec()} 决定。</p>
  *
  * <h3>相关配置</h3>
  * <pre>{@code
  * ingot:
  *   security:
+ *     violation-escalation:
+ *       enabled: true
+ *       policy:
+ *         temp-block-ttl-sec: 900
  *     blacklist:
  *       enabled: true          # BlacklistFilter 才会查询本 Store
  * spring:

@@ -43,7 +43,7 @@ flowchart LR
 |------|--------|
 | 规则 SDK | local / remote 加载、L1 缓存、失效广播、快照拉取失败降级 |
 | Filter 链 | Blacklist(+30) → Challenge(+40) → Sentinel(+50) 顺序与互斥响应 |
-| 限流 | IP / DEVICE / USER 维度、burst、dryRun、未配置路径不限流 |
+| 限流 | IP / DEVICE / USER 维度、burst、未配置路径不限流 |
 | 黑白名单 | 静态黑/白、CIDR、临时封禁、白名单跳过挑战与 Sentinel |
 | 挑战 | ALWAYS 强制 412、ON_RATE_LIMIT 限流降级 412、PassToken 全链路 |
 | 运行时 Redis | PassToken、ViolationCounter、TempBlockStore |
@@ -232,30 +232,12 @@ Content-Type: application/json
   "intervalSec": 1,
   "controlBehavior": "F",
   "enabled": true,
-  "dryRun": false,
   "priority": 0
 }
 ```
 
 ```http
 POST {{GATEWAY}}/platform/security/policy/rules
-```
-
-**规则 B — dryRun 观察**
-
-```json
-{
-  "code": "e2e-dryrun",
-  "groupCode": "e2e-public",
-  "dimension": "IP",
-  "qps": 1,
-  "burst": 1,
-  "intervalSec": 1,
-  "controlBehavior": "F",
-  "enabled": true,
-  "dryRun": true,
-  "priority": 1
-}
 ```
 
 **规则 C — DEVICE 维度（可选 P1）**
@@ -270,7 +252,6 @@ POST {{GATEWAY}}/platform/security/policy/rules
   "intervalSec": 1,
   "controlBehavior": "F",
   "enabled": true,
-  "dryRun": false,
   "priority": 0
 }
 ```
@@ -329,7 +310,6 @@ POST {{GATEWAY}}/platform/security/policy/challenges
 |----|--------|------|------|
 | TC-SP-001 | P0 | 限流 | 未配置路径不限流 |
 | TC-SP-002 | P0 | 限流 | 超 QPS 返回 429 |
-| TC-SP-003 | P0 | 限流 | dryRun 不阻断 |
 | TC-SP-004 | P1 | 限流 | IP 维度隔离 |
 | TC-SP-005 | P1 | 限流 | DEVICE 维度（Header） |
 | TC-SP-006 | P1 | 限流 | USER 维度（需登录） |
@@ -377,14 +357,6 @@ for i in $(seq 1 6); do
     -H "X-Forwarded-For: $TEST_IP"
 done
 ```
-
-### TC-SP-003 dryRun 不阻断
-
-| 项 | 内容 |
-|----|------|
-| 前置 | 规则 A `enabled: false`；仅规则 B（dryRun=true）启用 |
-| 步骤 | 高速请求 `POST /test/send` |
-| 期望 | 客户端始终 200；网关日志出现 dry-run / block 相关观察日志，**不**返回 429 |
 
 ### TC-SP-004 IP 维度隔离
 

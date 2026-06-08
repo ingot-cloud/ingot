@@ -11,6 +11,8 @@ import com.ingot.framework.gateway.rule.client.blacklist.model.IpKeyType;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger;
+import com.ingot.framework.gateway.rule.client.violation.ViolationEscalationService;
+import com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +32,12 @@ import java.time.Duration;
  *
  * <h3>处理流程</h3>
  * <ol>
- *     <li>异步累加违规计数（{@link ViolationCounter}，窗口见
- *         {@link GatewaySecurityConstants#VIOLATION_WINDOW_SECONDS}）</li>
- *     <li>窗口内违规 ≥ {@link GatewaySecurityConstants#VIOLATION_BLOCK_THRESHOLD}
+ *     <li>若 {@code ingot.security.violation-escalation.enabled=true} 且配置启用，
+ *         异步累加违规计数（{@link ViolationCounter}，窗口见
+ *         {@link ViolationEscalationConfig#getWindowSec()}）</li>
+ *     <li>窗口内违规 ≥ {@link ViolationEscalationConfig#getBlockThreshold()}
  *         → {@link TempBlockStore} 临时封禁
- *         {@link GatewaySecurityConstants#TEMP_BLOCK_TTL_MINUTES} 分钟，
+ *         {@link ViolationEscalationConfig#getTempBlockTtlSec()} 秒，
  *         后续由 {@link BlacklistFilter} 返回 403</li>
  *     <li>异步上报审计（{@link BlacklistEventReporter} → security 服务）</li>
  *     <li>匹配 {@link ChallengeTrigger#ON_RATE_LIMIT} 挑战策略 → 412；否则 429</li>
@@ -46,6 +49,13 @@ import java.time.Duration;
  *   security:
  *     ratelimit:
  *       enabled: true
+ *     violation-escalation:
+ *       enabled: true
+ *       policy:
+ *         mode: local
+ *         window-sec: 60
+ *         block-threshold: 30
+ *         temp-block-ttl-sec: 900
  *     challenge:
  *       enabled: true
  *       policy:
@@ -62,16 +72,12 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class SentinelBlockHandler implements BlockRequestHandler {
 
-    private static final Duration VIOLATION_WINDOW =
-            Duration.ofSeconds(GatewaySecurityConstants.VIOLATION_WINDOW_SECONDS);
-    private static final Duration TEMP_BLOCK_TTL =
-            Duration.ofMinutes(GatewaySecurityConstants.TEMP_BLOCK_TTL_MINUTES);
-
     private final ViolationCounter violationCounter;
     private final TempBlockStore tempBlockStore;
     private final BlacklistEventReporter reporter;
     private final ReactiveResponseWriter responseWriter;
     private final ObjectProvider<ChallengePolicyService> challengeProvider;
+    private final ObjectProvider<ViolationEscalationService> violationEscalationProvider;
 
     @PostConstruct
     public void register() {
@@ -117,20 +123,37 @@ public class SentinelBlockHandler implements BlockRequestHandler {
     }
 
     private void accumulateAndMaybeBlock(ServerWebExchange exchange, ClientIdentity identity, String ruleCode) {
+        ViolationEscalationService escalationService = violationEscalationProvider.getIfAvailable();
+        if (escalationService == null) {
+            return;
+        }
+        ViolationEscalationConfig config;
+        try {
+            config = escalationService.getConfig();
+        } catch (Exception e) {
+            log.warn("[Sentinel] load violation escalation config failed", e);
+            return;
+        }
+        if (config == null || !config.isEnabled()) {
+            return;
+        }
         if (identity == null || identity.getIp() == null) {
             return;
         }
         String keyType = IpKeyType.IP.dbCode();
         String keyValue = identity.getIp();
-        violationCounter.incr(keyType, keyValue, ruleCode, VIOLATION_WINDOW)
+        Duration window = Duration.ofSeconds(config.getWindowSec());
+        Duration tempBlockTtl = Duration.ofSeconds(config.getTempBlockTtlSec());
+        int blockThreshold = config.getBlockThreshold();
+        violationCounter.incr(keyType, keyValue, ruleCode, window)
                 .flatMap(count -> {
-                    if (count != null && count >= GatewaySecurityConstants.VIOLATION_BLOCK_THRESHOLD) {
-                        log.info("[Sentinel] threshold reached, temp-block ip={} count={}",
-                                keyValue, count);
+                    if (count != null && count >= blockThreshold) {
+                        log.info("[Sentinel] threshold reached, temp-block ip={} count={} threshold={}",
+                                keyValue, count, blockThreshold);
                         BlacklistReportDTO dto = buildReport(exchange, identity, ruleCode,
-                                count.intValue(), (int) TEMP_BLOCK_TTL.getSeconds());
+                                count.intValue(), (int) tempBlockTtl.getSeconds());
                         reporter.report(dto);
-                        return tempBlockStore.block(keyType, keyValue, ruleCode, TEMP_BLOCK_TTL);
+                        return tempBlockStore.block(keyType, keyValue, ruleCode, tempBlockTtl);
                     }
                     return Mono.empty();
                 })

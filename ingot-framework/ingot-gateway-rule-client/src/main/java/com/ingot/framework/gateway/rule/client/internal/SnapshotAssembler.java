@@ -5,6 +5,7 @@ import com.ingot.cloud.security.api.model.vo.policy.EndpointPatternVO;
 import com.ingot.cloud.security.api.model.vo.policy.IpListItemVO;
 import com.ingot.cloud.security.api.model.vo.policy.RateLimitRuleVO;
 import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
+import com.ingot.cloud.security.api.model.vo.policy.ViolationEscalationVO;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpKeyType;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListItem;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListSnapshot;
@@ -14,6 +15,7 @@ import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitDimension;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
+import com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +64,23 @@ public class SnapshotAssembler {
         }
         List<IpListItem> items = vo.getIpList().stream().map(SnapshotAssembler::toIpListItem).toList();
         return new IpListSnapshot(items, vo.getVersion());
+    }
+
+    /**
+     * 从全量快照中提取违规升级配置；缺失时返回 {@link ViolationEscalationConfig#defaults()}。
+     */
+    public static ViolationEscalationConfig toViolationEscalationConfig(SecurityPolicySnapshotVO vo) {
+        if (vo == null || vo.getViolationEscalation() == null) {
+            return ViolationEscalationConfig.defaults();
+        }
+        ViolationEscalationVO v = vo.getViolationEscalation();
+        return ViolationEscalationConfig.builder()
+                .windowSec(Math.max(1, v.getWindowSec()))
+                .blockThreshold(Math.max(1, v.getBlockThreshold()))
+                .tempBlockTtlSec(Math.max(60, v.getTempBlockTtlSec()))
+                .enabled(v.isEnabled())
+                .version(vo.getVersion())
+                .build();
     }
 
     private static RateLimitRule toRule(RateLimitRuleVO v) {

@@ -3,6 +3,7 @@ package com.ingot.cloud.security.service.policy;
 import com.ingot.cloud.security.model.domain.GatewayEndpointGroup;
 import com.ingot.cloud.security.model.domain.GatewayIpList;
 import com.ingot.cloud.security.model.domain.GatewayRateLimitRule;
+import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
 import com.ingot.cloud.security.model.domain.SecurityChallengePolicy;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public record SecurityPolicySnapshot(
         List<GatewayRateLimitRule> rules,
         List<GatewayIpList> ipList,
         List<SecurityChallengePolicy> challengePolicies,
+        GatewayViolationEscalation violationEscalation,
         long version
 ) {
 }

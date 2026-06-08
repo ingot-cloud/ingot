@@ -6,7 +6,9 @@ import com.ingot.cloud.security.api.model.vo.policy.EndpointGroupVO;
 import com.ingot.cloud.security.api.model.vo.policy.IpListItemVO;
 import com.ingot.cloud.security.api.model.vo.policy.RateLimitRuleVO;
 import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
+import com.ingot.cloud.security.api.model.vo.policy.ViolationEscalationVO;
 import com.ingot.cloud.security.model.domain.GatewayBlacklistEvent;
+import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
 import com.ingot.cloud.security.service.policy.SecurityPolicyAdminService;
 import com.ingot.cloud.security.service.policy.SecurityPolicySnapshot;
 import com.ingot.framework.commons.model.support.R;
@@ -71,7 +73,21 @@ public class InnerSecurityPolicyAPI implements RShortcuts {
             v.setPriority(orZero(e.getPriority()));
             return v;
         }).toList());
+        vo.setViolationEscalation(toViolationEscalationVO(snap.violationEscalation()));
         return ok(vo);
+    }
+
+    private static ViolationEscalationVO toViolationEscalationVO(GatewayViolationEscalation entity) {
+        if (entity == null) {
+            return null;
+        }
+        ViolationEscalationVO vo = new ViolationEscalationVO();
+        vo.setId(entity.getId());
+        vo.setWindowSec(orZero(entity.getWindowSec()));
+        vo.setBlockThreshold(orZero(entity.getBlockThreshold()));
+        vo.setTempBlockTtlSec(orZero(entity.getTempBlockTtlSec()));
+        vo.setEnabled(Boolean.TRUE.equals(entity.getEnabled()));
+        return vo;
     }
 
     @PostMapping("/blacklist/report")

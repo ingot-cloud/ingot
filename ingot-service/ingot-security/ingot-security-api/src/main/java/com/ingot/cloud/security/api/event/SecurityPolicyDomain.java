@@ -9,6 +9,7 @@ package com.ingot.cloud.security.api.event;
  *     <li>{@link #ENDPOINT_GROUP} — API 路径分组定义</li>
  *     <li>{@link #IP_LIST} — IP / 设备 / 用户 / CIDR / UA 黑白名单</li>
  *     <li>{@link #CHALLENGE_POLICY} — 挑战策略（限流命中后要求验证码）</li>
+ *     <li>{@link #VIOLATION_ESCALATION} — 限流违规升级（滑动窗口 / 封禁阈值 / 临时封禁 TTL）</li>
  *     <li>{@link #ALL} — 全量失效，订阅方清空所有域缓存</li>
  * </ul>
  *
@@ -21,5 +22,6 @@ public enum SecurityPolicyDomain {
     RATE_LIMIT_RULE,
     ENDPOINT_GROUP,
     IP_LIST,
-    CHALLENGE_POLICY
+    CHALLENGE_POLICY,
+    VIOLATION_ESCALATION
 }

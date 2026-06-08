@@ -17,6 +17,8 @@ import lombok.experimental.UtilityClass;
  *       enabled: true              # 为 true 时 Sentinel 编译 SDK 规则
  *     blacklist:
  *       enabled: true              # 静态名单 + 读取 Redis 临时封禁
+ *     violation-escalation:
+ *       enabled: true              # 限流违规计数与临时封禁阈值（见 ViolationEscalationProperties）
  *     challenge:
  *       enabled: true              # ALWAYS / ON_RATE_LIMIT 挑战
  * spring:
@@ -81,16 +83,8 @@ public class GatewaySecurityConstants {
     /** 策略未配置 scope 时的默认 PassToken 作用域。 */
     public static final String DEFAULT_PASS_TOKEN_SCOPE = "default";
 
-    // ---- 限流违规升级（Phase 1 阈值未配置化，见 SentinelBlockHandler） ----
-
-    /** 滑动窗口内限流拒绝次数达到该值即临时封禁。 */
-    public static final long VIOLATION_BLOCK_THRESHOLD = 30L;
-
-    /** 违规计数滑动窗口（秒）。 */
-    public static final long VIOLATION_WINDOW_SECONDS = 60L;
-
-    /** 临时封禁 TTL（分钟）。 */
-    public static final long TEMP_BLOCK_TTL_MINUTES = 15L;
+    /** PassToken 签发时 remaining / ttl 下限。 */
+    public static final int MIN_PASS_TOKEN_REMAINING = 1;
 
     /** 429 响应 {@code Retry-After} 头（秒）。 */
     public static final String RETRY_AFTER_SECONDS = "1";
@@ -100,7 +94,4 @@ public class GatewaySecurityConstants {
 
     /** Sentinel 编译时 intervalSec 下限。 */
     public static final int MIN_RATE_LIMIT_INTERVAL_SEC = 1;
-
-    /** PassToken 签发时 remaining / ttl 下限。 */
-    public static final int MIN_PASS_TOKEN_REMAINING = 1;
 }

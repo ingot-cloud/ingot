@@ -4,6 +4,7 @@ import com.ingot.cloud.security.model.domain.GatewayBlacklistEvent;
 import com.ingot.cloud.security.model.domain.GatewayEndpointGroup;
 import com.ingot.cloud.security.model.domain.GatewayIpList;
 import com.ingot.cloud.security.model.domain.GatewayRateLimitRule;
+import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
 import com.ingot.cloud.security.model.domain.SecurityChallengePolicy;
 import com.ingot.cloud.security.service.policy.SecurityPolicyAdminService;
 import com.ingot.framework.commons.model.support.R;
@@ -178,6 +179,23 @@ public class SecurityPolicyAPI implements RShortcuts {
     @AdminOrHasAnyAuthority({"platform:security:policy:delete"})
     public R<Void> deleteChallengePolicy(@PathVariable Long id) {
         policyService.deleteChallengePolicy(id);
+        return ok();
+    }
+
+    // ====== violation escalation ======
+
+    @GetMapping("/violation-escalation")
+    @Operation(summary = "查询限流违规升级配置")
+    @AdminOrHasAnyAuthority({"platform:security:policy:query"})
+    public R<GatewayViolationEscalation> getViolationEscalation() {
+        return ok(policyService.getViolationEscalation());
+    }
+
+    @PutMapping("/violation-escalation")
+    @Operation(summary = "更新限流违规升级配置")
+    @AdminOrHasAnyAuthority({"platform:security:policy:update"})
+    public R<Void> saveViolationEscalation(@RequestBody GatewayViolationEscalation config) {
+        policyService.saveViolationEscalation(config);
         return ok();
     }
 

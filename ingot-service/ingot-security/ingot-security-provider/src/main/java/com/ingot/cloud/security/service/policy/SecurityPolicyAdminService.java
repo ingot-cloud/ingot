@@ -4,6 +4,7 @@ import com.ingot.cloud.security.model.domain.GatewayBlacklistEvent;
 import com.ingot.cloud.security.model.domain.GatewayEndpointGroup;
 import com.ingot.cloud.security.model.domain.GatewayIpList;
 import com.ingot.cloud.security.model.domain.GatewayRateLimitRule;
+import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
 import com.ingot.cloud.security.model.domain.SecurityChallengePolicy;
 
 import java.util.List;
@@ -59,6 +60,11 @@ public interface SecurityPolicyAdminService {
     SecurityChallengePolicy updateChallengePolicy(SecurityChallengePolicy policy);
 
     void deleteChallengePolicy(Long id);
+
+    // ====== violation escalation ======
+    GatewayViolationEscalation getViolationEscalation();
+
+    GatewayViolationEscalation saveViolationEscalation(GatewayViolationEscalation config);
 
     // ====== snapshot ======
     /**

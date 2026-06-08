@@ -38,9 +38,13 @@ public class SecurityPolicySnapshotVO implements Serializable {
 
     /**
      * 挑战策略列表，对应 {@code security_challenge_policy}。
-     * 后续 Phase 加入 VC 配置等扩展域。
      */
     private List<ChallengePolicyVO> challengePolicies;
+
+    /**
+     * 限流违规升级全局配置，对应 {@code gateway_violation_escalation} 单行表。
+     */
+    private ViolationEscalationVO violationEscalation;
 
     /**
      * 快照单调递增版本号；任意策略变更后递增，供 SDK 增量比对与 InvalidationBus 通知。

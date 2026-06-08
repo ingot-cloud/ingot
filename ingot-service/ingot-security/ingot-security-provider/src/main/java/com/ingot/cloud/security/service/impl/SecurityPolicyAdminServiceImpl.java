@@ -7,11 +7,13 @@ import com.ingot.cloud.security.mapper.GatewayBlacklistEventMapper;
 import com.ingot.cloud.security.mapper.GatewayEndpointGroupMapper;
 import com.ingot.cloud.security.mapper.GatewayIpListMapper;
 import com.ingot.cloud.security.mapper.GatewayRateLimitRuleMapper;
+import com.ingot.cloud.security.mapper.GatewayViolationEscalationMapper;
 import com.ingot.cloud.security.mapper.SecurityChallengePolicyMapper;
 import com.ingot.cloud.security.model.domain.GatewayBlacklistEvent;
 import com.ingot.cloud.security.model.domain.GatewayEndpointGroup;
 import com.ingot.cloud.security.model.domain.GatewayIpList;
 import com.ingot.cloud.security.model.domain.GatewayRateLimitRule;
+import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
 import com.ingot.cloud.security.model.domain.SecurityChallengePolicy;
 import com.ingot.cloud.security.service.policy.SecurityPolicyAdminService;
 import com.ingot.cloud.security.service.policy.SecurityPolicyChangedSpringEvent;
@@ -45,6 +47,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     private final GatewayIpListMapper ipListMapper;
     private final GatewayBlacklistEventMapper eventMapper;
     private final SecurityChallengePolicyMapper challengeMapper;
+    private final GatewayViolationEscalationMapper violationEscalationMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final AssertionChecker assertionChecker;
     private final ObjectProvider<InvalidationBus> invalidationBusProvider;
@@ -219,6 +222,38 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
         publishChanged(com.ingot.cloud.security.api.event.SecurityPolicyDomain.CHALLENGE_POLICY);
     }
 
+    // ============== violation escalation ==============
+
+    @Override
+    public GatewayViolationEscalation getViolationEscalation() {
+        GatewayViolationEscalation config = violationEscalationMapper.selectById(
+                GatewayViolationEscalation.SINGLETON_ID);
+        if (config == null) {
+            config = defaultViolationEscalation();
+        }
+        return config;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public GatewayViolationEscalation saveViolationEscalation(GatewayViolationEscalation config) {
+        validateViolationEscalation(config);
+        config.setId(GatewayViolationEscalation.SINGLETON_ID);
+        LocalDateTime now = DateUtil.now();
+        GatewayViolationEscalation existing = violationEscalationMapper.selectById(config.getId());
+        if (existing == null) {
+            config.setCreatedAt(now);
+            config.setUpdatedAt(now);
+            violationEscalationMapper.insert(config);
+        } else {
+            config.setCreatedAt(existing.getCreatedAt());
+            config.setUpdatedAt(now);
+            violationEscalationMapper.updateById(config);
+        }
+        publishChanged(SecurityPolicyDomain.VIOLATION_ESCALATION);
+        return config;
+    }
+
     // ============== snapshot ==============
 
     @Override
@@ -227,8 +262,9 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
         List<GatewayRateLimitRule> rules = listRules();
         List<GatewayIpList> ipList = listIpList();
         List<SecurityChallengePolicy> challengePolicies = listChallengePolicies();
-        long version = maxTimestamp(groups, rules, ipList, challengePolicies);
-        return new SecurityPolicySnapshot(groups, rules, ipList, challengePolicies, version);
+        GatewayViolationEscalation violationEscalation = getViolationEscalation();
+        long version = maxTimestamp(groups, rules, ipList, challengePolicies, violationEscalation);
+        return new SecurityPolicySnapshot(groups, rules, ipList, challengePolicies, violationEscalation, version);
     }
 
     @Override
@@ -249,7 +285,8 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     private static long maxTimestamp(List<GatewayEndpointGroup> groups,
                                      List<GatewayRateLimitRule> rules,
                                      List<GatewayIpList> ipList,
-                                     List<SecurityChallengePolicy> challenges) {
+                                     List<SecurityChallengePolicy> challenges,
+                                     GatewayViolationEscalation violationEscalation) {
         long max = 0L;
         for (GatewayEndpointGroup g : groups) {
             max = Math.max(max, toMillis(g.getUpdatedAt()));
@@ -263,7 +300,30 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
         for (SecurityChallengePolicy c : challenges) {
             max = Math.max(max, toMillis(c.getUpdatedAt()));
         }
+        if (violationEscalation != null) {
+            max = Math.max(max, toMillis(violationEscalation.getUpdatedAt()));
+        }
         return max;
+    }
+
+    private static GatewayViolationEscalation defaultViolationEscalation() {
+        GatewayViolationEscalation config = new GatewayViolationEscalation();
+        config.setId(GatewayViolationEscalation.SINGLETON_ID);
+        config.setWindowSec(60);
+        config.setBlockThreshold(30);
+        config.setTempBlockTtlSec(900);
+        config.setEnabled(true);
+        return config;
+    }
+
+    private void validateViolationEscalation(GatewayViolationEscalation config) {
+        assertionChecker.checkOperation(config != null, "SecurityPolicy.ViolationEscalationNotNull");
+        assertionChecker.checkOperation(config.getWindowSec() != null && config.getWindowSec() >= 1,
+                "SecurityPolicy.ViolationWindowInvalid");
+        assertionChecker.checkOperation(config.getBlockThreshold() != null && config.getBlockThreshold() >= 1,
+                "SecurityPolicy.ViolationThresholdInvalid");
+        assertionChecker.checkOperation(config.getTempBlockTtlSec() != null && config.getTempBlockTtlSec() >= 60,
+                "SecurityPolicy.ViolationTtlInvalid");
     }
 
     private static long toMillis(LocalDateTime t) {

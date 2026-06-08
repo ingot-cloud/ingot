@@ -17,8 +17,8 @@ import java.util.List;
  * Redis 原子计数器：限流命中后累加违规次数，并附带 TTL 滑动窗口。
  *
  * <p>{@link SentinelBlockHandler} 在 Sentinel 抛出 BlockException 时调用 {@link #incr}；
- * 返回值达到 {@link GatewaySecurityConstants#VIOLATION_BLOCK_THRESHOLD} 即触发
- * {@link TempBlockStore#block} 与 {@link BlacklistEventReporter} 审计上报。</p>
+ * 返回值达到 {@link com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig#getBlockThreshold()}
+ * 即触发 {@link TempBlockStore#block} 与 {@link BlacklistEventReporter} 审计上报。</p>
  *
  * <h3>Key 规范</h3>
  * <p>{@link GatewaySecurityConstants#REDIS_KEY_VIOLATION_PREFIX}{@code {keyType}:{keyValue}:{ruleCode}}</p>
@@ -29,8 +29,8 @@ import java.util.List;
  *   if v == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end
  *   return v
  * </pre>
- * <p>窗口长度默认 {@link GatewaySecurityConstants#VIOLATION_WINDOW_SECONDS} 秒（Phase 1 硬编码，
- * 未配置化）；TTL 下限见 {@link GatewaySecurityConstants#MIN_VIOLATION_WINDOW_MS}。</p>
+ * <p>窗口长度由 {@link com.ingot.framework.gateway.rule.client.violation.ViolationEscalationService}
+ * 提供；TTL 下限见 {@link GatewaySecurityConstants#MIN_VIOLATION_WINDOW_MS}。</p>
  *
  * <h3>相关配置</h3>
  * <pre>{@code
@@ -38,6 +38,10 @@ import java.util.List;
  *   security:
  *     ratelimit:
  *       enabled: true          # 限流开启后 SentinelBlockHandler 才会调用 incr
+ *     violation-escalation:
+ *       enabled: true
+ *       policy:
+ *         window-sec: 60
  * spring:
  *   data:
  *     redis:
