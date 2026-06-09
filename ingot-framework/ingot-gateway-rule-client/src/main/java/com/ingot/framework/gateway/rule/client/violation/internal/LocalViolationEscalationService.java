@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.violation.internal;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.ingot.framework.gateway.rule.client.internal.LocalCompiledCache;
 import com.ingot.framework.gateway.rule.client.violation.ViolationEscalationService;
 import com.ingot.framework.gateway.rule.client.violation.config.ViolationEscalationProperties;
 import com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 违规升级配置 — local 模式：从 {@link ViolationEscalationProperties} 编译并 L1 缓存。

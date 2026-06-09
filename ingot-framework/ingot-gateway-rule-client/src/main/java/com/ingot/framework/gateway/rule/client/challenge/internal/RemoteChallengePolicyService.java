@@ -1,5 +1,8 @@
 package com.ingot.framework.gateway.rule.client.challenge.internal;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.ingot.cloud.security.api.model.vo.policy.ChallengePolicyVO;
 import com.ingot.cloud.security.api.model.vo.policy.EndpointPatternVO;
 import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
@@ -16,9 +19,6 @@ import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 挑战策略服务 — remote 模式实现。

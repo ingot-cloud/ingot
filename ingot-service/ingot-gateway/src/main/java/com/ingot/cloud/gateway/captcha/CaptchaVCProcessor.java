@@ -1,22 +1,21 @@
 package com.ingot.cloud.gateway.captcha;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import cn.hutool.core.util.StrUtil;
 import com.anji.captcha.model.common.ResponseModel;
-import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
+import com.ingot.cloud.gateway.security.PassTokenStore;
 import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.commons.model.support.R;
-import com.ingot.framework.commons.utils.reactive.WebUtil;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.vc.VCGenerator;
 import com.ingot.framework.vc.common.VCConstants;
-import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProcessor;
-import com.ingot.framework.vc.module.reactive.ReactorUtils;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
-import com.ingot.cloud.gateway.security.PassTokenStore;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
@@ -27,9 +26,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * 网关 Captcha 处理器：保留原有登录验码逻辑，并在风控挑战场景下签发 PassToken。
@@ -105,24 +101,25 @@ public class CaptchaVCProcessor implements VCProcessor {
 
     @Override
     public Mono<ServerResponse> check(VCType type, ServerRequest request) {
-        try {
-            String pointJson = ReactorUtils.getFromRequest(request, "pointJson");
-            String token = ReactorUtils.getFromRequest(request, "token");
-
-            CaptchaVO vo = new CaptchaVO();
-            vo.setPointJson(pointJson);
-            vo.setToken(token);
-            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
-            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            ResponseModel responseModel = captchaService.check(vo);
-
-            String scope = request.queryParam(VCConstants.QUERY_PARAMS_SCOPE).orElse(null);
-            return issuePassToken(scope)
-                    .map(passToken -> buildCheckResponse(responseModel, scope, passToken))
-                    .flatMap(ReactorUtils::successResponse);
-        } catch (VCException e) {
-            return Mono.error(e);
-        }
+//        try {
+//            String pointJson = ReactorUtils.getFromRequest(request, "pointJson");
+//            String token = ReactorUtils.getFromRequest(request, "token");
+//
+//            CaptchaVO vo = new CaptchaVO();
+//            vo.setPointJson(pointJson);
+//            vo.setToken(token);
+//            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
+//            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
+//            ResponseModel responseModel = captchaService.check(vo);
+//
+//            String scope = request.queryParam(VCConstants.QUERY_PARAMS_SCOPE).orElse(null);
+//            return issuePassToken(scope)
+//                    .map(passToken -> buildCheckResponse(responseModel, scope, passToken))
+//                    .flatMap(ReactorUtils::successResponse);
+//        } catch (VCException e) {
+//            return Mono.error(e);
+//        }
+        return defaultCaptchaVCProcessor.check(type, request);
     }
 
     private Mono<String> issuePassToken(String scope) {

@@ -1,10 +1,10 @@
 package com.ingot.framework.gateway.rule.client.violation.model;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Builder;
+import lombok.Getter;
 
 /**
  * 限流违规升级运行时配置：滑动窗口、封禁阈值、临时封禁 TTL。

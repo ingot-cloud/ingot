@@ -1,11 +1,11 @@
 package com.ingot.framework.gateway.rule.client.challenge.internal;
 
-import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
-import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
+import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger;
 
 /**
  * 编译后的挑战策略索引。

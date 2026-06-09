@@ -1,5 +1,10 @@
 package com.ingot.framework.gateway.rule.client.internal;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.cloud.security.api.event.SecurityPolicyInvalidationEvent;
 import com.ingot.framework.eventbus.InvalidationBus;
@@ -8,11 +13,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 安全策略缓存协调器：订阅 {@link SecurityPolicyInvalidationEvent}，

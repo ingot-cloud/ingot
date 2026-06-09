@@ -1,15 +1,11 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.model;
 
-import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+
+import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
+import lombok.*;
 
 /**
  * API 路径分组，供多条 {@link RateLimitRule} 或挑战策略复用同一组 path。

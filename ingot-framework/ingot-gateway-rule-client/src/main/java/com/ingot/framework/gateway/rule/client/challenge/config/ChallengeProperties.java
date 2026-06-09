@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.challenge.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 挑战策略配置（前缀 {@code ingot.security.challenge}）。

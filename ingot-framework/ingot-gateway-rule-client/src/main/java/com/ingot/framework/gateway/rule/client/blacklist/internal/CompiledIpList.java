@@ -1,20 +1,14 @@
 package com.ingot.framework.gateway.rule.client.blacklist.internal;
 
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpKeyType;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListItem;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListType;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * 编译后的黑白名单索引：按 listType + keyType 拆分到独立集合 / 正则列表，

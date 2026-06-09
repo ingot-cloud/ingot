@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 限流域配置：模式开关 + local 模式的内联规则与分组。

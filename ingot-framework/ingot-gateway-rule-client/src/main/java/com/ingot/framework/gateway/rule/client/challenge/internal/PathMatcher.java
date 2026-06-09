@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.challenge.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
 import lombok.experimental.UtilityClass;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 路径模式编译与匹配工具。

@@ -1,14 +1,10 @@
 package com.ingot.framework.gateway.rule.client.blacklist.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.*;
 
 /**
  * 单条黑白名单条目。对应 {@code gateway_ip_list} 表。

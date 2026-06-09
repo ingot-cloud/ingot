@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.internal;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.ingot.framework.gateway.rule.client.internal.LocalCompiledCache;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.config.RateLimitProperties;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 限流规则服务 — local 模式实现。

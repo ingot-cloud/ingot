@@ -1,14 +1,13 @@
 package com.ingot.framework.gateway.rule.client.internal;
 
-import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
+import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import lombok.experimental.UtilityClass;
 
 /**

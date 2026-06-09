@@ -1,5 +1,7 @@
 package com.ingot.framework.gateway.rule.client.blacklist.internal;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.ingot.framework.gateway.rule.client.blacklist.BlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.config.BlacklistProperties;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpKeyType;
@@ -7,8 +9,6 @@ import com.ingot.framework.gateway.rule.client.blacklist.model.IpListSnapshot;
 import com.ingot.framework.gateway.rule.client.internal.LocalCompiledCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 黑白名单服务 — local 模式实现。

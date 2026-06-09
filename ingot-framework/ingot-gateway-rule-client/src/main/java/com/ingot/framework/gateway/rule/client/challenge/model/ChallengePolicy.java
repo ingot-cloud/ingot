@@ -1,15 +1,11 @@
 package com.ingot.framework.gateway.rule.client.challenge.model;
 
-import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+
+import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
+import lombok.*;
 
 /**
  * 挑战策略定义 POJO，对应表 {@code gateway_challenge_policy}。

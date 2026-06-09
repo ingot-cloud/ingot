@@ -1,12 +1,12 @@
 package com.ingot.framework.gateway.rule.client.blacklist.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListItem;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 黑白名单域配置。
