@@ -1,6 +1,8 @@
-# Software Design Documents
+# Spec-Driven Development
 
-`specs` 是公司内部软件设计与变更管理的事实来源，结合以下思想：
+本仓库使用 SDD（Spec-Driven Development，规格驱动开发）管理需求、设计、实施、验收和系统基线。
+
+`specs` 是公司内部规格与变更管理的事实来源，结合以下思想：
 
 - OpenSpec：区分当前系统事实与待实施变更，并保留变更历史。
 - GitHub Spec Kit：每个变更包含需求、设计、任务和验收工件。
@@ -187,4 +189,3 @@ current/<domain>/<capability>/
 ## 7. 当前活动变更
 
 - [PMS 应用中心化授权改造](./changes/active/20260612-pms-application-authorization/README.md)
-
