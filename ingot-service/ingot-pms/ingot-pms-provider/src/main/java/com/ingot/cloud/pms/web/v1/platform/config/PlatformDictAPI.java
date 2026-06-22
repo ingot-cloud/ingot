@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.base;
+package com.ingot.cloud.pms.web.v1.platform.config;
 
 import java.util.List;
 
@@ -31,33 +31,33 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @Tag(description = "PlatformDict", name = "平台字典管理模块")
-@RequestMapping(value = "/v1/platform/base/dict")
+@RequestMapping(value = "/v1/platform/config/dict")
 @RequiredArgsConstructor
 public class PlatformDictAPI implements RShortcuts {
     private final BizPlatformDictService platformDictService;
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:query"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:query"})
     @GetMapping("/tree")
     @Operation(summary = "字典树", description = "返回字典类型与字典项的树形结构")
     public R<List<DictTreeNodeVO>> tree(DictQueryDTO query) {
         return ok(platformDictService.tree(query));
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:query"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:query"})
     @GetMapping("/page")
     @Operation(summary = "字典分页", description = "管理端分页查询字典节点")
     public R<IPage<PlatformDict>> page(Page<PlatformDict> page, DictQueryDTO query) {
         return ok(platformDictService.page(page, query));
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:query"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:query"})
     @GetMapping("/items/{code}")
     @Operation(summary = "字典项查询", description = "根据 code 返回作用域生效字典项")
     public R<List<DictItemVO>> items(@PathVariable String code, DictQueryDTO query) {
         return ok(platformDictService.items(code, query));
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:create"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:create"})
     @PostMapping
     @Operation(summary = "创建字典", description = "创建字典节点")
     public R<?> create(@Validated(Group.Create.class) @RequestBody PlatformDict params) {
@@ -65,7 +65,7 @@ public class PlatformDictAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:update"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:update"})
     @PutMapping
     @Operation(summary = "更新字典", description = "更新字典节点")
     public R<?> update(@Validated(Group.Update.class) @RequestBody PlatformDict params) {
@@ -73,7 +73,7 @@ public class PlatformDictAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:update"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:update"})
     @PatchMapping("/{id}/status/{status}")
     @Operation(summary = "切换字典状态", description = "启用/禁用字典节点")
     public R<?> changeStatus(@PathVariable Long id, @PathVariable CommonStatusEnum status) {
@@ -81,7 +81,7 @@ public class PlatformDictAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:update"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:update"})
     @PutMapping("/sort")
     @Operation(summary = "批量排序", description = "批量更新字典排序")
     public R<?> sort(@RequestBody List<DictSortDTO> items) {
@@ -89,7 +89,7 @@ public class PlatformDictAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:dict:delete"})
+    @AdminOrHasAnyAuthority({"platform:config:dict:delete"})
     @DeleteMapping("/{id}")
     @Operation(summary = "删除字典", description = "删除字典节点（叶子节点）")
     public R<?> removeById(@PathVariable Long id) {

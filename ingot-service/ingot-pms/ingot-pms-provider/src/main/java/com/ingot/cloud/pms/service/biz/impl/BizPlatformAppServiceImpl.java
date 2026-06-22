@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.PlatformMenu;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.core.BizMenuUtils;
 import com.ingot.cloud.pms.service.biz.BizPlatformAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.PlatformAppService;
@@ -51,6 +53,15 @@ public class BizPlatformAppServiceImpl implements BizPlatformAppService {
         assert menu != null;
 
         params.setPermissionId(menu.getPermissionId());
+        if (params.getAppType() == null) {
+            params.setAppType(OrgTypeEnum.Tenant);
+        }
+        if (StrUtil.isEmpty(params.getCode())) {
+            params.setCode(BizMenuUtils.getMenuAuthorityCode(menu));
+        }
+        if (params.getSort() == null) {
+            params.setSort(menu.getSort());
+        }
         if (StrUtil.isEmpty(params.getName())) {
             params.setName(menu.getName());
         }

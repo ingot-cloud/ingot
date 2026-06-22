@@ -7,6 +7,7 @@ import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.oauth2.jwt.CustomJwtValidators;
 import com.ingot.framework.security.oauth2.jwt.JwkSupplier;
 import com.ingot.framework.security.oauth2.jwt.ResourceServerJwkSupplier;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -43,20 +44,22 @@ public class CustomOAuth2ResourceServerJwtConfiguration {
     @ConditionalOnMissingBean(JwtDecoder.class)
     @ConditionalOnIssuerLocationJwtDecoder
     JwtDecoder jwtDecoderByIssuerUri(OAuth2ResourceServerProperties properties,
-                                     InSecurityProperties inSecurityProperties) {
+                                     InSecurityProperties inSecurityProperties,
+                                     OnlineTokenService onlineTokenService) {
         log.info("[CustomOAuth2ResourceServerJwtConfiguration] jwtDecoderByIssuerUri, 使用CustomJwtValidators.createDefaultWithIssuer");
         OAuth2ResourceServerProperties.Jwt jwt = properties.getJwt();
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(jwt.getIssuerUri());
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(CustomJwtValidators.createDefaultWithIssuer(
-                jwt.getIssuerUri(), inSecurityProperties));
+                jwt.getIssuerUri(), inSecurityProperties, onlineTokenService));
         return jwtDecoder;
     }
 
     @Bean
     @ConditionalOnMissingBean(JwtDecoder.class)
     JwtDecoder jwtDecoder(InSecurityProperties properties,
-                          JWKSource<SecurityContext> jwkSource) {
+                          JWKSource<SecurityContext> jwkSource,
+                          OnlineTokenService onlineTokenService) {
         log.info("[CustomOAuth2ResourceServerJwtConfiguration] default jwtDecoder");
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
@@ -73,7 +76,7 @@ public class CustomOAuth2ResourceServerJwtConfiguration {
         NimbusJwtDecoder jwtDecoder = new NimbusJwtDecoder(jwtProcessor);
         // 扩展 JwtValidator
         jwtDecoder.setJwtValidator(
-                CustomJwtValidators.createDefault(properties));
+                CustomJwtValidators.createDefault(properties, onlineTokenService));
         return jwtDecoder;
     }
 

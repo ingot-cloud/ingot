@@ -25,6 +25,10 @@ public interface PermissionType {
 
     void setPid(Long pid);
 
+    Long getAppId();
+
+    void setAppId(Long appId);
+
     /**
      * 权限名称
      */

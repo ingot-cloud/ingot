@@ -4,17 +4,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
-import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
+import com.ingot.cloud.pms.api.model.enums.PermissionSourceTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.service.biz.BizPlatformPermissionService;
-import com.ingot.cloud.pms.service.domain.PlatformAppService;
 import com.ingot.cloud.pms.service.domain.PlatformPermissionService;
 import com.ingot.cloud.pms.service.domain.PlatformRolePermissionService;
+import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Service;
 public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionService {
     private final PlatformPermissionService authorityService;
     private final PlatformRolePermissionService roleAuthorityService;
-    private final PlatformAppService appService;
 
     private final AuthorityConvert authorityConvert;
     private final AssertionChecker assertionChecker;
@@ -88,9 +86,11 @@ public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionSe
         assertionChecker.checkOperation(current.getType() != PermissionTypeEnum.MENU,
                 "BizPlatformAuthorityServiceImpl.CantDeleteMenuAuthority");
 
-        // 判断是否为应用，如果是应用那么不可删除
-        assertionChecker.checkOperation(appService.count(Wrappers.<PlatformApp>lambdaQuery()
-                        .eq(PlatformApp::getMenuId, id)) == 0,
+        // 判断是否为应用根（系统根权限），如果是那么不可删除
+        boolean isApplicationRoot = current.getAppId() != null
+                && current.getSourceType() == PermissionSourceTypeEnum.SYSTEM
+                && (current.getPid() == null || current.getPid() <= IDConstants.ROOT_TREE_ID);
+        assertionChecker.checkOperation(!isApplicationRoot,
                 "BizPlatformAuthorityServiceImpl.IsApplication");
 
         // 清空角色权限关联

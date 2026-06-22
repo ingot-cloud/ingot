@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -36,11 +37,12 @@ public final class CustomJwtValidators {
      * supplied
      */
     public static OAuth2TokenValidator<Jwt> createDefaultWithIssuer(String issuer,
-                                                                    InSecurityProperties properties) {
+                                                                    InSecurityProperties properties,
+                                                                    OnlineTokenService onlineTokenService) {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
         validators.add(new JwtIssuerValidator(issuer));
-        validators.add(new JwtTenantValidator(properties));
+        validators.add(new JwtTenantValidator(properties, onlineTokenService));
         return new DelegatingOAuth2TokenValidator<>(validators);
     }
 
@@ -50,10 +52,11 @@ public final class CustomJwtValidators {
      * @param properties {@link InSecurityProperties}
      * @return {@link OAuth2TokenValidator}
      */
-    public static OAuth2TokenValidator<Jwt> createDefault(InSecurityProperties properties) {
+    public static OAuth2TokenValidator<Jwt> createDefault(InSecurityProperties properties,
+                                                          OnlineTokenService onlineTokenService) {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
-        validators.add(new JwtTenantValidator(properties));
+        validators.add(new JwtTenantValidator(properties, onlineTokenService));
         return new DelegatingOAuth2TokenValidator<>(validators);
     }
 }

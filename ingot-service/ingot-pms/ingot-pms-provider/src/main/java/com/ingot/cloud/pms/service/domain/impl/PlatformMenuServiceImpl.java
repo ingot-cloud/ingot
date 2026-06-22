@@ -166,6 +166,12 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
         removeById(id);
     }
 
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_MENUS, allEntries = true)
+    public void deleteByAppId(long appId) {
+        remove(Wrappers.<PlatformMenu>lambdaQuery().eq(PlatformMenu::getAppId, appId));
+    }
+
     private PlatformMenu innerGetById(Long id) {
         return SpringContextHolder.getBean(PlatformMenuService.class).getById(id);
     }

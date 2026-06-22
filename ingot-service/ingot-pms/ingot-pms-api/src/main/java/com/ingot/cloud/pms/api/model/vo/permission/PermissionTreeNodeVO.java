@@ -19,6 +19,11 @@ import lombok.EqualsAndHashCode;
 public class PermissionTreeNodeVO extends TreeNode<Long, PermissionTreeNodeVO> implements PermissionType {
 
     /**
+     * 所属应用
+     */
+    private Long appId;
+
+    /**
      * 权限名称
      */
     private String name;

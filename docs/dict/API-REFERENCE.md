@@ -83,7 +83,7 @@ public enum DictScope { PLATFORM, TENANT, APP }
 
 ## 管理端 REST API
 
-包路径 `com.ingot.cloud.pms.web.v1.platform.base.PlatformDictAPI`。
+包路径 `com.ingot.cloud.pms.web.v1.platform.config.PlatformDictAPI`。
 
 ### 字典树
 

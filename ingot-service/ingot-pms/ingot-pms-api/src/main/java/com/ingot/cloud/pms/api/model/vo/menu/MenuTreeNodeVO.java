@@ -2,6 +2,7 @@ package com.ingot.cloud.pms.api.model.vo.menu;
 
 import java.io.Serial;
 
+import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
@@ -35,9 +36,9 @@ public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
      */
     private String path;
     /**
-     * 是否开启权限
+     * 访问模式
      */
-    private Boolean enablePermission;
+    private AccessModeEnum accessMode;
     /**
      * 权限ID
      */
@@ -102,4 +103,12 @@ public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
      * 链接url
      */
     private String linkUrl;
+    /**
+     * 所属应用 ID
+     */
+    private Long appId;
+    /**
+     * 应用编码
+     */
+    private String appCode;
 }

@@ -42,4 +42,11 @@ public interface PlatformPermissionService extends BaseService<PlatformPermissio
      * @param id 权限ID
      */
     void delete(long id);
+
+    /**
+     * 删除指定应用下的全部权限（用于应用强制删除级联）。
+     *
+     * @param appId 应用ID
+     */
+    void deleteByAppId(long appId);
 }

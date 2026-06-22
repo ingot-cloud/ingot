@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Class JavaDoc"
+  short_description: "生成、补全并审查符合项目规范的 Java 类型级 JavaDoc 注释"
+  default_prompt: "使用 $java-class-javadoc，根据 Java 代码体现的职责与约束生成或审查类型级 JavaDoc。"

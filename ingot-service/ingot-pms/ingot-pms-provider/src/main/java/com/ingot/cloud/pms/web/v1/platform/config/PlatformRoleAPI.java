@@ -1,4 +1,4 @@
-package com.ingot.cloud.pms.web.v1.platform.base;
+package com.ingot.cloud.pms.web.v1.platform.config;
 
 import java.util.List;
 
@@ -26,26 +26,26 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @Tag(description = "PlatformRole", name = "平台角色管理模块")
-@RequestMapping(value = "/v1/platform/base/role")
+@RequestMapping(value = "/v1/platform/config/role")
 @RequiredArgsConstructor
 public class PlatformRoleAPI implements RShortcuts {
     private final BizPlatformRoleService bizPlatformRoleService;
 
-    @AdminOrHasAnyAuthority({"meta:role:query"})
+    @AdminOrHasAnyAuthority({"platform:config:role:query"})
     @GetMapping(value = "/options")
     @Operation(summary = "角色选项", description = "角色选项列表")
     public R<List<Option<Long>>> options(PlatformRole condition) {
         return ok(bizPlatformRoleService.options(condition));
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:query"})
+    @AdminOrHasAnyAuthority({"platform:config:role:query"})
     @GetMapping(value = "/list")
     @Operation(summary = "角色列表", description = "角色列表")
     public R<List<RoleTreeNodeVO>> conditionList(PlatformRole condition) {
         return ok(bizPlatformRoleService.conditionTree(condition));
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:create"})
+    @AdminOrHasAnyAuthority({"platform:config:role:create"})
     @PostMapping
     @Operation(summary = "创建角色", description = "创建角色")
     public R<Void> create(@RequestBody PlatformRole params) {
@@ -53,7 +53,7 @@ public class PlatformRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:update"})
+    @AdminOrHasAnyAuthority({"platform:config:role:update"})
     @PutMapping
     @Operation(summary = "更新角色", description = "更新角色")
     public R<Void> update(@RequestBody PlatformRole params) {
@@ -61,7 +61,7 @@ public class PlatformRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:delete"})
+    @AdminOrHasAnyAuthority({"platform:config:role:delete"})
     @DeleteMapping(value = "/{id}")
     @Operation(summary = "删除角色", description = "删除角色")
     public R<Void> delete(@PathVariable Long id) {
@@ -69,7 +69,7 @@ public class PlatformRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:permissions:assign"})
+    @AdminOrHasAnyAuthority({"platform:config:role:permissions:assign"})
     @PutMapping(value = "/{id}/permissions")
     @Operation(summary = "绑定权限", description = "绑定权限")
     public R<Void> bindAuthorities(@PathVariable Long id,
@@ -79,7 +79,7 @@ public class PlatformRoleAPI implements RShortcuts {
         return ok();
     }
 
-    @AdminOrHasAnyAuthority({"platform:base:role:permissions:query"})
+    @AdminOrHasAnyAuthority({"platform:config:role:permissions:query"})
     @GetMapping(value = "/{id}/permissions")
     @Operation(summary = "获取角色权限", description = "获取角色权限")
     public R<List<PermissionTreeNodeVO>> getPermissions(@PathVariable Long id) {

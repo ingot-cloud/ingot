@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionNodeTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionSourceTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
@@ -14,9 +16,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <p>
- *
- * </p>
+ * <p>平台权限实体，归属于应用，支持精确编码与通配编码（{@code :*} / {@code :**}）。</p>
  *
  * @author jymot
  * @since 2025-11-12
@@ -34,6 +34,31 @@ public class PlatformPermission extends BaseModel<PlatformPermission> implements
      */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
+
+    /**
+     * 所属应用
+     */
+    private Long appId;
+
+    /**
+     * 节点类型
+     */
+    private PermissionNodeTypeEnum nodeType;
+
+    /**
+     * 来源类型
+     */
+    private PermissionSourceTypeEnum sourceType;
+
+    /**
+     * 来源资源 ID
+     */
+    private Long sourceId;
+
+    /**
+     * 是否系统托管
+     */
+    private Boolean managed;
 
     /**
      * 父ID

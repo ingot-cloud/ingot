@@ -47,6 +47,12 @@ public interface PlatformRolePermissionService extends BaseService<PlatformRoleP
     void clearByPermissionId(long permissionId);
 
     /**
+     * 根据权限ID列表清理角色权限关系
+     * @param ids 权限ID列表
+     */
+    void clearByPermissionIds(List<Long> ids);
+
+    /**
      * 更具角色ID清理角色权限关系
      *
      * @param roleId 角色ID

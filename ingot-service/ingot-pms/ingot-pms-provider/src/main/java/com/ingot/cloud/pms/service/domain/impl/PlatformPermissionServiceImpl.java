@@ -102,6 +102,12 @@ public class PlatformPermissionServiceImpl extends BaseServiceImpl<PlatformPermi
         removeById(id);
     }
 
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_PERMISSIONS, allEntries = true)
+    public void deleteByAppId(long appId) {
+        remove(Wrappers.<PlatformPermission>lambdaQuery().eq(PlatformPermission::getAppId, appId));
+    }
+
     private String formatCode(Long pid, String code) {
         return Optional.ofNullable(pid)
                 .filter(id -> id != IDConstants.ROOT_TREE_ID)

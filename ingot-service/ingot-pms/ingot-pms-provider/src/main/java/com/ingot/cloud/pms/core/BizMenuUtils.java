@@ -9,6 +9,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.pms.api.model.domain.PlatformMenu;
+import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.PlatformMenuService;
@@ -35,9 +36,9 @@ public class BizMenuUtils {
                                                    List<? extends PermissionType> authorities) {
 
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
-                // 1.菜单未开启权限的内容
-                // 2.菜单开启权限并且拥有该权限，且权限可用
-                .filter(node -> node.getEnablePermission() == null || BooleanUtil.isFalse(node.getEnablePermission()) ||
+                // 1.访问模式为开放（OPEN）的菜单无需鉴权
+                // 2.其余菜单需拥有对应权限且权限可用
+                .filter(node -> node.getAccessMode() == AccessModeEnum.OPEN ||
                         authorities.stream()
                                 .anyMatch(authority ->
                                         node.getPermissionId().equals(authority.getId())
@@ -100,6 +101,9 @@ public class BizMenuUtils {
      */
     public static String getMenuAuthorityCode(PlatformMenu menu) {
         String path = menu.getPath();
+        if (BooleanUtil.isTrue(menu.getProps())) {
+            path = StrUtil.subBefore(path, "/", true);
+        }
         String r = StrUtil.replace(path, StrUtil.COLON, "");
         r = StrUtil.replace(r, StrUtil.SLASH, StrUtil.COLON);
         if (StrUtil.startWith(r, StrUtil.COLON)) {

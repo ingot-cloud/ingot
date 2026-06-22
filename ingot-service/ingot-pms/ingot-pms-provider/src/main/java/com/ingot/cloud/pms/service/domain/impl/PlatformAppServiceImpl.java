@@ -36,7 +36,8 @@ public class PlatformAppServiceImpl extends BaseServiceImpl<PlatformAppMapper, P
 
     @Override
     public IPage<PlatformApp> conditionPage(Page<PlatformApp> pageParams, PlatformApp condition) {
-        return page(pageParams, Wrappers.lambdaQuery(condition));
+        return page(pageParams, Wrappers.lambdaQuery(condition)
+                .orderByAsc(PlatformApp::getAppType, PlatformApp::getSort));
     }
 
     @Override

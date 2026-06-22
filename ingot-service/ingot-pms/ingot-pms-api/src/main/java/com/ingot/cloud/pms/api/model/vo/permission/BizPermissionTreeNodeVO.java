@@ -19,6 +19,11 @@ import lombok.EqualsAndHashCode;
 public class BizPermissionTreeNodeVO extends TreeNode<Long, BizPermissionTreeNodeVO> implements PermissionType {
 
     /**
+     * 所属应用
+     */
+    private Long appId;
+
+    /**
      * 权限名称
      */
     private String name;
@@ -52,4 +57,9 @@ public class BizPermissionTreeNodeVO extends TreeNode<Long, BizPermissionTreeNod
      * 是否为平台角色绑定的权限
      */
     private boolean platformRoleBind;
+
+    /**
+     * 是否为预设权限
+     */
+    private Boolean defaultFlag;
 }

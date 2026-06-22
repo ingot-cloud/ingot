@@ -17,4 +17,8 @@ public class BizPermissionVO extends PlatformPermission {
      * 是否为平台角色绑定的权限
      */
     private boolean platformRoleBind;
+    /**
+     * 是否为预设权限
+     */
+    private Boolean defaultFlag;
 }

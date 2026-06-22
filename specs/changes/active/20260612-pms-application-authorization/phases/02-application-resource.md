@@ -1,6 +1,6 @@
 # 阶段 2：应用中心化资源管理
 
-> 状态：待实施。
+> 状态：代码已完成（ApplicationResourceService + `/v1/platform/config/apps` API + API.md），待统一验收。
 
 ## 1. 目标
 
@@ -118,13 +118,21 @@ POST   /platform/apps/{appId}/permissions
 - 菜单权限只能由菜单生命周期更新。
 - 旧管理接口在兼容期内仍可工作。
 
-## 9. 退出条件
+## 9. 实施记录（2026-06-12）
+
+- `ApplicationResourceService` / `ApplicationResourceServiceImpl`：应用 CRUD、菜单/权限 CRUD、`app_id` 校验、双写、删除规则
+- `PlatformApplicationAPI`（`web.v1.platform.config` 包）：`/v1/platform/config/apps` 及嵌套 menus/permissions
+- DTO/VO：`AppCreateDTO`、`AppDetailVO`、`AppPermissionTreeNodeVO` 等（带 `@Schema`）
+- 旧 `PlatformAppAPI` / `PlatformMenuAPI` / `PlatformPermissionAPI`：`@Deprecated`；menu/permission 写入带 `appId` 时转发
+- 前端契约：[API.md](../API.md)
+
+## 10. 退出条件
 
 - 所有新增资源都通过应用中心化接口创建。
 - 旧接口不再产生缺失 `app_id` 的数据。
 - 资源写入链路具备自动化事务测试。
 
-## 10. 回滚
+## 11. 回滚
 
 - 保留旧接口和旧字段写入。
 - 通过功能开关恢复旧管理入口。

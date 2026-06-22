@@ -12,9 +12,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <p>
- *
- * </p>
+ * <p>租户私有的角色-用户关联，按 {@code platformRole} 区分平台预设与租户自建角色。</p>
  *
  * @author jymot
  * @since 2025-11-12

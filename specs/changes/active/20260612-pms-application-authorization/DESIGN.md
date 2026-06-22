@@ -251,3 +251,180 @@ menu.sort ASC
 - 通配权限会动态扩大，必须审计。
 - 应用编码和权限编码属于稳定外部契约。
 - 跨应用依赖必须通过业务服务协作，不能通过权限树交叉挂载表达。
+
+## 10. 当前基线（改造前）
+
+以下描述当前线上事实，供迁移对照。详细 current 基线将在验收后写入 `specs/current/pms/application-authorization/`。
+
+### 10.1 数据模型
+
+| 表 | 当前关键字段 | 当前语义 |
+|---|---|---|
+| `platform_app` | `menu_id`、`permission_id` | 应用与单个根菜单、根权限绑定 |
+| `platform_menu` | `org_type`、`enable_permission`、`permission_id` | 通过 `org_type` 区分平台/租户菜单；`enable_permission=false` 时跳过权限检查 |
+| `platform_permission` | `org_type`、`pid`、`code` | 通过 `org_type` 区分平台/租户权限；父权限绑定后隐式包含后代 |
+| `tenant_app_config` | `tenant_id`、`app_id`、`enabled` | 租户应用私有开关；无配置时继承应用全局 `status` |
+| `platform_role` / `tenant_role_private` | `platform_role` 布尔标记 | 区分平台预设角色与租户自定义角色 |
+
+### 10.2 当前授权链路
+
+```text
+登录
+→ IdentityUtil.getScopes()
+→ BizUserService.getUserRoles()
+→ BizRoleService.getRolesPermissions()（父权限隐式展开子权限）
+→ BizAppService.getDisabledApps()（按 app.permission_id 前缀过滤）
+→ 菜单：BizMenuUtils.filterMenus()（enable_permission + 权限 ID 匹配）
+```
+
+### 10.3 当前主要代码位置
+
+| 职责 | 模块路径 |
+|---|---|
+| 菜单过滤与权限编码生成 | `ingot-pms-provider/.../core/BizMenuUtils.java` |
+| 权限树与应用过滤 | `ingot-pms-provider/.../core/BizPermissionUtils.java` |
+| 租户应用启停 | `ingot-pms-provider/.../service/biz/impl/BizAppServiceImpl.java` |
+| 菜单 CRUD 与权限联动 | `ingot-pms-provider/.../service/biz/impl/BizPlatformMenuServiceImpl.java` |
+| 登录权限快照 | `ingot-pms-provider/.../identity/IdentityUtil.java` |
+| 应用管理 API | `ingot-pms-provider/.../web/v1/platform/base/PlatformAppAPI.java` |
+
+### 10.4 已知问题
+
+- 应用范围通过根权限 ID 和前缀匹配表达，跨模块权限边界不清晰。
+- 父权限绑定语义不明确（精确 vs 通配），新增子权限时可能意外扩权或漏权。
+- 菜单排序仅按 `menu.sort`，无法按应用分组排序。
+- `org_type` 与 `app_type` 语义重叠，平台/租户隔离规则分散在多处。
+
+## 11. 影响范围
+
+### 11.1 数据库
+
+- 迁移脚本目录：`databases/migrations/`
+- 初始化脚本：`databases/ingot_core.sql`（阶段 6 同步更新）
+
+### 11.2 后端服务
+
+| 服务 | 变更类型 |
+|---|---|
+| `ingot-pms` | 核心改造：领域模型、鉴权引擎、菜单生成、管理 API |
+| `ingot-auth` | 消费侧：登录权限快照、令牌 scope 格式保持兼容 |
+
+### 11.3 前端
+
+| 页面 | 变更类型 |
+|---|---|
+| 平台应用/菜单/权限管理 | 应用中心化入口，权限树展示调整 |
+| 租户角色授权 | 平台默认权限锁定、应用范围过滤、通配提示 |
+| 运行时菜单 | 协议兼容；可选使用 `appId`/`appCode` 调试 |
+
+### 11.4 配置项
+
+```text
+authorization.model = legacy | shadow | application
+```
+
+- 阶段 0 接入，默认 `legacy`。
+- 阶段 3 起启用 `shadow` 做差异观测。
+- 阶段 5 按开关逐步切到 `application`。
+
+## 12. 数据流与失败处理
+
+### 12.1 菜单创建
+
+```text
+POST /platform/apps/{appId}/menus
+→ 校验 appId 来自 URL 上下文
+→ 校验父菜单 app_id 一致
+→ 事务：保存菜单 → 创建 NAVIGATION 托管权限 → 回写 permission_id
+→ 提交后发布缓存失效事件
+```
+
+失败处理：
+
+- 父菜单跨应用：拒绝，返回业务错误，不部分写入。
+- 权限编码冲突：拒绝，同事务回滚。
+- 缓存失效失败：记录告警，依赖 TTL 兜底；不阻塞主事务。
+
+### 12.2 有效权限计算
+
+```text
+输入 userId + tenantId
+→ 加载用户角色（role_source + role_id）
+→ 合并 platform_role_permission 与 tenant_role_permission_private
+→ 分离 EXACT 与 SUBTREE（:*）授权
+→ 过滤禁用权限 / 禁用应用 / 未授权或过期租户应用
+→ 输出 EffectiveAuthorization
+```
+
+失败处理：
+
+- 角色引用已删除权限：审计告警，计算时忽略该绑定。
+- 租户应用授权数据缺失（切换期）：按阶段策略回退到 legacy 或 shadow 对比。
+
+### 12.3 菜单树生成
+
+```text
+输入 userId + tenantId + EffectiveAuthorization
+→ 获取可访问应用列表（已排序）
+→ 批量加载应用下有效菜单
+→ 按 access_mode 和权限过滤
+→ 补齐祖先目录
+→ 分应用构建树并递归排序
+→ 按应用顺序拼接根节点
+```
+
+失败处理：
+
+- 祖先菜单禁用时丢弃对应子树。
+- 单应用菜单加载失败：记录错误，跳过该应用，不返回不完整子树。
+
+## 13. 迁移与回滚摘要
+
+| 阶段 | 线上行为 | 回滚方式 |
+|---|---|---|
+| 0 | 不变 | 关闭观测代码 |
+| 1 | 不变（读旧字段） | 回滚代码，保留新字段 |
+| 2 | 写入双写，读旧字段 | 功能开关恢复旧管理入口 |
+| 3 | legacy 返回，shadow 对比 | `authorization.model=legacy` |
+| 4 | 按租户灰度新授权 | 按租户关闭新模型 |
+| 5 | 分开关切换读路径 | 各开关独立切回 legacy |
+| 6 | 唯一模型 | 数据库备份 + 版本回退 |
+
+关键迁移决策：
+
+- 历史父级授权 → 显式 `SUBTREE` 或 `EXACT`，禁止批量无脑转通配。
+- 租户应用默认策略切换前 → 为活跃租户生成等价 `tenant_app_config` 记录。
+- 平台一级模块 → 回填为 `PLATFORM` 应用；租户应用根菜单 → 回填 `TENANT` 应用。
+
+## 14. 测试策略
+
+### 14.1 单元测试
+
+- 权限匹配器：精确、通配、跨应用隔离、中间通配拒绝。
+- 菜单排序：同 sort 值 ID 稳定、跨应用根节点顺序。
+- 权限编码校验：`GROUP` 必须以 `:*` 结尾，`ACTION`/`NAVIGATION` 不得结尾 `:*`。
+
+### 14.2 集成测试
+
+- 菜单 CRUD 与托管权限同事务一致性。
+- 角色授权读写与 `role_source` 正确性。
+- 租户应用开通/禁用/过期后的权限即时性。
+- 登录菜单树与权限快照端到端。
+
+### 14.3 迁移测试
+
+- 回填脚本可重复执行（幂等）。
+- 测试库、预发布库全量回填后审计零阻断。
+- 影子模式样本用户（平台 + 租户各至少一组）连续三次结果一致。
+
+### 14.4 性能测试
+
+- 单次 `hasPermission` 缓存命中 < 1ms，无 DB 查询。
+- 菜单树生成：批量加载，禁止 N+1 查询。
+- 角色/应用变更后缓存失效延迟可观测。
+
+### 14.5 安全测试
+
+- 未授权应用权限不可通过 API 直接提交。
+- 平台默认权限不可被租户 API 删除。
+- 通配授权审计完整性抽查。

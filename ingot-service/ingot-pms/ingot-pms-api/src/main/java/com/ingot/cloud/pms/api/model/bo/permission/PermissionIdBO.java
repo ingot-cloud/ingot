@@ -20,11 +20,16 @@ public class PermissionIdBO implements Serializable {
      * 是否为平台角色绑定的权限
      */
     private Boolean platformRoleBind;
+    /**
+     * 是否为预设权限
+     */
+    private Boolean defaultFlag;
 
-    public static PermissionIdBO of(Long id, Boolean platformRoleBind) {
+    public static PermissionIdBO of(Long id, Boolean platformRoleBind, Boolean defaultFlag) {
         PermissionIdBO bo = new PermissionIdBO();
         bo.setId(id);
         bo.setPlatformRoleBind(platformRoleBind);
+        bo.setDefaultFlag(defaultFlag);
         return bo;
     }
 }

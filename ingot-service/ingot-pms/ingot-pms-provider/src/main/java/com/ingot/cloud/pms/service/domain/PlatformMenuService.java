@@ -43,4 +43,11 @@ public interface PlatformMenuService extends BaseService<PlatformMenu> {
      * @param id 菜单ID
      */
     void delete(long id);
+
+    /**
+     * 删除指定应用下的全部菜单（用于应用强制删除级联）。
+     *
+     * @param appId 应用ID
+     */
+    void deleteByAppId(long appId);
 }

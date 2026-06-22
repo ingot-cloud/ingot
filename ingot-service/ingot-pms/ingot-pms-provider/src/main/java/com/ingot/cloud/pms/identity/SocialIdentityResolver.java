@@ -45,10 +45,11 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             SocialTypeEnum socialType = request.getSocialType();
             String socialCode = request.getSocialCode();
             String uniqueID = userSocialService.getUniqueID(socialType, socialCode);
-            return IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
+            UserDetailsResponse response = IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
                     request.getUserType(), request.getTenant(),
                     sysTenantService, sysUserTenantService,
                     bizUserService, bizAppService, bizRoleService, bizUserDeptService);
+            return response;
         });
     }
 }

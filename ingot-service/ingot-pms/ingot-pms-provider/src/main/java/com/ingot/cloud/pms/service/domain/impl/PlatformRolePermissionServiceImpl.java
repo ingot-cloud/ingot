@@ -111,6 +111,16 @@ public class PlatformRolePermissionServiceImpl extends BaseServiceImpl<PlatformR
             value = CacheConstants.PLATFORM_ROLE_PERMISSIONS,
             allEntries = true
     )
+    public void clearByPermissionIds(List<Long> ids) {
+        remove(Wrappers.<PlatformRolePermission>lambdaQuery()
+                .in(PlatformRolePermission::getPermissionId, ids));
+    }
+
+    @Override
+    @CacheEvict(
+            value = CacheConstants.PLATFORM_ROLE_PERMISSIONS,
+            allEntries = true
+    )
     public void clearByRoleId(long roleId) {
         remove(Wrappers.<PlatformRolePermission>lambdaQuery()
                 .eq(PlatformRolePermission::getRoleId, roleId));

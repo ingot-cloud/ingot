@@ -16,6 +16,7 @@ import com.ingot.cloud.pms.api.model.domain.SysTenant;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
 import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
+import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.core.TenantEngine;
@@ -91,7 +92,16 @@ public class BizOrgServiceImpl implements BizOrgService {
     @Override
     public List<PlatformApp> getOrgApps(long tenantId) {
         return TenantEnv.applyAs(tenantId, () -> {
-            List<PlatformApp> list = platformAppService.list();
+            SysTenant tenant = getDetails(tenantId);
+            List<PlatformApp> list = CollUtil.emptyIfNull(platformAppService.list())
+                    .stream()
+                    .filter(app -> {
+                        if (tenant.getOrgType() == OrgTypeEnum.Platform) {
+                            return Boolean.TRUE;
+                        }
+                        return app.getAppType() == tenant.getOrgType();
+                    })
+                    .toList();
             if (CollUtil.isEmpty(list)) {
                 return ListUtil.empty();
             }
@@ -145,7 +155,7 @@ public class BizOrgServiceImpl implements BizOrgService {
             // 平台默认组织不可更新状态
             if (StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE)) {
                 assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE),
-                        "Platform.canNotDisableIngotOrg");
+                        "Platform.canNotDisablePlatformOrg");
             }
         }
 
@@ -169,7 +179,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     public void removeOrg(long id) {
         SysTenant org = sysTenantService.getById(id);
         String code = org.getCode();
-        assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE), "Platform.canNotRemoveIngotOrg");
+        assertionChecker.checkOperation(!StrUtil.equals(code, OrgConstants.INGOT_CLOUD_CODE), "Platform.canNotRemovePlatformOrg");
 
         // 销毁组织
         TenantEnv.runAs(id, () -> tenantEngine.destroy(id));

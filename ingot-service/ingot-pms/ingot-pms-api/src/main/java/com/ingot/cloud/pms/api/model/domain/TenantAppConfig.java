@@ -13,9 +13,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <p>
- * 
- * </p>
+ * <p>租户应用开通配置，记录租户对应用的启用状态与来源。</p>
  *
  * @author jymot
  * @since 2025-11-12
@@ -50,6 +48,21 @@ public class TenantAppConfig extends BaseModel<TenantAppConfig> {
      * 是否启用
      */
     private Boolean enabled;
+
+    /**
+     * 授权来源
+     */
+    private String source;
+
+    /**
+     * 生效时间
+     */
+    private LocalDateTime validFrom;
+
+    /**
+     * 失效时间
+     */
+    private LocalDateTime validUntil;
 
     /**
      * 创建时间

@@ -186,9 +186,9 @@ public class BizRoleServiceImpl implements BizRoleService {
 
         List<PermissionIdBO> permissions = new ArrayList<>(tenant.stream()
                 .map(item ->
-                        PermissionIdBO.of(item.getPermissionId(), item.getPlatformRole()))
+                        PermissionIdBO.of(item.getPermissionId(), item.getPlatformRole(), false))
                 .toList());
-        permissions.addAll(platformIds.stream().map(id -> PermissionIdBO.of(id, true)).toList());
+        permissions.addAll(platformIds.stream().map(id -> PermissionIdBO.of(id, true, true)).toList());
 
         return ids.stream()
                 .map(id -> permissions.stream()
@@ -205,9 +205,10 @@ public class BizRoleServiceImpl implements BizRoleService {
             return ListUtil.empty();
         }
         if (CollUtil.size(ids) == 1) {
-            PlatformPermission permission = authorityService.getById(ids.get(0).getId());
+            PlatformPermission permission = authorityService.getById(ids.getFirst().getId());
             BizPermissionVO result = authorityConvert.to(permission);
-            result.setPlatformRoleBind(ids.get(0).getPlatformRoleBind());
+            result.setPlatformRoleBind(ids.getFirst().getPlatformRoleBind());
+            result.setDefaultFlag(ids.getFirst().getDefaultFlag());
             return List.of(result);
         }
 
@@ -216,9 +217,13 @@ public class BizRoleServiceImpl implements BizRoleService {
                 .stream()
                 .map(item -> {
                     BizPermissionVO vo = authorityConvert.to(item);
-                    vo.setPlatformRoleBind(ids.stream()
-                            .anyMatch(id ->
-                                    id.getId().equals(item.getId()) && id.getPlatformRoleBind()));
+                    ids.stream()
+                            .filter(id -> id.getId().equals(item.getId()))
+                            .findFirst()
+                            .ifPresent(target -> {
+                                vo.setPlatformRoleBind(target.getPlatformRoleBind());
+                                vo.setDefaultFlag(target.getDefaultFlag());
+                            });
                     return vo;
                 })
                 .toList();
@@ -310,13 +315,19 @@ public class BizRoleServiceImpl implements BizRoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void setPermissions(SetDTO<Long, Long> params) {
+        List<Long> bindList = params.getSetIds();
+
         PlatformRole platformRole = platformRoleService.getById(params.getId());
         if (platformRole != null) {
             assertionChecker.checkOperation(!StrUtil.equals(platformRole.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
                     "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
+            // 如果绑定的是平台创建的角色，那么默认不处理已经预设的权限，在bindList中去掉预设内容
+            List<Long> platformIds = roleAuthorityService.getRoleBindPermissionIds(params.getId());
+            bindList = bindList.stream()
+                    .filter(id -> !platformIds.contains(id))
+                    .toList();
         }
 
-        List<Long> bindList = params.getSetIds();
         if (CollUtil.isNotEmpty(bindList)) {
             List<Long> authorities = CollUtil.emptyIfNull(BizPermissionUtils.getTenantAuthorities(
                             TenantContextHolder.get(), bizAppService, authorityService, authorityConvert))

@@ -3,9 +3,13 @@
 <mapper namespace="com.ingot.cloud.pms.mapper.PlatformMenuMapper">
 
     <select id="getAll" resultType="com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO">
-        SELECT menu.*, permission.code as permission_code
+        SELECT menu.*,
+               permission.code AS permission_code,
+               menu.app_id     AS app_id,
+               app.code        AS app_code
         FROM platform_menu AS menu
                  LEFT JOIN platform_permission AS permission ON permission.id = menu.permission_id
+                 LEFT JOIN platform_app AS app ON app.id = menu.app_id
         WHERE menu.deleted_at IS NULL
     </select>
 </mapper>

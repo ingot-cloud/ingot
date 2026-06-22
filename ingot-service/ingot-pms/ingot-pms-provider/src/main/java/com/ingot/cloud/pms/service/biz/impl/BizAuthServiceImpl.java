@@ -8,15 +8,10 @@ import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
-import com.ingot.cloud.pms.api.model.types.PermissionType;
-import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.pms.authorization.ApplicationAuthorizationResolver;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.core.BizPermissionUtils;
-import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizAuthService;
-import com.ingot.cloud.pms.service.biz.BizPlatformMenuService;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
@@ -48,9 +43,7 @@ public class BizAuthServiceImpl implements BizAuthService {
     private final SysTenantService tenantService;
     private final SysUserTenantService userTenantService;
 
-    private final BizRoleService bizRoleService;
-    private final BizAppService bizAppService;
-    private final BizPlatformMenuService bizPlatformMenuService;
+    private final ApplicationAuthorizationResolver applicationAuthorizationResolver;
     private final CredentialSecurityService credentialSecurityService;
 
     private final UserConvert userConvert;
@@ -126,13 +119,6 @@ public class BizAuthServiceImpl implements BizAuthService {
 
     @Override
     public List<MenuTreeNodeVO> getUserMenus(InUser user) {
-        List<String> roleCodeList = user.getRoleCodeList();
-        List<RoleType> roles = bizRoleService.getRolesByCodes(roleCodeList);
-        List<PermissionType> authorities = bizRoleService.getRolesPermissionsAndChildren(roles);
-
-        // 过滤禁用App
-        List<PermissionType> finallyAuthorities = BizPermissionUtils.filterOrgLockAuthority(
-                authorities, bizAppService);
-        return bizPlatformMenuService.getMenuByPermissions(finallyAuthorities);
+        return applicationAuthorizationResolver.resolveMenus(user.getRoleCodeList());
     }
 }
