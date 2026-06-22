@@ -12,5 +12,5 @@
 
 当前变更：
 
-- [PMS 应用中心化授权改造](./20260612-pms-application-authorization/README.md)
+- 暂无进行中的变更。
 

@@ -9,5 +9,7 @@
 3. 只记录当前有效事实，不保留实施过程和临时兼容逻辑。
 4. 在对应 archived change 中记录本次更新的 capability 路径。
 
-当前尚未建立能力基线。后续变更完成时逐步补充。
+## 能力基线
+
+- [pms / application-authorization](./pms/application-authorization/README.md)：应用中心化授权（应用、菜单、权限归属与租户授权、权限匹配语义）。
 

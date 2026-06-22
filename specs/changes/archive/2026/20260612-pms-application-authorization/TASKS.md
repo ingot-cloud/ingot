@@ -1,6 +1,14 @@
 # 应用中心化授权改造任务
 
-> 状态：implementing（整体实施中，待统一验收）
+> 状态：completed（已验收并归档；发布 A 完成，破坏性 DDL 拆出独立变更）
+
+## 归档核对（2026-06-22）
+
+- 发布 A（P0–P5 + P6.1–P6.5）已实现并验证：应用中心化模型为唯一授权来源，`APPLICATION` 模式经测试通过。下文部分 P3–P5 细分复选框为历史规划态，最终实现以 [DESIGN](./DESIGN.md)/[API](./API.md) 与 `specs/current/pms/application-authorization/` 为准。
+- **已 superseded（不再适用）**：
+  - T3.6「启用 shadow 模式」——shadow 双轨已于 P6.5 整体删除。
+  - T4.5「正式启用 `role_source`」——`role_source`/`RoleSourceEnum` 已于 P6.4/§0.4 整体删除，角色来源统一用 `platform_role`。
+- **已拆出为新 active change**：T6.0 前置闸门 + T6.6 破坏性 DDL（发布 B）→ `specs/changes/active/20260622-pms-authorization-ddl-cleanup/`。
 
 ## 实施策略
 

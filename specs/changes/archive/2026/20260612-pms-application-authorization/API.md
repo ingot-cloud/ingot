@@ -20,12 +20,12 @@
 
 | 操作 | 权限码 |
 |---|---|
-| 应用查询 | `platform:base:app:query` |
-| 应用创建 | `platform:base:app:create` |
-| 应用更新/启停 | `platform:base:app:update` |
-| 应用删除 | `platform:base:app:delete` |
-| 应用菜单 | `platform:base:app:menu:query|create|update|delete` |
-| 应用权限 | `platform:base:app:permission:query|create|update|delete` |
+| 应用查询 | `platform:config:app:query` |
+| 应用创建 | `platform:config:app:create` |
+| 应用更新/启停 | `platform:config:app:update` |
+| 应用删除 | `platform:config:app:delete` |
+| 应用菜单 | `platform:config:app:menu:query|create|update|delete` |
+| 应用权限 | `platform:config:app:permission:query|create|update|delete` |
 
 ## 应用
 

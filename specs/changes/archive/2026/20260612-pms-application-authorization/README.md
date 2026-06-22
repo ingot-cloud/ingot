@@ -1,10 +1,10 @@
 # PMS 应用中心化授权改造
 
-> 状态：implementing（整体实施，完成后统一验收）
+> 状态：completed（已验收，current 已更新，归档于 `archive/2026/`）
 
 ## 实施策略
 
-本次变更采用**整体实施、统一验收**：P0–P5 连续交付，不按阶段单独退出；P6（旧字段清理）在统一验收通过后再执行。开发期间保留 `authorization.model=legacy|shadow` 以便回滚对比，默认已切换为 `application`。
+本次变更采用**整体实施、统一验收**：P0–P5 连续交付，不按阶段单独退出；P6 拆为发布 A（代码收尾，本次完成）与发布 B（破坏性 DDL，已拆出独立变更）。开发期间曾保留 `authorization.model=legacy|shadow` 双轨用于回滚对比，验证通过后已于 P6.5 整体删除，应用中心化模型成为唯一来源。
 
 ## 元数据
 
@@ -93,8 +93,17 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
+- 完成日期：2026-06-22
+- 关联提交或 PR：见本次归档提交
+- 更新的 current capability：`specs/current/pms/application-authorization/`（README + SPEC）
 - 与原设计的差异：
-- 取消原因：
+  - 应用根权限默认编码改为 Ant 子树通配 `{code}:**`（原设计为 `{code}:*`）；匹配器同时支持 `:*` 与 `:**`。
+  - 应用类型统一为 `OrgTypeEnum`，删除 `AppTypeEnum`（D1）。
+  - 菜单访问控制以 `access_mode` 为唯一来源，移除 `enable_permission` Java 字段（物理列待发布 B 删除）。
+  - 角色来源以 `platform_role` 为唯一表示，删除冗余 `role_source`/`RoleSourceEnum`（含未发布的 `role_source` 列，D2 修订）。
+  - 删除 `authorization.model` 双轨与 shadow/legacy/snapshot/diff，`ApplicationAuthorizationResolver` 为唯一入口（D4）；旧 `/base` 应用接口保留兼容（D3），旧 `/base` 菜单/权限写接口移除，新增只读 `/v1/platform/config/{menu,permission}/tree`。
+  - 应用管理 API 基址由 `/v1/platform/apps` 调整为 `/v1/platform/config/apps`。
+  - 新增应用强制删除（超级管理员 + 存在租户授权时仍拒绝）与「菜单即应用」复用应用根权限语义。
+  - 破坏性 DDL（P6.6）拆为独立变更 `20260622-pms-authorization-ddl-cleanup`。
+- 取消原因：不适用（已完成）。
+- superseded 任务：T3.6（shadow）、T4.5（role_source）随双轨/字段删除而废弃，详见 TASKS.md 归档核对。
