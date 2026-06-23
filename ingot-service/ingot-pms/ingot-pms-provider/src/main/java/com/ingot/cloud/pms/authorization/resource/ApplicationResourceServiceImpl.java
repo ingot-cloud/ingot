@@ -285,6 +285,8 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         menu.setPermissionId(permissionId);
         menuService.create(menu);
         syncManagedPermissionSource(menu);
+        // 子节点创建后，父菜单（非目录）托管权限码升级为 :**，覆盖其下全部子权限
+        promoteParentManagedPermission(app, menu);
         return menu.getId();
     }
 
@@ -323,6 +325,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         // 菜单即应用：共享应用根权限时仅删菜单行，权限归应用由 deleteApp 管理
         if (Objects.equals(current.getPermissionId(), app.getPermissionId())) {
             menuService.delete(menuId);
+            demoteParentManagedPermission(app, current);
             return;
         }
 
@@ -333,6 +336,8 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         rolePermissionService.clearByPermissionId(current.getPermissionId());
         permissionService.delete(current.getPermissionId());
         menuService.delete(menuId);
+        // 子节点删除后，父菜单（非目录）若已无子节点，托管权限码降级回精确码
+        demoteParentManagedPermission(app, current);
     }
 
     @Override
@@ -496,6 +501,77 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
             authority.setCode(appendAntSubtreeSuffix(authority.getCode()));
         }
         return permissionService.createAndReturnId(authority, false);
+    }
+
+    /**
+     * 子菜单/按钮创建后，将父菜单（非目录）的托管权限码由精确码升级为 Ant 子树通配 {@code :**}，
+     * 使授予父菜单即可覆盖其下全部子权限。
+     *
+     * <p>守卫：仅处理非根级且非「菜单即应用」共享应用根权限的父菜单；目录始终 {@code :**} 不参与；
+     * 父码已为通配码时跳过。</p>
+     *
+     * @param app       应用
+     * @param childMenu 新建的子菜单
+     */
+    private void promoteParentManagedPermission(PlatformApp app, PlatformMenu childMenu) {
+        PlatformPermission parentPermission = resolveAdjustableParentPermission(app, childMenu.getPid());
+        if (parentPermission == null || PermissionMatcher.isWildcard(parentPermission.getCode())) {
+            return;
+        }
+        PlatformPermission update = new PlatformPermission();
+        update.setId(parentPermission.getId());
+        update.setCode(appendAntSubtreeSuffix(parentPermission.getCode()));
+        permissionService.update(update);
+    }
+
+    /**
+     * 子菜单/按钮删除后，若父菜单（非目录）已无任何子节点，则将其托管权限码由 {@code :**} 降级回精确码。
+     *
+     * <p>守卫同 {@link #promoteParentManagedPermission}，并要求父菜单当前已无子节点且父码为 {@code :**}。</p>
+     *
+     * @param app         应用
+     * @param deletedMenu 已删除的子菜单
+     */
+    private void demoteParentManagedPermission(PlatformApp app, PlatformMenu deletedMenu) {
+        PlatformPermission parentPermission = resolveAdjustableParentPermission(app, deletedMenu.getPid());
+        if (parentPermission == null || !PermissionMatcher.isAntSubtreeWildcard(parentPermission.getCode())) {
+            return;
+        }
+        long remaining = menuService.count(Wrappers.<PlatformMenu>lambdaQuery()
+                .eq(PlatformMenu::getPid, deletedMenu.getPid()));
+        if (remaining > 0) {
+            return;
+        }
+        PlatformPermission update = new PlatformPermission();
+        update.setId(parentPermission.getId());
+        update.setCode(PermissionMatcher.wildcardPathPrefix(parentPermission.getCode()));
+        permissionService.update(update);
+    }
+
+    /**
+     * 解析可参与升降级的父菜单托管权限：父菜单须存在、非根级、非目录、未共享应用根权限。
+     *
+     * @param app 应用
+     * @param pid 父菜单ID
+     * @return 可调整的父托管权限；不满足条件返回 {@code null}
+     */
+    private PlatformPermission resolveAdjustableParentPermission(PlatformApp app, Long pid) {
+        if (pid == null || pid <= IDConstants.ROOT_TREE_ID) {
+            return null;
+        }
+        PlatformMenu parent = menuService.getById(pid);
+        if (parent == null || parent.getPermissionId() == null) {
+            return null;
+        }
+        // 共享应用根权限（菜单即应用）不处理，避免篡改应用根权限
+        if (Objects.equals(parent.getPermissionId(), app.getPermissionId())) {
+            return null;
+        }
+        // 目录始终 :**，不参与升降级
+        if (isDirectoryMenu(parent)) {
+            return null;
+        }
+        return permissionService.getById(parent.getPermissionId());
     }
 
     private void syncManagedPermissionSource(PlatformMenu menu) {

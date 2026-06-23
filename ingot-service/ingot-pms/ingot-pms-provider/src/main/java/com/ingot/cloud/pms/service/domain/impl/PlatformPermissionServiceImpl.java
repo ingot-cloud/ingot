@@ -16,6 +16,7 @@ import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.security.core.context.SecurityAuthContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -85,7 +86,9 @@ public class PlatformPermissionServiceImpl extends BaseServiceImpl<PlatformPermi
     @CacheEvict(value = CacheConstants.PLATFORM_PERMISSIONS, allEntries = true)
     public void update(PlatformPermission authority) {
         // 权限编码不可更新
-        authority.setCode(null);
+        if (!SecurityAuthContext.isAdmin()) {
+            authority.setCode(null);
+        }
         authority.setUpdatedAt(DateUtil.now());
         updateById(authority);
     }

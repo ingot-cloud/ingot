@@ -1,6 +1,8 @@
 package com.ingot.framework.core.error;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.ingot.framework.commons.error.BizException;
@@ -12,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -37,7 +41,7 @@ public class GlobalExceptionHandlerResolver {
     public R<?> exception(Exception e) {
         log.error("[GlobalExceptionHandlerResolver] - Exception - message={}",
                 e.getLocalizedMessage(), e);
-        return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(),
+        return R.error(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(),
                 e.getLocalizedMessage());
     }
 
@@ -134,5 +138,13 @@ public class GlobalExceptionHandlerResolver {
     public R<?> noResourceFoundException(NoResourceFoundException exception) {
         log.error("[GlobalExceptionHandlerResolver] - noResourceFoundException 404 {}", exception.getLocalizedMessage());
         return R.error(BaseErrorCode.NOT_FOUND.getCode(), exception.getLocalizedMessage());
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public R<?> handleAccessDenied(AccessDeniedException ex) {
+        Map<String, String> data = new HashMap<>();
+        data.put("raw", ex.getLocalizedMessage());
+        return R.error(data, BaseErrorCode.FORBIDDEN);
     }
 }

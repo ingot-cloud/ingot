@@ -28,21 +28,21 @@ public class OrgDeptAPI implements RShortcuts {
     private final BizDeptService bizDeptService;
 
     @Operation(summary = "部门树", description = "部门树")
-    @AdminOrHasAnyAuthority({"org:contacts:member:query", "contacts:dept:query"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:query", "contacts:dept:query"})
     @GetMapping("/tree")
     public R<?> tree() {
         return ok(bizDeptService.orgList());
     }
 
     @Operation(summary = "部门树2", description = "部门树2")
-    @AdminOrHasAnyAuthority({"org:contacts:member:query", "contacts:dept:query"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:query", "contacts:dept:query"})
     @GetMapping("/tree2")
     public R<?> tree2() {
         return ok(bizDeptService.orgTree());
     }
 
     @Operation(summary = "基础结构部门树", description = "基础结构部门树")
-    @AdminOrHasAnyAuthority({"org:contacts:member:query", "contacts:dept:query"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:query", "contacts:dept:query"})
     @GetMapping("/simpleTree")
     public R<?> simpleTree() {
         return ok(bizDeptService.orgSimpleTree());

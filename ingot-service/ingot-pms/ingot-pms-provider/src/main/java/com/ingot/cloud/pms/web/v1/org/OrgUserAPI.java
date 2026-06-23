@@ -34,7 +34,7 @@ public class OrgUserAPI implements RShortcuts {
     private final BizUserService bizUserService;
 
     @Operation(summary = "组织用户分页", description = "组织用户分页")
-    @AdminOrHasAnyAuthority({"org:contacts:member:query"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:query"})
     @GetMapping("/page")
     public R<?> page(Page<SysUser> page, UserQueryDTO condition) {
         Long tenantId = TenantContextHolder.get();
@@ -42,7 +42,7 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户分页", description = "组织用户分页")
-    @AdminOrHasAnyAuthority({"org:contacts:member:query"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:query"})
     @GetMapping("/role/{roleId}/page")
     public R<?> pageWithRoleStatus(Page<SysUser> page,
                                    UserQueryDTO condition,
@@ -53,7 +53,7 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户创建", description = "组织用户创建")
-    @AdminOrHasAnyAuthority({"org:contacts:member:create"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:create"})
     @PostMapping
     public R<?> create(@RequestBody OrgUserDTO params) {
         bizUserService.orgCreateUser(params);
@@ -61,7 +61,7 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户更新", description = "组织用户更新")
-    @AdminOrHasAnyAuthority({"org:contacts:member:update"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:update"})
     @PutMapping
     public R<?> update(@RequestBody OrgUserDTO params) {
         bizUserService.orgUpdateUser(params);
@@ -69,7 +69,7 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户删除", description = "组织用户删除")
-    @AdminOrHasAnyAuthority({"org:contacts:member:delete"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:delete"})
     @DeleteMapping("/{id}")
     public R<?> removeById(@PathVariable Long id) {
         bizUserService.orgDeleteUser(id);
@@ -77,7 +77,7 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户详情", description = "组织用户详情")
-    @AdminOrHasAnyAuthority({"org:contacts:member:detail"})
+    @AdminOrHasAnyAuthority({"org:contacts:user:detail"})
     @GetMapping("/detail/{id}")
     public R<?> userProfile(@PathVariable Long id) {
         return ok(bizUserService.getOrgUserProfile(id));
