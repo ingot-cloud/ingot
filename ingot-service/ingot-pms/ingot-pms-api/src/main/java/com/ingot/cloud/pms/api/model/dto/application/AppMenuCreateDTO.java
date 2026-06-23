@@ -75,4 +75,7 @@ public class AppMenuCreateDTO implements Serializable {
 
     @Schema(description = "状态")
     private CommonStatusEnum status;
+
+    @Schema(description = "备注")
+    private String remark;
 }

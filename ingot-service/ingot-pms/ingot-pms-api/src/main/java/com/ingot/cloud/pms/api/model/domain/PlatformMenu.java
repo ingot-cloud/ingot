@@ -147,6 +147,11 @@ public class PlatformMenu extends BaseModel<PlatformMenu> implements MenuType {
     private CommonStatusEnum status;
 
     /**
+     * 备注
+     */
+    private String remark;
+
+    /**
      * 创建日期
      */
     private LocalDateTime createdAt;

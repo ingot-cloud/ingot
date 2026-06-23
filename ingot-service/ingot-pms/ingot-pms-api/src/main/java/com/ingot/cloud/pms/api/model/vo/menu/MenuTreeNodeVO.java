@@ -111,4 +111,8 @@ public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
      * 应用编码
      */
     private String appCode;
+    /**
+     * 备注
+     */
+    private String remark;
 }
