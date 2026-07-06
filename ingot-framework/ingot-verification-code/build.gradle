@@ -4,7 +4,7 @@ dependencies {
     implementation project(ingot.framework_core)
     api(deps.aj_captcha)
 
-    compileOnly project(ingot.framework_security)
+    compileOnly project(ingot.framework_security_common)
     compileOnly(deps.spring.security_web)
     compileOnly(deps.spring.spring_boot.data_redis_starter)
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)

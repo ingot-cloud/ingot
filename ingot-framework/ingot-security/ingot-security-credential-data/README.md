@@ -314,7 +314,7 @@ CREATE TABLE password_expiration (
 ```gradle
 // build.gradle
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential-data')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential-data')
 }
 ```
 
@@ -332,7 +332,7 @@ mysql -u root -p ingot_member < databases/migrations/add_password_history.sql
 ```gradle
 // build.gradle
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential-data')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential-data')
 }
 ```
 
@@ -351,7 +351,7 @@ mysql -u root -p ingot_core < databases/migrations/add_password_history.sql
 // build.gradle
 dependencies {
     // 只依赖核心模块，不需要数据层
-    implementation project(':ingot-framework:ingot-security-credential')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential')
 }
 ```
 
@@ -421,7 +421,7 @@ ingot:
 
 ```gradle
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential')
 }
 ```
 

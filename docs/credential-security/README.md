@@ -26,7 +26,7 @@
 ```java
 // 1. 添加依赖
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential')
 }
 
 // 2. 直接使用
@@ -253,7 +253,7 @@ public List<PasswordPolicy> loadPolicies(Long tenantId) {
 
 ```gradle
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential')
 }
 ```
 
@@ -281,7 +281,7 @@ PasswordCheckResult result = credentialSecurityService.validate(request);
 
 ```gradle
 dependencies {
-    implementation project(':ingot-framework:ingot-security-credential-data')
+    implementation project(':ingot-framework:ingot-security:ingot-security-credential-data')
 }
 ```
 

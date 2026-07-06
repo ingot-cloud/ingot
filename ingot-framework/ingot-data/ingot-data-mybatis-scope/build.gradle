@@ -6,6 +6,6 @@ dependencies {
     implementation(deps.mybatis.plus_join)
     implementation project(ingot.framework_data_mybatis_common)
     implementation project(ingot.framework_core)
-    implementation project(ingot.framework_security)
+    implementation project(ingot.framework_security_common)
     implementation project(ingot.pms_api)
 }

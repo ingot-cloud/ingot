@@ -1113,7 +1113,7 @@ public class OnlineUserCleanupTask {
 ```gradle
 dependencies {
     // 授权服务器核心
-    implementation project(':ingot-framework:ingot-security-authorization-server')
+    implementation project(':ingot-framework:ingot-security:ingot-security-authorization-server')
     
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -1213,7 +1213,7 @@ public class AuthorizationServerConfig {
 ```gradle
 dependencies {
     // 资源服务器核心
-    implementation project(':ingot-framework:ingot-security')
+    implementation project(':ingot-framework:ingot-security:ingot-security-common')
     
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'

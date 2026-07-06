@@ -2,7 +2,7 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     api project(ingot.framework_account_core)
-    api project(ingot.framework_security)
+    api project(ingot.framework_security_common)
     api project(ingot.framework_security_credential)
 
     compileOnly(deps.lombok)
