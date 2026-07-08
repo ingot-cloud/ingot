@@ -12,5 +12,5 @@
 
 当前变更：
 
-- 暂无进行中的变更。
+- [传输安全信封加密（HYBRID）与通用防重放](./20260707-security-crypto-hybrid/README.md) · 状态：approved
 
