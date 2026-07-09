@@ -188,11 +188,15 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [传输安全信封加密（HYBRID）与通用防重放](./changes/active/20260707-security-crypto-hybrid/README.md) · 状态：approved
+（无）
 
 已归档（2026）：
 
+- [传输安全信封加密（HYBRID）与通用防重放](./changes/archive/2026/20260707-security-crypto-hybrid/README.md)
 - [PMS 应用中心化授权改造（发布 A）](./changes/archive/2026/20260612-pms-application-authorization/README.md)
 - [PMS 应用授权旧字段破坏性清理（发布 B）](./changes/archive/2026/20260622-pms-authorization-ddl-cleanup/README.md)
 
-对应 current 能力：[pms/application-authorization](./current/pms/application-authorization/README.md)
+对应 current 能力：
+
+- [security/transport-crypto](./current/security/transport-crypto/README.md)
+- [pms/application-authorization](./current/pms/application-authorization/README.md)
