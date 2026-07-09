@@ -1,7 +1,5 @@
 package com.ingot.cloud.bff.model.dto;
 
-import com.ingot.framework.crypto.annotation.InFieldDecrypt;
-import com.ingot.framework.crypto.model.CryptoType;
 import lombok.Data;
 
 /**
@@ -12,8 +10,6 @@ import lombok.Data;
  */
 @Data
 public class BffLoginDTO {
-    @InFieldDecrypt(CryptoType.AES)
     private String username;
-    @InFieldDecrypt(CryptoType.AES)
     private String password;
 }

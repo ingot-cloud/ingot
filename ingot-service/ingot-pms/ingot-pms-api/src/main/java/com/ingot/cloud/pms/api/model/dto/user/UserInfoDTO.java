@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.ingot.framework.commons.model.common.TenantMainDTO;
-import com.ingot.framework.crypto.annotation.InFieldEncrypt;
-import com.ingot.framework.crypto.model.CryptoType;
+import com.ingot.framework.security.crypto.annotation.InEncryptField;
 import com.ingot.framework.security.credential.model.CredentialErrorCode;
 import lombok.Data;
 
@@ -24,7 +23,7 @@ public class UserInfoDTO implements Serializable {
     /**
      * 拥有角色
      */
-    @InFieldEncrypt(CryptoType.AES)
+    @InEncryptField
     private List<String> roles;
     /**
      * 可以访问的租户
@@ -33,6 +32,7 @@ public class UserInfoDTO implements Serializable {
     /**
      * 必须修改密码
      */
+    @InEncryptField
     private Boolean mustChangePwd;
     /**
      * 凭证状态码，用于前端展示过期预警。缺省 null 表示无需提示。

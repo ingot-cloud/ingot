@@ -19,4 +19,5 @@ spring:
   config:
     import:
       - optional:nacos:application-common.yml
+      - optional:nacos:application-security.yml?refreshEnabled=true
       - optional:nacos:${spring.application.name}.yml?refreshEnabled=true

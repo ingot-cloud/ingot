@@ -168,6 +168,59 @@ public final class AESUtil {
         return decryptGCM(key, Base64.decode(cipherText));
     }
 
+    // =================== GCM (原始字节密钥 + AAD) ===================
+
+    /**
+     * GCM 模式加密，使用原始字节密钥并绑定附加认证数据（AAD）。
+     * <p>适用于信封加密场景：密钥为随机生成的原始字节 CEK，AAD 用于绑定协议头防篡改。</p>
+     *
+     * @param plainText 待加密数据
+     * @param key       原始字节密钥（如 32 字节 AES-256）
+     * @param aad       附加认证数据，可为 {@code null}
+     * @return Base64(IV[12字节] + 密文 + Tag[16字节])
+     * @throws Exception 异常
+     */
+    public static String encryptGCM(byte[] plainText, byte[] key, byte[] aad) throws Exception {
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        random.nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance(GCM_NOPADDING);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, AES), spec);
+        if (aad != null) {
+            cipher.updateAAD(aad);
+        }
+
+        byte[] encrypted = cipher.doFinal(plainText);
+        byte[] combined = new byte[iv.length + encrypted.length];
+        System.arraycopy(iv, 0, combined, 0, iv.length);
+        System.arraycopy(encrypted, 0, combined, iv.length, encrypted.length);
+        return Base64.encode(combined);
+    }
+
+    /**
+     * GCM 模式解密，使用原始字节密钥并校验附加认证数据（AAD）。
+     *
+     * @param cipherTextBase64 Base64(IV[12字节] + 密文 + Tag[16字节]) 的字节形式
+     * @param key              原始字节密钥
+     * @param aad              附加认证数据，必须与加密时一致，可为 {@code null}
+     * @return 明文字节
+     * @throws Exception 解密或完整性校验失败时抛出
+     */
+    public static byte[] decryptGCM(byte[] cipherTextBase64, byte[] key, byte[] aad) throws Exception {
+        byte[] combined = Base64.decode(cipherTextBase64);
+        byte[] iv = Arrays.copyOfRange(combined, 0, GCM_IV_LENGTH);
+        byte[] cipherBytes = Arrays.copyOfRange(combined, GCM_IV_LENGTH, combined.length);
+
+        Cipher cipher = Cipher.getInstance(GCM_NOPADDING);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, AES), spec);
+        if (aad != null) {
+            cipher.updateAAD(aad);
+        }
+        return cipher.doFinal(cipherBytes);
+    }
+
     private static String encrypt(byte[] plainText, Cipher cipher, byte[] iv) throws Exception {
         byte[] encrypted = cipher.doFinal(plainText);
 

@@ -7,6 +7,7 @@ import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizAuthService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,7 @@ public class AuthUserAPI implements RShortcuts {
     private final BizAuthService bizAuthService;
 
     @GetMapping(value = "/info")
+    @InCryptoHybridContext
     @Operation(summary = "用户信息", description = "获取当前用户信息")
     public R<UserInfoDTO> getUserInfo() {
         return ok(bizAuthService.getUserInfo(SecurityAuthContext.getUser()));

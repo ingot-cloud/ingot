@@ -2,8 +2,7 @@ package com.ingot.cloud.member.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.crypto.annotation.InFieldDecrypt;
-import com.ingot.framework.crypto.model.CryptoType;
+import com.ingot.framework.security.crypto.annotation.InDecryptField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -19,14 +18,14 @@ public class MemberUserPasswordDTO implements Serializable {
      * 旧密码
      */
     @Schema(description = "旧密码")
-    @InFieldDecrypt(CryptoType.AES)
+    @InDecryptField
     private String password;
 
     /**
      * 新密码
      */
     @Schema(description = "新密码")
-    @InFieldDecrypt(CryptoType.AES)
+    @InDecryptField
     private String newPassword;
 }
 

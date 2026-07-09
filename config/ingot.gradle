@@ -15,6 +15,7 @@ ingot.framework_security_auth_server = ":ingot-framework:ingot-security:ingot-se
 ingot.framework_security_credential = ":ingot-framework:ingot-security:ingot-security-credential"
 ingot.framework_security_credential_data = ":ingot-framework:ingot-security:ingot-security-credential-data"
 ingot.framework_security_crypto = ":ingot-framework:ingot-security:ingot-security-crypto"
+ingot.framework_security_replay = ":ingot-framework:ingot-security:ingot-security-replay"
 ingot.framework_tenant = ":ingot-framework:ingot-tenant"
 ingot.framework_oss_common = ":ingot-framework:ingot-oss:ingot-oss-common"
 ingot.framework_oss_minio = ":ingot-framework:ingot-oss:ingot-oss-minio"

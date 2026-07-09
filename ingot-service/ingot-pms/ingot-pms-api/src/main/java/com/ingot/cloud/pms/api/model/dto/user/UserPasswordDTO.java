@@ -2,8 +2,6 @@ package com.ingot.cloud.pms.api.model.dto.user;
 
 import java.io.Serializable;
 
-import com.ingot.framework.crypto.annotation.InFieldDecrypt;
-import com.ingot.framework.crypto.model.CryptoType;
 import lombok.Data;
 
 /**
@@ -14,8 +12,6 @@ import lombok.Data;
  */
 @Data
 public class UserPasswordDTO implements Serializable {
-    @InFieldDecrypt(CryptoType.AES)
     private String password;
-    @InFieldDecrypt(CryptoType.AES)
     private String newPassword;
 }

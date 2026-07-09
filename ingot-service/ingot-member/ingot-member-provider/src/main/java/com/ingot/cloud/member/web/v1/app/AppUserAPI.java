@@ -6,6 +6,7 @@ import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class AppUserAPI implements RShortcuts {
     private final BizUserService bizUserService;
 
     @Operation(summary = "获取当前用户信息", description = "获取当前用户信息")
+    @InCryptoHybridContext
     @GetMapping
     public R<?> user() {
         return ok(bizAuthService.getUserInfo(SecurityAuthContext.getUser()));

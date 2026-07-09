@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
@@ -52,6 +53,34 @@ public class GlobalExceptionHandlerResolver {
         log.error("[GlobalExceptionHandlerResolver] - BizException - message={}",
                 e.getLocalizedMessage(), e);
         return R.error(e.getCode(), e.getLocalizedMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public R<?> httpMessageNotReadableException(HttpMessageNotReadableException e) {
+        // 请求体读取/反序列化阶段抛出的业务异常（如字段级 HYBRID 完整性校验失败）会被
+        // Jackson 包装，这里还原根因中的 BizException 以透出其错误码
+        BizException biz = findBizException(e);
+        if (biz != null) {
+            log.error("[GlobalExceptionHandlerResolver] - HttpMessageNotReadableException - biz={}",
+                    biz.getLocalizedMessage());
+            return R.error(biz.getCode(), biz.getLocalizedMessage());
+        }
+        log.error("[GlobalExceptionHandlerResolver] - HttpMessageNotReadableException - message={}",
+                e.getLocalizedMessage(), e);
+        return R.error(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), e.getLocalizedMessage());
+    }
+
+    private BizException findBizException(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause != null) {
+            if (cause instanceof BizException biz) {
+                return biz;
+            }
+            cause = cause.getCause();
+        }
+        return null;
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

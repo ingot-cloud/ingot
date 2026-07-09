@@ -1,4 +1,4 @@
-com.ingot.framework.crypto.InCryptoConfiguration
-com.ingot.framework.crypto.InArgumentConfiguration
-com.ingot.framework.crypto.web.InEncryptResponseBodyAdvice
-com.ingot.framework.crypto.web.InDecryptRequestBodyAdvice
+com.ingot.framework.security.crypto.InCryptoConfiguration
+com.ingot.framework.security.crypto.InArgumentConfiguration
+com.ingot.framework.security.crypto.web.InEncryptResponseBodyAdvice
+com.ingot.framework.security.crypto.web.InDecryptRequestBodyAdvice

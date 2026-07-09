@@ -10,6 +10,8 @@ import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InDecrypt;
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,6 +87,8 @@ public class OrgUserAPI implements RShortcuts {
 
     @Operation(summary = "组织用户密码初始化", description = "组织用户密码初始化")
     @AdminOrHasAnyAuthority({PermissionConstants.INIT_PASSWORD})
+    @InCryptoHybridContext
+    @InDecrypt
     @PutMapping("/pwd/init")
     public R<?> initFixPwd(@RequestBody UserPasswordDTO params) {
         bizUserService.orgPasswordInit(params);
@@ -92,6 +96,8 @@ public class OrgUserAPI implements RShortcuts {
     }
 
     @Operation(summary = "组织用户密码修改", description = "组织用户密码修改")
+    @InCryptoHybridContext
+    @InDecrypt
     @PutMapping("/pwd")
     public R<?> fixPwd(@RequestBody UserPasswordDTO params) {
         bizUserService.fixPassword(params);

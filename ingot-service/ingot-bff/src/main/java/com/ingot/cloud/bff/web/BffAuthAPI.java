@@ -2,13 +2,15 @@ package com.ingot.cloud.bff.web;
 
 import java.util.Map;
 
-import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
 import com.ingot.cloud.bff.model.dto.BffTenantSelectDTO;
 import com.ingot.cloud.bff.service.BffAuthService;
 import com.ingot.cloud.bff.service.BffSessionService;
+import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InDecrypt;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,10 +37,9 @@ import org.springframework.web.bind.annotation.*;
  * }</pre>
  *
  * @author jy
- * @since 1.0.0
- *
  * @see BffAuthService
  * @see BffSessionService
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/bff/auth")
@@ -57,6 +58,8 @@ public class BffAuthAPI implements RShortcuts {
      * @return 可选租户列表
      */
     @Permit
+    @InCryptoHybridContext
+    @InDecrypt
     @PostMapping("/login")
     public R<?> login(@RequestBody BffLoginDTO dto,
                       HttpServletRequest request,

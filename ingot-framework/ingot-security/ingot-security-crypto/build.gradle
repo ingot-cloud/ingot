@@ -2,9 +2,17 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     implementation project(ingot.framework_core)
+    api project(ingot.framework_security_replay)
     compileOnly(deps.spring.spring_cloud.context)
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
     compileOnly(deps.spring.framework_webmvc)
     compileOnly(deps.jakarta_servlet_api)
 
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.framework_webmvc)
+    testImplementation(deps.jakarta_servlet_api)
+}
+
+test {
+    useJUnitPlatform()
 }
