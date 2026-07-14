@@ -17,7 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "ingot.replay")
+@ConfigurationProperties(prefix = "ingot.security.replay")
 public class ReplayProperties {
     /**
      * 是否启用防重放校验

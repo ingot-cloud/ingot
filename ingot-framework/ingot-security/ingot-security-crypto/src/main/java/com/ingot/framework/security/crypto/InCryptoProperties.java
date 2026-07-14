@@ -17,7 +17,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 @Getter
 @Setter
 @RefreshScope
-@ConfigurationProperties(prefix = "ingot.crypto")
+@ConfigurationProperties(prefix = "ingot.security.crypto")
 public class InCryptoProperties {
     /**
      * url参数加解密key
