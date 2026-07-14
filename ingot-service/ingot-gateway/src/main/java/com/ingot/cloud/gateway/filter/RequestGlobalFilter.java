@@ -63,6 +63,7 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
                         httpHeaders.remove(header);
                     }
                     httpHeaders.set(HeaderConstants.CLIENT_REAL_IP, clientIp);
+                    log.info("[Filter] - RequestGlobalFilter - ip={}", clientIp);
                 })
                 .build();
         return chain.filter(exchange.mutate().request(request).build());

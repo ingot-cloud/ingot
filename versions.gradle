@@ -32,7 +32,7 @@ versions.logstash_logback_encoder = "9.0"
 versions.caffeine = "3.2.3"
 
 versions.ingot_plugin_mybatis = "0.2.4"
-versions.ingot_plugin_assemble = "0.6.0.0"
+versions.ingot_plugin_assemble = "0.7.1.0"
 
 def spring = [:]
 def spring_boot = [:]

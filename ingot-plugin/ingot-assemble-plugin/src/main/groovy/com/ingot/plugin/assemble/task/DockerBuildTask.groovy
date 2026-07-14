@@ -53,7 +53,7 @@ class DockerBuildTask extends DefaultTask {
     dockerImage() {
         project.logger.lifecycle("DockerBuildTask running.")
         outputDirPath = Utils.getOutputDirPathOrDefault(project, outputDirPath)
-        dockerCmd = Utils.getDockerCmdOrDefault(dockerCmd)
+        dockerCmd = Utils.resolveDockerCmd(project, dockerCmd)
 
         // build dockerfile 的目录
         String buildDirPath = Utils.projectOutputPath(outputDirPath, project)
@@ -64,7 +64,7 @@ class DockerBuildTask extends DefaultTask {
                 " --load" +
                 " .")
 
-        execOperations.exec {
+        Utils.execDocker(execOperations, project, dockerCmd) {
             workingDir buildDirPath
             commandLine dockerCmd, 'buildx', 'build', '--platform', platform, '-t', tag, '--load', '.'
             logging.captureStandardOutput LogLevel.INFO

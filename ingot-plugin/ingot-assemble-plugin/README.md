@@ -226,7 +226,7 @@ ingotAssemble {
 
 | 配置项 | 类型 | 默认值 | 必填 | 说明 |
 |--------|------|--------|------|------|
-| `dockerCmd` | String | `docker` | 否 | Docker 命令路径 |
+| `dockerCmd` | String | `docker` | 否 | Docker 命令路径；未显式配置时会自动探测常见安装路径 |
 | `platform` | String | `linux/amd64` | 否 | 构建平台，多平台用逗号分隔 |
 | `registry` | String | `""` | 否 | 镜像仓库地址 |
 | `username` | String | `""` | 否 | 仓库登录用户名 |
@@ -250,6 +250,20 @@ ingotAssemble {
 | `saveName` | String | 否 | 保存的镜像文件名（可选） |
 
 **配置优先级：** `环境配置` > `全局配置`
+
+**`dockerCmd` 解析优先级：** 显式配置的 `dockerCmd` > 环境变量 `DOCKER_CMD` > Gradle 属性 `ingot.dockerCmd` > 常见安装路径自动探测 > `docker`
+
+在 IDE（IntelliJ / Cursor）中执行 `dockerBuild*` 时，Gradle Daemon 的 `PATH` 往往不包含 Docker 安装目录，可能出现 `A problem occurred starting process 'command 'docker''`。插件会自动探测常见安装路径（macOS / Linux / Windows）；若仍失败，可在项目根 `gradle.properties` 中显式配置：
+
+```properties
+# macOS
+ingot.dockerCmd=/usr/local/bin/docker
+
+# Windows
+ingot.dockerCmd=C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe
+```
+
+或通过 `config/docker-assemble.gradle` 统一注入（见 ingot 主工程配置）。
 
 ## 🎯 使用场景
 
@@ -418,7 +432,28 @@ docker buildx inspect --bootstrap
 2. 运行 `./gradlew tasks --group=ingot` 查看可用任务
 3. 检查配置是否在 `project.afterEvaluate` 中生效
 
-### 问题 2：Dockerfile 未找到
+### 问题 2：找不到 docker 命令
+
+**错误**：`A problem occurred starting process 'command 'docker''`
+
+**原因**：IDE 中 Gradle Daemon 的 `PATH` 通常比终端更精简，找不到 `docker` 可执行文件。
+
+**解决**（任选其一）：
+
+1. 依赖插件自动探测（macOS / Linux / Windows Docker Desktop 常见路径）
+2. 在项目根 `gradle.properties` 设置：
+   ```properties
+   # macOS
+   ingot.dockerCmd=/usr/local/bin/docker
+
+   # Windows
+   ingot.dockerCmd=C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe
+   ```
+3. 设置环境变量 `DOCKER_CMD` 为上述路径
+4. 在 `ingotAssemble.docker` 中显式配置 `dockerCmd`
+5. 确认 Docker Desktop 已安装并运行，然后执行 `./gradlew --stop` 后重试
+
+### 问题 3：Dockerfile 未找到
 
 **错误**：`Dockerfile not found in src/main/docker/prod`
 
@@ -427,7 +462,7 @@ docker buildx inspect --bootstrap
 2. 确认 Dockerfile 文件存在
 3. 路径是相对于项目根目录的
 
-### 问题 3：多平台构建失败
+### 问题 4：多平台构建失败
 
 **错误**：`multiple platforms feature is currently not supported`
 
@@ -438,7 +473,7 @@ docker buildx create --use
 docker buildx inspect --bootstrap
 ```
 
-### 问题 4：认证失败
+### 问题 5：认证失败
 
 **错误**：`unauthorized: authentication required`
 

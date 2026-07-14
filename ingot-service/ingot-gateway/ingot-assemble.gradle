@@ -10,6 +10,7 @@ ingotAssemble {
         env("dev") {
             name = "ingot/gateway"
             saveName = "ingot-gateway.tar"
+            platform = "linux/arm64"
         }
         env("test") {
             name = "ingot/gateway"

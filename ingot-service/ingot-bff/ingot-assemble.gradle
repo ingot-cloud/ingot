@@ -1,4 +1,5 @@
 apply plugin: 'com.ingot.plugin.assemble'
+apply from: "${rootProject.projectDir}/config/docker-assemble.gradle"
 
 ingotAssemble {
     docker {

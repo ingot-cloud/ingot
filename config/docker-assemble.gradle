@@ -1,0 +1,6 @@
+ingotAssemble {
+    docker {
+        def cmd = project.findProperty('ingot.dockerCmd') ?: 'docker'
+        dockerCmd cmd
+    }
+}

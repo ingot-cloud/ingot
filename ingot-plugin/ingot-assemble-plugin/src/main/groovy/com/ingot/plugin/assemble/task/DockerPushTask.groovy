@@ -56,7 +56,7 @@ class DockerPushTask extends DefaultTask {
     push() {
         project.logger.lifecycle("DockerPushTask running")
 
-        dockerCmd = Utils.getDockerCmdOrDefault(dockerCmd)
+        dockerCmd = Utils.resolveDockerCmd(project, dockerCmd)
 
         if (Utils.isEmpty(registry)) {
             throw new GradleException("注册中心地址不能为空")
@@ -67,7 +67,7 @@ class DockerPushTask extends DefaultTask {
         // login
         if (!Utils.isEmpty(username) && !Utils.isEmpty(password)) {
             project.logger.lifecycle("ShiftDockerfileTask - docker login")
-            execOperations.exec {
+            Utils.execDocker(execOperations, project, dockerCmd) {
                 commandLine dockerCmd, "login", "-u", username, "-p", password, registry
                 logging.captureStandardOutput LogLevel.INFO
                 logging.captureStandardError LogLevel.ERROR
@@ -76,7 +76,7 @@ class DockerPushTask extends DefaultTask {
         }
 
         project.logger.lifecycle("DockerPushTask - docker image push: " + tag)
-        execOperations.exec {
+        Utils.execDocker(execOperations, project, dockerCmd) {
             commandLine dockerCmd, 'push', tag
             logging.captureStandardOutput LogLevel.INFO
             logging.captureStandardError LogLevel.ERROR
