@@ -1,4 +1,5 @@
 apply from: "${project.getRootDir().path}/config/service-base.gradle"
+apply from: 'ingot-assemble.gradle'
 
 dependencies {
     implementation(deps.spring.spring_boot.web_starter)
