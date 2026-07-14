@@ -18,6 +18,9 @@ import org.springframework.context.annotation.Import;
 @Documented
 @EnableInWebSecurity
 @EnableConfigurationProperties(InOAuth2AuthProperties.class)
-@Import({InOAuth2AuthorizationServerConfiguration.class})
+@Import({
+        InOAuth2AuthorizationServerConfiguration.class,
+        AuthServerJwtEncoderConfiguration.class
+})
 public @interface EnableInAuthorizationServer {
 }
