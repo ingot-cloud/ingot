@@ -38,10 +38,10 @@ flowchart TD
 
 | Order | 组件 | 作用 |
 |-------|------|------|
-| `HIGHEST` | `RequestGlobalFilter` | 剥离内部 Header、写入 `X-Client-Real-IP` |
+| `HIGHEST` | `RequestGlobalFilter` | 剥离内部 Header、写入 `In-Inner-Client-Real-IP` |
 | +10 | `SessionTokenRelayFilter` | Cookie Session → Bearer |
 | +15 | `AuthContextRelayFilter` | JWT 解析 → `userId` attribute |
-| +20 | `IdentityResolveFilter` | 聚合 `ClientIdentity`，回填 `X-User-Id`（USER 维度限流） |
+| +20 | `IdentityResolveFilter` | 聚合 `ClientIdentity`，回填 `In-Inner-User-Id`（USER 维度限流） |
 | +30 | `BlacklistFilter` | 白名单 bypass、临时封禁、静态黑白名单 → 403 |
 | +40 | `ChallengeFilter` | ALWAYS 挑战、PassToken 消费 → 412 或放行 |
 | +50 | `WhitelistAwareSentinelGatewayFilter` | Sentinel 限流（白名单 / PassToken 跳过） |
@@ -52,10 +52,21 @@ flowchart TD
 
 | 字段 | 来源 |
 |------|------|
-| IP | `X-Client-Real-IP`（`RequestGlobalFilter` 写入，**不用** Sentinel 自带的 client IP） |
-| 设备 | `X-In-Ca-Sig` |
-| userId | `AuthContextRelayFilter` → attribute，并回填 `X-User-Id` |
+| IP | `In-Inner-Client-Real-IP`（`RequestGlobalFilter` 写入，**不用** Sentinel 自带的 client IP） |
+| 设备 | `In-Ca-Sig` |
+| userId | `AuthContextRelayFilter` → attribute，并回填 `In-Inner-User-Id` |
 | UA / Referer | 标准 HTTP Header |
+
+> **内部 Header 安全约束**：`In-Inner-*` 系列（含 `In-Inner-Client-Real-IP`、`In-Inner-User-Id`、`In-Inner-From`）由 `RequestGlobalFilter` 在网关入口统一剥离，后续 Filter 按需写入可信值；外部客户端伪造无效。
+
+### 2.3 自定义 Header 速查
+
+| Header | 写入方 | 用途 | Java 常量 |
+|---|---|---|---|
+| `In-Ca-Sig` | 前端/BFF | 设备指纹 | `BFF_DEVICE_FINGERPRINT_HEADER` |
+| `In-Inner-Client-Real-IP` | 网关 | 标准化客户端 IP | `INNER_CLIENT_REAL_IP` |
+| `In-Inner-User-Id` | 网关 | Sentinel USER 维度 | `INNER_USER_ID` |
+| `In-Inner-From` | 网关 | 请求来源标识 | `SECURITY_FROM` |
 
 ---
 
@@ -360,7 +371,7 @@ spring:
 ## 9. 运维与排障提示
 
 1. **改了 Platform 规则但网关未生效**：确认 `invalidation-enabled=true`、Feign 可达 security、且对应域 `enabled=true`；限流另看 `[Sentinel] reloaded` 日志。
-2. **限流粒度不对**：确认 `RequestGlobalFilter` 已写 `X-Client-Real-IP`，勿依赖 Sentinel 默认 client IP。
+2. **限流粒度不对**：确认 `RequestGlobalFilter` 已写 `In-Inner-Client-Real-IP`，勿依赖 Sentinel 默认 client IP。
 3. **白名单不生效**：须先命中 `BlacklistFilter` 静态白名单；仅 PassToken 不会跳过黑名单检查。
 4. **412 后仍被限流**：检查 PassToken 是否带对 `scope`、Redis 是否可用、是否设置 `ingot.security.passToken.ok` 路径。
 5. **403 来自 temp**：查 Redis `in:gw:bl:tmp:IP:*`，或等待 `tempBlockTtlSec` TTL；阈值见 Platform `GET /platform/security/policy/violation-escalation` 或 local `ViolationEscalationProperties`。

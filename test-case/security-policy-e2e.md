@@ -371,7 +371,7 @@ done
 | 项 | 内容 |
 |----|------|
 | 前置 | 规则 A 禁用；规则 C 启用 |
-| 步骤 | 相同 IP、不同 `X-In-Ca-Sig` 头各发 3 次 POST |
+| 步骤 | 相同 IP、不同 `In-Ca-Sig` 头各发 3 次 POST |
 | 期望 | 按设备指纹独立限流；缺省设备头时行为以 `ClientIdentity` 实现为准（记录实际结果） |
 
 ### TC-SP-006 USER 维度
@@ -380,7 +380,7 @@ done
 |----|------|
 | 前置 | 新增 `dimension: UI` 规则，绑定需登录路径（如 `/api/user/**`） |
 | 步骤 | 用户 A、用户 B 各自 Bearer Token 并发请求 |
-| 期望 | 按 `X-User-Id`（JWT 解析回填）独立计数 |
+| 期望 | 按 `In-Inner-User-Id`（JWT 解析回填）独立计数 |
 
 ---
 
@@ -583,7 +583,7 @@ curl -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: $TEST_IP"
 # 带设备指纹
 curl -X POST "$GATEWAY/test/send" \
   -H "X-Forwarded-For: $TEST_IP" \
-  -H "X-In-Ca-Sig: $TEST_DEVICE"
+  -H "In-Ca-Sig: $TEST_DEVICE"
 
 # 带 PassToken
 curl -X POST "$GATEWAY/test/send?_vc_pass_token=YOUR_TOKEN" \

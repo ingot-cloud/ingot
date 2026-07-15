@@ -2,7 +2,7 @@
 
 ## 概述
 
-BFF 会话安全机制要求前端在每次 HTTP 请求中携带设备指纹 Header `X-Ca-Sig`，用于绑定 Cookie Session 与物理设备，防止 Cookie 被窃取后在其他设备上使用。
+BFF 会话安全机制要求前端在每次 HTTP 请求中携带设备指纹 Header `In-Ca-Sig`，用于绑定 Cookie Session 与物理设备，防止 Cookie 被窃取后在其他设备上使用。
 
 **安全模型：**
 - HTTPS 防止中间人看到请求内容（包括 Header 和 Cookie）
@@ -217,7 +217,7 @@ axios.interceptors.request.use(async (config) => {
   if (!cachedFingerprint) {
     cachedFingerprint = await generateFingerprint();
   }
-  config.headers['X-Ca-Sig'] = cachedFingerprint;
+  config.headers['In-Ca-Sig'] = cachedFingerprint;
   return config;
 });
 ```
@@ -235,7 +235,7 @@ export async function request(url: string, options: RequestInit = {}) {
   }
   
   const headers = new Headers(options.headers);
-  headers.set('X-Ca-Sig', cachedFingerprint);
+  headers.set('In-Ca-Sig', cachedFingerprint);
   
   return fetch(url, { ...options, headers });
 }
@@ -258,7 +258,7 @@ export const requestInterceptor = async (url: string, options: any) => {
       ...options,
       headers: {
         ...options.headers,
-        'X-Ca-Sig': cachedFingerprint,
+        'In-Ca-Sig': cachedFingerprint,
       },
     },
   };
@@ -278,9 +278,9 @@ export const requestInterceptor = async (url: string, options: any) => {
 
 自定义 Header 的核心优势：**值是从当前设备硬件特征实时计算的，不是一个静态的可迁移令牌**。
 
-### Header 名称为什么用 X-Ca-Sig？
+### Header 名称为什么用 In-Ca-Sig？
 
-使用非语义化名称，不暴露用途。`Ca` 可理解为 Client Authentication，`Sig` 可理解为 Signature。避免使用 `X-Device-Fingerprint` 这种直白的名称。
+使用非语义化名称，不暴露用途。`In-` 为 Ingot 平台自定义 Header 前缀；`Ca` 可理解为 Client Authentication，`Sig` 可理解为 Signature。避免使用 `X-Device-Fingerprint` 这类直白的名称。
 
 ### 指纹的稳定性
 
@@ -305,7 +305,7 @@ export const requestInterceptor = async (url: string, options: any) => {
 
 ### 降级兼容
 
-当前端未携带 `X-Ca-Sig` Header 时，BFF 和网关会自动降级为 IP+UA 方式计算指纹，确保：
+当前端未携带 `In-Ca-Sig` Header 时，BFF 和网关会自动降级为 IP+UA 方式计算指纹，确保：
 
 - 旧版前端在改造前仍可使用
 - 非浏览器客户端（如移动 App）可以使用自己的设备标识
@@ -313,7 +313,7 @@ export const requestInterceptor = async (url: string, options: any) => {
 
 ## CORS 配置注意
 
-网关需要允许 `X-Ca-Sig` Header 通过 CORS：
+网关需要允许 `In-Ca-Sig` Header 通过 CORS：
 
 ```yaml
 spring:
@@ -325,7 +325,7 @@ spring:
             allowed-headers:
               - "*"
             # 或明确列出: 
-            # - X-Ca-Sig
+            # - In-Ca-Sig
             # - Content-Type
             # - Authorization
 ```

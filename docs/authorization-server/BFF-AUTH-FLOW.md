@@ -95,7 +95,7 @@ Content-Type: application/json
  │                    │                      │                                    │                       │
  │                    │                      │ 3. 创建 BFF Session:                │                       │
  │                    │                      │    sessionId = UUID                 │                       │
- │                    │                      │    fingerprint = X-Ca-Sig Header    │                       │
+ │                    │                      │    fingerprint = In-Ca-Sig Header    │                       │
  │                    │                      │    accessToken = code_verifier (暂存)│                      │
  │                    │                      │    refreshToken = state|redirect_uri │                      │
  │                    │                      │ ──────────────────────────────────────────────────────►    │
@@ -243,7 +243,7 @@ Cookie: IN_SESSION=xxx
  │                    │                                           │                    │
  │                    │ 4. 指纹校验                                 │                    │
  │                    │    stored = session.fingerprint             │                    │
- │                    │    current = X-Ca-Sig Header (设备指纹)     │                    │
+ │                    │    current = In-Ca-Sig Header (设备指纹)     │                    │
  │                    │    → 不匹配则返回 401                       │                    │
  │                    │                                           │                    │
  │                    │ 5. 注入 JWT                                 │                    │
@@ -344,7 +344,7 @@ Cookie: IN_SESSION=xxx
 
 ### 2. 客户端设备指纹校验
 
-采用**前端设备指纹**方案（推荐），取代传统的 IP+UA 方式。前端通过浏览器 API 计算一个稳定的设备标识，每次请求通过 `X-Ca-Sig` Header 传递。
+采用**前端设备指纹**方案（推荐），取代传统的 IP+UA 方式。前端通过浏览器 API 计算一个稳定的设备标识，每次请求通过 `In-Ca-Sig` Header 传递。
 
 **为什么不用 IP+UA？**
 
@@ -361,11 +361,11 @@ Cookie: IN_SESSION=xxx
 前端登录时:
   1. 采集浏览器特征(UA + 语言 + 分辨率 + 时区 + Canvas + WebGL + ...)
   2. SHA-256 → 设备指纹值 (如 "a1b2c3d4...")
-  3. 每次请求带上 Header: X-Ca-Sig: a1b2c3d4...
+  3. 每次请求带上 Header: In-Ca-Sig: a1b2c3d4...
 
 后端:
-  1. 登录时: session.fingerprint = request.getHeader("X-Ca-Sig")
-  2. 后续: 对比 session.fingerprint == request.getHeader("X-Ca-Sig")
+  1. 登录时: session.fingerprint = request.getHeader("In-Ca-Sig")
+  2. 后续: 对比 session.fingerprint == request.getHeader("In-Ca-Sig")
 ```
 
 **安全性分析：**
@@ -375,9 +375,10 @@ Cookie: IN_SESSION=xxx
 | MITM（中间人） | HTTPS/TLS | 指纹不防 MITM，这是 HTTPS 的职责 |
 | XSS 窃取 Cookie | 设备指纹 | 攻击者的设备特征不同，指纹必然不匹配 |
 | Cookie 泄露（日志/共享电脑） | 设备指纹 | 其他设备上无法计算出相同指纹 |
-| 伪造 X-Ca-Sig Header | HTTPS | 攻击者看不到 Header 值（HTTPS 加密） |
+| 伪造 In-Ca-Sig Header | HTTPS | 攻击者看不到 Header 值（HTTPS 加密） |
 
-> **Header 使用 `X-Ca-Sig`（非语义化名称），不暴露用途。**
+> **Header 使用 `In-Ca-Sig`（非语义化名称），不暴露用途。**
+> 与网关内部头 `In-Inner-Client-Real-IP`（客户端 IP 标准化）区分：前者由前端携带，后者仅网关写入。
 
 校验发生在**两个层级**（纵深防御）：
 
@@ -386,7 +387,7 @@ Cookie: IN_SESSION=xxx
 | **网关** `SessionTokenRelayFilter` | 每次 Session→JWT 转换前 | **所有** 通过 session 访问的请求 |
 | **BFF** `BffSessionService.getSession()` | BFF 自身读取 session 时 | BFF 服务的 API |
 
-两层都优先从 `X-Ca-Sig` 读取设备指纹，Header 不存在时降级为 IP+UA 计算（兼容未改造的前端）。
+两层都优先从 `In-Ca-Sig` 读取设备指纹，Header 不存在时降级为 IP+UA 计算（兼容未改造的前端）。
 
 **配置项：**
 
@@ -497,7 +498,7 @@ BFF 专属客户端需要在 `oauth2_registered_client` 表中注册，参见 `d
 
 ## 前端设备指纹集成
 
-前端需要在每次请求中携带 `X-Ca-Sig` Header，值为设备指纹。详见 `docs/authorization-server/DEVICE-FINGERPRINT.md`。
+前端需要在每次请求中携带 `In-Ca-Sig` Header，值为设备指纹。详见 `docs/authorization-server/DEVICE-FINGERPRINT.md`。
 
 **快速集成（axios 示例）：**
 
@@ -511,7 +512,7 @@ axios.interceptors.request.use(async (config) => {
   if (!cachedFingerprint) {
     cachedFingerprint = await generateFingerprint();
   }
-  config.headers['X-Ca-Sig'] = cachedFingerprint;
+  config.headers['In-Ca-Sig'] = cachedFingerprint;
   return config;
 });
 ```

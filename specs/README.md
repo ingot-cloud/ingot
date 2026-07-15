@@ -192,6 +192,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [网关自定义 Header 命名统一](./changes/archive/2026/20260715-gateway-header-rename/README.md)
 - [JWK 多密钥签名 Selector 修复](./changes/archive/2026/20260713-security-jwk-signing-selector/README.md)
 - [传输安全信封加密（HYBRID）与通用防重放](./changes/archive/2026/20260707-security-crypto-hybrid/README.md)
 - [PMS 应用中心化授权改造（发布 A）](./changes/archive/2026/20260612-pms-application-authorization/README.md)
@@ -199,6 +200,7 @@ current/<domain>/<capability>/
 
 对应 current 能力：
 
+- [gateway/header-conventions](./current/gateway/header-conventions/README.md)
 - [security/jwk-management](./current/security/jwk-management/README.md)
 - [security/transport-crypto](./current/security/transport-crypto/README.md)
 - [pms/application-authorization](./current/pms/application-authorization/README.md)
