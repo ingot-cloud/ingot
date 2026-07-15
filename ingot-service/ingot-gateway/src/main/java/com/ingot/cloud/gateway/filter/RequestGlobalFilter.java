@@ -1,9 +1,8 @@
 package com.ingot.cloud.gateway.filter;
 
-import cn.hutool.core.net.NetUtil;
-import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.HeaderConstants;
-import com.ingot.framework.commons.utils.FingerprintUtil;
+import com.ingot.framework.commons.utils.ClientIpResolver;
+import com.ingot.framework.commons.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -18,7 +17,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>作为安全策略链路的第一个 Filter（order = {@link GatewayFilterOrders#REQUEST_GLOBAL}），
  * 后续 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter}、黑白名单、限流均依赖
- * 本 Filter 写入的 {@link HeaderConstants#CLIENT_REAL_IP}（{@code X-Client-Real-IP}）。</p>
+ * 本 Filter 写入的 {@link HeaderConstants#INNER_CLIENT_REAL_IP}（{@code In-Inner-Client-Real-IP}）。</p>
  *
  * <h3>IP 解析优先级（从高到低）</h3>
  * <ol>
@@ -28,7 +27,7 @@ import reactor.core.publisher.Mono;
  *     <li>{@code WL-Proxy-Client-IP}</li>
  *     <li>{@code request.getRemoteAddress()} — 直连网关时的 socket 地址</li>
  * </ol>
- * <p>每个候选值经 {@link com.ingot.framework.commons.utils.FingerprintUtil#normalizeIp} 标准化；
+ * <p>每个候选值经 {@link com.ingot.framework.commons.utils.IpUtil#normalize} 标准化；
  * 未知或空值跳过，全部缺失时写入空字符串。</p>
  *
  * <h3>Nginx 部署说明</h3>
@@ -47,9 +46,6 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class RequestGlobalFilter implements GlobalFilter, Ordered {
-    private static final String[] IP_HEADERS = {
-            "X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP"
-    };
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -62,7 +58,7 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
                     for (String header : HeaderConstants.GATEWAY_INTERNAL_HEADERS) {
                         httpHeaders.remove(header);
                     }
-                    httpHeaders.set(HeaderConstants.CLIENT_REAL_IP, clientIp);
+                    httpHeaders.set(HeaderConstants.INNER_CLIENT_REAL_IP, clientIp);
                     log.info("[Filter] - RequestGlobalFilter - ip={}", clientIp);
                 })
                 .build();
@@ -75,15 +71,9 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private String resolveClientIp(ServerHttpRequest request) {
-        for (String header : IP_HEADERS) {
-            String ip = request.getHeaders().getFirst(header);
-            if (StrUtil.isNotEmpty(ip) && !NetUtil.isUnknown(ip)) {
-                return FingerprintUtil.normalizeIp(NetUtil.getMultistageReverseProxyIp(ip));
-            }
-        }
-        if (request.getRemoteAddress() != null) {
-            return FingerprintUtil.normalizeIp(request.getRemoteAddress().getAddress().getHostAddress());
-        }
-        return "";
+        return ClientIpResolver.resolve(
+                HeaderConstants.PROXY_IP_HEADERS,
+                header -> request.getHeaders().getFirst(header),
+                () -> IpUtil.fromInetSocketAddress(request.getRemoteAddress()));
     }
 }

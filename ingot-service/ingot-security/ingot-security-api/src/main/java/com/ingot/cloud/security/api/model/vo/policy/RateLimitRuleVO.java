@@ -47,9 +47,9 @@ public class RateLimitRuleVO implements Serializable {
      * SDK 内统一由 {@code RateLimitDimension.fromCode} 解析为枚举。
      *
      * <ul>
-     *     <li>{@code IP}：按客户端真实 IP 限流（{@code X-Client-Real-IP}）。</li>
-     *     <li>{@code DV}：按设备指纹限流（{@code X-In-Ca-Sig}）。</li>
-     *     <li>{@code UI}：按用户 ID 限流（{@code X-User-Id}）；匿名请求退化为 API 整体限流。</li>
+     *     <li>{@code IP}：按客户端真实 IP 限流（{@code In-Inner-Client-Real-IP}）。</li>
+     *     <li>{@code DV}：按设备指纹限流（{@code In-Ca-Sig}）。</li>
+     *     <li>{@code UI}：按用户 ID 限流（{@code In-Inner-User-Id}）；匿名请求退化为 API 整体限流。</li>
      * </ul>
      */
     private String dimension;

@@ -32,7 +32,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
         try {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
+            vo.setBrowserInfo(WebUtil.getClientIP(request));
             ResponseModel responseModel = captchaService.get(vo);
 
             InnerCheck.check(responseModel.isSuccess(), VCErrorCode.Illegal,
@@ -53,7 +53,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaVerification(code);
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtil.getRemoteIP(exchange.getRequest()));
+            vo.setBrowserInfo(WebUtil.getClientIP(exchange.getRequest()));
             InnerCheck.check(captchaService.verification(vo).isSuccess(), "vc.check.image.checkFailure");
             return chain.filter(exchange);
         } catch (VCException e) {
@@ -70,7 +70,7 @@ public class DefaultCaptchaVCProcessor implements VCProcessor {
             CaptchaVO vo = new CaptchaVO();
             vo.setPointJson(pointJson);
             vo.setToken(token);
-            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
+            vo.setBrowserInfo(WebUtil.getClientIP(request));
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
             ResponseModel responseModel = captchaService.check(vo);
             return ReactorUtils.successResponse(R.ok(responseModel));

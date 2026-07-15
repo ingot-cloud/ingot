@@ -7,6 +7,7 @@ dependencies {
     implementation(deps.spring.framework_spring_web)
 
     compileOnly(deps.jakarta_servlet_api)
+    compileOnly project(ingot.framework_commons)
     compileOnly project(ingot.framework_feign)
     compileOnly project(ingot.framework_core)
 }

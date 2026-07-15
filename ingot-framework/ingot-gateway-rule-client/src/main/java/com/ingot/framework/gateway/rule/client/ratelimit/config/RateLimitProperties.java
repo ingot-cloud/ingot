@@ -44,7 +44,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *             pattern-list:
  *               - path: /captcha/code
  *                 method: GET
- *             dimension: DEVICE          # 按 X-In-Ca-Sig 设备指纹限流
+ *             dimension: DEVICE          # 按 In-Ca-Sig 设备指纹限流
  *             qps: 2
  *             burst: 2
  *             interval-sec: 1

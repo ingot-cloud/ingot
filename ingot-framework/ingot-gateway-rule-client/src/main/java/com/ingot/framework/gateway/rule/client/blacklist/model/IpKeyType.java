@@ -14,9 +14,9 @@ import lombok.experimental.Accessors;
  *
  * <table>
  *   <tr><th>短码</th><th>枚举</th><th>匹配来源</th></tr>
- *   <tr><td>IP</td><td>{@link #IP}</td><td>{@code X-Client-Real-IP}</td></tr>
- *   <tr><td>DV</td><td>{@link #DEVICE}</td><td>{@code X-In-Ca-Sig}</td></tr>
- *   <tr><td>UI</td><td>{@link #USER}</td><td>{@code X-User-Id}</td></tr>
+ *   <tr><td>IP</td><td>{@link #IP}</td><td>{@code In-Inner-Client-Real-IP}</td></tr>
+ *   <tr><td>DV</td><td>{@link #DEVICE}</td><td>{@code In-Ca-Sig}</td></tr>
+ *   <tr><td>UI</td><td>{@link #USER}</td><td>{@code In-Inner-User-Id}</td></tr>
  *   <tr><td>CD</td><td>{@link #CIDR}</td><td>客户端 IP 是否落在 CIDR 段内</td></tr>
  *   <tr><td>UA</td><td>{@link #USER_AGENT}</td><td>User-Agent 正则（Java {@code Pattern.find}）</td></tr>
  *   <tr><td>RF</td><td>{@link #REFERER}</td><td>Referer 正则（Java {@code Pattern.find}）</td></tr>

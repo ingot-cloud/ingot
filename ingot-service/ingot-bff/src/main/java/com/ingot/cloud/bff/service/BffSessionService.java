@@ -218,8 +218,8 @@ public class BffSessionService {
             }
             log.warn("[BffSession] device fingerprint header missing, falling back to ip_ua");
         }
-        // 优先读网关统一设置的 X-Client-Real-IP，保证与网关侧指纹计算使用同一 IP
-        String ip = request.getHeader(HeaderConstants.CLIENT_REAL_IP);
+        // 优先读网关统一设置的 In-Inner-Client-Real-IP，保证与网关侧指纹计算使用同一 IP
+        String ip = request.getHeader(HeaderConstants.INNER_CLIENT_REAL_IP);
         if (StrUtil.isEmpty(ip)) {
             ip = WebUtil.getClientIP(request);
         }

@@ -17,7 +17,7 @@ public class AuthContextAttributes {
      * JWT 解析出的用户 ID。
      * <p>由 {@link AuthContextRelayFilter} 写入；{@link IdentityResolveFilter} 读取后
      * 填入 {@link com.ingot.cloud.gateway.security.ClientIdentity#getUserId()}，
-     * 非空时同步回填 {@code X-User-Id} Header 供 Sentinel {@code USER} 维度。</p>
+     * 非空时同步回填 {@code In-Inner-User-Id} Header 供 Sentinel {@code USER} 维度。</p>
      */
     public static final String USER_ID = "ingot.security.auth.userId";
 }

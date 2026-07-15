@@ -1,6 +1,6 @@
 package com.ingot.framework.commons.utils;
 
-import com.ingot.framework.commons.constants.GlobalConstants;
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 
 /**
@@ -19,7 +19,7 @@ public final class SocialUtil {
      * @return 唯一码
      */
     public static String uniqueCode(String socialType, String code) {
-        return socialType.concat(GlobalConstants.AT).concat(code);
+        return socialType.concat(StrUtil.AT).concat(code);
     }
 
     /**
@@ -29,6 +29,6 @@ public final class SocialUtil {
      * @return 提取唯一码数组，第0个为socialType，第一个为code
      */
     public static String[] extract(String uniqueCode) {
-        return uniqueCode.split(GlobalConstants.AT);
+        return uniqueCode.split(StrUtil.AT);
     }
 }

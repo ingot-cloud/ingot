@@ -37,9 +37,9 @@ public class IpListItemVO implements Serializable {
      * SDK 内由 {@code IpKeyType.fromCode} 解析为枚举全名。
      *
      * <ul>
-     *     <li>{@code IP}：精确 IP（{@code X-Client-Real-IP}）。</li>
-     *     <li>{@code DV}：设备指纹（{@code X-In-Ca-Sig}）。</li>
-     *     <li>{@code UI}：用户 ID（{@code X-User-Id}）。</li>
+     *     <li>{@code IP}：精确 IP（{@code In-Inner-Client-Real-IP}）。</li>
+     *     <li>{@code DV}：设备指纹（{@code In-Ca-Sig}）。</li>
+     *     <li>{@code UI}：用户 ID（{@code In-Inner-User-Id}）。</li>
      *     <li>{@code CD}：CIDR 网段，客户端 IP 落在段内即命中。</li>
      *     <li>{@code UA}：User-Agent 正则（Java {@code Pattern.find}）。</li>
      *     <li>{@code RF}：Referer 正则（Java {@code Pattern.find}）。</li>

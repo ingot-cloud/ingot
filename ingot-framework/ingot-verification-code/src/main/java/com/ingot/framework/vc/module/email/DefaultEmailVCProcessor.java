@@ -26,7 +26,7 @@ public class DefaultEmailVCProcessor extends AbstractVCProcessor {
     @Override
     protected Mono<ServerResponse> send(ServerRequest request, VC validateCode) {
         String receiver = ReactorUtils.getReceiver(request);
-        String remoteIP = WebUtil.getRemoteIP(request);
+        String remoteIP = WebUtil.getClientIP(request);
 
         // 发送短息
         emailCodeSender.send(receiver, remoteIP, validateCode);

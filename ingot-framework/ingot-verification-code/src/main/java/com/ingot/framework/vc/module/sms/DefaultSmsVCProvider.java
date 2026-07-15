@@ -28,7 +28,7 @@ public class DefaultSmsVCProvider extends AbstractVCProvider {
     @Override
     protected void send(ServletWebRequest request, VC validateCode) throws Exception {
         String receiver = ServletUtils.getReceiver(request);
-        String remoteIP = WebUtil.getRemoteIP(request.getRequest());
+        String remoteIP = WebUtil.getClientIP(request.getRequest());
 
         // 发送短息
         smsCodeSender.send(receiver, remoteIP, validateCode);

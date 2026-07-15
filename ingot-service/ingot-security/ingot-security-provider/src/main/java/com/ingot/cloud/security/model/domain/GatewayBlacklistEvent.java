@@ -93,7 +93,7 @@ public class GatewayBlacklistEvent implements Serializable {
     private String userAgent;
 
     /**
-     * 客户端真实 IP（{@code X-Client-Real-IP}）。
+     * 客户端真实 IP（{@code In-Inner-Client-Real-IP}）。
      */
     private String realIp;
 

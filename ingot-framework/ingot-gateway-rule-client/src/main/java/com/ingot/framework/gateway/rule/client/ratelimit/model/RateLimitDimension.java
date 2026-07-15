@@ -12,12 +12,12 @@ import lombok.experimental.Accessors;
  * <p>每个维度对应 Sentinel {@code GatewayParamFlowItem.fieldName} 取值来源：</p>
  * <ul>
  *     <li>{@link #IP}（DB 短码 {@code IP}）：客户端真实 IP，从
- *         {@code X-Client-Real-IP} Header 读取（由
+ *         {@code In-Inner-Client-Real-IP} Header 读取（由
  *         {@code RequestGlobalFilter} 在最前面标准化写入）。</li>
  *     <li>{@link #DEVICE}（DB 短码 {@code DV}）：设备指纹，从
- *         {@code X-In-Ca-Sig} Header 读取（来源：BFF）。</li>
+ *         {@code In-Ca-Sig} Header 读取（来源：BFF）。</li>
  *     <li>{@link #USER}（DB 短码 {@code UI}）：用户 ID，从
- *         {@code X-User-Id} Header 读取（由网关 IdentityResolveFilter 从 JWT attribute 回填）。
+ *         {@code In-Inner-User-Id} Header 读取（由网关 IdentityResolveFilter 从 JWT attribute 回填）。
  *         匿名请求 userId 为空时，Sentinel 取不到参数会退化为按 API 整体限流。</li>
  * </ul>
  *
@@ -38,13 +38,13 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public enum RateLimitDimension {
 
-    /** 按客户端真实 IP 限流；Header {@code X-Client-Real-IP}；DB 短码 {@code IP}。 */
+    /** 按客户端真实 IP 限流；Header {@code In-Inner-Client-Real-IP}；DB 短码 {@code IP}。 */
     IP("IP"),
 
-    /** 按设备指纹限流；Header {@code X-In-Ca-Sig}；DB 短码 {@code DV}。 */
+    /** 按设备指纹限流；Header {@code In-Ca-Sig}；DB 短码 {@code DV}。 */
     DEVICE("DV"),
 
-    /** 按用户 ID 限流；Header {@code X-User-Id}；匿名时退化为 API 整体限流；DB 短码 {@code UI}。 */
+    /** 按用户 ID 限流；Header {@code In-Inner-User-Id}；匿名时退化为 API 整体限流；DB 短码 {@code UI}。 */
     USER("UI");
 
     private final String dbCode;

@@ -35,7 +35,7 @@ public class DefaultVCProcessorManager implements VCProcessorManager {
             VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
             String receiver = ReactorUtils.getReceiver(request);
-            String remoteIP = WebUtil.getRemoteIP(request);
+            String remoteIP = WebUtil.getClientIP(request);
 
             checker.beforeSend(receiver, remoteIP);
             return processor.handle(request, generator);
@@ -49,7 +49,7 @@ public class DefaultVCProcessorManager implements VCProcessorManager {
         VCProcessor processor = Utils.getProcessor(type, processorMap);
         VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
-        String remoteIP = WebUtil.getRemoteIP(exchange.getRequest());
+        String remoteIP = WebUtil.getClientIP(exchange.getRequest());
         checker.beforeCheck(remoteIP);
         return processor.checkOnly(type, exchange, chain);
     }
@@ -59,7 +59,7 @@ public class DefaultVCProcessorManager implements VCProcessorManager {
         VCProcessor processor = Utils.getProcessor(type, processorMap);
         VCPreChecker checker = Utils.getSendChecker(type, checkerMap);
 
-        String remoteIP = WebUtil.getRemoteIP(request);
+        String remoteIP = WebUtil.getClientIP(request);
         checker.beforeCheck(remoteIP);
         return processor.check(type, request);
     }

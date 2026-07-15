@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.utils.WebUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Builder;
@@ -42,7 +43,7 @@ public class LoginInfoExtractor {
         }
 
         try {
-            String ipAddress = getClientIp(request);
+            String ipAddress = WebUtil.getClientIP(request);
             String userAgent = request.getHeader("User-Agent");
 
             LoginInfo.LoginInfoBuilder builder = LoginInfo.builder()
@@ -59,50 +60,6 @@ public class LoginInfoExtractor {
             log.warn("[LoginInfoExtractor] Failed to extract login info", e);
             return LoginInfo.builder().build();
         }
-    }
-
-    /**
-     * 获取客户端真实 IP
-     */
-    private static String getClientIp(HttpServletRequest request) {
-        // 优先从代理头中获取
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            // 多次反向代理后会有多个IP值，第一个为真实IP
-            int index = ip.indexOf(',');
-            if (index != -1) {
-                return ip.substring(0, index);
-            }
-            return ip;
-        }
-
-        ip = request.getHeader("X-Real-IP");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("Proxy-Client-IP");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("WL-Proxy-Client-IP");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("HTTP_CLIENT_IP");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        if (StrUtil.isNotEmpty(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-
-        // 都获取不到则使用 RemoteAddr
-        return request.getRemoteAddr();
     }
 
     /**

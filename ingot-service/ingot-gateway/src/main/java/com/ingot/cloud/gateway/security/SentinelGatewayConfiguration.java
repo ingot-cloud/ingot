@@ -193,16 +193,16 @@ public class SentinelGatewayConfiguration {
                 param.setFieldName(HeaderConstants.BFF_DEVICE_FINGERPRINT_HEADER);
             }
             case USER -> {
-                // userId 由 AuthContextRelayFilter 解析 JWT → IdentityResolveFilter 回填 X-User-Id
+                // userId 由 AuthContextRelayFilter 解析 JWT → IdentityResolveFilter 回填 In-Inner-User-Id
                 param.setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_HEADER);
-                param.setFieldName(HeaderConstants.X_USER_ID);
+                param.setFieldName(HeaderConstants.INNER_USER_ID);
             }
             default -> {
-                // IP 维度：必须读 IdentityResolveFilter 标准化后的 X-Client-Real-IP，
+                // IP 维度：必须读 IdentityResolveFilter 标准化后的 In-Inner-Client-Real-IP，
                 // 不能用 Sentinel 的 PARAM_PARSE_STRATEGY_CLIENT_IP（直接取
                 // RemoteAddress，反向代理 / K8s Service 后会拿到代理 IP，导致限流粒度错位）。
                 param.setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_HEADER);
-                param.setFieldName(HeaderConstants.CLIENT_REAL_IP);
+                param.setFieldName(HeaderConstants.INNER_CLIENT_REAL_IP);
             }
         }
         r.setParamItem(param);

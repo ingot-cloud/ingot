@@ -32,7 +32,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
         try {
             CaptchaVO vo = new CaptchaVO();
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-            vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
+            vo.setBrowserInfo(WebUtil.getClientIP(request.getRequest()));
             ResponseModel responseModel = captchaService.get(vo);
             ServletUtils.successResponse(request, objectMapper, R.ok(responseModel));
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
         InnerCheck.check(StrUtil.isNotEmpty(code), "vc.check.image.illegalArgs");
 
         CaptchaVO vo = new CaptchaVO();
-        vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
+        vo.setBrowserInfo(WebUtil.getClientIP(request.getRequest()));
         vo.setCaptchaVerification(code);
         vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
         InnerCheck.check(captchaService.verification(vo).isSuccess(), "vc.check.image.checkFailure");
@@ -61,7 +61,7 @@ public class DefaultCaptchaVCProvider implements VCProvider {
             String token = ServletUtils.getFromRequest(request, "token");
 
             CaptchaVO vo = new CaptchaVO();
-            vo.setBrowserInfo(WebUtil.getRemoteIP(request.getRequest()));
+            vo.setBrowserInfo(WebUtil.getClientIP(request.getRequest()));
             vo.setPointJson(pointJson);
             vo.setToken(token);
             vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);

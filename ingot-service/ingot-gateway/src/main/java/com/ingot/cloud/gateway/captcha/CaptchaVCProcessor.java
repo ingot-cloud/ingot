@@ -108,7 +108,7 @@ public class CaptchaVCProcessor implements VCProcessor {
 //            CaptchaVO vo = new CaptchaVO();
 //            vo.setPointJson(pointJson);
 //            vo.setToken(token);
-//            vo.setBrowserInfo(WebUtil.getRemoteIP(request));
+//            vo.setBrowserInfo(WebUtil.getClientIP(request));
 //            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
 //            ResponseModel responseModel = captchaService.check(vo);
 //

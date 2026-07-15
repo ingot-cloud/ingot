@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * <ul>
  *     <li>IP / 设备 / UA / Referer — 读 {@link RequestGlobalFilter} 标准化后的 Header</li>
  *     <li>userId — 读 {@link AuthContextAttributes#USER_ID}（{@link AuthContextRelayFilter} 写入）</li>
- *     <li>非空 userId 时回填 {@code X-User-Id} Header，供 Sentinel {@code USER} 资源维度</li>
+ *     <li>非空 userId 时回填 {@code In-Inner-User-Id} Header，供 Sentinel {@code USER} 资源维度</li>
  * </ul>
  *
  * <h3>Pipeline 位置</h3>
@@ -46,7 +46,7 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         HttpHeaders headers = exchange.getRequest().getHeaders();
-        String ip = headers.getFirst(HeaderConstants.CLIENT_REAL_IP);
+        String ip = headers.getFirst(HeaderConstants.INNER_CLIENT_REAL_IP);
         String device = headers.getFirst(HeaderConstants.BFF_DEVICE_FINGERPRINT_HEADER);
         String ua = headers.getFirst(HttpHeaders.USER_AGENT);
         String referer = headers.getFirst(HttpHeaders.REFERER);
@@ -65,7 +65,7 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
 
         if (userId != null) {
             ServerHttpRequest mutated = exchange.getRequest().mutate()
-                    .header(HeaderConstants.X_USER_ID, userId)
+                    .header(HeaderConstants.INNER_USER_ID, userId)
                     .build();
             return chain.filter(exchange.mutate().request(mutated).build());
         }

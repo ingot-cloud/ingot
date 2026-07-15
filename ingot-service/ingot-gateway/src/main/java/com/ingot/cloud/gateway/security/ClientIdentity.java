@@ -36,7 +36,7 @@ public class ClientIdentity {
 
     /**
      * 客户端真实 IP。
-     * <p>来源：{@link com.ingot.framework.commons.constants.HeaderConstants#CLIENT_REAL_IP}，
+     * <p>来源：{@link com.ingot.framework.commons.constants.HeaderConstants#INNER_CLIENT_REAL_IP}，
      * 由 {@link com.ingot.cloud.gateway.filter.RequestGlobalFilter} 按代理头优先级解析并标准化。
      * 供黑白名单 {@code IP} 维度、Sentinel 限流 {@code IP} 资源名使用。</p>
      */
@@ -45,7 +45,7 @@ public class ClientIdentity {
     /**
      * 设备指纹。
      * <p>来源：{@link com.ingot.framework.commons.constants.HeaderConstants#BFF_DEVICE_FINGERPRINT_HEADER}
-     *（{@code X-In-Ca-Sig}）。供黑白名单 {@code DEVICE} 维度匹配。</p>
+     *（{@code In-Ca-Sig}）。供黑白名单 {@code DEVICE} 维度匹配。</p>
      */
     private final String device;
 
@@ -54,7 +54,7 @@ public class ClientIdentity {
      * <p>来源：{@link com.ingot.cloud.gateway.filter.auth.AuthContextRelayFilter} 解析 JWT claim
      * {@code i} 后写入 {@link com.ingot.cloud.gateway.filter.auth.AuthContextAttributes#USER_ID}，
      * 再由 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter} 聚合进本对象；
-     * 非空时同步回填 {@code X-User-Id} Header 供 Sentinel {@code USER} 维度。</p>
+     * 非空时同步回填 {@code In-Inner-User-Id} Header 供 Sentinel {@code USER} 维度。</p>
      */
     private final String userId;
 

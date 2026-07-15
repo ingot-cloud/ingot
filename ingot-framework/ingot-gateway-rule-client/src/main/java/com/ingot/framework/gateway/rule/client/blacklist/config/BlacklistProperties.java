@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *             key-type: CIDR
  *             key-value: "10.0.0.0/24"
  *             enabled: true
- *           # 黑名单设备指纹（Header X-In-Ca-Sig）
+ *           # 黑名单设备指纹（Header In-Ca-Sig）
  *           - list-type: BLACK
  *             key-type: DEVICE          # DB 短码 DV
  *             key-value: "abc-device-hash"

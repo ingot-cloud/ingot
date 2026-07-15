@@ -2,6 +2,7 @@ package com.ingot.cloud.gateway.config;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.HeaderConstants;
+import com.ingot.framework.commons.utils.IpUtil;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +13,7 @@ import reactor.core.publisher.Mono;
  * <p>网关限流 KeyResolver 配置。</p>
  *
  * <p>所有 KeyResolver 优先读取由 {@link com.ingot.cloud.gateway.filter.RequestGlobalFilter}
- * 标准化后的 {@code X-Client-Real-IP} Header，避免反向代理 / K8s Service 后端
+ * 标准化后的 {@code In-Inner-Client-Real-IP} Header，避免反向代理 / K8s Service 后端
  * {@code getRemoteAddress()} 返回代理 IP 导致按代理 IP 统一限流。</p>
  *
  * <p><b>多 KeyResolver 选择规则</b>：Spring Cloud Gateway 的 {@code RequestRateLimiter}
@@ -40,9 +41,9 @@ public class RateLimiterConfiguration {
     public KeyResolver remoteAddrKeyResolver() {
         return exchange -> {
             String ip = exchange.getRequest().getHeaders()
-                    .getFirst(HeaderConstants.CLIENT_REAL_IP);
-            if (StrUtil.isBlank(ip) && exchange.getRequest().getRemoteAddress() != null) {
-                ip = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+                    .getFirst(HeaderConstants.INNER_CLIENT_REAL_IP);
+            if (StrUtil.isBlank(ip)) {
+                ip = IpUtil.fromInetSocketAddress(exchange.getRequest().getRemoteAddress());
             }
             return Mono.just(StrUtil.blankToDefault(ip, UNKNOWN));
         };
@@ -60,9 +61,9 @@ public class RateLimiterConfiguration {
                 return Mono.just(device);
             }
             String ip = exchange.getRequest().getHeaders()
-                    .getFirst(HeaderConstants.CLIENT_REAL_IP);
-            if (StrUtil.isBlank(ip) && exchange.getRequest().getRemoteAddress() != null) {
-                ip = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+                    .getFirst(HeaderConstants.INNER_CLIENT_REAL_IP);
+            if (StrUtil.isBlank(ip)) {
+                ip = IpUtil.fromInetSocketAddress(exchange.getRequest().getRemoteAddress());
             }
             return Mono.just(StrUtil.blankToDefault(ip, UNKNOWN));
         };

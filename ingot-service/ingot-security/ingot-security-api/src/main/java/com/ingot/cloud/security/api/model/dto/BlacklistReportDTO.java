@@ -92,7 +92,7 @@ public class BlacklistReportDTO implements Serializable {
     private String userAgent;
 
     /**
-     * 客户端真实 IP（{@code X-Client-Real-IP}），与 {@link #keyType} 为 IP 时互为佐证。
+     * 客户端真实 IP（{@code In-Inner-Client-Real-IP}），与 {@link #keyType} 为 IP 时互为佐证。
      */
     private String realIp;
 

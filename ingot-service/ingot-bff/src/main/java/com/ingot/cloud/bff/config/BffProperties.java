@@ -102,7 +102,7 @@ public class BffProperties {
         /**
          * 指纹模式：{@code device}（前端设备指纹，推荐）或 {@code ip_ua}（服务端 IP+UA，降级方案）。
          * <ul>
-         *     <li>{@code device} — 从请求 Header {@code X-Ca-Sig} 读取前端计算的设备指纹，
+         *     <li>{@code device} — 从请求 Header {@code In-Ca-Sig} 读取前端计算的设备指纹，
          *         不受 Docker/代理/IP 变化影响，稳定性最优</li>
          *     <li>{@code ip_ua} — 服务端通过 SHA-256(IP+UA) 计算，适用于无法修改前端的场景</li>
          * </ul>

@@ -31,9 +31,9 @@ public interface BlacklistService {
      * 是否在黑名单中（任一维度匹配即返回 true）。
      * <p>匹配顺序：精确 IP → 设备 → 用户 → CIDR → UA 正则 → Referer 正则。</p>
      *
-     * @param ip      客户端 IP（{@code X-Client-Real-IP}），可能为 null
-     * @param device  设备指纹（{@code X-In-Ca-Sig}），可能为 null
-     * @param userId  用户 ID（{@code X-User-Id}），可能为 null
+     * @param ip      客户端 IP（{@code In-Inner-Client-Real-IP}），可能为 null
+     * @param device  设备指纹（{@code In-Ca-Sig}），可能为 null
+     * @param userId  用户 ID（{@code In-Inner-User-Id}），可能为 null
      * @param ua      User-Agent，可能为 null
      * @param referer Referer，可能为 null
      * @return 命中黑名单返回 true
