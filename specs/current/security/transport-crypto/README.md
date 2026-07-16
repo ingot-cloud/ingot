@@ -9,7 +9,7 @@
 ## 边界
 
 - 应用层加密是对 HTTPS 的补充，不可替代 HTTPS。
-- 标注 `@InCryptoHybridContext` 的端点必须携带完整 `X-In-Crypto-*` 协议头，缺头返回 `crypto_header_missing`。
+- 标注 `@InCryptoHybridContext` 的端点必须携带完整 `In-Crypto-*` 协议头，缺头返回 `crypto_header_missing`（fail-close，不降级明文）。
 - 同一端点不可混用整体模式（`@InDecrypt`/`@InEncrypt`）与字段级模式（`@InDecryptField`/`@InEncryptField`）。
 - 防重放依赖 Redis；存储不可用默认 `fail-close`（拒绝请求）。
 - 国密算法本期未实现，仅通过 `alg/enc` 头预留扩展。
@@ -24,6 +24,8 @@
 | 职责 | 路径 |
 |---|---|
 | 配置属性 | `ingot-security-crypto/.../InCryptoProperties.java` |
+| 协议头常量 | `ingot-security-crypto/.../hybrid/HybridHeaders.java` |
+| 协议版本枚举 | `ingot-security-crypto/.../hybrid/HybridProtocolVersion.java` |
 | 拦截器（CEK/AAD 上下文） | `ingot-security-crypto/.../web/HybridCryptoInterceptor.java` |
 | 请求体解密 Advice | `ingot-security-crypto/.../web/InDecryptRequestBodyAdvice.java` |
 | 响应体加密 Advice | `ingot-security-crypto/.../web/InEncryptResponseBodyAdvice.java` |
@@ -37,4 +39,4 @@
 
 - [SPEC](./SPEC.md)：协议、配置、注解组合与运行约束
 - 前端对接：[frontend-integration.md](../../changes/archive/2026/20260707-security-crypto-hybrid/frontend-integration.md)
-- 来源变更：`specs/changes/archive/2026/20260707-security-crypto-hybrid/`
+- 来源变更：`specs/changes/archive/2026/20260707-security-crypto-hybrid/`、`specs/changes/archive/2026/20260716-security-crypto-protocol-headers/`

@@ -12,17 +12,19 @@
 | 密文编码 | `base64(IV[12] ‖ ciphertext ‖ Tag[16])` |
 | AAD | `"<Md>|<Kv>|<No>|<Ts>"` UTF-8 字节，请求与响应复用 |
 
-## 2. 协议头（默认名称，可通过 `ingot.crypto.hybrid.headers` 重命名）
+## 2. 协议头（固定名称，见 `HybridHeaders`）
 
 | 头 | 方向 | 说明 |
 |---|---|---|
-| `X-In-Crypto-Md` | 请求必填 / 响应回带 | 模式标记，默认 `h1` |
-| `X-In-Crypto-Kv` | 请求必填 / 响应回带 | 公钥版本 kid |
-| `X-In-Crypto-Sk` | 请求必填 | `base64(RSA-OAEP-256(CEK))` |
-| `X-In-Crypto-No` | 请求必填 | 防重放随机数 |
-| `X-In-Crypto-Ts` | 请求必填 | 毫秒时间戳 |
-| `X-In-Crypto-Al` | 可选 | 缺省 `RSA-OAEP-256` |
-| `X-In-Crypto-En` | 可选 | 缺省 `A256GCM` |
+| `In-Crypto-Md` | 请求必填 / 响应回带 | 协议版本，当前 `h1`（`HybridProtocolVersion.H1`） |
+| `In-Crypto-Kv` | 请求必填 / 响应回带 | 公钥版本 kid |
+| `In-Crypto-Sk` | 请求必填 | `base64(RSA-OAEP-256(CEK))` |
+| `In-Crypto-No` | 请求必填 | 防重放随机数 |
+| `In-Crypto-Ts` | 请求必填 | 毫秒时间戳 |
+| `In-Crypto-Al` | 可选 | 缺省 `RSA-OAEP-256` |
+| `In-Crypto-En` | 可选 | 缺省 `A256GCM` |
+
+协议头名称不可配置；协议版本由 `HybridProtocolVersion` 枚举维护，服务端响应回写 `HybridProtocolVersion.current()`。
 
 ## 3. 报文形态
 
@@ -61,10 +63,8 @@ ingot:
     hybrid:
       response-wrap: DATA_ONLY   # DATA_ONLY | FULL
       active-kid: <kid>
-      mode-value: h1
       public-key-endpoint-enabled: true
       replay-namespace: crypto
-      headers: { ... }       # 七个协议头名称
       key-pairs:
         <kid>:
           public-key: <X509 Base64>
@@ -92,7 +92,7 @@ ingot:
 2. 请求解密：整体走 Advice / URL 走 ParamResolver / 字段走 Jackson Deserializer
 3. 响应加密：整体走 Advice（`response-wrap`）/ 字段走 Jackson Serializer
 
-缺协议头或缺 CEK 上下文：返回 `crypto_header_missing`（明文 `R`）。
+缺协议头或缺 CEK 上下文：返回 `crypto_header_missing`（明文 `R`），**不降级为明文处理**（fail-close）。
 
 ## 8. 错误码
 
@@ -111,8 +111,11 @@ ingot:
 - 未标注 `@InCryptoHybridContext` 的接口：行为不变。
 - 显式 `@InDecrypt(AES|AES_GCM|RSA)` / `@InEncrypt(...)` 的传统模式继续可用。
 - 已删除 `ingot.crypto.hybrid.mode`（原 optional/strict）；标注端点统一要求协议头。
+- 已删除 `ingot.crypto.hybrid.headers.*` 与 `mode-value`；协议头固定为 `In-Crypto-*`（自 20260716 变更起，替代原 `X-In-Crypto-*`）。
 
 ## 10. 关联能力
 
+- 协议头常量：`ingot-security-crypto/.../hybrid/HybridHeaders.java`
+- 协议版本枚举：`ingot-security-crypto/.../hybrid/HybridProtocolVersion.java`
 - 防重放通用模块：`ingot-security-replay`，提供 `ReplayGuard` 与 `@Idempotent`。
 - 字段级 Jackson 异常经 `GlobalExceptionHandlerResolver` 还原 `BizException` 错误码。

@@ -75,14 +75,6 @@ public class InCryptoProperties {
          */
         private Map<String, KeyPair> keyPairs = new LinkedHashMap<>();
         /**
-         * 协议头名称配置
-         */
-        private Headers headers = new Headers();
-        /**
-         * 模式标记头的取值
-         */
-        private String modeValue = "h1";
-        /**
          * 是否暴露公钥下发端点
          */
         private boolean publicKeyEndpointEnabled = true;
@@ -109,44 +101,5 @@ public class InCryptoProperties {
          * 私钥，PKCS8 Base64
          */
         private String privateKey;
-    }
-
-    /**
-     * <p>协议头名称配置，可整体重命名以隐藏特征。</p>
-     *
-     * @author jy
-     * @since 1.0.0
-     */
-    @Getter
-    @Setter
-    public static class Headers {
-        /**
-         * 模式标记头
-         */
-        private String mode = "X-In-Crypto-Md";
-        /**
-         * 密钥版本头
-         */
-        private String kid = "X-In-Crypto-Kv";
-        /**
-         * 包裹 CEK 头
-         */
-        private String key = "X-In-Crypto-Sk";
-        /**
-         * 防重放随机数头
-         */
-        private String nonce = "X-In-Crypto-No";
-        /**
-         * 防重放时间戳头
-         */
-        private String timestamp = "X-In-Crypto-Ts";
-        /**
-         * 密钥包裹算法协商头
-         */
-        private String alg = "X-In-Crypto-Al";
-        /**
-         * 内容加密算法协商头
-         */
-        private String enc = "X-In-Crypto-En";
     }
 }

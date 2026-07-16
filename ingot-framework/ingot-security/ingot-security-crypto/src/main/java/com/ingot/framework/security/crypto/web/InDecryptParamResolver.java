@@ -34,7 +34,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  * @InCryptoHybridContext
  * @GetMapping("/query")
  * public R<?> query(@InDecrypt(CryptoType.HYBRID) MyQueryDTO query) { ... }
- * // GET /query?data=<密文> + X-In-Crypto-* 协议头
+ * // GET /query?data=<密文> + In-Crypto-* 协议头
  * }</pre>
  *
  * @author jy

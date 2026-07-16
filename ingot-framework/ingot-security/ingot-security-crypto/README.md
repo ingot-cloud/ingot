@@ -5,7 +5,7 @@
 **当前默认算法为信封加密（HYBRID）**：前端每请求生成临时 CEK（AES-256-GCM），用服务端 RSA 公钥包裹传输；服务端解包后解密请求，并复用同一 CEK 加密响应。前端无需保存长期对称密钥。
 
 > 应用层加密是对 HTTPS 的补充，**生产环境仍必须启用 HTTPS**。  
-> 前端对接协议详见：[frontend-integration.md](../../../specs/changes/active/20260707-security-crypto-hybrid/frontend-integration.md)
+> 前端对接协议详见：[frontend-integration.md](../../../specs/changes/archive/2026/20260707-security-crypto-hybrid/frontend-integration.md)（协议头已固定为 `In-Crypto-*`，见 `HybridHeaders`）
 
 ---
 
@@ -58,24 +58,12 @@ ingot:
     hybrid:
       # 响应包装：DATA_ONLY=仅加密 R.data；FULL=整个响应体加密
       response-wrap: DATA_ONLY
-      # 当前活跃密钥版本，回写在响应头 X-In-Crypto-Kv
+      # 当前活跃密钥版本，回写在响应头 In-Crypto-Kv
       active-kid: k-2026-07
-      # 协议头 Md 的取值，标识信封加密 v1
-      mode-value: h1
       # 是否暴露 GET /crypto/public-keys 端点
       public-key-endpoint-enabled: true
       # 防重放命名空间（传给 ReplayGuard）
       replay-namespace: crypto
-
-      # 协议头名称（可整体重命名以隐藏特征）
-      headers:
-        mode: X-In-Crypto-Md
-        kid: X-In-Crypto-Kv
-        key: X-In-Crypto-Sk
-        nonce: X-In-Crypto-No
-        timestamp: X-In-Crypto-Ts
-        alg: X-In-Crypto-Al
-        enc: X-In-Crypto-En
 
       # 多版本 RSA 密钥对，key 为 kid；轮换时新旧 kid 并存
       key-pairs:
@@ -105,16 +93,30 @@ ingot:
 | `ingot.crypto.hybrid.response-wrap` | `DATA_ONLY` | `DATA_ONLY` / `FULL` |
 | `ingot.crypto.hybrid.active-kid` | — | 活跃 kid，须存在于 `key-pairs` |
 | `ingot.crypto.hybrid.key-pairs` | `{}` | kid → `{publicKey, privateKey}` |
-| `ingot.crypto.hybrid.mode-value` | `h1` | 协议头 Md 期望值 |
 | `ingot.crypto.hybrid.public-key-endpoint-enabled` | `true` | 是否注册公钥端点 |
 | `ingot.crypto.hybrid.replay-namespace` | `crypto` | 防重放隔离命名空间 |
-| `ingot.crypto.hybrid.headers.*` | 见示例 | 七个协议头名称 |
 | `ingot.replay.enabled` | `true` | 是否启用防重放 |
 | `ingot.replay.window` | `5m` | nonce TTL / 去重窗口 |
 | `ingot.replay.clock-skew` | `5m` | 时间戳校验偏移 |
 | `ingot.replay.fail-open` | `false` | 存储不可用降级策略 |
 
-### 2.3 生成 RSA 密钥对
+### 2.3 协议头（固定常量）
+
+头名称定义于 `HybridHeaders`，不可配置：
+
+| 常量 | 头名称 | 说明 |
+|---|---|---|
+| `MODE` | `In-Crypto-Md` | 协议版本，当前值 `h1`（`HybridProtocolVersion.H1`） |
+| `KID` | `In-Crypto-Kv` | 公钥版本 kid |
+| `WRAPPED_KEY` | `In-Crypto-Sk` | RSA-OAEP 包裹的 CEK |
+| `NONCE` | `In-Crypto-No` | 防重放随机数 |
+| `TIMESTAMP` | `In-Crypto-Ts` | 毫秒时间戳 |
+| `KEY_ALG` | `In-Crypto-Al` | 可选，缺省 RSA-OAEP-256 |
+| `CONTENT_ENC` | `In-Crypto-En` | 可选，缺省 A256GCM |
+
+标注 `@InCryptoHybridContext` 的端点缺必填头时返回 `crypto_header_missing`（fail-close）。
+
+### 2.4 生成 RSA 密钥对
 
 模块根目录提供脚本 `create-rsa-keypair.sh`：
 
@@ -130,7 +132,7 @@ openssl pkcs8 -topk8 -inform PEM -outform DER -in hybrid-private.pem -nocrypt | 
 
 **注意：** 私钥仅配置在服务端，通过配置中心或环境变量注入，勿提交到代码仓库。
 
-### 2.4 网关与公钥端点
+### 2.5 网关与公钥端点
 
 - 公钥端点：`GET /crypto/public-keys`，返回 `[{kid, alg, publicKey, active}]`
 - 须在网关将该路径加入**匿名放行白名单**，供前端初始化拉取公钥
@@ -186,7 +188,7 @@ sequenceDiagram
 - 内容算法：AES-256-GCM（`A256GCM`）
 - 密钥包裹：RSA-OAEP-256（`RSA-OAEP-256`）
 - AAD：`"<Md>|<Kv>|<No>|<Ts>"`（UTF-8），请求加密与响应解密复用同一 AAD
-- 响应头：拦截器统一回带 `X-In-Crypto-Md: h1` 与 `X-In-Crypto-Kv: <activeKid>`
+- 响应头：拦截器统一回带 `In-Crypto-Md: h1` 与 `In-Crypto-Kv: <activeKid>`
 
 ---
 
@@ -230,7 +232,7 @@ public R<OrderVO> create(@RequestBody OrderDTO dto) { ... }
 @InCryptoHybridContext
 @GetMapping("/query")
 public R<?> query(@InDecrypt QueryDTO query) { ... }
-// GET /query?data=<密文> + X-In-Crypto-* 协议头
+// GET /query?data=<密文> + In-Crypto-* 协议头
 ```
 
 **配置要点：**
@@ -478,7 +480,7 @@ public R<List<ItemVO>> search(@InDecrypt SearchQuery query) { ... }
 1. 在配置中心新增 kid 密钥对，更新 `active-kid`
 2. 保留旧 kid 一段时间（新旧并存），避免进行中的请求失败
 3. `HybridKeyManager` 监听 `RefreshScopeRefreshedEvent` 自动重载密钥快照
-4. 响应头 `X-In-Crypto-Kv` 回传当前 `active-kid`，前端感知后异步刷新公钥缓存
+4. 响应头 `In-Crypto-Kv` 回传当前 `active-kid`，前端感知后异步刷新公钥缓存
 5. 客户端使用已下线 kid 时收到 `crypto_kid_unknown`，应重新拉取公钥并重试
 
 ---

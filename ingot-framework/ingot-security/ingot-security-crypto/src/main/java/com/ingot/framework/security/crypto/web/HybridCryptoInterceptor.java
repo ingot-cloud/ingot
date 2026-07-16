@@ -5,7 +5,9 @@ import com.ingot.framework.security.crypto.InCryptoProperties;
 import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import com.ingot.framework.security.crypto.hybrid.HybridContext;
 import com.ingot.framework.security.crypto.hybrid.HybridCryptoService;
+import com.ingot.framework.security.crypto.hybrid.HybridHeaders;
 import com.ingot.framework.security.crypto.hybrid.HybridKeyManager;
+import com.ingot.framework.security.crypto.hybrid.HybridProtocolVersion;
 import com.ingot.framework.security.crypto.model.CryptoErrorCode;
 import com.ingot.framework.security.crypto.utils.CryptoUtils;
 import com.ingot.framework.security.replay.ReplayGuard;
@@ -22,7 +24,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 /**
  * <p>信封加密处理拦截器，在请求进入 Controller 前统一建立加解密上下文。</p>
  *
- * <p>{@code preHandle} 阶段解析隐晦协议头、执行防重放校验、以 RSA-OAEP 解包 CEK，
+ * <p>{@code preHandle} 阶段解析 {@link HybridHeaders} 协议头、执行防重放校验、以 RSA-OAEP 解包 CEK，
  * 并将 CEK 与 AAD 存入 request attribute，供请求体解密与响应体加密复用。</p>
  *
  * @author jy
@@ -49,19 +51,18 @@ public class HybridCryptoInterceptor implements HandlerInterceptor {
         }
 
         InCryptoProperties.Hybrid hybrid = properties.getHybrid();
-        InCryptoProperties.Headers headerNames = hybrid.getHeaders();
 
-        String mode = request.getHeader(headerNames.getMode());
+        String mode = request.getHeader(HybridHeaders.MODE);
         if (StrUtil.isBlank(mode)) {
             CryptoUtils.throwError(CryptoErrorCode.CRYPTO_HEADER_MISSING);
         }
 
-        String kid = request.getHeader(headerNames.getKid());
-        String wrappedKey = request.getHeader(headerNames.getKey());
-        String nonce = request.getHeader(headerNames.getNonce());
-        String ts = request.getHeader(headerNames.getTimestamp());
-        String alg = request.getHeader(headerNames.getAlg());
-        String enc = request.getHeader(headerNames.getEnc());
+        String kid = request.getHeader(HybridHeaders.KID);
+        String wrappedKey = request.getHeader(HybridHeaders.WRAPPED_KEY);
+        String nonce = request.getHeader(HybridHeaders.NONCE);
+        String ts = request.getHeader(HybridHeaders.TIMESTAMP);
+        String alg = request.getHeader(HybridHeaders.KEY_ALG);
+        String enc = request.getHeader(HybridHeaders.CONTENT_ENC);
 
         if (StrUtil.hasBlank(kid, wrappedKey)) {
             CryptoUtils.throwError(CryptoErrorCode.CRYPTO_HEADER_MISSING);
@@ -81,9 +82,9 @@ public class HybridCryptoInterceptor implements HandlerInterceptor {
 
         // 统一在此回带模式标记与激活 kid：整体与字段级模式均适用，
         // 供前端感知响应已加密并跟进密钥轮换。
-        response.addHeader(headerNames.getMode(), hybrid.getModeValue());
+        response.addHeader(HybridHeaders.MODE, HybridProtocolVersion.current().wireValue());
         if (StrUtil.isNotBlank(hybrid.getActiveKid())) {
-            response.addHeader(headerNames.getKid(), hybrid.getActiveKid());
+            response.addHeader(HybridHeaders.KID, hybrid.getActiveKid());
         }
         return true;
     }
