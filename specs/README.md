@@ -188,7 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [凭证安全收口（L1）](./changes/active/20260717-security-credential-closure/README.md) — 状态 `draft`
+- [凭证安全收口（L1）](./changes/active/20260717-security-credential-closure/README.md) — 状态 `implemented`（待验收）
+- [凭证策略降级兜底与初始密码收口对齐](./changes/active/20260717-security-credential-resilience/README.md) — 状态 `draft`
 
 已归档（2026）：
 

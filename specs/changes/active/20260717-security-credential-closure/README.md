@@ -1,6 +1,6 @@
 # 凭证安全收口（L1）
 
-> 状态：draft
+> 状态：implemented（代码完成，待运行时/集成验收后归档）
 
 ## 元数据
 
@@ -49,8 +49,17 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
+- 完成日期：代码完成 2026-07-17（待验收）
+- 关联提交或 PR：TBD
+- 更新的 current capability：待验收后更新 `specs/current` 凭证安全基线
 - 与原设计的差异：
-- 取消原因：
+  - D2 强制改密拦截由「网关拦截」改为「方案 B 受限 scope」，且确认现网已由 `IdentityUtil` + `INIT_PASSWORD` scope 实现，无需新增代码。
+  - 「无 DDL 变更」结论修正：`ingot_core.password_expiration` 实际缺 `force_change` 列，已补基线 + 迁移 008 + 回滚。
+  - 初始密码 `validHours` 硬超期登录拦截拆为后续增强。
+  - Member 完整凭证持久化（credential-data + `ingot_member` DDL）拆为后续独立 change，本闭环仅域级对齐。
+- 取消原因：—
+
+## 后续跟踪（拆出项）
+
+1. 初始密码 `validHours` 登录硬超期拦截（需登录期读取 `mustChangePwd + passwordChangedAt`）。
+2. Member 完整凭证持久化：Member provider 增 `ingot-security-credential-data` 依赖 + `ingot_member` 建 `password_history`/`password_expiration`（DDL + 回滚）。

@@ -91,7 +91,7 @@
 
 ## 迁移与回滚
 
-- 无 DDL 变更（`force_change` 列已存在）。存量用户 `password_expiration` 记录 `force_change` 默认 0，兼容。
+- **DDL 变更（修正）**：实测线上基线 `databases/ingot_core.sql` 的 `password_expiration` **无 `force_change` 列**（仅 credential-data 内置 DDL 有）。已补：基线加列 + 迁移 `databases/migrations/008_add_force_change_password_expiration.sql`（含存量按 `sys_user.must_change_pwd` 回填）+ 回滚 `rollback_008.sql`。列默认 0，兼容存量。
 - 初始密码策略默认值保持「兼容现状」：`generation=RANDOM`、`oneTime=true`、`forceChangeOnFirstLogin=true`、`validHours` 给较宽松默认（如 72）。默认不改变现有 `ADMIN_CREATE` 行为（已 `mustChangePwd=true`）。
 - 回滚：各改动均为增量接入，回退代码即恢复原行为；无数据不可逆操作。
 
@@ -101,6 +101,14 @@
 - 集成：ADMIN 与 Member 各跑一遍「创建→首登强制改密→改密→再登录」全链路。
 - 降级：`mode=local` 修改 Nacos 配置动态刷新验证。
 - 回归：现有 PMS 登录 / 改密链路、`AuthContextSupport` 硬过期阻断不受影响。
+
+## 实施偏差与决策（对应 AGENTS.md 规则 4）
+
+1. **T5 强制改密拦截落点（D2 由网关改为方案 B，已确认）**：原定网关统一拦截，但网关 [AuthContextRelayFilter](../../../../ingot-service/ingot-gateway/src/main/java/com/ingot/cloud/gateway/filter/auth/AuthContextRelayFilter.java) 仅读 JWT `i` claim（不验签、不鉴权）、JWT 瘦身不含 `mustChangePwd`，不适合。改采**方案 B：登录时按 `mustChangePwd` 签发受限 scope**。
+   - 结论：**已在现网实现**。[PMS IdentityUtil](../../../../ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/identity/IdentityUtil.java) 与 [Member IdentityUtil](../../../../ingot-service/ingot-member/ingot-member-provider/src/main/java/com/ingot/cloud/member/identity/IdentityUtil.java) 在 `mustChangePwd=true` 时仅下发 `PermissionConstants.INIT_PASSWORD`（`in:init_pwd`）；改密接口以 `@AdminOrHasAnyAuthority({INIT_PASSWORD})` 保护。资源服务基于 scope 鉴权，天然拒绝其余接口，无需新增拦截。
+   - 后续增强（非本闭环）：初始密码 `validHours` 硬超期在登录期拦截。
+
+2. **T6 Member 完整持久化（拆为后续 change，已确认）**：Member provider 仅含 `ingot-security-credential`（`PasswordExpirationService`/`PasswordHistoryService` 为 NoOp）。本闭环仅完成 Member **域级对齐**（走账号域用例 + `AuthContextSupport` + 受限 scope）。完整持久化（增 `credential-data` 依赖 + `ingot_member` 建 `password_history`/`password_expiration` DDL）因涉及 DDL 与 Member baseline 定位，拆为后续独立 change。
 
 ## 待审阅决策点（实施前需在 TASKS 敲定）
 
