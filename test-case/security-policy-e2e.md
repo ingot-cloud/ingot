@@ -1,6 +1,6 @@
 # 网关限流与安全策略 — 端到端测试用例
 
-> **对照实现**：[`docs/security-center/GATEWAY-RATE-LIMIT.md`](../docs/security-center/GATEWAY-RATE-LIMIT.md)  
+> **对照实现**：[`docs/modules/security-center/GATEWAY-RATE-LIMIT.md`](../docs/modules/security-center/GATEWAY-RATE-LIMIT.md)  
 > **管理面 API**：`ingot-service/ingot-security` → `/platform/security/policy/*`  
 > **适用版本**：Phase 1–4（2026-05 As-Built）
 
@@ -664,5 +664,5 @@ curl -s "$SECURITY_INNER/inner/security/policy/snapshot" | jq '.data.version, .d
 
 ## 16. 相关文档
 
-- [网关限流与安全策略执行面](../docs/security-center/GATEWAY-RATE-LIMIT.md)
+- [网关限流与安全策略执行面](../docs/modules/security-center/GATEWAY-RATE-LIMIT.md)
 - [DB 迁移 `005_security_policy_center.sql`](../databases/migrations/005_security_policy_center.sql)

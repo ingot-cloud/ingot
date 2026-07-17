@@ -245,7 +245,7 @@ scrape_configs:
 
 ### 告警规则
 
-参考文档：`../TROUBLESHOOTING-SERVICE-HANG.md` 第 6.3 节
+参考文档：`../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md` 第 6.3 节
 
 ## 🔍 故障排查
 
@@ -259,7 +259,7 @@ scrape_configs:
 cat troubleshoot_*/REPORT.md
 ```
 
-详细排查步骤参考：`../TROUBLESHOOTING-SERVICE-HANG.md`
+详细排查步骤参考：`../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md`
 
 ## 📝 注意事项
 
@@ -332,8 +332,8 @@ redis-cli CONFIG GET maxmemory
 
 ## 🔗 相关文档
 
-- [故障排查指南](../TROUBLESHOOTING-SERVICE-HANG.md)
-- **[微服务资源规划指南](../MICROSERVICES-RESOURCE-PLANNING.md)** ⭐ 重点阅读
+- [故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md)
+- **[微服务资源规划指南](../performance/MICROSERVICES-RESOURCE-PLANNING.md)** ⭐ 重点阅读
 - [优化后的 Dockerfile](../../ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile)
 - [诊断脚本](../../bin/troubleshoot.sh)
 

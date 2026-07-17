@@ -1,13 +1,13 @@
 ---
 name: java-class-javadoc
-description: Generate, complete, and review Chinese type-level JavaDoc for Java class, interface, enum, record, annotation, and nested type declarations according to this repository's docs/code-standards/Javadoc.md. Use when Codex is asked to add missing Java type comments, improve or audit existing type comments, or check type-level JavaDoc compliance. Do not use for method, constructor, field, or package comments.
+description: Generate, complete, and review Chinese type-level JavaDoc for Java class, interface, enum, record, annotation, and nested type declarations according to this repository's docs/standards/Javadoc.md. Use when Codex is asked to add missing Java type comments, improve or audit existing type comments, or check type-level JavaDoc compliance. Do not use for method, constructor, field, or package comments.
 ---
 
 # Java Class JavaDoc
 
 ## Workflow
 
-1. Locate the repository root and read `docs/code-standards/Javadoc.md` before drafting comments. Treat that file as the source of truth if it differs from this skill.
+1. Locate the repository root and read `docs/standards/Javadoc.md` before drafting comments. Treat that file as the source of truth if it differs from this skill.
 2. Read the complete target type and enough surrounding code to understand its actual responsibility, collaborators, lifecycle, constraints, and intended callers.
 3. Identify every requested type declaration: `class`, `interface`, `enum`, `record`, `@interface`, and nested variants. Exclude methods, constructors, fields, enum constants, and package declarations.
 4. Determine whether to create, complete, or review the type-level JavaDoc.

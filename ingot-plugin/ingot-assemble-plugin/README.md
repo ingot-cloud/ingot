@@ -484,7 +484,7 @@ docker buildx inspect --bootstrap
 
 ## 📚 相关文档
 
-- [完整使用指南](../../docs/DOCKER-MULTI-ENVIRONMENT.md)
+- [完整使用指南](../../docs/guides/deployment/DOCKER-MULTI-ENVIRONMENT.md)
 - [Docker Buildx 文档](https://docs.docker.com/buildx/working-with-buildx/)
 - [多阶段构建最佳实践](https://docs.docker.com/develop/develop-images/multistage-build/)
 

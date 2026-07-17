@@ -232,7 +232,7 @@ Map<String, Object> extra = item.getExtra();
 String color = extra == null ? null : (String) extra.get("color");
 ```
 
-> **建议**：`extra` 中的 key 在团队内统一约定，不要每个开发者随意命名；可以把约定写在 `docs/dict/EXTRA-CONVENTIONS.md`（按需追加）。
+> **建议**：`extra` 中的 key 在团队内统一约定，不要每个开发者随意命名；可以把约定写在 `docs/modules/dict/EXTRA-CONVENTIONS.md`（按需追加）。
 
 ---
 

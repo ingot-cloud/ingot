@@ -16,7 +16,7 @@
 ## 所有者
 
 - 模块：`ingot-security-common`、`ingot-security-authorization-server`、`ingot-auth`
-- 配置文档：`docs/authorization-server/JWK-CONFIGURATION.md`
+- 配置文档：`docs/modules/authorization-server/JWK-CONFIGURATION.md`
 
 ## 关联模块
 
@@ -32,5 +32,5 @@
 ## 文档索引
 
 - [SPEC](./SPEC.md)：Redis 键、轮换规则、签名/验签数据流
-- 运维配置：[JWK-CONFIGURATION.md](../../../../docs/authorization-server/JWK-CONFIGURATION.md)
+- 运维配置：[JWK-CONFIGURATION.md](../../../../docs/modules/authorization-server/JWK-CONFIGURATION.md)
 - 来源变更：`specs/changes/archive/2026/20260713-security-jwk-signing-selector/`

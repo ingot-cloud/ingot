@@ -9,7 +9,7 @@
 - 单服务连接池：**50**（不是 100）
 - 单服务线程池：**120**（不是 256）
 
-详见：[微服务资源规划指南](./MICROSERVICES-RESOURCE-PLANNING.md) 和 [配置对比文档](./CONFIGURATION-COMPARISON.md)
+详见：[微服务资源规划指南](../performance/MICROSERVICES-RESOURCE-PLANNING.md) 和 [配置对比文档](../performance/CONFIGURATION-COMPARISON.md)
 
 ## ⚡ 30 秒快速诊断
 
@@ -347,7 +347,7 @@ ss -s
 ```
 运维团队：emergency@example.com
 告警系统：监控大盘 URL
-故障文档：/docs/TROUBLESHOOTING-SERVICE-HANG.md
+故障文档：/docs/guides/troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md
 诊断脚本：./bin/troubleshoot.sh
 ```
 
@@ -378,10 +378,10 @@ QPS = 1000 ÷ (5 + 0.2) ≈ 192
 ## 📚 完整文档
 
 详细内容请查看：
-- **故障排查指南**：`docs/TROUBLESHOOTING-SERVICE-HANG.md`
-- **微服务资源规划**：`docs/MICROSERVICES-RESOURCE-PLANNING.md` ⭐
-- **配置对比**：`docs/CONFIGURATION-COMPARISON.md` ⭐
-- **配置示例**：`docs/config-examples/`
+- **故障排查指南**：`docs/guides/troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md`
+- **微服务资源规划**：`docs/guides/performance/MICROSERVICES-RESOURCE-PLANNING.md` ⭐
+- **配置对比**：`docs/guides/performance/CONFIGURATION-COMPARISON.md` ⭐
+- **配置示例**：`docs/guides/config-examples/`
 - **诊断脚本**：`bin/troubleshoot.sh`
 - **优化 Dockerfile**：`ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile`
 

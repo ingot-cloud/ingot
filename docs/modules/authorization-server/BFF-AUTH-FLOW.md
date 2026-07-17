@@ -498,7 +498,7 @@ BFF 专属客户端需要在 `oauth2_registered_client` 表中注册，参见 `d
 
 ## 前端设备指纹集成
 
-前端需要在每次请求中携带 `In-Ca-Sig` Header，值为设备指纹。详见 `docs/authorization-server/DEVICE-FINGERPRINT.md`。
+前端需要在每次请求中携带 `In-Ca-Sig` Header，值为设备指纹。详见 `docs/modules/authorization-server/DEVICE-FINGERPRINT.md`。
 
 **快速集成（axios 示例）：**
 

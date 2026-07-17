@@ -17,7 +17,7 @@
    - 配置决策树
    - 快速调整命令
 
-3. **[故障排查指南](./TROUBLESHOOTING-SERVICE-HANG.md)** ⭐⭐⭐
+3. **[故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md)** ⭐⭐⭐
    - 完整的 5 步排查流程
    - JVM、数据库、网络诊断
    - 监控配置和告警规则
@@ -25,13 +25,13 @@
 
 ### 📋 快速参考
 
-4. **[快速参考卡片](./QUICK-REFERENCE-TROUBLESHOOTING.md)** ⭐⭐
+4. **[快速参考卡片](../troubleshooting/QUICK-REFERENCE-TROUBLESHOOTING.md)** ⭐⭐
    - 30 秒快速诊断
    - 五步排查法
    - 关键指标阈值
    - 常见问题速查
 
-5. **[配置示例说明](./config-examples/README.md)** ⭐⭐
+5. **[配置示例说明](../config-examples/README.md)** ⭐⭐
    - 优化后的配置文件
    - 性能预期
    - 应用步骤
@@ -374,14 +374,14 @@ groups:
 ### 文档
 - [微服务资源规划](./MICROSERVICES-RESOURCE-PLANNING.md)
 - [配置对比](./CONFIGURATION-COMPARISON.md)
-- [故障排查指南](./TROUBLESHOOTING-SERVICE-HANG.md)
-- [快速参考](./QUICK-REFERENCE-TROUBLESHOOTING.md)
-- [配置示例](./config-examples/README.md)
+- [故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md)
+- [快速参考](../troubleshooting/QUICK-REFERENCE-TROUBLESHOOTING.md)
+- [配置示例](../config-examples/README.md)
 
 ### 配置文件
 - [Dockerfile](../ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile)
-- [应用配置](./config-examples/application-prod-optimized.yml)
-- [网关配置](./config-examples/gateway-routes-optimized.yml)
+- [应用配置](../config-examples/application-prod-optimized.yml)
+- [网关配置](../config-examples/gateway-routes-optimized.yml)
 
 ### 工具
 - [诊断脚本](../bin/troubleshoot.sh)
@@ -392,7 +392,7 @@ groups:
 
 ### 遇到问题时
 
-1. **查看快速参考**：[QUICK-REFERENCE-TROUBLESHOOTING.md](./QUICK-REFERENCE-TROUBLESHOOTING.md)
+1. **查看快速参考**：[QUICK-REFERENCE-TROUBLESHOOTING.md](../troubleshooting/QUICK-REFERENCE-TROUBLESHOOTING.md)
 2. **运行诊断脚本**：`./bin/troubleshoot.sh <容器名>`
 3. **查看故障排查指南**：按照 5 步排查流程操作
 4. **查看配置对比**：确认配置是否合理

@@ -14,9 +14,9 @@
 
 # 代码注释规范
 
-Java 类型级注释（`class`、`interface`、`enum`、`record`、`@interface` 及嵌套类型）统一遵循 [Javadoc 规范](./docs/code-standards/Javadoc.md)，可借助 `.agents/skills/java-class-javadoc` skill 生成、补全或审查。规则如下：
+Java 类型级注释（`class`、`interface`、`enum`、`record`、`@interface` 及嵌套类型）统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借助 `.agents/skills/java-class-javadoc` skill 生成、补全或审查。规则如下：
 
-1. 以标准为准：动笔前先读 `docs/code-standards/Javadoc.md`，与本节冲突时以该文件为准；仅处理类型级注释，不改动方法、构造器、字段、枚举常量与包注释（除非任务明确要求）。
+1. 以标准为准：动笔前先读 `docs/standards/Javadoc.md`，与本节冲突时以该文件为准；仅处理类型级注释，不改动方法、构造器、字段、枚举常量与包注释（除非任务明确要求）。
 2. 结构：首段用一个 `<p>...</p>` 一句话说明该类型职责；仅当设计意图、核心职责、使用场景、边界或约束确有帮助时才追加第二段；能从可见 API 推导出正确示例时用 `<pre>{@code ... }</pre>` 给出。
 3. 标签顺序：`@author`、`@since`、可选 `@see`、可选 `@apiNote`（面向调用者的限制/性能/生命周期）、可选 `@implNote`（实现原理/不变量/取舍/扩展）；代码不支持的内容一律省略，禁止占位符与空标签。
 4. 作者与版本优先级：① 使用用户/当前任务显式指定的 `@author`/`@since`；② 更新既有注释时保留其非空 `@author`/`@since`；③ 新建且无显式值时用 `@author jy`、`@since 1.0.0`。不得从 Git 历史、邻近文件或当前日期推断，除非用户明确要求。

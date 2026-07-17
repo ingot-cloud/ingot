@@ -255,5 +255,5 @@ ingot:
 
 - [Common 抽象层](../ingot-tss-common/README.md)
 - [XXL-Job 实现](../../ingot-tss-xxljob/README.md)
-- [使用示例](../../../docs/tss-usage-example.md)
-- [架构设计](../../../docs/tss-architecture.md)
+- [使用示例](../../../docs/modules/task-scheduler-system/tss-usage-example.md)
+- [架构设计](../../../docs/modules/task-scheduler-system/tss-architecture.md)

@@ -111,7 +111,7 @@ public void onConfigChanged(SocialConfigChangedEvent event) {
 
 - [ingot-social-common/README.md](../ingot-social-common/README.md)
 - [ingot-social-common/EXTENSION_GUIDE.md](../ingot-social-common/EXTENSION_GUIDE.md)
-- [docs/dict/ARCHITECTURE.md](../../../docs/dict/ARCHITECTURE.md)（失效总线通用说明）
+- [docs/modules/dict/ARCHITECTURE.md](../../../docs/modules/dict/ARCHITECTURE.md)（失效总线通用说明）
 
 ---
 

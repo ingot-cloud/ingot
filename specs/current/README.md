@@ -2,6 +2,8 @@
 
 `current` 描述已经上线并验收的系统能力，是理解系统当前行为的首选入口。
 
+上游产品意图与路线图见 [docs/requirements/VISION.md](../../docs/requirements/VISION.md) 与 [ROADMAP.md](../../docs/requirements/ROADMAP.md)。
+
 新增或更新 current 时：
 
 1. 按 `<domain>/<capability>/` 组织。

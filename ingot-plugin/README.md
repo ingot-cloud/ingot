@@ -90,7 +90,7 @@ plugins {
 
 - [ingot-assemble-plugin 完整文档](./ingot-assemble-plugin/README.md)
 - [配置示例](./ingot-assemble-plugin/examples/)
-- [Docker 多环境构建指南](../docs/DOCKER-MULTI-ENVIRONMENT.md)
+- [Docker 多环境构建指南](../docs/guides/deployment/DOCKER-MULTI-ENVIRONMENT.md)
 
 ## 🔧 开发
 

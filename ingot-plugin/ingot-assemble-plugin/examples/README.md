@@ -235,7 +235,7 @@ tag("prod") {
 ## 🔗 相关文档
 
 - [插件完整文档](../README.md)
-- [Docker 多环境构建指南](../../../docs/DOCKER-MULTI-ENVIRONMENT.md)
+- [Docker 多环境构建指南](../../../docs/guides/deployment/DOCKER-MULTI-ENVIRONMENT.md)
 - [Docker Buildx 文档](https://docs.docker.com/buildx/working-with-buildx/)
 
 ## ❓ 常见问题

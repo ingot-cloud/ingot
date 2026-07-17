@@ -145,7 +145,7 @@ PMS 写库 → SysSocialDetailsServiceImpl
 
 - [EXTENSION_GUIDE.md](./EXTENSION_GUIDE.md) — 自定义发布器与监听器
 - [ingot-social-wechat/README.md](../ingot-social-wechat/README.md) — 微信实现
-- 字典侧总线说明：[docs/dict/ARCHITECTURE.md](../../../docs/dict/ARCHITECTURE.md)（§4、channel 命名）
+- 字典侧总线说明：[docs/modules/dict/ARCHITECTURE.md](../../../docs/modules/dict/ARCHITECTURE.md)（§4、channel 命名）
 
 ---
 

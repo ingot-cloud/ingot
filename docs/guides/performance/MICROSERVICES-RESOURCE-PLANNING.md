@@ -635,9 +635,9 @@ find /data/logs -name "*.log" -mtime +30 -delete
 
 ## 🔗 相关文档
 
-- [故障排查指南](./TROUBLESHOOTING-SERVICE-HANG.md)
-- [配置示例](./config-examples/README.md)
-- [快速参考](./QUICK-REFERENCE-TROUBLESHOOTING.md)
+- [故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md)
+- [配置示例](../config-examples/README.md)
+- [快速参考](../troubleshooting/QUICK-REFERENCE-TROUBLESHOOTING.md)
 
 ---
 

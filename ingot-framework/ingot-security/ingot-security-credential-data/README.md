@@ -439,12 +439,12 @@ dependencies {
 
 | 文档 | 说明 |
 |-----|------|
-| [README](../../docs/credential-security/README.md) | 完整概述、快速开始、架构说明 |
-| [策略加载器](../../docs/credential-security/POLICY-LOADER.md) | 策略加载器架构、模式切换、扩展指南 |
-| [架构设计](../../docs/credential-security/ARCHITECTURE.md) | 完整架构设计、分层模型、核心组件 |
-| [策略配置指南](../../docs/credential-security/POLICY-GUIDE.md) | 密码策略详细配置、多租户管理 |
-| [API 参考](../../docs/credential-security/API-REFERENCE.md) | RPC/REST 接口、请求响应示例 |
-| [常见问题](../../docs/credential-security/FAQ.md) | 功能、集成、性能、故障排查问题解答 |
+| [README](../../docs/modules/credential-security/README.md) | 完整概述、快速开始、架构说明 |
+| [策略加载器](../../docs/modules/credential-security/POLICY-LOADER.md) | 策略加载器架构、模式切换、扩展指南 |
+| [架构设计](../../docs/modules/credential-security/ARCHITECTURE.md) | 完整架构设计、分层模型、核心组件 |
+| [策略配置指南](../../docs/modules/credential-security/POLICY-GUIDE.md) | 密码策略详细配置、多租户管理 |
+| [API 参考](../../docs/modules/credential-security/API-REFERENCE.md) | RPC/REST 接口、请求响应示例 |
+| [常见问题](../../docs/modules/credential-security/FAQ.md) | 功能、集成、性能、故障排查问题解答 |
 
 ---
 
@@ -511,8 +511,8 @@ public void cleanupInactiveUsers() {
 ## 🚀 下一步
 
 1. **查看核心模块** - [ingot-security-credential/README.md](../ingot-security-credential/README.md)
-2. **了解完整架构** - [ARCHITECTURE.md](../../docs/credential-security/ARCHITECTURE.md)
-3. **学习策略配置** - [POLICY-GUIDE.md](../../docs/credential-security/POLICY-GUIDE.md)
+2. **了解完整架构** - [ARCHITECTURE.md](../../docs/modules/credential-security/ARCHITECTURE.md)
+3. **学习策略配置** - [POLICY-GUIDE.md](../../docs/modules/credential-security/POLICY-GUIDE.md)
 
 ---
 

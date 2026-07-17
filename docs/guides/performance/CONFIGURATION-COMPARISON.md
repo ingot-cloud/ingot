@@ -341,9 +341,9 @@ docker exec -it mysql mysql -uroot -p -e "SHOW PROCESSLIST;"
 ## 📚 相关文档
 
 - **[微服务资源规划指南](./MICROSERVICES-RESOURCE-PLANNING.md)** - 详细的资源规划
-- [故障排查指南](./TROUBLESHOOTING-SERVICE-HANG.md) - 问题排查
-- [配置示例](./config-examples/README.md) - 具体配置文件
-- [快速参考](./QUICK-REFERENCE-TROUBLESHOOTING.md) - 快速查阅
+- [故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md) - 问题排查
+- [配置示例](../config-examples/README.md) - 具体配置文件
+- [快速参考](../troubleshooting/QUICK-REFERENCE-TROUBLESHOOTING.md) - 快速查阅
 
 ---
 

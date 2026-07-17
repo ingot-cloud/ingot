@@ -33,6 +33,6 @@
 ## 文档索引
 
 - [SPEC](./SPEC.md)：Header 名称、写入方、Java 常量与数据流
-- 网关限流：[GATEWAY-RATE-LIMIT.md](../../../../docs/security-center/GATEWAY-RATE-LIMIT.md)
-- BFF 指纹：[DEVICE-FINGERPRINT.md](../../../../docs/authorization-server/DEVICE-FINGERPRINT.md)、[BFF-AUTH-FLOW.md](../../../../docs/authorization-server/BFF-AUTH-FLOW.md)
+- 网关限流：[GATEWAY-RATE-LIMIT.md](../../../../docs/modules/security-center/GATEWAY-RATE-LIMIT.md)
+- BFF 指纹：[DEVICE-FINGERPRINT.md](../../../../docs/modules/authorization-server/DEVICE-FINGERPRINT.md)、[BFF-AUTH-FLOW.md](../../../../docs/modules/authorization-server/BFF-AUTH-FLOW.md)
 - 来源变更：`specs/changes/archive/2026/20260715-gateway-header-rename/`

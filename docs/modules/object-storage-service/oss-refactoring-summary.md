@@ -72,13 +72,13 @@
 
 #### 文档
 
-1. `docs/oss-usage-example.md`
+1. `docs/modules/object-storage-service/oss-usage-example.md`
    - 详细的使用示例和最佳实践
 
-2. `docs/oss-architecture.md`
+2. `docs/modules/object-storage-service/oss-architecture.md`
    - 架构设计文档，包含类图和模块依赖关系
 
-3. `docs/oss-refactoring-summary.md`
+3. `docs/modules/object-storage-service/oss-refactoring-summary.md`
    - 本文档，重构总结
 
 ### 修改文件
@@ -243,7 +243,7 @@ public class FileService {
 3. 继承 `AbstractS3OssService`
 4. 创建自动配置类
 
-详见：`docs/oss-architecture.md` 的"扩展新的存储实现"章节。
+详见：`docs/modules/object-storage-service/oss-architecture.md` 的"扩展新的存储实现"章节。
 
 ## 相关文档
 
