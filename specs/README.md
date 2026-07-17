@@ -188,7 +188,7 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-（无）
+- [凭证安全收口（L1）](./changes/active/20260717-security-credential-closure/README.md) — 状态 `draft`
 
 已归档（2026）：
 
