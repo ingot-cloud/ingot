@@ -99,7 +99,8 @@ ingot-credential (Service)          (微服务)
 ```
 本地模式（local）- 默认
 └─→ LocalCredentialPolicyLoader
-    └─→ 从 application.yml 加载策略
+    └─→ 从 CredentialSecurityProperties（Nacos in-security-credential.yml）加载策略
+    └─→ NacosConfigRefreshEvent 触发编译缓存失效，支持热更新
     └─→ 适合简单场景、快速原型
 
 远程模式（remote）

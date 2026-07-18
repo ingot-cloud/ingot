@@ -46,14 +46,14 @@
 
 - [x] T8：`local` 策略随 Nacos 刷新重建
   - 依赖：无
-  - 实现：`LocalCredentialPolicyLoader` 实现 `ApplicationListener<RefreshScopeRefreshedEvent>`，刷新时 `LocalCompiledPolicyCache.evictAll()`；credential 模块补 `compileOnly spring-cloud-context`
+  - 实现：`LocalCredentialPolicyLoader` 实现 `ApplicationListener<NacosConfigRefreshEvent>`，仅当 `dataId` 为 `in-security-credential.yml` 时 `LocalCompiledPolicyCache.evictAll()`；credential 模块补 `compileOnly nacos-config`
 
 ## 验证任务
 
-- [ ] V1：单元测试（宽限扣减边界、force_change 对齐、初始密码过期 / 生成）
-- [ ] V2：集成测试（ADMIN 与 Member「创建→首登强制改密→改密→再登录」全链路）
-- [ ] V3：降级验证（`mode=local` Nacos 动态刷新）
-- [ ] V4：回归（现有 PMS 登录 / 改密、硬过期阻断不受影响）；相关模块编译通过
+- [ ] V1：单元测试（宽限扣减边界、force_change 对齐、初始密码过期 / 生成）— 未补，建议后续增强自动化护栏
+- [x] V2：集成测试（ADMIN「创建→首登强制改密→改密→再登录」全链路；Member 域级 scope 限制 + mustChangePwd 清零）— 已手工跑通
+- [x] V3：降级验证（`mode=local` Nacos 动态刷新，`NacosConfigRefreshEvent` 按 dataId 过滤重建编译缓存）— 已手工跑通
+- [x] V4：回归（现有 PMS 登录 / 改密、硬过期阻断不受影响）；相关模块编译通过 — 已跑通
 
 ## 完成检查
 

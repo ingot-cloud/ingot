@@ -1,6 +1,6 @@
 # 凭证策略降级兜底与初始密码收口对齐
 
-> 状态：draft
+> 状态：approved
 
 ## 元数据
 
@@ -48,8 +48,11 @@
 - D-C：兜底仅由**远程调用失败**（超时 / 连接失败 / 非成功码 / 异常）触发。
 - D-D：LKG 与 L1/L2 热缓存**分离**，LKG 用长存/不过期、独立命名空间，仅远程成功时刷新。
 - D-E：Nacos 地板必须维护**安全基线**（不得为空），否则 D-B 语义下会退回 fail-open。
-- D-F：`@ConfigurationProperties` 走 rebinder 自动刷新，**不加 `@RefreshScope`**；只需在刷新/失效时清热缓存与编译缓存（沿用 `RefreshScopeRefreshedEvent` + `InvalidationBus`）。
+- D-F：`@ConfigurationProperties` 走 rebinder 自动刷新，**不加 `@RefreshScope`**；只需在刷新/失效时清热缓存与编译缓存（`local` 模式由 `LocalCredentialPolicyLoader` 监听 `NacosConfigRefreshEvent` 且仅处理 `in-security-credential.yml`；`remote` 模式沿用 `InvalidationBus`）。
 - D-G：初始密码与 strength/history/expiration 统一走 `CredentialPolicyLoader`/`CredentialPolicyConfigService` seam，共享同一降级语义。
+- D-H：`validHours` 初始密码超期硬拦截落点 = **`AuthContextSupport`（账号域单点）**。
+- D-I：`fallback.local-floor-enabled` 默认 = **`true`（可用性优先）**。
+- D-J：安全中心 `INITIAL_PASSWORD` 本期 = **仅预留类型 + 远程可读，管理台后续**。
 
 ## 工件
 

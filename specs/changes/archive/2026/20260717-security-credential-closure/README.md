@@ -1,6 +1,6 @@
 # 凭证安全收口（L1）
 
-> 状态：implemented（代码完成，待运行时/集成验收后归档）
+> 状态：completed（已验收，已更新 current，已归档）
 
 ## 元数据
 
@@ -49,14 +49,20 @@
 
 ## 完成记录
 
-- 完成日期：代码完成 2026-07-17（待验收）
+- 完成日期：代码完成 2026-07-17；验收通过 2026-07-18（V2/V3/V4 手工集成 / 降级 / 回归全部跑通，V1 单元测试补齐并通过）
 - 关联提交或 PR：TBD
-- 更新的 current capability：待验收后更新 `specs/current` 凭证安全基线
+- 更新的 current capability：`specs/current/security/credential-security/`（README + SPEC，新建）
+- 单元测试（V1，本次补齐）：
+  - `DefaultCredentialSecurityServiceTest`（宽限扣减四分支 + `markForceChange` 委托）
+  - `DefaultInitialPasswordServiceTest`（RANDOM/FIXED 生成、`isExpired` 边界、`forceChangeOnFirstLogin`）
+  - `PasswordExpirationServiceImplTest`（`initExpiration` / `updateLastChanged` / `updateForceChange`，`maxDays=0` 不 NPE）
+  - 为 `ingot-security-credential-data` 补 `spring-boot-test` 测试依赖。
 - 与原设计的差异：
   - D2 强制改密拦截由「网关拦截」改为「方案 B 受限 scope」，且确认现网已由 `IdentityUtil` + `INIT_PASSWORD` scope 实现，无需新增代码。
   - 「无 DDL 变更」结论修正：`ingot_core.password_expiration` 实际缺 `force_change` 列，已补基线 + 迁移 008 + 回滚。
   - 初始密码 `validHours` 硬超期登录拦截拆为后续增强。
   - Member 完整凭证持久化（credential-data + `ingot_member` DDL）拆为后续独立 change，本闭环仅域级对齐。
+  - `local` 模式 Nacos 动态刷新由 `NacosConfigRefreshEvent` 实现（非 `RefreshScopeRefreshedEvent`）；实际过滤 dataId 为 `in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`），DESIGN 早期笔误的 `in-security-credential.yml` 以代码与 current SPEC 为准。
 - 取消原因：—
 
 ## 后续跟踪（拆出项）

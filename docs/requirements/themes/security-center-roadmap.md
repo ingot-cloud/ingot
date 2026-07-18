@@ -56,7 +56,7 @@
 
 | 闭环 | 名称 | 对应需求章节 | 关键内容 | 可降级 | 状态 | Change |
 |------|------|--------------|----------|--------|------|--------|
-| L1 | 凭证安全收口 | 二（2.2 / 2.4） | 初始密码、宽限期扣减、force_change 对齐、Member 对齐 | 是（策略字段） | planned | `specs/changes/active/*-security-credential-closure` |
+| L1 | 凭证安全收口 | 二（2.2 / 2.4） | 初始密码、宽限期扣减、force_change 对齐、Member 对齐 | 是（策略字段） | done | `specs/changes/archive/2026/20260717-security-credential-closure`；current `security/credential-security` |
 | L2 | 账号保护全用户闭环 | 三 | 失败计数 / 锁定 / 安全事件从 ADMIN 扩到 Member | 是（阈值 / 时长） | planned | 待建 |
 | L3 | 统一安全事件中心 | 九 | 通用安全事件模型 + 上报 / 存储（安全中心侧） | 部分（记录开关可降级，聚合不可降级） | planned | 待建 |
 | L4 | 访问防护补全 | 四 | 现有网关策略中心的防爆破 / 执行面收口 | 是（阈值 / 名单） | planned | 待建 |

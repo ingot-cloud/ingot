@@ -223,6 +223,7 @@ CREATE TABLE `password_expiration` (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `last_changed_at` datetime NOT NULL COMMENT '最后修改密码时间',
   `expires_at` datetime NOT NULL COMMENT '密码过期时间',
+  `force_change` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否强制修改（0-否 1-是）',
   `grace_login_remaining` int NOT NULL DEFAULT '0' COMMENT '剩余宽限登录次数',
   `next_warning_at` datetime DEFAULT NULL COMMENT '下次提醒时间',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

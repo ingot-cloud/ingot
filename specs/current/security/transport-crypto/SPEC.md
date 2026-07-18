@@ -78,7 +78,7 @@ ingot:
     fail-open: false
 ```
 
-密钥轮换：配置中心更新 `key-pairs` 与 `active-kid`，`HybridKeyManager` 监听 `RefreshScopeRefreshedEvent` 原子重载。
+密钥轮换：配置中心更新 `in-security-crypto.yml` 中 `key-pairs` 与 `active-kid`，`HybridKeyManager` 监听 `NacosConfigRefreshEvent` 原子重载。
 
 ## 6. 公钥端点
 

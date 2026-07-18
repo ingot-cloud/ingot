@@ -1,10 +1,10 @@
 # Tasks
 
-## 决策任务（实施前敲定，对应 DESIGN 待审阅决策点）
+## 决策任务（已敲定，对应 DESIGN 决策记录）
 
-- [ ] D-H：`validHours` 超期硬拦截落点 → `AuthContextSupport` / `IdentityUtil`（默认建议 `AuthContextSupport`）
-- [ ] D-I：`fallback.local-floor-enabled` 默认值 → `true` / `false`（默认建议 `true`）
-- [ ] D-J：本期是否提供安全中心 `INITIAL_PASSWORD` 下发 → 预留类型+远程可读 / 含管理台（默认建议前者）
+- [x] D-H：`validHours` 超期硬拦截落点 → **`AuthContextSupport`（账号域单点）**
+- [x] D-I：`fallback.local-floor-enabled` 默认值 → **`true`（可用性优先）**
+- [x] D-J：本期安全中心 `INITIAL_PASSWORD` → **仅预留类型 + 远程可读，管理台后续**
 
 ## 实施任务
 

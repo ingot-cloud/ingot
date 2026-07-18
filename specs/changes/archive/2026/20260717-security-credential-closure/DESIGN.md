@@ -74,7 +74,7 @@
 
 ## Nacos 降级与动态刷新设计
 
-> 遵循 [roadmap 横切原则](../../../../docs/requirements/themes/security-center-roadmap.md)。
+> 遵循 [roadmap 横切原则](../../../../../docs/requirements/themes/security-center-roadmap.md)。
 
 - 统一开关：`ingot.security.credential.policy.mode = local | remote`。`local` → Nacos；`remote` → 安全中心快照。
 - 可 Nacos 降级字段（`local` 模式）：
@@ -82,10 +82,10 @@
   - `ingot.security.credential.policy.history.*`（`enabled` / `checkCount`）
   - `ingot.security.credential.policy.expiration.*`（`enabled` / `maxDays` / `warningDaysBefore` / `graceLoginCount`）
   - `ingot.security.credential.policy.initial-password.*`（本次新增：`generation` / `fixedPassword` / `validHours` / `oneTime` / `forceChangeOnFirstLogin`）
-- 对应 Nacos dataId：沿用现有 `application-security.yml`（`refreshEnabled=true`，已在各服务 `spring.config.import` 引入）承载 `ingot.security.credential.*`。
+- 对应 Nacos dataId：独立 `in-security-credential.yml`（`spring.config.import` 以 `?refreshEnabled=true` 引入）承载 `ingot.security.credential.*`。
 - 动态刷新落地：
   1. `CredentialSecurityProperties` 为 `@ConfigurationProperties`，随 Nacos 刷新更新字段值。
-  2. **验证策略对象是否随刷新重建**：`local` 策略加载器若在启动时固化策略实例，则刷新不生效。需确认 `LocalCredentialPolicyLoader` 每次 `loadPolicies()` 是否读取最新 properties；若缓存则加 `@RefreshScope` 或监听 `RefreshEvent` 重建。
+  2. **策略对象随刷新重建**：`LocalCredentialPolicyLoader` 通过 `LocalCompiledPolicyCache` 缓存编译结果；监听 `NacosConfigRefreshEvent`，且仅当 `dataId` 为 `in-security-credential.yml` 时 `evictAll()`，下次 `loadPolicies()` 按最新 properties 重新编译。不加 `@RefreshScope`。
   3. 不可降级项：无（凭证策略全部可降级）。初始密码「用后失效」依赖 DB 状态，属执行数据不属策略配置。
 - 验证方式：`mode=local` 下改 Nacos 中 `expiration.maxDays` / `strength.minLength`，不重启，触发一次登录 / 改密，观察行为按新值执行。
 
@@ -104,8 +104,8 @@
 
 ## 实施偏差与决策（对应 AGENTS.md 规则 4）
 
-1. **T5 强制改密拦截落点（D2 由网关改为方案 B，已确认）**：原定网关统一拦截，但网关 [AuthContextRelayFilter](../../../../ingot-service/ingot-gateway/src/main/java/com/ingot/cloud/gateway/filter/auth/AuthContextRelayFilter.java) 仅读 JWT `i` claim（不验签、不鉴权）、JWT 瘦身不含 `mustChangePwd`，不适合。改采**方案 B：登录时按 `mustChangePwd` 签发受限 scope**。
-   - 结论：**已在现网实现**。[PMS IdentityUtil](../../../../ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/identity/IdentityUtil.java) 与 [Member IdentityUtil](../../../../ingot-service/ingot-member/ingot-member-provider/src/main/java/com/ingot/cloud/member/identity/IdentityUtil.java) 在 `mustChangePwd=true` 时仅下发 `PermissionConstants.INIT_PASSWORD`（`in:init_pwd`）；改密接口以 `@AdminOrHasAnyAuthority({INIT_PASSWORD})` 保护。资源服务基于 scope 鉴权，天然拒绝其余接口，无需新增拦截。
+1. **T5 强制改密拦截落点（D2 由网关改为方案 B，已确认）**：原定网关统一拦截，但网关 [AuthContextRelayFilter](../../../../../ingot-service/ingot-gateway/src/main/java/com/ingot/cloud/gateway/filter/auth/AuthContextRelayFilter.java) 仅读 JWT `i` claim（不验签、不鉴权）、JWT 瘦身不含 `mustChangePwd`，不适合。改采**方案 B：登录时按 `mustChangePwd` 签发受限 scope**。
+   - 结论：**已在现网实现**。[PMS IdentityUtil](../../../../../ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/identity/IdentityUtil.java) 与 [Member IdentityUtil](../../../../../ingot-service/ingot-member/ingot-member-provider/src/main/java/com/ingot/cloud/member/identity/IdentityUtil.java) 在 `mustChangePwd=true` 时仅下发 `PermissionConstants.INIT_PASSWORD`（`in:init_pwd`）；改密接口以 `@AdminOrHasAnyAuthority({INIT_PASSWORD})` 保护。资源服务基于 scope 鉴权，天然拒绝其余接口，无需新增拦截。
    - 后续增强（非本闭环）：初始密码 `validHours` 硬超期在登录期拦截。
 
 2. **T6 Member 完整持久化（拆为后续 change，已确认）**：Member provider 仅含 `ingot-security-credential`（`PasswordExpirationService`/`PasswordHistoryService` 为 NoOp）。本闭环仅完成 Member **域级对齐**（走账号域用例 + `AuthContextSupport` + 受限 scope）。完整持久化（增 `credential-data` 依赖 + `ingot_member` 建 `password_history`/`password_expiration` DDL）因涉及 DDL 与 Member baseline 定位，拆为后续独立 change。

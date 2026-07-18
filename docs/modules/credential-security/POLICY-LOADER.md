@@ -82,10 +82,14 @@ CredentialPolicyLoader (接口)
 - ✅ 无需外部依赖
 - ✅ 配置即生效
 - ✅ 适合开发/测试环境
+- ✅ Nacos 变更可热更新（监听 `NacosConfigRefreshEvent`，仅处理 `in-security-credential.yml`）
 
 **配置示例：**
 
 ```yaml
+# spring.config.import 需引入独立 dataId（生产环境建议加 ?refreshEnabled=true）
+# - optional:nacos:in-security-credential.yml?refreshEnabled=true
+
 ingot:
   security:
     credential:
@@ -116,7 +120,7 @@ ingot:
 
 **核心流程：**
 
-应用启动时从配置文件读取策略参数，创建策略实例并缓存，供 PasswordValidator 使用。
+首次 `loadPolicies()` 从 `CredentialSecurityProperties` 编译策略并写入 `LocalCompiledPolicyCache`；Nacos 推送 `in-security-credential.yml` 变更时，`LocalCredentialPolicyLoader` 收到 `NacosConfigRefreshEvent` 后清空编译缓存，下次加载按最新配置重建。
 
 ---
 
@@ -326,8 +330,9 @@ ingot:
 ### 2. 缓存策略
 
 **Local 模式：**
-- 应用启动时加载一次
-- 缓存永久有效（直到重启）
+- 首次 `loadPolicies()` 时编译并缓存到 `LocalCompiledPolicyCache`
+- Nacos 变更 `in-security-credential.yml` 后自动失效缓存，下次请求按新配置重建
+- 未启用 Nacos 动态刷新时，缓存持续有效直至进程重启
 
 **Remote 模式：**
 - 首次请求时加载
@@ -425,7 +430,11 @@ implementation project(':ingot-credential-api')
 
 ### Q3: 如何支持热更新？
 
-**A:** 使用 Remote 模式 + 主动刷新：
+**A:**
+
+**Local 模式：** 将凭证策略拆到 Nacos `in-security-credential.yml`，在 `spring.config.import` 加 `?refreshEnabled=true`。`LocalCredentialPolicyLoader` 监听 `NacosConfigRefreshEvent`，仅处理该 dataId，变更后下次校验自动生效。
+
+**Remote 模式：** 修改策略后主动刷新：
 
 ```java
 // 修改策略后
