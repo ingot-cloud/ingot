@@ -1,0 +1,66 @@
+ingot:
+  security:
+    oauth2:
+      resource:
+        public-urls:
+          - /crypto/public-keys,GET
+  bff:
+    client-id: ingot-bff
+    scope: system
+    # 管理用户:0, C端用户:1
+    user-type: "0"
+    session-ttl: 7200
+    redirect-uri: http://localhost:5400/bff/auth/callback
+    cookie:
+      # 开发环境不设置 domain（localhost 可用），生产环境设置顶级域名如 .ingotcloud.top
+      domain: ${BFF_COOKIE_DOMAIN:}
+      # 开发环境 false，生产必须 true
+      secure: ${BFF_COOKIE_SECURE:false}
+      same-site: ${BFF_COOKIE_SAME_SITE:Lax}
+    security:
+      # 客户端指纹校验，防止 Cookie 盗用
+      fingerprint-enabled: ${BFF_FINGERPRINT_ENABLED:true}
+      # 指纹模式: device（前端设备指纹，推荐）/ ip_ua（服务端 IP+UA，降级方案）
+      fingerprint-mode: ${BFF_FINGERPRINT_MODE:device}
+      # 信任的前端应用域名列表
+      allowed-frontends:
+        - http://localhost:1798
+        - http://localhost:5798
+        - http://192.168.1.139:1798
+        - http://192.168.1.139:5798
+        - http://192.168.31.53:1798
+        - http://192.168.31.53:5798
+      default-redirect-uri: http://192.168.1.139:5798
+
+# SpringDoc/Swagger配置（开发环境开启）
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+# ==================== 日志配置 ====================
+logs:
+  path: ${LOG_PATH:/ingot-data/logs}
+
+# 开发环境日志级别配置
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.cloud: DEBUG
+    com.alibaba.nacos.client: INFO
+    com.alibaba.cloud: INFO
+    com.ingot: DEBUG
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
+      max-history: ${LOG_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOG_FILE_TOTAL_SIZE:20GB}

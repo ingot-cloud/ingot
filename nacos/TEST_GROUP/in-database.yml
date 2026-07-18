@@ -1,0 +1,120 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: ${DB_POOL_INITIAL_SIZE:5}           # 初始化连接数
+      min-idle: ${DB_POOL_MIN_IDLE:5}                   # 最小空闲连接
+      max-active: ${DB_POOL_MAX_ACTIVE:50}              # 最大活跃连接（单服务）
+      max-wait: ${DB_POOL_MAX_WAIT:5000}                # 获取连接最大等待时间(ms)
+      
+      # 连接保活和回收配置
+      test-on-borrow: false                              # 申请连接时不检测（影响性能）
+      test-on-return: false                              # 归还连接时不检测
+      test-while-idle: true                              # 空闲时检测
+      validation-query: SELECT 1                         # 检测SQL
+      validation-query-timeout: 3                        # 检测超时时间(s)
+      time-between-eviction-runs-millis: 60000          # 检测间隔(ms)
+      min-evictable-idle-time-millis: 300000            # 最小空闲时间(ms)
+      max-evictable-idle-time-millis: 900000            # 最大空闲时间(ms)
+      
+      # 连接泄露检测
+      remove-abandoned: ${DB_REMOVE_ABANDONED:true}      # 开启泄露检测
+      remove-abandoned-timeout: ${DB_REMOVE_ABANDONED_TIMEOUT:300}  # 泄露超时时间(s)
+      log-abandoned: ${DB_LOG_ABANDONED:true}            # 记录泄露日志
+      
+      # 连接属性配置
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=${DB_SLOW_SQL_MILLIS:2000}
+      connection-init-sqls:
+        - SET NAMES utf8mb4
+        - SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
+      
+      # SQL监控配置
+      filters: ${DB_FILTERS:stat,wall}  # 生产环境可移除log4j filter
+      
+      # StatFilter配置
+      stat-view-servlet:
+        enabled: ${DRUID_STAT_VIEW_ENABLED:true}
+        url-pattern: /druid/*
+        reset-enable: false                              # 禁止重置统计数据
+        login-username: ${DRUID_USERNAME:admin}
+        login-password: ${DRUID_PASSWORD:DruidAdmin@2025}
+        allow: ${DRUID_ALLOW:127.0.0.1}                 # IP白名单（生产环境严格控制）
+        deny: ${DRUID_DENY:}                            # IP黑名单
+      
+      # WebStatFilter配置
+      web-stat-filter:
+        enabled: ${DRUID_WEB_STAT_ENABLED:true}
+        url-pattern: /*
+        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*,/actuator/*'
+        session-stat-enable: true
+        session-stat-max-count: 1000
+        principal-session-name: user
+        principal-cookie-name: user
+      
+      # SQL防火墙配置
+      wall:
+        enabled: true
+        config:
+          multi-statement-allow: true                   # 允许多条SQL
+          none-base-statement-allow: true
+          comment-allow: true                            # 允许注释
+          select-allow: true
+          select-into-allow: false                       # 禁止SELECT INTO
+          update-allow: true
+          insert-allow: true
+          delete-allow: true
+          create-table-allow: ${DB_WALL_CREATE_TABLE:false}  # 生产环境禁止
+          drop-table-allow: ${DB_WALL_DROP_TABLE:false}      # 生产环境禁止
+          alter-table-allow: ${DB_WALL_ALTER_TABLE:false}    # 生产环境禁止
+          truncate-allow: ${DB_WALL_TRUNCATE:false}          # 生产环境禁止
+      
+      # 监控统计异步化
+      use-global-data-source-stat: true
+      
+      # 超时配置
+      query-timeout: ${DB_QUERY_TIMEOUT:30}              # 查询超时时间(s)
+      transaction-query-timeout: ${DB_TX_QUERY_TIMEOUT:60}  # 事务查询超时(s)
+      
+      # Keep Alive配置（防止连接被中间件断开）
+      keep-alive: ${DB_KEEP_ALIVE:true}
+      keep-alive-between-time-millis: 120000            # Keep Alive间隔(ms)
+      
+      # 异步初始化
+      async-init: true
+
+# MyBatis配置优化
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: ${MYBATIS_CACHE_ENABLED:true}        # 二级缓存
+    lazy-loading-enabled: ${MYBATIS_LAZY_LOADING:true}  # 延迟加载
+    aggressive-lazy-loading: false                       # 关闭积极加载
+    multiple-result-sets-enabled: true
+    use-column-label: true
+    use-generated-keys: true
+    auto-mapping-behavior: partial
+    default-executor-type: reuse                        # 复用执行器
+    default-statement-timeout: ${MYBATIS_STATEMENT_TIMEOUT:30}  # 语句超时(s)
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# MyBatis-Plus配置优化
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml,classpath*:sdk/mapper/*.xml
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.CompositeEnumTypeHandler
+    # 关闭MyBatis-Plus自带日志（使用SLF4J）
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    enable-sql-runner: false
+    db-config:
+      # 主键策略
+      id-type: ${MYBATIS_PLUS_ID_TYPE:ASSIGN_ID}
+      # 逻辑删除配置
+      logic-delete-value: now()                         # 逻辑已删除值
+      logic-not-delete-value: "null"                    # 逻辑未删除值
+      # 字段策略
+      insert-strategy: not_null
+      update-strategy: not_null
+

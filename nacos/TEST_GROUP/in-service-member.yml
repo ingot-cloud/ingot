@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    # 数据库连接URL配置
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_member}?useUnicode=true&characterEncoding=UTF8&useSSL=${MYSQL_SSL:false}&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=${MYSQL_PREP_STMT_CACHE_SIZE:250}&prepStmtCacheSqlLimit=${MYSQL_PREP_STMT_SQL_LIMIT:2048}&cacheResultSetMetadata=true&cacheServerConfiguration=true&maintainTimeStats=false&useLocalSessionState=true&elideSetAutoCommits=true&socketTimeout=${MYSQL_SOCKET_TIMEOUT:30000}&connectTimeout=${MYSQL_CONNECT_TIMEOUT:10000}
+
+# Ingot业务配置
+ingot:
+  oss:
+    minio:
+      url: ${MINIO_URL:http://ingot-cloud:9090}
+      accessKey: ${MINIO_ACCESS_KEY:2NPpKzxFQjyeMTQFEXA1}
+      secretKey: ${MINIO_SECRET_KEY:8SGAp7DhqZCQrYnU9Poyu888pQOB6w4SP2ILHbVU}
+  social:
+    wechat:
+      miniProgramAppId: wx18dc0ea8c6ca1d7d
+  # MyBatis SQL日志配置
+  mybatis:
+    show-sql-log: ${MYBATIS_SHOW_SQL:true}  # 生产环境关闭
+
+# SpringDoc/Swagger配置（测试环境开启）
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+# ==================== 日志配置 ====================
+logs:
+  path: ${LOG_PATH:/ingot-data/logs}
+  mybatisMapper: com.ingot.cloud.member.mapper
+
+# 日志级别配置
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.cloud: DEBUG
+    com.alibaba.nacos.client: INFO
+    com.alibaba.cloud: INFO
+    com.ingot: DEBUG
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
+      max-history: ${LOG_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOG_FILE_TOTAL_SIZE:20GB}

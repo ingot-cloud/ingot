@@ -1,0 +1,107 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: openapi
+              uri: lb://in-service-gateway
+              predicates:
+                - Path=/v3/api-docs/**
+              filters:
+                - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/$\{path}/v3/api-docs
+            - id: in-service-pms
+              uri: lb://in-service-pms
+              predicates:
+                - Path=/pms/**
+              filters:
+                - StripPrefix=1
+                # 限流过滤器
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: '#{@remoteAddrKeyResolver}'
+                    # 每秒最大访问次数（放令牌桶的速率）
+                    redis-rate-limiter.replenishRate: 200
+                    # 令牌桶最大容量（令牌桶的大小）
+                    redis-rate-limiter.burstCapacity: 300
+            - id: in-service-member
+              uri: lb://in-service-member
+              predicates:
+                - Path=/member/**
+              filters:
+                - StripPrefix=1
+                # 限流过滤器
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: '#{@remoteAddrKeyResolver}'
+                    # 每秒最大访问次数（放令牌桶的速率）
+                    redis-rate-limiter.replenishRate: 200
+                    # 令牌桶最大容量（令牌桶的大小）
+                    redis-rate-limiter.burstCapacity: 300
+            - id: in-service-security
+              uri: lb://in-service-security
+              predicates:
+                - Path=/security/**
+              filters:
+                - StripPrefix=1
+                # 限流过滤器
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: '#{@remoteAddrKeyResolver}'
+                    # 每秒最大访问次数（放令牌桶的速率）
+                    redis-rate-limiter.replenishRate: 200
+                    # 令牌桶最大容量（令牌桶的大小）
+                    redis-rate-limiter.burstCapacity: 300
+            - id: in-crypto-pubkey
+              uri: lb://in-service-bff
+              predicates:
+                - Path=/crypto/public-keys
+            - id: in-service-bff
+              uri: lb://in-service-bff
+              predicates:
+                - Path=/bff/**
+
+ingot:
+  vc:
+    verifyUrls:
+      - image,/auth/oauth2/token,POST
+      - image,/auth/oauth2/pre_authorize,POST
+      - image,/bff/auth/login,POST
+    image:
+      opsLimitGetPerMinute: 20
+      opsLimitCheckPerMinute: 40
+
+
+
+# SpringDoc/Swagger配置（开发环境开启）
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+# ==================== 日志配置 ====================
+logs:
+  path: ${LOG_PATH:/ingot-data/logs}
+
+# 开发环境日志级别配置
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.cloud: DEBUG
+    com.alibaba.nacos.client: INFO
+    com.alibaba.cloud: INFO
+    com.ingot: DEBUG
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
+      max-history: ${LOG_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOG_FILE_TOTAL_SIZE:20GB}

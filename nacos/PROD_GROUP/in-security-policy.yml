@@ -1,0 +1,75 @@
+ingot:
+  security:
+    ignoreTenantValidateRoleCodeList:
+      - role_admin
+    
+    # 重放配置
+    replay:
+      enabled: true
+      window: 5m
+      clock-skew: 5m
+      key-prefix: "replay:"
+      fail-open: false
+    
+    # 凭证配置
+    credential:
+      policy:
+        # 策略加载模式：local（本地配置）或 remote（远程加载）
+        mode: ${CREDENTIAL_MODE:local}
+
+        # 本地策略配置
+        strength:
+          # 是否启用
+          enabled: true
+          # 最小长度
+          min-length: 8
+          # 最大长度
+          max-length: 32
+          # 是否要求大写字母
+          require-uppercase: false
+          # 是否要求小写字母
+          require-lowercase: false
+          # 是否要求数字
+          require-digit: false
+          # 是否要求特殊字符
+          requireSpecialChar: false
+          # 特殊字符集合
+          specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+          # 禁止的模式
+          forbiddenPatterns:
+            - "password"
+            - "123456"
+            - "admin"
+            - "qwerty"
+          # 禁止包含用户属性
+          forbidUserAttributes: false
+
+        history:
+          # 是否启用
+          enabled: true
+          # 检查最近N次密码
+          check-count: 5
+
+        expiration:
+          # 是否启用 
+          enabled: false
+          # 最大有效天数
+          max-days: 90
+          # 提前警告天数
+          warningDaysBefore: 7
+          # 宽限登录次数
+          graceLoginCount: 3
+
+        initialPassword:
+          # 初始密码生成方式：RANDOM-随机生成；FIXED-统一默认密码
+          generation: RANDOM
+          # 随机初始密码长度（generation=RANDOM 时生效）
+          length: 10
+          # 统一默认密码（generation=FIXED 时生效）
+          fixedPassword: In@123456
+          # 初始密码有效小时数；0 表示不限制。超过后视为初始密码失效，需重新重置。
+          validHours: 72
+          # 用后失效：初始密码修改成功后即失效（依赖 mustChangePwd/force_change 清除，默认 true）
+          oneTime: true
+          # 首次登录是否强制修改密码
+          forceChangeOnFirstLogin: true

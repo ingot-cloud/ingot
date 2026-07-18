@@ -1,0 +1,125 @@
+jasypt:
+  encryptor:
+    password: ${JASYPT_PASSWORD:ingot}
+
+server:
+  forward-headers-strategy: framework
+  tomcat:
+    uri-encoding: UTF-8
+    remote-ip-header: x-forwarded-for
+    threads:
+      max: ${TOMCAT_THREADS_MAX:200}           # 最大线程数
+      min-spare: ${TOMCAT_THREADS_MIN:10}      # 最小空闲线程数
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:8000}  # 最大连接数
+    accept-count: ${TOMCAT_ACCEPT_COUNT:100}   # 等待队列长度
+    connection-timeout: ${TOMCAT_CONNECTION_TIMEOUT:20000}  # 连接超时时间(ms)
+    max-http-form-post-size: ${TOMCAT_MAX_POST_SIZE:104857600}  # 100MB
+  shutdown: graceful  # 优雅关闭
+
+# Spring应用生命周期配置
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
+  web:
+    forwarding:
+      enabled: true
+      strategy: framework
+  webflux:
+    forwarding:
+      enabled: true
+      strategy: framework
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:100MB}
+      max-request-size: ${MAX_REQUEST_SIZE:100MB}
+      enabled: true
+      resolve-lazily: true  # 延迟解析，提高性能
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+  data:
+    redis:
+      database: ${REDIS_DATABASE:0}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: ${REDIS_TIMEOUT:3000}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:100}    # 最大连接数
+          max-idle: ${REDIS_POOL_MAX_IDLE:20}        # 最大空闲连接
+          min-idle: ${REDIS_POOL_MIN_IDLE:5}         # 最小空闲连接
+          max-wait: ${REDIS_POOL_MAX_WAIT:3000}      # 最大等待时间(ms)
+          time-between-eviction-runs: 60000          # 空闲连接检测周期
+        shutdown-timeout: 5000
+        cluster:
+          refresh:
+            adaptive: true  # 自适应拓扑刷新
+  cloud:
+    sentinel:
+      eager: true
+      log:
+        dir: ${SENTINEL_LOG_DIR:/ingot-data/sentinel/}
+        switch-pid: true
+
+
+# 端点对外暴露
+management:
+  endpoints:
+    web:
+      exposure:
+        # 仅暴露必要端点，生产环境需要通过网关或防火墙限制访问
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics}
+      base-path: /actuator
+  endpoint:
+    health:
+      access: unrestricted
+      show-details: ${HEALTH_SHOW_DETAILS:ALWAYS}
+      probes:
+        enabled: true  # 启用K8s健康检查
+    info:
+      access: unrestricted
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: ${HEALTH_DISK_THRESHOLD:10GB}
+
+# Feign配置优化
+feign:
+  sentinel:
+    enabled: ${FEIGN_SENTINEL_ENABLED:true}
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+    max-connections: ${FEIGN_MAX_CONNECTIONS:400}
+    max-connections-per-route: ${FEIGN_MAX_CONNECTIONS_PER_ROUTE:50}
+    time-to-live: 900
+    connection-timer-repeat: 3000
+  client:
+    config:
+      default:
+        connectTimeout: ${FEIGN_CONNECT_TIMEOUT:5000}
+        readTimeout: ${FEIGN_READ_TIMEOUT:10000}
+        loggerLevel: ${FEIGN_LOGGER_LEVEL:BASIC}  # NONE, BASIC, HEADERS, FULL
+  compression:
+    request:
+      enabled: true
+      mime-types: text/xml,application/xml,application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+      useGzipDecoder: true
+  circuitbreaker:
+    enabled: true
+    alphanumeric-ids:
+      enabled: true

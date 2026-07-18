@@ -1,0 +1,63 @@
+spring:
+  mvc:
+    static-path-pattern: /static/**
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_auth}?useUnicode=true&characterEncoding=UTF8&useSSL=${MYSQL_SSL:false}&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=${MYSQL_PREP_STMT_CACHE_SIZE:250}&prepStmtCacheSqlLimit=${MYSQL_PREP_STMT_SQL_LIMIT:2048}&cacheResultSetMetadata=true&cacheServerConfiguration=true&maintainTimeStats=false&useLocalSessionState=true&elideSetAutoCommits=true&socketTimeout=${MYSQL_SOCKET_TIMEOUT:30000}&connectTimeout=${MYSQL_CONNECT_TIMEOUT:10000}
+
+ingot:
+  security:
+    oauth2:
+      auth:
+        loginFormUrl: https://login.ingotcloud.top/oauth2/challenge
+        issuer: http://${SERVICE_AUTH_HOST:localhost:5100}
+      resource:
+        publicUrls:
+          - /favicon.ico,GET
+          - /static/**,GET
+          - /logout,*
+          - /error,*
+    jwk:
+      key-lifetime: 90d
+      key-grace-period: 2h
+      max-active-keys: 3
+      cache-refresh-interval: 5m
+      master-key: ${AUTH_JWK_MASTER_KEY}
+      enable-encryption: true
+  # MyBatis SQL日志配置
+  mybatis:
+    show-sql-log: ${MYBATIS_SHOW_SQL:false}  # 生产环境关闭
+
+# SpringDoc/Swagger配置（生产环境关闭）
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# ==================== 日志配置 ====================
+logs:
+  path: ${LOG_PATH:/ingot-data/logs}
+  mybatisMapper: com.ingot.cloud.auth.mapper
+
+# 日志级别配置
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:WARN}
+    org.springframework.web: ${LOG_LEVEL_WEB:WARN}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.springframework.cloud: ${LOG_LEVEL_CLOUD:WARN}
+    com.alibaba.nacos.client: ${LOG_LEVEL_NACOS:ERROR}
+    com.alibaba.cloud: ${LOG_LEVEL_ALIBABA_CLOUD:WARN}
+    com.ingot: ${LOG_LEVEL_APP:INFO}
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
+      max-history: ${LOG_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOG_FILE_TOTAL_SIZE:20GB}
