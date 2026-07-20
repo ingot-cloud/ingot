@@ -10,12 +10,13 @@ import java.util.*;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.cloud.nacos.refresh.NacosConfigRefreshEvent;
+import com.ingot.framework.commons.constants.NacosConstants;
 import com.ingot.framework.commons.utils.crypto.RSAUtil;
 import com.ingot.framework.security.crypto.InCryptoProperties;
 import com.ingot.framework.security.crypto.model.CryptoErrorCode;
 import com.ingot.framework.security.crypto.utils.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.context.ApplicationListener;
 
 /**
@@ -26,11 +27,12 @@ import org.springframework.context.ApplicationListener;
  *
  * @author jy
  * @since 1.0.0
- * @apiNote 监听 {@link RefreshScopeRefreshedEvent}，配置中心刷新后自动重建密钥快照；也可显式调用 {@link #refresh()}。
+ * @apiNote 监听 {@link NacosConfigRefreshEvent}，且仅当 dataId 为 {@link NacosConstants#IN_SECURITY_CRYPTO}
+ * 时自动重建密钥快照；也可显式调用 {@link #refresh()}。
  * @implNote RSA-OAEP 使用 SHA-256 且 MGF1 亦为 SHA-256，以与 WebCrypto {@code RSA-OAEP(SHA-256)} 互通。
  */
 @Slf4j
-public class HybridKeyManager implements ApplicationListener<RefreshScopeRefreshedEvent> {
+public class HybridKeyManager implements ApplicationListener<NacosConfigRefreshEvent> {
     /**
      * RSA-OAEP with SHA-256 (MGF1 SHA-256)，与 WebCrypto RSA-OAEP(SHA-256) 互通
      */
@@ -55,7 +57,10 @@ public class HybridKeyManager implements ApplicationListener<RefreshScopeRefresh
     }
 
     @Override
-    public void onApplicationEvent(RefreshScopeRefreshedEvent event) {
+    public void onApplicationEvent(NacosConfigRefreshEvent event) {
+        if (!StrUtil.equals(event.getDataId(), NacosConstants.IN_SECURITY_CRYPTO)) {
+            return;
+        }
         refresh();
     }
 

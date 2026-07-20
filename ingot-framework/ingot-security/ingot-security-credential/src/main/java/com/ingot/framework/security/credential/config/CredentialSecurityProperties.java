@@ -42,6 +42,58 @@ public class CredentialSecurityProperties {
          * 密码历史策略
          */
         private HistoryPolicy history = new HistoryPolicy();
+
+        /**
+         * 初始密码策略
+         */
+        private InitialPasswordPolicy initialPassword = new InitialPasswordPolicy();
+    }
+
+    @Data
+    public static class InitialPasswordPolicy {
+        /**
+         * 初始密码生成方式：RANDOM-随机生成；FIXED-统一默认密码
+         */
+        private Generation generation = Generation.RANDOM;
+
+        /**
+         * 随机初始密码长度（generation=RANDOM 时生效）
+         */
+        private int length = 10;
+
+        /**
+         * 统一默认密码（generation=FIXED 时生效）
+         */
+        private String fixedPassword = "In@123456";
+
+        /**
+         * 初始密码有效小时数；0 表示不限制。超过后视为初始密码失效，需重新重置。
+         */
+        private int validHours = 72;
+
+        /**
+         * 用后失效：初始密码修改成功后即失效（依赖 mustChangePwd/force_change 清除，默认 true）
+         */
+        private boolean oneTime = true;
+
+        /**
+         * 首次登录是否强制修改密码
+         */
+        private boolean forceChangeOnFirstLogin = true;
+
+        /**
+         * 初始密码生成方式枚举
+         */
+        public enum Generation {
+            /**
+             * 随机生成
+             */
+            RANDOM,
+            /**
+             * 统一默认密码
+             */
+            FIXED
+        }
     }
 
     @Data

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.cloud.nacos.refresh.NacosConfigRefreshEvent;
+import com.ingot.framework.commons.constants.NacosConstants;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
 import com.ingot.framework.security.credential.internal.LocalCompiledPolicyCache;
 import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
@@ -13,13 +16,16 @@ import com.ingot.framework.security.credential.policy.PasswordStrengthPolicy;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * 本地凭证策略加载器，从 yaml 配置文件中加载策略。
+ * 本地凭证策略加载器，从 Nacos / yaml 配置加载策略。
  * <p>
- * 编译结果通过 {@link LocalCompiledPolicyCache} 在进程内缓存；
- * yaml 静态变更需重启进程或手动调用 {@code LocalCompiledPolicyCache.evictAll()} 才会重新生效。
+ * 编译结果通过 {@link LocalCompiledPolicyCache} 在进程内缓存。为支持 {@code local} 模式下
+ * 的 Nacos 动态刷新，本加载器监听 {@link NacosConfigRefreshEvent}，且仅处理
+ * {@link NacosConstants#IN_SECURITY_POLICY} 对应的 dataId；匹配时清空编译缓存，
+ * 下次 {@link #loadPolicies()} 依据最新 {@link CredentialSecurityProperties} 重新编译。
  * </p>
  *
  * @author jy
@@ -27,7 +33,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
+public class LocalCredentialPolicyLoader
+        implements CredentialPolicyLoader, ApplicationListener<NacosConfigRefreshEvent> {
 
     private final CredentialSecurityProperties properties;
     private final LocalCompiledPolicyCache compiledPolicyCache;
@@ -36,6 +43,15 @@ public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
     @Override
     public List<PasswordPolicy> loadPolicies() {
         return compiledPolicyCache.get(this::doLoadPolicies);
+    }
+
+    @Override
+    public void onApplicationEvent(NacosConfigRefreshEvent event) {
+        if (!StrUtil.equals(event.getDataId(), NacosConstants.IN_SECURITY_POLICY)) {
+            return;
+        }
+        compiledPolicyCache.evictAll();
+        log.info("[Credential] 配置刷新，已清空本地编译策略缓存，下次加载按最新配置生效");
     }
 
     /**

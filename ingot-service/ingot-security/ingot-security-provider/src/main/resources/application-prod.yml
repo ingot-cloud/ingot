@@ -18,7 +18,8 @@ spring:
         group: ${NACOS_GROUP:PROD_GROUP}
   config:
     import:
-      - optional:nacos:application-common.yml
-      - optional:nacos:application-security.yml?refreshEnabled=true
-      - optional:nacos:application-mysql.yml
-      - optional:nacos:${spring.application.name}.yml?refreshEnabled=true
+      - optional:nacos:in-common.yml
+      - optional:nacos:in-database.yml
+      - optional:nacos:in-security-crypto.yml
+      - optional:nacos:in-security-policy.yml
+      - optional:nacos:${spring.application.name}.yml

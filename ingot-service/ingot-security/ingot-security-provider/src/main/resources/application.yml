@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-security
+    name: in-service-security
 
 management:
   server:

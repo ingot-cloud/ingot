@@ -39,7 +39,7 @@ dependencies {
 
 ## 2. 配置说明
 
-配置前缀：`ingot.crypto`（`@RefreshScope`，支持配置中心热刷新密钥）。
+配置前缀：`ingot.security.crypto`（`@ConfigurationProperties`，Nacos `in-security-crypto.yml` 变更经 rebinder 刷新后由 `HybridKeyManager` 重建密钥快照）。
 
 ### 2.1 完整配置示例
 
@@ -479,7 +479,7 @@ public R<List<ItemVO>> search(@InDecrypt SearchQuery query) { ... }
 
 1. 在配置中心新增 kid 密钥对，更新 `active-kid`
 2. 保留旧 kid 一段时间（新旧并存），避免进行中的请求失败
-3. `HybridKeyManager` 监听 `RefreshScopeRefreshedEvent` 自动重载密钥快照
+3. `HybridKeyManager` 监听 `NacosConfigRefreshEvent`（仅 `in-security-crypto.yml`）自动重载密钥快照
 4. 响应头 `In-Crypto-Kv` 回传当前 `active-kid`，前端感知后异步刷新公钥缓存
 5. 客户端使用已下线 kid 时收到 `crypto_kid_unknown`，应重新拉取公钥并重试
 

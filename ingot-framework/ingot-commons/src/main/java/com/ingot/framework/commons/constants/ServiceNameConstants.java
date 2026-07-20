@@ -11,31 +11,21 @@ public interface ServiceNameConstants {
     /**
      * 权限管理系统
      */
-    String PMS_SERVICE = "ingot-service-pms";
+    String PMS_SERVICE = "in-service-pms";
 
     /**
      * 会员系统
      */
-    String MEMBER_SERVICE = "ingot-service-member";
+    String MEMBER_SERVICE = "in-service-member";
 
     /**
-     * 任务调度中心
+     * 安全中心服务
      */
-    String TMC_SERVICE = "ingot-service-tmc";
-
-    /**
-     * 安全服务
-     */
-    String SECURITY_SERVICE = "ingot-service-security";
+    String SECURITY_SERVICE = "in-service-security";
 
     /**
      * 授权服务
      */
-    String AUTH_SERVICE = "ingot-service-auth";
-
-    /**
-     * BFF 服务
-     */
-    String BFF_SERVICE = "ingot-service-bff";
+    String AUTH_SERVICE = "in-service-auth";
 
 }

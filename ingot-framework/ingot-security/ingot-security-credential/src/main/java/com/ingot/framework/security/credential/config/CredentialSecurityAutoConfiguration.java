@@ -12,9 +12,11 @@ import com.ingot.framework.security.credential.internal.RemoteCredentialPolicyCo
 import com.ingot.framework.security.credential.service.CredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import com.ingot.framework.security.credential.service.PasswordExpirationService;
 import com.ingot.framework.security.credential.service.PasswordHistoryService;
 import com.ingot.framework.security.credential.service.impl.DefaultCredentialSecurityService;
+import com.ingot.framework.security.credential.service.impl.DefaultInitialPasswordService;
 import com.ingot.framework.security.credential.service.impl.LocalCredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.impl.NoOpPasswordExpirationService;
 import com.ingot.framework.security.credential.service.impl.NoOpPasswordHistoryService;
@@ -175,6 +177,12 @@ public class CredentialSecurityAutoConfiguration {
     @ConditionalOnMissingBean(PasswordExpirationService.class)
     public PasswordExpirationService passwordExpirationService() {
         return new NoOpPasswordExpirationService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(InitialPasswordService.class)
+    public InitialPasswordService initialPasswordService(CredentialSecurityProperties properties) {
+        return new DefaultInitialPasswordService(properties);
     }
 
     @Bean

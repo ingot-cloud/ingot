@@ -37,6 +37,11 @@ public class NoOpPasswordExpirationService implements PasswordExpirationService 
     }
 
     @Override
+    public void updateForceChange(Long userId, boolean forceChange) {
+        log.debug("使用默认空实现，不更新强制改密标记");
+    }
+
+    @Override
     public boolean isExpired(Long userId) {
         log.debug("使用默认空实现，密码未过期");
         return false; // 永不过期

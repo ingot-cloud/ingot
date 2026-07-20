@@ -48,6 +48,15 @@ public interface PasswordExpirationService {
     int decrementGraceLogin(Long userId);
 
     /**
+     * 更新强制修改密码标记（凭证域），与账号域 {@code mustChangePwd} 保持一致。
+     * <p>记录不存在时静默返回，不新建记录。</p>
+     *
+     * @param userId      用户ID
+     * @param forceChange 是否强制修改
+     */
+    void updateForceChange(Long userId, boolean forceChange);
+
+    /**
      * 检查密码是否过期
      *
      * @param userId 用户ID

@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-bff
+    name: in-service-bff
 
 management:
   server:

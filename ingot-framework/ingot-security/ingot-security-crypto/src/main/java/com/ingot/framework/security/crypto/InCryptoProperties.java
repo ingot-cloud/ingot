@@ -6,7 +6,6 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * <p>Description  : 加密属性.</p>
@@ -16,7 +15,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
  */
 @Getter
 @Setter
-@RefreshScope
 @ConfigurationProperties(prefix = "ingot.security.crypto")
 public class InCryptoProperties {
     /**

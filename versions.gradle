@@ -107,6 +107,7 @@ deps.api = api
 def alibaba = [:]
 alibaba.cloud_dependencies = "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${versions.spring_cloud_alibaba}"
 alibaba.nacos_config_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config"
+alibaba.nacos_config = "com.alibaba.cloud:spring-alibaba-nacos-config"
 alibaba.nacos_discovery_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery"
 alibaba.sentinel_starter = "com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel"
 alibaba.sentinel_gateway = "com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway"

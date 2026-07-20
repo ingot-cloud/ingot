@@ -18,5 +18,5 @@ spring:
         group: ${NACOS_GROUP:TEST_GROUP}
   config:
     import:
-      - optional:nacos:application-common.yml
-      - optional:nacos:${spring.application.name}.yml?refreshEnabled=true
+      - optional:nacos:in-common.yml
+      - optional:nacos:${spring.application.name}.yml

@@ -37,4 +37,22 @@ public interface CredentialSecurityService {
      * @param userId 用户ID
      */
     void updatePasswordExpiration(Long userId);
+
+    /**
+     * 标记 / 清除强制修改密码（凭证域），与账号域 {@code mustChangePwd} 语义保持一致。
+     * <p>管理员创建 / 重置密码时置位，用户改密成功后清除。</p>
+     *
+     * @param userId      用户ID
+     * @param forceChange 是否强制修改
+     */
+    void markForceChange(Long userId, boolean forceChange);
+
+    /**
+     * 登录成功后消费一次宽限登录次数。
+     * <p>仅当过期策略启用且密码已过期（处于宽限期）时扣减，其余情况不处理。</p>
+     *
+     * @param userId 用户ID
+     * @return 剩余宽限次数；未处于宽限扣减场景返回 {@code -1}
+     */
+    int consumeGraceLoginOnSuccess(Long userId);
 }

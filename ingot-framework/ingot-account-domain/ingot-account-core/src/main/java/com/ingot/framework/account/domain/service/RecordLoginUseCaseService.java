@@ -10,6 +10,7 @@ import com.ingot.framework.account.domain.port.inbound.RecordLoginUseCase;
 import com.ingot.framework.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
+import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
     private final SecurityEventPort securityEventPort;
     private final LockAccountUseCase lockAccountUseCase;
     private final AccountDomainProperties accountProperties;
+    private final CredentialSecurityService credentialSecurityService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -47,6 +49,14 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
 
         // 2. 重置失败计数
         lockStatePort.resetFailCount(command.getUserId(), command.getUserType());
+
+        // 2.1 宽限期扣减：密码已过期但仍在宽限内的成功登录，消费一次宽限次数
+        //     未启用过期策略或密码未过期时内部自动跳过
+        try {
+            credentialSecurityService.consumeGraceLoginOnSuccess(command.getUserId());
+        } catch (Exception e) {
+            log.warn("[RecordLogin] 宽限期扣减异常，忽略 userId={}", command.getUserId(), e);
+        }
 
         // 3. 发布登录成功事件
         AccountSecurityEvent event = AccountSecurityEvent.loginSuccess(

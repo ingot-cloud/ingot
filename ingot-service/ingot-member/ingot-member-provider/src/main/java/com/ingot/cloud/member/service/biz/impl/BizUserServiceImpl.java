@@ -3,7 +3,6 @@ package com.ingot.cloud.member.service.biz.impl;
 import java.util.List;
 
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -34,6 +33,7 @@ import com.ingot.framework.commons.utils.UUIDUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -61,6 +61,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final LockAccountUseCase lockAccountUseCase;
     private final UnlockAccountUseCase unlockAccountUseCase;
     private final AssertionChecker assertionChecker;
+    private final InitialPasswordService initialPasswordService;
 
     @Override
     public IPage<MemberUser> conditionPage(Page<MemberUser> page, MemberUserDTO condition) {
@@ -159,8 +160,8 @@ public class BizUserServiceImpl implements BizUserService {
     public ResetPwdVO createUser(MemberUserDTO params) {
         MemberUser user = MemberUserConvert.INSTANCE.toEntity(params);
 
-        // 默认初始化密码
-        String initPwd = randomPwd();
+        // 默认初始化密码（按初始密码策略生成）
+        String initPwd = initialPasswordService.generate();
 
         user.setUsername(params.getPhone());
         user.setPassword(initPwd);
@@ -198,7 +199,7 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public ResetPwdVO resetPwd(long userId) {
         InUser operator = SecurityAuthContext.getUser();
-        String randomPwd = randomPwd();
+        String randomPwd = initialPasswordService.generate();
 
         // 管理员重置密码：走账号域 ChangePasswordUseCase，自动更新 mustChangePwd/密码历史/过期记录
         changePasswordUseCase.resetPassword(ChangePasswordUseCase.ResetPasswordCommand.builder()
@@ -281,9 +282,5 @@ public class BizUserServiceImpl implements BizUserService {
                 .operatorName(operator.getUsername())
                 .source(EventSource.MEMBER)
                 .build());
-    }
-
-    private String randomPwd() {
-        return RandomUtil.randomString(6);
     }
 }

@@ -39,6 +39,11 @@ public class PasswordExpiration implements Serializable {
     private LocalDateTime expiresAt;
 
     /**
+     * 是否强制修改密码（凭证域标记，与账号域 {@code mustChangePwd} 语义保持一致）
+     */
+    private Boolean forceChange;
+
+    /**
      * 剩余宽限登录次数
      */
     private Integer graceLoginRemaining;

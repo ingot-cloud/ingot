@@ -104,6 +104,10 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
         //    两种场景均需初始化：后续改密时凭证策略会检查历史和过期，确保链路完整
         credentialSecurityService.savePasswordHistory(userId, passwordHash);
         credentialSecurityService.updatePasswordExpiration(userId);
+        // 强制改密标记与账号域 mustChangePwd 保持一致（凭证域镜像）
+        if (mustChangePwd) {
+            credentialSecurityService.markForceChange(userId, true);
+        }
 
         // 7. 发布账号创建事件
         //    事件来源优先使用命令中显式指定的 eventSource；

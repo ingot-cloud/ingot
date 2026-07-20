@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-gateway
+    name: in-service-gateway
 
 management:
   server:

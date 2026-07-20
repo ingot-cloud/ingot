@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-member
+    name: in-service-member
 
 management:
   server:

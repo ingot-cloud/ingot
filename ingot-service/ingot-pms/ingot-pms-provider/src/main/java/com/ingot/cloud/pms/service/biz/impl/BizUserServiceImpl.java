@@ -6,7 +6,6 @@ import java.util.Objects;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -39,6 +38,7 @@ import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.utils.PageUtils;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import com.ingot.framework.tenant.TenantContextHolder;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +75,7 @@ public class BizUserServiceImpl implements BizUserService {
     private final AssertionChecker assertionChecker;
     private final UserOpsChecker userOpsChecker;
     private final UserConvert userConvert;
+    private final InitialPasswordService initialPasswordService;
 
     @Override
     public IPage<UserPageItemWithBindRoleStatusVO> conditionPageWithRole(Page<SysUser> page,
@@ -175,8 +176,8 @@ public class BizUserServiceImpl implements BizUserService {
         }
 
         SysUser user = userConvert.to(params);
-        // 默认初始化密码
-        String initPwd = RandomUtil.randomString(8);
+        // 默认初始化密码（按初始密码策略生成）
+        String initPwd = initialPasswordService.generate();
         user.setPassword(initPwd);
 
         sysUserService.create(user);
@@ -218,7 +219,7 @@ public class BizUserServiceImpl implements BizUserService {
     @Override
     public ResetPwdVO resetPwd(long userId) {
         InUser operator = SecurityAuthContext.getUser();
-        String randomPwd = RandomUtil.randomString(6);
+        String randomPwd = initialPasswordService.generate();
 
         changePasswordUseCase.resetPassword(ChangePasswordUseCase.ResetPasswordCommand.builder()
                 .userId(userId)

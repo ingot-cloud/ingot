@@ -116,6 +116,10 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
 
         AssertionUtil.checkArgument(updated, getMessage("Password.UpdateFailed"));
 
+        // 2.1 重置过期信息并置位强制改密标记（凭证域与账号域 mustChangePwd 保持一致）
+        credentialSecurityService.updatePasswordExpiration(command.getUserId());
+        credentialSecurityService.markForceChange(command.getUserId(), true);
+
         // 3. 发布密码重置事件
         securityEventPort.publishEvent(AccountSecurityEvent.builder()
                 .userId(command.getUserId())

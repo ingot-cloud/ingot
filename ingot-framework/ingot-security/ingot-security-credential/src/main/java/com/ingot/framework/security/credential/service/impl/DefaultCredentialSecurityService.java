@@ -136,4 +136,30 @@ public class DefaultCredentialSecurityService implements CredentialSecurityServi
                     passwordExpirationService.updateLastChanged(userId, maxDays, graceLoginCount, warningDaysBefore);
                 });
     }
+
+    @Override
+    public void markForceChange(Long userId, boolean forceChange) {
+        log.debug("标记强制修改密码 - 用户ID: {}, forceChange: {}", userId, forceChange);
+        passwordExpirationService.updateForceChange(userId, forceChange);
+    }
+
+    @Override
+    public int consumeGraceLoginOnSuccess(Long userId) {
+        if (userId == null) {
+            return -1;
+        }
+        // 仅当过期策略启用时才处理宽限扣减
+        boolean expirationEnabled = credentialPolicyLoader.loadPolicies().stream()
+                .anyMatch(policy -> policy instanceof PasswordExpirationPolicy);
+        if (!expirationEnabled) {
+            return -1;
+        }
+        // 仅当密码已过期（处于宽限期）时扣减，避免未过期误扣
+        if (!passwordExpirationService.isExpired(userId)) {
+            return -1;
+        }
+        int remaining = passwordExpirationService.decrementGraceLogin(userId);
+        log.info("宽限期登录扣减 - 用户ID: {}, 剩余: {}", userId, remaining);
+        return remaining;
+    }
 }

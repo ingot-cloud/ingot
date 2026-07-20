@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingot-service-pms
+    name: in-service-pms
 
 management:
   server:

@@ -8,6 +8,8 @@ dependencies {
     api project(ingot.security_api)
     api project(ingot.framework_event_bus)
 
+    compileOnly(deps.alibaba.nacos_config)
+    compileOnly(deps.spring.spring_cloud.context)
     compileOnly(deps.spring.security_crypto)
     compileOnly(deps.log.logback_classic)
     compileOnly(deps.jackson.annotation)

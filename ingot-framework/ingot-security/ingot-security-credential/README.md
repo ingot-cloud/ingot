@@ -128,13 +128,19 @@ ingot:
 - ✅ 无需外部依赖
 - ✅ 配置即生效
 - ✅ 适合快速开发
+- ✅ Nacos `in-security-credential.yml` 变更可热更新
 
 **工作流程：**
 ```
-应用启动 → LocalCredentialPolicyLoader 
-         → 从配置文件创建策略 
-         → 缓存到内存 
-         → PasswordValidator 使用
+首次 loadPolicies() → LocalCredentialPolicyLoader
+                   → 从 CredentialSecurityProperties 编译策略
+                   → 写入 LocalCompiledPolicyCache
+                   → PasswordValidator 使用
+
+Nacos 变更 in-security-credential.yml
+  → NacosConfigRefreshEvent（dataId 匹配）
+  → LocalCompiledPolicyCache.evictAll()
+  → 下次 loadPolicies() 按最新配置重建
 ```
 
 ---

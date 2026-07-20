@@ -46,7 +46,9 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
         expiration.setUserId(userId);
         expiration.setLastChangedAt(now);
         expiration.setExpiresAt(expiresAt);
+        expiration.setForceChange(false);
         expiration.setGraceLoginRemaining(graceLoginCount);
+        expiration.setNextWarningAt(expiresAt != null ? expiresAt.minusDays(warningDaysBefore) : null);
         expiration.setCreatedAt(now);
         expiration.setUpdatedAt(now);
 
@@ -65,14 +67,31 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
             // 不存在则初始化
             initExpiration(userId, maxDays, graceLoginCount, warningDaysBefore);
         } else {
-            // 更新现有记录
+            // 更新现有记录：密码刚修改，清除强制改密标记，重置过期与宽限
+            LocalDateTime expiresAt = maxDays > 0 ? now.plusDays(maxDays) : null;
             expiration.setLastChangedAt(now);
-            expiration.setExpiresAt(maxDays > 0 ? now.plusDays(maxDays) : null);
+            expiration.setExpiresAt(expiresAt);
+            expiration.setForceChange(false);
             expiration.setGraceLoginRemaining(graceLoginCount);
-            expiration.setNextWarningAt(expiration.getExpiresAt().minusDays(warningDaysBefore));
+            expiration.setNextWarningAt(expiresAt != null ? expiresAt.minusDays(warningDaysBefore) : null);
             expiration.setUpdatedAt(now);
             mapper.updateById(expiration);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateForceChange(Long userId, boolean forceChange) {
+        log.info("更新强制修改密码标记 - userId: {}, forceChange: {}", userId, forceChange);
+
+        PasswordExpiration expiration = getByUserId(userId);
+        if (expiration == null) {
+            log.warn("密码过期信息不存在，跳过强制改密标记更新 - userId: {}", userId);
+            return;
+        }
+        expiration.setForceChange(forceChange);
+        expiration.setUpdatedAt(LocalDateTime.now());
+        mapper.updateById(expiration);
     }
 
     @Override
