@@ -60,7 +60,7 @@ evictAll(): 仅透传给上层热缓存清理；不清 LKG
 - 存储：Redis `StringRedisTemplate`，独立 key（如 `ingot:credential:policy:lkg`，与 `CredentialCacheProperties.l2KeyPrefix` 区分命名空间），**长 TTL 或不过期**。
 - 进程内再持一份 `AtomicReference<List<CredentialPolicyConfigVO>>` 作为 Redis 也不可用时的二级 LKG。
 - 仅 `ResilientCredentialPolicyConfigService` 在远程成功时写入。
-- 失效事件（`InvalidationBus` / `NacosConfigRefreshEvent` 且 dataId 为 `in-security-credential.yml`）**不清 LKG**，只清 L1/L2 与编译缓存。
+- 失效事件（`InvalidationBus` / `NacosConfigRefreshEvent` 且 dataId 为 `in-security-policy.yml`，常量 `NacosConstants.IN_SECURITY_POLICY`）**不清 LKG**，只清 L1/L2 与编译缓存。
 - Redis 不可用时：LKG 读写降级为进程内副本；进程内副本冷（刚重启且远程仍失败）→ 落 Nacos 地板。
 
 ### 4. `LocalFloorSupplier`（Nacos 地板）
