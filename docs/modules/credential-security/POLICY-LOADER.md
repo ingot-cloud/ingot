@@ -82,7 +82,7 @@ CredentialPolicyLoader (接口)
 - ✅ 无需外部依赖
 - ✅ 配置即生效
 - ✅ 适合开发/测试环境
-- ✅ Nacos 变更可热更新（监听 `NacosConfigRefreshEvent`，仅处理 `in-security-credential.yml`）
+- ✅ Nacos 变更可热更新（`ConfigurationPropertiesRebinder` 重绑定 `CredentialSecurityProperties`，dataId `in-security-policy.yml`）
 
 **配置示例：**
 
@@ -120,7 +120,7 @@ ingot:
 
 **核心流程：**
 
-首次 `loadPolicies()` 从 `CredentialSecurityProperties` 编译策略并写入 `LocalCompiledPolicyCache`；Nacos 推送 `in-security-credential.yml` 变更时，`LocalCredentialPolicyLoader` 收到 `NacosConfigRefreshEvent` 后清空编译缓存，下次加载按最新配置重建。
+`loadPolicies()` 每次按当前 `CredentialSecurityProperties` 即时编译策略，不做进程内编译缓存；Nacos 推送 `in-security-policy.yml` 变更时，`ConfigurationPropertiesRebinder` 重绑定 `CredentialSecurityProperties`，下次加载自然读到最新值。
 
 ---
 
@@ -330,14 +330,13 @@ ingot:
 ### 2. 缓存策略
 
 **Local 模式：**
-- 首次 `loadPolicies()` 时编译并缓存到 `LocalCompiledPolicyCache`
-- Nacos 变更 `in-security-credential.yml` 后自动失效缓存，下次请求按新配置重建
-- 未启用 Nacos 动态刷新时，缓存持续有效直至进程重启
+- `loadPolicies()` 每次按当前 `CredentialSecurityProperties` 即时编译，无进程内编译缓存
+- Nacos 变更 `in-security-policy.yml` 后由 `ConfigurationPropertiesRebinder` 重绑定属性，下次加载即按新配置生效
 
 **Remote 模式：**
-- 首次请求时加载
-- 缓存 TTL: 5分钟
-- 修改策略后，最多 5分钟生效
+- 每次经 `policyConfigService.getAll()`（L1 Caffeine → L2 Redis → Resilient 弹性阶梯）取 VO 并即时编译
+- 新鲜度上界由 L1(5min)/L2(30min) 的 TTL 决定；配置变更由 `CredentialInvalidationEvent` 即时清 L1/L2
+- 安全中心不可用时经 LKG/Nacos 地板降级，恢复后自动回到远程
 
 **主动刷新：**
 
@@ -432,7 +431,7 @@ implementation project(':ingot-credential-api')
 
 **A:**
 
-**Local 模式：** 将凭证策略拆到 Nacos `in-security-credential.yml`，在 `spring.config.import` 加 `?refreshEnabled=true`。`LocalCredentialPolicyLoader` 监听 `NacosConfigRefreshEvent`，仅处理该 dataId，变更后下次校验自动生效。
+**Local 模式：** 将凭证策略拆到 Nacos `in-security-policy.yml`，在 `spring.config.import` 加 `?refreshEnabled=true`。变更后 `ConfigurationPropertiesRebinder` 重绑定 `CredentialSecurityProperties`，下次校验自动读到最新值（无需额外的刷新监听）。
 
 **Remote 模式：** 修改策略后主动刷新：
 
