@@ -15,6 +15,8 @@
 
 初始密码默认值（兼容现状）：`generation=RANDOM`、`length=10`、`fixedPassword=Ingot@123456`、`validHours=72`、`oneTime=true`、`forceChangeOnFirstLogin=true`。
 
+四类策略统一映射为 `CredentialPolicyType`（`STRENGTH` / `HISTORY` / `EXPIRATION` / `INITIAL_PASSWORD`），均可经安全中心下发或 Nacos 兜底（见 §7）。
+
 ## 2. 数据模型
 
 - `password_expiration`（`ingot_core`）：`user_id`、`last_changed_at`、`expires_at`、`force_change TINYINT(1)`、`grace_login_remaining INT`、`next_warning_at`。
@@ -52,9 +54,16 @@
 
 ## 5. 初始密码（`DefaultInitialPasswordService`）
 
+初始密码配置**不再直连降级源**，统一经 `CredentialPolicyLoader.getInitialPasswordConfig()` 取生效值（`INITIAL_PASSWORD` 策略类型），因此与 strength/history/expiration 共享同一「远程优先 + 兜底」降级阶梯（见 §7）。
+
 - `generate()`：`RANDOM` 生成长度 = `length`（保证含大写与数字，下限 6）；`FIXED` 返回 `fixedPassword`。ADMIN / Member 创建用户均改用此入口（替换原 `RandomUtil` / `randomPwd()`）。
 - `isExpired(issuedAt)`：`validHours<=0` 或 `issuedAt` 为空 → `false`；否则 `now > issuedAt + validHours` → `true`。
-- `isForceChangeOnFirstLogin()`：读取 `forceChangeOnFirstLogin`。
+- `isForceChangeOnFirstLogin()`：读取生效配置的 `forceChangeOnFirstLogin`。
+
+接线：
+
+- `RegisterUserUseCaseService` 的 `ADMIN_CREATE` 由 `isForceChangeOnFirstLogin()` 决定 `mustChangePwd`（命令显式值优先）；`SELF_REGISTER` 保持默认 `true`。
+- 登录期初始密码 `validHours` 硬超期拦截落点为 `AuthContextSupport`（账号域单点）：`mustChangePwd` 且 `passwordChangedAt + validHours < now` 时置 `credentialsNonExpired=false` 阻断并引导重置；可选依赖（`InitialPasswordService` / `UserAccountPort`）缺失时降级跳过。
 
 ## 6. 强制改密访问限制（受限 scope）
 
@@ -64,14 +73,54 @@
 - 改密接口以 `@AdminOrHasAnyAuthority({INIT_PASSWORD})` 保护；资源服务基于 scope 鉴权天然拒绝其余接口。
 - 改密成功后重新登录，恢复正常权限 scope。
 
-## 7. Nacos 降级与动态刷新（`local` 模式）
+## 7. 策略来源、缓存与弹性降级
 
-- 凭证策略字段全部可经 Nacos 降级（strength / history / expiration / initial-password）。
+统一入口 `CredentialPolicyLoader`（`loadPolicies()` + `getInitialPasswordConfig()`），两条加载路径**同源同节奏**：均经 `CredentialPolicyConfigService.getAll()` 取原始配置后即时编译，**不再有无 TTL 的进程内编译缓存**（`LocalCompiledPolicyCache` 已移除）。稳态新鲜度上界 = L1 TTL。
+
+### 7.1 `remote` 模式降级阶梯
+
+`getAll()` 由内到外的委托链：
+
+```
+L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCredentialPolicyConfigService
+                                        remote(新鲜) → LKG(最近成功快照) → Nacos 地板
+```
+
+- 远端 delegate（`RemoteCredentialPolicyConfigService`）**区分失败与合法空**：调用异常 / 连接失败 / 非成功码统一抛 `CredentialRemoteUnavailableException`；成功（含空）返回真实数据。
+- `ResilientCredentialPolicyConfigService`：远程成功 → 刷新 LKG 并返回（成功空 = 合法无策略，直接接受，不兜底）；远程失败 → 回退 LKG；LKG 缺失 → 回退 Nacos 地板；**永不 fail-open 到「无策略」**。
+- 失败态返回的是**有效兜底值**（非失败空），L1/L2 本就不缓存空；远程恢复后随 L1/L2 短 TTL 过期自动回到新鲜值。
+- `ingot-security-provider` 的本地 Mapper delegate **不包裹** Resilient（无远程失败语义）。
+
+### 7.2 LKG（Last-Known-Good）
+
+- 存储：Redis 独立命名空间 key `in:credential:policy:lkg`，长存 / 不过期，仅在**远程成功**时刷新（含成功空）。
+- 与 L1/L2 热缓存**分离**：`InvalidationBus` / 失效事件**不清** LKG。
+- **Redis 为唯一 LKG 源**（无进程内 `AtomicReference` 副本）：Redis 不可用 / 缺失 / 读异常时 `load()` 返回 `null` → 全集群统一落 Nacos 地板，避免负载均衡下热/冷节点在 LKG 与地板间分叉。
+
+### 7.3 Nacos 地板（`LocalFloorSupplier`）
+
+- 由本地属性（`ingot.security.credential.policy.*`）映射为 `List<CredentialPolicyConfigVO>`：strength/history/expiration 按启用纳入，初始密码始终纳入。
+- 必须维护**安全基线**：全部校验类关闭时补最小强度基线，**永不返回空**（否则 D-B 合法空语义会退回 fail-open）。
+- 默认开关 `ingot.security.credential.fallback.local-floor-enabled = true`（可用性优先）。
+
+### 7.4 `local` 模式与 Nacos 动态刷新
+
+- `mode=local`：仅走 Nacos 本地配置，**无远程调用**。凭证策略字段全部可降级（strength / history / expiration / initial-password）。
 - dataId：`in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`）。
-- 刷新机制：`CredentialSecurityProperties` 为 `@ConfigurationProperties` 随刷新更新；`LocalCredentialPolicyLoader` 监听 `NacosConfigRefreshEvent`，仅当 `dataId == in-security-policy.yml` 时 `evictAll()` 编译缓存，下次 `loadPolicies()` 按最新值重编译。不使用 `@RefreshScope`。
+- 刷新机制：`CredentialSecurityProperties` 为 `@ConfigurationProperties`，Nacos 变更经 `ConfigurationPropertiesRebinder` 重绑定；因加载器每次即时编译，下次 `loadPolicies()` / `getInitialPasswordConfig()` 即读到最新值。**不使用 `@RefreshScope`**，也不再监听 `NacosConfigRefreshEvent`。
 - 「用后失效」依赖 DB 执行状态，属执行数据而非策略配置，不随 Nacos 刷新。
 
-## 8. 已知限制 / 后续跟踪
+### 7.5 缓存 TTL 配置
 
-1. 初始密码 `validHours` 登录期硬超期拦截尚未接入（`isExpired` 已具备，缺登录期读取 `passwordChangedAt` 的调用点）。
-2. Member 完整凭证持久化未落地：Member provider 未依赖 `ingot-security-credential-data`，`ingot_member` 未建 `password_history` / `password_expiration`；当前 Member 为域级对齐 + NoOp 持久化。
+- `CredentialCacheProperties.l1Ttl` / `l2Ttl` 为 `Duration`，标注 `@DurationUnit(ChronoUnit.MINUTES)`：无单位裸数值按**分钟**解析，避免被 Spring Boot 默认按毫秒绑定导致「写入即过期」的缓存假性未命中。
+
+## 8. 可观测（降级来源）
+
+- `CredentialPolicySourceHolder` 记录当前生效来源（`REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR`）、LKG/地板降级计数与最近降级时间；走兜底时打 WARN 日志。
+- Actuator 端点 `credentialpolicy` 暴露上述状态（`@ConditionalOnClass` 守护，缺 actuator 依赖时不注册）。
+
+## 9. 已知限制 / 后续跟踪
+
+1. Member 完整凭证持久化未落地：Member provider 未依赖 `ingot-security-credential-data`，`ingot_member` 未建 `password_history` / `password_expiration`；当前 Member 为域级对齐 + NoOp 持久化。
+2. 安全中心 `INITIAL_PASSWORD` 本期仅**预留类型 + 远程可读**，可视化管理台后续 change。
+3. 远程调用熔断（Sentinel）为 P2 可选增强，本期未接入；以「每次远程失败即兜底 + 不缓存失败」保证正确性。
