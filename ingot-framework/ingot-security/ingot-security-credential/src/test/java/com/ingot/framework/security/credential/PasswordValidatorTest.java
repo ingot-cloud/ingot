@@ -125,7 +125,17 @@ class PasswordValidatorTest {
 
     private static PasswordValidator newValidator(PasswordPolicy... policies) {
         List<PasswordPolicy> list = List.of(policies);
-        CredentialPolicyLoader loader = () -> list;
+        CredentialPolicyLoader loader = new CredentialPolicyLoader() {
+            @Override
+            public List<PasswordPolicy> loadPolicies() {
+                return list;
+            }
+
+            @Override
+            public com.ingot.framework.security.credential.model.InitialPasswordConfig getInitialPasswordConfig() {
+                return com.ingot.framework.security.credential.model.InitialPasswordConfig.defaults();
+            }
+        };
         return new DefaultPasswordValidator(loader);
     }
 }

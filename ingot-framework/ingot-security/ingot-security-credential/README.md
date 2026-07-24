@@ -128,19 +128,17 @@ ingot:
 - ✅ 无需外部依赖
 - ✅ 配置即生效
 - ✅ 适合快速开发
-- ✅ Nacos `in-security-credential.yml` 变更可热更新
+- ✅ Nacos `in-security-policy.yml` 变更可热更新
 
 **工作流程：**
 ```
-首次 loadPolicies() → LocalCredentialPolicyLoader
-                   → 从 CredentialSecurityProperties 编译策略
-                   → 写入 LocalCompiledPolicyCache
-                   → PasswordValidator 使用
+loadPolicies() → LocalCredentialPolicyLoader
+              → 每次按当前 CredentialSecurityProperties 即时编译策略
+              → PasswordValidator 使用
 
-Nacos 变更 in-security-credential.yml
-  → NacosConfigRefreshEvent（dataId 匹配）
-  → LocalCompiledPolicyCache.evictAll()
-  → 下次 loadPolicies() 按最新配置重建
+Nacos 变更 in-security-policy.yml
+  → ConfigurationPropertiesRebinder 重绑定 CredentialSecurityProperties
+  → 下次 loadPolicies() 自然读到最新值（无进程内编译缓存）
 ```
 
 ---
@@ -171,13 +169,14 @@ dependencies {
 
 **工作流程：**
 ```
-PasswordValidator 调用 
-  → RemoteCredentialPolicyLoader 
-  → RPC 调用 Credential Service 
-  → 返回策略列表 
-  → 缓存（TTL: 5分钟） 
+PasswordValidator 调用
+  → RemoteCredentialPolicyLoader
+  → policyConfigService.getAll()（L1 Caffeine → L2 Redis → Resilient 弹性阶梯 remote → LKG → Nacos 地板）
+  → 即时编译策略列表（无独立编译缓存，与 getInitialPasswordConfig 同源）
   → 执行校验
 ```
+
+> 说明：`loadPolicies()` 每次都经上述链路取 VO 并编译；新鲜度由 L1(5min)/L2(30min) 的 TTL 决定，配置变更由 `CredentialInvalidationEvent` 即时清 L1/L2，安全中心宕机时经 LKG/Nacos 地板降级并在恢复后自动回到远程。
 
 ---
 

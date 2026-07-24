@@ -1,10 +1,12 @@
 package com.ingot.framework.security.credential.config;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
 
 /**
  * 凭证策略多级缓存配置项。
@@ -33,8 +35,9 @@ public class CredentialCacheProperties {
     private boolean l1Enabled = true;
 
     /**
-     * L1 Caffeine TTL。
+     * L1 Caffeine TTL。无单位数值按分钟解析（如 {@code 5} 表示 5 分钟），避免误当成毫秒导致写入即过期。
      */
+    @DurationUnit(ChronoUnit.MINUTES)
     private Duration l1Ttl = Duration.ofMinutes(5);
 
     /**
@@ -48,8 +51,9 @@ public class CredentialCacheProperties {
     private boolean l2Enabled = true;
 
     /**
-     * L2 Redis TTL。
+     * L2 Redis TTL。无单位数值按分钟解析（如 {@code 30} 表示 30 分钟），避免误当成毫秒导致写入即过期。
      */
+    @DurationUnit(ChronoUnit.MINUTES)
     private Duration l2Ttl = Duration.ofMinutes(30);
 
     /**

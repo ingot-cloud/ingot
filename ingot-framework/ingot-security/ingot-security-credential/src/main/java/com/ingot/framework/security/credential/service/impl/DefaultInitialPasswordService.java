@@ -3,16 +3,18 @@ package com.ingot.framework.security.credential.service.impl;
 import java.time.LocalDateTime;
 
 import cn.hutool.core.util.RandomUtil;
-import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties.InitialPasswordPolicy;
+import com.ingot.framework.security.credential.model.InitialPasswordConfig;
+import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 初始密码服务默认实现，直接读取 {@link CredentialSecurityProperties} 当前策略值。
+ * 初始密码服务默认实现，经 {@link CredentialPolicyLoader} 获取当前生效的初始密码配置。
  *
- * <p>依赖 {@code local} 模式下 {@link CredentialSecurityProperties} 随 Nacos 刷新即时更新的特性，
- * 每次调用都读取最新配置，无需自身缓存。</p>
+ * <p>与 strength / history / expiration 共享同一「安全中心优先、Nacos 兜底」的来源语义：
+ * {@code remote} 模式取安全中心下发并享受降级阶梯，{@code local} 模式取 Nacos 属性。
+ * 每次调用都取最新生效配置，无需自身缓存。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -20,15 +22,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultInitialPasswordService implements InitialPasswordService {
 
-    private final CredentialSecurityProperties properties;
+    private final CredentialPolicyLoader policyLoader;
 
     @Override
     public String generate() {
-        InitialPasswordPolicy policy = policy();
-        if (policy.getGeneration() == InitialPasswordPolicy.Generation.FIXED) {
-            return policy.getFixedPassword();
+        InitialPasswordConfig config = policyLoader.getInitialPasswordConfig();
+        if (config.generation() == InitialPasswordPolicy.Generation.FIXED) {
+            return config.fixedPassword();
         }
-        int length = Math.max(6, policy.getLength());
+        int length = Math.max(6, config.length());
         // 保证包含大小写与数字，满足常见强度要求
         String base = RandomUtil.randomString("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789", length - 2);
         String upper = RandomUtil.randomString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1);
@@ -38,7 +40,7 @@ public class DefaultInitialPasswordService implements InitialPasswordService {
 
     @Override
     public boolean isExpired(LocalDateTime issuedAt) {
-        int validHours = policy().getValidHours();
+        int validHours = policyLoader.getInitialPasswordConfig().validHours();
         if (validHours <= 0 || issuedAt == null) {
             return false;
         }
@@ -47,10 +49,6 @@ public class DefaultInitialPasswordService implements InitialPasswordService {
 
     @Override
     public boolean isForceChangeOnFirstLogin() {
-        return policy().isForceChangeOnFirstLogin();
-    }
-
-    private InitialPasswordPolicy policy() {
-        return properties.getPolicy().getInitialPassword();
+        return policyLoader.getInitialPasswordConfig().forceChangeOnFirstLogin();
     }
 }

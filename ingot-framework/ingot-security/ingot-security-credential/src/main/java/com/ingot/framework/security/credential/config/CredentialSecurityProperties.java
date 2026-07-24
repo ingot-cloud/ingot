@@ -29,6 +29,11 @@ public class CredentialSecurityProperties {
         private String mode = "local";
 
         /**
+         * 降级兜底配置（{@code remote} 模式生效）
+         */
+        private Fallback fallback = new Fallback();
+
+        /**
          * 密码强度策略
          */
         private StrengthPolicy strength = new StrengthPolicy();
@@ -47,6 +52,15 @@ public class CredentialSecurityProperties {
          * 初始密码策略
          */
         private InitialPasswordPolicy initialPassword = new InitialPasswordPolicy();
+    }
+
+    @Data
+    public static class Fallback {
+        /**
+         * 远程不可用且无 LKG 时，是否落 Nacos 本地地板（可用性优先，默认 true）。
+         * <p>置为 {@code false} 时无 LKG 场景将向上抛出远程不可用异常（极端严格场景）。</p>
+         */
+        private boolean localFloorEnabled = true;
     }
 
     @Data

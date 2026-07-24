@@ -20,7 +20,8 @@ import lombok.RequiredArgsConstructor;
 public enum CredentialPolicyType {
     STRENGTH("1", "密码强度"),
     HISTORY("2", "密码历史"),
-    EXPIRATION("3", "密码过期");
+    EXPIRATION("3", "密码过期"),
+    INITIAL_PASSWORD("4", "初始密码");
 
     @JsonValue
     @EnumValue

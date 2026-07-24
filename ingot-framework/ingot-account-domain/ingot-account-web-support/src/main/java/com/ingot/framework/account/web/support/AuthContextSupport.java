@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import com.ingot.framework.account.domain.config.AccountDomainProperties;
 import com.ingot.framework.account.domain.model.LockState;
+import com.ingot.framework.account.domain.model.UserAccount;
 import com.ingot.framework.account.domain.port.outbound.LockStatePort;
+import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.InUserMetaKeys;
@@ -14,6 +16,7 @@ import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.PasswordCheckResult;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -57,13 +60,19 @@ public class AuthContextSupport {
     private final CredentialSecurityService credentialSecurityService;
     private final LockStatePort lockStatePort;
     private final AccountDomainProperties accountProperties;
+    private final InitialPasswordService initialPasswordService;
+    private final UserAccountPort userAccountPort;
 
     public AuthContextSupport(CredentialSecurityService credentialSecurityService,
                               LockStatePort lockStatePort,
-                              AccountDomainProperties accountProperties) {
+                              AccountDomainProperties accountProperties,
+                              InitialPasswordService initialPasswordService,
+                              UserAccountPort userAccountPort) {
         this.credentialSecurityService = credentialSecurityService;
         this.lockStatePort = lockStatePort;
         this.accountProperties = accountProperties;
+        this.initialPasswordService = initialPasswordService;
+        this.userAccountPort = userAccountPort;
     }
 
     /**
@@ -96,12 +105,40 @@ public class AuthContextSupport {
             } catch (Exception e) {
                 log.warn("[AuthContextSupport] 凭证过期检查异常，放行登录 userId={}", userId, e);
             }
+
+            // 1.1 初始密码硬超期：持有初始/重置密码（mustChangePwd=true）且超过 validHours 未改密，
+            //     视为初始密码失效，硬阻断登录，需管理员重置。
+            if (!Boolean.FALSE.equals(result.getCredentialsNonExpired())) {
+                fillInitialPasswordExpiry(result, userId, userType);
+            }
         }
 
         // 2. 软上下文：仅当锁定策略开启 + 端口可用时填充，否则 meta 为空、不设置
         Map<String, Object> meta = buildMeta(userId, userType, result);
         if (!meta.isEmpty()) {
             result.setMeta(meta);
+        }
+    }
+
+    /**
+     * 初始密码 {@code validHours} 硬超期判定：命中则置 {@code credentialsNonExpired=false}。
+     * <p>依赖可选注入：缺少 {@link InitialPasswordService} 或 {@link UserAccountPort} 时跳过（降级）。</p>
+     */
+    private void fillInitialPasswordExpiry(UserDetailsResponse result, Long userId, UserTypeEnum userType) {
+        if (initialPasswordService == null || userAccountPort == null) {
+            return;
+        }
+        try {
+            UserAccount account = userAccountPort.findById(userId, userType).orElse(null);
+            if (account == null || !Boolean.TRUE.equals(account.getMustChangePwd())) {
+                return;
+            }
+            if (initialPasswordService.isExpired(account.getPasswordChangedAt())) {
+                result.setCredentialsNonExpired(false);
+                log.info("[AuthContextSupport] 初始密码已超期，阻断登录并需管理员重置 userId={}", userId);
+            }
+        } catch (Exception e) {
+            log.warn("[AuthContextSupport] 初始密码超期检查异常，放行登录 userId={}", userId, e);
         }
     }
 

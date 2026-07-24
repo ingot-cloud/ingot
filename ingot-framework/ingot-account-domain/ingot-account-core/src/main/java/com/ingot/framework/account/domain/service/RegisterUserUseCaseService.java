@@ -14,6 +14,7 @@ import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -36,6 +37,7 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
     private final LockStatePort lockStatePort;
     private final SecurityEventPort securityEventPort;
     private final CredentialSecurityService credentialSecurityService;
+    private final InitialPasswordService initialPasswordService;
     private final PasswordEncoder passwordEncoder;
 
     private final MessageSourceAccessor message = AccountMessageSource.getAccessor();
@@ -73,8 +75,16 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
         String passwordHash = passwordEncoder.encode(command.getPassword());
 
         // 4. 构建并保存用户账号
-        boolean mustChangePwd = command.getMustChangePwd() == null ? Boolean.TRUE
-                : command.getMustChangePwd();
+        //    mustChangePwd 决策：命令显式值优先；ADMIN_CREATE 未显式指定时由初始密码策略
+        //    forceChangeOnFirstLogin 决定；SELF_REGISTER 未显式指定时保持原行为（默认强制改密）。
+        boolean mustChangePwd;
+        if (command.getMustChangePwd() != null) {
+            mustChangePwd = command.getMustChangePwd();
+        } else if (isAdminCreate) {
+            mustChangePwd = initialPasswordService.isForceChangeOnFirstLogin();
+        } else {
+            mustChangePwd = Boolean.TRUE;
+        }
 
         LocalDateTime now = LocalDateTime.now();
         UserAccount account = UserAccount.builder()

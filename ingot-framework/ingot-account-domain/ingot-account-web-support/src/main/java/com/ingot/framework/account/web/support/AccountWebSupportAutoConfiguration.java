@@ -2,7 +2,9 @@ package com.ingot.framework.account.web.support;
 
 import com.ingot.framework.account.domain.config.AccountDomainProperties;
 import com.ingot.framework.account.domain.port.outbound.LockStatePort;
+import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
+import com.ingot.framework.security.credential.service.InitialPasswordService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -25,10 +27,14 @@ public class AccountWebSupportAutoConfiguration {
     public AuthContextSupport authContextSupport(
             ObjectProvider<CredentialSecurityService> credentialSecurityService,
             ObjectProvider<LockStatePort> lockStatePort,
-            ObjectProvider<AccountDomainProperties> accountProperties) {
+            ObjectProvider<AccountDomainProperties> accountProperties,
+            ObjectProvider<InitialPasswordService> initialPasswordService,
+            ObjectProvider<UserAccountPort> userAccountPort) {
         return new AuthContextSupport(
                 credentialSecurityService.getIfAvailable(),
                 lockStatePort.getIfAvailable(),
-                accountProperties.getIfAvailable());
+                accountProperties.getIfAvailable(),
+                initialPasswordService.getIfAvailable(),
+                userAccountPort.getIfAvailable());
     }
 }

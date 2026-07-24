@@ -1,9 +1,12 @@
 package com.ingot.framework.security.credential;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
-import com.ingot.framework.security.credential.config.CredentialSecurityProperties.InitialPasswordPolicy;
+import com.ingot.framework.security.credential.config.CredentialSecurityProperties.InitialPasswordPolicy.Generation;
+import com.ingot.framework.security.credential.model.InitialPasswordConfig;
+import com.ingot.framework.security.credential.policy.PasswordPolicy;
+import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.impl.DefaultInitialPasswordService;
 import org.junit.jupiter.api.Test;
 
@@ -12,29 +15,31 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link DefaultInitialPasswordService} 初始密码生成与有效期判定单元测试。
+ * {@link DefaultInitialPasswordService} 经 {@link CredentialPolicyLoader} 取生效配置的单元测试。
  *
  * @author jy
  * @since 1.0.0
  */
 class DefaultInitialPasswordServiceTest {
 
-    private final CredentialSecurityProperties properties = new CredentialSecurityProperties();
+    private DefaultInitialPasswordService service(InitialPasswordConfig config) {
+        CredentialPolicyLoader loader = new CredentialPolicyLoader() {
+            @Override
+            public List<PasswordPolicy> loadPolicies() {
+                return List.of();
+            }
 
-    private DefaultInitialPasswordService service() {
-        return new DefaultInitialPasswordService(properties);
-    }
-
-    private InitialPasswordPolicy policy() {
-        return properties.getPolicy().getInitialPassword();
+            @Override
+            public InitialPasswordConfig getInitialPasswordConfig() {
+                return config;
+            }
+        };
+        return new DefaultInitialPasswordService(loader);
     }
 
     @Test
     void generate_random_matchesLengthAndHasUpperAndDigit() {
-        policy().setGeneration(InitialPasswordPolicy.Generation.RANDOM);
-        policy().setLength(12);
-
-        String pwd = service().generate();
+        String pwd = service(new InitialPasswordConfig(Generation.RANDOM, 12, "x", 72, true, true)).generate();
 
         assertEquals(12, pwd.length());
         assertTrue(pwd.chars().anyMatch(Character::isUpperCase), "应包含大写字母");
@@ -43,46 +48,40 @@ class DefaultInitialPasswordServiceTest {
 
     @Test
     void generate_fixed_returnsFixedPassword() {
-        policy().setGeneration(InitialPasswordPolicy.Generation.FIXED);
-        policy().setFixedPassword("Fixed@2026");
+        String pwd = service(new InitialPasswordConfig(Generation.FIXED, 10, "Fixed@2026", 72, true, true)).generate();
 
-        assertEquals("Fixed@2026", service().generate());
+        assertEquals("Fixed@2026", pwd);
     }
 
     @Test
     void isExpired_validHoursZero_neverExpires() {
-        policy().setValidHours(0);
-
-        assertFalse(service().isExpired(LocalDateTime.now().minusDays(365)));
+        assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 0, true, true))
+                .isExpired(LocalDateTime.now().minusDays(365)));
     }
 
     @Test
     void isExpired_issuedAtNull_returnsFalse() {
-        policy().setValidHours(72);
-
-        assertFalse(service().isExpired(null));
+        assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
+                .isExpired(null));
     }
 
     @Test
     void isExpired_beyondValidHours_returnsTrue() {
-        policy().setValidHours(72);
-
-        assertTrue(service().isExpired(LocalDateTime.now().minusHours(100)));
+        assertTrue(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
+                .isExpired(LocalDateTime.now().minusHours(100)));
     }
 
     @Test
     void isExpired_withinValidHours_returnsFalse() {
-        policy().setValidHours(72);
-
-        assertFalse(service().isExpired(LocalDateTime.now().minusHours(1)));
+        assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
+                .isExpired(LocalDateTime.now().minusHours(1)));
     }
 
     @Test
     void isForceChangeOnFirstLogin_readsConfig() {
-        policy().setForceChangeOnFirstLogin(false);
-        assertFalse(service().isForceChangeOnFirstLogin());
-
-        policy().setForceChangeOnFirstLogin(true);
-        assertTrue(service().isForceChangeOnFirstLogin());
+        assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, false))
+                .isForceChangeOnFirstLogin());
+        assertTrue(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
+                .isForceChangeOnFirstLogin());
     }
 }

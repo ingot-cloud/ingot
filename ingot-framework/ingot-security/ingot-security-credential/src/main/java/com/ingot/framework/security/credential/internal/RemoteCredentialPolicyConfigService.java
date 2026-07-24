@@ -27,18 +27,21 @@ public class RemoteCredentialPolicyConfigService implements CredentialPolicyConf
 
     @Override
     public List<CredentialPolicyConfigVO> getAll() {
+        R<List<CredentialPolicyConfigVO>> response;
         try {
-            R<List<CredentialPolicyConfigVO>> response = remoteCredentialService.getPolicyConfigs();
-            if (response == null || !response.isSuccess()) {
-                log.warn("[Credential] Remote getPolicyConfigs failed, response={}", response);
-                return List.of();
-            }
-            List<CredentialPolicyConfigVO> data = response.getData();
-            return data != null ? data : List.of();
+            response = remoteCredentialService.getPolicyConfigs();
         } catch (Exception e) {
-            log.warn("[Credential] Remote getPolicyConfigs error", e);
-            return List.of();
+            // 调用异常（连接失败 / 超时 / 反序列化等）：视为远程不可用，交由上层弹性兜底处理，绝不吞成空。
+            throw new CredentialRemoteUnavailableException("Remote getPolicyConfigs error", e);
         }
+        if (response == null || !response.isSuccess()) {
+            // 非成功码或空响应：同样视为远程不可用，触发降级阶梯。
+            throw new CredentialRemoteUnavailableException(
+                    "Remote getPolicyConfigs failed, response=" + response);
+        }
+        // 成功（含空集合）：表达「合法无策略」，直接返回真实数据，不触发兜底。
+        List<CredentialPolicyConfigVO> data = response.getData();
+        return data != null ? data : List.of();
     }
 
     @Override

@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
+import com.ingot.framework.security.credential.actuate.CredentialPolicyEndpoint;
 import com.ingot.framework.security.credential.internal.CredentialCacheCoordinator;
 import com.ingot.framework.security.credential.internal.CredentialPolicyConfigServiceFactory;
-import com.ingot.framework.security.credential.internal.LocalCompiledPolicyCache;
+import com.ingot.framework.security.credential.internal.CredentialPolicySourceHolder;
+import com.ingot.framework.security.credential.internal.LastKnownGoodStore;
+import com.ingot.framework.security.credential.internal.LocalFloorSupplier;
 import com.ingot.framework.security.credential.internal.RedisCredentialPolicyConfigService;
 import com.ingot.framework.security.credential.internal.RemoteCredentialPolicyConfigService;
+import com.ingot.framework.security.credential.internal.ResilientCredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
@@ -29,6 +33,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -68,14 +73,60 @@ public class CredentialSecurityAutoConfiguration {
     public static final String CREDENTIAL_POLICY_CONFIG_DELEGATE = "credentialPolicyConfigDelegate";
 
     /**
+     * LKG 快照独立 Redis key（与 L1/L2 热缓存命名空间区分，长存 / 不过期）。
+     */
+    static final String LKG_REDIS_KEY = "in:credential:policy:lkg";
+
+    /**
+     * 凭证策略生效来源与降级计数持有者（降级可观测）。
+     */
+    @Bean
+    @ConditionalOnMissingBean(CredentialPolicySourceHolder.class)
+    public CredentialPolicySourceHolder credentialPolicySourceHolder() {
+        return new CredentialPolicySourceHolder();
+    }
+
+    /**
+     * Nacos 本地地板供给器：远程不可用且无 LKG 时的最终兜底来源。
+     */
+    @Bean
+    @ConditionalOnMissingBean(LocalFloorSupplier.class)
+    public LocalFloorSupplier credentialLocalFloorSupplier(CredentialSecurityProperties properties) {
+        return new LocalFloorSupplier(properties);
+    }
+
+    /**
+     * 最近成功快照（LKG）存储：Redis 独立 key 长存 / 不过期，为唯一 LKG 源（不持进程内副本）；
+     * Redis 不可用时 LKG 不可用，交由 Nacos 地板兜底，保证多节点降级来源一致。
+     */
+    @Bean
+    @ConditionalOnMissingBean(LastKnownGoodStore.class)
+    public LastKnownGoodStore credentialLastKnownGoodStore(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+                                                           ObjectProvider<ObjectMapper> objectMapperProvider) {
+        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+        ObjectMapper mapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
+        return new LastKnownGoodStore(redisTemplate, mapper, LKG_REDIS_KEY, null);
+    }
+
+    /**
      * L0 Remote delegate（仅在没有本地 delegate 时启用，典型场景：非 ingot-security 微服务）。
+     * <p>原始 Feign delegate 外包裹 {@link ResilientCredentialPolicyConfigService}，成为热缓存链最内层，
+     * 提供 remote → LKG → Nacos 地板 的降级阶梯。{@code ingot-security-provider} 以本地 Mapper delegate
+     * 覆盖本 bean，不经弹性兜底（本地无远程失败语义）。</p>
      */
     @Bean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
     @ConditionalOnBean(RemoteCredentialService.class)
     @ConditionalOnMissingBean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
-    public CredentialPolicyConfigService credentialPolicyConfigDelegate(RemoteCredentialService remoteCredentialService) {
-        log.info("[Credential] register remote delegate (RemoteCredentialPolicyConfigService)");
-        return new RemoteCredentialPolicyConfigService(remoteCredentialService);
+    public CredentialPolicyConfigService credentialPolicyConfigDelegate(RemoteCredentialService remoteCredentialService,
+                                                                        LastKnownGoodStore lkgStore,
+                                                                        LocalFloorSupplier localFloorSupplier,
+                                                                        CredentialPolicySourceHolder sourceHolder,
+                                                                        CredentialSecurityProperties properties) {
+        RemoteCredentialPolicyConfigService raw = new RemoteCredentialPolicyConfigService(remoteCredentialService);
+        boolean localFloorEnabled = properties.getPolicy().getFallback().isLocalFloorEnabled();
+        log.info("[Credential] register resilient remote delegate (remote -> LKG -> local-floor), localFloorEnabled={}",
+                localFloorEnabled);
+        return new ResilientCredentialPolicyConfigService(raw, lkgStore, localFloorSupplier, localFloorEnabled, sourceHolder);
     }
 
     /**
@@ -122,43 +173,41 @@ public class CredentialSecurityAutoConfiguration {
     }
 
     /**
-     * 编译后的策略列表本地缓存。
+     * 降级可观测 actuator 端点：仅当类路径存在 Spring Boot Actuator 时装配。
      */
     @Bean
-    @ConditionalOnMissingBean(LocalCompiledPolicyCache.class)
-    public LocalCompiledPolicyCache localCompiledPolicyCache() {
-        return new LocalCompiledPolicyCache();
+    @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+    @ConditionalOnMissingBean(CredentialPolicyEndpoint.class)
+    public CredentialPolicyEndpoint credentialPolicyEndpoint(CredentialPolicySourceHolder sourceHolder) {
+        return new CredentialPolicyEndpoint(sourceHolder);
     }
 
     /**
-     * 失效广播协调器：订阅 {@code CredentialInvalidationEvent}，回调时清 L1+L2 与编译策略。
+     * 失效广播协调器：订阅 {@code CredentialInvalidationEvent}，回调时清 L1+L2 缓存。
      */
     @Bean
     @ConditionalOnBean(InvalidationBus.class)
     @ConditionalOnProperty(value = "ingot.security.credential.cache.invalidation-enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(CredentialCacheCoordinator.class)
     public CredentialCacheCoordinator credentialCacheCoordinator(InvalidationBus bus,
-                                                                 CredentialPolicyConfigService policyConfigService,
-                                                                 LocalCompiledPolicyCache compiledPolicyCache) {
-        return new CredentialCacheCoordinator(bus, policyConfigService, compiledPolicyCache);
+                                                                 CredentialPolicyConfigService policyConfigService) {
+        return new CredentialCacheCoordinator(bus, policyConfigService);
     }
 
     @Bean
     @ConditionalOnMissingBean(CredentialPolicyLoader.class)
     @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = "local", matchIfMissing = true)
     public CredentialPolicyLoader localCredentialPolicyLoader(CredentialSecurityProperties properties,
-                                                              LocalCompiledPolicyCache compiledPolicyCache,
                                                               PasswordEncoder passwordEncoder) {
-        return new LocalCredentialPolicyLoader(properties, compiledPolicyCache, passwordEncoder);
+        return new LocalCredentialPolicyLoader(properties, passwordEncoder);
     }
 
     @Bean
     @ConditionalOnMissingBean(CredentialPolicyLoader.class)
     @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = "remote")
     public CredentialPolicyLoader credentialPolicyLoader(CredentialPolicyConfigService policyConfigService,
-                                                         LocalCompiledPolicyCache compiledPolicyCache,
                                                          PasswordEncoder passwordEncoder) {
-        return new RemoteCredentialPolicyLoader(policyConfigService, compiledPolicyCache, passwordEncoder);
+        return new RemoteCredentialPolicyLoader(policyConfigService, passwordEncoder);
     }
 
     @Bean
@@ -181,8 +230,8 @@ public class CredentialSecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(InitialPasswordService.class)
-    public InitialPasswordService initialPasswordService(CredentialSecurityProperties properties) {
-        return new DefaultInitialPasswordService(properties);
+    public InitialPasswordService initialPasswordService(CredentialPolicyLoader credentialPolicyLoader) {
+        return new DefaultInitialPasswordService(credentialPolicyLoader);
     }
 
     @Bean

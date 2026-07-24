@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.cloud.nacos.refresh.NacosConfigRefreshEvent;
-import com.ingot.framework.commons.constants.NacosConstants;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
-import com.ingot.framework.security.credential.internal.LocalCompiledPolicyCache;
+import com.ingot.framework.security.credential.model.InitialPasswordConfig;
 import com.ingot.framework.security.credential.policy.PasswordExpirationPolicy;
 import com.ingot.framework.security.credential.policy.PasswordHistoryPolicy;
 import com.ingot.framework.security.credential.policy.PasswordPolicy;
@@ -16,16 +13,14 @@ import com.ingot.framework.security.credential.policy.PasswordStrengthPolicy;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * 本地凭证策略加载器，从 Nacos / yaml 配置加载策略。
  * <p>
- * 编译结果通过 {@link LocalCompiledPolicyCache} 在进程内缓存。为支持 {@code local} 模式下
- * 的 Nacos 动态刷新，本加载器监听 {@link NacosConfigRefreshEvent}，且仅处理
- * {@link NacosConstants#IN_SECURITY_POLICY} 对应的 dataId；匹配时清空编译缓存，
- * 下次 {@link #loadPolicies()} 依据最新 {@link CredentialSecurityProperties} 重新编译。
+ * 每次 {@link #loadPolicies()} 均按当前 {@link CredentialSecurityProperties} 即时编译，不做进程内缓存。
+ * {@code local} 模式下的 Nacos 动态刷新由 {@code ConfigurationPropertiesRebinder} 在配置变更时
+ * 重绑定 {@link CredentialSecurityProperties} 完成，下一次加载自然读到最新值，无需额外的刷新监听。
  * </p>
  *
  * @author jy
@@ -33,25 +28,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class LocalCredentialPolicyLoader
-        implements CredentialPolicyLoader, ApplicationListener<NacosConfigRefreshEvent> {
+public class LocalCredentialPolicyLoader implements CredentialPolicyLoader {
 
     private final CredentialSecurityProperties properties;
-    private final LocalCompiledPolicyCache compiledPolicyCache;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<PasswordPolicy> loadPolicies() {
-        return compiledPolicyCache.get(this::doLoadPolicies);
+        return doLoadPolicies();
     }
 
     @Override
-    public void onApplicationEvent(NacosConfigRefreshEvent event) {
-        if (!StrUtil.equals(event.getDataId(), NacosConstants.IN_SECURITY_POLICY)) {
-            return;
-        }
-        compiledPolicyCache.evictAll();
-        log.info("[Credential] 配置刷新，已清空本地编译策略缓存，下次加载按最新配置生效");
+    public InitialPasswordConfig getInitialPasswordConfig() {
+        return InitialPasswordConfig.from(properties.getPolicy().getInitialPassword());
     }
 
     /**
