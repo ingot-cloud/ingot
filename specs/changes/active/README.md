@@ -12,4 +12,4 @@
 
 当前变更：
 
-- 暂无
+- [`20260729-security-access-protection`](./20260729-security-access-protection/) — 访问防护补全（L4），状态 `draft`，待审阅
