@@ -60,15 +60,14 @@ spring:
               uri: lb://in-service-bff
               predicates:
                 - Path=/bff/**
+            - id: in-service-auth
+              uri: lb://in-service-auth
+              predicates:
+                - Path=/auth/client/**,/auth/token/**
+              filters:
+                - StripPrefix=1
 
 ingot:
-  security:
-    event:
-      enabled: true
-      mode: local
-      source-module: ingot-gateway
-      categories:
-        access: true
   vc:
     verifyUrls:
       - image,/auth/oauth2/token,POST

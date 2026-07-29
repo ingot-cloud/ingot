@@ -52,7 +52,7 @@ ingot:
 
         expiration:
           # 是否启用 
-          enabled: false
+          enabled: true
           # 最大有效天数
           max-days: 90
           # 提前警告天数

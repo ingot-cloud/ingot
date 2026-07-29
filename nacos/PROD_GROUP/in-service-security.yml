@@ -7,11 +7,16 @@ spring:
 ingot:
   security:
     event:
+      # 过期事件物理删除策略
       retention:
+        # 是否启用定时清理任务
         enabled: true
+        # 保留天数
         days: 30
-        batch-size: 500
-        max-rounds: 100
+        # 单批 {@code DELETE ... LIMIT N} 条数，避免长事务与大锁
+        batchSize: 500
+        # 单次定时任务最多连续执行的批次数，防止清理洪峰占用连接过久
+        maxRounds: 100
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:false}

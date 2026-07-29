@@ -6,33 +6,50 @@ spring:
 # Ingot业务配置
 ingot:
   security:
-    account:
-      # 策略来源模式：local（纯 Nacos）| remote（安全中心弹性阶梯，后续 change 提供实现）
+    event:
+      # 上报模式
       mode: local
-      # 账号登录失败锁定（B端/管理用户：严格策略）
+      # 上报方模块标识，写入中心库
+      sourceModule: PMS
+      # 按事件大类控制是否上报安全中心（仅 {@code mode=remote} 时生效）
+      categories:
+        # 认证类：登录成功/失败等（AUTH）
+        auth: true
+        # 账号类：锁定/解锁/创建等（ACCOUNT）
+        account: true
+        # 凭证类：改密/重置等（CREDENTIAL）
+        credential: true
+        # 访问防护类：网关封禁/限流违规等（ACCESS）；通常仅网关产生
+        access: true
+      # 过期事件物理删除策略
+      retention:
+        # 是否启用定时清理任务
+        enabled: true
+        # 保留天数
+        days: 30
+        # 单批 {@code DELETE ... LIMIT N} 条数，避免长事务与大锁
+        batchSize: 500
+        # 单次定时任务最多连续执行的批次数，防止清理洪峰占用连接过久
+        maxRounds: 100
+    account:
+      # local 或 remote
+      mode: local
       lockout:
         # 是否启用自动锁定账号
         enabled: ${ACCOUNT_LOCKOUT_ENABLED:true}
         # 失败次数阈值
-        max-attempts: 5
-        # 锁定时长（分钟），0=永久（仅 B端可用）
-        lock-duration-minutes: 30
-        # 从第几次失败开始给出剩余次数提示
-        hint-after-attempts: 3
-    event:
-      enabled: true
-      mode: local
-      source-module: ingot-pms
-      categories:
-        auth: true
-        account: true
-        credential: true
-        access: true
-      retention:
-        enabled: true
-        days: 90
-        batch-size: 500
-        max-rounds: 100
+        maxAttempts: 5
+        # 锁定时长（分钟），0=永久锁定
+        lockDurationMinutes: 30
+        # 失败计数窗口期（分钟）
+        attemptWindowMinutes: 15
+        # 从第几次失败开始给出"还剩几次将锁定"的详细提示， 之前的失败一律返回通用"账号或密码错误"，避免暴露用户存在性。
+        # 例：maxAttempts=5，hintAfterAttempts=3 时：
+        # 第 1/2 次：通用提示
+        # 第 3 次：剩余 2 次
+        # 第 4 次：剩余 1 次
+        # 第 5 次：触发自动锁定，下次登录命中锁定分支
+        hintAfterAttempts: 3
   oss:
     minio:
       url: ${MINIO_URL:http://ingot-cloud:9090}
