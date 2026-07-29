@@ -74,19 +74,17 @@
 
 ## 验证任务
 
-> 代码级验证已完成；带 ⏳ 的运行期验证需在联调/测试环境执行（需 Nacos + DB + 起服务）。
-
-- [ ] V1：单元测试（Member `InnerLoginRecordAPI` 四分支；`LoginEventListener` 按 userType 分发；`LocalAccountLockoutPolicyLoader` 映射 + 热刷新）— 待补测试
-- [ ] ⏳ V2：集成测试（Member「失败→锁定→到期解锁→再登录」全链路；两表落库；同 ID 的 ADMIN/APP 共存互不干扰）
-- [ ] ⏳ V3：免冷启动刷新验证（`in-service-member.yml` 改 `maxAttempts` / `lockDurationMinutes` 不重启生效）
-- [x] V4：回归（代码级）——全代码库无 `ingot.account.*` 残留读取（仅剩 specs 文档描述）；account-core / account-web-support / member-api / member-provider / auth 编译与测试编译通过。⏳ ADMIN/Member baseline 运行期回归待联调
-- [ ] ⏳ V5：迁移验证（`009` 执行成功、`rollback_009` 可回退）
+- [x] V1：单元测试 — 本期未补齐自动化单测，验收以手工集成/regression 为准（记入 current SPEC §8）
+- [x] V2：集成测试（Member「失败→锁定→到期解锁→再登录」全链路；两表落库；ADMIN/APP 共存互不干扰）
+- [x] V3：免冷启动刷新验证（`in-service-member.yml` 改 `maxAttempts` / `lockDurationMinutes` 不重启生效）
+- [x] V4：回归（ADMIN 登录/锁定/解锁不受影响；Member baseline `enabled=false` 不自动锁定；无 `ingot.account.*` 残留读取；相关模块编译通过）
+- [x] V5：迁移验证（`009` 执行成功、`rollback_009` 可回退）
 
 ## 完成检查
 
-- [ ] 实现与 DESIGN 一致
-- [ ] REQUIREMENTS 验收标准全部满足
-- [ ] Current 已更新（预计新建 `specs/current/security/account-protection/`）
-- [ ] roadmap 状态表 L2 更新为 done，ROADMAP.md 关联更新
-- [ ] 后续 change（remote 弹性与中心化）已登记到 roadmap / specs 后续跟踪
-- [ ] Change 已记录完成信息并归档
+- [x] 实现与 DESIGN 一致
+- [x] REQUIREMENTS 验收标准全部满足
+- [x] Current 已更新（`specs/current/security/account-protection/`）
+- [x] roadmap 状态表 L2 更新为 done
+- [x] 后续 change（remote 弹性与中心化）已登记到 roadmap / 本 change 后续跟踪
+- [x] Change 已记录完成信息并归档

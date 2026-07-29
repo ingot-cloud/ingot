@@ -2,7 +2,7 @@
 
 > 跟踪 Ingot 平台级能力演进与持续优化。条目进入开发时链接 `specs/changes/active/` change；完成后链接 `specs/current/` 或 `docs/modules/`。
 
-**最后 review**：2026-07-17
+**最后 review**：2026-07-29
 
 ## 状态说明
 
@@ -35,6 +35,7 @@
 | R-2026-005 | 传输层信封加密 | API 敏感数据 HYBRID 加密与防重放 | done | [spec](../../specs/current/security/transport-crypto/) |
 | R-2026-006 | 网关 Header 约定 | 内部头命名与安全约束统一 | done | [spec](../../specs/current/gateway/header-conventions/) |
 | R-2026-007 | 网关限流与安全策略 | 动态限流、黑白名单、挑战执行面 | done | [模块文档](../modules/security-center/GATEWAY-RATE-LIMIT.md) · [E2E 用例](../../test-case/security-policy-e2e.md) |
+| R-2026-024 | 账号保护全用户闭环 | Member 登录失败锁定、安全事件与 lockout 策略土台 | done | [spec](../../specs/current/security/account-protection/) · [change](../../specs/changes/archive/2026/20260724-security-account-protection/) |
 
 ---
 
@@ -66,6 +67,7 @@
 以下能力已验收，详细规格见 `specs/current/` 或模块文档：
 
 - PMS 应用中心化授权（2026-06）
+- 账号保护全用户闭环 + lockout 策略土台（2026-07）
 - JWK 密钥管理、传输层加密、网关 Header 约定
 - 网关限流与安全策略执行面
 - 微服务性能优化与故障排查文档体系（2025-12）

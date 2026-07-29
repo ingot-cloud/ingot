@@ -1,6 +1,6 @@
 # 账号保护全用户闭环 + remote 弹性架构土台（L2）
 
-> 状态：implementing（决策 D1-D8 已敲定，按 TASKS 实施中）
+> 状态：completed（已验收，已更新 current，已归档）
 
 ## 元数据
 
@@ -63,11 +63,14 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：（预计新建 `specs/current/security/account-protection/`）
+- 完成日期：代码完成 2026-07-24；验收通过 2026-07-29
+- 关联提交或 PR：TBD
+- 更新的 current capability：`specs/current/security/account-protection/`（README + SPEC，新建）
 - 与原设计的差异：
-- 取消原因：
+  - 按 D1 采用 member-api 独立 `LoginRecordDTO`，未复用 pms-api DTO。
+  - D8 确认 `unlockExpired` / `recordSuccess` 已有清零逻辑，无需额外补齐。
+  - V1 单元测试未在本 change 补齐，验收以手工集成 / 回归 / migration 执行为准（记入 current SPEC 已知限制）。
+- 取消原因：—
 
 ## 后续跟踪（拆出为新 change）
 

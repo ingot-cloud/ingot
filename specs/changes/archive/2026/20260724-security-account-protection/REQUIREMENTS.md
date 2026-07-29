@@ -74,16 +74,16 @@
 
 ## 验收标准
 
-- [ ] Member 连续失败达 `maxAttempts` 后被自动锁定，`ingot_member.account_lock_state` 落库（`user_type=1`、`lock_type=AUTO`）
-- [ ] 临时锁定期内 Member 登录被拒绝并提示剩余解锁时间；`locked_until` 到期后 `AccountLockTask` 自动解锁且 `failed_login_count` 归零
-- [ ] Member 登录成功后 `failed_login_count` 清零，`last_login_at/ip` 更新
-- [ ] Member 失败 / 锁定 / 解锁 / 成功事件写入 `ingot_member.account_security_event`
-- [ ] Auth `LoginEventListener` 对 ADMIN 走 PMS、对 APP 走 Member，二者均生效
-- [ ] Member 失败达 `hintAfterAttempts` 时返回分级提示
-- [ ] 账号 lockout 配置以 `ingot.security.account.*` 生效；全代码库无 `ingot.account.*` 残留读取
-- [ ] `AccountLockoutPolicyLoader` seam 就位，`RecordLoginUseCaseService` / `AuthContextSupport` 经 loader 取策略
-- [ ] `mode=local` 时修改 Nacos 锁定阈值 / 时长，无需重启，新请求即生效
-- [ ] PMS（5/30/3）与 Member（5/15/3，禁 `lockDurationMinutes=0`）差异化默认值生效
-- [ ] `ingot.security.account.lockout.enabled=false` 时 Member 保持 baseline 行为（不自动锁定、不写表）
-- [ ] ADMIN 现有登录 / 锁定 / 解锁链路回归无破坏；相关模块编译通过
-- [ ] `009` migration 在 `ingot_member` 执行成功，`rollback_009` 可回退
+- [x] Member 连续失败达 `maxAttempts` 后被自动锁定，`ingot_member.account_lock_state` 落库（`user_type=1`、`lock_type=AUTO`）
+- [x] 临时锁定期内 Member 登录被拒绝并提示剩余解锁时间；`locked_until` 到期后 `AccountLockTask` 自动解锁且 `failed_login_count` 归零
+- [x] Member 登录成功后 `failed_login_count` 清零，`last_login_at/ip` 更新
+- [x] Member 失败 / 锁定 / 解锁 / 成功事件写入 `ingot_member.account_security_event`
+- [x] Auth `LoginEventListener` 对 ADMIN 走 PMS、对 APP 走 Member，二者均生效
+- [x] Member 失败达 `hintAfterAttempts` 时返回分级提示
+- [x] 账号 lockout 配置以 `ingot.security.account.*` 生效；全代码库无 `ingot.account.*` 残留读取
+- [x] `AccountLockoutPolicyLoader` seam 就位，`RecordLoginUseCaseService` / `AuthContextSupport` 经 loader 取策略
+- [x] `mode=local` 时修改 Nacos 锁定阈值 / 时长，无需重启，新请求即生效
+- [x] PMS（5/30/3）与 Member（5/15/3，禁 `lockDurationMinutes=0`）差异化默认值生效
+- [x] `ingot.security.account.lockout.enabled=false` 时 Member 保持 baseline 行为（不自动锁定、不写表）
+- [x] ADMIN 现有登录 / 锁定 / 解锁链路回归无破坏；相关模块编译通过
+- [x] `009` migration 在 `ingot_member` 执行成功，`rollback_009` 可回退

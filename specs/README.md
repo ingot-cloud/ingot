@@ -192,6 +192,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [账号保护全用户闭环 + remote 土台（L2）](./changes/archive/2026/20260724-security-account-protection/README.md)
 - [凭证策略降级兜底与初始密码收口对齐](./changes/archive/2026/20260717-security-credential-resilience/README.md)
 - [凭证安全收口（L1）](./changes/archive/2026/20260717-security-credential-closure/README.md)
 - [网关自定义 Header 命名统一](./changes/archive/2026/20260715-gateway-header-rename/README.md)
@@ -203,6 +204,7 @@ current/<domain>/<capability>/
 对应 current 能力：
 
 - [gateway/header-conventions](./current/gateway/header-conventions/README.md)
+- [security/account-protection](./current/security/account-protection/README.md)
 - [security/credential-security](./current/security/credential-security/README.md)
 - [security/jwk-management](./current/security/jwk-management/README.md)
 - [security/transport-crypto](./current/security/transport-crypto/README.md)
