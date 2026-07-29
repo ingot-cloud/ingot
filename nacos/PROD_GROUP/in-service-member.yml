@@ -5,6 +5,20 @@ spring:
 
 # Ingot业务配置
 ingot:
+  security:
+    account:
+      # 策略来源模式：local（纯 Nacos）| remote（安全中心弹性阶梯，后续 change 提供实现）
+      mode: local
+      # 账号登录失败锁定（C端/应用用户：短锁，禁止永久锁定以规避恶意锁号 DoS）
+      lockout:
+        # 是否启用自动锁定账号
+        enabled: ${MEMBER_ACCOUNT_LOCKOUT_ENABLED:true}
+        # 失败次数阈值
+        max-attempts: 5
+        # 锁定时长（分钟），C端仅允许短临时锁，禁止 0（永久）
+        lock-duration-minutes: 15
+        # 从第几次失败开始给出剩余次数提示
+        hint-after-attempts: 3
   oss:
     minio:
       url: ${MINIO_URL:http://ingot-cloud:9090}
