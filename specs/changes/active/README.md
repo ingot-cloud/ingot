@@ -12,4 +12,4 @@
 
 当前变更：
 
-- [`20260729-security-event-center`](./20260729-security-event-center/) — 统一安全事件中心（L3，approved / implementing）
+- 暂无

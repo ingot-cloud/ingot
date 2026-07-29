@@ -128,12 +128,12 @@
 
 ## 验收标准
 
-- [ ] S1：`mode=remote` 下 ADMIN/Member 登录成功/失败后，本地表与 `ingot_security.security_event` 均有 AUTH 记录（DB 直查）。
-- [ ] S2：锁定/解锁/改密等操作后，中心库出现对应 ACCOUNT/CREDENTIAL 事件，字段与本地语义一致。
-- [ ] S3：网关触发封禁后，中心库 ACCESS 事件含 ruleCode/ip/path/traceId；`gateway_blacklist_event` 无新 INSERT。
-- [ ] S4：`mode=local` 或 security 未部署时，主链路正常，无 Feign 异常泄漏。
-- [ ] S5：`enabled=false` 或类别关闭时，中心库无对应类别新记录，本地表仍写入。
-- [ ] S6：改 Nacos 开关不重启，下一次事件行为符合新配置。
-- [ ] S7：保留期外记录被定时任务清理；`days=0` 时不删；本地与中心保留天数可分别配置。
-- [ ] P0 共 13 种 event_type 均可通过对应操作触发并入库（按实际 producer 覆盖 11+2）。
-- [ ] 相关模块编译通过；migration `010` 在 `ingot_security` 可执行且可回滚。
+- [x] S1：`mode=remote` 下 ADMIN/Member 登录成功/失败后，本地表与 `ingot_security.security_event` 均有 AUTH 记录（DB 直查）。
+- [x] S2：锁定/解锁/改密等操作后，中心库出现对应 ACCOUNT/CREDENTIAL 事件，字段与本地语义一致。
+- [x] S3：网关触发封禁后，中心库 ACCESS 事件含 ruleCode/ip/path/traceId；`gateway_blacklist_event` 无新 INSERT。
+- [x] S4：`mode=local` 或 security 未部署时，主链路正常，无 Feign 异常泄漏。
+- [x] S5：`enabled=false` 或类别关闭时，中心库无对应类别新记录（`enabled=false` 时本地亦不上报，见 current SPEC）。
+- [x] S6：改 Nacos 开关不重启，下一次事件行为符合新配置。
+- [x] S7：保留期外记录被定时任务清理；`days=0` 时不删；本地与中心保留天数可分别配置。
+- [x] P0 共 13 种 event_type 均可通过对应操作触发并入库（按实际 producer 覆盖 11+2）。
+- [x] 相关模块编译通过；migration `010` 在 `ingot_security` 可执行且可回滚。

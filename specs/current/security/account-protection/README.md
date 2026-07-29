@@ -16,7 +16,8 @@
 ## 边界
 
 - 本能力覆盖**账号维度**登录失败锁定（`user_id + user_type`），不含 IP / 设备 / Client 多维度防爆破（属 L4 访问防护）。
-- **不含**：remote 弹性阶梯（LKG / Nacos 地板 / L1-L2 缓存 / Actuator）、安全中心 account lockout 策略表与管理面、`attemptWindowMinutes` 滑动窗口重置、统一安全事件中心跨服务聚合（L3）。
+- **不含**：remote 弹性阶梯（LKG / Nacos 地板 / L1-L2 缓存 / Actuator）、安全中心 account lockout 策略表与管理面、`attemptWindowMinutes` 滑动窗口重置。
+- 跨服务事件聚合与中心入库见 [security-event-center](../security-event-center/README.md)（L3）。
 - B端/C端差异**仅通过服务级 Nacos 配置**表达：PMS 严格（5/30/3），Member 短锁（5/15/3，禁止永久自动锁 `lockDurationMinutes=0`）。
 - `lockout.enabled=false` 时保持 baseline：不写 lock_state / 事件表、不自动锁定。
 

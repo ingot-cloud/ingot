@@ -21,10 +21,11 @@
 - 安全中心服务：凭证策略 CRUD、网关策略中心（限流 / 黑白名单 / 路径分组 / 挑战策略 / 违规升级 / 封禁审计）、内网快照下发（`RemoteSecurityPolicyService`）、凭证策略读取（`RemoteCredentialService`）、跨节点缓存失效（`InvalidationBus`）。
 - 框架密码引擎：强度 / 历史 / 过期三类策略 + 持久化（`password_history`、`password_expiration`）完整，支持 `local` / `remote` 双模式与多级缓存。
 - 账号保护：`account_lock_state`（失败计数 / 锁定）、`account_security_event`（安全事件表）已覆盖 **ADMIN 与 Member** 全用户闭环；lockout 策略前缀 `ingot.security.account.*`，`mode=local` 热刷新；remote 弹性阶梯待后续 change。
+- 统一安全事件：`ingot_security.security_event` 中心表 + 跨模块上报（PMS/Member/Gateway）；配置 `ingot.security.event.*`；详见 current `security/security-event-center`。
 - 会话 / Token：Redis 在线 Token、强制下线 API 已有。
 - 验证码：能力独立，**未接入登录链路**。
 
-主要缺口：安全概览、统一安全事件中心、通用安全审计、告警、风险控制、处置管理、MFA / 二次确认、登录设备、并发会话策略、异常登录、策略视图；以及若干「已实现未接入」点（`decrementGraceLogin` 无调用方、初始密码无独立策略、`password_expiration.force_change` 未映射、Member 侧凭证策略未对齐）。
+主要缺口：安全概览、通用安全审计、告警、风险控制、处置管理、MFA / 二次确认、登录设备、并发会话策略、异常登录、策略视图；以及若干「已实现未接入」点（`decrementGraceLogin` 无调用方、初始密码无独立策略、`password_expiration.force_change` 未映射、Member 侧凭证策略未对齐）。
 
 ---
 
@@ -58,7 +59,7 @@
 |------|------|--------------|----------|--------|------|--------|
 | L1 | 凭证安全收口 | 二（2.2 / 2.4） | 初始密码、宽限期扣减、force_change 对齐、Member 对齐 | 是（策略字段） | done | `specs/changes/archive/2026/20260717-security-credential-closure`（+ 后续 `20260717-security-credential-resilience` 弹性降级/初始密码统一）；current `security/credential-security` |
 | L2 | 账号保护全用户闭环 | 三 | 失败计数 / 锁定 / 安全事件从 ADMIN 扩到 Member；`ingot.security.account.*` 命名统一 + seam 土台 | 是（阈值 / 时长） | done | `specs/changes/archive/2026/20260724-security-account-protection`；current `security/account-protection` |
-| L3 | 统一安全事件中心 | 九 | 通用安全事件模型 + 上报 / 存储（安全中心侧） | 部分（记录开关可降级，聚合不可降级） | implementing | [`20260729-security-event-center`](../../../specs/changes/active/20260729-security-event-center/) |
+| L3 | 统一安全事件中心 | 九 | 通用安全事件模型 + 上报 / 存储（安全中心侧） | 部分（记录开关可降级，聚合不可降级） | done | `specs/changes/archive/2026/20260729-security-event-center`；current `security/security-event-center` |
 | L4 | 访问防护补全 | 四 | 现有网关策略中心的防爆破 / 执行面收口 | 是（阈值 / 名单） | planned | 待建 |
 | L5 | 会话安全 | 五 | 在线会话 / 并发会话 / 强制下线统一管理面 | 部分（并发策略可降级，统一管理不可降级） | planned | 待建 |
 | L6 | 挑战验证 | 六（6.1） | 图形验证码接入登录 / 敏感接口 | 是（触发策略） | planned | 待建 |

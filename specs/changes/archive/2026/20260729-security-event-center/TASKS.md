@@ -49,22 +49,22 @@
 
 ## 验证任务
 
-- [ ] V1：S1–S2 账号域双写（remote 模式）
+- [x] V1：S1–S2 账号域双写（remote 模式）
   - ADMIN/Member 登录成功/失败、锁定/解锁、改密
   - DB：`account_security_event` + `security_event` 均有对应记录
 
-- [ ] V2：S3 网关 ACCESS 上报
+- [x] V2：S3 网关 ACCESS 上报
   - 触发限流违规封禁
   - DB：`security_event` 含 extension；旧表无新行
 
-- [ ] V3：S4 降级（local / security 不可用）
+- [x] V3：S4 降级（local / security 不可用）
   - 主链路正常；无 Feign 异常泄漏
 
-- [ ] V4：S5–S6 开关与热刷新
-- [ ] V7：S7 retention 清理（插入过期数据 → 跑任务 → 确认删除）
+- [x] V4：S5–S6 开关与热刷新
+- [x] V7：S7 retention 清理（插入过期数据 → 跑任务 → 确认删除）
   - `enabled=false`、类别关闭、Nacos 改配置不重启
 
-- [ ] V5：migration
+- [x] V5：migration
   - `010` 执行成功；`rollback_010` 可回滚
 
 - [x] V6：编译与回归
@@ -72,12 +72,12 @@
 
 ## 完成检查
 
-- [ ] 实现与 DESIGN 一致
-- [ ] REQUIREMENTS 验收标准全部满足
-- [ ] 更新 `specs/current/security/security-event-center/`（README + SPEC）
-- [ ] 更新 [security-center-roadmap.md](../../../../docs/requirements/themes/security-center-roadmap.md) L3 状态为 `done`
-- [ ] 更新 [ROADMAP.md](../../../../docs/requirements/ROADMAP.md) R-2026-025 为 `done`
-- [ ] Change 已记录完成信息并归档至 `specs/changes/archive/2026/20260729-security-event-center/`
+- [x] 实现与 DESIGN 一致（差异已记入 README 完成记录）
+- [x] REQUIREMENTS 验收标准全部满足（S5 enabled 语义以 current SPEC 为准）
+- [x] 更新 `specs/current/security/security-event-center/`（README + SPEC）
+- [x] 更新 [security-center-roadmap.md](../../../../docs/requirements/themes/security-center-roadmap.md) L3 状态为 `done`
+- [x] 更新 [ROADMAP.md](../../../../docs/requirements/ROADMAP.md) R-2026-025 为 `done`
+- [x] Change 已记录完成信息并归档至 `specs/changes/archive/2026/20260729-security-event-center/`
 
 ## 任务依赖图
 

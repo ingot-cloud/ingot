@@ -48,7 +48,7 @@
 | R-2026-012 | TSS 任务调度框架推广 | 统一 XXL-JOB 集成与使用规范 | planned | [架构](../modules/task-scheduler-system/tss-architecture.md) · [实施总结](../modules/task-scheduler-system/tss-implementation-summary.md) |
 | R-2026-013 | 字典 extra 字段团队约定 | 避免各开发者随意命名扩展字段 | planned | [使用指南](../modules/dict/USAGE.md) |
 | R-2026-014 | Docker 多环境构建标准化 | 简化 CI/CD 与多环境镜像管理 | planned | [部署指南](../guides/deployment/DOCKER-MULTI-ENVIRONMENT.md) · [Dockerfile 迁移](../guides/deployment/DOCKERFILE-MIGRATION-GUIDE.md) |
-| R-2026-025 | 统一安全事件中心 | 跨模块安全事实统一模型与中心入库，支撑后续安全概览 | implementing | [change](../../specs/changes/active/20260729-security-event-center/) · [roadmap](./themes/security-center-roadmap.md) |
+| R-2026-025 | 统一安全事件中心 | 跨模块安全事实统一模型与中心入库，支撑后续安全概览 | done | [change](../../specs/changes/archive/2026/20260729-security-event-center/) · [current](../../specs/current/security/security-event-center/) · [roadmap](./themes/security-center-roadmap.md) |
 
 ---
 
