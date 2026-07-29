@@ -25,7 +25,7 @@
 
 - 策略引擎与服务：`ingot-security-credential`
 - 通用持久化：`ingot-security-credential-data`（`sys_user` / `ingot_core` 侧）
-- 账号域用例：`ingot-account-domain/ingot-account-core`
+- 账号域用例：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-core`
 - 接入方：`ingot-pms-provider`、`ingot-member-provider`、`ingot-auth`
 
 ## 关联模块
@@ -40,9 +40,9 @@
 | Nacos 地板（属性→VO，安全基线非空） | `ingot-security-credential/.../internal/LocalFloorSupplier.java` |
 | 降级来源可观测（holder + actuator） | `ingot-security-credential/.../internal/CredentialPolicySourceHolder.java`、`.../actuate/CredentialPolicyEndpoint.java` |
 | 本地策略即时编译（Nacos rebinder 刷新） | `ingot-security-credential/.../LocalCredentialPolicyLoader.java` |
-| 注册 / 创建初始密码 + 强制改密置位 | `ingot-account-core/.../RegisterUserUseCaseService.java` |
-| 改密清除 / 重置置位 强制改密 | `ingot-account-core/.../ChangePasswordUseCaseService.java` |
-| 登录成功宽限扣减 | `ingot-account-core/.../RecordLoginUseCaseService.java` |
+| 注册 / 创建初始密码 + 强制改密置位 | `ingot-security-account-core/.../RegisterUserUseCaseService.java` |
+| 改密清除 / 重置置位 强制改密 | `ingot-security-account-core/.../ChangePasswordUseCaseService.java` |
+| 登录成功宽限扣减 | `ingot-security-account-core/.../RecordLoginUseCaseService.java` |
 | 强制改密受限 scope 下发 | `ingot-pms-provider/.../identity/IdentityUtil.java`、`ingot-member-provider/.../identity/IdentityUtil.java` |
 
 ## 文档索引

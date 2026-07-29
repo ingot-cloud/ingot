@@ -24,7 +24,7 @@
 
 - 契约与配置 SoT：`ingot-security-api`
 - 中心入库：`ingot-security-provider`
-- 账号域组合 Port：`ingot-account-adapter`
+- 账号域组合 Port：`ingot-security-account-adapter`
 - 网关 ACCESS 上报：`ingot-gateway`
 
 ## 关联模块
@@ -35,9 +35,9 @@
 | 异步有界上报 | `ingot-security-api/.../support/AsyncSecurityEventReporter.java` |
 | Feign 契约 | `ingot-security-api/.../rpc/RemoteSecurityEventService.java` |
 | 中心入库 API | `ingot-security-provider/.../web/inner/InnerSecurityEventAPI.java` |
-| 组合 Port | `ingot-account-adapter/.../port/CompositeSecurityEventPort.java` |
-| 远程 Port | `ingot-account-adapter/.../port/RemoteSecurityEventPortAdapter.java` |
-| 本地 retention | `ingot-account-adapter/.../task/AccountSecurityEventRetentionTask.java` |
+| 组合 Port | `ingot-security-account-adapter/.../port/CompositeSecurityEventPort.java` |
+| 远程 Port | `ingot-security-account-adapter/.../port/RemoteSecurityEventPortAdapter.java` |
+| 本地 retention | `ingot-security-account-adapter/.../task/AccountSecurityEventRetentionTask.java` |
 | 中心 retention | `ingot-security-provider/.../task/SecurityEventRetentionTask.java` |
 | 网关 Reporter | `ingot-gateway/.../security/BlacklistEventReporter.java` |
 

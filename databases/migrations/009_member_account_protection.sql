@@ -2,10 +2,10 @@
 -- Member 账号保护表（account_lock_state / account_security_event）
 -- 版本: V2.0
 -- 日期: 2026-07-24
--- 说明: 账号保护全用户闭环（L2）——Member 引入 ingot-account-adapter，
+-- 说明: 账号保护全用户闭环（L2）——Member 引入 ingot-security-account-adapter，
 --       在 ingot_member 库建账号锁定状态表与安全事件表，与 ADMIN（ingot_core）对齐。
 --       表结构与 ingot_core 一致，user_type 存 '1'（APP / C端用户）。
---       两表 DDL 随 ingot-account-adapter 模块管理（见其 resources/sql/）。
+--       两表 DDL 随 ingot-security-account-adapter 模块管理（见其 resources/sql/）。
 -- ============================================================
 
 USE ingot_member;

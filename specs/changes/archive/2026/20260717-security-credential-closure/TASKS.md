@@ -4,7 +4,7 @@
 
 - [x] D1：宽限扣减调用位置 → **方案 A（账号域登录成功用例统一扣减）**
 - [x] D2：强制改密拦截位置 → **网关统一拦截**
-- [x] D3：初始密码能力归属 → **账号域 `ingot-account-domain`**
+- [x] D3：初始密码能力归属 → **账号域 `ingot-security/ingot-security-account`**
 - [x] D4：Member 凭证装配现状确认结论 → 实施首步核实（T0）
 
 ## 实施任务

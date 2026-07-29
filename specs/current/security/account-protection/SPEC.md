@@ -81,7 +81,7 @@ Auth 登录成功/失败
 
 ## 7. Member 持久化接入
 
-`ingot-member-provider` 依赖 `ingot-account-adapter` 后：
+`ingot-member-provider` 依赖 `ingot-security-account-adapter` 后：
 
 - `LockStatePort` / `SecurityEventPort` 为真实 MyBatis 实现（非 NoOp）。
 - `AccountLockTask` 自动注册，扫描 `ingot_member.account_lock_state` 过期锁定。

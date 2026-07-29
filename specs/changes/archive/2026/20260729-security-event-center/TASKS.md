@@ -18,7 +18,7 @@
   - 内容：`010_unified_security_event.sql` + rollback + `ingot_security.sql` 基线；Entity/Mapper/Service；`InnerSecurityEventAPI`
   - 验收：POST `/inner/security/event/report` 入库成功；非法 payload 返回 4xx
 
-- [x] T3：账号域映射与 Composite Port（`ingot-account-adapter`）
+- [x] T3：账号域映射与 Composite Port（`ingot-security-account-adapter`）
   - 依赖：T1
   - 内容：`SecurityEventProperties`；`AccountSecurityEventMapper`；`RemoteSecurityEventPortAdapter`；`CompositeSecurityEventPort`；自动配置替换默认 `SecurityEventPort` Bean
   - 验收：`mode=local` 仅本地 INSERT；`mode=remote` 本地 + 异步 Feign；Feign 失败不抛到 UseCase

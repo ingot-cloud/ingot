@@ -5,7 +5,7 @@
 -- 说明: Member 用户表结构与 PMS 对齐，仅做基线字段拆分 / 迁移
 --       本脚本不再创建 account_lock_state / account_security_event /
 --       password_history / password_expiration 等账号域/凭证策略表，
---       这些表的 DDL 随 ingot-account-adapter / ingot-security-credential-data
+--       这些表的 DDL 随 ingot-security-account-adapter / ingot-security-credential-data
 --       模块的依赖 SQL 一并管理，未启用对应模块的服务无需创建。
 -- ============================================================
 

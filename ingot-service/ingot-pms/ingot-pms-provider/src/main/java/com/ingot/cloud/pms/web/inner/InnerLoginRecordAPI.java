@@ -1,9 +1,9 @@
 package com.ingot.cloud.pms.web.inner;
 
 import com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO;
-import com.ingot.framework.account.domain.model.UserAccount;
-import com.ingot.framework.account.domain.port.inbound.RecordLoginUseCase;
-import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
+import com.ingot.framework.security.account.domain.model.UserAccount;
+import com.ingot.framework.security.account.domain.port.inbound.RecordLoginUseCase;
+import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;

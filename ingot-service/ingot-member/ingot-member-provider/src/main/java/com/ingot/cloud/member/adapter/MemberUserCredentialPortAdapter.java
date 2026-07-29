@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.mapper.MemberUserMapper;
-import com.ingot.framework.account.domain.port.outbound.UserCredentialPort;
+import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

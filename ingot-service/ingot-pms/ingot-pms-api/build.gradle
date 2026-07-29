@@ -6,7 +6,7 @@ dependencies {
     implementation project(ingot.framework_security_crypto)
     implementation project(ingot.framework_data_mybatis_common)
     implementation project(ingot.framework_oss_common)
-    implementation project(ingot.framework_account_core)
+    implementation project(ingot.framework_security_account_core)
 
     //mapstruct
     implementation(deps.mapstruct.library)

@@ -175,7 +175,7 @@ ingot:
 
 挑战类型 `challengeType`（如 `SLIDER`）经 `ChallengeTypes` 映射为 VC 路由名（如 `image`），响应体由 `ChallengeResponses.buildPayload` 组装。
 
-**不支持** `on_failure_threshold`：登录连续失败由 `ingot-account-domain` 的 `RecordLoginUseCaseService` 计数并自动锁定账号；管理面保存挑战策略时仅允许 `always` / `on_rate_limit`。
+**不支持** `on_failure_threshold`：登录连续失败由 `ingot-security/ingot-security-account` 的 `RecordLoginUseCaseService` 计数并自动锁定账号；管理面保存挑战策略时仅允许 `always` / `on_rate_limit`。
 
 管理面表字段 `failure_*`、`challenge_failure_limit`、`block_ttl_sec` 保留列兼容，**网关执行面不读取**；限流违规临时封禁阈值由 `ViolationEscalationService` 提供（Platform 单行表 `gateway_violation_escalation` 或 local yaml，默认 60s 窗口 / 30 次 / 900s TTL）。
 

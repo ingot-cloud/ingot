@@ -42,7 +42,7 @@
 
 - `ingot-security-api`：`SecurityEventReportDTO`、统一 `SecurityEventType` / `SecurityEventCategory` 枚举、`RemoteSecurityEventService` Feign。
 - `ingot-security-provider`：`security_event` 表 migration、Entity/Mapper/Service、`InnerSecurityEventAPI` 入库。
-- `ingot-account-adapter`：`AccountSecurityEvent → SecurityEventReportDTO` 映射、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、自动配置与 `ingot.security.event.*` 属性。
+- `ingot-security-account-adapter`：`AccountSecurityEvent → SecurityEventReportDTO` 映射、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、自动配置与 `ingot.security.event.*` 属性。
 - `ingot-gateway`：`BlacklistEventReporter` 改调统一 Feign；`SentinelBlockHandler` DTO 映射。
 - Nacos 降级配置：`enabled` / `mode` / 类别开关 + 动态刷新验证说明。
 - **过期清理**：本地 `account_security_event` 与中心 `security_event` 定时 retention（可独立配置天数）。

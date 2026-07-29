@@ -2,7 +2,7 @@
 
 ## 方案摘要
 
-复用现有框架密码引擎（`ingot-security-credential` + `ingot-security-credential-data`）与账号域用例（`ingot-account-domain`），不新建库表、不改动 `RemoteCredentialService` 契约。围绕四个缺口做「接入 + 对齐」，并统一 `local` 模式下的 Nacos 动态刷新。
+复用现有框架密码引擎（`ingot-security-credential` + `ingot-security-credential-data`）与账号域用例（`ingot-security/ingot-security-account`），不新建库表、不改动 `RemoteCredentialService` 契约。围绕四个缺口做「接入 + 对齐」，并统一 `local` 模式下的 Nacos 动态刷新。
 
 分层职责保持不变：
 
@@ -117,5 +117,5 @@
    - 方案 B：Auth 侧 `AccessTokenAuthenticationSuccessHandler` 通过新增内网接口回调扣减。
    - 方案 C：`AuthContextSupport` 判定为软过期时即扣减（偏差：认证可能后续失败导致误扣）。
 2. **强制改密拦截位置**：网关统一拦截 vs 各资源服务过滤器。倾向网关（集中、覆盖全应用）。
-3. **初始密码能力归属**：账号域（`ingot-account-domain`）新增 vs 凭证模块新增。倾向账号域（贴近创建 / 重置用例）。
+3. **初始密码能力归属**：账号域（`ingot-security/ingot-security-account`）新增 vs 凭证模块新增。倾向账号域（贴近创建 / 重置用例）。
 4. **Member 凭证装配确认**：核实 Member provider 是否已装配 `CredentialSecurityService` / `AuthContextSupport`；若未装配需补 Bean。

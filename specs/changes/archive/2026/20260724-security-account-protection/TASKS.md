@@ -7,7 +7,7 @@
 - [x] D3：Member 注册时 `lockStatePort.initialize` → **无需额外代码**：引入 adapter 后真实 Port 自动生效，回归验证注册链路即可。
 - [x] D4：Nacos 动态刷新方式 → **rebinder 自动重绑定 `@ConfigurationProperties`**，loader 每次即时读取；实施后 V3 验证免冷启动生效，无需额外刷新监听。
 - [x] D5：`mode=remote` 占位行为 → **回退 `local` + WARN**（可用性优先；remote 实现由后续 change 提供）。
-- [x] D6：`LockoutPolicy` 载体 → **新建独立不可变 model**（`com.ingot.framework.account.domain.model.LockoutPolicy`），与 Properties 解耦，便于后续 remote 复用。
+- [x] D6：`LockoutPolicy` 载体 → **新建独立不可变 model**（`com.ingot.framework.security.account.domain.model.LockoutPolicy`），与 Properties 解耦，便于后续 remote 复用。
 - [x] D7：`AccountDomainProperties` → **仅改前缀保类名**（`prefix=ingot.security.account`），改动最小。
 - [x] D8：`unlockExpired` 清零 `failed_login_count` → **已满足**：`UnlockAccountUseCaseService.doUnlockExpired` 与 `recordSuccess` 均已调用 `resetFailCount`，无需补齐。
 
@@ -15,10 +15,10 @@
 
 ### 闭环（A）
 
-- [x] T1：Member 引入 `ingot-account-adapter` 依赖
+- [x] T1：Member 引入 `ingot-security-account-adapter` 依赖
   - 依赖：无
   - 验收：`ingot-member-provider` 启动后 `LockStatePort` / `SecurityEventPort` 为真实 adapter 实现（非 NoOp），`AccountLockTask` bean 存在
-  - 实现：`ingot-member-provider/build.gradle` 增 `implementation project(ingot.framework_account_adapter)`
+  - 实现：`ingot-member-provider/build.gradle` 增 `implementation project(ingot.framework_security_account_adapter)`
 
 - [x] T2：`ingot_member` 库 DDL 迁移与基线同步
   - 依赖：D2
@@ -60,7 +60,7 @@
 - [x] T9：新增 `AccountLockoutPolicyLoader` seam + `LocalAccountLockoutPolicyLoader`（按 D6）
   - 依赖：T8
   - 验收：loader 返回生效 `LockoutPolicy`；`Local` 实现每次即时映射属性（热刷新可感知）
-  - 实现：`ingot-account-core` 新增 `service/AccountLockoutPolicyLoader` + `impl/LocalAccountLockoutPolicyLoader`；`AccountDomainAutoConfiguration` 按 `mode` 装配（`remote` 占位按 D5）
+  - 实现：`ingot-security-account-core` 新增 `service/AccountLockoutPolicyLoader` + `impl/LocalAccountLockoutPolicyLoader`；`AccountDomainAutoConfiguration` 按 `mode` 装配（`remote` 占位按 D5）
 
 - [x] T10：消费侧改经 loader 取策略
   - 依赖：T9

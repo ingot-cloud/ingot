@@ -18,7 +18,7 @@
 
 **目标一（闭环）**：把 ADMIN（PMS）侧已成熟的账号保护闭环——**登录失败计数 → 达阈值自动锁定 → 安全事件持久化 → 定时自动解锁 → 认证 meta 友好提示**——完整扩展到 Member（`UserTypeEnum.APP`）用户，消除 Member 侧「三层欠缺」：
 
-1. **依赖层**：`ingot-member-provider` 未引入 `ingot-account-adapter`，`LockStatePort` / `SecurityEventPort` 回退到 NoOp（不写库、仅日志），`AccountLockTask` 定时解锁 bean 不存在。
+1. **依赖层**：`ingot-member-provider` 未引入 `ingot-security-account-adapter`，`LockStatePort` / `SecurityEventPort` 回退到 NoOp（不写库、仅日志），`AccountLockTask` 定时解锁 bean 不存在。
 2. **数据层**：`ingot_member` 库无 `account_lock_state` / `account_security_event` 表（`002_upgrade_member_user.sql` 明确交由模块依赖 SQL 管理）。
 3. **接线层**：Auth 侧 `LoginEventListener` 对非 ADMIN 用户直接 `return`；Member 无 `InnerLoginRecordAPI` / `RemoteMemberLoginRecordService` 登录记录回调入口。
 
@@ -35,7 +35,7 @@
 
 **包含：**
 
-- Member `ingot-account-adapter` 依赖接入，`LockStatePort` / `SecurityEventPort` 切换为真实持久化实现。
+- Member `ingot-security-account-adapter` 依赖接入，`LockStatePort` / `SecurityEventPort` 切换为真实持久化实现。
 - `ingot_member` 库新增 `account_lock_state` / `account_security_event` 表（migration + 回滚 + 基线 SQL 同步）。
 - Auth → Member 登录记录回调链路：新增 `RemoteMemberLoginRecordService`（Feign）+ Member `InnerLoginRecordAPI`（`userType=APP`）。
 - 改造 Auth `LoginEventListener`：按 `userType` 分发 ADMIN→PMS、APP→Member，移除「非 ADMIN 直接 return」。

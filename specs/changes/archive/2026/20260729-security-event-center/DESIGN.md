@@ -17,8 +17,8 @@
 |----|------|------|
 | API | `ingot-security-api` | DTO、枚举、`RemoteSecurityEventService` |
 | 中心 | `ingot-security-provider` | 表、入库 Service、`InnerSecurityEventAPI` |
-| 账号 | `ingot-account-adapter` | 映射器、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、Properties |
-| 账号 | `ingot-account-core` | 无 UseCase 改动；可选 `SecurityEventProperties` 接口定义 |
+| 账号 | `ingot-security-account-adapter` | 映射器、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、Properties |
+| 账号 | `ingot-security-account-core` | 无 UseCase 改动；可选 `SecurityEventProperties` 接口定义 |
 | 网关 | `ingot-gateway` | Reporter 改调统一 Feign；DTO 映射 |
 | 数据 | `databases/migrations/010_*` | `security_event` DDL + 回滚 + 基线 |
 
@@ -171,7 +171,7 @@ SecurityEventPort (interface, 不变)
 | `source.name()` | `source` |
 | `extraData` | `extension` |
 
-account-domain 现有 [`SecurityEventType`](../../../../../ingot-framework/ingot-account-domain/ingot-account-core/src/main/java/com/ingot/framework/account/domain/model/enums/SecurityEventType.java) 通过 `SecurityEventTypeMapping` 转到 api enum code（code 相同则直传）。
+account-domain 现有 [`SecurityEventType`](../../../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-core/src/main/java/com/ingot/framework/security/account/domain/model/enums/SecurityEventType.java) 通过 `SecurityEventTypeMapping` 转到 api enum code（code 相同则直传）。
 
 ### 网关接入
 

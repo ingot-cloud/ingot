@@ -7,7 +7,7 @@
 - **涉及模块**：
   - [ingot-service/ingot-security](../../../ingot-service/ingot-security)（安全中心服务）
   - [ingot-security-credential(-data)](../../../ingot-framework/ingot-security/ingot-security-credential)（框架密码引擎）
-  - [ingot-account-domain](../../../ingot-framework/ingot-account-domain)（账号锁定、安全事件）
+  - [ingot-security-account](../../../ingot-framework/ingot-security/ingot-security-account)（账号锁定、安全事件）
   - [ingot-auth](../../../ingot-service/ingot-auth)、[ingot-gateway](../../../ingot-service/ingot-gateway)（执行面）
   - [ingot-verification-code](../../../ingot-framework/ingot-verification-code)（挑战验证）
 - **ROADMAP 关联**：[R-2026-007 网关限流与安全策略](../ROADMAP.md)（已完成执行面）、R-2026-022 凭证安全策略扩展

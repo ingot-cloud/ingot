@@ -4,14 +4,14 @@
 
 本 change 分两块，共用一次实施：
 
-**A. 账号保护全用户闭环**：复用账号域（`ingot-account-domain`）已有用例、领域模型、Port 与 adapter 实现，**不新增判定逻辑、不改动 ADMIN 侧行为**，只补齐 Member 侧「依赖 / 数据 / 接线」三层，让 Member 走通与 ADMIN 相同的账号保护闭环。
+**A. 账号保护全用户闭环**：复用账号域（`ingot-security/ingot-security-account`）已有用例、领域模型、Port 与 adapter 实现，**不新增判定逻辑、不改动 ADMIN 侧行为**，只补齐 Member 侧「依赖 / 数据 / 接线」三层，让 Member 走通与 ADMIN 相同的账号保护闭环。
 
 **B. remote 弹性架构土台**：对齐 L1 凭证的命名与可扩展结构，但**不实现 remote**。只做三件铺垫：配置改名 `ingot.security.account.*`、引入 `mode` 开关、引入 `AccountLockoutPolicyLoader` seam（仅 Local 实现）。使将来另立的 remote 弹性 change 能「差入即用」，无需再改消费侧。
 
 关键设计原则：
 
 - **对齐而非重造**（闭环）：Member 的失败计数 / 锁定 / 解锁 / 安全事件全部复用 `RecordLoginUseCaseService` / `LockAccountUseCaseService` / `UnlockAccountUseCaseService`，区别仅在 `userType=APP` 与数据落 `ingot_member` 库。
-- **Port 自动切换**：引入 `ingot-account-adapter` 后，`AccountAdapterAutoConfiguration`（`@AutoConfigureBefore(AccountDomainAutoConfiguration)`）注册真实 `LockStatePort` / `SecurityEventPort`，覆盖 `@ConditionalOnMissingBean` 的 NoOp，`AccountLockTask` 定时任务 bean 随之生效。
+- **Port 自动切换**：引入 `ingot-security-account-adapter` 后，`AccountAdapterAutoConfiguration`（`@AutoConfigureBefore(AccountDomainAutoConfiguration)`）注册真实 `LockStatePort` / `SecurityEventPort`，覆盖 `@ConditionalOnMissingBean` 的 NoOp，`AccountLockTask` 定时任务 bean 随之生效。
 - **策略 vs 用户数据分离**：将来可 remote/LKG/缓存的仅是 **lockout 策略参数**；`account_lock_state` 锁定状态与失败计数永远落 DB、不可降级（与凭证「策略 vs 用户数据」一致）。
 - **seam 先行**：消费侧改经 `AccountLockoutPolicyLoader`，把「策略来源」收敛到单一 seam，未来 remote 只需新增 `RemoteAccountLockoutPolicyLoader` 实现并按 `mode` 装配。
 
@@ -19,21 +19,21 @@
 
 | 层 | 组件 | 本次改动 |
 |----|------|----------|
-| 依赖 | `ingot-member-provider/build.gradle` | 增 `ingot-account-adapter` 依赖 |
+| 依赖 | `ingot-member-provider/build.gradle` | 增 `ingot-security-account-adapter` 依赖 |
 | 数据 | `ingot_member.account_lock_state` / `account_security_event` | 新增 migration `009` + 回滚 + 基线 SQL |
 | 接口 | `ingot-member-api` | 新增 `RemoteMemberLoginRecordService`（Feign） |
 | 接口 | `ingot-member-provider` | 新增 `InnerLoginRecordAPI`（`userType=APP`） |
 | 接线 | `ingot-auth` `LoginEventListener` | 按 `userType` 分发 ADMIN→PMS / APP→Member |
 | 配置 | `AccountDomainProperties` | 前缀 `ingot.account` → `ingot.security.account`；新增 `mode` |
 | 配置 | PMS/Member `in-service-*.yml` | 键迁移 + B/C 差异化值 |
-| seam | `ingot-account-core` | 新增 `AccountLockoutPolicyLoader` + `LocalAccountLockoutPolicyLoader` |
+| seam | `ingot-security-account-core` | 新增 `AccountLockoutPolicyLoader` + `LocalAccountLockoutPolicyLoader` |
 | 消费 | `RecordLoginUseCaseService` / `AuthContextSupport` | 改经 loader 取策略 |
 
 ## 数据模型与接口
 
 ### 数据模型
 
-Member 侧两张表 DDL 与 ADMIN（`ingot_core`）**完全一致**，仅落库位置不同（`ingot_member`），DDL 复用 [ingot-account-adapter 内置 SQL](../../../../../ingot-framework/ingot-account-domain/ingot-account-adapter/src/main/resources/sql/)：
+Member 侧两张表 DDL 与 ADMIN（`ingot_core`）**完全一致**，仅落库位置不同（`ingot_member`），DDL 复用 [ingot-security-account-adapter 内置 SQL](../../../../../ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/)：
 
 - `account_lock_state`：`(user_id, user_type)` 联合唯一；`user_type=1`（APP）；含 `failed_login_count` / `locked` / `lock_type` / `locked_until` / `idx_locked(locked, locked_until)`（定时解锁使用）。
 - `account_security_event`：审计事件表，`user_type=1`；`event_category` = AUTH / ACCOUNT / CREDENTIAL；`source` = MEMBER / AUTH。
@@ -93,7 +93,7 @@ ingot:
 
 把「lockout 策略来源」收敛到单一 seam，消费侧不再直读 `@ConfigurationProperties`。本期仅 `Local` 实现；将来 remote change 新增 `Remote` 实现并按 `mode` 装配，消费侧零改动。
 
-### 接口草案（`ingot-account-core`）
+### 接口草案（`ingot-security-account-core`）
 
 ```java
 // service/AccountLockoutPolicyLoader.java

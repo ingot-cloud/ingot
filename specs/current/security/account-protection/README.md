@@ -23,23 +23,23 @@
 
 ## 所有者
 
-- 账号域用例与 seam：`ingot-account-domain/ingot-account-core`
-- 持久化 adapter：`ingot-account-domain/ingot-account-adapter`
-- 认证 meta：`ingot-account-domain/ingot-account-web-support`
+- 账号域用例与 seam：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-core`
+- 持久化 adapter：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter`
+- 认证 meta：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-web-support`
 - 接入方：`ingot-pms-provider`、`ingot-member-provider`、`ingot-auth`
 
 ## 关联模块
 
 | 职责 | 路径 |
 |---|---|
-| lockout 策略配置 | `ingot-account-core/.../config/AccountDomainProperties.java` |
-| 策略加载 seam | `ingot-account-core/.../service/AccountLockoutPolicyLoader.java` |
-| local 策略加载（即时映射 + 热刷新） | `ingot-account-core/.../service/impl/LocalAccountLockoutPolicyLoader.java` |
-| 登录成功/失败记录与自动锁定 | `ingot-account-core/.../service/RecordLoginUseCaseService.java` |
-| 手动/自动解锁 | `ingot-account-core/.../service/UnlockAccountUseCaseService.java` |
-| 锁定状态 / 安全事件持久化 | `ingot-account-adapter/.../port/DefaultLockStatePortAdapter.java`、`DefaultSecurityEventPortAdapter.java` |
-| 定时解锁任务 | `ingot-account-adapter/.../task/AccountLockTask.java` |
-| 认证 meta 填充 | `ingot-account-web-support/.../AuthContextSupport.java` |
+| lockout 策略配置 | `ingot-security-account-core/.../config/AccountDomainProperties.java` |
+| 策略加载 seam | `ingot-security-account-core/.../service/AccountLockoutPolicyLoader.java` |
+| local 策略加载（即时映射 + 热刷新） | `ingot-security-account-core/.../service/impl/LocalAccountLockoutPolicyLoader.java` |
+| 登录成功/失败记录与自动锁定 | `ingot-security-account-core/.../service/RecordLoginUseCaseService.java` |
+| 手动/自动解锁 | `ingot-security-account-core/.../service/UnlockAccountUseCaseService.java` |
+| 锁定状态 / 安全事件持久化 | `ingot-security-account-adapter/.../port/DefaultLockStatePortAdapter.java`、`DefaultSecurityEventPortAdapter.java` |
+| 定时解锁任务 | `ingot-security-account-adapter/.../task/AccountLockTask.java` |
+| 认证 meta 填充 | `ingot-security-account-web-support/.../AuthContextSupport.java` |
 | Auth 登录事件分发 | `ingot-auth/.../event/LoginEventListener.java` |
 | PMS 登录记录回调 | `ingot-pms-provider/.../web/inner/InnerLoginRecordAPI.java` |
 | Member 登录记录回调 | `ingot-member-provider/.../web/inner/InnerLoginRecordAPI.java` |
