@@ -62,6 +62,13 @@ spring:
                 - Path=/bff/**
 
 ingot:
+  security:
+    event:
+      enabled: true
+      mode: local
+      source-module: ingot-gateway
+      categories:
+        access: true
   vc:
     verifyUrls:
       - image,/auth/oauth2/token,POST

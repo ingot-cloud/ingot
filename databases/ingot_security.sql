@@ -75,6 +75,49 @@ BEGIN;
 COMMIT;
 
 -- ----------------------------
+-- Table structure for security_event
+-- ----------------------------
+DROP TABLE IF EXISTS `security_event`;
+CREATE TABLE `security_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `event_type` varchar(64) NOT NULL COMMENT '事件类型',
+  `event_category` varchar(20) NOT NULL COMMENT 'AUTH/ACCOUNT/CREDENTIAL/ACCESS',
+  `occurred_at` datetime DEFAULT NULL COMMENT '业务发生时间',
+  `received_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '中心接收时间',
+  `tenant_id` bigint DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
+  `user_type` varchar(20) DEFAULT NULL COMMENT 'ADMIN/APP',
+  `account` varchar(128) DEFAULT NULL,
+  `client_id` varchar(64) DEFAULT NULL,
+  `app_id` varchar(64) DEFAULT NULL,
+  `session_id` varchar(64) DEFAULT NULL,
+  `device_id` varchar(128) DEFAULT NULL,
+  `client_ip` varchar(64) DEFAULT NULL,
+  `request_uri` varchar(512) DEFAULT NULL,
+  `user_agent` varchar(512) DEFAULT NULL,
+  `result` varchar(20) DEFAULT NULL COMMENT 'SUCCESS/FAILURE',
+  `reason_code` varchar(50) DEFAULT NULL,
+  `reason_detail` varchar(500) DEFAULT NULL,
+  `source_module` varchar(64) NOT NULL COMMENT '上报模块',
+  `source` varchar(50) DEFAULT NULL,
+  `operator_id` bigint DEFAULT NULL,
+  `operator_name` varchar(64) DEFAULT NULL,
+  `trace_id` varchar(64) DEFAULT NULL,
+  `extension` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_event_time` (`received_at`),
+  KEY `idx_event_type` (`event_type`,`received_at`),
+  KEY `idx_tenant_user` (`tenant_id`,`user_id`),
+  KEY `idx_trace` (`trace_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件';
+
+-- ----------------------------
+-- Records of security_event
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
 -- Table structure for gateway_endpoint_group
 -- ----------------------------
 DROP TABLE IF EXISTS `gateway_endpoint_group`;

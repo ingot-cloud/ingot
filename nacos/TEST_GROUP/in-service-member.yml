@@ -19,6 +19,20 @@ ingot:
         lock-duration-minutes: 15
         # 从第几次失败开始给出剩余次数提示
         hint-after-attempts: 3
+    event:
+      enabled: true
+      mode: local
+      source-module: ingot-member
+      categories:
+        auth: true
+        account: true
+        credential: true
+        access: true
+      retention:
+        enabled: true
+        days: 90
+        batch-size: 500
+        max-rounds: 100
   oss:
     minio:
       url: ${MINIO_URL:http://ingot-cloud:9090}

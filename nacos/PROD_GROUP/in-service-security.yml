@@ -5,6 +5,13 @@ spring:
 
 # Ingot业务配置
 ingot:
+  security:
+    event:
+      retention:
+        enabled: true
+        days: 30
+        batch-size: 500
+        max-rounds: 100
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:false}

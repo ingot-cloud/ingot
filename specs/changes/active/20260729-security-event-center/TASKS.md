@@ -2,46 +2,50 @@
 
 ## 规格审阅
 
-- [ ] T0：四件套 review，决策点 D1–D6 敲定
+- [x] T0：四件套 review，决策点 D1–D6 敲定
   - 依赖：无
   - 验收：README 状态由 `draft` 转为 `approved`；TASKS 中 `[待确认]` 项已闭合
 
 ## 实施任务
 
-- [ ] T1：API 契约（`ingot-security-api`）
+- [x] T1：API 契约（`ingot-security-api`）
   - 依赖：T0
   - 内容：`SecurityEventReportDTO`、`SecurityEventType`、`SecurityEventCategory`、`RemoteSecurityEventService`（report + reportBatch）
   - 验收：模块编译通过；enum 覆盖 P0 共 13 种类型
 
-- [ ] T2：中心存储与 Inner API（`ingot-security-provider`）
+- [x] T2：中心存储与 Inner API（`ingot-security-provider`）
   - 依赖：T1
   - 内容：`010_unified_security_event.sql` + rollback + `ingot_security.sql` 基线；Entity/Mapper/Service；`InnerSecurityEventAPI`
   - 验收：POST `/inner/security/event/report` 入库成功；非法 payload 返回 4xx
 
-- [ ] T3：账号域映射与 Composite Port（`ingot-account-adapter`）
+- [x] T3：账号域映射与 Composite Port（`ingot-account-adapter`）
   - 依赖：T1
   - 内容：`SecurityEventProperties`；`AccountSecurityEventMapper`；`RemoteSecurityEventPortAdapter`；`CompositeSecurityEventPort`；自动配置替换默认 `SecurityEventPort` Bean
   - 验收：`mode=local` 仅本地 INSERT；`mode=remote` 本地 + 异步 Feign；Feign 失败不抛到 UseCase
 
-- [ ] T4：PMS / Member 配置与 source-module
+- [x] T4：PMS / Member 配置与 source-module
   - 依赖：T3
   - 内容：`in-service-pms.yml` / `in-service-member.yml` 增加 `ingot.security.event.*`；`source-module` 分别为 `ingot-pms` / `ingot-member`
   - 验收：两服务引入 adapter 后 Composite Port 生效
 
-- [ ] T5：网关 Reporter 改造（`ingot-gateway`）
+- [x] T5：网关 Reporter 改造（`ingot-gateway`）
   - 依赖：T1, T2
   - 内容：`SecurityEventReporter`（或改造 `BlacklistEventReporter`）；`BlacklistReportDTO` 映射；`ingot-security-api` 依赖；停止 `gateway_blacklist_event` 新写入（`reportBlacklist` 转调或废弃）
   - 验收：Sentinel 封禁后 `security_event` 有 ACCESS 记录；`gateway_blacklist_event` 无新 INSERT
 
-- [ ] T6：网关配置
+- [x] T6：网关配置
   - 依赖：T5
   - 内容：`in-service-gateway.yml` 样例与 `ingot.security.event.*`
   - 验收：Gateway 启动无循环依赖；Reporter 懒解析 Feign
 
-- [ ] T7：account-domain enum 映射（可选最小）
+- [x] T7：account-domain enum 映射（code 直传）
   - 依赖：T1, T3
   - 内容：`SecurityEventTypeMapping` 或 adapter 内 code 直传（code 一致则薄封装）
   - 验收：11 种账号事件类型映射正确
+
+- [x] T8：过期 retention 清理（本地 + 中心定时任务 + Nacos 配置）
+  - 依赖：T2, T3
+  - 验收：S7；`retention.days=0` 不删；PMS/Member 默认 90 天、security 默认 30 天
 
 ## 验证任务
 
@@ -57,12 +61,13 @@
   - 主链路正常；无 Feign 异常泄漏
 
 - [ ] V4：S5–S6 开关与热刷新
+- [ ] V7：S7 retention 清理（插入过期数据 → 跑任务 → 确认删除）
   - `enabled=false`、类别关闭、Nacos 改配置不重启
 
 - [ ] V5：migration
   - `010` 执行成功；`rollback_010` 可回滚
 
-- [ ] V6：编译与回归
+- [x] V6：编译与回归
   - 相关模块 `./gradlew` 编译通过；L2 账号保护行为无回归
 
 ## 完成检查
@@ -87,9 +92,9 @@ T2,T6 → V1–V6 → 归档
 
 | ID | 决策 | 状态 |
 |----|------|------|
-| D1 | enum SoT 在 `ingot-security-api` | 待确认 |
-| D2 | 停止 `gateway_blacklist_event` 新写入 | 待确认 |
-| D3 | remote 模式始终双写本地 | 待确认 |
-| D4 | migration 编号 `010` | 待确认 |
-| D5 | security 不可用等同 local | 待确认 |
-| D6 | `reportBlacklist` 转调统一入库 | 待确认 |
+| D1 | enum SoT 在 `ingot-security-api` | 已确认 |
+| D2 | 停止 `gateway_blacklist_event` 新写入 | 已确认 |
+| D3 | remote 模式始终双写本地 | 已确认 |
+| D4 | migration 编号 `010` | 已确认 |
+| D5 | security 不可用等同 local | 已确认 |
+| D6 | `reportBlacklist` 转调统一入库 | 已确认 |

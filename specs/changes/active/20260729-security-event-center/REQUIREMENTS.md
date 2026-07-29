@@ -52,6 +52,16 @@
 - 触发条件：运行中修改 Nacos 的 `enabled` / `mode` / `categories.*`，不重启服务。
 - 期望结果：下一次事件触发时，上报行为按新配置生效（例如关闭 `enabled` 后不再写入中心库）。
 
+### S7 过期事件定时清理
+
+- 使用者：运维 / 安全管理员。
+- 触发条件：定时任务每日执行；`ingot.security.event.retention.enabled=true` 且 `days>0`。
+- 期望结果：
+  - **本地**（PMS/Member）：`account_security_event` 中 `created_at` 早于保留期的记录被分批物理删除（默认 **90 天**）。
+  - **中心**（ingot-security）：`security_event` 中 `received_at` 早于保留期的记录被分批物理删除（默认 **30 天**，与本地可独立配置）。
+  - `retention.days=0` 或 `retention.enabled=false` 时不删除（永久保留）。
+  - 清理失败不影响主链路；任务日志输出删除条数。
+
 ## 业务规则
 
 ### P0 事件类型（本期必须支持）
@@ -114,7 +124,7 @@
   - `user_type` 规范为 `UserTypeEnum.name()`（`ADMIN`/`APP`）；不迁移历史 `'0'/'1'` 注释歧义数据。
 - **非目标**：
   - Platform 查询 / 导出 API。
-  - 安全概览、告警、风险规则、MQ、历史回填、全量第九章事件类型。
+  - 安全概览、告警、风险规则、MQ、历史回填、全量第九章事件类型、**冷归档到对象存储**（本期仅 DB 物理删除）。
 
 ## 验收标准
 
@@ -124,5 +134,6 @@
 - [ ] S4：`mode=local` 或 security 未部署时，主链路正常，无 Feign 异常泄漏。
 - [ ] S5：`enabled=false` 或类别关闭时，中心库无对应类别新记录，本地表仍写入。
 - [ ] S6：改 Nacos 开关不重启，下一次事件行为符合新配置。
+- [ ] S7：保留期外记录被定时任务清理；`days=0` 时不删；本地与中心保留天数可分别配置。
 - [ ] P0 共 13 种 event_type 均可通过对应操作触发并入库（按实际 producer 覆盖 11+2）。
 - [ ] 相关模块编译通过；migration `010` 在 `ingot_security` 可执行且可回滚。

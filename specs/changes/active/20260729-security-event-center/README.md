@@ -1,6 +1,6 @@
 # 统一安全事件中心（L3）
 
-> 状态：draft
+> 状态：approved
 
 ## 元数据
 
@@ -45,6 +45,7 @@
 - `ingot-account-adapter`：`AccountSecurityEvent → SecurityEventReportDTO` 映射、`RemoteSecurityEventPortAdapter`、`CompositeSecurityEventPort`、自动配置与 `ingot.security.event.*` 属性。
 - `ingot-gateway`：`BlacklistEventReporter`（或等价 `SecurityEventReporter`）改调统一 Feign；`SentinelBlockHandler` DTO 映射。
 - Nacos 降级配置：`enabled` / `mode` / 类别开关 + 动态刷新验证说明。
+- **过期清理**：本地 `account_security_event` 与中心 `security_event` 定时 retention（可独立配置天数）。
 - P0 事件类型：账号域已有 11 种 + 网关 ACCESS 2 种（见 [REQUIREMENTS](./REQUIREMENTS.md)）。
 
 **不包含（非目标）：**
@@ -62,15 +63,16 @@
 - [设计](./DESIGN.md)
 - [任务](./TASKS.md)
 
-## 待审阅决策点
+## 决策结论（T0 已闭合）
 
-| ID | 议题 | 推荐 |
-|----|------|------|
-| D1 | `SecurityEventType` 枚举 SoT 归属 | `ingot-security-api` 为事实来源；account-domain 保留映射 adapter |
-| D2 | 网关旧表 `gateway_blacklist_event` | 停止新写入，表与旧 GET `/events` 只读保留至阶段二 |
-| D3 | `mode=remote` 本地表 | 始终双写本地 `account_security_event` |
-| D4 | migration 编号 | 现有最新 `009`，本次取 `010`（实施前确认无并行占用） |
-| D5 | `mode=remote` 但 security 未部署 | 等同 `local`：仅本地表，Feign 不可用静默跳过（与 `BlacklistEventReporter` 一致） |
+| ID | 决议 |
+|----|------|
+| D1 | `SecurityEventType` / `SecurityEventCategory` SoT 在 `ingot-security-api` |
+| D2 | 停止向 `gateway_blacklist_event` 写入；旧表与 GET `/events` 只读保留 |
+| D3 | `mode=remote` 始终双写本地 `account_security_event` |
+| D4 | migration 编号 `010` |
+| D5 | security 未部署 / Feign 不可用 → 静默跳过，等同 local |
+| D6 | `reportBlacklist` 转调 `SecurityEventService` 统一入库 |
 
 ## 完成记录
 

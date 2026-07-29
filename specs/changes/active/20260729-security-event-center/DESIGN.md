@@ -197,6 +197,39 @@ account-domain 现有 [`SecurityEventType`](../../../../../ingot-framework/ingot
 
 **网关配置**：`ingot.security.event.*` 置于 `in-service-gateway.yml`；ACCESS 类别默认 `true`。
 
+### 过期清理（retention）
+
+**配置**（`ingot-security-api`.`SecurityEventProperties.retention`，各服务 Nacos 独立）：
+
+```yaml
+ingot:
+  security:
+    event:
+      retention:
+        enabled: true
+        days: 90          # 0=永久保留
+        batch-size: 500
+        max-rounds: 100
+```
+
+| 服务 | dataId | 清理目标 | 时间列 | 推荐默认 |
+|------|--------|----------|--------|----------|
+| PMS / Member | `in-service-pms.yml` / `in-service-member.yml` | `account_security_event` | `created_at` | 90 天 |
+| ingot-security | `in-service-security.yml` | `security_event` | `received_at` | 30 天 |
+
+**任务**：
+
+| 组件 | 类 | cron |
+|------|-----|------|
+| account-adapter | `AccountSecurityEventRetentionTask` | `0 0 3 * * ?`（每日 03:00） |
+| ingot-security | `SecurityEventRetentionTask` | `0 30 3 * * ?`（每日 03:30） |
+
+**策略**：
+
+- 分批 `SELECT id ... LIMIT N` + `deleteBatchIds`，每批默认 500 条，单次任务最多 100 批。
+- 物理删除（非软删）；合规需更长留存时调大 `days` 或设 `days=0`。
+- retention 与上报 `enabled`/`mode` 独立：关闭上报不影响清理，关闭清理不影响写入。
+
 ## 数据流与失败处理
 
 ### 账号域事件流（remote 模式）
