@@ -1,0 +1,58 @@
+package com.ingot.cloud.member.api.model.dto.auth;
+
+import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * 登录记录 DTO（Auth 服务通知 Member 记录 C 端登录事件）。
+ *
+ * <p>与 PMS 端 {@code LoginRecordDTO} 语义一致，但归属 member-api 自持，避免 member-api 依赖 pms-api。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ */
+@Data
+public class LoginRecordDTO implements Serializable {
+
+    /**
+     * 是否登录成功
+     */
+    private boolean success;
+
+    /**
+     * 用户ID（登录成功时必填；失败时若能查到则填）
+     */
+    private Long userId;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 客户端IP
+     */
+    private String clientIp;
+
+    /**
+     * 用户类型
+     */
+    private String userType;
+
+    /**
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
+     * 登录时间
+     */
+    private LocalDateTime loginAt;
+
+    /**
+     * 失败原因码（登录失败时填写）
+     */
+    private String failureReason;
+}

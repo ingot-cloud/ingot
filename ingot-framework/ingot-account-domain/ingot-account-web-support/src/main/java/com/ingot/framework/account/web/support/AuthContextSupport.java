@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.ingot.framework.account.domain.config.AccountDomainProperties;
 import com.ingot.framework.account.domain.model.LockState;
+import com.ingot.framework.account.domain.model.LockoutPolicy;
 import com.ingot.framework.account.domain.model.UserAccount;
 import com.ingot.framework.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.account.domain.port.outbound.UserAccountPort;
+import com.ingot.framework.account.domain.service.AccountLockoutPolicyLoader;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.InUserMetaKeys;
@@ -38,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>可选依赖（按需降级）</h3>
  * <ul>
  *   <li>{@code credentialSecurityService} 为 {@code null} 或业务侧未启用密码策略时：跳过硬过期判定</li>
- *   <li>{@code lockStatePort} 为 {@code null}、{@code accountProperties} 未启用锁定策略时：跳过 meta 填充</li>
+ *   <li>{@code lockStatePort} 为 {@code null}、{@code lockoutPolicyLoader} 未启用锁定策略时：跳过 meta 填充</li>
  * </ul>
  * <p>这使得 Member 等 baseline 场景（不启用密码过期/自动锁定策略）可以不注入上述依赖，
  * 调用方仍可安全使用本工具，不会导致启动失败或空指针。</p>
@@ -59,18 +60,18 @@ public class AuthContextSupport {
 
     private final CredentialSecurityService credentialSecurityService;
     private final LockStatePort lockStatePort;
-    private final AccountDomainProperties accountProperties;
+    private final AccountLockoutPolicyLoader lockoutPolicyLoader;
     private final InitialPasswordService initialPasswordService;
     private final UserAccountPort userAccountPort;
 
     public AuthContextSupport(CredentialSecurityService credentialSecurityService,
                               LockStatePort lockStatePort,
-                              AccountDomainProperties accountProperties,
+                              AccountLockoutPolicyLoader lockoutPolicyLoader,
                               InitialPasswordService initialPasswordService,
                               UserAccountPort userAccountPort) {
         this.credentialSecurityService = credentialSecurityService;
         this.lockStatePort = lockStatePort;
-        this.accountProperties = accountProperties;
+        this.lockoutPolicyLoader = lockoutPolicyLoader;
         this.initialPasswordService = initialPasswordService;
         this.userAccountPort = userAccountPort;
     }
@@ -145,8 +146,7 @@ public class AuthContextSupport {
     private Map<String, Object> buildMeta(Long userId, UserTypeEnum userType, UserDetailsResponse result) {
         Map<String, Object> meta = new HashMap<>(4);
 
-        AccountDomainProperties.LockoutPolicy policy =
-                accountProperties != null ? accountProperties.getLockout() : null;
+        LockoutPolicy policy = lockoutPolicyLoader != null ? lockoutPolicyLoader.getLockoutPolicy() : null;
         if (policy != null && policy.isEnabled()) {
             meta.put(InUserMetaKeys.MAX_FAILED_ATTEMPTS, policy.getMaxAttempts());
             meta.put(InUserMetaKeys.HINT_AFTER_ATTEMPTS, policy.getHintAfterAttempts());

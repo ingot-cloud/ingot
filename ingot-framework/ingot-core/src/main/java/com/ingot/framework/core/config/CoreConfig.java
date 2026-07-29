@@ -2,10 +2,12 @@ package com.ingot.framework.core.config;
 
 import com.ingot.framework.commons.model.transform.CommonTypeTransform;
 import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.core.utils.RuntimeEnvironment;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 
 /**
  * <p>Description  : CoreConfig.</p>
@@ -31,5 +33,10 @@ public class CoreConfig {
     @Lazy(false)
     public SpringContextHolder springContextHolder() {
         return new SpringContextHolder();
+    }
+
+    @Bean
+    public RuntimeEnvironment runtimeEnvironment(Environment environment) {
+        return new RuntimeEnvironment(environment);
     }
 }

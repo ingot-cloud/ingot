@@ -1,6 +1,6 @@
 package com.ingot.cloud.auth.event;
 
-import com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO;
+import com.ingot.cloud.member.api.rpc.RemoteMemberLoginRecordService;
 import com.ingot.cloud.pms.api.rpc.RemotePmsLoginRecordService;
 import com.ingot.framework.commons.model.common.AuthFailureDTO;
 import com.ingot.framework.commons.model.common.AuthSuccessDTO;
@@ -15,11 +15,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * 登录事件监听器
+ * 登录事件监听器。
  * <p>
- * 异步处理登录成功/失败事件，通知 PMS/Member 服务更新登录状态：
- * - 成功：更新 last_login_at、last_login_ip、重置失败计数
- * - 失败：累加失败计数，触发自动锁定策略
+ * 异步处理登录成功/失败事件，按用户类型分发到对应服务更新登录状态：
+ * <ul>
+ *   <li>ADMIN（B 端）→ PMS：{@link RemotePmsLoginRecordService}</li>
+ *   <li>APP（C 端）→ Member：{@link RemoteMemberLoginRecordService}</li>
+ * </ul>
+ * 成功更新 last_login_at/ip 并重置失败计数；失败累加失败计数并触发自动锁定策略。
  * </p>
  *
  * @author wangchao
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Component;
 public class LoginEventListener {
 
     private final RemotePmsLoginRecordService pmsLoginRecordService;
+    private final RemoteMemberLoginRecordService memberLoginRecordService;
 
     @Async
     @Order
@@ -40,23 +44,34 @@ public class LoginEventListener {
         log.info("[LoginEventListener] 登录成功 username={} userId={} userType={} ip={}",
                 payload.getUsername(), payload.getUserId(), payload.getUserType(), payload.getIp());
 
-        // 只处理平台用户（ADMIN），Member 用户暂时不处理
-        if (!UserTypeEnum.ADMIN.getValue().equals(payload.getUserType())) {
-            log.debug("[LoginEventListener] 非 ADMIN 用户，暂不处理 userType={}", payload.getUserType());
-            return;
-        }
-
+        String userType = payload.getUserType();
         try {
-            LoginRecordDTO dto = new LoginRecordDTO();
-            dto.setSuccess(true);
-            dto.setUserId(payload.getUserId());
-            dto.setUsername(payload.getUsername());
-            dto.setClientIp(payload.getIp());
-            dto.setUserType(payload.getUserType());
-            dto.setLoginAt(payload.getTime());
-            pmsLoginRecordService.record(dto);
+            if (UserTypeEnum.ADMIN.getValue().equals(userType)) {
+                com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO();
+                dto.setSuccess(true);
+                dto.setUserId(payload.getUserId());
+                dto.setUsername(payload.getUsername());
+                dto.setClientIp(payload.getIp());
+                dto.setUserType(userType);
+                dto.setLoginAt(payload.getTime());
+                pmsLoginRecordService.record(dto);
+            } else if (UserTypeEnum.APP.getValue().equals(userType)) {
+                com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO();
+                dto.setSuccess(true);
+                dto.setUserId(payload.getUserId());
+                dto.setUsername(payload.getUsername());
+                dto.setClientIp(payload.getIp());
+                dto.setUserType(userType);
+                dto.setLoginAt(payload.getTime());
+                memberLoginRecordService.record(dto);
+            } else {
+                log.debug("[LoginEventListener] 未识别用户类型，跳过 userType={}", userType);
+            }
         } catch (Exception e) {
-            log.error("[LoginEventListener] 通知 PMS 登录成功失败 username={}", payload.getUsername(), e);
+            log.error("[LoginEventListener] 通知下游登录成功失败 username={} userType={}",
+                    payload.getUsername(), userType, e);
         }
     }
 
@@ -68,33 +83,48 @@ public class LoginEventListener {
         log.warn("[LoginEventListener] 登录失败 username={} userType={} ip={} reason={}",
                 payload.getUsername(), payload.getUserType(), payload.getIp(), payload.getErrorCode());
 
-        // 只处理平台用户（ADMIN），Member 用户待 M5 阶段接入
-        if (!UserTypeEnum.ADMIN.getValue().equals(payload.getUserType())) {
-            log.debug("[LoginEventListener] 非 ADMIN 用户，暂不处理 userType={}", payload.getUserType());
-            return;
-        }
-
+        String userType = payload.getUserType();
+        Long tenantId = parseTenantId(payload.getTenantId());
         try {
-            LoginRecordDTO dto = new LoginRecordDTO();
-            dto.setSuccess(false);
-            dto.setUsername(payload.getUsername());
-            dto.setClientIp(payload.getIp());
-            dto.setUserType(payload.getUserType());
-            dto.setLoginAt(payload.getTime());
-            dto.setFailureReason(payload.getErrorCode());
-
-            Long tenantId = null;
-            if (payload.getTenantId() != null) {
-                try {
-                    tenantId = Long.parseLong(payload.getTenantId());
-                } catch (NumberFormatException ignored) {
-                }
+            if (UserTypeEnum.ADMIN.getValue().equals(userType)) {
+                com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO();
+                dto.setSuccess(false);
+                dto.setUsername(payload.getUsername());
+                dto.setClientIp(payload.getIp());
+                dto.setUserType(userType);
+                dto.setLoginAt(payload.getTime());
+                dto.setFailureReason(payload.getErrorCode());
+                dto.setTenantId(tenantId);
+                pmsLoginRecordService.record(dto);
+            } else if (UserTypeEnum.APP.getValue().equals(userType)) {
+                com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO();
+                dto.setSuccess(false);
+                dto.setUsername(payload.getUsername());
+                dto.setClientIp(payload.getIp());
+                dto.setUserType(userType);
+                dto.setLoginAt(payload.getTime());
+                dto.setFailureReason(payload.getErrorCode());
+                dto.setTenantId(tenantId);
+                memberLoginRecordService.record(dto);
+            } else {
+                log.debug("[LoginEventListener] 未识别用户类型，跳过 userType={}", userType);
             }
-            dto.setTenantId(tenantId);
-
-            pmsLoginRecordService.record(dto);
         } catch (Exception e) {
-            log.error("[LoginEventListener] 通知 PMS 登录失败失败 username={}", payload.getUsername(), e);
+            log.error("[LoginEventListener] 通知下游登录失败失败 username={} userType={}",
+                    payload.getUsername(), userType, e);
+        }
+    }
+
+    private Long parseTenantId(String tenantId) {
+        if (tenantId == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(tenantId);
+        } catch (NumberFormatException ignored) {
+            return null;
         }
     }
 }

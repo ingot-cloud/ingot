@@ -1,8 +1,6 @@
 package com.ingot.cloud.member.identity;
 
 import com.ingot.cloud.member.service.biz.BizUserService;
-import com.ingot.cloud.member.service.domain.MemberUserTenantService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
@@ -10,6 +8,7 @@ import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.security.core.identity.UserIdentityResolver;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
 import com.ingot.framework.tenant.TenantEnv;
+import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +22,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SocialIdentityResolver implements UserIdentityResolver {
     private final UserSocialService userSocialService;
-    private final MemberUserTenantService userTenantService;
-
     private final BizUserService bizUserService;
-    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
+    private final TenantProperties tenantProperties;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -40,8 +37,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             String socialCode = request.getSocialCode();
             String uniqueID = userSocialService.getUniqueID(socialType, socialCode);
             return IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
-                    request.getUserType(), request.getTenant(),
-                    userTenantService, bizUserService, remotePmsTenantDetailsService);
+                    request.getUserType(), bizUserService, tenantProperties);
         });
     }
 }

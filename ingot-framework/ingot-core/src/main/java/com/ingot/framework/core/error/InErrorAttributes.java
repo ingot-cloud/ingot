@@ -10,7 +10,9 @@ import cn.hutool.core.util.ObjectUtil;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.core.utils.RuntimeEnvironment;
 import jakarta.servlet.ServletException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -29,8 +31,11 @@ import org.springframework.web.context.request.WebRequest;
  * <p>Time         : 5:24 PM.</p>
  */
 @Slf4j
+@RequiredArgsConstructor
 public class InErrorAttributes implements ErrorAttributes, Ordered {
     private static final String ERROR_ATTRIBUTE = InErrorAttributes.class.getName() + ".ERROR";
+
+    private final RuntimeEnvironment environment;
 
     @Override
     public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
@@ -43,7 +48,9 @@ public class InErrorAttributes implements ErrorAttributes, Ordered {
         addPath(errorAttributes, webRequest);
 
         Map<String, Object> finalAttributes = new LinkedHashMap<>();
-        finalAttributes.put(R.DATA, errorAttributes);
+        if (environment.isDev()) {
+            finalAttributes.put(R.DATA, errorAttributes);
+        }
 
         log.error("[{}] error={}, attributes={}", ERROR_ATTRIBUTE, error, errorAttributes);
 

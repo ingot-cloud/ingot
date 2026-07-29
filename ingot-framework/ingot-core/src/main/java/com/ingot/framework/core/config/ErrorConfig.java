@@ -1,6 +1,7 @@
 package com.ingot.framework.core.config;
 
 import com.ingot.framework.core.error.InErrorAttributes;
+import com.ingot.framework.core.utils.RuntimeEnvironment;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -20,7 +21,7 @@ import org.springframework.context.annotation.Bean;
 public class ErrorConfig {
 
     @Bean
-    public ErrorAttributes errorAttributes() {
-        return new InErrorAttributes();
+    public ErrorAttributes errorAttributes(RuntimeEnvironment environment) {
+        return new InErrorAttributes(environment);
     }
 }

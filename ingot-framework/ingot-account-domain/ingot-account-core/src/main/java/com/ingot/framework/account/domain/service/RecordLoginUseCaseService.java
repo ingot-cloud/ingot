@@ -2,8 +2,8 @@ package com.ingot.framework.account.domain.service;
 
 import java.time.LocalDateTime;
 
-import com.ingot.framework.account.domain.config.AccountDomainProperties;
 import com.ingot.framework.account.domain.model.AccountSecurityEvent;
+import com.ingot.framework.account.domain.model.LockoutPolicy;
 import com.ingot.framework.account.domain.model.enums.LockReason;
 import com.ingot.framework.account.domain.port.inbound.LockAccountUseCase;
 import com.ingot.framework.account.domain.port.inbound.RecordLoginUseCase;
@@ -31,7 +31,7 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
     private final LockStatePort lockStatePort;
     private final SecurityEventPort securityEventPort;
     private final LockAccountUseCase lockAccountUseCase;
-    private final AccountDomainProperties accountProperties;
+    private final AccountLockoutPolicyLoader lockoutPolicyLoader;
     private final CredentialSecurityService credentialSecurityService;
 
     @Override
@@ -89,12 +89,13 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
         securityEventPort.publishEvent(event);
 
         // 3. 检查是否需要自动锁定
-        if (accountProperties.getLockout().isEnabled()) {
-            int maxAttempts = accountProperties.getLockout().getMaxAttempts();
+        LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy();
+        if (lockout.isEnabled()) {
+            int maxAttempts = lockout.getMaxAttempts();
             if (newFailCount >= maxAttempts) {
                 log.warn("用户 {} 登录失败次数达到 {}，触发自动锁定", command.getUserId(), newFailCount);
 
-                Integer lockDuration = accountProperties.getLockout().getLockDurationMinutes();
+                Integer lockDuration = lockout.getLockDurationMinutes();
                 lockAccountUseCase.lockAutomatically(
                         command.getUserId(),
                         command.getUserType(),
