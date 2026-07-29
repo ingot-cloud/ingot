@@ -1,1 +1,2 @@
 com.ingot.cloud.security.api.EnableAPIConfiguration
+com.ingot.cloud.security.api.config.SecurityEventPropertiesAutoConfiguration

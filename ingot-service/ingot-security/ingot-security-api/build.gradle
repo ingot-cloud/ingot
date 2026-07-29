@@ -4,4 +4,6 @@ dependencies {
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
     api project(ingot.framework_event_bus)
+
+    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
 }

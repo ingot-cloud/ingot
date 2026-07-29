@@ -2,10 +2,12 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
     api project(ingot.framework_account_core)
+    api project(ingot.security_api)
     implementation project(ingot.framework_data_mybatis_common)
     implementation(deps.mybatis.plus_starter)
     implementation project(ingot.framework_tss_spring)
 
+    compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
 }

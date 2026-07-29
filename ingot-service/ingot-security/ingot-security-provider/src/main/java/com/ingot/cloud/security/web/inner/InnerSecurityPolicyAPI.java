@@ -7,8 +7,8 @@ import com.ingot.cloud.security.api.model.vo.policy.IpListItemVO;
 import com.ingot.cloud.security.api.model.vo.policy.RateLimitRuleVO;
 import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
 import com.ingot.cloud.security.api.model.vo.policy.ViolationEscalationVO;
-import com.ingot.cloud.security.model.domain.GatewayBlacklistEvent;
 import com.ingot.cloud.security.model.domain.GatewayViolationEscalation;
+import com.ingot.cloud.security.service.SecurityEventService;
 import com.ingot.cloud.security.service.policy.SecurityPolicyAdminService;
 import com.ingot.cloud.security.service.policy.SecurityPolicySnapshot;
 import com.ingot.framework.commons.model.support.R;
@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class InnerSecurityPolicyAPI implements RShortcuts {
 
     private final SecurityPolicyAdminService policyService;
+    private final SecurityEventService securityEventService;
 
     @GetMapping("/policy/snapshot")
     public R<SecurityPolicySnapshotVO> snapshot() {
@@ -92,9 +93,7 @@ public class InnerSecurityPolicyAPI implements RShortcuts {
 
     @PostMapping("/blacklist/report")
     public R<Void> reportBlacklist(@RequestBody BlacklistReportDTO dto) {
-        GatewayBlacklistEvent event = new GatewayBlacklistEvent();
-        BeanUtils.copyProperties(dto, event);
-        policyService.recordEvent(event);
+        securityEventService.saveFromBlacklistReport(dto);
         return ok();
     }
 
