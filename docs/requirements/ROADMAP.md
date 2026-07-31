@@ -2,7 +2,7 @@
 
 > 跟踪 Ingot 平台级能力演进与持续优化。条目进入开发时链接 `specs/changes/active/` change；完成后链接 `specs/current/` 或 `docs/modules/`。
 
-**最后 review**：2026-07-29
+**最后 review**：2026-07-30
 
 ## 状态说明
 
@@ -50,6 +50,7 @@
 | R-2026-014 | Docker 多环境构建标准化 | 简化 CI/CD 与多环境镜像管理 | planned | [部署指南](../guides/deployment/DOCKER-MULTI-ENVIRONMENT.md) · [Dockerfile 迁移](../guides/deployment/DOCKERFILE-MIGRATION-GUIDE.md) |
 | R-2026-025 | 统一安全事件中心 | 跨模块安全事实统一模型与中心入库，支撑后续安全概览 | done | [change](../../specs/changes/archive/2026/20260729-security-event-center/) · [current](../../specs/current/security/security-event-center/) · [roadmap](./themes/security-center-roadmap.md) |
 | R-2026-026 | 访问防护补全 | 网关策略执行面收口、Sentinel 统一限流、3.1 四维度防爆破与 remote 弹性 | in-spec | [change](../../specs/changes/active/20260729-security-access-protection/) · [roadmap](./themes/security-center-roadmap.md) |
+| R-2026-027 | 统一分层缓存框架 | 消除 credential/gateway/access/dict 四处重复的分层缓存与降级实现，补齐 TTL 兜底与共享快照层 | in-spec | [change](../../specs/changes/active/20260730-framework-layered-cache/) |
 
 ---
 

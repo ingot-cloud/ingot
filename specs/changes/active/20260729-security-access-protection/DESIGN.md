@@ -217,15 +217,31 @@ LoginFailurePolicyLoader (facade)
 | `PolicyRemoteUnavailableException` | gateway-rule-client | 远程失败信号 |
 | `ResilientSnapshotFetcher` | gateway-rule-client | 包装 delegate，成功刷新 LKG，失败走 LKG/地板 |
 | `PolicyLastKnownGoodStore` | gateway-rule-client | Redis 存 `SecurityPolicySnapshotVO` JSON |
-| `LocalPolicyFloorSupplier` | gateway-rule-client | 从各域 `*Properties` 组装最低快照 |
+| `LocalPolicyFloorSupplier` | gateway-rule-client | 按域 `ObjectProvider<*Properties>` 聚合最低快照；域未启用则该域片段为空 |
 | `PolicySourceHolder` | gateway-rule-client | 当前来源 REMOTE/LKG/LOCAL_FLOOR |
 | Actuator endpoint | gateway 或 client | 暴露 `policySource`、降级计数 |
 
 **改造点**：`RemoteSnapshotFetcher.fetch()` 失败时 **抛** `PolicyRemoteUnavailableException`，不再返回 `null`；各领域 `Remote*Service` 经 `ResilientSnapshotFetcher` 取快照。
 
-**Nacos 地板 dataId**：`in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`，与凭证 resilience 一致）。
+**Nacos 地板 dataId**：`in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`，与凭证 resilience 一致）。该文件仅承载地板**数据**（`policy.groups` / `policy.rules` / `policy.items` / `policy.policies`），**不声明** 域 `enabled` 与 `policy.mode`——避免与 `in-service-gateway.yml` 同前缀冲突后由 `spring.config.import` 顺序决定生效值。
 
 **合法空快照**：远程 HTTP 成功且 data 为空 → 接受、刷新 LKG、编译结果为空规则集（不限流），**不**触发地板。
+
+### 配置开关契约（正交化）
+
+SDK 配置分两层，**互不级联**，任一开关的状态不影响其他开关对应的功能：
+
+| 层 | 配置 | 职责 | 装配条件 |
+|----|------|------|---------|
+| 能力层 | 无开关 | 快照拉取链：`FeignPolicySnapshotFetcher`、`PolicyLastKnownGoodStore`、`LocalPolicyFloorSupplier`、`ResilientSnapshotFetcher`、`RemoteSnapshotFetcher`、`PolicySourceHolder`、Actuator | 仅 `@ConditionalOnBean(RemoteSecurityPolicyService)`（Feign 客户端可用性，纯能力判定） |
+| 基础设施调参 | `ingot.security.policy.client.*` | `invalidation-enabled`（失效协调器）、`resilience-enabled`、`local-floor-enabled`、`lkg-redis-key` | 各自独立 |
+| 功能层 | `ingot.security.<domain>.enabled` + `policy.mode` | ratelimit / blacklist / challenge / violation-escalation 四域 Service | 各域 `@ConditionalOnProperty` |
+
+**移除 `ingot.security.policy.client.enabled`**：该键原先同时门控「快照链能力」与「失效协调器功能」，导致域 `mode=remote` 隐式依赖它（关闭即 `NoSuchBeanDefinitionException`）。快照链是各域 remote 模式的基础设施依赖而非功能，装配后不主动发请求（按需 lazy fetch），因此下移为无条件装配；协调器由既有 `invalidation-enabled` 独立控制，该键遂成冗余。
+
+**顶层不再 `@EnableConfigurationProperties` 各域 Properties**：改由各域 AutoConfiguration 自行绑定，`LocalPolicyFloorSupplier` 经 `ObjectProvider` 延迟解析。副作用是地板语义与域开关自动对齐——域关闭则其地板片段为空；同时补齐 challenge 域地板（原先恒为空列表），四域对称。`SecurityPolicySnapshotVO.groups` 为 ratelimit 与 challenge 共用，challenge 分组按 `code` 去重合并（ratelimit 优先）。
+
+**最低安全基线按域条件化**：原 `minimalBaseline()` 在地板整体为空时无条件注入登录路径 IP 限流，现改为仅对**已启用且本地无配置**的域补基线（对齐 REQUIREMENTS 业务规则 8），域未启用不贡献任何片段。`local-floor-enabled=false` 且无 LKG 时仍 fail-closed（D7）。
 
 ### attemptWindowMinutes（L2 补齐）
 

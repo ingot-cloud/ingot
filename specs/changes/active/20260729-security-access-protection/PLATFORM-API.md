@@ -4,7 +4,7 @@
 > **服务**：`ingot-service-security`（经网关 `/security/**` StripPrefix 后访问）  
 > **Base Path**：`/platform/security`  
 > **鉴权**：Platform 管理员 JWT + 权限码（见各接口）  
-> **响应包装**：统一 `R<T>`（`code` / `msg` / `data`）
+> **响应包装**：统一 `R<T>`（`code` / `message` / `data`）
 
 本文档覆盖 L4 change 涉及的全部**管理面写操作** API：既有网关策略（限流/名单/违规升级）与本 change **新增**的登录失败保护策略。Inner Feign 快照接口仅供后端，不在本文档范围。
 
@@ -23,13 +23,13 @@
 
 ```json
 {
-  "code": "0",
-  "msg": "success",
+  "code": "S0200",
+  "message": "Success",
   "data": { }
 }
 ```
 
-失败时 `code` 非 `0`，`msg` 为可读错误信息。
+失败时 `code` 非 `S0200`，`message` 为可读错误信息。
 
 ### 1.3 权限码前缀
 

@@ -20,93 +20,43 @@
 
 ## Phase 1 — Gateway Policy Resilience
 
-- [ ] T1-1：新增 `PolicyRemoteUnavailableException`、`PolicyLastKnownGoodStore`（Redis）、`LocalPolicyFloorSupplier`
-  - 依赖：T0-1 approved
-  - 验收：单元测试覆盖 save/load LKG；floor 返回非空 baseline
-
-- [ ] T1-2：实现 `ResilientSnapshotFetcher` + `PolicySourceHolder`；改造 `RemoteSnapshotFetcher` 失败抛异常
-  - 依赖：T1-1
-  - 验收：`ResilientSnapshotFetcherTest`：成功刷新 LKG / 失败走 LKG / 无 LKG 走地板 / 合法空不兜底
-
-- [ ] T1-3：装配 Resilient 链至各 `Remote*Service`；Actuator 端点暴露 `policySource`
-  - 依赖：T1-2
-  - 验收：remote 失败时 Actuator 显示 LKG 或 LOCAL_FLOOR；不出现 null 快照 silent 放行
-
-- [ ] T1-4：Nacos 地板示例 `in-security-policy.yml` + 动态刷新说明写入模块 JavaDoc
-  - 依赖：T1-3
-  - 验收：改 floor yaml 不重启，Actuator 来源仍为 LOCAL_FLOOR 且规则变化
+- [x] T1-1：新增 `PolicyRemoteUnavailableException`、`PolicyLastKnownGoodStore`（Redis）、`LocalPolicyFloorSupplier`
+- [x] T1-2：实现 `ResilientSnapshotFetcher` + `PolicySourceHolder`；改造 `RemoteSnapshotFetcher` 失败抛异常
+- [x] T1-3：装配 Resilient 链至各 `Remote*Service`；Actuator 端点暴露 `policySource`
+- [x] T1-4：Nacos 地板示例 `in-security-policy.yml` + 动态刷新说明写入模块 JavaDoc
 
 ---
 
 ## Phase 2 — Execution Closure
 
-- [ ] T2-1：编写 migration `011_security_access_protection_seed.sql` + rollback + 基线 SQL 同步
-  - 依赖：T0-1 approved
-  - 验收：`login-auth` / `api-business` 分组及限流种子可执行可回滚
-
-- [ ] T2-2：更新 Nacos DEV/TEST/PROD `in-service-gateway.yml`：SDK 四域 enabled + remote + event.remote
-  - 依赖：T2-1
-  - 验收：网关启动 `SecurityPolicyBootstrapLogger` 打印规则条数 > 0
-
+- [x] T2-1：编写 migration `011_security_access_protection_seed.sql` + rollback + 基线 SQL 同步
+- [x] T2-2：更新 Nacos DEV/TEST/PROD `in-service-gateway.yml`：SDK 四域 enabled + remote + event.remote
 - [ ] T2-3：E2E 阶段二 remote：Platform 快照 + 失效广播 + 登录路径 429
-  - 依赖：T2-2、T1-3
-  - 验收：`test-case/security-policy-e2e.md` 阶段二核心用例通过
-
-- [ ] T2-4：移除 `/pms/**`、`/member/**`、`/security/**` 路由 `RequestRateLimiter` filter
-  - 依赖：T2-3
-  - 验收：Nacos 无 RequestRateLimiter；E2E 限流行为与迁移前等价或更严（D9）
+- [x] T2-4：移除 `/pms/**`、`/member/**`、`/security/**` 路由 `RequestRateLimiter` filter
 
 ---
 
 ## Phase 3 — 3.1 四维度登录失败保护 + 安全中心 remote
 
-- [ ] T3-0：`login_failure_protection_policy` DDL + 四维种子（合入 migration 011）+ 基线 SQL
-  - 依赖：T0-1 approved
-  - 验收：表可执行可回滚；种子与 PLATFORM-API §3.2 一致
-
-- [ ] T3-0b：`LoginFailureProtectionAPI`（Platform）+ `InnerLoginFailurePolicyAPI` + `RemoteLoginFailurePolicyService`（api 模块）
-  - 依赖：T3-0
-  - 验收：Swagger 可浏览；字段与 [PLATFORM-API.md](./PLATFORM-API.md) 一致；PUT 触发 `LOGIN_FAILURE_PROTECTION` 失效
-
-- [ ] T3-1：脚手架 `ingot-security-access-core` + `ingot-security-access-adapter` + Gradle；Auth 引入 adapter
-  - 依赖：T3-0b
-  - 验收：模块编译；`ingot.security.access.mode` 开关
-
-- [ ] T3-1b：`LocalLoginFailurePolicyLoader` + `RemoteLoginFailurePolicyLoader` + `ResilientLoginFailurePolicyLoader` + LKG + Floor + Actuator
-  - 依赖：T3-1
-  - 验收：remote 成功/LKG/地板单测；与凭证 Resilient 语义一致（D5）
-
-- [ ] T3-2：扩展 `AuthFailureDTO`（clientId/deviceId）+ `DefaultAuthenticationFailureHandler`
-  - 依赖：T3-1
-  - 验收：登录失败事件 payload 含新字段（有 Header/参数时）
-
-- [ ] T3-3：实现 `LoginFailureProtectionService` + Redis 滑动窗口 + `TempBlockWriter`（经 loader 读策略）
-  - 依赖：T3-1b、T3-2
-  - 验收：单测达阈值写 `in:gw:bl:tmp:*`；策略来自 remote Platform 配置
-
-- [ ] T3-4：Auth listener 接线 + `LoginFailurePolicyCacheCoordinator`（失效订阅）
-  - 依赖：T3-3
-  - 验收：S3–S6、S12；Platform 改阈值 ≤10s 生效
-
-- [ ] T3-5：扩展 `SecurityEventType` + 异步上报 ACCESS 事件
-  - 依赖：T3-4、L3
-  - 验收：封禁后 `security_event` 有对应 `LOGIN_FAIL_*_EXCEED`
-
-- [ ] T3-6：实现 `attemptWindowMinutes` 滑动窗口（`RecordLoginUseCaseService`）
-  - 依赖：T3-1
-  - 验收：S8 窗口外失败计数归零
-
-- [ ] T3-7：`ClientIdentity` + `RateLimitDimension.CLIENT` + `IpKeyType.CLIENT`（P0）
-  - 依赖：T2-3
-  - 验收：Platform 可配 Client 维度限流/名单；与 PLATFORM-API §4 一致
-
-- [ ] T3-8：Nacos `in-service-auth.yml`：`ingot.security.access.mode=remote`（DEV/TEST/PROD）
-  - 依赖：T3-4
-  - 验收：Auth 启动 Feign 拉策略；local 模式集成测试仍可通过
+- [x] T3-0：`login_failure_protection_policy` DDL + 四维种子（合入 migration 011）+ 基线 SQL
+- [x] T3-0b：`LoginFailureProtectionAPI`（Platform）+ `InnerLoginFailurePolicyAPI` + `RemoteLoginFailurePolicyService`（api 模块）
+- [x] T3-1：脚手架 `ingot-security-access-core` + `ingot-security-access-adapter` + Gradle；Auth 引入 adapter
+- [x] T3-1b：`LocalLoginFailurePolicyLoader` + `RemoteLoginFailurePolicyLoader` + `ResilientLoginFailurePolicyLoader` + LKG + Floor + Actuator
+- [x] T3-2：扩展 `AuthFailureDTO`（clientId/deviceId）+ `DefaultAuthenticationFailureHandler`
+- [x] T3-3：实现 `LoginFailureProtectionService` + Redis 滑动窗口 + `TempBlockWriter`（经 loader 读策略）
+- [x] T3-4：Auth listener 接线 + `LoginFailurePolicyCacheCoordinator`（失效订阅）
+- [ ] T3-5：扩展 `SecurityEventType` + 异步上报 ACCESS 事件（需 E2E 验证）
+- [x] T3-6：实现 `attemptWindowMinutes` 滑动窗口（`RecordLoginUseCaseService`）
+- [x] T3-7：`ClientIdentity` + `RateLimitDimension.CLIENT` + `IpKeyType.CLIENT`（P0）
+- [x] T3-8：Nacos `in-service-auth.yml`：`ingot.security.access.mode=remote`（DEV/TEST/PROD）
 
 ---
 
 ## Phase 4 — 验收与基线
+
+- [x] T4-0：网关策略 SDK 配置解耦（移除 `ingot.security.policy.client.enabled`；快照链下移为无条件能力层；地板改按域 `ObjectProvider` 聚合并补齐 challenge 域；基线按域条件化；三环境 `in-security-policy.yml` 只留地板数据）
+  - 依赖：Phase 1
+  - 验收：`PolicySnapshotFloorAssemblerTest` + `GatewayRuleClientWiringTest` 通过（不设 `policy.client.*` 时 remote 模式可装配，单域关闭不影响其他域）；DESIGN「配置开关契约」与 GATEWAY-RATE-LIMIT §6.1/§6.2 同步
 
 - [ ] T4-1：Resilience 故障注入：停 security → LKG → 地板 → 恢复 remote
   - 依赖：Phase 1–3

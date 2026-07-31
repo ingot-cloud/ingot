@@ -1,6 +1,6 @@
 # 访问防护补全（L4）
 
-> 状态：draft
+> 状态：approved（implementing）
 
 ## 元数据
 

@@ -86,7 +86,7 @@ SDK 按域拆分，各域独立开关与 `policy.mode`（`local` | `remote`）�
 
 自动配置入口（`META-INF/spring/...AutoConfiguration.imports`）：
 
-- `GatewayRuleClientAutoConfiguration` — Coordinator、`RemoteSnapshotFetcher`
+- `GatewayRuleClientAutoConfiguration` — Coordinator、快照拉取链（Feign → LKG → 地板 → Resilient → `RemoteSnapshotFetcher`）、`PolicySourceHolder` 与 Actuator
 - `RateLimitAutoConfiguration`
 - `BlacklistAutoConfiguration`
 - `ChallengeAutoConfiguration`
@@ -96,12 +96,14 @@ SDK 按域拆分，各域独立开关与 `policy.mode`（`local` | `remote`）�
 ### 3.2 加载模式
 
 **local**：规则写在各域 `*Properties` 的 yaml 中，适合单机调试。  
-**remote**：通过 `RemoteSnapshotFetcher` 一次 Feign 拉取 `SecurityPolicySnapshotVO`（`GET /inner/security/policy/snapshot`），`SnapshotAssembler` 转为各域内部模型；失败返回空快照，**不抛异常**（限流侧 Sentinel 退化为无 SDK 规则；名单侧视为未命中）。
+**remote**：通过 `RemoteSnapshotFetcher` 一次 Feign 拉取 `SecurityPolicySnapshotVO`（`GET /inner/security/policy/snapshot`），`SnapshotAssembler` 转为各域内部模型；**失败不 fail-open**，而是经 `ResilientSnapshotFetcher` 按 `remote → LKG(Redis) → Nacos 地板` 阶梯降级，当前来源见 Actuator `securitypolicy` 端点。`local-floor-enabled=false` 且无 LKG 时抛 `PolicyRemoteUnavailableException`（fail-closed）。
+
+远程 HTTP 成功但 `data` 为空视为**合法空快照**：接受、刷新 LKG、编译为空规则集，不触发降级。
 
 ### 3.3 L1 缓存与热更新
 
 - 各域 Service 内使用 `LocalCompiledCache`（`AtomicReference`，无 TTL）。
-- `ingot.security.policy.client.enabled=true`（默认）时装配 `SecurityPolicyCacheCoordinator`，订阅 `SecurityPolicyInvalidationEvent`，按 `SecurityPolicyDomain` 分发 evictor；`ALL` 域触发全部回调。
+- `ingot.security.policy.client.invalidation-enabled=true`（默认）且容器内存在 `InvalidationBus` 时装配 `SecurityPolicyCacheCoordinator`，订阅 `SecurityPolicyInvalidationEvent`，按 `SecurityPolicyDomain` 分发 evictor；`ALL` 域触发全部回调。
 - 限流域除 `RateLimitRuleService::evictAll` 外，网关 `SentinelGatewayConfiguration` 另注册 `reloadRules()`（先 evict 再拉快照，全量 `GatewayRuleManager.loadRules`）。
 
 典型生产配置：
@@ -111,7 +113,6 @@ ingot:
   security:
     policy:
       client:
-        enabled: true
         invalidation-enabled: true   # 跨节点改规则后自动 evict + Sentinel reload
     ratelimit:
       enabled: true
@@ -287,23 +288,33 @@ Sentinel 阻断后并行逻辑：
 
 ## 6. 配置速查
 
-### 6.1 SDK 总开关
+### 6.1 SDK 基础设施调参
+
+快照拉取链（Feign / LKG / 地板 / Resilient / `RemoteSnapshotFetcher` / `PolicySourceHolder` / Actuator）属于**能力层**，无功能开关，仅在 Feign 客户端 `RemoteSecurityPolicyService` 已注册时装配；装配后不主动发请求，按需 lazy fetch。以下键只调参，不做功能门控：
 
 | 配置项 | 默认 | 含义 |
 |--------|------|------|
-| `ingot.security.policy.client.enabled` | true | 关闭则无 Coordinator / RemoteSnapshotFetcher |
-| `ingot.security.policy.client.invalidation-enabled` | true | 关闭则不发失效订阅，需重启或手动广播 |
+| `ingot.security.policy.client.invalidation-enabled` | true | 关闭则不订阅失效事件，需重启或手动广播 |
+| `ingot.security.policy.client.resilience-enabled` | true | 关闭则退化为纯 Feign 直连（不写 LKG、不降级，远端不可用直接抛异常） |
+| `ingot.security.policy.client.local-floor-enabled` | true | 关闭则 remote 不可用且无 LKG 时 fail-closed 抛异常，不落 Nacos 地板 |
+| `ingot.security.policy.client.lkg-redis-key` | `in:sec:policy:lkg:snapshot` | LKG 快照 Redis key，长存不过期 |
+
+> `ingot.security.policy.client.enabled` 已移除。该键原先同时门控快照链能力与失效协调器，导致各域 `mode=remote` 隐式依赖它。现快照链无条件装配，协调器由 `invalidation-enabled` 独立控制。
 
 ### 6.2 各域开关（均需 `enabled=true` 才装配）
+
+各域开关与 §6.1 的基础设施调参**互不级联**：任一方状态不影响另一方对应的功能。
 
 | 域 | 开关 | 默认 |
 |----|------|------|
 | 限流 | `ingot.security.ratelimit.enabled` | **false**（避免影响现有 Sentinel 部署） |
-| 黑白名单 | `ingot.security.blacklist.enabled` | 见 `BlacklistProperties` |
-| 挑战 | `ingot.security.challenge.enabled` | 见 `ChallengeProperties` |
+| 黑白名单 | `ingot.security.blacklist.enabled` | **false** |
+| 挑战 | `ingot.security.challenge.enabled` | **false** |
 | 违规升级 | `ingot.security.violation-escalation.enabled` | **false**（避免影响现有部署） |
 
 各域 `policy.mode`：`local`（yaml 内联）| `remote`（Feign 快照）。
+
+各域 `*Properties` 由各自的 AutoConfiguration 绑定，因此域关闭时其 Properties Bean 不存在，Nacos 地板中该域片段自动为空——地板内容与域开关始终一致。启动期 `GatewayRuleClientWiringReporter` 会打印各域装配结果与地板贡献来源。
 
 详细 yaml 示例见各类 `*Properties` 类 JavaDoc（如 `RateLimitProperties`、`BlacklistProperties`、`ChallengeProperties`、`ViolationEscalationProperties`）。
 
@@ -328,8 +339,16 @@ spring:
 
 | 包/类 | 说明 |
 |-------|------|
-| `config.GatewayRuleClientAutoConfiguration` | SDK 顶层、Fetcher、Coordinator |
-| `internal.RemoteSnapshotFetcher` | 共享 Feign 拉快照 |
+| `config.GatewayRuleClientAutoConfiguration` | SDK 顶层：快照链、Coordinator、Actuator |
+| `config.GatewayRuleClientWiringReporter` | 启动期汇总各域装配结果与地板贡献来源 |
+| `internal.RemoteSnapshotFetcher` | 对外统一入口，内部委托 Resilient 链 |
+| `internal.ResilientSnapshotFetcher` | `remote → LKG → 地板` 降级阶梯，禁止 fail-open |
+| `internal.FeignPolicySnapshotFetcher` | 纯 Feign 拉快照，失败抛 `PolicyRemoteUnavailableException` |
+| `internal.PolicyLastKnownGoodStore` | LKG 快照 Redis 读写 |
+| `internal.LocalPolicyFloorSupplier` | 按域 `ObjectProvider` 聚合 Nacos 地板 |
+| `internal.PolicySnapshotFloorAssembler` | 各域 `*Properties` → 地板快照 VO |
+| `internal.PolicySourceHolder` | 当前来源与降级计数 |
+| `actuate.SecurityPolicyEndpoint` | `GET /actuator/securitypolicy` |
 | `internal.SecurityPolicyCacheCoordinator` | 失效事件 → 多 evictor 串行 |
 | `internal.SnapshotAssembler` | VO → 域模型 |
 | `internal.LocalCompiledCache` | L1 编译缓存 |

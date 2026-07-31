@@ -72,14 +72,14 @@ flowchart LR
 
 ### 1.2 阶段一：Local 模式配置（先测执行面）
 
-规则直接写在网关 yaml，**不经过安全中心**。三域均设为 `local`，`policy.client` 可关闭以简化环境：
+规则直接写在网关 yaml，**不经过安全中心**。三域均设为 `local`，关闭失效订阅以简化环境：
 
 ```yaml
 ingot:
   security:
     policy:
       client:
-        enabled: false          # 阶段一可关，不测失效广播
+        invalidation-enabled: false   # 阶段一不测失效广播
     ratelimit:
       enabled: true
       policy:
@@ -141,7 +141,6 @@ ingot:
   security:
     policy:
       client:
-        enabled: true
         invalidation-enabled: true   # 必开，测热更新
     ratelimit:
       enabled: true

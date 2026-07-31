@@ -188,7 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- 暂无
+- [访问防护补全（L4）](./changes/active/20260729-security-access-protection/README.md) — approved（implementing）
+- [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — approved（分 Phase 交付，Phase 03 起需等 L4 验收）
 
 已归档（2026）：
 
