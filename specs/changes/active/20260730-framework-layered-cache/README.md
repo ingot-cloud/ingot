@@ -1,6 +1,6 @@
 # 统一分层缓存框架抽象与消费者迁移
 
-> 状态：approved
+> 状态：in-progress（Phase 01、02 已完成；Phase 03 门禁已解除，待实施）
 
 ## 元数据
 
@@ -12,7 +12,7 @@
 | 创建日期 | 2026-07-30 |
 | 目标发布日期 | TBD（分 Phase 交付） |
 | Roadmap | [平台优化路线图](../../../../docs/requirements/ROADMAP.md) · R-2026-027 |
-| 需求来源 | 实施 [20260729-security-access-protection](../20260729-security-access-protection/README.md) 期间发现的横切重复与缓存一致性缺陷 |
+| 需求来源 | 实施 [20260729-security-access-protection](../../archive/2026/20260729-security-access-protection/README.md) 期间发现的横切重复与缓存一致性缺陷 |
 
 ## 目标
 
@@ -63,14 +63,14 @@
 
 ## 分 Phase 交付与门禁
 
-| Phase | 内容 | 前置门禁 |
-|---|---|---|
-| [01](./phases/01-cache-framework.md) | 框架模块 + skill | 无，可立即开始 |
-| [02](./phases/02-gateway-migration.md) | gateway-rule-client 迁移 | Phase 01 |
-| [03](./phases/03-loginfailure-credential.md) | LoginFailure 补齐 + credential 迁移 | Phase 02 **且** L4 change 完成 E2E 验收 |
-| [04](./phases/04-dict-closure.md) | dict 迁移 + 收口归档 | Phase 03 |
+| Phase | 内容 | 前置门禁 | 状态 |
+|---|---|---|---|
+| [01](./phases/01-cache-framework.md) | 框架模块 + skill | 无，可立即开始 | completed |
+| [02](./phases/02-gateway-migration.md) | gateway-rule-client 迁移 | Phase 01 | completed |
+| [03](./phases/03-loginfailure-credential.md) | LoginFailure 补齐 + credential 迁移 | Phase 02 **且** L4 change 完成 E2E 验收 | pending |
+| [04](./phases/04-dict-closure.md) | dict 迁移 + 收口归档 | Phase 03 | pending |
 
-**Phase 03 的门禁是硬约束**：[20260729-security-access-protection](../20260729-security-access-protection/TASKS.md) 的 T4-1（Resilience 故障注入）与 T4-2（全量 E2E）尚未完成，此时改动 `access-adapter` 与 `credential` 会让「测试失败到底是 L4 实现问题还是缓存迁移引入」变得无法区分。credential 更是已归档上线的 L1 基线，必须在 L4 验收后单独迁移并单独回归。
+**Phase 03 外部门禁**：L4 [20260729-security-access-protection](../../archive/2026/20260729-security-access-protection/) 已于 2026-08-01 验收归档（T4-1/T4-2 完成），Phase 03 可启动。
 
 ## 工件
 

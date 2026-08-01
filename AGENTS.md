@@ -23,3 +23,14 @@ Java 类型级注释（`class`、`interface`、`enum`、`record`、`@interface` 
 5. 真实性：所有 `{@link}`/`@see`/示例必须对应真实符号并与实现或公共契约一致；保留仍然有效的既有信息，仅修正错误、过时、冗余或不符合规范之处。
 6. 落盘时机：仅在用户明确要求"应用/修正注释"时改写源码；否则只给出建议注释或审查结论。
 
+# 缓存接入规范
+
+远端拉取的只读参考数据（策略、配置、字典、租户参数等）一律接入统一分层缓存框架 `ingot-framework/ingot-cache`，不再手写 L1/L2/降级逻辑，可借助 `.agents/skills/layered-cache` skill 完成接入或审查。规则如下：
+
+1. 适用范围：读多写少、来自远端、故障时不能 fail-open 的参考数据。实体 CRUD 的 `@Cacheable` 缓存由 `InRedisCacheManager` 承担，不在本框架职责内。
+2. 装配方式：用 `LayeredCacheBuilder` 组合，层次顺序固定为 `L1 → 刷新通知 → L2 → Resilient → loader`，可选层缺省即跳过。
+3. 不可违反的语义：Resilient 位于 L1/L2 之下；LKG 独立 key、无 TTL、不随失效清除；不缓存空值；远端不可用与合法空严格区分；地板 fail-closed；广播方自行清本地缓存。
+4. 配置键归属消费模块，框架只接收映射后的 `LayeredCacheSettings`，不得为兼容框架而改动模块已上线的配置键。
+5. 编译产物（`Pattern`、`PathPattern`、预建索引等）不进 L2，改用 `VersionedDerivedCache`，失效键必须是 `(source, version)` 二元组而非版本号本身。
+6. 详细契约与迁移记录以 [specs/current/framework/layered-cache/](./specs/current/framework/layered-cache/) 为准；该基线建立前参考 [active change DESIGN](./specs/changes/active/20260730-framework-layered-cache/DESIGN.md)。
+

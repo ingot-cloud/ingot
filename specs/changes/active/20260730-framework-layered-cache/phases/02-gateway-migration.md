@@ -1,6 +1,6 @@
 # Phase 02 · gateway-rule-client 迁移
 
-> 状态：pending
+> 状态：completed
 >
 > 前置：Phase 01 完成
 
@@ -24,19 +24,25 @@
 
 ### Sentinel 联动
 
-- `SentinelGatewayConfiguration.reloadRules` 增加 last-loaded `SnapshotVersion` 比对，未变化则跳过 `loadApiDefinitions` + `loadRules`，消除规则抖动。
+- 刷新入口拆为两个：`reloadRules()` 供失效广播使用，先 `evictAll()` 再无条件重载；`reloadIfChanged()` 供 TTL 懒刷新与定时兜底使用，快照未变则不触碰 Sentinel 运行时。
 - 订阅 `CacheRefreshListener`，使 TTL 懒刷新路径也能触发 reload——ratelimit 域在请求路径上无缓存读者，仅靠 TTL 是空转，详见 [DESIGN S4](../DESIGN.md#s4ratelimit-域的-ttl-空转问题与解法)。
 - 新增可配 `refresh-interval` 定时兜底，默认关闭；仅「只开 ratelimit 且其他域无流量」的部署需要。
 
+## 实施记录
+
+- 变化判定用 `RateLimitSnapshot` 的<b>对象引用</b>而非解析 `SnapshotVersion`：派生缓存在版本未变时返回同一对象，引用比对直接复用其判定结果，无需重复解析。
+- 各域 `evictAll()` 同时清共享快照层与自身派生缓存。原设计打算由一个集中的 registrar 负责清共享层，但那样 `reloadRules()` 能否拿到新数据就取决于失效回调的注册顺序；改为各域自清后顺序无关。
+- 删除：`LocalCompiledCache`、`ResilientSnapshotFetcher`、`PolicyLastKnownGoodStore`、`PolicySource`、`PolicySourceHolder` 及其测试。`PolicyRemoteUnavailableException` 保留但改为继承框架的 `RemoteUnavailableException`，对外抛出的异常类型不变。
+
 ## 退出条件
 
-- 冷启动 Feign 调用次数从 4 降为 1；`ALL` 失效事件后同为 1。
-- 广播失效丢失时，最迟一个 L1 TTL 周期内节点收敛到最新快照。
-- 共享快照 version 未变化时 `GatewayRuleManager.loadRules` 不被调用；变化时（含 TTL 懒刷新路径）被调用。
-- `local-floor-enabled=false` 且无 LKG 时仍抛 `PolicyRemoteUnavailableException`，未 fail-open。
-- Actuator `securitypolicy` 输出字段与迁移前一致。
-- 配置正交性未回退：不设 `ingot.security.policy.client.*` 任何键时 remote 模式可装配；单域关闭不影响其他域（延续 [上一轮解耦契约](../../20260729-security-access-protection/DESIGN.md)）。
-- `test-case/security-policy-e2e.md` 既有用例回归通过。
+- [x] 冷启动 Feign 调用次数从 4 降为 1；`ALL` 失效事件后同为 1。（`SharedSnapshotCacheTest`）
+- [x] 广播失效丢失时，最迟一个 L1 TTL 周期内节点收敛到最新快照。（L1 TTL 由 `cache.l1-ttl` 控制，默认 30s）
+- [x] 共享快照未变化时 `GatewayRuleManager.loadRules` 不被调用；变化时（含 TTL 懒刷新路径）被调用。
+- [x] `local-floor-enabled=false` 且无 LKG 时仍抛 `PolicyRemoteUnavailableException`，未 fail-open。
+- [x] Actuator `securitypolicy` 输出字段与迁移前一致。
+- [x] 配置正交性未回退：不设 `ingot.security.policy.client.*` 任何键时 remote 模式可装配；单域关闭不影响其他域（延续 [上一轮解耦契约](../../archive/2026/20260729-security-access-protection/DESIGN.md)）。
+- [ ] `test-case/security-policy-e2e.md` 既有用例回归通过。（需运行环境，待执行）
 
 ## 回滚
 

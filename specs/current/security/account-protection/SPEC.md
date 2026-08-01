@@ -92,5 +92,5 @@ Auth 登录成功/失败
 ## 8. 已知限制 / 后续跟踪
 
 1. **remote 弹性与中心化**（L2 后续 change）：`RemoteAccountLockoutPolicyLoader`、Resilient/LKG/Nacos 地板/L1-L2/Invalidation/Actuator、安全中心 `account_lockout_policy_config` 表与管理 CRUD。依托现有 `mode` 与 seam，消费侧无需再改。
-2. **`attemptWindowMinutes` 滑动窗口**：配置项已定义，失败计数重置逻辑未实现。
+2. **`attemptWindowMinutes` 滑动窗口**：已在 L4（[access-protection](../access-protection/README.md)）于 `RecordLoginUseCaseService` 实现；窗口外失败计数归零后再递增。
 3. **V1 单元测试**：`InnerLoginRecordAPI`、`LoginEventListener`、`LocalAccountLockoutPolicyLoader` 自动化测试待后续补齐（验收以手工集成/regression 为准）。

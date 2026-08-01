@@ -9,12 +9,14 @@
 ```mermaid
 flowchart TD
   subgraph shared [共享值缓存层 泛型框架]
+    NOTIFY["RefreshNotifyingCacheLayer 引用比对"]
     L1["CaffeineCacheLayer 有 TTL"]
     L2["RedisCacheLayer 有 TTL"]
     RES["ResilientCacheLayer"]
     LOADER["CacheValueLoader remote 或 local"]
     LKG["LastKnownGoodStore 无 TTL"]
     FLOOR["CacheFloorSupplier Nacos"]
+    NOTIFY --> L1
     L1 -->|miss| L2
     L2 -->|miss| RES
     RES --> LOADER
@@ -27,13 +29,13 @@ flowchart TD
   subgraph fanout [失效与刷新]
     BUS["InvalidationBus"]
     COORD["LayeredCacheCoordinator"]
-    REFRESH["CacheRefreshListener"]
+    REFRESH["CacheRefreshPublisher"]
   end
-  L1 --> VDC
+  NOTIFY --> VDC
   BUS --> COORD
-  COORD -->|evict| L1
-  L1 -->|"载入新值"| REFRESH
-  REFRESH -->|"version 变化"| SENT["Sentinel reloadRules"]
+  COORD -->|evict| NOTIFY
+  NOTIFY -->|"值发生变化"| REFRESH
+  REFRESH -->|"快照引用变化"| SENT["Sentinel reloadRules"]
 ```
 
 三重一致性保障，职责不重叠：
@@ -52,41 +54,54 @@ flowchart TD
 
 | 包 | 类 | 职责 |
 |---|---|---|
-| `spi` | `LayeredCache<K, V>` | 统一读写口：`get(K)` / `evict(K)` / `evictAll()` |
+| `spi` | `LayeredCache<K, V>` | 统一读写口：`get(K)` / `evict(K)` / `evictAll()` / `name()` |
 | `spi` | `CacheValueLoader<K, V>` | 底层加载器（Feign remote 或 DB local） |
-| `spi` | `CacheFloorSupplier<V>` | Nacos 地板供给 |
+| `spi` | `CacheFloorSupplier<K, V>` | 地板供给；带 key 参数以兼容多 key 场景 |
 | `spi` | `RemoteUnavailableException` | 远端不可用信号，区别于合法空 |
 | `internal` | `CaffeineCacheLayer<K, V>` | L1 装饰器，`expireAfterWrite` + `maximumSize` |
-| `internal` | `RedisCacheLayer<K, V>` | L2 装饰器，JSON via `ObjectMapper` + `TypeReference`；多 key `evictAll()` 用 SCAN+DEL |
+| `internal` | `RedisCacheLayer<K, V>` | L2 装饰器，JSON via `ObjectMapper` + `TypeReference`；`evictAll` 按 pattern 决定 DEL 或 SCAN+DEL |
 | `internal` | `ResilientCacheLayer<K, V>` | remote → LKG → floor 阶梯 |
-| `internal` | `LastKnownGoodStore<V>` | Redis 无 TTL 存储，`evict` 不触及 |
+| `internal` | `LoaderCacheLayer<K, V>` | 弹性关闭时的最内层占位，保证链路结构完整 |
+| `internal` | `RefreshNotifyingCacheLayer<K, V>` | 最外层刷新通知层，引用比对去重 |
+| `internal` | `LastKnownGoodStore<K, V>` | Redis 无 TTL 存储，`evict` 不触及 |
 | `derived` | `VersionedDerivedCache<S, D>` | 派生编译缓存，键为 `SnapshotVersion` |
+| `derived` | `LazyDerivedCache<D>` | 无版本源的派生缓存，仅显式失效后重编译，供 local 模式使用 |
 | `derived` | `SnapshotVersion` | `record(CacheSource source, long version)` |
-| `source` | `CacheSource` | `L1` / `L2` / `REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR` |
+| `source` | `CacheSource` | `REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR` |
 | `source` | `CacheSourceHolder` | 当前来源、降级计数、`lastDegradeAt` |
-| `coordinator` | `LayeredCacheCoordinator` | `InvalidationBus` 订阅 + `register(domainKey, Runnable)` |
-| `coordinator` | `CacheRefreshListener` | 载入新值时的回调，供 version 变化联动 |
-| `config` | `LayeredCacheSettings` | 分层参数载体（普通 POJO，见 D2） |
-| `config` | `LayeredCacheBuilder` | 流式装配，可选层缺省即跳过 |
-| `config` | `LayeredCacheAutoConfiguration` | 注册 `LayeredCacheRegistry`、Coordinator、Endpoint |
+| `coordinator` | `LayeredCacheCoordinator<E, D>` | `InvalidationBus` 订阅 + `register(domain, Runnable)`；泛型化以适配各模块自己的事件与域类型 |
+| `coordinator` | `CacheRefreshListener<V>` | 载入新值时的回调，供 version 变化联动 |
+| `coordinator` | `CacheRefreshPublisher<V>` | 监听器注册与分发中介，解耦缓存构建与监听方装配时机 |
+| `config` | `LayeredCacheSettings` | 分层参数载体（Lombok `@Builder` POJO，见 D2） |
+| `config` | `LayeredCacheBuilder<K, V>` | 流式装配，可选层缺省即跳过 |
+| `config` | `LayeredCacheAutoConfiguration` | 注册 `LayeredCacheRegistry` 与 Endpoint；不装配具体缓存实例 |
 | `registry` | `LayeredCacheRegistry` | 汇总已注册实例，供 Actuator |
+| `registry` | `LayeredCacheDescriptor` | 单实例装配画像（层次开关 + `CacheSourceHolder`） |
 | `actuate` | `LayeredCacheEndpoint` | `GET /actuator/layeredcache` |
+
+`CacheSource` 只有三个值而非包含 L1/L2：来源标记仅由 `ResilientCacheLayer` 更新，热缓存命中不重新标记，否则高频读取会把可观测数据覆盖成无意义的「命中缓存」。这也保证 `SnapshotVersion` 的来源维度只反映降级位置。
+
+`LazyDerivedCache` 是 `VersionedDerivedCache` 的退化形式，服务于数据来自本地 `Properties`、没有可比对版本号的 local 模式。它替代 gateway 原有的 `LocalCompiledCache`，避免四个 local 域各自重复实现双重检查加载。
+
+刷新通知层位于装饰器链<b>最外层</b>而非 L1 之下：监听器回调通常要回读缓存取转换后的领域模型，若此时 L1 尚未写入，回读会再次穿透到远端，把一次加载放大成两次。放在最外层则回读必然命中 L1；配合引用比对去重，L1 命中期间完全静默，回调内的回读也不会触发二次广播，从根本上排除递归。代价是引用比对不区分缓存键，故该层仅适用于单 key 的共享快照场景。
 
 ### Builder 用法
 
 ```java
 LayeredCache<String, List<CredentialPolicyConfigVO>> cache = LayeredCacheBuilder
-        .named("credential")
-        .valueType(new TypeReference<List<CredentialPolicyConfigVO>>() {})
+        .<String, List<CredentialPolicyConfigVO>>named("credential")
         .loader(remoteLoader)
-        .resilient(lkgStore, floorSupplier)   // 可选；dict 不调用
-        .l2(redisTemplate, objectMapper)      // 可选；Redis 缺失时自动跳过
-        .l1()                                 // 可选
         .settings(settings)
+        .cacheable(v -> v != null && !v.isEmpty())   // 集合类必须排除空值
+        .emptyValue(List::of)
+        .resilientSingleKey(redisTemplate, objectMapper, TYPE, lkgKey, floorSupplier)
+        .l2SingleKey(redisTemplate, objectMapper, TYPE, "in:credential:configs:all")
         .sourceHolder(holder)
         .registry(registry)
         .build();
 ```
+
+L2 键策略按基数二选一：`l2SingleKey` 用于单一聚合快照（`evictAll` 直接 DEL），`l2MultiKey` 用于按实体分键（`evictAll` 按前缀 SCAN）；两者都是 `l2(...)` 的便捷封装，需要完全自定义映射时直接用后者。
 
 ### 关键决策
 
@@ -156,7 +171,9 @@ LayeredCache.get(key)
 | violation | `SentinelBlockHandler` 限流时调 | 生效（低频） |
 | **ratelimit** | **无**。Sentinel 读的是 `GatewayRuleManager` 已加载规则；`getSnapshot()` 仅在 `reloadRules()` 内被调用 | **不生效** |
 
-解法（D5）：共享快照层被 blacklist/challenge 的流量刷新后发出 `CacheRefreshListener` 回调，`SentinelGatewayConfiguration` 订阅并比对 last-loaded `SnapshotVersion`，变化才执行 `GatewayApiDefinitionManager.loadApiDefinitions` + `GatewayRuleManager.loadRules`。原有 Coordinator 注册的失效路径保持不变，两条路径都收敛到同一个 version 比对，天然幂等。
+解法（D5）：共享快照层被 blacklist/challenge 的流量刷新后发出 `CacheRefreshListener` 回调，`SentinelGatewayConfiguration` 订阅并判断快照是否真的变了，变化才执行 `GatewayApiDefinitionManager.loadApiDefinitions` + `GatewayRuleManager.loadRules`。
+
+判断用的是 `RateLimitSnapshot` 的<b>对象引用</b>而非重新解析版本号：派生缓存在 `(source, version)` 未变时返回同一个对象，引用比对因此直接复用了它已经做过的判定，零成本且不会漏判。原有 Coordinator 注册的失效路径保持不变（走 `reloadRules()`，先清缓存再无条件重载），两条路径互不干扰。
 
 ### 失败处理矩阵
 
@@ -190,7 +207,7 @@ Phase 01 → 02 → 03 → 04，每个 Phase 独立可发布。Phase 03 有外�
 **access-adapter LoginFailure（Phase 03）**
 
 - 换框架组件并**首次补齐 L1+L2**，修复 D-C（Coordinator 空转）。
-- 该模块属 L4 active change 的交付物，改动需同步回写 [20260729-security-access-protection/DESIGN.md](../20260729-security-access-protection/DESIGN.md)。
+- 该模块属 L4 active change 的交付物，改动需同步回写 [20260729-security-access-protection/DESIGN.md](../../archive/2026/20260729-security-access-protection/DESIGN.md)。
 
 **credential（Phase 03）**
 

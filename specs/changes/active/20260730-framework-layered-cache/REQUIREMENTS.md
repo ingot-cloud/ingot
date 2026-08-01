@@ -71,7 +71,7 @@
 ### 框架可用性（P1）
 
 14. Redis 与 Actuator 为**可选依赖**（`compileOnly` + `ObjectProvider`），Redis 缺失时 L2 与 LKG 静默降级为 no-op，不影响 L1 与地板。
-15. 各层可独立开关，任一层关闭后链路仍完整（装饰器缺省即跳过），不得出现「关掉某层导致 Bean 缺失」的耦合——这正是上一轮 [网关策略 SDK 配置解耦](../20260729-security-access-protection/DESIGN.md) 已确立的契约。
+15. 各层可独立开关，任一层关闭后链路仍完整（装饰器缺省即跳过），不得出现「关掉某层导致 Bean 缺失」的耦合——这正是上一轮 [网关策略 SDK 配置解耦](../../archive/2026/20260729-security-access-protection/DESIGN.md) 已确立的契约。
 
 ## 边界与非目标
 
@@ -105,7 +105,7 @@
 
 ### Phase 03 LoginFailure + credential
 
-- [ ] L4 change 的 T4-1 与 T4-2 已完成（门禁）
+- [x] L4 change 的 T4-1 与 T4-2 已完成（门禁，2026-08-01 验收归档）
 - [ ] LoginFailure 失效事件后 L1/L2 被真实清除（修复 D-C）
 - [ ] credential 迁移前后 Actuator `credentialpolicy` 输出逐字段一致
 - [ ] credential 的 Redis key `in:credential:configs:all` 与 `in:credential:policy:lkg` 内容格式不变

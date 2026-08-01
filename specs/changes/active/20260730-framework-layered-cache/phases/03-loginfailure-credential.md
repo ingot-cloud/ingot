@@ -1,12 +1,12 @@
 # Phase 03 · LoginFailure 补齐与 credential 迁移
 
-> 状态：blocked（等待 L4 change 验收）
+> 状态：pending（L4 门禁已解除，可启动）
 >
-> 前置：Phase 02 完成 **且** [20260729-security-access-protection](../../20260729-security-access-protection/TASKS.md) 的 T4-1（Resilience 故障注入）与 T4-2（全量 E2E）已完成
+> 前置：Phase 02 完成 **且** [20260729-security-access-protection](../../archive/2026/20260729-security-access-protection/TASKS.md) 的 T4-1（Resilience 故障注入）与 T4-2（全量 E2E）已完成（2026-08-01 验收归档）
 
 ## 门禁理由
 
-`ingot-security-access-adapter` 是 L4 active change 尚未验收的交付物。在其 E2E 与故障注入完成前替换缓存实现，会让测试失败的归因（L4 实现问题 vs 缓存迁移引入）无法区分。credential 更是已归档上线的 L1 基线，必须单独迁移、单独回归。
+`ingot-security-access-adapter` 是 L4 交付物。L4 已验收归档后，可将 LoginFailure 缓存实现迁移至 `ingot-cache` 框架，并与 credential 分 Phase 独立回归。
 
 ## 目标
 
@@ -19,7 +19,7 @@
 
 - `ResilientLoginFailurePolicyLoader` + `LoginFailureLkgStore` + `LocalLoginFailureFloorSupplier` 换成框架组件。
 - 补齐 L1+L2，使 `LoginFailurePolicyCacheCoordinator` 的失效订阅真正生效。
-- 该模块属 L4 change 交付物，改动需同步回写 [L4 DESIGN.md](../../20260729-security-access-protection/DESIGN.md)。
+- 改动需与 [L4 归档 DESIGN.md](../../archive/2026/20260729-security-access-protection/DESIGN.md) 及 current [access-protection](../../../current/security/access-protection/SPEC.md) 一致。
 
 ### credential
 

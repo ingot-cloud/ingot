@@ -1,6 +1,6 @@
 # 访问防护补全（L4）
 
-> 状态：approved（implementing）
+> 状态：completed（已验收，已更新 current，已归档）
 
 ## 元数据
 
@@ -88,8 +88,22 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
+- 完成日期：2026-08-01（验收通过）
+- 关联提交或 PR：工作区实施提交（网关 SDK 弹性、ingot-cache 迁移、access-adapter、migration 011、Nacos 三环境）
 - 更新的 current capability：
+  - `specs/current/security/access-protection/`（新建 README + SPEC）
+  - `specs/current/security/account-protection/`（`attemptWindowMinutes` 已实现，交叉引用 L4）
+  - `specs/current/security/security-event-center/`（扩展 ACCESS 事件类型）
 - 与原设计的差异：
-- 取消原因：
+  - 网关共享快照弹性由 L4 初版 `ResilientSnapshotFetcher` **演进为** 统一 `ingot-cache` 分层框架（[20260730-framework-layered-cache](../20260730-framework-layered-cache/README.md) Phase 02 在 L4 验收后合入）；语义不变（remote → LKG → 地板）。
+  - **封禁审计**：`GET /platform/security/policy/events` 保持读历史 `gateway_blacklist_event`；新事件仅入 `security_event`（与 L3 一致，Platform 读侧后续 change）。
+  - **挑战 SDK**（`ingot.security.challenge`）未在 L4 启用执行面。
+  - E2E / 故障注入以手工与 `test-case/security-policy-e2e.md` 为准；部分 V* 自动化项未全量补齐（记入 current 已知限制）。
+- 取消原因：—
+
+## 后续跟踪（拆出为新 change）
+
+1. **Platform 安全事件 / 封禁审计读侧**（分页查询 `security_event`）。
+2. **账号 lockout remote** 与安全中心策略表（L2 后续）。
+3. **L6 挑战验证** SDK 启用与 `ingot.vc` 合并。
+4. **行为型防爆破**（同 IP 多账号）。

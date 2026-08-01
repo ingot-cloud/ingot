@@ -188,11 +188,11 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [访问防护补全（L4）](./changes/active/20260729-security-access-protection/README.md) — approved（implementing）
-- [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — approved（分 Phase 交付，Phase 03 起需等 L4 验收）
+- [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — approved（Phase 03 起 L4 已验收，门禁已解除）
 
 已归档（2026）：
 
+- [访问防护补全（L4）](./changes/archive/2026/20260729-security-access-protection/README.md)
 - [统一安全事件中心（L3）](./changes/archive/2026/20260729-security-event-center/README.md)
 - [账号保护全用户闭环 + remote 土台（L2）](./changes/archive/2026/20260724-security-account-protection/README.md)
 - [凭证策略降级兜底与初始密码收口对齐](./changes/archive/2026/20260717-security-credential-resilience/README.md)
@@ -206,6 +206,7 @@ current/<domain>/<capability>/
 对应 current 能力：
 
 - [gateway/header-conventions](./current/gateway/header-conventions/README.md)
+- [security/access-protection](./current/security/access-protection/README.md)
 - [security/account-protection](./current/security/account-protection/README.md)
 - [security/security-event-center](./current/security/security-event-center/README.md)
 - [security/credential-security](./current/security/credential-security/README.md)
