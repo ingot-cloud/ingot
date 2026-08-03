@@ -1,0 +1,4 @@
+interface:
+  display_name: "Layered Cache"
+  short_description: "按统一分层缓存框架接入或迁移缓存：L1 + L2 + LKG + 地板降级 + 跨节点失效"
+  default_prompt: "使用 $layered-cache，把目标读路径接入 ingot-framework/ingot-cache 的分层缓存与降级机制。"
