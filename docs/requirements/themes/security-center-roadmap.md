@@ -60,7 +60,7 @@
 | L1 | 凭证安全收口 | 二（2.2 / 2.4） | 初始密码、宽限期扣减、force_change 对齐、Member 对齐 | 是（策略字段） | done | `specs/changes/archive/2026/20260717-security-credential-closure`（+ 后续 `20260717-security-credential-resilience` 弹性降级/初始密码统一）；current `security/credential-security` |
 | L2 | 账号保护全用户闭环 | 三 | 失败计数 / 锁定 / 安全事件从 ADMIN 扩到 Member；`ingot.security.account.*` 命名统一 + seam 土台 | 是（阈值 / 时长） | done | `specs/changes/archive/2026/20260724-security-account-protection`；current `security/account-protection` |
 | L3 | 统一安全事件中心 | 九 | 通用安全事件模型 + 上报 / 存储（安全中心侧） | 部分（记录开关可降级，聚合不可降级） | done | `specs/changes/archive/2026/20260729-security-event-center`；current `security/security-event-center` |
-| L4 | 访问防护补全 | 四 | 现有网关策略中心的防爆破 / 执行面收口 | 是（阈值 / 名单） | in-spec | [`specs/changes/active/20260729-security-access-protection`](../../../specs/changes/active/20260729-security-access-protection/) |
+| L4 | 访问防护补全 | 四 | 现有网关策略中心的防爆破 / 执行面收口 | 是（阈值 / 名单） | done | `specs/changes/archive/2026/20260729-security-access-protection`；current `security/access-protection` |
 | L5 | 会话安全 | 五 | 在线会话 / 并发会话 / 强制下线统一管理面 | 部分（并发策略可降级，统一管理不可降级） | planned | 待建 |
 | L6 | 挑战验证 | 六（6.1） | 图形验证码接入登录 / 敏感接口 | 是（触发策略） | planned | 待建 |
 

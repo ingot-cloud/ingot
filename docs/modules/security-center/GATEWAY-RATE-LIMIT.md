@@ -86,7 +86,7 @@ SDK 按域拆分，各域独立开关与 `policy.mode`（`local` | `remote`）�
 
 自动配置入口（`META-INF/spring/...AutoConfiguration.imports`）：
 
-- `GatewayRuleClientAutoConfiguration` — Coordinator、快照拉取链（Feign → LKG → 地板 → Resilient → `RemoteSnapshotFetcher`）、`PolicySourceHolder` 与 Actuator
+- `GatewayRuleClientAutoConfiguration` — Coordinator、共享快照缓存链、`CacheSourceHolder` 与 Actuator
 - `RateLimitAutoConfiguration`
 - `BlacklistAutoConfiguration`
 - `ChallengeAutoConfiguration`
@@ -95,16 +95,29 @@ SDK 按域拆分，各域独立开关与 `policy.mode`（`local` | `remote`）�
 
 ### 3.2 加载模式
 
-**local**：规则写在各域 `*Properties` 的 yaml 中，适合单机调试。  
-**remote**：通过 `RemoteSnapshotFetcher` 一次 Feign 拉取 `SecurityPolicySnapshotVO`（`GET /inner/security/policy/snapshot`），`SnapshotAssembler` 转为各域内部模型；**失败不 fail-open**，而是经 `ResilientSnapshotFetcher` 按 `remote → LKG(Redis) → Nacos 地板` 阶梯降级，当前来源见 Actuator `securitypolicy` 端点。`local-floor-enabled=false` 且无 LKG 时抛 `PolicyRemoteUnavailableException`（fail-closed）。
+**local**：规则写在各域 `*Properties` 的 yaml / Nacos `in-security-policy.yml` 中，适合单机调试与本地联调。Nacos 推送变更后，`ConfigurationPropertiesRebinder` 重绑定 Properties，各域 local Service 的编译缓存自动失效；限流域还会触发 Sentinel 规则热重载，无需重启。  
+**remote**：通过 `RemoteSnapshotFetcher` 一次 Feign 拉取 `SecurityPolicySnapshotVO`（`GET /inner/security/policy/snapshot`），`SnapshotAssembler` 转为各域内部模型；**失败不 fail-open**，而是按 `remote → LKG(Redis) → Nacos 地板` 阶梯降级，当前来源见 Actuator `securitypolicy` 端点。`local-floor-enabled=false` 且无 LKG 时抛 `PolicyRemoteUnavailableException`（fail-closed）。
 
 远程 HTTP 成功但 `data` 为空视为**合法空快照**：接受、刷新 LKG、编译为空规则集，不触发降级。
 
-### 3.3 L1 缓存与热更新
+### 3.3 缓存与热更新
 
-- 各域 Service 内使用 `LocalCompiledCache`（`AtomicReference`，无 TTL）。
-- `ingot.security.policy.client.invalidation-enabled=true`（默认）且容器内存在 `InvalidationBus` 时装配 `SecurityPolicyCacheCoordinator`，订阅 `SecurityPolicyInvalidationEvent`，按 `SecurityPolicyDomain` 分发 evictor；`ALL` 域触发全部回调。
-- 限流域除 `RateLimitRuleService::evictAll` 外，网关 `SentinelGatewayConfiguration` 另注册 `reloadRules()`（先 evict 再拉快照，全量 `GatewayRuleManager.loadRules`）。
+缓存分两层，均由 [ingot-cache 分层缓存框架](../../../.agents/skills/layered-cache/SKILL.md) 提供：
+
+- **共享快照层**：`SecurityPolicySnapshotVO` 走 `L1 Caffeine → L2 Redis → Resilient(remote → LKG → 地板)`，四域共用一个实例，因此冷启动或全量失效后只打一次 Feign。参数见 `ingot.security.policy.client.cache.*`。
+- **派生编译层**：各域 Service 缓存自己的编译产物（`CompiledIpList` 等含 `Pattern`/`PathPattern`，不可序列化故只留本机）。remote 模式按共享快照的 `(来源, version)` 二元组判定是否重编译，version 未变则复用；local 模式仅在显式失效后重编译。
+
+三条一致性路径：
+
+| 机制 | 时延 | 解决的问题 |
+|---|---|---|
+| `InvalidationBus` 广播 | 秒级 | 规则变更即时生效 |
+| L1/L2 TTL | 一个 TTL 周期 | Redis Pub/Sub 消息丢失导致的永久 stale |
+| `(来源, version)` 比对 | — | 避免无谓重编译与 Sentinel 规则抖动 |
+
+`ingot.security.policy.client.invalidation-enabled=true`（默认）且容器内存在 `InvalidationBus` 时装配 `SecurityPolicyCacheCoordinator`，订阅 `SecurityPolicyInvalidationEvent`，按 `SecurityPolicyDomain` 分发 evictor；`ALL` 域触发全部回调。各域 `evictAll()` 会同时清共享快照层与自身派生缓存。
+
+限流域比较特殊：Sentinel 读的是 `GatewayRuleManager` 里已加载的规则，不经过缓存，所以 TTL 刷新对它天然无效。`SentinelGatewayConfiguration` 因此有三条刷新路径——失效广播走 `reloadRules()`（先清缓存再无条件重载）；共享快照被其他域流量刷新时发出的通知走 `reloadIfChanged()`（快照未变则跳过）；只启用限流域、没有其他域流量的部署可再打开 `cache.refresh-interval` 做定时兜底，默认关闭。
 
 典型生产配置：
 
@@ -202,14 +215,14 @@ ingot:
 
 ### 4.2 黑白名单：`BlacklistFilter`
 
-处理顺序：
+`BlacklistFilter` 为网关常驻 Filter（**不**受 `ingot.security.blacklist.enabled` 门控），处理顺序：
 
 1. 无 `ClientIdentity` → 放行（异常链路兜底）
-2. 静态**白名单**命中 → 设置 `ingot.security.whitelisted=true`，跳过后续挑战与 Sentinel
-3. Redis **临时封禁**（`TempBlockStore`，检查 IP、DEVICE）
-4. SDK **静态黑名单** → **403**，`code=FORBIDDEN_BLOCKED`
+2. 静态**白名单**命中 → 设置 `ingot.security.whitelisted=true`，跳过后续挑战与 Sentinel（须 `blacklist.enabled=true` 装配 `BlacklistService`）
+3. Redis **临时封禁**（`TempBlockStore`，检查 IP、DEVICE、CLIENT）→ **403**（**不依赖** `blacklist.enabled`；由违规升级或 Auth 登录失败防护写入）
+4. SDK **静态黑名单** → **403**，`code=FORBIDDEN_BLOCKED`（须 `blacklist.enabled=true`）
 
-临时封禁与静态名单无关，但静态名单需 `ingot.security.blacklist.enabled=true`。
+`blacklist.enabled=false` 时仅关闭静态黑白名单 SDK；临时封禁的读取与 403  enforcement 仍由本 Filter 执行。
 
 ### 4.3 挑战：`ChallengeFilter` + PassToken
 
@@ -238,7 +251,7 @@ Redis Key：`in:gw:vc:pass:{scope}:{token}`，值为剩余次数，消费为 Lua
 
 Sentinel 阻断后并行逻辑：
 
-1. **违规累积**（需 `ingot.security.violation-escalation.enabled=true` 且配置 `enabled=true`）：`ViolationCounter` 按 `windowSec` 滑动窗口（默认 60s，按 IP）累加；窗口内 ≥ `blockThreshold`（默认 30）→ `TempBlockStore` 封禁 `tempBlockTtlSec`（默认 900s）+ `BlacklistEventReporter` 异步上报 security
+1. **违规累积**（需 `ingot.security.ratelimit.enabled=true` 触发 Sentinel 阻断，且 `ingot.security.violation-escalation.enabled=true` 与配置 `enabled=true`）：`ViolationCounter` 按 `windowSec` 滑动窗口（默认 60s，按 IP）累加；窗口内 ≥ `blockThreshold`（默认 30）→ `TempBlockStore` 封禁 `tempBlockTtlSec`（默认 900s）+ `BlacklistEventReporter` 异步上报 security。**与 `blacklist.enabled` 无关。**
 2. 匹配 `ON_RATE_LIMIT` 挑战 → **412** + `CHALLENGE_REQUIRED`
 3. 否则 → **429** + `LIMIT_TOO_MANY`，Header `Retry-After: 1`
 
@@ -264,7 +277,7 @@ Sentinel 阻断后并行逻辑：
 
 **单次请求**只会返回上表之一：Filter 顺序为 Blacklist → Challenge → Sentinel，403 最先判定；`ALWAYS` 的 412 在 Sentinel 之前且会终止链路；Sentinel 阻断后 412 与 429 互斥（先匹配 `ON_RATE_LIMIT` 策略）。
 
-**跨请求升级**：反复触发 Sentinel 阻断（每次 412 或 429）→ `ViolationCounter` 异步累计 → 窗口内达 `blockThreshold` → `TempBlockStore` 写入临时封禁 → **后续请求**在 `BlacklistFilter` 直接 403（须 `blacklist.enabled=true`；非同一次响应内 412 变 403）。
+**跨请求升级**：反复触发 Sentinel 阻断（每次 412 或 429）→ `ViolationCounter` 异步累计 → 窗口内达 `blockThreshold` → `TempBlockStore` 写入临时封禁 → **后续请求**在常驻的 `BlacklistFilter` 查 Redis 后直接 **403**（**无需** `blacklist.enabled=true`；非同一次响应内 412/429 变 403）。若需静态白名单跳过后续限流/挑战，才须开启 `blacklist.enabled` 并配置 WHITE 条目。
 
 挑战响应示例：
 
@@ -290,7 +303,7 @@ Sentinel 阻断后并行逻辑：
 
 ### 6.1 SDK 基础设施调参
 
-快照拉取链（Feign / LKG / 地板 / Resilient / `RemoteSnapshotFetcher` / `PolicySourceHolder` / Actuator）属于**能力层**，无功能开关，仅在 Feign 客户端 `RemoteSecurityPolicyService` 已注册时装配；装配后不主动发请求，按需 lazy fetch。以下键只调参，不做功能门控：
+快照缓存链（Feign / LKG / 地板 / Resilient / L1 / L2 / `RemoteSnapshotFetcher` / `CacheSourceHolder` / Actuator）属于**能力层**，无功能开关，仅在 Feign 客户端 `RemoteSecurityPolicyService` 已注册时装配；装配后不主动发请求，按需 lazy fetch。以下键只调参，不做功能门控：
 
 | 配置项 | 默认 | 含义 |
 |--------|------|------|
@@ -298,6 +311,13 @@ Sentinel 阻断后并行逻辑：
 | `ingot.security.policy.client.resilience-enabled` | true | 关闭则退化为纯 Feign 直连（不写 LKG、不降级，远端不可用直接抛异常） |
 | `ingot.security.policy.client.local-floor-enabled` | true | 关闭则 remote 不可用且无 LKG 时 fail-closed 抛异常，不落 Nacos 地板 |
 | `ingot.security.policy.client.lkg-redis-key` | `in:sec:policy:lkg:snapshot` | LKG 快照 Redis key，长存不过期 |
+| `ingot.security.policy.client.cache.l1-enabled` | true | 共享快照本机缓存开关 |
+| `ingot.security.policy.client.cache.l1-ttl` | 5m | 本机缓存 TTL，同时是失效广播丢失时的收敛上限；无单位数值按分钟解析 |
+| `ingot.security.policy.client.cache.l1-maximum-size` | 8 | L1 最大条目数；共享快照为单 key，取小值即可 |
+| `ingot.security.policy.client.cache.l2-enabled` | true | 共享快照 Redis 缓存开关；Redis 不可用时自动跳过 |
+| `ingot.security.policy.client.cache.l2-ttl` | 30m | Redis 缓存 TTL |
+| `ingot.security.policy.client.cache.l2-redis-key` | `in:sec:policy:snapshot` | Redis 缓存 key，区别于 LKG key |
+| `ingot.security.policy.client.cache.refresh-interval` | 未设置（关闭） | Sentinel 规则定时兜底重载间隔；仅「只开限流域且其他域无流量」的部署需要 |
 
 > `ingot.security.policy.client.enabled` 已移除。该键原先同时门控快照链能力与失效协调器，导致各域 `mode=remote` 隐式依赖它。现快照链无条件装配，协调器由 `invalidation-enabled` 独立控制。
 
@@ -313,6 +333,8 @@ Sentinel 阻断后并行逻辑：
 | 违规升级 | `ingot.security.violation-escalation.enabled` | **false**（避免影响现有部署） |
 
 各域 `policy.mode`：`local`（yaml 内联）| `remote`（Feign 快照）。
+
+**域间独立**：违规升级（`violation-escalation`）与黑白名单（`blacklist`）开关互不级联——可只开违规升级而不开静态名单；临时封禁的写入（`SentinelBlockHandler`）与 403  enforcement（`BlacklistFilter` → `TempBlockStore`）不依赖 `blacklist.enabled`。
 
 各域 `*Properties` 由各自的 AutoConfiguration 绑定，因此域关闭时其 Properties Bean 不存在，Nacos 地板中该域片段自动为空——地板内容与域开关始终一致。启动期 `GatewayRuleClientWiringReporter` 会打印各域装配结果与地板贡献来源。
 
@@ -339,19 +361,17 @@ spring:
 
 | 包/类 | 说明 |
 |-------|------|
-| `config.GatewayRuleClientAutoConfiguration` | SDK 顶层：快照链、Coordinator、Actuator |
+| `config.GatewayRuleClientAutoConfiguration` | SDK 顶层：共享快照缓存链、Coordinator、Actuator |
 | `config.GatewayRuleClientWiringReporter` | 启动期汇总各域装配结果与地板贡献来源 |
-| `internal.RemoteSnapshotFetcher` | 对外统一入口，内部委托 Resilient 链 |
-| `internal.ResilientSnapshotFetcher` | `remote → LKG → 地板` 降级阶梯，禁止 fail-open |
+| `internal.RemoteSnapshotFetcher` | 对外统一入口，持有四域共享的 `LayeredCache` |
 | `internal.FeignPolicySnapshotFetcher` | 纯 Feign 拉快照，失败抛 `PolicyRemoteUnavailableException` |
-| `internal.PolicyLastKnownGoodStore` | LKG 快照 Redis 读写 |
 | `internal.LocalPolicyFloorSupplier` | 按域 `ObjectProvider` 聚合 Nacos 地板 |
 | `internal.PolicySnapshotFloorAssembler` | 各域 `*Properties` → 地板快照 VO |
-| `internal.PolicySourceHolder` | 当前来源与降级计数 |
 | `actuate.SecurityPolicyEndpoint` | `GET /actuator/securitypolicy` |
 | `internal.SecurityPolicyCacheCoordinator` | 失效事件 → 多 evictor 串行 |
 | `internal.SnapshotAssembler` | VO → 域模型 |
-| `internal.LocalCompiledCache` | L1 编译缓存 |
+
+分层缓存、LKG 存储、来源标记与降级阶梯由框架模块 `ingot-framework/ingot-cache` 提供，见 [分层缓存接入指引](../../../.agents/skills/layered-cache/SKILL.md)。
 | `ratelimit.*` | 限流规则 local/remote |
 | `blacklist.*` | 黑白名单编译与匹配 |
 | `challenge.*` | 挑战策略编译与匹配 |

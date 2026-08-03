@@ -258,4 +258,36 @@ CREATE TABLE `security_challenge_policy` (
 BEGIN;
 COMMIT;
 
+-- ----------------------------
+-- Table structure for login_failure_protection_policy
+-- ----------------------------
+DROP TABLE IF EXISTS `login_failure_protection_policy`;
+CREATE TABLE `login_failure_protection_policy` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `dimension` varchar(16) NOT NULL COMMENT 'IP/DEVICE/CLIENT/ACCOUNT_IP',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `max_attempts` int NOT NULL DEFAULT '50' COMMENT '窗口内最大失败次数',
+  `window_minutes` int NOT NULL DEFAULT '1' COMMENT '滑动窗口（分钟）',
+  `block_ttl_sec` int NOT NULL DEFAULT '3600' COMMENT '临时封禁 TTL（秒）',
+  `block_key_type` char(2) NOT NULL DEFAULT 'IP' COMMENT '封禁 keyType: IP/DV/CL',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_login_failure_dimension` (`dimension`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='登录失败保护策略（按维度）';
+
+-- ----------------------------
+-- Records of login_failure_protection_policy
+-- ----------------------------
+BEGIN;
+INSERT INTO `login_failure_protection_policy`
+  (`dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`)
+VALUES
+  ('IP',         1, 50,  1, 3600, 'IP', '同一 IP 登录失败达阈值临时封禁'),
+  ('DEVICE',     1, 30,  5, 1800, 'DV', '同一设备指纹登录失败达阈值临时封禁'),
+  ('CLIENT',     1, 100, 5, 3600, 'CL', '同一 OAuth2 Client 登录失败达阈值临时封禁'),
+  ('ACCOUNT_IP', 1, 10,  5, 3600, 'IP', '同一账号+IP 组合登录失败达阈值封禁 IP');
+COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;
