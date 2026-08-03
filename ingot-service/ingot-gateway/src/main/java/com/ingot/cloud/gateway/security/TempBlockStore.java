@@ -1,5 +1,6 @@
 package com.ingot.cloud.gateway.security;
 
+import com.ingot.framework.commons.constants.RedisKeyConstants;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import java.time.Duration;
  * 未命中时通过 {@link #isBlocked} 读取并返回 403。</p>
  *
  * <h3>Key 规范</h3>
- * <p>{@link GatewaySecurityConstants#REDIS_KEY_TEMP_BLOCK_PREFIX}{@code {keyType}:{keyValue}}，
+ * <p>{@link RedisKeyConstants.Gateway#TEMP_BLOCK_PREFIX}{@code {keyType}:{keyValue}}，
  * value 为触发的规则编码（如 {@link GatewaySecurityConstants#RULE_CODE_RATE_LIMIT}），
  * TTL 由 {@link com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig#getTempBlockTtlSec()} 决定。</p>
  *
@@ -49,8 +50,6 @@ import java.time.Duration;
 @Component
 @RequiredArgsConstructor
 public class TempBlockStore {
-
-    private static final String KEY_PREFIX = GatewaySecurityConstants.REDIS_KEY_TEMP_BLOCK_PREFIX;
 
     private final ObjectProvider<ReactiveStringRedisTemplate> redisProvider;
     private ReactiveStringRedisTemplate redisTemplate;
@@ -86,6 +85,6 @@ public class TempBlockStore {
     }
 
     private static String buildKey(String keyType, String keyValue) {
-        return KEY_PREFIX + keyType + ":" + keyValue;
+        return RedisKeyConstants.Gateway.tempBlockKey(keyType, keyValue);
     }
 }

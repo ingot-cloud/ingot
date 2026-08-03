@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.server.authorization.web.authenticat
 import java.io.IOException;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.common.AuthFailureDTO;
 import com.ingot.framework.commons.model.event.LoginFailureEvent;
@@ -69,6 +70,8 @@ public class DefaultAuthenticationFailureHandler implements AuthenticationFailur
             payload.setUserType(request.getParameter(InOAuth2ParameterNames.USER_TYPE));
             payload.setTenantId(request.getParameter(InOAuth2ParameterNames.TENANT));
             payload.setIp(WebUtil.getClientIP(request));
+            payload.setClientId(request.getParameter(OAuth2ParameterNames.CLIENT_ID));
+            payload.setDeviceId(request.getHeader(HeaderConstants.BFF_DEVICE_FINGERPRINT_HEADER));
             payload.setTime(DateUtil.now());
             payload.setErrorCode(error.getErrorCode());
             payload.setErrorMessage(error.getDescription());

@@ -75,7 +75,7 @@ public class BlacklistFilter implements GlobalFilter, Ordered {
         BlacklistService bl = blacklistProvider.getIfAvailable();
 
         if (bl != null && bl.isWhitelisted(identity.getIp(), identity.getDevice(),
-                identity.getUserId(), identity.getUserAgent(), identity.getReferer())) {
+                identity.getUserId(), identity.getClientId(), identity.getUserAgent(), identity.getReferer())) {
             exchange.getAttributes().put(ATTR_WHITELISTED, Boolean.TRUE);
             return chain.filter(exchange);
         }
@@ -84,13 +84,18 @@ public class BlacklistFilter implements GlobalFilter, Ordered {
         Mono<Boolean> tempBlockedDevice = identity.getDevice() == null
                 ? Mono.just(false)
                 : tempBlockStore.isBlocked(IpKeyType.DEVICE.dbCode(), identity.getDevice());
+        Mono<Boolean> tempBlockedClient = identity.getClientId() == null
+                ? Mono.just(false)
+                : tempBlockStore.isBlocked(IpKeyType.CLIENT.dbCode(), identity.getClientId());
 
-        return Mono.zip(tempBlockedIp, tempBlockedDevice)
+        return Mono.zip(tempBlockedIp, tempBlockedDevice, tempBlockedClient)
                 .flatMap(t -> {
-                    boolean blockedByTemp = Boolean.TRUE.equals(t.getT1()) || Boolean.TRUE.equals(t.getT2());
+                    boolean blockedByTemp = Boolean.TRUE.equals(t.getT1())
+                            || Boolean.TRUE.equals(t.getT2())
+                            || Boolean.TRUE.equals(t.getT3());
                     boolean blockedByStatic = bl != null && bl.isBlocked(identity.getIp(),
-                            identity.getDevice(), identity.getUserId(), identity.getUserAgent(),
-                            identity.getReferer());
+                            identity.getDevice(), identity.getUserId(), identity.getClientId(),
+                            identity.getUserAgent(), identity.getReferer());
                     if (blockedByTemp || blockedByStatic) {
                         log.info("[BlacklistFilter] blocked ip={} device={} reason={}",
                                 identity.getIp(), identity.getDevice(),

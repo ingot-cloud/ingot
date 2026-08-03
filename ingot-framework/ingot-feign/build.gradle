@@ -6,7 +6,19 @@ dependencies {
 
     implementation(deps.feign_okhttp)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_spring_web)
+    implementation(deps.jackson.data_bind)
 
     compileOnly(deps.jakarta_servlet_api)
+    compileOnly(deps.spring.framework_spring_webflux)
     compileOnly project(ingot.framework_core)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.framework_spring_webflux)
+    testImplementation(deps.jakarta_servlet_api)
+    testImplementation project(ingot.framework_core)
+}
+
+test {
+    useJUnitPlatform()
 }

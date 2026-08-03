@@ -1,6 +1,8 @@
 rootProject.name = 'ingot'
 
 // Framework
+include 'ingot-framework:ingot-cache'
+findProject(':ingot-framework:ingot-cache')?.name = 'ingot-cache'
 include 'ingot-framework:ingot-commons'
 findProject(':ingot-framework:ingot-commons')?.name = 'ingot-commons'
 include 'ingot-framework:ingot-core'
@@ -61,6 +63,10 @@ include 'ingot-framework:ingot-security:ingot-security-account:ingot-security-ac
 findProject(':ingot-framework:ingot-security:ingot-security-account:ingot-security-account-adapter')?.name = 'ingot-security-account-adapter'
 include 'ingot-framework:ingot-security:ingot-security-account:ingot-security-account-web-support'
 findProject(':ingot-framework:ingot-security:ingot-security-account:ingot-security-account-web-support')?.name = 'ingot-security-account-web-support'
+include 'ingot-framework:ingot-security:ingot-security-access-core'
+findProject(':ingot-framework:ingot-security:ingot-security-access-core')?.name = 'ingot-security-access-core'
+include 'ingot-framework:ingot-security:ingot-security-access-adapter'
+findProject(':ingot-framework:ingot-security:ingot-security-access-adapter')?.name = 'ingot-security-access-adapter'
 include 'ingot-framework:ingot-dict-client'
 findProject(':ingot-framework:ingot-dict-client')?.name = 'ingot-dict-client'
 include 'ingot-framework:ingot-event-bus'

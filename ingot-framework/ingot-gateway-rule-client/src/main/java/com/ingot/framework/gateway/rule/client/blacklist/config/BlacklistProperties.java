@@ -64,7 +64,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   security:
  *     policy:
  *       client:
- *         enabled: true
  *         invalidation-enabled: true    # Platform 改名单后跨节点热更新
  *     blacklist:
  *       enabled: true
@@ -94,6 +93,10 @@ public class BlacklistProperties {
      * <p>关闭后 {@link com.ingot.cloud.gateway.security.TempBlockStore} 临时封禁仍由
      * {@link com.ingot.cloud.gateway.security.SentinelBlockHandler} 写入，
      * {@link com.ingot.cloud.gateway.security.BlacklistFilter} 仍会检查 Redis 临时封禁。</p>
+     * <p>本字段由 {@link BlacklistAutoConfiguration} 上的 {@code @ConditionalOnProperty} 按属性键
+     * {@code ingot.security.blacklist.enabled} 消费，是黑白名单域生效的<b>唯一</b>门控，
+     * 与 {@code ingot.security.policy.client.*} 互不级联；关闭时本类的 Properties Bean 不装配，
+     * Nacos 地板中的名单片段随之为空。</p>
      */
     private boolean enabled = false;
 

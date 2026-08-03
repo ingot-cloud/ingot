@@ -1,5 +1,6 @@
 package com.ingot.cloud.gateway.security;
 
+import com.ingot.framework.commons.constants.RedisKeyConstants;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,7 @@ import java.util.UUID;
 /**
  * PassToken 存储与消费。
  *
- * <p>Key: {@code in:gw:vc:pass:{scope}:{token}}，value：剩余可消费次数（整数）。
+ * <p>Key: {@link RedisKeyConstants.Gateway#PASS_TOKEN_PREFIX}{@code {scope}:{token}}，value：剩余可消费次数（整数）。
  * 签发 = SET key remaining EX ttl；消费 = DECR + 当 &lt;=0 时删除（Lua 原子）。</p>
  *
  * @author jy
@@ -27,8 +28,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class PassTokenStore {
-
-    private static final String KEY_PREFIX = GatewaySecurityConstants.REDIS_KEY_PASS_TOKEN_PREFIX;
 
     private static final RedisScript<Long> CONSUME_SCRIPT = RedisScript.of(
             "local v = redis.call('DECR', KEYS[1])\n" +
@@ -77,6 +76,7 @@ public class PassTokenStore {
     }
 
     private static String buildKey(String scope, String token) {
-        return KEY_PREFIX + (scope == null ? GatewaySecurityConstants.DEFAULT_PASS_TOKEN_SCOPE : scope) + ":" + token;
+        String effectiveScope = scope == null ? GatewaySecurityConstants.DEFAULT_PASS_TOKEN_SCOPE : scope;
+        return RedisKeyConstants.Gateway.passTokenKey(effectiveScope, token);
     }
 }

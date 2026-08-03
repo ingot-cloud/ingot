@@ -1,13 +1,13 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.internal.LocalRateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.internal.RemoteRateLimitRuleService;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -88,7 +88,6 @@ public class RateLimitAutoConfiguration {
      * {@link RateLimitRuleService#evictAll()} 挂到 Coordinator 的
      * {@code RATE_LIMIT_RULE} 与 {@code ENDPOINT_GROUP} 域。
      */
-    @RequiredArgsConstructor
     static class CoordinatorRegistrar {
 
         @Autowired(required = false)
@@ -97,14 +96,23 @@ public class RateLimitAutoConfiguration {
         @Autowired(required = false)
         private RateLimitRuleService rateLimitRuleService;
 
+        @Autowired(required = false)
+        private LocalPolicyEnvironmentRefreshListener refreshListener;
+
+        @Autowired(required = false)
+        private RateLimitProperties properties;
+
         @PostConstruct
         public void register() {
-            if (coordinator == null || rateLimitRuleService == null) {
-                return;
+            if (coordinator != null && rateLimitRuleService != null) {
+                Runnable evict = rateLimitRuleService::evictAll;
+                coordinator.register(SecurityPolicyDomain.RATE_LIMIT_RULE, evict);
+                coordinator.register(SecurityPolicyDomain.ENDPOINT_GROUP, evict);
             }
-            Runnable evict = rateLimitRuleService::evictAll;
-            coordinator.register(SecurityPolicyDomain.RATE_LIMIT_RULE, evict);
-            coordinator.register(SecurityPolicyDomain.ENDPOINT_GROUP, evict);
+            if (refreshListener != null && rateLimitRuleService != null && properties != null
+                    && properties.getPolicy().getMode() == RateLimitProperties.Mode.LOCAL) {
+                refreshListener.register("ingot.security.ratelimit.", rateLimitRuleService::evictAll);
+            }
         }
     }
 }

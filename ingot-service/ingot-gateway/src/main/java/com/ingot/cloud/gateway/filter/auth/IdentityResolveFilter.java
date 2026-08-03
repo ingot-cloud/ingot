@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono;
  *     <li>IP / 设备 / UA / Referer — 读 {@link RequestGlobalFilter} 标准化后的 Header</li>
  *     <li>userId — 读 {@link AuthContextAttributes#USER_ID}（{@link AuthContextRelayFilter} 写入）</li>
  *     <li>非空 userId 时回填 {@code In-Inner-User-Id} Header，供 Sentinel {@code USER} 资源维度</li>
+ *     <li>非空 clientId 时回填 {@code In-Inner-Client-Id} Header，供 Sentinel {@code CLIENT} 资源维度</li>
  * </ul>
  *
  * <h3>Pipeline 位置</h3>
@@ -54,20 +55,28 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
         String userId = (String) exchange.getAttributes().get(AuthContextAttributes.USER_ID);
         userId = StrUtil.blankToDefault(userId, null);
 
+        String clientId = exchange.getRequest().getQueryParams().getFirst("client_id");
+        clientId = StrUtil.blankToDefault(clientId, null);
+
         ClientIdentity identity = ClientIdentity.builder()
                 .ip(StrUtil.blankToDefault(ip, null))
                 .device(StrUtil.blankToDefault(device, null))
                 .userId(userId)
+                .clientId(clientId)
                 .userAgent(ua)
                 .referer(StrUtil.blankToDefault(referer, null))
                 .build();
         exchange.getAttributes().put(GatewaySecurityConstants.ATTR_CLIENT_IDENTITY, identity);
 
+        ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate();
         if (userId != null) {
-            ServerHttpRequest mutated = exchange.getRequest().mutate()
-                    .header(HeaderConstants.INNER_USER_ID, userId)
-                    .build();
-            return chain.filter(exchange.mutate().request(mutated).build());
+            requestBuilder.header(HeaderConstants.INNER_USER_ID, userId);
+        }
+        if (clientId != null) {
+            requestBuilder.header(HeaderConstants.INNER_CLIENT_ID, clientId);
+        }
+        if (userId != null || clientId != null) {
+            return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
         }
         return chain.filter(exchange);
     }

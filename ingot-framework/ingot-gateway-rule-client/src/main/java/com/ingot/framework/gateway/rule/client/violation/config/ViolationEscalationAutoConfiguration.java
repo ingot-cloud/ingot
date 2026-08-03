@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.violation.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import com.ingot.framework.gateway.rule.client.violation.ViolationEscalationService;
@@ -63,12 +64,23 @@ public class ViolationEscalationAutoConfiguration {
         @Autowired(required = false)
         private ViolationEscalationService violationEscalationService;
 
+        @Autowired(required = false)
+        private LocalPolicyEnvironmentRefreshListener refreshListener;
+
+        @Autowired(required = false)
+        private ViolationEscalationProperties properties;
+
         @PostConstruct
         public void register() {
-            if (coordinator == null || violationEscalationService == null) {
-                return;
+            if (coordinator != null && violationEscalationService != null) {
+                coordinator.register(SecurityPolicyDomain.VIOLATION_ESCALATION,
+                        violationEscalationService::evictAll);
             }
-            coordinator.register(SecurityPolicyDomain.VIOLATION_ESCALATION, violationEscalationService::evictAll);
+            if (refreshListener != null && violationEscalationService != null && properties != null
+                    && properties.getPolicy().getMode() == ViolationEscalationProperties.Mode.LOCAL) {
+                refreshListener.register("ingot.security.violation-escalation.",
+                        violationEscalationService::evictAll);
+            }
         }
     }
 }

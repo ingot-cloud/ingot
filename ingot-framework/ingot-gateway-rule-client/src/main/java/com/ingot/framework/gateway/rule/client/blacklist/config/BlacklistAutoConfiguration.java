@@ -4,6 +4,7 @@ import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.framework.gateway.rule.client.blacklist.BlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.internal.LocalBlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.internal.RemoteBlacklistService;
+import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import jakarta.annotation.PostConstruct;
@@ -90,12 +91,21 @@ public class BlacklistAutoConfiguration {
         @Autowired(required = false)
         private BlacklistService blacklistService;
 
+        @Autowired(required = false)
+        private LocalPolicyEnvironmentRefreshListener refreshListener;
+
+        @Autowired(required = false)
+        private BlacklistProperties properties;
+
         @PostConstruct
         public void register() {
-            if (coordinator == null || blacklistService == null) {
-                return;
+            if (coordinator != null && blacklistService != null) {
+                coordinator.register(SecurityPolicyDomain.IP_LIST, blacklistService::evictAll);
             }
-            coordinator.register(SecurityPolicyDomain.IP_LIST, blacklistService::evictAll);
+            if (refreshListener != null && blacklistService != null && properties != null
+                    && properties.getPolicy().getMode() == BlacklistProperties.Mode.LOCAL) {
+                refreshListener.register("ingot.security.blacklist.", blacklistService::evictAll);
+            }
         }
     }
 }

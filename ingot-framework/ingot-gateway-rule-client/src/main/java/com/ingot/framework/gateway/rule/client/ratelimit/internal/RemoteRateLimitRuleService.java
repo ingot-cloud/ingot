@@ -1,52 +1,60 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.internal;
 
-import com.ingot.framework.gateway.rule.client.internal.LocalCompiledCache;
+import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
+import com.ingot.framework.cache.derived.VersionedDerivedCache;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SnapshotAssembler;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 限流规则服务 — remote 模式实现。
+ * <p>限流规则服务 — remote 模式实现。</p>
  *
  * <p>激活条件：{@code ingot.security.ratelimit.enabled=true} 且
  * {@code ingot.security.ratelimit.policy.mode=remote}。</p>
  *
- * <p>通过 {@link RemoteSnapshotFetcher} 调 ingot-service-security 拉取全量快照，
- * 由 {@link SnapshotAssembler#toRateLimitSnapshot} 转换为 {@link RateLimitSnapshot}
- * 并缓存到 {@link LocalCompiledCache}。</p>
- *
- * <p>拉取失败时返回空快照（规则数为 0，不抛异常），网关侧退化为不限流。</p>
+ * <p>快照本身由 {@link RemoteSnapshotFetcher} 背后的四域共享分层缓存提供，本类只在其上做
+ * 版本驱动的派生缓存：快照版本未变时直接复用上次转换结果，避免上游 TTL 刷新引发无谓重建
+ * 与 Sentinel 规则抖动。</p>
  *
  * @author jy
  * @since 2026/5/26
+ * @see VersionedDerivedCache
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RemoteRateLimitRuleService implements RateLimitRuleService {
 
     private final RemoteSnapshotFetcher fetcher;
-    private final LocalCompiledCache<RateLimitSnapshot> cache = new LocalCompiledCache<>();
+    private final VersionedDerivedCache<SecurityPolicySnapshotVO, RateLimitSnapshot> cache;
 
-    /** 获取限流快照；cache miss 时通过 Feign 拉取远端并转换。 */
+    public RemoteRateLimitRuleService(RemoteSnapshotFetcher fetcher) {
+        this.fetcher = fetcher;
+        this.cache = new VersionedDerivedCache<>(fetcher::versionOf, vo -> {
+            RateLimitSnapshot snapshot = SnapshotAssembler.toRateLimitSnapshot(vo);
+            log.info("[RateLimit] remote snapshot compiled, rules={} version={}",
+                    snapshot.getRules().size(), snapshot.getVersion());
+            return snapshot;
+        });
+    }
+
+    /** 获取限流快照；共享快照版本变化时重新转换。 */
     @Override
     public RateLimitSnapshot getSnapshot() {
-        return cache.get(this::load);
+        return cache.get(fetcher.fetch());
     }
 
-    /** 清空 L1 缓存，下次 getSnapshot 重新拉取远端。 */
+    /**
+     * 清空共享快照与本域派生缓存，下次 {@link #getSnapshot()} 穿透到远端。
+     *
+     * <p>共享层也一并清理，使本方法不依赖失效回调的注册顺序：
+     * {@code SentinelGatewayConfiguration#reloadRules} 在事件回调中先调本方法再立即读取，
+     * 若只清派生层就会重新编译出同一份旧快照。</p>
+     */
     @Override
     public void evictAll() {
+        fetcher.evictAll();
         cache.evictAll();
         log.debug("[RateLimit] remote snapshot evicted");
-    }
-
-    private RateLimitSnapshot load() {
-        RateLimitSnapshot snapshot = SnapshotAssembler.toRateLimitSnapshot(fetcher.fetch());
-        log.info("[RateLimit] remote snapshot loaded, rules={} version={}",
-                snapshot.getRules().size(), snapshot.getVersion());
-        return snapshot;
     }
 }

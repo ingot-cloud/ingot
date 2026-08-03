@@ -75,6 +75,17 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
     public void recordFailure(LoginCommand command) {
         log.warn("记录用户 {} 登录失败: {}", command.getUserId(), command.getFailureReason());
 
+        LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy();
+        if (lockout.isEnabled() && command.getUserId() != null && command.getUserType() != null) {
+            int windowMinutes = lockout.getAttemptWindowMinutes();
+            lockStatePort.findByUser(command.getUserId(), command.getUserType()).ifPresent(state -> {
+                if (state.getLastFailedAt() != null
+                        && state.getLastFailedAt().plusMinutes(windowMinutes).isBefore(LocalDateTime.now())) {
+                    lockStatePort.resetFailCount(command.getUserId(), command.getUserType());
+                }
+            });
+        }
+
         // 1. 原子递增失败计数，直接拿到最新值，无需再查一次
         int newFailCount = lockStatePort.incrementFailCount(command.getUserId(), command.getUserType());
 
@@ -89,7 +100,6 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
         securityEventPort.publishEvent(event);
 
         // 3. 检查是否需要自动锁定
-        LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy();
         if (lockout.isEnabled()) {
             int maxAttempts = lockout.getMaxAttempts();
             if (newFailCount >= maxAttempts) {

@@ -16,10 +16,12 @@ import lombok.experimental.Accessors;
  *         {@code RequestGlobalFilter} 在最前面标准化写入）。</li>
  *     <li>{@link #DEVICE}（DB 短码 {@code DV}）：设备指纹，从
  *         {@code In-Ca-Sig} Header 读取（来源：BFF）。</li>
- *     <li>{@link #USER}（DB 短码 {@code UI}）：用户 ID，从
- *         {@code In-Inner-User-Id} Header 读取（由网关 IdentityResolveFilter 从 JWT attribute 回填）。
- *         匿名请求 userId 为空时，Sentinel 取不到参数会退化为按 API 整体限流。</li>
- * </ul>
+     *     <li>{@link #USER}（DB 短码 {@code UI}）：用户 ID，从
+     *         {@code In-Inner-User-Id} Header 读取（由网关 IdentityResolveFilter 从 JWT attribute 回填）。
+     *         匿名请求 userId 为空时，Sentinel 取不到参数会退化为按 API 整体限流。</li>
+     *     <li>{@link #CLIENT}（DB 短码 {@code CL}）：OAuth2 {@code client_id}，从
+     *         {@code In-Inner-Client-Id} Header 读取（由 IdentityResolveFilter 从 query 解析）。</li>
+     * </ul>
  *
  * <p>DB 表 {@code gateway_rate_limit_rule.dimension} 字段为 {@code char(2)} 短码，
  * yaml 配置（local 模式）习惯写枚举全名；本类同时支持两种写法，由
@@ -27,7 +29,7 @@ import lombok.experimental.Accessors;
  *
  * <h3>yaml 示例</h3>
  * <pre>{@code
- * dimension: IP      # 或 DEVICE / USER；remote 模式 DB 短码 IP/DV/UI 亦可
+ * dimension: IP      # 或 DEVICE / USER / CLIENT；remote 模式 DB 短码 IP/DV/UI/CL 亦可
  * }</pre>
  *
  * @author jy
@@ -45,7 +47,10 @@ public enum RateLimitDimension {
     DEVICE("DV"),
 
     /** 按用户 ID 限流；Header {@code In-Inner-User-Id}；匿名时退化为 API 整体限流；DB 短码 {@code UI}。 */
-    USER("UI");
+    USER("UI"),
+
+    /** 按 OAuth2 client_id 限流；Header {@code In-Inner-Client-Id}；DB 短码 {@code CL}。 */
+    CLIENT("CL");
 
     private final String dbCode;
 

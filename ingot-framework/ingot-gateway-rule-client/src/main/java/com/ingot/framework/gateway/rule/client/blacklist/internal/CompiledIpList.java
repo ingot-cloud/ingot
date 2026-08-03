@@ -61,7 +61,7 @@ public class CompiledIpList {
                 continue;
             }
             switch (item.getKeyType()) {
-                case IP, DEVICE, USER -> compiled.exact(blacklist, item.getKeyType()).add(key);
+                case IP, DEVICE, USER, CLIENT -> compiled.exact(blacklist, item.getKeyType()).add(key);
                 case CIDR -> (blacklist ? compiled.blackCidrs : compiled.whiteCidrs).add(key);
                 case USER_AGENT -> addPattern(blacklist, key, item, compiled.blackUaPatterns,
                         compiled.whiteUaPatterns);
@@ -77,15 +77,27 @@ public class CompiledIpList {
     /**
      * 黑名单匹配：IP / 设备 / 用户 / CIDR / UA / Referer 任一维度命中即 true。
      */
-    public boolean isBlocked(String ip, String device, String user, String ua, String referer) {
-        return match(true, ip, device, user, ua, referer);
+    public boolean isBlocked(String ip, String device, String user, String clientId, String ua, String referer) {
+        return match(true, ip, device, user, clientId, ua, referer);
     }
 
     /**
      * 白名单匹配：逻辑同 {@link #isBlocked}，查 white 侧索引。
      */
+    public boolean isWhitelisted(String ip, String device, String user, String clientId, String ua, String referer) {
+        return match(false, ip, device, user, clientId, ua, referer);
+    }
+
+    /** @deprecated 请使用含 {@code clientId} 的重载。 */
+    @Deprecated
+    public boolean isBlocked(String ip, String device, String user, String ua, String referer) {
+        return isBlocked(ip, device, user, null, ua, referer);
+    }
+
+    /** @deprecated 请使用含 {@code clientId} 的重载。 */
+    @Deprecated
     public boolean isWhitelisted(String ip, String device, String user, String ua, String referer) {
-        return match(false, ip, device, user, ua, referer);
+        return isWhitelisted(ip, device, user, null, ua, referer);
     }
 
     /**
@@ -96,7 +108,7 @@ public class CompiledIpList {
         return set != null && set.contains(keyValue);
     }
 
-    private boolean match(boolean blacklist, String ip, String device, String user,
+    private boolean match(boolean blacklist, String ip, String device, String user, String clientId,
                         String ua, String referer) {
         if (notBlank(ip) && exact(blacklist, IpKeyType.IP).contains(ip)) {
             return true;
@@ -105,6 +117,9 @@ public class CompiledIpList {
             return true;
         }
         if (notBlank(user) && exact(blacklist, IpKeyType.USER).contains(user)) {
+            return true;
+        }
+        if (notBlank(clientId) && exact(blacklist, IpKeyType.CLIENT).contains(clientId)) {
             return true;
         }
         if (notBlank(ip) && cidrMatch(blacklist, ip)) {

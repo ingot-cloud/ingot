@@ -20,6 +20,7 @@ import lombok.experimental.Accessors;
  *   <tr><td>CD</td><td>{@link #CIDR}</td><td>客户端 IP 是否落在 CIDR 段内</td></tr>
  *   <tr><td>UA</td><td>{@link #USER_AGENT}</td><td>User-Agent 正则（Java {@code Pattern.find}）</td></tr>
  *   <tr><td>RF</td><td>{@link #REFERER}</td><td>Referer 正则（Java {@code Pattern.find}）</td></tr>
+ *   <tr><td>CL</td><td>{@link #CLIENT}</td><td>OAuth2 {@code client_id}（{@code In-Inner-Client-Id}）</td></tr>
  * </table>
  *
  * @author jy
@@ -35,7 +36,8 @@ public enum IpKeyType {
     USER("UI"),
     CIDR("CD"),
     USER_AGENT("UA"),
-    REFERER("RF");
+    REFERER("RF"),
+    CLIENT("CL");
 
     private final String dbCode;
 

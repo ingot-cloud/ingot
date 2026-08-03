@@ -87,6 +87,12 @@ public interface HeaderConstants {
     String INNER_USER_ID = "In-Inner-User-Id";
 
     /**
+     * 当前请求 OAuth2 client_id（网关内部 Header）。
+     * <p>由 IdentityResolveFilter 从 query {@code client_id} 解析并回填，供 Sentinel CLIENT 维度限流。</p>
+     */
+    String INNER_CLIENT_ID = "In-Inner-Client-Id";
+
+    /**
      * 应用层：解析请求来源 IP（网关标准化头优先，含历史兼容头）。
      */
     String[] REQUEST_SOURCE_IP_HEADERS = {
@@ -107,5 +113,6 @@ public interface HeaderConstants {
             SECURITY_FROM,
             INNER_CLIENT_REAL_IP,
             INNER_USER_ID,
+            INNER_CLIENT_ID,
     };
 }

@@ -1,0 +1,22 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api project(ingot.framework_event_bus)
+
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_context)
+    implementation(deps.caffeine)
+
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
+    compileOnly(deps.jackson.annotation)
+    compileOnly(deps.jackson.data_bind)
+    compileOnly(deps.spring.spring_boot.actuator_autoconfigure)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.data_redis_starter)
+    testImplementation(deps.jackson.data_bind)
+}
+
+test {
+    useJUnitPlatform()
+}

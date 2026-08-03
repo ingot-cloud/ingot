@@ -14,8 +14,8 @@ import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot
  *     <li>{@code policy.mode=remote} — {@link com.ingot.framework.gateway.rule.client.ratelimit.internal.RemoteRateLimitRuleService}</li>
  * </ul>
  *
- * <p>SPI 同步返回；实现内部使用 {@link com.ingot.framework.gateway.rule.client.internal.LocalCompiledCache}
- * 维护 L1 编译缓存，仅在 cache miss 时从 yaml 或 Feign 重新加载。
+ * <p>SPI 同步返回；实现内部用派生缓存维护编译产物，remote 模式下按共享快照的
+ * {@link com.ingot.framework.cache.derived.SnapshotVersion} 决定是否重编译，local 模式仅在显式失效后重编译。
  * 跨节点变更通过 {@link com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator}
  * 触发 {@link #evictAll()}。</p>
  *

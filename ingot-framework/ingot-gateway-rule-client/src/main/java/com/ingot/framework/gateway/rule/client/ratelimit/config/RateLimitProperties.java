@@ -58,13 +58,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   security:
  *     policy:
  *       client:
- *         enabled: true
  *         invalidation-enabled: true    # 必开，否则跨节点改规则后无法热更新
  *     ratelimit:
  *       enabled: true
  *       policy:
  *         mode: remote                  # 规则统一在 Platform 页面维护，下沉到本地 L1 编译缓存
- *         # groups / rules 在 remote 模式下被忽略
+ *         # groups / rules 在 remote 模式下仅作 Nacos 地板数据源，不参与 remote 编译
  * }</pre>
  *
  * <h3>设计说明</h3>
@@ -90,6 +89,11 @@ public class RateLimitProperties {
      *     <li>{@code SentinelGatewayConfiguration} 因依赖 {@code RateLimitRuleService} 也不会执行 reload</li>
      *     <li>仍然兼容现有 Nacos 直接下发 Sentinel 规则的路径，本 SDK 静默不接管</li>
      * </ul>
+     * <p>本字段由 {@link RateLimitAutoConfiguration} 上的 {@code @ConditionalOnProperty} 按属性键
+     * {@code ingot.security.ratelimit.enabled} 消费，而非通过 getter 读取，因此 IDE 的
+     * 「未使用」提示是误报。</p>
+     * <p>本开关是限流域生效的<b>唯一</b>门控，与 {@code ingot.security.policy.client.*}
+     * 互不级联；关闭时本类的 Properties Bean 不装配，Nacos 地板中的限流片段随之为空。</p>
      */
     private boolean enabled = false;
 
@@ -132,8 +136,10 @@ public class RateLimitProperties {
      */
     public enum Mode {
         /**
-         * 从本机 yaml {@link Policy#getRules()} / {@link Policy#getGroups()} 加载。
-         * 适合本机调试、单实例或规则极简的场景；修改 yaml 后需重启或手动 evict。
+         * 从本机 yaml / Nacos {@code in-security-policy.yml} 加载。
+         * 配置变更时由 {@code ConfigurationPropertiesRebinder} 重绑定 Properties，
+         * {@link com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener}
+         * 触发缓存失效；网关侧 Sentinel 规则同步热重载，无需重启。
          */
         LOCAL,
         /**

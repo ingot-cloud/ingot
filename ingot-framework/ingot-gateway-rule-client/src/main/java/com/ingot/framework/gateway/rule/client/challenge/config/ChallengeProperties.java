@@ -58,7 +58,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   security:
  *     policy:
  *       client:
- *         enabled: true
  *         invalidation-enabled: true
  *     challenge:
  *       enabled: true
@@ -81,6 +80,10 @@ public class ChallengeProperties {
      *         网关限流触发后不弹出验证码，直接返回 Sentinel 429。</li>
      *     <li>{@code true}：装配 SDK + 网关挑战过滤器，按策略触发 SLIDER / SMS 等验证码。</li>
      * </ul>
+     * <p>本字段由 {@link ChallengeAutoConfiguration} 上的 {@code @ConditionalOnProperty} 按属性键
+     * {@code ingot.security.challenge.enabled} 消费，是挑战域生效的<b>唯一</b>门控，
+     * 与 {@code ingot.security.policy.client.*} 互不级联；关闭时本类的 Properties Bean 不装配，
+     * Nacos 地板中的挑战片段随之为空。</p>
      */
     private boolean enabled = false;
 

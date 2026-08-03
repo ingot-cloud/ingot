@@ -6,6 +6,7 @@ import lombok.experimental.UtilityClass;
  * 网关安全策略执行面常量：Redis Key 前缀、Exchange Attribute 键、业务错误码、响应文案、违规升级阈值等。
  *
  * <p>与 {@link com.ingot.framework.commons.constants.HeaderConstants}（HTTP Header）、
+ * {@link com.ingot.framework.commons.constants.RedisKeyConstants}（跨模块 Redis Key）、
  * {@link com.ingot.framework.vc.common.VCConstants}（验证码 PassToken 参数）分工明确，
  * 本类为网关 security 包内运行时常量的唯一事实来源。</p>
  *
@@ -34,17 +35,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class GatewaySecurityConstants {
 
-    // ---- Redis Key 前缀 ----
-
-    /** 临时封禁 Key 前缀：{@code in:gw:bl:tmp:{keyType}:{keyValue}}。 */
-    public static final String REDIS_KEY_TEMP_BLOCK_PREFIX = "in:gw:bl:tmp:";
-
-    /** 限流违规计数 Key 前缀：{@code in:gw:violation:{keyType}:{keyValue}:{ruleCode}}。 */
-    public static final String REDIS_KEY_VIOLATION_PREFIX = "in:gw:violation:";
-
-    /** PassToken Key 前缀：{@code in:gw:vc:pass:{scope}:{token}}。 */
-    public static final String REDIS_KEY_PASS_TOKEN_PREFIX = "in:gw:vc:pass:";
-
     // ---- Exchange Attribute 键 ----
 
     /** {@link ClientIdentity} 在 exchange 中的 attribute 键。 */
@@ -69,7 +59,7 @@ public class GatewaySecurityConstants {
 
     // ---- 响应文案 ----
 
-    public static final String MSG_REQUEST_BLOCKED = "Request blocked";
+    public static final String MSG_REQUEST_BLOCKED = "请求已被拦截";
     public static final String MSG_TOO_MANY_REQUESTS = "Too many requests";
     public static final String MSG_CAPTCHA_REQUIRED = "Captcha required";
 

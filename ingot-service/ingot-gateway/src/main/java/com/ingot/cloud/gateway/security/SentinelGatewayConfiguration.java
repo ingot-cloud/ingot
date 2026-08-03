@@ -9,7 +9,11 @@ import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayParamFlowItem
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleManager;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
+import com.ingot.framework.cache.coordinator.CacheRefreshPublisher;
 import com.ingot.framework.commons.constants.HeaderConstants;
+import com.ingot.framework.gateway.rule.client.config.GatewayRuleClientProperties;
+import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
@@ -19,6 +23,7 @@ import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitDimensio
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -26,6 +31,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,29 +39,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 把 SDK 的 {@link RateLimitSnapshot} 编译为 Sentinel Gateway 的
- * {@link ApiDefinition} + {@link GatewayFlowRule} 并加载到运行时。
+ * <p>把 SDK 的 {@link RateLimitSnapshot} 编译为 Sentinel Gateway 的
+ * {@link ApiDefinition} + {@link GatewayFlowRule} 并加载到运行时。</p>
  *
  * <p>装载条件：必须有 {@link RateLimitRuleService} bean（即
  * {@code ingot.security.ratelimit.enabled=true}）；为关时本类
  * 静默 — 不影响现有 Nacos 规则路径。</p>
  *
- * <h3>热更新闭环</h3>
+ * <h3>四条刷新路径</h3>
  * <ol>
- *     <li>Platform 改规则 → security-provider 发
- *         {@link com.ingot.cloud.security.api.event.SecurityPolicyInvalidationEvent}</li>
- *     <li>{@link SecurityPolicyCacheCoordinator} 收到事件 → 串行回调本类注册的
- *         {@link #reloadRules()}</li>
- *     <li>{@link #reloadRules()} 内部 <b>先调用 {@code service.evictAll()} 清 L1</b>，
- *         再 {@code getSnapshot()} 重新编译，最后 {@link GatewayRuleManager#loadRules}
- *         全量替换 Sentinel 规则。</li>
+ *     <li><b>失效广播</b>：Platform 改规则 → {@link SecurityPolicyCacheCoordinator} 回调
+ *         {@link #reloadRules()}，先 {@code evictAll()} 清缓存再无条件重载，秒级生效。</li>
+ *     <li><b>Nacos 热更新</b>：local 模式下 {@code in-security-policy.yml} 变更 →
+ *         {@code EnvironmentChangeEvent} 触发 {@link #reloadRules()}，无需重启。</li>
+ *     <li><b>TTL 懒刷新</b>：缓存 TTL 到期后由请求流量触发重新拉取，共享快照层广播刷新事件，
+ *         本类比对快照引用后按需重载。这条路径是广播丢失时的兜底。</li>
+ *     <li><b>定时兜底</b>：仅当部署中只启用限流域、没有其他域的流量驱动共享快照刷新时才需要，
+ *         由 {@code ingot.security.policy.client.cache.refresh-interval} 打开，默认关闭。</li>
  * </ol>
  *
- * <p>由于 {@code RateLimitAutoConfiguration} 中已存在另一个 evictor，
- * Coordinator 会按注册顺序串行触发；本类 reload 内自带 evict 不依赖那条注册顺序，
- * 因此重复 evict 无副作用，保证 remote 模式失效后必拿新快照。</p>
+ * <p>后两条路径都走 {@link #reloadIfChanged()}，用<b>快照对象引用</b>判定是否真的变了。
+ * 引用比对能直接复用 SDK 派生缓存已有的版本判定结果——版本未变时派生缓存返回同一个对象，
+ * 因此这里不需要重复解析版本号，也不会因 TTL 刷新而反复重建 Sentinel 规则造成计数器抖动。</p>
  *
  * <h3>当前限制（已知）</h3>
  * <ul>
@@ -78,16 +89,46 @@ public class SentinelGatewayConfiguration {
 
     private final ObjectProvider<RateLimitRuleService> rateLimitProvider;
     private final ObjectProvider<SecurityPolicyCacheCoordinator> coordinatorProvider;
+    private final ObjectProvider<CacheRefreshPublisher<SecurityPolicySnapshotVO>> refreshPublisherProvider;
+    private final ObjectProvider<GatewayRuleClientProperties> policyPropertiesProvider;
+    private final ObjectProvider<LocalPolicyEnvironmentRefreshListener> localRefreshListenerProvider;
+
+    /**
+     * 上次已加载进 Sentinel 的快照；用引用比对避免无变化时重复 loadRules。
+     */
+    private final AtomicReference<RateLimitSnapshot> loaded = new AtomicReference<>();
+
+    private ScheduledExecutorService refreshScheduler;
 
     @PostConstruct
     public void registerCoordinator() {
         SecurityPolicyCacheCoordinator coordinator = coordinatorProvider.getIfAvailable();
-        if (coordinator == null) {
-            return;
+        if (coordinator != null) {
+            Runnable reload = this::reloadRules;
+            coordinator.register(SecurityPolicyDomain.RATE_LIMIT_RULE, reload);
+            coordinator.register(SecurityPolicyDomain.ENDPOINT_GROUP, reload);
         }
-        Runnable reload = this::reloadRules;
-        coordinator.register(SecurityPolicyDomain.RATE_LIMIT_RULE, reload);
-        coordinator.register(SecurityPolicyDomain.ENDPOINT_GROUP, reload);
+
+        CacheRefreshPublisher<SecurityPolicySnapshotVO> publisher = refreshPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publisher.addListener(vo -> reloadIfChanged());
+        }
+
+        LocalPolicyEnvironmentRefreshListener localRefreshListener =
+                localRefreshListenerProvider.getIfAvailable();
+        if (localRefreshListener != null) {
+            localRefreshListener.register("ingot.security.ratelimit.", this::reloadRules);
+        }
+
+        startScheduledRefresh();
+    }
+
+    @PreDestroy
+    public void stopScheduledRefresh() {
+        if (refreshScheduler != null) {
+            refreshScheduler.shutdownNow();
+            refreshScheduler = null;
+        }
     }
 
     @Bean
@@ -96,20 +137,55 @@ public class SentinelGatewayConfiguration {
     }
 
     /**
-     * 重新从 SDK 拉快照并刷新 Sentinel 规则。
+     * 强制重新拉取快照并全量替换 Sentinel 规则。
      *
-     * <p>内部先调用 {@link RateLimitRuleService#evictAll()} 强制下次取快照穿透
-     * L1 缓存，确保 remote 模式下能拿到最新 Feign 结果；接着按 priority 排序
-     * 编译并全量替换 Sentinel 当前规则。</p>
+     * <p>先 {@link RateLimitRuleService#evictAll()} 清掉共享快照与派生缓存，确保 remote 模式下
+     * 拿到的是最新的远端结果而不是刚被广播判定为过期的那一份。</p>
      */
     public synchronized void reloadRules() {
         RateLimitRuleService service = rateLimitProvider.getIfAvailable();
         if (service == null) {
             return;
         }
+        service.evictAll();
+        applySnapshot(service.getSnapshot());
+    }
+
+    /**
+     * 按需重载：快照对象未变化时直接跳过，不触碰 Sentinel 运行时。
+     *
+     * <p>供 TTL 懒刷新与定时兜底两条路径调用。不清缓存，因此不会引发额外的远端调用。</p>
+     */
+    public synchronized void reloadIfChanged() {
+        RateLimitRuleService service = rateLimitProvider.getIfAvailable();
+        if (service == null) {
+            return;
+        }
+        RateLimitSnapshot snapshot = service.getSnapshot();
+        if (snapshot == loaded.get()) {
+            return;
+        }
+        applySnapshot(snapshot);
+    }
+
+    private void startScheduledRefresh() {
+        GatewayRuleClientProperties properties = policyPropertiesProvider.getIfAvailable();
+        Duration interval = properties == null ? null : properties.getCache().getRefreshInterval();
+        if (interval == null || interval.isZero() || interval.isNegative()) {
+            return;
+        }
+        refreshScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "sentinel-rule-refresh");
+            t.setDaemon(true);
+            return t;
+        });
+        refreshScheduler.scheduleWithFixedDelay(this::reloadIfChanged,
+                interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
+        log.info("[Sentinel] scheduled rule refresh enabled, interval={}", interval);
+    }
+
+    private void applySnapshot(RateLimitSnapshot snapshot) {
         try {
-            service.evictAll();
-            RateLimitSnapshot snapshot = service.getSnapshot();
             Map<String, EndpointGroup> groupMap = indexGroups(snapshot.getGroups());
 
             Set<ApiDefinition> apiDefinitions = new HashSet<>();
@@ -136,6 +212,7 @@ public class SentinelGatewayConfiguration {
 
             GatewayApiDefinitionManager.loadApiDefinitions(apiDefinitions);
             GatewayRuleManager.loadRules(flowRules);
+            loaded.set(snapshot);
             log.info("[Sentinel] reloaded api={} rules={} patternSkipped={} (snapshot version={})",
                     apiDefinitions.size(), flowRules.size(), patternMissingSkipped,
                     snapshot.getVersion());
@@ -196,6 +273,10 @@ public class SentinelGatewayConfiguration {
                 // userId 由 AuthContextRelayFilter 解析 JWT → IdentityResolveFilter 回填 In-Inner-User-Id
                 param.setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_HEADER);
                 param.setFieldName(HeaderConstants.INNER_USER_ID);
+            }
+            case CLIENT -> {
+                param.setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_HEADER);
+                param.setFieldName(HeaderConstants.INNER_CLIENT_ID);
             }
             default -> {
                 // IP 维度：必须读 IdentityResolveFilter 标准化后的 In-Inner-Client-Real-IP，

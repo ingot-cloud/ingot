@@ -42,7 +42,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ViolationEscalationProperties {
 
     /**
-     * 违规升级域总开关；默认 false，避免影响现有部署。
+     * 违规升级域<b>装配</b>总开关；默认 false，避免影响现有部署。
+     * <p>由 {@link ViolationEscalationAutoConfiguration} 上的 {@code @ConditionalOnProperty} 按属性键
+     * {@code ingot.security.violation-escalation.enabled} 消费，是违规升级域生效的<b>唯一</b>门控，
+     * 与 {@code ingot.security.policy.client.*} 互不级联；关闭时本类的 Properties Bean 不装配，
+     * Nacos 地板中的违规升级片段随之为空。</p>
+     * <p>注意与 {@link Policy#isEnabled()} 区分：本字段决定 Service 是否装配，
+     * {@code policy.enabled} 决定装配后运行期是否真的计数并临时封禁；
+     * 且 {@code policy.enabled} 在 {@link Mode#REMOTE} 下取自远端快照，yaml 值被忽略。</p>
      */
     private boolean enabled = false;
 
@@ -74,7 +81,9 @@ public class ViolationEscalationProperties {
         private int tempBlockTtlSec = ViolationEscalationConfig.DEFAULT_TEMP_BLOCK_TTL_SEC;
 
         /**
-         * 是否启用违规计数与临时封禁；local 模式生效。
+         * 运行期是否启用违规计数与临时封禁；仅 {@link Mode#LOCAL} 下取本值，
+         * {@link Mode#REMOTE} 下取自远端快照。与外层
+         * {@link ViolationEscalationProperties#isEnabled()}（装配开关）语义不同。
          */
         private boolean enabled = true;
     }

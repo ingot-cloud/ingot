@@ -6,7 +6,10 @@
 #
 # policy.mode:
 #   local  — 规则写在下方 groups/rules/items/policies
-#   remote — 通过 Feign 拉取 ingot-service-security 快照，需 ingot.security.policy.client.enabled=true
+#   remote — 通过 Feign 拉取 ingot-service-security 快照，须引入 ingot-security-api 并启用 @EnableFeignClients
+#
+# 各域 enabled 与 ingot.security.policy.client.* 互不级联：后者只调参快照链与失效订阅的行为，
+# 不做功能门控（无「SDK 总开关」）。
 # ---------------------------------------------------------------------------
 ingot:
   security:

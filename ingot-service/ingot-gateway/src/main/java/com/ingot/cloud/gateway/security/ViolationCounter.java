@@ -1,5 +1,6 @@
 package com.ingot.cloud.gateway.security;
 
+import com.ingot.framework.commons.constants.RedisKeyConstants;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import java.util.List;
  * 即触发 {@link TempBlockStore#block} 与 {@link BlacklistEventReporter} 审计上报。</p>
  *
  * <h3>Key 规范</h3>
- * <p>{@link GatewaySecurityConstants#REDIS_KEY_VIOLATION_PREFIX}{@code {keyType}:{keyValue}:{ruleCode}}</p>
+ * <p>{@link RedisKeyConstants.Gateway#VIOLATION_PREFIX}{@code {keyType}:{keyValue}:{ruleCode}}</p>
  *
  * <h3>Lua 原子语义</h3>
  * <pre>
@@ -56,8 +57,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ViolationCounter {
 
-    private static final String KEY_PREFIX = GatewaySecurityConstants.REDIS_KEY_VIOLATION_PREFIX;
-
     private static final RedisScript<Long> INCR_SCRIPT = RedisScript.of(
             "local v = redis.call('INCR', KEYS[1])\n" +
                     "if v == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end\n" +
@@ -78,7 +77,7 @@ public class ViolationCounter {
         if (redisTemplate == null || keyValue == null) {
             return Mono.just(0L);
         }
-        String key = KEY_PREFIX + keyType + ":" + keyValue + ":" + ruleCode;
+        String key = RedisKeyConstants.Gateway.violationKey(keyType, keyValue, ruleCode);
         List<String> keys = Collections.singletonList(key);
         long ttlMs = Math.max(GatewaySecurityConstants.MIN_VIOLATION_WINDOW_MS, window.toMillis());
         return redisTemplate.execute(INCR_SCRIPT, keys, Collections.singletonList(String.valueOf(ttlMs)))

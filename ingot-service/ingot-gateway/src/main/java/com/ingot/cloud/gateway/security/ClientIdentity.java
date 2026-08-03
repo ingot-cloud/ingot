@@ -59,6 +59,13 @@ public class ClientIdentity {
     private final String userId;
 
     /**
+     * OAuth2 client_id。
+     * <p>来源：请求 query {@code client_id}，由 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter}
+     * 聚合进本对象并回填 {@code In-Inner-Client-Id} Header，供 Sentinel {@code CLIENT} 维度与名单 {@code CL} 匹配。</p>
+     */
+    private final String clientId;
+
+    /**
      * User-Agent 原始值。
      * <p>来源：标准 {@code User-Agent} 请求头；当前主要用于审计与日志，黑白名单维度未直接使用。</p>
      */

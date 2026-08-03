@@ -31,7 +31,11 @@ public enum SecurityEventType {
     FORCE_CHANGE_PASSWORD("FORCE_CHANGE_PASSWORD", SecurityEventCategory.CREDENTIAL),
 
     BLACKLIST_BLOCK("BLACKLIST_BLOCK", SecurityEventCategory.ACCESS),
-    RATE_LIMIT_VIOLATION("RATE_LIMIT_VIOLATION", SecurityEventCategory.ACCESS);
+    RATE_LIMIT_VIOLATION("RATE_LIMIT_VIOLATION", SecurityEventCategory.ACCESS),
+    LOGIN_FAIL_IP_EXCEED("LOGIN_FAIL_IP_EXCEED", SecurityEventCategory.ACCESS),
+    LOGIN_FAIL_DEVICE_EXCEED("LOGIN_FAIL_DEVICE_EXCEED", SecurityEventCategory.ACCESS),
+    LOGIN_FAIL_CLIENT_EXCEED("LOGIN_FAIL_CLIENT_EXCEED", SecurityEventCategory.ACCESS),
+    LOGIN_FAIL_ACCOUNT_IP_EXCEED("LOGIN_FAIL_ACCOUNT_IP_EXCEED", SecurityEventCategory.ACCESS);
 
     private final String code;
     private final SecurityEventCategory category;

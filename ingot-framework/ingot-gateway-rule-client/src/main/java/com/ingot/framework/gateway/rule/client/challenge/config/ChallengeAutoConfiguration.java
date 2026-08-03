@@ -4,6 +4,7 @@ import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.internal.LocalChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.internal.RemoteChallengePolicyService;
+import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import jakarta.annotation.PostConstruct;
@@ -61,7 +62,6 @@ import org.springframework.context.annotation.Bean;
  *   security:
  *     policy:
  *       client:
- *         enabled: true
  *         invalidation-enabled: true
  *     challenge:
  *       enabled: true
@@ -127,11 +127,22 @@ public class ChallengeAutoConfiguration {
         @Autowired(required = false)
         private ChallengePolicyService challengePolicyService;
 
+        @Autowired(required = false)
+        private LocalPolicyEnvironmentRefreshListener refreshListener;
+
+        @Autowired(required = false)
+        private ChallengeProperties properties;
+
         @PostConstruct
         public void register() {
-            if (coordinator == null || challengePolicyService == null) return;
-            coordinator.register(SecurityPolicyDomain.CHALLENGE_POLICY,
-                    challengePolicyService::evictAll);
+            if (coordinator != null && challengePolicyService != null) {
+                coordinator.register(SecurityPolicyDomain.CHALLENGE_POLICY,
+                        challengePolicyService::evictAll);
+            }
+            if (refreshListener != null && challengePolicyService != null && properties != null
+                    && properties.getPolicy().getMode() == ChallengeProperties.Mode.LOCAL) {
+                refreshListener.register("ingot.security.challenge.", challengePolicyService::evictAll);
+            }
         }
     }
 }

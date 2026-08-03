@@ -34,17 +34,18 @@ public interface BlacklistService {
      * @param ip      客户端 IP（{@code In-Inner-Client-Real-IP}），可能为 null
      * @param device  设备指纹（{@code In-Ca-Sig}），可能为 null
      * @param userId  用户 ID（{@code In-Inner-User-Id}），可能为 null
+     * @param clientId OAuth2 client_id（{@code In-Inner-Client-Id}），可能为 null
      * @param ua      User-Agent，可能为 null
      * @param referer Referer，可能为 null
      * @return 命中黑名单返回 true
      */
-    boolean isBlocked(String ip, String device, String userId, String ua, String referer);
+    boolean isBlocked(String ip, String device, String userId, String clientId, String ua, String referer);
 
     /**
      * 是否在白名单中（任一维度匹配即返回 true）。
      * <p>白名单命中后网关跳过后续黑名单检查、挑战策略与 Sentinel 限流。</p>
      */
-    boolean isWhitelisted(String ip, String device, String userId, String ua, String referer);
+    boolean isWhitelisted(String ip, String device, String userId, String clientId, String ua, String referer);
 
     /**
      * 精确判断某个键是否在指定类型的名单中（用于运营查询 / 管理端校验）。

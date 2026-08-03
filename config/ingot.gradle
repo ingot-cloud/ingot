@@ -1,6 +1,7 @@
 def ingot = [:]
 
 // framework
+ingot.framework_cache = ":ingot-framework:ingot-cache"
 ingot.framework_commons = ":ingot-framework:ingot-commons"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_data_mybatis = ":ingot-framework:ingot-data:ingot-data-mybatis"
@@ -31,6 +32,8 @@ ingot.framework_tss_xxljob = ":ingot-framework:ingot-tss:ingot-tss-xxljob"
 ingot.framework_security_account_core = ":ingot-framework:ingot-security:ingot-security-account:ingot-security-account-core"
 ingot.framework_security_account_adapter = ":ingot-framework:ingot-security:ingot-security-account:ingot-security-account-adapter"
 ingot.framework_security_account_web_support = ":ingot-framework:ingot-security:ingot-security-account:ingot-security-account-web-support"
+ingot.framework_security_access_core = ":ingot-framework:ingot-security:ingot-security-access-core"
+ingot.framework_security_access_adapter = ":ingot-framework:ingot-security:ingot-security-access-adapter"
 ingot.framework_dict_client = ":ingot-framework:ingot-dict-client"
 ingot.framework_event_bus = ":ingot-framework:ingot-event-bus"
 ingot.framework_gateway_rule_client = ":ingot-framework:ingot-gateway-rule-client"

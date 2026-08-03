@@ -41,4 +41,12 @@ public class AuthFailureDTO implements Serializable {
      * 租户ID（来自请求上下文）
      */
     private String tenantId;
+    /**
+     * OAuth2 client_id
+     */
+    private String clientId;
+    /**
+     * 设备指纹（In-Ca-Sig）
+     */
+    private String deviceId;
 }

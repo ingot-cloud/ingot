@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * <h3>响应示例</h3>
  * <pre>{@code
  * // 403 黑名单
- * { "code": "FORBIDDEN_BLOCKED", "msg": "Request blocked", "data": null }
+ * { "code": "FORBIDDEN_BLOCKED", "msg": "请求已被拦截", "data": null }
  * // 412 挑战
  * { "code": "CHALLENGE_REQUIRED", "msg": "Captcha required", "data": { "vcType": "...", ... } }
  * }</pre>
