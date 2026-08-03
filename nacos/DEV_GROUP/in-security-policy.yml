@@ -88,3 +88,60 @@ ingot:
           oneTime: true
           # 首次登录是否强制修改密码
           forceChangeOnFirstLogin: true
+
+    # 网关策略本地地板（remote 失败且无 LKG 时生效；与 migration 011 种子语义对齐）
+    #
+    # 本文件只承载地板【数据】（policy.groups / rules / items / policies），
+    # 不声明各域 enabled 与 policy.mode —— 那两项的唯一来源是 in-service-gateway.yml。
+    # 否则两个文件同前缀冲突后，实际生效值将由 spring.config.import 顺序决定。
+    #
+    # 域未启用时其 *Properties Bean 不装配，对应地板片段自动为空。
+    ratelimit:
+      policy:
+        groups:
+          - code: login-auth-floor
+            name: 登录入口（地板）
+            enabled: true
+            pattern-list:
+              - path: /auth/token/**
+                method: ANY
+              - path: /bff/auth/login
+                method: POST
+          - code: api-business-floor
+            name: 业务 API（地板）
+            enabled: true
+            pattern-list:
+              - path: /pms/**
+                method: ANY
+              - path: /member/**
+                method: ANY
+              - path: /security/**
+                method: ANY
+        rules:
+          - code: login-ip-floor
+            group-code: login-auth-floor
+            dimension: IP
+            qps: 1
+            burst: 2
+            interval-sec: 60
+            control-behavior: F
+            enabled: true
+            priority: 0
+          - code: pms-ip-floor
+            group-code: api-business-floor
+            dimension: IP
+            qps: 200
+            burst: 300
+            interval-sec: 1
+            control-behavior: F
+            enabled: true
+            priority: 10
+    blacklist:
+      policy:
+        # 地板名单条目；留空表示降级期不启用静态名单（临时封禁仍生效）
+        items: []
+    violation-escalation:
+      policy:
+        window-sec: 60
+        block-threshold: 30
+        temp-block-ttl-sec: 900

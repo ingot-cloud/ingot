@@ -30,6 +30,8 @@ ingot:
       cache-refresh-interval: 5m
       master-key: ${AUTH_JWK_MASTER_KEY}
       enable-encryption: true
+    access:
+      mode: remote
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:false}  # 生产环境关闭

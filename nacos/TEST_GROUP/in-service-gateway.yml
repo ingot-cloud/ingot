@@ -16,42 +16,18 @@ spring:
                 - Path=/pms/**
               filters:
                 - StripPrefix=1
-                # 限流过滤器
-                - name: RequestRateLimiter
-                  args:
-                    key-resolver: '#{@remoteAddrKeyResolver}'
-                    # 每秒最大访问次数（放令牌桶的速率）
-                    redis-rate-limiter.replenishRate: 200
-                    # 令牌桶最大容量（令牌桶的大小）
-                    redis-rate-limiter.burstCapacity: 300
             - id: in-service-member
               uri: lb://in-service-member
               predicates:
                 - Path=/member/**
               filters:
                 - StripPrefix=1
-                # 限流过滤器
-                - name: RequestRateLimiter
-                  args:
-                    key-resolver: '#{@remoteAddrKeyResolver}'
-                    # 每秒最大访问次数（放令牌桶的速率）
-                    redis-rate-limiter.replenishRate: 200
-                    # 令牌桶最大容量（令牌桶的大小）
-                    redis-rate-limiter.burstCapacity: 300
             - id: in-service-security
               uri: lb://in-service-security
               predicates:
                 - Path=/security/**
               filters:
                 - StripPrefix=1
-                # 限流过滤器
-                - name: RequestRateLimiter
-                  args:
-                    key-resolver: '#{@remoteAddrKeyResolver}'
-                    # 每秒最大访问次数（放令牌桶的速率）
-                    redis-rate-limiter.replenishRate: 200
-                    # 令牌桶最大容量（令牌桶的大小）
-                    redis-rate-limiter.burstCapacity: 300
             - id: in-crypto-pubkey
               uri: lb://in-service-bff
               predicates:
@@ -68,6 +44,29 @@ spring:
                 - StripPrefix=1
 
 ingot:
+  security:
+    policy:
+      client:
+        invalidation-enabled: true
+        resilience-enabled: true
+        local-floor-enabled: true
+    ratelimit:
+      enabled: true
+      policy:
+        mode: remote
+    blacklist:
+      enabled: true
+      policy:
+        mode: remote
+    violation-escalation:
+      enabled: true
+      policy:
+        mode: remote
+    event:
+      mode: remote
+      sourceModule: GATEWAY
+      categories:
+        access: true
   vc:
     verifyUrls:
       - image,/auth/oauth2/token,POST
