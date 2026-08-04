@@ -12,4 +12,5 @@
 
 当前变更：
 
-- [`20260729-security-access-protection`](./20260729-security-access-protection/) — 访问防护补全（L4），状态 `draft`，待审阅
+- [`20260730-framework-layered-cache`](./20260730-framework-layered-cache/) — 统一分层缓存框架抽象与消费者迁移，状态 `in-progress`
+- [`20260804-security-event-storage-pipeline`](./20260804-security-event-storage-pipeline/) — 安全事件统一 SPI、可靠投递与可插拔存储，状态 `review`
