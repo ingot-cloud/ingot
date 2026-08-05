@@ -1,6 +1,6 @@
 # 安全事件统一 SPI、可靠投递与可插拔存储
 
-> 状态：approved
+> 状态：completed
 
 ## 元数据
 
@@ -51,9 +51,9 @@
 | Phase | 内容 | 前置门禁 | 状态 |
 |---|---|---|---|
 | [01](./phases/01-contract-runtime.md) | 统一契约、dispatcher、配置与兼容层 | Change approved | completed |
-| [02](./phases/02-storage-delivery.md) | MySQL/日志 Store、file spool、查询与 retention | Phase 01 | pending |
-| [03](./phases/03-consumer-migration.md) | PMS/Member/Gateway/安全中心迁移与 shadow 对账 | Phase 02 | pending |
-| [04](./phases/04-validation-cutover.md) | 故障压测、单一权威切换、基线更新 | Phase 03 | pending |
+| [02](./phases/02-storage-delivery.md) | MySQL/日志 Store、file spool、查询与 retention | Phase 01 | completed |
+| [03](./phases/03-consumer-migration.md) | PMS/Member/Gateway/安全中心迁移与 shadow 对账 | Phase 02 | completed |
+| [04](./phases/04-validation-cutover.md) | 故障压测、单一权威切换、基线更新 | Phase 03 | completed |
 
 ## 工件
 
@@ -72,8 +72,10 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
+- 完成日期：2026-08-05
+- 关联提交或 PR：（待填写）
 - 更新的 current capability：
-- 与原设计的差异：
+  - `specs/current/framework/security-event-recording/`
+  - `specs/current/security/security-event-center/`
+- 与原设计的差异：Micrometer 使用 gauge 桥接计数器（非 Counter 类型）；legacy 清理类保留待 breaking change
 - 取消原因：

@@ -1,151 +1,123 @@
 # 统一安全事件中心 SPEC
 
-> 记录当前已验收并在线生效的系统事实。
+> 记录当前已验收并在线生效的系统事实（post recording pipeline）。
 
 ## 1. 配置（`ingot.security.event`）
 
-各服务独立 Nacos dataId（如 `in-service-pms.yml`、`in-service-member.yml`、`in-service-gateway.yml`、`in-service-security.yml`），结构共用。
+各服务独立 Nacos dataId；recording 装配后以 `SecurityEventRecordingProperties` 解析。
 
-### 1.1 上报开关与模式
-
-| 配置 | 默认 | 说明 |
-|---|---|---|
-| `enabled` | `true` | **总开关**。`false` 时本地与中心均不上报 |
-| `mode` | `local` | 仅 `enabled=true` 时生效：`local` 仅业务库；`remote` 业务库 + 中心 |
-| `source-module` | `unknown` | 写入中心 `security_event.source_module`（如 `ingot-pms` / `ingot-member`） |
-
-**语义矩阵**：
-
-| enabled | mode | 本地 `account_security_event` | 中心 `security_event` |
-|---|---|---|---|
-| `false` | — | 不写 | 不写 |
-| `true` | `local` | 写 | 不写 |
-| `true` | `remote` | 写 | 异步写（受 `categories.*` 控制） |
-
-网关无本地业务表，仅 `mode=remote` 且 `categories.access=true` 时上报中心。
-
-`categories.*` 在 `mode=local` 时不限制本地写入；在 `mode=remote` 时控制是否转发中心。
-
-### 1.2 类别开关（`categories`）
-
-| 键 | 默认 | 对应 `event_category` |
-|---|---|---|
-| `auth` | `true` | AUTH |
-| `account` | `true` | ACCOUNT |
-| `credential` | `true` | CREDENTIAL |
-| `access` | `true` | ACCESS（网关） |
-
-### 1.3 异步上报缓冲（`async`，`mode=remote` 时生效）
+### 1.1 拓扑
 
 | 键 | 默认 | 说明 |
 |---|---|---|
-| `queue-capacity` | `2048` | 有界队列；满时丢弃新事件并限流 warn |
-| `batch-size` | `32` | 单次 `reportBatch` 上限 |
-| `poll-timeout-ms` | `100` | 消费者攒批 poll 超时 |
-| `shutdown-timeout-ms` | `5000` | 优雅关闭排空超时 |
+| `enabled` | `true` | 总开关 |
+| `target` | （空） | `local` \| `center`；空则映射 legacy `mode` |
+| `shadow-targets` | `[]` | 迁移 shadow；稳定态必须为空 |
+| `primary-store` | （空） | 多 Store 时必填 `mysql` |
+| `source-module` | `unknown` | 写入 `source_module` |
 
-实现类：`AsyncSecurityEventReporter`（account-adapter 与 gateway 共用）。
+**Legacy 映射（兼容一个发布周期）**：
 
-### 1.4 Retention（与上报开关独立）
-
-| 键 | 默认（代码） | 说明 |
+| enabled | legacy mode | effective |
 |---|---|---|
-| `retention.enabled` | `true` | 关闭则不物理删除 |
-| `retention.days` | `30` | `0` = 永久保留 |
-| `retention.batch-size` | `500` | 单批删除条数 |
-| `retention.max-rounds` | `100` | 单次任务最多批次数 |
+| true | `local` | target=local |
+| true | `remote` | target=center + shadow=local + 继续写 `account_security_event` |
 
-**推荐 Nacos 样例**：PMS/Member 本地 **90 天**；ingot-security 中心 **30 天**（可独立调大）。
+**显式 target 切换（稳定态）**：
 
-| 服务 | 清理表 | 时间列 | 任务 cron |
-|---|---|---|---|
-| PMS / Member | `account_security_event` | `created_at` | `0 0 3 * * ?` |
-| ingot-security | `security_event` | `received_at` | `0 30 3 * * ?` |
+```yaml
+ingot:
+  security:
+    event:
+      enabled: true
+      target: center   # 或 local
+      shadow-targets: []
+      source-module: ingot-pms
+      primary-store: mysql
+```
 
-## 2. 统一契约（`ingot-security-api`）
+### 1.2 投递与 spool
 
-### 2.1 P0 事件类型
+| 前缀 | 说明 |
+|---|---|
+| `delivery.memory.*` | BEST_EFFORT 队列（默认 capacity 2048、batch 32） |
+| `delivery.spool.*` | DURABLE spool 目录、配额、ack 超时 20ms |
+| `priority-overrides` | 按 eventType 覆盖优先级 |
+
+旧 `async.*` 映射到 `delivery.memory.*`。
+
+### 1.3 Retention
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| `retention.enabled` | `true` | |
+| `retention.days` | `30` | `0`=永久 |
+| `retention.batch-size` | `500` | |
+| `retention.max-rounds` | `100` | |
+| `retention.max-duration-seconds` | `30` | |
+| `retention.yield-queue-usage-percent` | `50` | 写入积压让步 |
+
+| 表 | 任务 | cron |
+|---|---|---|
+| canonical `security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
+| legacy `account_security_event` | `PurgeAccountSecurityEventTask` | `0 0 3 * * ?`（切换后仅清理历史） |
+
+## 2. 上报链路
+
+### 2.1 账号域
 
 ```text
-AUTH:        LOGIN_SUCCESS, LOGIN_FAILURE
-ACCOUNT:     ACCOUNT_CREATED, ACCOUNT_ENABLED, ACCOUNT_DISABLED,
-             ACCOUNT_LOCKED, ACCOUNT_UNLOCKED, ACCOUNT_DELETED
-CREDENTIAL:  PASSWORD_CHANGED, PASSWORD_RESET, FORCE_CHANGE_PASSWORD
-ACCESS:      BLACKLIST_BLOCK, RATE_LIMIT_VIOLATION,
-             LOGIN_FAIL_IP_EXCEED, LOGIN_FAIL_DEVICE_EXCEED,
-             LOGIN_FAIL_CLIENT_EXCEED, LOGIN_FAIL_ACCOUNT_IP_EXCEED
-```
-
-后四种由 L4 登录失败保护在达阈值封禁时上报（见 [access-protection](../access-protection/SPEC.md)）。
-
-enum SoT：`SecurityEventType`、`SecurityEventCategory`（account-domain 既有 enum 通过 mapper code 直传）。
-
-### 2.2 Feign 接口
-
-```text
-POST /inner/security/event/report       — 单条入库
-POST /inner/security/event/report/batch — 批量入库
-```
-
-Feign：`RemoteSecurityEventService`；内网实现：`InnerSecurityEventAPI`（`@Permit(INNER)`）。
-
-- 校验 `eventType` / `eventCategory` / `sourceModule` 非空。
-- `occurredAt` 缺省时 `received_at = now()`。
-- 本期不做 dedup；同事件可多条。
-
-## 3. 中心数据模型
-
-表：`ingot_security.security_event`（migration `010_unified_security_event.sql`）。
-
-核心列：`event_type`、`event_category`、`occurred_at`、`received_at`、`tenant_id`、`user_id`、`user_type`（`ADMIN`/`APP`）、`client_ip`、`source_module`、`extension`（JSON）等。
-
-索引：`received_at`、`(event_type, received_at)`、`(tenant_id, user_id)`、`trace_id`。
-
-**网关旧表**：`gateway_blacklist_event` 历史只读；新事件不再 INSERT。`InnerSecurityPolicyAPI.reportBlacklist` 转调统一入库。
-
-## 4. 账号域上报链路
-
-```
 UseCase → SecurityEventPort (CompositeSecurityEventPort)
-            ├─ DefaultSecurityEventPortAdapter   同步 INSERT account_security_event
-            └─ RemoteSecurityEventPortAdapter    有界队列 → AsyncSecurityEventReporter → Feign
+            ├─ [legacy mode=remote] DefaultSecurityEventPortAdapter → account_security_event
+            └─ SecurityEventPublisher → dispatcher → Store/Transport (+ shadow)
 ```
 
-- `SecurityEventPort` 唯一 Bean 入口；`DefaultSecurityEventPortAdapter` 不可单独注册为 Bean。
-- `remotePort` 可空（无 Feign 时 `mode=remote` 仅写本地）。
-- 本地 INSERT 失败仍抛异常；Feign 失败仅 warn，不阻塞 UseCase。
+### 2.2 网关 ACCESS
 
-映射：`AccountSecurityEventReportMapper`（`eventType.code`、`userType.name()`、`extraData` → `extension`）。
+```text
+BlacklistEventReporter → SecurityEventReportPublisher → target=center → 中心 admission
+```
 
-## 5. 网关 ACCESS 上报
+### 2.3 中心 ingest
 
-`BlacklistEventReporter`：`BlacklistReportDTO` → `SecurityEventReportDTO`（`BlacklistReportEventMapper`）。
+```text
+InnerSecurityEventAPI → SecurityEventAdmissionService → enqueue → async MySqlSecurityEventStore
+```
 
-- `sourceModule=ingot-gateway`，`eventCategory=ACCESS`。
-- 自动限流触发：`RATE_LIMIT_VIOLATION`；封禁动作 B/U/R：`BLACKLIST_BLOCK` + `extension.action`。
-- `RemoteSecurityEventService` 经 `ObjectProvider` 懒解析，避免 Sentinel 过滤链循环依赖。
+Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选）。
 
-## 6. 失败处理与降级
+## 3. 数据模型
+
+中心与 PMS/Member 各自库：canonical `security_event`（migration `012`）。
+
+核心列：`event_id`(UK)、`priority`、`occurred_at`、`received_at`、`source_module`、`extension` JSON。
+
+## 4. 失败与降级
 
 | 场景 | 行为 |
 |---|---|
-| `enabled=false` | 不上报（本地与中心均不写） |
-| `mode=local` | 仅本地表 |
-| security 未部署 / Feign 不可用 | 本地正常；中心 debug/warn 跳过 |
-| 远程队列满 | 丢弃并 warn；不阻塞业务线程 |
-| 中心 DB / RPC 失败 | warn；不重试阻塞 |
-| retention 任务失败 | 不影响主链路 |
+| 事件失败 | 不回滚业务事务 |
+| BEST_EFFORT 队列满 | DROPPED + 指标 |
+| DURABLE spool 满 | FAILED + 告警；中心返回 503 |
+| shadow 失败 | 主链路 ack；`shadowFailures` 计数 |
+| Feign/中心不可用 | durable 本地 spool 重放 |
 
-Nacos 热刷新：`@ConfigurationProperties` + refresh；每次上报读取当前 Properties。
+## 5. 观测
 
-## 7. 已知限制
+- `GET /actuator/securityrecording`：target、shadow、队列深度、计数器
+- Micrometer：`ingot.security.event.*`
+- Shadow 对账脚本：`databases/scripts/security_event_shadow_reconcile.sql`
 
-- 无 Platform 读侧 API；验收与运维依赖 DB 直查。
-- 无历史从 `account_security_event` / `gateway_blacklist_event` 回填。
-- 远程上报队列满时事件丢弃，无持久化 dead-letter。
-- P2 单元测试（Composite 分支、映射器）未在本 change 全量补齐；以集成 / 手工验收为准。
+## 6. 已知限制
 
-## 8. 迁移
+- 无 Platform 读侧 API（Repository 已交付）。
+- ES/Kafka Store/Transport 未实现。
+- 旧 `AsyncSecurityEventReporter` 类保留，运行路径已迁移；后续 breaking change 删除。
 
-- 执行顺序：migration `010` → 上线 ingot-security → PMS/Member（默认 `mode=local`）→ 灰度 `mode=remote` → Gateway Reporter。
-- 回滚：Nacos `enabled=false` 或 `mode=local`；可选 `rollback_010.sql`（无生产数据时）。
+## 7. 迁移与回滚
+
+1. 执行 migration `012`
+2. 部署 recording + store + transport 模块
+3. shadow 对账窗口（legacy `mode=remote` 或显式 shadow）
+4. 切换显式 `target` + 清空 `shadow-targets`
+5. 回滚：恢复 shadow 或 legacy mode；禁止删表；以 `eventId` 对账
