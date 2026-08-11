@@ -189,6 +189,8 @@ current/<domain>/<capability>/
 ## 7. 当前活动变更
 
 - [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — approved（Phase 03 起 L4 已验收，门禁已解除）
+- [安全事件 Legacy 清理](./changes/active/20260806-security-event-legacy-cleanup/README.md) — approved
+- [安全事件边沿去重与账号锁定链路短路](./changes/active/20260811-security-event-edge-dedup-lock-shortcut/README.md) — draft
 - [安全事件统一 SPI、可靠投递与可插拔存储](./changes/active/20260804-security-event-storage-pipeline/README.md) — review（等待 D1-D7 与审阅门禁确认）
 
 已归档（2026）：

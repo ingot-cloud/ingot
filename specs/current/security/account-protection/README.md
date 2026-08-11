@@ -38,7 +38,7 @@
 | local 策略加载（即时映射 + 热刷新） | `ingot-security-account-core/.../service/impl/LocalAccountLockoutPolicyLoader.java` |
 | 登录成功/失败记录与自动锁定 | `ingot-security-account-core/.../service/RecordLoginUseCaseService.java` |
 | 手动/自动解锁 | `ingot-security-account-core/.../service/UnlockAccountUseCaseService.java` |
-| 锁定状态 / 安全事件持久化 | `ingot-security-account-adapter/.../port/DefaultLockStatePortAdapter.java`、`DefaultSecurityEventPortAdapter.java` |
+| 锁定状态 / 安全事件持久化 | `DefaultLockStatePortAdapter.java`、`CompositeSecurityEventPort.java` → canonical `security_event` |
 | 定时解锁任务 | `ingot-security-account-adapter/.../task/AccountLockTask.java` |
 | 认证 meta 填充 | `ingot-security-account-web-support/.../AuthContextSupport.java` |
 | Auth 登录事件分发 | `ingot-auth/.../event/LoginEventListener.java` |

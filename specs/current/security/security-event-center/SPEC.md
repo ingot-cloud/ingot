@@ -1,66 +1,88 @@
 # 统一安全事件中心 SPEC
 
-> 记录当前已验收并在线生效的系统事实（post recording pipeline）。
+> 记录当前已验收并在线生效的系统事实（post legacy cleanup）。
 
 ## 1. 配置（`ingot.security.event`）
 
-各服务独立 Nacos dataId；recording 装配后以 `SecurityEventRecordingProperties` 解析。
+各服务独立 Nacos dataId。**唯一绑定类**：`com.ingot.framework.security.recording.config.SecurityEventProperties`（`ingot-security-recording` 模块）。完整样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml)。
 
 ### 1.1 拓扑
 
 | 键 | 默认 | 说明 |
 |---|---|---|
-| `enabled` | `true` | 总开关 |
-| `target` | （空） | `local` \| `center`；空则映射 legacy `mode` |
-| `shadow-targets` | `[]` | 迁移 shadow；稳定态必须为空 |
-| `primary-store` | （空） | 多 Store 时必填 `mysql` |
-| `source-module` | `unknown` | 写入 `source_module` |
+| `enabled` | `true` | 总开关；`false` 时不做任何上报 |
+| `target` | `local` | `local` 写本库 `security_event`；`center` Feign 上报中心 |
+| `shadow-targets` | `[]` | 次要投递；稳定态必须为空 |
+| `primary-store` | （空） | `target=local` 时填 `mysql` |
+| `source-module` | `unknown` | 写入 `security_event.source_module` |
 
-**Legacy 映射（兼容一个发布周期）**：
+### 1.2 类别过滤（`categories.*`）
 
-| enabled | legacy mode | effective |
+| 键 | 默认 | 说明 |
 |---|---|---|
-| true | `local` | target=local |
-| true | `remote` | target=center + shadow=local + 继续写 `account_security_event` |
+| `auth` | `true` | 登录成功/失败（AUTH） |
+| `account` | `true` | 锁定/解锁/建删账号（ACCOUNT） |
+| `credential` | `true` | 改密/重置（CREDENTIAL） |
+| `access` | `true` | 网关封禁/限流（ACCESS）；Gateway 通常仅开此项 |
 
-**显式 target 切换（稳定态）**：
+### 1.3 投递与 spool（`delivery.*`）
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| `delivery.memory.queue-capacity` | `2048` | BEST_EFFORT 有界队列 |
+| `delivery.memory.batch-size` | `32` | dispatcher 攒批上限 |
+| `delivery.memory.poll-timeout-ms` | `100` | poll 超时 |
+| `delivery.memory.shutdown-timeout-ms` | `5000` | 关闭排空超时 |
+| `delivery.spool.directory` | `./logs/security-recording/spool` | DURABLE spool 目录 |
+| `delivery.spool.max-bytes` | `1GB` | spool 总配额 |
+| `delivery.spool.durable-ack-timeout-ms` | `20` | producer 等待 spool 接纳超时 |
+| `priority-overrides` | `{}` | eventType → BEST_EFFORT \| DURABLE |
+
+### 1.4 MySQL Store（`mysql.*`）
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| `mysql.max-concurrent-writes` | `1` | 写入信号量 |
+| `mysql.transaction-timeout-seconds` | `5` | 批量 INSERT 事务超时 |
+
+### 1.5 Retention（`retention.*`）
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| `retention.enabled` | `true` | 是否启用定时清理 |
+| `retention.days` | `30` | 保留天数；`0`=永久 |
+| `retention.batch-size` | `500` | 单批 DELETE 条数 |
+| `retention.max-rounds` | `100` | 单次任务最大批次数 |
+| `retention.max-duration-seconds` | `30` | 单次任务时间预算 |
+| `retention.yield-queue-usage-percent` | `50` | 队列积压让步阈值 |
+
+| 表 | 任务 | cron |
+|---|---|---|
+| canonical `security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
+
+> `account_security_event` 仅保留历史数据，无新写入、无独立 retention 任务。
+
+### 1.6 各服务推荐
+
+| 服务 | `target` | `primary-store` | `source-module` |
+|---|---|---|---|
+| PMS | `local` | `mysql` | `PMS` |
+| Member | `local` | `mysql` | `MEMBER` |
+| Gateway | `center` | — | `GATEWAY` |
+| Security | `local` | `mysql` | `SECURITY` |
+
+**推荐配置（PMS/Member/Security）**：
 
 ```yaml
 ingot:
   security:
     event:
       enabled: true
-      target: center   # 或 local
+      target: local
       shadow-targets: []
-      source-module: ingot-pms
+      source-module: PMS
       primary-store: mysql
 ```
-
-### 1.2 投递与 spool
-
-| 前缀 | 说明 |
-|---|---|
-| `delivery.memory.*` | BEST_EFFORT 队列（默认 capacity 2048、batch 32） |
-| `delivery.spool.*` | DURABLE spool 目录、配额、ack 超时 20ms |
-| `priority-overrides` | 按 eventType 覆盖优先级 |
-
-旧 `async.*` 映射到 `delivery.memory.*`。
-
-### 1.3 Retention
-
-| 键 | 默认 | 说明 |
-|---|---|---|
-| `retention.enabled` | `true` | |
-| `retention.days` | `30` | `0`=永久 |
-| `retention.batch-size` | `500` | |
-| `retention.max-rounds` | `100` | |
-| `retention.max-duration-seconds` | `30` | |
-| `retention.yield-queue-usage-percent` | `50` | 写入积压让步 |
-
-| 表 | 任务 | cron |
-|---|---|---|
-| canonical `security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
-| legacy `account_security_event` | `PurgeAccountSecurityEventTask` | `0 0 3 * * ?`（切换后仅清理历史） |
 
 ## 2. 上报链路
 
@@ -68,8 +90,7 @@ ingot:
 
 ```text
 UseCase → SecurityEventPort (CompositeSecurityEventPort)
-            ├─ [legacy mode=remote] DefaultSecurityEventPortAdapter → account_security_event
-            └─ SecurityEventPublisher → dispatcher → Store/Transport (+ shadow)
+            → SecurityEventPublisher → dispatcher → MySqlSecurityEventStore (target=local)
 ```
 
 ### 2.2 网关 ACCESS
@@ -81,7 +102,8 @@ BlacklistEventReporter → SecurityEventReportPublisher → target=center → �
 ### 2.3 中心 ingest
 
 ```text
-InnerSecurityEventAPI → SecurityEventAdmissionService → enqueue → async MySqlSecurityEventStore
+InnerSecurityEventAPI / InnerSecurityPolicyAPI.reportBlacklist
+  → SecurityEventAdmissionService → enqueue → async MySqlSecurityEventStore
 ```
 
 Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选）。
@@ -106,18 +128,16 @@ Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选�
 
 - `GET /actuator/securityrecording`：target、shadow、队列深度、计数器
 - Micrometer：`ingot.security.event.*`
-- Shadow 对账脚本：`databases/scripts/security_event_shadow_reconcile.sql`
 
 ## 6. 已知限制
 
 - 无 Platform 读侧 API（Repository 已交付）。
 - ES/Kafka Store/Transport 未实现。
-- 旧 `AsyncSecurityEventReporter` 类保留，运行路径已迁移；后续 breaking change 删除。
+- `account_security_event` 表尚未物理下线。
 
 ## 7. 迁移与回滚
 
 1. 执行 migration `012`
 2. 部署 recording + store + transport 模块
-3. shadow 对账窗口（legacy `mode=remote` 或显式 shadow）
-4. 切换显式 `target` + 清空 `shadow-targets`
-5. 回滚：恢复 shadow 或 legacy mode；禁止删表；以 `eventId` 对账
+3. Nacos 使用 `target`（禁止旧 `mode`）
+4. 回滚：改 `target` 或 `enabled=false`；以 `eventId` 对账

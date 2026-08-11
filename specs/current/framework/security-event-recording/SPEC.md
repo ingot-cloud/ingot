@@ -43,15 +43,18 @@ Feign/HTTP 上报 → 校验 → `SecurityEventEnqueue` → 异步 Store；HTTP 
 
 响应码：`SEC_EVENT_503`（DURABLE 可重试）、`SEC_EVENT_429`（BEST_EFFORT 拒绝）。
 
-## 6. 稳定态切换
+## 6. 配置
 
-显式配置 `target=local|center` 且 `shadow-targets: []` 后：
+唯一 `@ConfigurationProperties`：`com.ingot.framework.security.recording.config.SecurityEventProperties`（前缀 `ingot.security.event`）。字段说明与样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml) 与 [README](./README.md)。
 
-- 仅权威 Store 增长；
-- legacy `account_security_event` 停止新写入（仅当不再使用 legacy `mode=remote` 映射时）；
-- 旧表保留只读 + 独立 retention。
+## 7. 稳定态
 
-## 7. 后续清理（独立 change）
+显式配置 `target=local|center` 且 `shadow-targets: []`：
 
-- 删除 `AsyncSecurityEventReporter`、`RemoteSecurityEventPortAdapter`、legacy `mode` 兼容层；
-- 旧表 `account_security_event` 破坏性下线（需离线对账完成后）。
+- 仅 canonical `security_event` 增长；
+- legacy `account_security_event` 无新写入（表保留历史只读）。
+
+## 8. 已完成清理（20260806）
+
+- 已删除 `AsyncSecurityEventReporter`、`RemoteSecurityEventPortAdapter`、legacy `mode` 兼容层；
+- 旧表 `account_security_event` 破坏性下线仍待独立 change（需离线对账完成后）。
