@@ -33,18 +33,19 @@
 
 ## 3. 数据模型
 
-两表结构 ADMIN / Member **完全一致**，分库部署：
+锁定态表结构 ADMIN / Member **完全一致**，分库部署；安全事件写入各库 canonical `security_event`（migration `012`）：
 
-| 库 | 表 | `user_type` 取值 |
-|---|---|---|
-| `ingot_core` | `account_lock_state`、`account_security_event` | `0`（ADMIN） |
-| `ingot_member` | `account_lock_state`、`account_security_event` | `1`（APP） |
+| 库 | 锁定态表 | 事件表（权威） | `user_type` |
+|---|---|---|---|
+| `ingot_core` | `account_lock_state` | `security_event` | `0`（ADMIN） |
+| `ingot_member` | `account_lock_state` | `security_event` | `1`（APP） |
 
 - `account_lock_state`：`(user_id, user_type)` 联合唯一；`failed_login_count`、`locked`、`locked_until`、`lock_type`、`lock_reason_code` 等。
-- `account_security_event`：登录成功/失败、锁定/解锁等事件，`event_category`（AUTH / ACCOUNT / CREDENTIAL）。
+- `security_event`：登录成功/失败、锁定/解锁等事件经 recording 写入；`event_category`（AUTH / ACCOUNT / CREDENTIAL）。
+- legacy `account_security_event`：**已物理删除**（migration `013`）；历史 migration `009` 正文保留作档案。
 - 用户表冗余：`sys_user.locked` / `member_user.locked` 与 lock_state 同步（经 `UserAccountPort.updateLockStatus`）。
 
-Member 建表迁移：`databases/migrations/009_member_account_protection.sql`；回滚 `rollback_009.sql`；基线 `databases/ingot_member.sql`。
+Member 锁定态建表迁移：`databases/migrations/009_member_account_protection.sql`；回滚 `rollback_009.sql`；基线 `databases/ingot_member.sql`。canonical 事件表见 `012_security_event_recording_schema.sql`；旧事件表下线见 `013_drop_account_security_event.sql`。
 
 ## 4. 登录事件回调链路
 
@@ -87,7 +88,7 @@ Auth 登录成功/失败
 - `AccountLockTask` 自动注册，扫描 `ingot_member.account_lock_state` 过期锁定。
 - 手动锁定/解锁（`BizUserServiceImpl`）经既有 `LockAccountUseCase` / `UnlockAccountUseCase` 落库。
 
-`lockout.enabled=false` 时：不递增失败计数、不自动锁定、不写事件表（与 ADMIN baseline 一致）。
+`lockout.enabled=false` 时：不递增失败计数、不自动锁定、不发安全事件（与 ADMIN baseline 一致）。
 
 ## 8. 已知限制 / 后续跟踪
 

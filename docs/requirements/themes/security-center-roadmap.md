@@ -20,8 +20,8 @@
 
 - 安全中心服务：凭证策略 CRUD、网关策略中心（限流 / 黑白名单 / 路径分组 / 挑战策略 / 违规升级 / 封禁审计）、内网快照下发（`RemoteSecurityPolicyService`）、凭证策略读取（`RemoteCredentialService`）、跨节点缓存失效（`InvalidationBus`）。
 - 框架密码引擎：强度 / 历史 / 过期三类策略 + 持久化（`password_history`、`password_expiration`）完整，支持 `local` / `remote` 双模式与多级缓存。
-- 账号保护：`account_lock_state`（失败计数 / 锁定）、`account_security_event`（安全事件表）已覆盖 **ADMIN 与 Member** 全用户闭环；lockout 策略前缀 `ingot.security.account.*`，`mode=local` 热刷新；remote 弹性阶梯待后续 change。
-- 统一安全事件：`ingot_security.security_event` 中心表 + 跨模块上报（PMS/Member/Gateway）；配置 `ingot.security.event.*`；详见 current `security/security-event-center`。
+- 账号保护：`account_lock_state`（失败计数 / 锁定）已覆盖 **ADMIN 与 Member** 全用户闭环；安全事件经 recording 写入 canonical `security_event`；lockout 策略前缀 `ingot.security.account.*`，`mode=local` 热刷新；remote 弹性阶梯待后续 change。
+- 统一安全事件：各库 / 中心 `security_event` + 跨模块上报（PMS/Member/Gateway）；配置 `ingot.security.event.*`；详见 current `security/security-event-center` 与 `framework/security-event-recording`。
 - 会话 / Token：Redis 在线 Token、强制下线 API 已有。
 - 验证码：能力独立，**未接入登录链路**。
 

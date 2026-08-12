@@ -53,4 +53,5 @@
 ## 来源变更
 
 - `specs/changes/archive/2026/20260804-security-event-storage-pipeline/`
-- 配置类合并：`specs/changes/active/20260806-security-event-legacy-cleanup/`
+- `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（legacy `mode` / 双写 / 配置类合并清理）
+- `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）

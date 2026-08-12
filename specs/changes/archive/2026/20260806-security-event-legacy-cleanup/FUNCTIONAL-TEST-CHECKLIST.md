@@ -5,10 +5,10 @@
 
 ## 0. 前置检查
 
-- [ ] 已执行 migration `012`（`ingot_core` / `ingot_member` / `ingot_security` 均有 canonical `security_event` 表）
-- [ ] Nacos 已刷新：`ingot.security.event.target` 生效（PMS/Member/Security=`local`，Gateway=`center`）
-- [ ] 各服务启动无 Bean 冲突；`GET /actuator/health` 均为 UP
-- [ ] `GET /actuator/securityrecording` 可访问（需 actuator 暴露）
+- [x] 已执行 migration `012`（`ingot_core` / `ingot_member` / `ingot_security` 均有 canonical `security_event` 表）
+- [x] Nacos 已刷新：`ingot.security.event.target` 生效（PMS/Member/Security=`local`，Gateway=`center`）
+- [x] 各服务启动无 Bean 冲突；`GET /actuator/health` 均为 UP
+- [x] `GET /actuator/securityrecording` 可访问（需 actuator 暴露）
 
 ---
 
@@ -135,7 +135,7 @@
   :ingot-service:ingot-security:ingot-security-provider:test
 ```
 
-- [ ] 全部 PASS，含 `RecordingConfigResolverTest`
+- [x] 全部 PASS，含 `RecordingConfigResolverTest`
 
 ---
 
@@ -143,5 +143,5 @@
 
 | 角色 | 姓名 | 日期 | 结果 |
 |---|---|---|---|
-| 开发 | | | |
+| 开发 | jy | 2026-08-11 | PASS（功能测试清单均通过） |
 | QA | | | |

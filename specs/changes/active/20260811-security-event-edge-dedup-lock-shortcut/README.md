@@ -46,8 +46,10 @@
 - 为每次普通 429 新增采样级 `RATE_LIMIT_VIOLATION` 遥测（当前亦不按次上报；本期只收紧升级边沿）
 - Gateway 解密 BFF HYBRID 登录 body
 - 手动锁定「延长 lockedUntil」的单独产品（重复锁定本期 no-op）
-- `account_security_event` legacy 表变更
+- `account_security_event` legacy 表变更（见已归档 [20260811-security-drop-account-security-event](../../archive/2026/20260811-security-drop-account-security-event/README.md)）
 - Token 黑名单 / 强制踢下线全量会话（本期仅 Gateway uid key 403 + 自然失效语义）
+- **B 类天然边沿**（`PASSWORD_*` / create-delete）的额外短路 guard（见 REQUIREMENTS R1.1）
+- **`SecurityEventType` 双枚举合并**与 recording 事件 code 常量模块（见 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)）
 
 ## 工件
 
@@ -59,7 +61,8 @@
 ## 依赖与关系
 
 - 依赖已验收的 [security-event-recording](../../current/framework/security-event-recording/SPEC.md) 与 [account-protection](../../current/security/account-protection/SPEC.md) 基线。
-- 与 [20260806-security-event-legacy-cleanup](../20260806-security-event-legacy-cleanup/README.md) 正交（本 change 不改 recording SPI）。
+- 与 [20260806-security-event-legacy-cleanup](../../archive/2026/20260806-security-event-legacy-cleanup/README.md) 正交（本 change 不改 recording SPI）。
+- 正交 follow-up：[20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)（类型 SoT / code 常量；不阻塞本 change）。
 
 ## 完成记录
 

@@ -52,9 +52,11 @@ Feign/HTTP 上报 → 校验 → `SecurityEventEnqueue` → 异步 Store；HTTP 
 显式配置 `target=local|center` 且 `shadow-targets: []`：
 
 - 仅 canonical `security_event` 增长；
-- legacy `account_security_event` 无新写入（表保留历史只读）。
+- legacy `account_security_event` 已物理删除（migration `013`）。
 
-## 8. 已完成清理（20260806）
+## 8. Legacy 清理后事实
 
-- 已删除 `AsyncSecurityEventReporter`、`RemoteSecurityEventPortAdapter`、legacy `mode` 兼容层；
-- 旧表 `account_security_event` 破坏性下线仍待独立 change（需离线对账完成后）。
+- 已删除 `AsyncSecurityEventReporter`、`RemoteSecurityEventPortAdapter`、legacy `mode`/`async` 兼容层与 `legacyModeUsed` 观测字段（20260806）。
+- 配置仅认 `target` / `shadow-targets` / `delivery.*`；唯一绑定类见 §6。
+- Retention：`PurgeCanonicalSecurityEventTask`；让步探测分别读取 `MemoryRecordQueue` 与 `FileSpoolRecordQueue`（不得按裸 `RecordQueue` 解析，以免双 Bean 歧义）。
+- 旧表 `account_security_event` 已由 migration `013` DROP（`ingot_core` / `ingot_member`）。

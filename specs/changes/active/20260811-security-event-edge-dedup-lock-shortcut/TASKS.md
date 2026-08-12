@@ -15,12 +15,14 @@
 | Redis | 双 Key；afterCommit 写入；fail-open | DESIGN D4–D5、D9 |
 | 网关限流升级事件 | 保持 `RATE_LIMIT_VIOLATION` 类型；**边沿**触发；并发用 SETNX 去重 | DEV 实测刷库；REQUIREMENTS R6、DESIGN D12–D14 |
 | 每次 429 遥测 | **不做** | 非目标 |
+| 边沿实现强度 | 仅 A 类显式去重；B 类天然边沿本期不加 guard；C 类电平 | REQUIREMENTS R1.1、DESIGN D15 |
+| 类型 SoT / code 常量 | **不做**（另开 follow-up） | DESIGN D16；[20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md) |
 
 ## Phase 0 · SDD 与评审
 
-- [ ] T0-1：SDD 四工件 + 验收清单
+- [x] T0-1：SDD 四工件 + 验收清单
   - 依赖：无
-  - 验收：本目录 README/REQUIREMENTS/DESIGN/TASKS/FUNCTIONAL-TEST-CHECKLIST 齐备；`specs/README.md` §7 已登记
+  - 验收：本目录 README/REQUIREMENTS/DESIGN/TASKS/FUNCTIONAL-TEST-CHECKLIST 齐备；`specs/README.md` §7 已登记；R1.1 / D15–D16 / follow-up 链接已写入
 - [ ] T0-2：评审 → `approved`
   - 依赖：T0-1
   - 验收：README 状态改为 `approved`；TASKS 未定项无开放问题

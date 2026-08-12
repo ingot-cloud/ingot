@@ -60,7 +60,7 @@
 |---|---|---|
 | canonical `security_event` | `PurgeCanonicalSecurityEventTask` | `0 30 3 * * ?` |
 
-> `account_security_event` 仅保留历史数据，无新写入、无独立 retention 任务。
+> legacy `account_security_event` 已由 migration `013` 物理删除；无独立 retention 任务。
 
 ### 1.6 各服务推荐
 
@@ -133,11 +133,18 @@ Feign：`RemoteSecurityEventService`；DTO 含 `eventId`、`priority`（可选�
 
 - 无 Platform 读侧 API（Repository 已交付）。
 - ES/Kafka Store/Transport 未实现。
-- `account_security_event` 表尚未物理下线。
 
 ## 7. 迁移与回滚
 
-1. 执行 migration `012`
-2. 部署 recording + store + transport 模块
-3. Nacos 使用 `target`（禁止旧 `mode`）
-4. 回滚：改 `target` 或 `enabled=false`；以 `eventId` 对账
+1. 执行 migration `012`（canonical `security_event`）
+2. 执行 migration `013`（DROP legacy `account_security_event`；可选事前 dump）
+3. 部署 recording + store + transport 模块
+4. Nacos 使用 `target`（禁止旧 `mode`）
+5. 回滚 recording：改 `target` 或 `enabled=false`；以 `eventId` 对账
+6. 回滚 `013`：`rollback_013` 仅重建空旧表，不恢复数据
+
+## 8. 来源变更
+
+- `specs/changes/archive/2026/20260804-security-event-storage-pipeline/`
+- `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（已验收归档）
+- `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表 DROP）

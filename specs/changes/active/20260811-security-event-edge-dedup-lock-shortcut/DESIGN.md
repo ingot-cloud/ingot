@@ -62,6 +62,30 @@ flowchart TD
 | D12 | 网关限流升级事件 | 保持现网类型映射 `RATE_LIMIT_VIOLATION`（优先级表不改）；**触发语义改为边沿**：每次 temp-block 生命周期至多 1 条 |
 | D13 | 升级去重原语 | **禁止**仅用 `count == blockThreshold`；以 `TempBlockStore` **SETNX / setIfAbsent**（首次占位成功）决定是否 `report`；已存在则只 **刷新 TTL** |
 | D14 | 与 Filter 顺序 | 同波并发可在写 temp-block 前已过 `BlacklistFilter`，故去重必须在 `SentinelBlockHandler` 内完成，不能依赖「写完立刻 403」 |
+| D15 | 边沿实现强度 | 仅 **A 类**做显式 guard（可重复状态入口 / 超阈值升级）；**B 类**（`PASSWORD_*`、create-delete）靠 use case 天然单次；**C 类**电平不去重。详见 REQUIREMENTS R1.1 |
+| D16 | 类型枚举 / 硬编码 | 本 change **不**合并双份 `SecurityEventType`，也 **不**抽取 recording code 常量；留给 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/DESIGN.md) |
+
+### 边沿范围示意
+
+```mermaid
+flowchart LR
+    subgraph level [C_Level_BEST_EFFORT]
+        LF[LOGIN_FAILURE]
+        LS[LOGIN_SUCCESS]
+    end
+    subgraph edgeMust [A_Edge_must_dedup]
+        AL[ACCOUNT_LOCKED]
+        AU[ACCOUNT_UNLOCKED]
+        AE[ACCOUNT_ENABLED_DISABLED]
+        LFE[LOGIN_FAIL_EXCEED]
+        BB[BLACKLIST_BLOCK]
+        RLV[RATE_LIMIT_VIOLATION]
+    end
+    subgraph edgeNatural [B_Edge_by_nature]
+        AC[ACCOUNT_CREATED_DELETED]
+        PW[PASSWORD_star]
+    end
+```
 
 ## 数据模型与接口
 

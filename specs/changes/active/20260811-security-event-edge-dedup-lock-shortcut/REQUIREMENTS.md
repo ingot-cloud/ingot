@@ -49,11 +49,23 @@
 
 | 分类 | 默认优先级 | 触发语义 |
 |------|-----------|---------|
-| 活动遥测（`LOGIN_FAILURE`、`LOGIN_SUCCESS`） | BEST_EFFORT | **电平触发**：每次尝试可记录 |
+| 活动遥测（`LOGIN_FAILURE`、`LOGIN_SUCCESS`；若上报则含 `LOGOUT` / `TOKEN_REFRESH`） | BEST_EFFORT | **电平触发**：每次尝试可记录 |
 | 限流升级边沿（网关当前映射为 `RATE_LIMIT_VIOLATION`） | BEST_EFFORT（优先级表不变） | **边沿触发**：仅「未封禁 → 写入/首次取得 temp-block」上报一次；**不是**每次 429 |
 | 状态变更（`ACCOUNT_*`、`PASSWORD_*`、`LOGIN_FAIL_*_EXCEED`、`BLACKLIST_BLOCK` 等） | DURABLE | **边沿触发**：仅状态变化时记录 |
 
 > 说明：网关**不会**在每次 Sentinel 429 上写事件；今日唯一的限流相关 ACCESS 上报发生在违规升级写 temp-block 时。该上报虽类型名为 `RATE_LIMIT_VIOLATION`、优先级仍为 BEST_EFFORT，但本 change 将其触发语义收紧为**边沿**（与 US-6 一致）。普通 429 采样遥测不在本期范围。
+
+#### R1.1 边沿实现强度（A / B / C）
+
+不是所有「边沿语义」事件都需要同一套 DB/Redis guard。按「条件可持续为真、入口可被反复调用」分级：
+
+| 级别 | 事件 | 本期处理 |
+|------|------|----------|
+| **A · 必须显式边沿去重** | `ACCOUNT_LOCKED` / `ACCOUNT_UNLOCKED` / `ACCOUNT_ENABLED` / `ACCOUNT_DISABLED`；`LOGIN_FAIL_*_EXCEED`；`BLACKLIST_BLOCK`；网关升级路径 `RATE_LIMIT_VIOLATION` | 本 change 实施：状态未变 → no-op / 不 `report`；并发用 DB 状态或 SETNX |
+| **B · 用例天然边沿** | `ACCOUNT_CREATED` / `ACCOUNT_DELETED`；`PASSWORD_CHANGED` / `PASSWORD_RESET` / `FORCE_CHANGE_PASSWORD` / `PASSWORD_EXPIRED` | 语义仍是「仅变化时记」；靠 use case 单次动作即可，**本期不增加额外短路**。若后续发现重试入口刷事件，另开 change 补 guard |
+| **C · 电平（禁止边沿去重）** | `LOGIN_FAILURE` / `LOGIN_SUCCESS`（及活动类 `LOGOUT` / `TOKEN_REFRESH`） | 每次尝试可记；锁定后进入 `recordFailure` 时 **仍发** `LOGIN_FAILURE` |
+
+判定口诀：**false→true / true→false 才发一次**；同状态下重复调用 = no-op。刷库风险集中在 A 类可重复状态入口与超阈值升级，而非全部 DURABLE。
 
 ### R2 边沿检测（账号域）
 
@@ -101,6 +113,8 @@
 - **Inner API**：不经 Gateway 的内网 Feign 不受 Gateway Filter 保护，依赖 Phase 1 领域边沿 + Auth 缓存。
 - **Member C 端**：与 PMS 共用 account-core；永久锁禁止等 Nacos 约束不变。
 - **不在范围**：修改 recording 框架优先级表默认值；Gateway 验 JWT 签名；为每次 429 增加 ACCESS 遥测。
+- **不在范围（B 类）**：为 `PASSWORD_*` / `ACCOUNT_CREATED` / `ACCOUNT_DELETED` 增加与 A 类同构的边沿短路（见 R1.1）。
+- **不在范围（类型 SoT）**：合并双份 `SecurityEventType`、抽取 recording 可用的事件 code 常量模块——见 follow-up [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)。
 
 ## 验收标准
 
