@@ -7,29 +7,26 @@ spring:
 ingot:
   security:
     event:
-      # 上报模式
-      mode: local
-      # 上报方模块标识，写入中心库
+      # 安全事件总开关；false 时不做任何上报
+      enabled: true
+      # 投递目标：local=本库 security_event，center=上报 ingot-security
+      target: local
+      # target=local 时指定主 Store，典型值 mysql
+      primary-store: mysql
+      # 迁移 shadow；稳定态留空
+      shadow-targets: []
+      # 写入 security_event.source_module
       sourceModule: PMS
-      # 按事件大类控制是否上报安全中心（仅 {@code mode=remote} 时生效）
+      # 按事件大类过滤（enabled=true 时生效）
       categories:
-        # 认证类：登录成功/失败等（AUTH）
         auth: true
-        # 账号类：锁定/解锁/创建等（ACCOUNT）
         account: true
-        # 凭证类：改密/重置等（CREDENTIAL）
         credential: true
-        # 访问防护类：网关封禁/限流违规等（ACCESS）；通常仅网关产生
         access: true
-      # 过期事件物理删除策略
       retention:
-        # 是否启用定时清理任务
         enabled: true
-        # 保留天数
         days: 30
-        # 单批 {@code DELETE ... LIMIT N} 条数，避免长事务与大锁
         batchSize: 500
-        # 单次定时任务最多连续执行的批次数，防止清理洪峰占用连接过久
         maxRounds: 100
     account:
       # local 或 remote

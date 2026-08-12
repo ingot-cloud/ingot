@@ -63,10 +63,17 @@ ingot:
       policy:
         mode: remote
     event:
-      mode: remote
+      # 安全事件总开关；false 时不做任何上报
+      enabled: true
+      # center：ACCESS 事件 Feign 上报安全中心，不写网关本地库
+      target: center
+      shadow-targets: []
+      # 写入 security_event.source_module
       sourceModule: GATEWAY
       categories:
         access: true
+      retention:
+        enabled: false
   vc:
     verifyUrls:
       - image,/auth/oauth2/token,POST

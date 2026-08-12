@@ -7,16 +7,28 @@ spring:
 ingot:
   security:
     event:
-      # 过期事件物理删除策略
+      # 安全事件总开关；false 时不做任何上报
+      enabled: true
+      # 投递目标：local=本库 security_event
+      target: local
+      # target=local 时指定主 Store，典型值 mysql
+      primary-store: mysql
+      shadow-targets: []
+      # 写入 security_event.source_module
+      sourceModule: SECURITY
+      categories:
+        auth: true
+        account: true
+        credential: true
+        access: true
+      # 过期事件物理删除策略（canonical security_event）
       retention:
-        # 是否启用定时清理任务
         enabled: true
-        # 保留天数
         days: 30
-        # 单批 {@code DELETE ... LIMIT N} 条数，避免长事务与大锁
         batchSize: 500
-        # 单次定时任务最多连续执行的批次数，防止清理洪峰占用连接过久
         maxRounds: 100
+        max-duration-seconds: 30
+        yield-queue-usage-percent: 50
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:true}  # 生产环境关闭
