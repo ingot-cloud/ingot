@@ -1,5 +1,12 @@
 ingot:
   security:
+    # 账号锁定 BFF 登录短路：解密后查 Redis name key；默认拦截不调 Auth
+    account-lock-bff:
+      enabled: true
+      emit-login-failure-on-bff-block: false
+    # 永久锁 Redis key TTL（天）；PMS/Auth/BFF 共用
+    account-lock-signal:
+      permanent-lock-ttl-days: 30
     oauth2:
       resource:
         public-urls:

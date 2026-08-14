@@ -16,7 +16,7 @@
 - [security / jwk-management](./security/jwk-management/README.md)：JWK 密钥轮换、JWT 签名选择器与多密钥验签。
 - [security / transport-crypto](./security/transport-crypto/README.md)：传输层信封加密（HYBRID）与通用防重放。
 - [security / credential-security](./security/credential-security/README.md)：凭证（密码）安全引擎与登录/改密闭环。
-- [security / account-protection](./security/account-protection/README.md)：账号登录失败锁定、安全事件与全用户类型闭环。
+- [security / account-protection](./security/account-protection/README.md)：账号登录失败锁定、边沿安全事件、Redis 锁定信号与 BFF/Gateway 短路。
 - [security / security-event-center](./security/security-event-center/README.md)：统一安全事件模型、中心入库与跨模块上报接入。
 - [gateway / header-conventions](./gateway/header-conventions/README.md)：网关自定义 Header 命名与内部头安全约定。
 - [pms / application-authorization](./pms/application-authorization/README.md)：应用中心化授权（应用、菜单、权限归属与租户授权、权限匹配语义）。

@@ -56,7 +56,9 @@ Actuator：`GET /actuator/securitypolicy`（来源）、`GET /actuator/layeredca
 | `block_threshold` | 30 |
 | `temp_block_ttl_sec` | 900 |
 
-窗口内限流 429 达阈值 → `TempBlockStore` 临时封禁 → 403。
+窗口内限流 429 达阈值 → `TempBlockStore.tryBlockFirst`（Redis SETNX）写入临时封禁 → 后续请求 403。
+
+**升级事件边沿**：仅首次占位成功时 `BlacklistEventReporter.report` 一条 `RATE_LIMIT_VIOLATION`；已存在则只刷新 TTL，不上报。同一 key 一次 temp-block 生命周期至多 1 条。去重在 `SentinelBlockHandler` 内完成（同波并发可能已越过 `BlacklistFilter`）。
 
 ### 1.5 Nacos 地板
 
@@ -98,7 +100,8 @@ Platform：`/platform/security/access/login-failure-policies`（CRUD）；变更
 | 临时封禁（与网关共用） | `in:gw:bl:tmp:{keyType}:{keyValue}` |
 
 达阈值：**仅临时封禁**，不触发 L2 账号 lockout（D3）。  
-`invalid_client` **不计入** Client 维度（D10）。
+`invalid_client` **不计入** Client 维度（D10）。  
+超阈值 DURABLE（`LOGIN_FAIL_*_EXCEED`）：`tryBlockFirst` 成功才 `reportEvent`；已封禁则只刷新 TTL。
 
 ### 2.4 接线
 
@@ -120,7 +123,7 @@ LOGIN_FAIL_IP_EXCEED, LOGIN_FAIL_DEVICE_EXCEED,
 LOGIN_FAIL_CLIENT_EXCEED, LOGIN_FAIL_ACCOUNT_IP_EXCEED
 ```
 
-网关违规仍映射为 `RATE_LIMIT_VIOLATION` / `BLACKLIST_BLOCK`（见 [security-event-center](../security-event-center/SPEC.md)）。
+网关违规仍映射为 `RATE_LIMIT_VIOLATION` / `BLACKLIST_BLOCK`（见 [security-event-center](../security-event-center/SPEC.md)）。`RATE_LIMIT_VIOLATION` 优先级仍为 BEST_EFFORT；**触发**为边沿（见 §1.4）。`BLACKLIST_BLOCK` 同为超阈值边沿。
 
 **封禁审计 Platform API**：`GET /platform/security/policy/events` 仅查 **历史** `gateway_blacklist_event`；新事件请查 `security_event`（Platform 读侧后续 change）。
 

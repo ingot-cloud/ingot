@@ -45,6 +45,12 @@ spring:
 
 ingot:
   security:
+    # 账号锁定 Gateway Filter：JWT uid key 命中返回 403；Redis 不可用 fail-open
+    account-lock-gateway:
+      enabled: true
+      exclude-path-patterns:
+        - /actuator/**
+        - /bff/auth/**
     policy:
       client:
         invalidation-enabled: true

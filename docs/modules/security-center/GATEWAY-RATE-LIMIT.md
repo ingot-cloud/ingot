@@ -251,7 +251,7 @@ Redis Key：`in:gw:vc:pass:{scope}:{token}`，值为剩余次数，消费为 Lua
 
 Sentinel 阻断后并行逻辑：
 
-1. **违规累积**（需 `ingot.security.ratelimit.enabled=true` 触发 Sentinel 阻断，且 `ingot.security.violation-escalation.enabled=true` 与配置 `enabled=true`）：`ViolationCounter` 按 `windowSec` 滑动窗口（默认 60s，按 IP）累加；窗口内 ≥ `blockThreshold`（默认 30）→ `TempBlockStore` 封禁 `tempBlockTtlSec`（默认 900s）+ `BlacklistEventReporter` 异步上报 security。**与 `blacklist.enabled` 无关。**
+1. **违规累积**（需 `ingot.security.ratelimit.enabled=true` 触发 Sentinel 阻断，且 `ingot.security.violation-escalation.enabled=true` 与配置 `enabled=true`）：`ViolationCounter` 按 `windowSec` 滑动窗口（默认 60s，按 IP）累加；窗口内 ≥ `blockThreshold`（默认 30）→ `TempBlockStore.tryBlockFirst`（SETNX）封禁 `tempBlockTtlSec`（默认 900s）。**仅首次占位成功**时 `BlacklistEventReporter` 上报一条 `RATE_LIMIT_VIOLATION`；已存在则只刷新 TTL。**与 `blacklist.enabled` 无关。**
 2. 匹配 `ON_RATE_LIMIT` 挑战 → **412** + `CHALLENGE_REQUIRED`
 3. 否则 → **429** + `LIMIT_TOO_MANY`，Header `Retry-After: 1`
 

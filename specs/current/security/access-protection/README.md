@@ -40,4 +40,6 @@ L4 已验收闭环，覆盖三块能力：
 
 - [SPEC](./SPEC.md)：配置、数据模型、Redis Key、Platform API、降级语义、已知限制
 - Platform 前端对接（归档）：`specs/changes/archive/2026/20260729-security-access-protection/PLATFORM-API.md`
-- 来源变更：`specs/changes/archive/2026/20260729-security-access-protection/`
+- 来源变更：
+  - `specs/changes/archive/2026/20260729-security-access-protection/`
+  - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（超阈值 / 限流升级边沿去重）

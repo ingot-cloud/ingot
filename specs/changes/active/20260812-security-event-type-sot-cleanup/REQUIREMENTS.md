@@ -41,7 +41,7 @@
 
 ### R4 与边沿语义正交
 
-- 本 change **不**改变边沿 / 电平触发规则（见 [20260811 R1.1](../20260811-security-event-edge-dedup-lock-shortcut/REQUIREMENTS.md)）。
+- 本 change **不**改变边沿 / 电平触发规则（见 [20260811 R1.1](../../archive/2026/20260811-security-event-edge-dedup-lock-shortcut/REQUIREMENTS.md)）。
 - 优先级默认表归属（哪些 BEST_EFFORT / DURABLE）与现网 [`DefaultPriorityClassifier`](../../../../ingot-framework/ingot-security/ingot-security-recording/src/main/java/com/ingot/framework/security/recording/runtime/DefaultPriorityClassifier.java) 一致，仅替换字面量为常量引用。
 
 ## 边界与非目标

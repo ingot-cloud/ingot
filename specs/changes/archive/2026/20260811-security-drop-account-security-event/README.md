@@ -55,7 +55,7 @@
 ## 依赖与关系
 
 - 前置：已归档 [20260806-security-event-legacy-cleanup](../20260806-security-event-legacy-cleanup/README.md)（停写旧表）。
-- 与 [20260811-security-event-edge-dedup-lock-shortcut](../../active/20260811-security-event-edge-dedup-lock-shortcut/README.md) 正交。
+- 与 [20260811-security-event-edge-dedup-lock-shortcut](../20260811-security-event-edge-dedup-lock-shortcut/README.md) 正交。
 
 ## 完成记录
 

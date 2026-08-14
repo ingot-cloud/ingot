@@ -55,3 +55,4 @@
 - `specs/changes/archive/2026/20260804-security-event-storage-pipeline/`
 - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（legacy `mode` / 双写 / 配置类合并清理）
 - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
+- `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（状态变更/超阈值边沿 vs 活动遥测电平）

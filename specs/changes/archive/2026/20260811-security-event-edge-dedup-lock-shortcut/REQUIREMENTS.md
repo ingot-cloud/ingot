@@ -114,7 +114,7 @@
 - **Member C 端**：与 PMS 共用 account-core；永久锁禁止等 Nacos 约束不变。
 - **不在范围**：修改 recording 框架优先级表默认值；Gateway 验 JWT 签名；为每次 429 增加 ACCESS 遥测。
 - **不在范围（B 类）**：为 `PASSWORD_*` / `ACCOUNT_CREATED` / `ACCOUNT_DELETED` 增加与 A 类同构的边沿短路（见 R1.1）。
-- **不在范围（类型 SoT）**：合并双份 `SecurityEventType`、抽取 recording 可用的事件 code 常量模块——见 follow-up [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)。
+- **不在范围（类型 SoT）**：合并双份 `SecurityEventType`、抽取 recording 可用的事件 code 常量模块——见 follow-up [20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/README.md)。
 
 ## 验收标准
 

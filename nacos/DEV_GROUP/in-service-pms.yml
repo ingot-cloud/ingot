@@ -37,6 +37,9 @@ ingot:
         batchSize: 500
         # 单次定时任务最多连续执行的批次数
         maxRounds: 100
+    # 永久锁 Redis 信号 TTL（天）；锁定 transition afterCommit 双写 uid/name key
+    account-lock-signal:
+      permanent-lock-ttl-days: 30
     account:
       # local 或 remote
       mode: local

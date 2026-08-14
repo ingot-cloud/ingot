@@ -10,6 +10,8 @@
 - 锁定状态与失败计数**永远落 DB**（`account_lock_state`）；安全事件经 `CompositeSecurityEventPort` → recording 写入 canonical `security_event`（legacy `account_security_event` 表已物理下线）。
 - 临时锁定到期后 `AccountLockTask` 自动解锁并清零失败计数；登录成功同样清零。
 - 认证 meta 经 `AuthContextSupport` 填充失败次数、锁定截止时间与阈值提示。
+- 状态变更 DURABLE 事件 **边沿触发**；锁定后 skip 失败计数递增，仍可发 `LOGIN_FAILURE`。
+- 锁定态经 Redis 双 Key 同步；BFF 拦截加密登录、Gateway 拦截已认证 API（JWT + OnlineToken 补全 userType）、Auth 缓存兜底。
 - lockout **策略参数**统一前缀 `ingot.security.account.*`，与 `ingot.security.credential.*` 命名对齐；消费侧一律经 `AccountLockoutPolicyLoader` seam 读取。
 - 策略加载当前仅实现 `mode=local`（Nacos + rebinder 热刷新）；`mode=remote` 占位回退 local + WARN，remote 弹性阶梯由后续 change 接入（与事件 `ingot.security.event.target` 无关）。
 
@@ -27,7 +29,7 @@
 - 账号域用例与 seam：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-core`
 - 持久化 adapter：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter`
 - 认证 meta：`ingot-framework/ingot-security/ingot-security-account/ingot-security-account-web-support`
-- 接入方：`ingot-pms-provider`、`ingot-member-provider`、`ingot-auth`
+- 接入方：`ingot-pms-provider`、`ingot-member-provider`、`ingot-auth`、`ingot-bff`、`ingot-gateway`
 
 ## 关联模块
 
@@ -37,6 +39,10 @@
 | 策略加载 seam | `ingot-security-account-core/.../service/AccountLockoutPolicyLoader.java` |
 | local 策略加载（即时映射 + 热刷新） | `ingot-security-account-core/.../service/impl/LocalAccountLockoutPolicyLoader.java` |
 | 登录成功/失败记录与自动锁定 | `ingot-security-account-core/.../service/RecordLoginUseCaseService.java` |
+| Redis 锁定信号 | `AccountLockSignalPort` / `RedisAccountLockSignalAdapter`；Key 见 `RedisKeyConstants.AccountLock` |
+| BFF 登录短路 | `ingot-bff/.../BffAuthService.java` |
+| Gateway 已认证拦截 | `ingot-gateway/.../AccountLockFilter.java`；userType 经 `AuthContextRelayFilter` + OnlineToken |
+| Auth UserDetails 缓存 | `ingot-auth/.../CachingRemoteUserDetailsService.java` |
 | 手动/自动解锁 | `ingot-security-account-core/.../service/UnlockAccountUseCaseService.java` |
 | 锁定状态持久化 | `DefaultLockStatePortAdapter.java` → `account_lock_state` |
 | 安全事件发布 | `CompositeSecurityEventPort.java` → `SecurityEventPublisher` → canonical `security_event` |
@@ -53,3 +59,4 @@
   - `specs/changes/archive/2026/20260724-security-account-protection/`（L2 闭环 + remote 土台）
   - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（事件改写 canonical，停写 legacy 表）
   - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
+  - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（边沿事件 + Redis 锁定信号 + BFF/Gateway 短路）

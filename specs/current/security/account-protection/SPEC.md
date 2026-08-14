@@ -68,6 +68,8 @@ Auth 登录成功/失败
 
 自动锁定在**本次失败异步回调落库后**生效；当次请求仍返回 bad credentials，下次登录才命中 locked（与 ADMIN 历史行为一致）。
 
+锁定后继续 `recordFailure`：**仍发** `LOGIN_FAILURE`（电平遥测）；**跳过** `incrementFailCount` 与 `lockAutomatically`。
+
 ## 5. 解锁与失败计数清零
 
 | 场景 | `failed_login_count` | 说明 |
@@ -90,8 +92,44 @@ Auth 登录成功/失败
 
 `lockout.enabled=false` 时：不递增失败计数、不自动锁定、不发安全事件（与 ADMIN baseline 一致）。
 
-## 8. 已知限制 / 后续跟踪
+## 8. 状态变更边沿事件
+
+账号域 **A 类** DURABLE 事件仅在状态变化时 `publishEvent`（已是目标状态则 no-op）：
+
+| 用例 | 边沿 |
+|---|---|
+| `lockManually` / `lockAutomatically` | 已 `locked=true` → 不发 `ACCOUNT_LOCKED`，不延长 `lockedUntil` |
+| `unlockManually` / 过期自动解锁 | 已 `locked=false` → 不发 `ACCOUNT_UNLOCKED` |
+| `enableAccount` / `disableAccount` | 目标状态与当前一致 → 不发 `ACCOUNT_ENABLED` / `ACCOUNT_DISABLED` |
+
+`PASSWORD_*`、创建/删除等 **B 类** 仍靠用例单次动作，无额外短路。活动遥测（`LOGIN_FAILURE` / `LOGIN_SUCCESS`）为电平，不去重。
+
+## 9. Redis 锁定信号与分层拦截
+
+锁定 **transition 成功后** afterCommit 双写 Redis（解锁双删），fail-open：
+
+```text
+in:sec:account:locked:uid:{userType}:{userId}
+in:sec:account:locked:name:{userType}:{username}
+```
+
+临时锁 TTL 至 `lockedUntil`；永久锁 TTL 默认 30 天（`ingot.security.account-lock-signal.permanent-lock-ttl-days`）。与网关 `in:gw:bl:tmp:*` 命名空间独立。
+
+| 层级 | 职责 | 身份来源 |
+|---|---|---|
+| BFF | 加密登录短路（`ingot.security.account-lock-bff`，默认 enabled） | 解密后 username → name key；默认不调 Auth |
+| Gateway | 已认证 API 短路（`ingot.security.account-lock-gateway`，`AccountLockFilter`） | JWT `i` + OnlineToken/`ut` 补全的 userType → uid key；命中 **403** `ACCOUNT_LOCKED` |
+| Auth | UserDetails 缓存兜底 | name key hit 则跳过 Feign，返回 `locked=true` |
+| PMS/Member 领域层 | 边沿检测、事件、信号写入 | DB `LockStatePort` |
+
+Gateway 瘦身 JWT 通常不含 `ut`：`AuthContextRelayFilter` 用 `jti` 读 `token:jti:{jti}`（OnlineToken.userType）补全；Auth 与 Gateway 须共用同一 Redis。无 JWT / 解析失败 / Redis down / exclude 路径 → **fail-open**。Gateway **不**解析 `/bff/**` body。
+
+`AccountLockSignalPort` 在 account-core 装配（有 `StringRedisTemplate` 用 Redis，否则 NoOp）。账号用例（`UnlockAccountUseCaseService` 等）仅在 classpath 存在 account-adapter 时扫描，避免 BFF/Auth 误装事务依赖。
+
+## 10. 已知限制 / 后续跟踪
 
 1. **remote 弹性与中心化**（L2 后续 change）：`RemoteAccountLockoutPolicyLoader`、Resilient/LKG/Nacos 地板/L1-L2/Invalidation/Actuator、安全中心 `account_lockout_policy_config` 表与管理 CRUD。依托现有 `mode` 与 seam，消费侧无需再改。
 2. **`attemptWindowMinutes` 滑动窗口**：已在 L4（[access-protection](../access-protection/README.md)）于 `RecordLoginUseCaseService` 实现；窗口外失败计数归零后再递增。
 3. **V1 单元测试**：`InnerLoginRecordAPI`、`LoginEventListener`、`LocalAccountLockoutPolicyLoader` 自动化测试待后续补齐（验收以手工集成/regression 为准）。
+4. Gateway 明文 Auth token 路径的 name key 检查未做（生产主路径为 BFF 加密登录 + JWT uid Filter）。
+5. 手动重复锁定不延长 `lockedUntil`；延长需求另开 change。

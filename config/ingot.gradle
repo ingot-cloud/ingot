@@ -2,6 +2,10 @@ def ingot = [:]
 
 // framework
 ingot.framework_cache = ":ingot-framework:ingot-cache"
+ingot.framework_security_recording = ":ingot-framework:ingot-security:ingot-security-recording"
+ingot.framework_security_event_store_mysql = ":ingot-framework:ingot-security:ingot-security-event-store-mysql"
+ingot.framework_security_event_store_log = ":ingot-framework:ingot-security:ingot-security-event-store-log"
+ingot.framework_security_event_transport_feign = ":ingot-framework:ingot-security:ingot-security-event-transport-feign"
 ingot.framework_commons = ":ingot-framework:ingot-commons"
 ingot.framework_core = ":ingot-framework:ingot-core"
 ingot.framework_data_mybatis = ":ingot-framework:ingot-data:ingot-data-mybatis"

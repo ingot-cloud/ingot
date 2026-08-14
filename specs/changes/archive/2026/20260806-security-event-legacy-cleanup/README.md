@@ -48,4 +48,4 @@ recording pipeline 已上线，旧 L3 `mode=local|remote`、双写 `account_secu
   - `specs/current/security/account-protection/`（事件落库路径增量）
 - 与原设计的差异：
   - Retention 让步探测改为分别注入 `MemoryRecordQueue` / `FileSpoolRecordQueue`，避免双 `RecordQueue` Bean 导致 `NoUniqueBeanDefinitionException`
-  - 网关限流升级事件类型现网为 `RATE_LIMIT_VIOLATION`（边沿去重另见 `20260811-security-event-edge-dedup-lock-shortcut`）
+  - 网关限流升级事件类型现网为 `RATE_LIMIT_VIOLATION`（边沿去重另见 [20260811-security-event-edge-dedup-lock-shortcut](../20260811-security-event-edge-dedup-lock-shortcut/README.md)）

@@ -49,8 +49,11 @@
 |---|---|
 | IP | `In-Inner-Client-Real-IP` |
 | 设备 | `In-Ca-Sig` |
-| userId | JWT attribute → 非空时回填 `In-Inner-User-Id` |
+| userId | JWT `i`（`InJwtClaimNames`）→ 非空时回填 `In-Inner-User-Id` |
+| userType | 遗留 JWT `ut`，否则 `jti` → OnlineToken Redis（`token:jti:{jti}`） |
 | UA / Referer | 标准 HTTP Header |
+
+`AuthContextRelayFilter` 补全 userId / userType 后，`AccountLockFilter` 用 uid key 做账号锁定短路（见 [account-protection](../../security/account-protection/SPEC.md)）。
 
 Sentinel `GatewayParamFlowItem.fieldName` 与限流/黑白名单 DB 短码对应关系不变：
 

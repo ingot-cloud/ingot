@@ -41,8 +41,9 @@ GROUP BY event_type;
 
 | # | 场景 | 预期 |
 |---|------|------|
-| E4b | 已持 JWT 调业务 API，账号中途被锁 | Gateway **403**；请求不进 BFF/PMS 业务 |
+| E4b | 已持 JWT 调业务 API，账号中途被锁 | Gateway **403**；请求不进 BFF/PMS 业务。瘦身 JWT 无 `ut` 时须能从 Redis `token:jti:{jti}`（OnlineToken.userType）补全后命中 uid key；Auth 与 Gateway 共用同一 Redis |
 | E4c | 匿名/无 JWT 公共路径 | Gateway **放行**（与现网一致） |
+| E4d | OnlineToken miss（jti 无对应 Redis） | Gateway **fail-open 放行**（与 Redis down 语义一致）；不因缺少 userType 误 403 |
 
 ## 5. Auth 缓存
 
@@ -90,4 +91,4 @@ GROUP BY event_type, source_module;
 - E2 中若启用 BFF 前置拦截（E4a），锁定后 BFF 登录可能 **不产生** LOGIN_FAILURE（未进入 Auth）；经 Auth 直连或 inner 路径仍可产生 LOGIN_FAILURE。
 - spool 目录权限错误会导致 **仅 DURABLE** 丢失；验收前须确认 Nacos `ingot.security.event.delivery.spool.directory`。
 - E7：改造前同场景会落入约 `限流次数 − (blockThreshold − 1)` 条 `RATE_LIMIT_VIOLATION`；验收以 **恰好 1 条** 为准。第二次全 403 不上报是预期（E7b），不代表中心「写满」。
-- E7 查库请用 `event_type='RATE_LIMIT_VIOLATION'`（限流升级现网映射），不要只查 `BLACKLIST_BLOCK`。
+- E4b：会话中途锁定依赖 Gateway 能读取 Auth 写入的 OnlineToken（`token:jti:{jti}`）。验收时确认 Auth 与 Gateway 指向同一 Redis；JWT 瘦身后不要再期望 payload 含 `ut`。

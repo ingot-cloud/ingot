@@ -54,7 +54,7 @@ flowchart TD
 | D4 | Redis Key | **双 Key**：uid + name；lock 双写，unlock 双删 |
 | D5 | Redis 写入时机 | **afterCommit**（PMS/Member 本地事务） |
 | D6 | BFF 登录拦截 | **BFF 解密后**查 name key；Gateway **不**读 `/bff/**` body |
-| D7 | Gateway Filter | **GlobalFilter**；主路径 **JWT uid key**；可选明文 Auth token **name key** |
+| D7 | Gateway Filter | **GlobalFilter**；主路径 **uid key**（JWT `i` + OnlineToken/`ut` 补全的 userType）；可选明文 Auth token **name key** |
 | D8 | JWT 验签 | Gateway **不验签**（与限流/名单一致）；伪造 token 由 Resource Server 拒绝 |
 | D9 | Redis fail-open | 读写失败不阻断主业务；log warn |
 | D10 | 重复 manual lock | **no-op**（不延长 lockedUntil；延长需求另开 change） |
@@ -63,7 +63,7 @@ flowchart TD
 | D13 | 升级去重原语 | **禁止**仅用 `count == blockThreshold`；以 `TempBlockStore` **SETNX / setIfAbsent**（首次占位成功）决定是否 `report`；已存在则只 **刷新 TTL** |
 | D14 | 与 Filter 顺序 | 同波并发可在写 temp-block 前已过 `BlacklistFilter`，故去重必须在 `SentinelBlockHandler` 内完成，不能依赖「写完立刻 403」 |
 | D15 | 边沿实现强度 | 仅 **A 类**做显式 guard（可重复状态入口 / 超阈值升级）；**B 类**（`PASSWORD_*`、create-delete）靠 use case 天然单次；**C 类**电平不去重。详见 REQUIREMENTS R1.1 |
-| D16 | 类型枚举 / 硬编码 | 本 change **不**合并双份 `SecurityEventType`，也 **不**抽取 recording code 常量；留给 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/DESIGN.md) |
+| D16 | 类型枚举 / 硬编码 | 本 change **不**合并双份 `SecurityEventType`，也 **不**抽取 recording code 常量；留给 [20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/DESIGN.md) |
 
 ### 边沿范围示意
 
@@ -183,9 +183,12 @@ if newFailCount >= maxAttempts:
 **逻辑**：
 
 1. 路径匹配 exclude → pass
-2. 从 JWT payload 读 `i`（userId）+ `user_type` → 若齐全，查 **uid key** → hit 则 403
-3. 否则若路径为 **非 `/bff/**` 的明文 Auth token 端点** 且 method POST → 解析 form `username`+`user_type` → 查 **name key** → hit 则 403
-4. 其它 → pass
+2. 从上游身份取 userId + userType：`AuthContextRelayFilter` 解析 JWT `i`/`jti`，瘦身 JWT 无 `ut` 时按 `token:jti:{jti}` 读取 OnlineToken.userType；遗留 token 仍可读 JWT `ut`
+3. 身份齐全则查 **uid key** → hit 则 403
+4. 否则若路径为 **非 `/bff/**` 的明文 Auth token 端点** 且 method POST → 解析 form `username`+`user_type` → 查 **name key** → hit 则 403（本期可选，未实施）
+5. userType 无法补全 / Redis down / 无 JWT → **fail-open** pass
+
+claim 名统一引用 `InJwtClaimNames`（commons），`JwtClaimNamesExtension` 与 Gateway `BearerJwtPayloadReader` 不再各自维护 `"i"`/`"ut"`。
 
 **403 响应**：与 Gateway 现有 forbidden 结构一致；body 含账号锁定业务码（与 Auth 对齐，见实现时引用 `InUserDetailsChecker` 文案 key）。
 
