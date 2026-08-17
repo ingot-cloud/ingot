@@ -1,11 +1,8 @@
 package com.ingot.framework.security.access.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.cloud.security.api.config.SecurityEventProperties;
 import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
 import com.ingot.cloud.security.api.rpc.RemoteLoginFailurePolicyService;
-import com.ingot.cloud.security.api.rpc.RemoteSecurityEventService;
-import com.ingot.cloud.security.api.support.AsyncSecurityEventReporter;
 import com.ingot.framework.commons.constants.RedisKeyConstants;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
@@ -24,7 +21,7 @@ import com.ingot.framework.security.access.service.TempBlockWriter;
 import com.ingot.framework.security.access.service.impl.LocalLoginFailurePolicyLoader;
 import com.ingot.framework.security.access.service.impl.RemoteLoginFailurePolicyLoader;
 import com.ingot.framework.security.access.service.impl.ResilientLoginFailurePolicyLoader;
-import jakarta.annotation.PreDestroy;
+import com.ingot.framework.security.recording.transport.feign.SecurityEventReportPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -148,12 +145,12 @@ public class AccessAdapterAutoConfiguration {
             LoginFailurePolicyLoader policyLoader,
             LoginFailureCounter counter,
             TempBlockWriter tempBlockWriter,
-            LoginFailureEventReporter eventReporter) {
+            LoginFailureEventSink eventSink) {
         return new LoginFailureProtectionService(
                 policyLoader,
                 counter,
                 tempBlockWriter,
-                eventReporter::offer);
+                eventSink::offer);
     }
 
     @Bean
@@ -175,35 +172,22 @@ public class AccessAdapterAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(LoginFailureEventReporter.class)
-    public LoginFailureEventReporter loginFailureEventReporter(
-            ObjectProvider<RemoteSecurityEventService> remoteProvider,
-            ObjectProvider<SecurityEventProperties> propertiesProvider) {
-        SecurityEventProperties properties = propertiesProvider.getIfAvailable(SecurityEventProperties::new);
-        return new LoginFailureEventReporter(remoteProvider, properties);
+    @ConditionalOnBean(SecurityEventReportPublisher.class)
+    @ConditionalOnMissingBean(LoginFailureEventSink.class)
+    public LoginFailureEventSink recordingLoginFailureEventSink(SecurityEventReportPublisher reportPublisher) {
+        return reportPublisher::publish;
     }
 
-    static final class LoginFailureEventReporter implements AutoCloseable {
+    @Bean
+    @ConditionalOnMissingBean(LoginFailureEventSink.class)
+    public LoginFailureEventSink noopLoginFailureEventSink() {
+        return dto -> {
+            // recording 未装配时不阻塞登录防护
+        };
+    }
 
-        private final AsyncSecurityEventReporter reporter;
-
-        LoginFailureEventReporter(ObjectProvider<RemoteSecurityEventService> remoteProvider,
-                                  SecurityEventProperties properties) {
-            this.reporter = new AsyncSecurityEventReporter(
-                    remoteProvider::getIfAvailable,
-                    properties,
-                    "in-login-failure-event-reporter",
-                    "LoginFailureProtection");
-        }
-
-        void offer(SecurityEventReportDTO dto) {
-            reporter.offer(dto);
-        }
-
-        @PreDestroy
-        @Override
-        public void close() {
-            reporter.close();
-        }
+    @FunctionalInterface
+    interface LoginFailureEventSink {
+        void offer(SecurityEventReportDTO dto);
     }
 }

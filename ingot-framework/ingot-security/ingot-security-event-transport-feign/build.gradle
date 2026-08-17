@@ -1,0 +1,19 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api project(ingot.framework_security_recording)
+    implementation project(ingot.security_api)
+    implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_core)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.jackson.jsr310)
+
+    compileOnly(deps.lombok)
+    annotationProcessor(deps.lombok)
+
+    testImplementation(deps.spring.spring_boot.test)
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -1,22 +1,21 @@
 package com.ingot.framework.security.account.domain.config;
 
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
-import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
 import com.ingot.framework.security.account.domain.port.outbound.noop.NoOpLockStatePort;
-import com.ingot.framework.security.account.domain.port.outbound.noop.NoOpSecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.noop.NoOpUserAccountPort;
 import com.ingot.framework.security.account.domain.port.outbound.noop.NoOpUserCredentialPort;
 import com.ingot.framework.security.account.domain.service.AccountLockoutPolicyLoader;
 import com.ingot.framework.security.account.domain.service.AccountUseCaseModule;
 import com.ingot.framework.security.account.domain.service.impl.LocalAccountLockoutPolicyLoader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 账号域自动配置
@@ -24,12 +23,17 @@ import org.springframework.context.annotation.Configuration;
  * UseCase 实现通过 {@code @Service} 自动注入，
  * Port 接口的 NoOp 实现在没有具体实现时作为默认值生效。
  * </p>
+ * <p>
+ * 仅在 account-adapter 在类路径时启用，避免 BFF / Auth 等仅依赖 account-core
+ * 读取锁定信号的进程误装配 {@code UnlockAccountUseCaseService} 等需要事务管理器的用例。
+ * </p>
  *
  * @author jymot
  * @since 2026-02-13
  */
 @Slf4j
-@Configuration
+@AutoConfiguration
+@ConditionalOnClass(name = "com.ingot.framework.security.account.adapter.port.DefaultLockStatePortAdapter")
 @ComponentScan(basePackageClasses = AccountUseCaseModule.class)
 @EnableConfigurationProperties(AccountDomainProperties.class)
 public class AccountDomainAutoConfiguration {
@@ -65,11 +69,5 @@ public class AccountDomainAutoConfiguration {
     @ConditionalOnMissingBean(LockStatePort.class)
     public LockStatePort noOpLockStatePort() {
         return new NoOpLockStatePort();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(SecurityEventPort.class)
-    public SecurityEventPort noOpSecurityEventPort() {
-        return new NoOpSecurityEventPort();
     }
 }

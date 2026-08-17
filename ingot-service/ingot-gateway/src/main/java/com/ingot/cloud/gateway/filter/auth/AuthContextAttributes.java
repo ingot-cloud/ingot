@@ -20,4 +20,12 @@ public class AuthContextAttributes {
      * 非空时同步回填 {@code In-Inner-User-Id} Header 供 Sentinel {@code USER} 维度。</p>
      */
     public static final String USER_ID = "ingot.security.auth.userId";
+
+    /**
+     * JWT / OnlineToken 解析出的用户类型（{@code UserTypeEnum} 的 value，如 {@code 0}/{@code 1}）。
+     * <p>由 {@link AuthContextRelayFilter} 写入：优先 JWT claim {@code ut}，瘦身 token 则按 jti
+     * 读取 Redis OnlineToken；{@link IdentityResolveFilter} 聚合进
+     * {@link com.ingot.cloud.gateway.security.ClientIdentity#getUserType()}。</p>
+     */
+    public static final String USER_TYPE = "ingot.security.auth.userType";
 }

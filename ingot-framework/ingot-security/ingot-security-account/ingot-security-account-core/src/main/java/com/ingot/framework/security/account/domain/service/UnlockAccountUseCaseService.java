@@ -3,14 +3,18 @@ package com.ingot.framework.security.account.domain.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.config.AccountMessageSource;
+import com.ingot.framework.security.account.domain.model.AccountLockSignal;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import com.ingot.framework.security.account.domain.port.inbound.UnlockAccountUseCase;
+import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
+import com.ingot.framework.security.account.domain.support.AfterCommitActions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -37,6 +41,7 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
     private final LockStatePort lockStatePort;
     private final SecurityEventPort securityEventPort;
     private final PlatformTransactionManager transactionManager;
+    private final AccountLockSignalPort accountLockSignalPort;
 
     private final MessageSourceAccessor message = AccountMessageSource.getAccessor();
 
@@ -44,6 +49,11 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
     @Transactional(rollbackFor = Exception.class)
     public void unlockManually(UnlockCommand command) {
         log.info("管理员 {} 手动解锁用户 {}", command.getOperatorId(), command.getUserId());
+
+        if (!isCurrentlyLocked(command.getUserId(), command.getUserType())) {
+            log.info("用户 {} 已处于未锁定状态，跳过重复手动解锁", command.getUserId());
+            return;
+        }
 
         // 1. 更新锁定状态为解锁
         lockStatePort.updateLockStatus(
@@ -73,6 +83,8 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
                 command.getOperatorName()
         );
         securityEventPort.publishEvent(event);
+
+        scheduleClearLockSignal(command.getUserId(), command.getUserType());
 
         log.info("用户 {} 已解锁", command.getUserId());
     }
@@ -134,6 +146,11 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
     private void doUnlockExpired(LockState lockState) {
         log.info("自动解锁用户 {}，锁定已过期", lockState.getUserId());
 
+        if (!lockState.isLocked()) {
+            log.info("用户 {} 已处于未锁定状态，跳过过期自动解锁", lockState.getUserId());
+            return;
+        }
+
         // 1. 更新 lock_state 表：解锁
         lockStatePort.updateLockStatus(
                 lockState.getUserId(),
@@ -162,5 +179,21 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
                 null
         );
         securityEventPort.publishEvent(event);
+
+        scheduleClearLockSignal(lockState.getUserId(), lockState.getUserType());
+    }
+
+    private void scheduleClearLockSignal(Long userId, UserTypeEnum userType) {
+        String username = userAccountPort.findById(userId, userType)
+                .map(account -> account.getUsername())
+                .orElse(null);
+        AccountLockSignal signal = new AccountLockSignal(userId, userType, username, null);
+        AfterCommitActions.run(() -> accountLockSignalPort.clearLocked(signal));
+    }
+
+    private boolean isCurrentlyLocked(Long userId, UserTypeEnum userType) {
+        return lockStatePort.findByUser(userId, userType)
+                .map(LockState::isLocked)
+                .orElse(false);
     }
 }

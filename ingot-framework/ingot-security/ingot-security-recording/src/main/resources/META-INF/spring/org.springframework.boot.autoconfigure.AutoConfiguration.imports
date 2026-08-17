@@ -1,0 +1,4 @@
+com.ingot.framework.security.recording.spool.FileSpoolAutoConfiguration
+com.ingot.framework.security.recording.config.SecurityEventRecordingDisabledAutoConfiguration
+com.ingot.framework.security.recording.config.SecurityEventRecordingAutoConfiguration
+com.ingot.framework.security.recording.config.RecordingMetricsAutoConfiguration

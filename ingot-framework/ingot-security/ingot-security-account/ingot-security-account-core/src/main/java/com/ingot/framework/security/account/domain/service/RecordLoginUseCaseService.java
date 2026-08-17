@@ -3,6 +3,7 @@ package com.ingot.framework.security.account.domain.service;
 import java.time.LocalDateTime;
 
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
+import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.LockoutPolicy;
 import com.ingot.framework.security.account.domain.model.enums.LockReason;
 import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCase;
@@ -10,6 +11,7 @@ import com.ingot.framework.security.account.domain.port.inbound.RecordLoginUseCa
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +77,19 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
     public void recordFailure(LoginCommand command) {
         log.warn("记录用户 {} 登录失败: {}", command.getUserId(), command.getFailureReason());
 
+        // 已锁定：仍发 LOGIN_FAILURE（电平遥测），跳过失败计数递增与自动锁定
+        if (command.getUserId() != null && command.getUserType() != null
+                && isCurrentlyLocked(command.getUserId(), command.getUserType())) {
+            securityEventPort.publishEvent(AccountSecurityEvent.loginFailure(
+                    command.getUserId(),
+                    command.getUserType(),
+                    command.getUsername(),
+                    command.getClientIp(),
+                    command.getFailureReason()
+            ));
+            return;
+        }
+
         LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy();
         if (lockout.isEnabled() && command.getUserId() != null && command.getUserType() != null) {
             int windowMinutes = lockout.getAttemptWindowMinutes();
@@ -105,7 +120,7 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
             if (newFailCount >= maxAttempts) {
                 log.warn("用户 {} 登录失败次数达到 {}，触发自动锁定", command.getUserId(), newFailCount);
 
-                Integer lockDuration = lockout.getLockDurationMinutes();
+                int lockDuration = lockout.getLockDurationMinutes();
                 lockAccountUseCase.lockAutomatically(
                         command.getUserId(),
                         command.getUserType(),
@@ -114,5 +129,11 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
                 );
             }
         }
+    }
+
+    private boolean isCurrentlyLocked(Long userId, UserTypeEnum userType) {
+        return lockStatePort.findByUser(userId, userType)
+                .map(LockState::isLocked)
+                .orElse(false);
     }
 }

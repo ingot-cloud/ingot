@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>删除账号用例实现</p>
  *
  * <p>清理顺序：凭证附属数据 → 锁定状态 → 账号主记录（软删）→ 发布删除事件</p>
- * <p>安全事件（{@code account_security_event}）属于审计轨迹，默认不清理；
- * 如有合规需要可在业务侧覆盖 {@link SecurityEventPort#deleteByUser}</p>
+ * <p>安全事件写入 canonical {@code security_event}，属于审计轨迹，删除账号时默认不清理历史行；
+ * 如有合规需要可在业务侧覆盖 {@link SecurityEventPort#deleteByUser}（清理目标应为 {@code security_event}）。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -60,7 +60,7 @@ public class DeleteAccountUseCaseService implements DeleteAccountUseCase {
         // 5. 软删除账号主记录
         userAccountPort.delete(userId, userType);
 
-        // 6. 发布删除事件（审计用途，不影响主流程，记录在 account_security_event）
+        // 6. 发布删除事件（审计用途，不影响主流程，经 recording 写入 security_event）
         securityEventPort.publishEvent(
                 AccountSecurityEvent.accountDeleted(
                         userId, userType,

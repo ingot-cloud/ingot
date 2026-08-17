@@ -29,13 +29,14 @@ import reactor.core.publisher.Mono;
  * <ul>
  *     <li>IP / 设备 / UA / Referer — 读 {@link RequestGlobalFilter} 标准化后的 Header</li>
  *     <li>userId — 读 {@link AuthContextAttributes#USER_ID}（{@link AuthContextRelayFilter} 写入）</li>
+ *     <li>userType — 读 {@link AuthContextAttributes#USER_TYPE}（JWT {@code ut} 或 OnlineToken 补全）</li>
  *     <li>非空 userId 时回填 {@code In-Inner-User-Id} Header，供 Sentinel {@code USER} 资源维度</li>
  *     <li>非空 clientId 时回填 {@code In-Inner-Client-Id} Header，供 Sentinel {@code CLIENT} 资源维度</li>
  * </ul>
  *
  * <h3>Pipeline 位置</h3>
  * <pre>
- * RequestGlobalFilter → SessionTokenRelayFilter → AuthContextRelayFilter → 本 Filter → BlacklistFilter
+ * RequestGlobalFilter → SessionTokenRelayFilter → AuthContextRelayFilter → 本 Filter → AccountLockFilter → BlacklistFilter
  * </pre>
  *
  * <p>本 Filter 不做鉴权；JWT 签名校验由下游 Resource Server 负责。</p>
@@ -54,6 +55,8 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
 
         String userId = (String) exchange.getAttributes().get(AuthContextAttributes.USER_ID);
         userId = StrUtil.blankToDefault(userId, null);
+        String userType = (String) exchange.getAttributes().get(AuthContextAttributes.USER_TYPE);
+        userType = StrUtil.blankToDefault(userType, null);
 
         String clientId = exchange.getRequest().getQueryParams().getFirst("client_id");
         clientId = StrUtil.blankToDefault(clientId, null);
@@ -62,6 +65,7 @@ public class IdentityResolveFilter implements GlobalFilter, Ordered {
                 .ip(StrUtil.blankToDefault(ip, null))
                 .device(StrUtil.blankToDefault(device, null))
                 .userId(userId)
+                .userType(userType)
                 .clientId(clientId)
                 .userAgent(ua)
                 .referer(StrUtil.blankToDefault(referer, null))

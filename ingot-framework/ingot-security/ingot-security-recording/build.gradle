@@ -1,0 +1,21 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.framework_context)
+    implementation(deps.spring.framework_tx)
+    implementation(deps.log.logback_classic)
+
+    implementation(deps.jackson.data_bind)
+    implementation(deps.jackson.annotation)
+    compileOnly(deps.spring.spring_boot.actuator_autoconfigure)
+    compileOnly(deps.spring.spring_boot.actuator_starter)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.jackson.data_bind)
+    testImplementation(deps.spring.spring_boot.actuator_autoconfigure)
+}
+
+test {
+    useJUnitPlatform()
+}

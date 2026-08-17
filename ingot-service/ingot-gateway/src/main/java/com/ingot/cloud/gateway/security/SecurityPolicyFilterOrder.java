@@ -19,6 +19,7 @@ import lombok.experimental.UtilityClass;
  *   → SessionTokenRelayFilter  (+10)
  *   → AuthContextRelayFilter   (+15)
  *   → IdentityResolveFilter    (+20)   写入 ATTR_CLIENT_IDENTITY
+ *   → AccountLockFilter        (+25)   JWT uid 锁定信号
  *   → BlacklistFilter          (+30)   写入 ATTR_WHITELISTED
  *   → ChallengeFilter          (+40)   消费 PassToken / 返回 412
  *   → WhitelistAwareSentinel   (+50)   Sentinel 限流
@@ -30,6 +31,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class SecurityPolicyFilterOrder {
 
+    public static final int ACCOUNT_LOCK = Ordered.HIGHEST_PRECEDENCE + 25;
     public static final int BLACKLIST = Ordered.HIGHEST_PRECEDENCE + 30;
     public static final int CHALLENGE = Ordered.HIGHEST_PRECEDENCE + 40;
     public static final int SENTINEL = Ordered.HIGHEST_PRECEDENCE + 50;

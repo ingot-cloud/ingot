@@ -54,5 +54,11 @@ public class SecurityEventReportDTO implements Serializable {
     private String operatorName;
     private String traceId;
 
+    /** 32 字符 UUID；producer 生成，重试保持不变。 */
+    private String eventId;
+
+    /** BEST_EFFORT | DURABLE；未传时由中心/producer 按 eventType 分类。 */
+    private String priority;
+
     private Map<String, Object> extension;
 }

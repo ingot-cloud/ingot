@@ -70,4 +70,42 @@ public interface RedisKeyConstants {
         /** L2 热缓存：{@code in:sec:policy:snapshot}。 */
         String SNAPSHOT = PREFIX + ":snapshot";
     }
+
+    /**
+     * 账号锁定信号 Redis Key（BFF / Gateway / Auth 分层拦截；与网关 temp-block 命名空间独立）。
+     */
+    interface AccountLock {
+
+        String PREFIX = IN_PREFIX + ":sec:account:locked";
+
+        /** 按用户 ID：{@code in:sec:account:locked:uid:{userType}:{userId}}。 */
+        String UID_PREFIX = PREFIX + ":uid:";
+
+        /** 按用户名：{@code in:sec:account:locked:name:{userType}:{username}}。 */
+        String NAME_PREFIX = PREFIX + ":name:";
+
+        static String uidKey(String userType, Long userId) {
+            return UID_PREFIX + userType + ":" + userId;
+        }
+
+        static String nameKey(String userType, String username) {
+            return NAME_PREFIX + userType + ":" + username;
+        }
+    }
+
+    /**
+     * 在线 Token Redis Key（Auth 签发瘦身 JWT 后的扩展信息；Gateway 按 jti 读取 userType）。
+     *
+     * <p>现网前缀为 {@code token:jti:}（无 {@link #IN_PREFIX}），与
+     * {@code RedisOnlineTokenService} 历史 key 对齐，不得改写。</p>
+     */
+    interface OnlineToken {
+
+        /** 主数据：{@code token:jti:{jti}}。 */
+        String JTI_PREFIX = "token:jti:";
+
+        static String jtiKey(String jti) {
+            return JTI_PREFIX + jti;
+        }
+    }
 }

@@ -51,6 +51,9 @@ public class GatewaySecurityConstants {
     /** 静态/临时黑名单拒绝。HTTP 403。 */
     public static final String CODE_FORBIDDEN_BLOCKED = "FORBIDDEN_BLOCKED";
 
+    /** 账号锁定信号命中。HTTP 403。 */
+    public static final String CODE_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
+
     /** Sentinel 限流拒绝（无 ON_RATE_LIMIT 挑战策略时）。HTTP 429。 */
     public static final String CODE_LIMIT_TOO_MANY = "LIMIT_TOO_MANY";
 
@@ -60,6 +63,7 @@ public class GatewaySecurityConstants {
     // ---- 响应文案 ----
 
     public static final String MSG_REQUEST_BLOCKED = "请求已被拦截";
+    public static final String MSG_ACCOUNT_LOCKED = "账号已被锁定，请联系管理员";
     public static final String MSG_TOO_MANY_REQUESTS = "Too many requests";
     public static final String MSG_CAPTCHA_REQUIRED = "Captcha required";
 

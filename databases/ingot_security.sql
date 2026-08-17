@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 08/06/2026 14:13:33
+ Date: 17/08/2026 16:08:37
 */
 
 SET NAMES utf8mb4;
@@ -33,15 +33,16 @@ CREATE TABLE `credential_policy_config` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_active_type` (`active_type`),
   KEY `idx_type_enabled` (`policy_type`,`enabled`)
-) ENGINE=InnoDB AUTO_INCREMENT=2020031712521412611 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='凭证策略配置表';
+) ENGINE=InnoDB AUTO_INCREMENT=2080199762424926210 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='凭证策略配置表';
 
 -- ----------------------------
 -- Records of credential_policy_config
 -- ----------------------------
 BEGIN;
-INSERT INTO `credential_policy_config` (`id`, `policy_type`, `policy_config`, `priority`, `enabled`, `created_at`, `updated_at`) VALUES (1, '1', '{\"maxLength\": \"32\", \"minLength\": \"6\", \"requireDigit\": false, \"specialChars\": \"!@#$%^&*()_+-=[]{}|;:,.<>?\", \"requireLowercase\": false, \"requireUppercase\": false, \"forbiddenPatterns\": [\"password\", \"123456\", \"admin\", \"qwerty\", \"abc123\"], \"requireSpecialChar\": false, \"forbidUserAttributes\": true}', 10, 1, '2026-01-23 07:28:02', '2026-05-16 15:32:50');
+INSERT INTO `credential_policy_config` (`id`, `policy_type`, `policy_config`, `priority`, `enabled`, `created_at`, `updated_at`) VALUES (1, '1', '{\"maxLength\": \"32\", \"minLength\": \"6\", \"requireDigit\": false, \"specialChars\": \"!@#$%^&*()_+-=[]{}|;:,.<>?\", \"requireLowercase\": false, \"requireUppercase\": false, \"forbiddenPatterns\": [\"password\", \"123456\", \"admin\", \"qwerty\", \"abc123\", \"123\"], \"requireSpecialChar\": false, \"forbidUserAttributes\": true}', 0, 1, '2026-01-23 07:28:02', '2026-07-24 08:33:06');
 INSERT INTO `credential_policy_config` (`id`, `policy_type`, `policy_config`, `priority`, `enabled`, `created_at`, `updated_at`) VALUES (2, '3', '{\"enabled\": true, \"maxDays\": 90, \"graceLoginCount\": \"3\", \"warningDaysBefore\": \"7\", \"forceChangeAfterReset\": true}', 20, 1, '2026-01-23 07:28:02', '2026-02-10 15:18:43');
 INSERT INTO `credential_policy_config` (`id`, `policy_type`, `policy_config`, `priority`, `enabled`, `created_at`, `updated_at`) VALUES (3, '2', '{\"enabled\": true, \"checkCount\": \"5\", \"keepRecentCount\": 5}', 30, 1, '2026-01-23 07:28:02', '2026-02-10 15:18:37');
+INSERT INTO `credential_policy_config` (`id`, `policy_type`, `policy_config`, `priority`, `enabled`, `created_at`, `updated_at`) VALUES (2080199762424926209, '4', '{\"length\": 10, \"oneTime\": true, \"generation\": \"RANDOM\", \"validHours\": 72, \"forceChangeOnFirstLogin\": true}', 0, 1, '2026-07-23 15:54:06', '2026-07-24 08:43:32');
 COMMIT;
 
 -- ----------------------------
@@ -75,49 +76,6 @@ BEGIN;
 COMMIT;
 
 -- ----------------------------
--- Table structure for security_event
--- ----------------------------
-DROP TABLE IF EXISTS `security_event`;
-CREATE TABLE `security_event` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `event_type` varchar(64) NOT NULL COMMENT '事件类型',
-  `event_category` varchar(20) NOT NULL COMMENT 'AUTH/ACCOUNT/CREDENTIAL/ACCESS',
-  `occurred_at` datetime DEFAULT NULL COMMENT '业务发生时间',
-  `received_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '中心接收时间',
-  `tenant_id` bigint DEFAULT NULL,
-  `user_id` bigint DEFAULT NULL,
-  `user_type` varchar(20) DEFAULT NULL COMMENT 'ADMIN/APP',
-  `account` varchar(128) DEFAULT NULL,
-  `client_id` varchar(64) DEFAULT NULL,
-  `app_id` varchar(64) DEFAULT NULL,
-  `session_id` varchar(64) DEFAULT NULL,
-  `device_id` varchar(128) DEFAULT NULL,
-  `client_ip` varchar(64) DEFAULT NULL,
-  `request_uri` varchar(512) DEFAULT NULL,
-  `user_agent` varchar(512) DEFAULT NULL,
-  `result` varchar(20) DEFAULT NULL COMMENT 'SUCCESS/FAILURE',
-  `reason_code` varchar(50) DEFAULT NULL,
-  `reason_detail` varchar(500) DEFAULT NULL,
-  `source_module` varchar(64) NOT NULL COMMENT '上报模块',
-  `source` varchar(50) DEFAULT NULL,
-  `operator_id` bigint DEFAULT NULL,
-  `operator_name` varchar(64) DEFAULT NULL,
-  `trace_id` varchar(64) DEFAULT NULL,
-  `extension` json DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_event_time` (`received_at`),
-  KEY `idx_event_type` (`event_type`,`received_at`),
-  KEY `idx_tenant_user` (`tenant_id`,`user_id`),
-  KEY `idx_trace` (`trace_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件';
-
--- ----------------------------
--- Records of security_event
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
 -- Table structure for gateway_endpoint_group
 -- ----------------------------
 DROP TABLE IF EXISTS `gateway_endpoint_group`;
@@ -132,12 +90,14 @@ CREATE TABLE `gateway_endpoint_group` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_endpoint_group_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='API 路径分组定义';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='API 路径分组定义';
 
 -- ----------------------------
 -- Records of gateway_endpoint_group
 -- ----------------------------
 BEGIN;
+INSERT INTO `gateway_endpoint_group` (`id`, `code`, `name`, `pattern_list`, `enabled`, `remark`, `created_at`, `updated_at`) VALUES (1, 'login-auth', '登录认证入口', '[{\"path\": \"/bff/auth/login\", \"method\": \"POST\"}]', 1, 'L4 登录路径分组', '2026-07-30 00:32:56', '2026-08-01 10:58:55');
+INSERT INTO `gateway_endpoint_group` (`id`, `code`, `name`, `pattern_list`, `enabled`, `remark`, `created_at`, `updated_at`) VALUES (2, 'api-business', '基础业务接口', '[{\"path\": \"/pms/**\", \"method\": \"ANY\"}, {\"path\": \"/member/**\", \"method\": \"ANY\"}, {\"path\": \"/security/**\", \"method\": \"ANY\"}]', 1, '基础业务接口', '2026-07-30 00:32:56', '2026-08-01 11:02:15');
 COMMIT;
 
 -- ----------------------------
@@ -161,12 +121,13 @@ CREATE TABLE `gateway_ip_list` (
   PRIMARY KEY (`id`),
   KEY `idx_ip_list_lookup` (`list_type`,`key_type`,`enabled`),
   KEY `idx_ip_list_key_value` (`key_value`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='IP/设备/用户 黑白名单';
+) ENGINE=InnoDB AUTO_INCREMENT=2083386706797543426 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='IP/设备/用户 黑白名单';
 
 -- ----------------------------
 -- Records of gateway_ip_list
 -- ----------------------------
 BEGIN;
+INSERT INTO `gateway_ip_list` (`id`, `list_type`, `key_type`, `key_value`, `reason`, `source`, `effective_at`, `expires_at`, `enabled`, `operator_id`, `operator_name`, `created_at`, `updated_at`) VALUES (2083386706797543425, 'W', 'IP', '127.0.0.1', NULL, 'M', NULL, NULL, 1, NULL, NULL, '2026-08-01 10:57:53', '2026-08-01 16:43:34');
 COMMIT;
 
 -- ----------------------------
@@ -193,12 +154,14 @@ CREATE TABLE `gateway_rate_limit_rule` (
   UNIQUE KEY `uq_rate_limit_rule_code` (`code`),
   KEY `idx_rate_limit_rule_group_enabled` (`group_code`,`enabled`),
   KEY `idx_rate_limit_rule_enabled_priority` (`enabled`,`priority`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='网关限流规则';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='网关限流规则';
 
 -- ----------------------------
 -- Records of gateway_rate_limit_rule
 -- ----------------------------
 BEGIN;
+INSERT INTO `gateway_rate_limit_rule` (`id`, `code`, `group_code`, `pattern_list`, `dimension`, `qps`, `burst`, `interval_sec`, `control_behavior`, `enabled`, `dry_run`, `priority`, `remark`, `created_at`, `updated_at`) VALUES (1, 'login-ip', 'login-auth', NULL, 'IP', 8, 12, 60, 'F', 1, 0, 0, '登录路径 IP 限流基线', '2026-07-30 00:32:56', '2026-08-01 17:07:05');
+INSERT INTO `gateway_rate_limit_rule` (`id`, `code`, `group_code`, `pattern_list`, `dimension`, `qps`, `burst`, `interval_sec`, `control_behavior`, `enabled`, `dry_run`, `priority`, `remark`, `created_at`, `updated_at`) VALUES (3, 'business-ip', 'api-business', NULL, 'IP', 150, 225, 1, 'F', 1, 0, 10, '业务路由', '2026-07-30 00:32:56', '2026-08-01 16:43:22');
 COMMIT;
 
 -- ----------------------------
@@ -220,7 +183,36 @@ CREATE TABLE `gateway_violation_escalation` (
 -- Records of gateway_violation_escalation
 -- ----------------------------
 BEGIN;
-INSERT INTO `gateway_violation_escalation` (`id`, `window_sec`, `block_threshold`, `temp_block_ttl_sec`, `enabled`, `created_at`, `updated_at`) VALUES (1, 60, 30, 900, 1, '2026-06-08 06:13:11', '2026-06-08 06:13:11');
+INSERT INTO `gateway_violation_escalation` (`id`, `window_sec`, `block_threshold`, `temp_block_ttl_sec`, `enabled`, `created_at`, `updated_at`) VALUES (1, 60, 30, 900, 1, '2026-06-08 06:13:11', '2026-08-01 15:29:43');
+COMMIT;
+
+-- ----------------------------
+-- Table structure for login_failure_protection_policy
+-- ----------------------------
+DROP TABLE IF EXISTS `login_failure_protection_policy`;
+CREATE TABLE `login_failure_protection_policy` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `dimension` varchar(16) NOT NULL COMMENT 'IP/DEVICE/CLIENT/ACCOUNT_IP',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `max_attempts` int NOT NULL DEFAULT '50' COMMENT '窗口内最大失败次数',
+  `window_minutes` int NOT NULL DEFAULT '1' COMMENT '滑动窗口（分钟）',
+  `block_ttl_sec` int NOT NULL DEFAULT '3600' COMMENT '临时封禁 TTL（秒）',
+  `block_key_type` char(2) NOT NULL DEFAULT 'IP' COMMENT '封禁 keyType: IP/DV/CL',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_login_failure_dimension` (`dimension`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='登录失败保护策略（按维度）';
+
+-- ----------------------------
+-- Records of login_failure_protection_policy
+-- ----------------------------
+BEGIN;
+INSERT INTO `login_failure_protection_policy` (`id`, `dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`, `created_at`, `updated_at`) VALUES (1, 'IP', 1, 50, 1, 3600, 'IP', '同一 IP 登录失败达阈值临时封禁', '2026-07-30 00:32:56', '2026-08-01 15:30:56');
+INSERT INTO `login_failure_protection_policy` (`id`, `dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`, `created_at`, `updated_at`) VALUES (2, 'DEVICE', 1, 30, 5, 1800, 'DV', '同一设备指纹登录失败达阈值临时封禁', '2026-07-30 00:32:56', '2026-07-30 00:32:56');
+INSERT INTO `login_failure_protection_policy` (`id`, `dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`, `created_at`, `updated_at`) VALUES (3, 'CLIENT', 1, 100, 5, 3600, 'CL', '同一 OAuth2 Client 登录失败达阈值临时封禁', '2026-07-30 00:32:56', '2026-07-30 00:32:56');
+INSERT INTO `login_failure_protection_policy` (`id`, `dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`, `created_at`, `updated_at`) VALUES (4, 'ACCOUNT_IP', 1, 10, 5, 3600, 'IP', '同一账号+IP 组合登录失败达阈值封禁 IP', '2026-07-30 00:32:56', '2026-07-30 00:32:56');
 COMMIT;
 
 -- ----------------------------
@@ -259,35 +251,50 @@ BEGIN;
 COMMIT;
 
 -- ----------------------------
--- Table structure for login_failure_protection_policy
+-- Table structure for security_event
 -- ----------------------------
-DROP TABLE IF EXISTS `login_failure_protection_policy`;
-CREATE TABLE `login_failure_protection_policy` (
+DROP TABLE IF EXISTS `security_event`;
+CREATE TABLE `security_event` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `dimension` varchar(16) NOT NULL COMMENT 'IP/DEVICE/CLIENT/ACCOUNT_IP',
-  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
-  `max_attempts` int NOT NULL DEFAULT '50' COMMENT '窗口内最大失败次数',
-  `window_minutes` int NOT NULL DEFAULT '1' COMMENT '滑动窗口（分钟）',
-  `block_ttl_sec` int NOT NULL DEFAULT '3600' COMMENT '临时封禁 TTL（秒）',
-  `block_key_type` char(2) NOT NULL DEFAULT 'IP' COMMENT '封禁 keyType: IP/DV/CL',
-  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `event_id` varchar(32) DEFAULT NULL COMMENT 'producer 生成的幂等 ID',
+  `event_type` varchar(64) NOT NULL COMMENT '事件类型',
+  `event_category` varchar(20) NOT NULL COMMENT 'AUTH/ACCOUNT/CREDENTIAL/ACCESS',
+  `priority` varchar(16) NOT NULL DEFAULT 'BEST_EFFORT' COMMENT 'BEST_EFFORT/DURABLE',
+  `occurred_at` datetime DEFAULT NULL COMMENT '业务发生时间',
+  `received_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '中心接收时间',
+  `tenant_id` bigint DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
+  `user_type` varchar(20) DEFAULT NULL COMMENT 'ADMIN/APP',
+  `account` varchar(128) DEFAULT NULL,
+  `client_id` varchar(64) DEFAULT NULL,
+  `app_id` varchar(64) DEFAULT NULL,
+  `session_id` varchar(64) DEFAULT NULL,
+  `device_id` varchar(128) DEFAULT NULL,
+  `client_ip` varchar(64) DEFAULT NULL,
+  `request_uri` varchar(512) DEFAULT NULL,
+  `user_agent` varchar(512) DEFAULT NULL,
+  `result` varchar(20) DEFAULT NULL COMMENT 'SUCCESS/FAILURE',
+  `reason_code` varchar(50) DEFAULT NULL,
+  `reason_detail` varchar(500) DEFAULT NULL,
+  `source_module` varchar(64) NOT NULL COMMENT '上报模块',
+  `source` varchar(50) DEFAULT NULL,
+  `operator_id` bigint DEFAULT NULL,
+  `operator_name` varchar(64) DEFAULT NULL,
+  `trace_id` varchar(64) DEFAULT NULL,
+  `extension` json DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_login_failure_dimension` (`dimension`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='登录失败保护策略（按维度）';
+  UNIQUE KEY `uk_event_id` (`event_id`),
+  KEY `idx_event_time` (`received_at`),
+  KEY `idx_event_type` (`event_type`,`received_at`),
+  KEY `idx_tenant_user` (`tenant_id`,`user_id`),
+  KEY `idx_trace` (`trace_id`),
+  KEY `idx_received_id` (`received_at`,`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统一安全事件';
 
 -- ----------------------------
--- Records of login_failure_protection_policy
+-- Records of security_event
 -- ----------------------------
 BEGIN;
-INSERT INTO `login_failure_protection_policy`
-  (`dimension`, `enabled`, `max_attempts`, `window_minutes`, `block_ttl_sec`, `block_key_type`, `remark`)
-VALUES
-  ('IP',         1, 50,  1, 3600, 'IP', '同一 IP 登录失败达阈值临时封禁'),
-  ('DEVICE',     1, 30,  5, 1800, 'DV', '同一设备指纹登录失败达阈值临时封禁'),
-  ('CLIENT',     1, 100, 5, 3600, 'CL', '同一 OAuth2 Client 登录失败达阈值临时封禁'),
-  ('ACCOUNT_IP', 1, 10,  5, 3600, 'IP', '同一账号+IP 组合登录失败达阈值封禁 IP');
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;

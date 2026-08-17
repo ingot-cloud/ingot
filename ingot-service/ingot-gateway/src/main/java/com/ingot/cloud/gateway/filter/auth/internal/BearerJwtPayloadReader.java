@@ -1,13 +1,14 @@
 package com.ingot.cloud.gateway.filter.auth.internal;
 
+import java.util.Base64;
+import java.util.Map;
+
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.commons.constants.InJwtClaimNames;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Base64;
-import java.util.Map;
 
 /**
  * 轻量读取 Bearer JWT payload 的工具类（不验签）。
@@ -19,8 +20,8 @@ import java.util.Map;
  * <ul>
  *     <li>从 {@code Authorization: Bearer &lt;token&gt;} 提取 JWT 字符串</li>
  *     <li>Base64URL 解码 payload 段（第二段），不校验 header / signature</li>
- *     <li>用户 ID 取自 claim {@link #CLAIM_USER_ID}（{@code i}），与 ingot-security
- *         {@code JwtClaimNamesExtension.ID} 一致；支持数值与字符串类型</li>
+ *     <li>claim 名一律取自 {@link InJwtClaimNames}：用户 ID 为 {@code i}，
+ *         JWT ID 为 {@code jti}；瘦身前遗留 token 可能仍带 {@code ut}</li>
  * </ul>
  *
  * <p>解析失败（格式错误、claim 缺失等）返回 {@code null}，调用方不阻断请求。</p>
@@ -29,20 +30,28 @@ import java.util.Map;
 @UtilityClass
 public class BearerJwtPayloadReader {
 
-    /** JWT payload 中用户 ID 的 claim 名；与 {@code JwtClaimNamesExtension.ID} 一致。 */
-    public static final String CLAIM_USER_ID = "i";
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
      * 从 {@code Authorization: Bearer ...} 值中提取 userId；解析失败返回 null。
      */
     public static String readUserId(String authorizationHeader) {
-        String token = extractBearerToken(authorizationHeader);
-        if (token == null) {
-            return null;
-        }
-        return readUserIdFromJwt(token);
+        return readClaimFromAuthorization(authorizationHeader, InJwtClaimNames.ID);
+    }
+
+    /**
+     * 从 {@code Authorization: Bearer ...} 值中提取 jti；解析失败返回 null。
+     */
+    public static String readJti(String authorizationHeader) {
+        return readClaimFromAuthorization(authorizationHeader, InJwtClaimNames.JTI);
+    }
+
+    /**
+     * 从 {@code Authorization: Bearer ...} 值中提取 userType（claim {@code ut}）。
+     * <p>瘦身 JWT 通常不含该 claim，仅作为遗留 token 降级路径。</p>
+     */
+    public static String readUserType(String authorizationHeader) {
+        return readClaimFromAuthorization(authorizationHeader, InJwtClaimNames.USER_TYPE);
     }
 
     static String extractBearerToken(String authorizationHeader) {
@@ -58,6 +67,18 @@ public class BearerJwtPayloadReader {
     }
 
     static String readUserIdFromJwt(String jwt) {
+        return readClaimAsString(jwt, InJwtClaimNames.ID);
+    }
+
+    private static String readClaimFromAuthorization(String authorizationHeader, String claimName) {
+        String token = extractBearerToken(authorizationHeader);
+        if (token == null) {
+            return null;
+        }
+        return readClaimAsString(token, claimName);
+    }
+
+    static String readClaimAsString(String jwt, String claimName) {
         int firstDot = jwt.indexOf('.');
         if (firstDot < 0) {
             return null;
@@ -71,7 +92,7 @@ public class BearerJwtPayloadReader {
             byte[] decoded = Base64.getUrlDecoder().decode(payloadSegment);
             Map<String, Object> claims = MAPPER.readValue(decoded, new TypeReference<>() {
             });
-            Object raw = claims.get(CLAIM_USER_ID);
+            Object raw = claims.get(claimName);
             if (raw == null) {
                 return null;
             }

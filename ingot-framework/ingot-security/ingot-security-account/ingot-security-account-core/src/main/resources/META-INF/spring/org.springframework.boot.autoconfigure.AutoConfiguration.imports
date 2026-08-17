@@ -1,1 +1,4 @@
+com.ingot.framework.security.account.domain.config.AccountLockSignalAutoConfiguration
+com.ingot.framework.security.account.domain.config.AccountLockSignalNoOpAutoConfiguration
 com.ingot.framework.security.account.domain.config.AccountDomainAutoConfiguration
+com.ingot.framework.security.account.domain.config.AccountSecurityEventPortNoOpAutoConfiguration

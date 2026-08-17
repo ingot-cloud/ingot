@@ -30,14 +30,14 @@ public interface SecurityEventPort {
     /**
      * 删除用户的所有安全事件记录（可选扩展点，默认 NoOp）
      * <p>
-     * 安全事件属于合规审计数据，删除账号时<b>默认不清理</b>。
-     * 若有 GDPR 等数据清除需求，可在业务侧覆盖此方法执行物理删除。
+     * 安全事件写入 canonical {@code security_event}，属于合规审计数据，删除账号时<b>默认不清理</b>。
+     * 若有 GDPR 等数据清除需求，可在业务侧覆盖此方法对 {@code security_event} 执行物理删除（另开变更实现）。
      * </p>
      *
      * @param userId   用户ID
      * @param userType 用户类型
      */
     default void deleteByUser(Long userId, UserTypeEnum userType) {
-        // NoOp：安全事件作为审计轨迹默认保留
+        // NoOp：canonical security_event 审计轨迹默认保留
     }
 }

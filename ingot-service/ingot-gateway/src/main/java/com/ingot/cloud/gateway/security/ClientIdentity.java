@@ -59,6 +59,16 @@ public class ClientIdentity {
     private final String userId;
 
     /**
+     * 用户类型（{@code UserTypeEnum} value）。
+     * <p>来源：{@link com.ingot.cloud.gateway.filter.auth.AuthContextRelayFilter} 从 JWT {@code ut}
+     * 或 Redis OnlineToken 补全后写入
+     * {@link com.ingot.cloud.gateway.filter.auth.AuthContextAttributes#USER_TYPE}，
+     * 再由 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter} 聚合进本对象。
+     * 供 {@link AccountLockFilter} 拼装锁定 uid key。</p>
+     */
+    private final String userType;
+
+    /**
      * OAuth2 client_id。
      * <p>来源：请求 query {@code client_id}，由 {@link com.ingot.cloud.gateway.filter.auth.IdentityResolveFilter}
      * 聚合进本对象并回填 {@code In-Inner-Client-Id} Header，供 Sentinel {@code CLIENT} 维度与名单 {@code CL} 匹配。</p>

@@ -5,9 +5,19 @@ dependencies {
     api project(ingot.framework_security_credential)
     api(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.framework_tx)
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.spring.security_crypto)
     compileOnly(deps.mybatis.plus_annotation)
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.data_redis_starter)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
 }

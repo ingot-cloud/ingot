@@ -1,0 +1,2 @@
+com.ingot.framework.security.recording.transport.feign.config.FeignSecurityEventTransportAutoConfiguration
+com.ingot.framework.security.recording.transport.feign.config.SecurityEventReportPublisherAutoConfiguration

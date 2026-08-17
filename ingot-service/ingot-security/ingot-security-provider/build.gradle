@@ -20,4 +20,7 @@ dependencies {
     implementation project(ingot.framework_tss_spring)
 
     implementation project(ingot.security_api)
+    implementation project(ingot.framework_security_recording)
+    implementation project(ingot.framework_security_event_store_mysql)
+    implementation project(ingot.framework_security_event_transport_feign)
 }

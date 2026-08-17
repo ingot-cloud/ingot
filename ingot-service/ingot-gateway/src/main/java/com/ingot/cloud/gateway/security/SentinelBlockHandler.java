@@ -1,5 +1,7 @@
 package com.ingot.cloud.gateway.security;
 
+import java.time.Duration;
+
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
@@ -24,8 +26,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
 
 /**
  * Sentinel 网关限流拒绝时的自定义 {@link BlockRequestHandler}。
@@ -74,7 +74,7 @@ public class SentinelBlockHandler implements BlockRequestHandler {
 
     private final ViolationCounter violationCounter;
     private final TempBlockStore tempBlockStore;
-    private final BlacklistEventReporter reporter;
+    private final ObjectProvider<BlacklistEventReporter> reporterProvider;
     private final ReactiveResponseWriter responseWriter;
     private final ObjectProvider<ChallengePolicyService> challengeProvider;
     private final ObjectProvider<ViolationEscalationService> violationEscalationProvider;
@@ -147,15 +147,21 @@ public class SentinelBlockHandler implements BlockRequestHandler {
         int blockThreshold = config.getBlockThreshold();
         violationCounter.incr(keyType, keyValue, ruleCode, window)
                 .flatMap(count -> {
-                    if (count != null && count >= blockThreshold) {
-                        log.info("[Sentinel] threshold reached, temp-block ip={} count={} threshold={}",
-                                keyValue, count, blockThreshold);
-                        BlacklistReportDTO dto = buildReport(exchange, identity, ruleCode,
-                                count.intValue(), (int) tempBlockTtl.getSeconds());
-                        reporter.report(dto);
-                        return tempBlockStore.block(keyType, keyValue, ruleCode, tempBlockTtl);
+                    if (count == null || count < blockThreshold) {
+                        return Mono.empty();
                     }
-                    return Mono.empty();
+                    log.info("[Sentinel] threshold reached, temp-block ip={} count={} threshold={}",
+                            keyValue, count, blockThreshold);
+                    BlacklistReportDTO dto = buildReport(exchange, identity, ruleCode,
+                            count.intValue(), (int) tempBlockTtl.getSeconds());
+                    return tempBlockStore.tryBlockFirst(keyType, keyValue, ruleCode, tempBlockTtl)
+                            .flatMap(acquired -> {
+                                if (Boolean.TRUE.equals(acquired)) {
+                                    reporterProvider.ifAvailable(reporter -> reporter.report(dto));
+                                    return Mono.just(true);
+                                }
+                                return tempBlockStore.refreshTtl(keyType, keyValue, tempBlockTtl);
+                            });
                 })
                 .subscribe(v -> {}, e -> log.warn("[Sentinel] accumulateAndMaybeBlock failed", e));
     }

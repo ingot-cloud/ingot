@@ -77,6 +77,28 @@ public class TempBlockStore {
                 .set(buildKey(keyType, keyValue), ruleCode == null ? "" : ruleCode, ttl);
     }
 
+    /**
+     * 首次占位写入临时封禁（SET NX）；已存在返回 {@code false}。
+     */
+    public Mono<Boolean> tryBlockFirst(String keyType, String keyValue, String ruleCode, Duration ttl) {
+        if (redisTemplate == null || keyValue == null) {
+            return Mono.just(false);
+        }
+        return redisTemplate.opsForValue()
+                .setIfAbsent(buildKey(keyType, keyValue), ruleCode == null ? "" : ruleCode, ttl)
+                .defaultIfEmpty(false);
+    }
+
+    /**
+     * 刷新已有临时封禁 TTL，不视为边沿。
+     */
+    public Mono<Boolean> refreshTtl(String keyType, String keyValue, Duration ttl) {
+        if (redisTemplate == null || keyValue == null) {
+            return Mono.just(false);
+        }
+        return redisTemplate.expire(buildKey(keyType, keyValue), ttl).defaultIfEmpty(false);
+    }
+
     public Mono<Long> unblock(String keyType, String keyValue) {
         if (redisTemplate == null || keyValue == null) {
             return Mono.just(0L);

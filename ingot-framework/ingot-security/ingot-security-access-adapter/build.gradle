@@ -6,6 +6,8 @@ dependencies {
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_event_bus)
     implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_security_recording)
+    implementation project(ingot.framework_security_event_transport_feign)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.spring_boot.data_redis_starter)
     implementation(deps.hutool)

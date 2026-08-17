@@ -18,6 +18,7 @@ dependencies {
     implementation project(ingot.pms_api)
     implementation project(ingot.member_api)
     implementation project(ingot.framework_security_access_adapter)
+    implementation project(ingot.framework_security_account_core)
 }
 
 

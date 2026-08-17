@@ -8,4 +8,12 @@ dependencies {
 
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
 }

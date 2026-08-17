@@ -1,0 +1,21 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    api project(ingot.framework_security_recording)
+    implementation project(ingot.framework_data_mybatis_common)
+    implementation(deps.mybatis.plus_starter)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.jackson.data_bind)
+    implementation(deps.jackson.jsr310)
+
+    compileOnly(deps.lombok)
+    annotationProcessor(deps.lombok)
+    compileOnly project(ingot.framework_tss_common)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.h2)
+}
+
+test {
+    useJUnitPlatform()
+}

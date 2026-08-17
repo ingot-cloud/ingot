@@ -79,7 +79,14 @@ public class LoginFailureProtectionService {
         if (blockValue == null) {
             return;
         }
-        tempBlockWriter.block(policy.blockKeyType(), blockValue, Duration.ofSeconds(policy.blockTtlSec()));
+        Duration ttl = Duration.ofSeconds(policy.blockTtlSec());
+        boolean first = tempBlockWriter.tryBlockFirst(policy.blockKeyType(), blockValue, ttl);
+        if (!first) {
+            tempBlockWriter.refreshTtl(policy.blockKeyType(), blockValue, ttl);
+            log.debug("[LoginFailure] temp-block already active, skip report dimension={} value={}",
+                    policy.dimension(), blockValue);
+            return;
+        }
         reportEvent(ctx, policy, count);
         log.warn("[LoginFailure] dimension={} count={} blocked keyType={} value={}",
                 policy.dimension(), count, policy.blockKeyType(), blockValue);

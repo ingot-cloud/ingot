@@ -3,6 +3,7 @@ package com.ingot.framework.security.oauth2.jwt;
 import java.util.ArrayList;
 
 import cn.hutool.core.map.MapUtil;
+import com.ingot.framework.commons.constants.InJwtClaimNames;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
@@ -52,24 +53,24 @@ public interface JwtClaimNamesExtension {
     /**
      * {@code jti} - The JWT ID claim provides a unique identifier for the JWT
      */
-    String JTI = JwtClaimNames.JTI;
+    String JTI = InJwtClaimNames.JTI;
 
     /**
      * ID
      */
-    String ID = "i";
+    String ID = InJwtClaimNames.ID;
     /**
      * 租户 ID
      */
-    String TENANT = "org";
+    String TENANT = InJwtClaimNames.TENANT;
     /**
      * 认证类型
      */
-    String AUTH_TYPE = "tat";
+    String AUTH_TYPE = InJwtClaimNames.AUTH_TYPE;
     /**
      * 用户类型
      */
-    String USER_TYPE = "ut";
+    String USER_TYPE = InJwtClaimNames.USER_TYPE;
     String SCOPE = OAuth2ParameterNames.SCOPE;
 
     static String getUsername(Jwt source) {

@@ -1,0 +1,2 @@
+com.ingot.framework.security.recording.store.mysql.config.SecurityEventStoreMysqlMapperAutoConfiguration
+com.ingot.framework.security.recording.store.mysql.config.SecurityEventStoreMysqlAutoConfiguration

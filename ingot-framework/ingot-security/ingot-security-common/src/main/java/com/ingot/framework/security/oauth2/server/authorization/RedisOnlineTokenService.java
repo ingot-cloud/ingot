@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.constants.RedisKeyConstants;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -31,12 +32,6 @@ import org.springframework.data.redis.core.ZSetOperations;
 public class RedisOnlineTokenService implements OnlineTokenService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-
-    /**
-     * Token主Key前缀
-     * 格式：token:jti:{jti}
-     */
-    private static final String TOKEN_JTI_PREFIX = "token:jti:";
 
     /**
      * 用户唯一登录索引Key前缀（仅唯一登录使用）
@@ -106,7 +101,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         }
 
         // 1. 保存主数据
-        String jtiKey = TOKEN_JTI_PREFIX + jti;
+        String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(jti);
         redisTemplate.opsForValue().set(jtiKey, onlineToken, ttl, TimeUnit.SECONDS);
 
         // 2. 如果是唯一登录，保存唯一登录索引
@@ -170,7 +165,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
             return Optional.empty();
         }
 
-        String key = TOKEN_JTI_PREFIX + jti;
+        String key = RedisKeyConstants.OnlineToken.jtiKey(jti);
         Object value = redisTemplate.opsForValue().get(key);
 
         if (value != null) {
@@ -200,7 +195,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
 
         // 2. 删除所有主数据
         jtis.forEach(jti -> {
-            String jtiKey = TOKEN_JTI_PREFIX + jti;
+            String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(String.valueOf(jti));
             redisTemplate.delete(jtiKey);
         });
 
@@ -235,7 +230,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
         OnlineToken token = tokenOpt.get();
 
         // 2. 删除主数据
-        String jtiKey = TOKEN_JTI_PREFIX + jti;
+        String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(jti);
         redisTemplate.delete(jtiKey);
 
         // 3. 从用户 Token 集合中移除
@@ -268,7 +263,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
             return false;
         }
 
-        String key = TOKEN_JTI_PREFIX + jti;
+        String key = RedisKeyConstants.OnlineToken.jtiKey(jti);
         return redisTemplate.hasKey(key);
     }
 

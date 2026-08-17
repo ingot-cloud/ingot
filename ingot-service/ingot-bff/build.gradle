@@ -17,4 +17,5 @@ dependencies {
     implementation project(ingot.framework_commons)
     implementation project(ingot.framework_openapi)
     implementation project(ingot.framework_security_crypto)
+    implementation project(ingot.framework_security_account_core)
 }

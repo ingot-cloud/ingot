@@ -3,6 +3,7 @@ package com.ingot.framework.security.account.domain.service;
 import java.time.LocalDateTime;
 
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
+import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
@@ -31,6 +32,11 @@ public class ManageAccountStatusUseCaseService implements ManageAccountStatusUse
     public void enableAccount(StatusCommand command) {
         log.info("启用账号 {}", command.getUserId());
 
+        if (isAlreadyInTargetStatus(command, true)) {
+            log.info("账号 {} 已处于启用状态，跳过重复启用", command.getUserId());
+            return;
+        }
+
         // 1. 更新启用状态
         userAccountPort.updateStatus(command.getUserId(), command.getUserType(), true);
 
@@ -55,6 +61,11 @@ public class ManageAccountStatusUseCaseService implements ManageAccountStatusUse
     public void disableAccount(StatusCommand command) {
         log.info("禁用账号 {}", command.getUserId());
 
+        if (isAlreadyInTargetStatus(command, false)) {
+            log.info("账号 {} 已处于禁用状态，跳过重复禁用", command.getUserId());
+            return;
+        }
+
         // 1. 更新禁用状态
         userAccountPort.updateStatus(command.getUserId(), command.getUserType(), false);
 
@@ -72,5 +83,12 @@ public class ManageAccountStatusUseCaseService implements ManageAccountStatusUse
         securityEventPort.publishEvent(event);
 
         log.info("账号 {} 已禁用", command.getUserId());
+    }
+
+    private boolean isAlreadyInTargetStatus(StatusCommand command, boolean targetEnabled) {
+        return userAccountPort.findById(command.getUserId(), command.getUserType())
+                .map(UserAccount::isEnabled)
+                .map(enabled -> enabled == targetEnabled)
+                .orElse(false);
     }
 }

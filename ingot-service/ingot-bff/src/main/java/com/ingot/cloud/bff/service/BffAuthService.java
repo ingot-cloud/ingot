@@ -11,10 +11,13 @@ import java.util.Map;
 
 import cn.hutool.core.util.StrUtil;
 import com.ingot.cloud.bff.client.AuthClient;
+import com.ingot.cloud.bff.config.AccountLockBffProperties;
 import com.ingot.cloud.bff.config.BffProperties;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
 import com.ingot.framework.commons.model.bff.BffSession;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.oauth2.core.endpoint.PreAuthorizationGrantType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,9 +56,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class BffAuthService {
+    private static final String CODE_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
+    private static final String MSG_ACCOUNT_LOCKED = "账号已被锁定，请联系管理员";
+
     private final BffProperties properties;
     private final BffSessionService sessionService;
     private final AuthClient authClient;
+    private final AccountLockSignalPort accountLockSignalPort;
+    private final AccountLockBffProperties accountLockBffProperties;
 
     /**
      * 第一步：登录（预授权），返回可选租户列表。
@@ -66,6 +74,13 @@ public class BffAuthService {
      * 供后续 selectTenant 调用时转发给 Auth 恢复 SecurityContext。
      */
     public R<?> login(BffLoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
+        if (accountLockBffProperties.isEnabled()
+                && !accountLockBffProperties.isEmitLoginFailureOnBffBlock()
+                && isAccountLocked(dto.getUsername())) {
+            log.info("[BffAuth] account locked, skip pre_authorize username={}", dto.getUsername());
+            return R.error(CODE_ACCOUNT_LOCKED, MSG_ACCOUNT_LOCKED);
+        }
+
         String codeVerifier = generateCodeVerifier();
         String codeChallenge = generateCodeChallenge(codeVerifier);
         String state = generateState();
@@ -239,6 +254,17 @@ public class BffAuthService {
 
         log.warn("[BffAuth] redirect_uri rejected by whitelist: {}", uri);
         return null;
+    }
+
+    private boolean isAccountLocked(String username) {
+        if (StrUtil.isBlank(username)) {
+            return false;
+        }
+        UserTypeEnum userType = UserTypeEnum.getEnum(properties.getUserType());
+        if (userType == null) {
+            userType = UserTypeEnum.ADMIN;
+        }
+        return accountLockSignalPort.isLockedByUsername(userType, username);
     }
 
     /**

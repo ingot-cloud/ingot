@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ingot.framework.security.recording.store.mysql.mapper.SecurityEventStoreMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO security_event (
+            event_id, event_type, event_category, priority, occurred_at, received_at,
+            tenant_id, user_id, user_type, account,
+            client_id, app_id, session_id, device_id,
+            client_ip, request_uri, user_agent,
+            result, reason_code, reason_detail,
+            source_module, source, operator_id, operator_name, trace_id, extension
+        ) VALUES
+        <foreach collection="records" item="item" separator=",">
+            (
+                #{item.eventId}, #{item.eventType}, #{item.eventCategory}, #{item.priority},
+                #{item.occurredAt}, #{item.receivedAt},
+                #{item.tenantId}, #{item.userId}, #{item.userType}, #{item.account},
+                #{item.clientId}, #{item.appId}, #{item.sessionId}, #{item.deviceId},
+                #{item.clientIp}, #{item.requestUri}, #{item.userAgent},
+                #{item.result}, #{item.reasonCode}, #{item.reasonDetail},
+                #{item.sourceModule}, #{item.source}, #{item.operatorId}, #{item.operatorName},
+                #{item.traceId}, #{item.extensionJson}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE event_id = event_id
+    </insert>
+
+    <select id="selectByCursor" resultType="com.ingot.framework.security.recording.store.mysql.model.CanonicalSecurityEventEntity">
+        SELECT *
+        FROM security_event
+        WHERE received_at &gt;= #{receivedFrom}
+          AND received_at &lt;= #{receivedTo}
+        <if test="query.eventType != null and query.eventType != ''">
+            AND event_type = #{query.eventType}
+        </if>
+        <if test="query.eventCategory != null and query.eventCategory != ''">
+            AND event_category = #{query.eventCategory}
+        </if>
+        <if test="query.tenantId != null">
+            AND tenant_id = #{query.tenantId}
+        </if>
+        <if test="query.userId != null">
+            AND user_id = #{query.userId}
+        </if>
+        <if test="query.sourceModule != null and query.sourceModule != ''">
+            AND source_module = #{query.sourceModule}
+        </if>
+        <if test="query.traceId != null and query.traceId != ''">
+            AND trace_id = #{query.traceId}
+        </if>
+        <if test="cursorReceivedAt != null and cursorId != null">
+            AND (received_at &lt; #{cursorReceivedAt}
+                 OR (received_at = #{cursorReceivedAt} AND id &lt; #{cursorId}))
+        </if>
+        ORDER BY received_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectExpiredIds" resultType="long">
+        SELECT id
+        FROM security_event
+        WHERE received_at &lt; #{cutoff}
+        ORDER BY received_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteByIds">
+        DELETE FROM security_event
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="acquireNamedLock" resultType="java.lang.Integer">
+        SELECT GET_LOCK(#{lockName}, 0)
+    </select>
+
+    <select id="releaseNamedLock" resultType="java.lang.Integer">
+        SELECT RELEASE_LOCK(#{lockName})
+    </select>
+</mapper>
