@@ -188,8 +188,9 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — approved（Phase 03 起 L4 已验收，门禁已解除）
+- [统一分层缓存框架抽象与消费者迁移](./changes/active/20260730-framework-layered-cache/README.md) — in-progress（Phase 03 起 L4 已验收，门禁已解除）
 - [安全事件类型 SoT 收敛与 code 常量解耦](./changes/active/20260812-security-event-type-sot-cleanup/README.md) — draft
+- [会话安全（L5）](./changes/active/20260817-security-session-safety/README.md) — draft
 
 已归档（2026）：
 

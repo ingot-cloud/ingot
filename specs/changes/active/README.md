@@ -13,4 +13,5 @@
 当前变更：
 
 - [`20260730-framework-layered-cache`](./20260730-framework-layered-cache/) — 统一分层缓存框架抽象与消费者迁移，状态 `in-progress`
-- [`20260804-security-event-storage-pipeline`](./20260804-security-event-storage-pipeline/) — 安全事件统一 SPI、可靠投递与可插拔存储，状态 `review`
+- [`20260812-security-event-type-sot-cleanup`](./20260812-security-event-type-sot-cleanup/) — 安全事件类型 SoT 收敛与 code 常量解耦，状态 `draft`
+- [`20260817-security-session-safety`](./20260817-security-session-safety/) — 安全中心 L5 会话安全（sid 模型、撤销彻底性、中心管理面、并发策略），状态 `draft`
