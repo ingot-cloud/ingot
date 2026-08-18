@@ -29,7 +29,7 @@
 - [ ] A10：remote 停中心走 LKG/地板；改地板不重启，新登录行为变化。
 - [ ] overflow 三种行为有测试。
 - [ ] ADMIN 禁止并发生效。
-- [ ] current 反映 As-Built；已知限制（5.2 设备维度、交互式踢人、BFF 主动失效）写入 SPEC。
+- [ ] current 反映 As-Built；已知限制写入 SPEC：5.2 设备维度、交互式踢人、**非自助路径不清 BFF 会话键（D19，含收敛路径说明以免后人误当 bug）**、网关仍暴露 `/auth/client/**`（D21）。
 
 ## 回滚
 
