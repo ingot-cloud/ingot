@@ -1,6 +1,6 @@
 # 会话安全（L5）
 
-> 状态：draft
+> 状态：implementing（Phase 01–02 代码与单测完成，待联调环境执行集成验收）
 
 ## 元数据
 
@@ -105,7 +105,7 @@ D6–D18 全文见 [DESIGN 决策表](./DESIGN.md#关键设计决策)。下表�
 
 D6、D7、D9–D16、D18 按 DESIGN 推荐决议闭合（`sid = authorizationId`、保留 `OnlineToken` 类名、中心不直连 Auth Redis、无 JWT 黑名单、lastAccessAt 不写热路径、IP 索引、注册表清理、`USER_CLIENT` 维度、client UNIQUE/STANDARD 映射、账号联动范围、租户级踢光 Inner 预留）。
 
-审阅通过后 change 状态转 `approved`，再进入实施。
+审阅通过（2026-08-18）后 change 转 `approved`，随即进入 Phase 01 实施。
 
 ## 完成记录
 

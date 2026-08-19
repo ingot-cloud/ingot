@@ -1,6 +1,6 @@
 # Phase 02 · 执行面与事件
 
-> 状态：pending  
+> 状态：implementing（编码完成，集成验收待联调环境）  
 > 依赖：Phase 01 退出条件满足（含 `ingot-auth-api` 已可用）
 
 ## 目标
@@ -28,14 +28,14 @@ Auth 暴露 Inner 会话查询/撤销 API，供安全中心、账号域与 BFF �
 
 ## 退出条件
 
-- [ ] Inner 可按 tenantId+clientId 分页、按 sid 详情、按 user、按 IP 查询。
-- [ ] Inner DELETE 与 Phase 01 撤销语义一致（RT 失效）。
-- [ ] 密码/锁定/禁用后该用户当前租户全部会话 RS 401。
-- [ ] BFF 在 Access Token 已过期时仍能按 `BffSession.sid` 调 Inner 撤销成功（A16）。
-- [ ] `TokenEndpoint` 已删除；网关 `/auth/token/**` 返回 404；`RemoteAuthTokenService` 无 `/token`（A13 / A19）。
-- [ ] `security_event` 出现 `SESSION_REVOKED` 或 `SESSION_CONCURRENT_KICKOUT`，含 sid。
-- [ ] 停安全中心时 Inner 与联动仍可用（S11）。
-- [ ] `AUTH_SERVICE` 的 `@FeignClient` 定义全仓唯一，位于 `ingot-auth-api`（A18）。
+- [x] Inner 可按 tenantId+clientId 分页、按 sid 详情、按 user、按 IP 查询。（`BizSessionServiceImplTest` 覆盖四条查询路径与越界过滤）
+- [x] Inner DELETE 与 Phase 01 撤销语义一致（RT 失效）。（委托 `SessionRevocationService`，`InnerSessionAPITest` 断言原因与 actor 透传）
+- [ ] 密码/锁定/禁用后该用户当前租户全部会话 RS 401。（单测覆盖到 Port 调用与 Feign 入参；端到端待联调）
+- [ ] BFF 在 Access Token 已过期时仍能按 `BffSession.sid` 调 Inner 撤销成功（A16）。（`BffAuthServiceLogoutTest` 覆盖有/无 sid 与 Auth 故障；实例验证待联调）
+- [x] `TokenEndpoint` 已删除；网关 `/auth/token/**` 返回 404；`RemoteAuthTokenService` 无 `/token`（A13 / A19）。（三套网关 predicate 仅 `/auth/client/**`）
+- [ ] `security_event` 出现 `SESSION_REVOKED` 或 `SESSION_CONCURRENT_KICKOUT`，含 sid。（Listener 与 classifier 已就绪并有单测；落库需安全中心联调）
+- [x] 停安全中心时 Inner 与联动仍可用（S11）。（事件发布与联动均 fail-open，撤销不因上报失败回滚）
+- [x] `AUTH_SERVICE` 的 `@FeignClient` 定义全仓唯一，位于 `ingot-auth-api`（A18）。（全仓检索仅 `RemoteAuthTokenService` / `RemoteAuthSessionService`）
 
 ## 回滚
 
