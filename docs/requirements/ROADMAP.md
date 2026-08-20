@@ -2,7 +2,7 @@
 
 > 跟踪 Ingot 平台级能力演进与持续优化。条目进入开发时链接 `specs/changes/active/` change；完成后链接 `specs/current/` 或 `docs/modules/`。
 
-**最后 review**：2026-07-30
+**最后 review**：2026-08-20
 
 ## 状态说明
 
@@ -60,9 +60,21 @@
 | ID | 主题 | 动机 | 状态 | 关联 |
 |----|------|------|------|------|
 | R-2026-020 | 可观测性增强 | 统一 metrics / tracing / 告警规则 | planned | [排查指南 § 监控](../guides/troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md) |
-| R-2026-021 | Token 与会话优化 | 降低 Redis 压力、提升在线用户查询效率 | planned | [Token 优化](../modules/authorization-server/TOKEN-OPTIMIZATION-GUIDE.md) |
+| R-2026-021 | Token 与会话优化 | 降低 Redis 压力、提升在线用户查询效率。**不得打断 JWT 瘦身后的 InUser 补全**，约束见下节 | planned | [Token 优化](../modules/authorization-server/TOKEN-OPTIMIZATION-GUIDE.md) · [L5 会话安全](../../specs/changes/active/20260817-security-session-safety/) |
 | R-2026-022 | 凭证安全策略扩展 | 更多租户级策略模板与审计 | planned | [模块文档](../modules/credential-security/) |
 | R-2026-023 | 社交登录能力扩展 | 除微信外更多 OAuth 提供商 | planned | [社交模块](../modules/social/) |
+
+### R-2026-021 开工约束（写 spec 前必读）
+
+当前资源服务器还原登录身份的契约是：**JWT 只带定位字段，完整权限从会话补全**。
+
+- JWT 瘦身：claims 只保留 `sid` / `userId` / `tenantId` / `scope` 等定位信息，不携带完整 `authorities`。
+- 补全入口：`JwtInUserConverter` 按 `sid` 读 `token:sid:{sid}`（`OnlineToken`），把会话中的 `authorities`、`userType`、`deptIds` 与 JWT `scope` 合并后构建 `InUser`。业务微服务从 `SecurityAuthContext` 拿到的角色/权限依赖这一步，而不是 JWT 自身。
+- **允许**：换权限存放位置（例如按用户/角色做共享缓存，会话只存引用或版本号），以降低每会话拷贝一份权限列表带来的 Redis 内存压力。
+- **不允许**：从 `OnlineToken` 删掉 `authorities`（或停止在 Converter 里合并）却不提供等价补全路径。那样 JWT 瘦身仍然成立，但各微服务拿到的 `InUser` 会丢失角色与细粒度权限。
+- 开工时必须把「Converter 构建的 `InUser` 仍含完整 authorities / userType / deptIds」写成验收标准；实现偏离须先改 spec 再改代码。
+
+该约束来自 L5 会话安全实施期间的评审（2026-08-20），避免 021 被理解成「把会话主数据再瘦一刀」而破坏现网授权还原。
 
 ---
 
