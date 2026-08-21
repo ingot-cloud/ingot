@@ -193,6 +193,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [用枚举统一策略来源与事件投递配置](./changes/archive/2026/20260821-framework-policy-source-mode-enum/README.md)
 - [会话安全（L5）](./changes/archive/2026/20260817-security-session-safety/README.md)
 - [安全事件边沿去重与账号锁定链路短路](./changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/README.md)
 - [物理下线 account_security_event 表](./changes/archive/2026/20260811-security-drop-account-security-event/README.md)
