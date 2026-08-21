@@ -67,7 +67,7 @@ ingot:
         # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
         spool:
           # spool 根目录（append-only segment 文件）。
-          directory: ./logs/security-recording/spool
+          directory: /ingot-data/security-recording/spool
           # spool 目录总磁盘配额（如 1GB、512MB）。
           max-bytes: 1GB
           # 单个 segment 文件大小上限，达上限滚动新文件。
