@@ -32,6 +32,37 @@ ingot:
       enable-encryption: true
     access:
       mode: remote
+    session:
+      # 会话存储不可用宽限期；超期一律拒绝，会话键不存在不在宽限范围内
+      store-unavailable-grace: 30s
+      # remote：并发策略取自安全中心，下面的 concurrency 段退化为 Nacos 地板
+      mode: remote
+      policy:
+        resilience-enabled: true
+        fallback:
+          # 远端不可用且无 LKG 时回落地板；置 false 则该场景 fail-closed 拒绝新登录
+          local-floor-enabled: true
+        cache:
+          l1-ttl: 1m
+          l2-ttl: 10m
+      concurrency:
+        enabled: true
+        max-sessions: 0
+        dimension: USER_CLIENT
+        overflow: KICK_OLDEST
+        admin-forbid-concurrent: false
+    event:
+      # 安全事件总开关；false 时不做任何上报
+      enabled: true
+      # center：会话撤销等 AUTH 事件 Feign 上报安全中心，Auth 本库不落 security_event
+      target: center
+      shadow-targets: []
+      # 写入 security_event.source_module
+      sourceModule: AUTH
+      categories:
+        auth: true
+      retention:
+        enabled: false
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:true}  # 生产环境关闭

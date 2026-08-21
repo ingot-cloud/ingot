@@ -1,6 +1,6 @@
 # 会话安全（L5）
 
-> 状态：implementing（Phase 01–02 代码与单测完成，待联调环境执行集成验收）
+> 状态：completed（已验收，已更新 current，已归档）
 
 ## 元数据
 
@@ -11,9 +11,9 @@
 | 负责人 | jy |
 | 创建日期 | 2026-08-17 |
 | 目标发布日期 | TBD |
-| Roadmap | [安全中心分阶段落地 Roadmap](../../../../docs/requirements/themes/security-center-roadmap.md) · L5 |
-| 需求来源 | [安全中心服务需求 §五 5.1 / 5.3 / 5.4](../../../../docs/requirements/themes/security-center-service.md) |
-| 平台路线 | 建议编号 `R-2026-028`（见 [ROADMAP.md](../../../../docs/requirements/ROADMAP.md) Next） |
+| Roadmap | [安全中心分阶段落地 Roadmap](../../../../../docs/requirements/themes/security-center-roadmap.md) · L5 |
+| 需求来源 | [安全中心服务需求 §五 5.1 / 5.3 / 5.4](../../../../../docs/requirements/themes/security-center-service.md) |
+| 平台路线 | `R-2026-028`（见 [ROADMAP.md](../../../../../docs/requirements/ROADMAP.md)） |
 
 ## 目标
 
@@ -41,7 +41,7 @@
 |------|------|
 | L3 统一安全事件中心 | 下线原因入 `security_event`；复用 `SecurityEventPublisher` |
 | L4 访问防护 | Platform / Inner / Feign 三分法与 `SecurityPolicyDomain` 失效广播范式 |
-| `ingot-cache` 分层缓存 | [20260730-framework-layered-cache](../20260730-framework-layered-cache/README.md) Phase 01/02 已完成；Phase 04 并发策略直接用 `LayeredCacheBuilder`（见 D4） |
+| `ingot-cache` 分层缓存 | [20260730-framework-layered-cache](../../active/20260730-framework-layered-cache/README.md) Phase 01/02 已完成；Phase 04 并发策略直接用 `LayeredCacheBuilder`（见 D4） |
 | 现网会话基线 | `RedisOnlineTokenService` + `RedisOAuth2AuthorizationService` + `TokenEndpoint` |
 
 ## 范围
@@ -74,7 +74,7 @@
 - **非自助路径的 BFF 会话清理**：管理员下线 / 账号联动 / 并发踢旧后，`in:bff_session:{sessionId}` 不做跨服务清除，浏览器由一次 401 引导重登、残键随 TTL 消亡（D19 否决直删方案）。
 - **`DevClientAPI` / `/auth/client/**` 迁移**：网关继续暴露该端点，本期不迁移（D21）。
 - **旧 JWT / 旧 API 均不兼容**（D2 / D17）：无 sid 的存量 Token 上线即失效；`TokenEndpoint` 本 change 内删除，不保留 deprecated 包装。
-- **R-2026-021 Token 与会话优化**（Redis 压力 / 查询性能专项，Later 独立项）。
+- **R-2026-021 Token 与会话优化**（Redis 压力 / 查询性能专项，Later 独立项）。开工前必须遵守 [ROADMAP R-2026-021 约束](../../../../../docs/requirements/ROADMAP.md#r-2026-021-开工约束写-spec-前必读)：不得打断 JWT 瘦身后由会话补全 `InUser` 的契约。
 
 ## 工件
 
@@ -85,6 +85,7 @@
 - [Phase 02 执行面与事件](./phases/02-execution-events.md)
 - [Phase 03 中心管理面](./phases/03-center-admin.md)
 - [Phase 04 并发会话策略](./phases/04-concurrency-policy.md)
+- [安全中心会话管理 Platform API（前端对接）](./PLATFORM-API.md)——含 Phase 03 会话查询/下线与 Phase 04 并发策略 CRUD
 
 ## 待审阅决策（D1–D21）
 
@@ -109,11 +110,15 @@ D6、D7、D9–D16、D18 按 DESIGN 推荐决议闭合（`sid = authorizationId`
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：`specs/current/security/session-safety/`（验收后新建）
+- 完成日期：2026-08-20（验收通过）
+- 关联提交或 PR：工作区实施提交（sid 模型、Auth api/provider 拆分、会话管理面、并发策略、Redis 存储收敛）
+- 更新的 current capability：`specs/current/security/session-safety/`（新建 README + SPEC）
 - 与原设计的差异：
-- 取消原因：
+  - Phase 01：会话 Redis 存储收敛——`extendExpire` 不再把 `-1` 当永久；运行时停写 `token:jti` / UNIQUE `token:user`；IP 集合默认上限 1000；小时任务清过期 userSet。
+  - Phase 03：Platform 会话路径按 `sessions` 复数收敛（DESIGN 表格 `/session` + `/sessions` 会拼出 `session/sessions`，属笔误）。
+  - Phase 04：权限码种子单独起 `017`（`016` 的目标库是 `ingot_security`，权限表在 `ingot_core`）；策略失效订阅拆到 `SessionConcurrencyInvalidationAutoConfiguration`（用户配置阶段无法可靠判定 `InvalidationBus` 是否存在）；`scope` 匹配确定为「命中即止」不做字段合并；GLOBAL 兜底策略禁止删除。
+  - 详见各 phase 的实施记录小节。
+- 取消原因：—
 
 ## 后续跟踪（拆出为新 change）
 

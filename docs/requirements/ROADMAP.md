@@ -51,7 +51,7 @@
 | R-2026-025 | 统一安全事件中心 | 跨模块安全事实统一模型与中心入库，支撑后续安全概览 | done | [change](../../specs/changes/archive/2026/20260729-security-event-center/) · [current](../../specs/current/security/security-event-center/) · [roadmap](./themes/security-center-roadmap.md) |
 | R-2026-026 | 访问防护补全 | 网关策略执行面收口、Sentinel 统一限流、3.1 四维度防爆破与 remote 弹性 | done | [change](../../specs/changes/archive/2026/20260729-security-access-protection/) · [current](../../specs/current/security/access-protection/) · [roadmap](./themes/security-center-roadmap.md) |
 | R-2026-027 | 统一分层缓存框架 | 消除 credential/gateway/access/dict 四处重复的分层缓存与降级实现，补齐 TTL 兜底与共享快照层 | in-spec | [change](../../specs/changes/active/20260730-framework-layered-cache/) |
-| R-2026-028 | 会话安全（L5） | 在线会话 sid 模型、强制下线彻底性、安全中心管理面、并发策略可降级 | in-spec | [change](../../specs/changes/active/20260817-security-session-safety/) · [roadmap](./themes/security-center-roadmap.md) |
+| R-2026-028 | 会话安全（L5） | 在线会话 sid 模型、强制下线彻底性、安全中心管理面、并发策略可降级 | done | [change](../../specs/changes/archive/2026/20260817-security-session-safety/) · [current](../../specs/current/security/session-safety/) · [roadmap](./themes/security-center-roadmap.md) |
 
 ---
 
@@ -60,7 +60,7 @@
 | ID | 主题 | 动机 | 状态 | 关联 |
 |----|------|------|------|------|
 | R-2026-020 | 可观测性增强 | 统一 metrics / tracing / 告警规则 | planned | [排查指南 § 监控](../guides/troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md) |
-| R-2026-021 | Token 与会话优化 | 降低 Redis 压力、提升在线用户查询效率。**不得打断 JWT 瘦身后的 InUser 补全**，约束见下节 | planned | [Token 优化](../modules/authorization-server/TOKEN-OPTIMIZATION-GUIDE.md) · [L5 会话安全](../../specs/changes/active/20260817-security-session-safety/) |
+| R-2026-021 | Token 与会话优化 | 降低 Redis 压力、提升在线用户查询效率。**不得打断 JWT 瘦身后的 InUser 补全**，约束见下节 | planned | [Token 优化](../modules/authorization-server/TOKEN-OPTIMIZATION-GUIDE.md) · [L5 会话安全](../../specs/current/security/session-safety/) · [change](../../specs/changes/archive/2026/20260817-security-session-safety/) |
 | R-2026-022 | 凭证安全策略扩展 | 更多租户级策略模板与审计 | planned | [模块文档](../modules/credential-security/) |
 | R-2026-023 | 社交登录能力扩展 | 除微信外更多 OAuth 提供商 | planned | [社交模块](../modules/social/) |
 
@@ -84,6 +84,7 @@
 
 - PMS 应用中心化授权（2026-06）
 - 账号保护全用户闭环 + lockout 策略土台（2026-07）
+- 会话安全：sid 模型、强制下线彻底性、安全中心管理面、并发策略可降级（2026-08）
 - JWK 密钥管理、传输层加密、网关 Header 约定
 - 网关限流与安全策略执行面
 - 微服务性能优化与故障排查文档体系（2025-12）

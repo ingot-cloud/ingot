@@ -54,8 +54,8 @@ auth-assemble:
       -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
       -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
       -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
-      :ingot-service:ingot-auth:ingotAssemble
-    - gradle :ingot-service:ingot-auth:shiftDockerfileIngotAuth
+      :ingot-service:ingot-auth:ingot-auth-provider:ingotAssemble
+    - gradle :ingot-service:ingot-auth:ingot-auth-provider:shiftDockerfileIngotAuth
   when: manual
   tags: [ingot]
 

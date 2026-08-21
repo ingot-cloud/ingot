@@ -34,12 +34,12 @@
 - `SessionRevocationService` **不含**任何 BFF 键操作 —— Auth 无出向依赖，不读写 `in:bff_session:*`（D19）。
 - `OnlineTokenTask`：遍历 `session:online:registry`，禁止 `keys()`。
 - `TokenEndpoint`：本 Phase 仅保留 `DELETE /token` 作为施工桥并改为 `revokeBySid`；`/tokens` `/jti` `/user` 可在本 Phase 直接删除（D17，无兼容窗口），最迟 Phase 02 整类删除。
-- 发布运维脚本 [`bin/session_keys_purge.sh`](../../../../../bin/session_keys_purge.sh)：SCAN 清空 `in:bff_session:*`、`token:jti:*`、`token:sid:*`、`token:user:*`、`online:user:*`、`session:ip:*`、`session:online:registry`、`oauth2:auth:*`、`oauth2:token:*`（用 SCAN + UNLINK，不用 KEYS），随发布执行。因不做运行时跨服务清理，这是清除存量 BFF 会话键的唯一时机。
+- 发布运维脚本 [`bin/session_keys_purge.sh`](../../../../../../bin/session_keys_purge.sh)：SCAN 清空 `in:bff_session:*`、`token:jti:*`、`token:sid:*`、`token:user:*`、`online:user:*`、`session:ip:*`、`session:online:registry`、`oauth2:auth:*`、`oauth2:token:*`（用 SCAN + UNLINK，不用 KEYS），随发布执行。因不做运行时跨服务清理，这是清除存量 BFF 会话键的唯一时机。
 
 ## 退出条件
 
 - [ ] 新登录 JWT 含 sid 且等于 authorizationId。（待联调环境验证）
-- [ ] refresh 后 sid 不变、旧 jti key 删除、Refresh Token 仍对应同一 authorization。（单测 `RedisOnlineTokenServiceTest.save_onRenew_dropsPreviousJtiIndexAndKeepsIssuedAt` 已覆盖索引轮换，端到端待联调）
+- [ ] refresh 后 sid 不变、Refresh Token 仍对应同一 authorization。（单测 `RedisOnlineTokenServiceTest.save_onRenew_keepsIssuedAtAndDoesNotWriteJtiIndex`；运行时已不再写 jti 索引，端到端待联调）
 - [x] 无 sid 的 JWT 被 RS 拒绝；代码中无 jti 回退与 `convertFromJwtOnly` 放行分支（A15）。（`JwtInUserConverterTest`；全仓检索 `convertFromJwtOnly` 无命中）
 - [ ] 管理员通过 `SessionRevocationService`（或临时 Inner 前的测试入口）按下线后，Refresh Token 换发失败；STANDARD 客户端 RS 拒绝旧 AT。（`DefaultSessionRevocationServiceTest` 覆盖级联撤销，端到端待联调）
 - [ ] UNIQUE 新登录后旧 RT 无效。（`SessionRegistrarTest.uniqueLogin_revokesPreviousSession` 覆盖踢旧调用，端到端待联调）
@@ -48,6 +48,10 @@
 - [x] 清理代码路径无 `redisTemplate.keys`。（`OnlineTokenTask` / `RedisOnlineTokenService` 均走 `session:online:registry`）
 - [x] `ingot-auth-api` / `ingot-auth-provider` 可编译；BFF 走 `RemoteAuthTokenService`，自建 `AuthClient` 已删除。
 - [x] 相关单测通过。（framework 新增 24 例 + gateway / bff / auth 既有单测全绿）
+
+## 实施记录（As-Built）
+
+会话 Redis 存储收敛（T1-2b）：`token:user:set` / `session:ip` 的 `extendExpire` 原先把 `TTL=-1` 当成永久，`SADD` 新建的 key 永远补不上过期。已改为 `-1` 必须补 TTL；读路径 `MGET` 后 `SREM` 墓碑；撤销后按剩余会话回写 `online:user` score；小时任务删除过期 userId 对应的 userSet。运行时不再写 `token:jti` 与 UNIQUE `token:user` 索引。IP 集合默认上限 1000。管理面按 Client 分页改为批量读取。不瘦身 `token:sid` 内 authorities（见 ROADMAP R-2026-021 约束）。
 
 ## 发布预案
 

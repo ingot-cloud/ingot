@@ -33,7 +33,7 @@ export default defineConfig(({ mode, command, ssrBuild }) => {
     build: {
       outDir: resolve(
         __dirname,
-        "../../ingot-service/ingot-auth/src/main/resources"
+        "../../ingot-service/ingot-auth/ingot-auth-provider/src/main/resources"
       ),
       rollupOptions: {
         input: {

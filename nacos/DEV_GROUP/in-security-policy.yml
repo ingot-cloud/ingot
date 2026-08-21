@@ -103,8 +103,6 @@ ingot:
             name: 登录入口（地板）
             enabled: true
             pattern-list:
-              - path: /auth/token/**
-                method: ANY
               - path: /bff/auth/login
                 method: POST
           - code: api-business-floor

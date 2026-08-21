@@ -297,4 +297,32 @@ CREATE TABLE `security_event` (
 BEGIN;
 COMMIT;
 
+-- ----------------------------
+-- Table structure for session_concurrency_policy
+-- ----------------------------
+DROP TABLE IF EXISTS `session_concurrency_policy`;
+CREATE TABLE `session_concurrency_policy` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `scope` varchar(16) NOT NULL COMMENT '生效范围: GLOBAL/CLIENT/USER_TYPE',
+  `client_id` varchar(64) NOT NULL DEFAULT '' COMMENT 'scope=CLIENT 时的 clientId，其余为空串',
+  `user_type` varchar(8) NOT NULL DEFAULT '' COMMENT 'scope=USER_TYPE 时的用户类型，其余为空串',
+  `max_sessions` int NOT NULL DEFAULT '0' COMMENT '同一维度最大会话数，0=不限制',
+  `dimension` varchar(16) NOT NULL DEFAULT 'USER_CLIENT' COMMENT '并发计数维度: USER_CLIENT',
+  `overflow` varchar(16) NOT NULL DEFAULT 'KICK_OLDEST' COMMENT '超限行为: REJECT/KICK_OLDEST/KICK_ALL',
+  `admin_forbid_concurrent` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'ADMIN 用户强制单会话',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_session_concurrency_scope` (`scope`,`client_id`,`user_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='并发会话策略';
+
+-- ----------------------------
+-- Records of session_concurrency_policy
+-- ----------------------------
+BEGIN;
+INSERT INTO `session_concurrency_policy` (`id`, `scope`, `client_id`, `user_type`, `max_sessions`, `dimension`, `overflow`, `admin_forbid_concurrent`, `enabled`, `remark`, `created_at`, `updated_at`) VALUES (1, 'GLOBAL', '', '', 0, 'USER_CLIENT', 'KICK_OLDEST', 0, 1, '全局兜底：不限制并发会话', '2026-08-19 10:00:00', '2026-08-19 10:00:00');
+COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;

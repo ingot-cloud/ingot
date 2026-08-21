@@ -1,6 +1,6 @@
 # Requirements
 
-来源：[安全中心服务需求 §五](../../../../docs/requirements/themes/security-center-service.md) 的 5.1 在线会话、5.3 并发会话、5.4 强制下线。5.2 登录设备为非目标。
+来源：[安全中心服务需求 §五](../../../../../docs/requirements/themes/security-center-service.md) 的 5.1 在线会话、5.3 并发会话、5.4 强制下线。5.2 登录设备为非目标。
 
 ## 用户场景
 
@@ -182,22 +182,22 @@
 
 ## 验收标准
 
-- [ ] A1：新登录 JWT 含 `sid`，且 `sid == authorizationId`。
-- [ ] A2：refresh 后 `sid` 不变、`jti` 变；旧 jti 的 Redis key 不残留。
-- [ ] A3：管理员按 sid 下线后，Access Token 立即被 RS 拒绝，Refresh Token 换发失败。
-- [ ] A4：`STANDARD` 客户端执行 A3 同样成功（不再 JWT-only 放行）。
-- [ ] A5：BFF 自助登出与管理员下线共用同一 `SessionRevocationService`（均经 Auth Inner；Authorization + 会话索引）。
-- [ ] A6：UNIQUE / `maxSessions=1` 新登录踢旧后，旧 Refresh Token 无效。
-- [ ] A7：密码修改、密码重置、锁定、禁用后，该用户当前租户会话全部失效。
-- [ ] A8：安全中心可按租户+Client 分页查看在线会话，并展示用户/租户名称（PMS 拼装）。
-- [ ] A9：不部署安全中心时，登录 / refresh / BFF 自助登出 / local 并发策略仍可用。
-- [ ] A10：`mode=remote` 时停安全中心，并发策略走 LKG 或 Nacos 地板；改 Nacos 地板无重启后新登录行为变化（动态刷新）。
-- [ ] A11：强制下线写入 `SESSION_REVOKED`（或并发场景 `SESSION_CONCURRENT_KICKOUT`），含 sid 与原因。
-- [ ] A12：过期在线用户清理不再调用 `RedisTemplate.keys`。
-- [ ] A13：`TokenEndpoint` 及 `/token/**` 已删除；代码与网关均无该路径；无 deprecated 包装（D8 / D17）。
-- [ ] A14：D1–D21 已在 DESIGN 决策表闭合，实现与决议一致。
-- [ ] A15：无 `sid` claim 的 JWT 被 RS 拒绝，代码中不存在 jti 回退或 `convertFromJwtOnly` 放行分支。
-- [ ] A16：BFF 自助登出按 `BffSession.sid` 调 Auth Inner 撤销成功（含 Access Token 已过期的场景），并清除自己的会话键与 Cookie。
-- [ ] A17：管理员下线 BFF 来源会话后，Auth 侧代码路径未访问 `in:bff_session:*`；该浏览器下次请求得 401 且重登可恢复（D19 行为断言）。
-- [ ] A18：`ingot-auth-api` 已落地；会话与 Token Feign 契约均在该模块，`ingot-security-api` 与 BFF 内无重复定义；BFF 自建 `AuthClient` 已删除（D20）。
-- [ ] A19：网关 `in-service-auth` 路由仅剩 `/auth/client/**`。
+- [x] A1：新登录 JWT 含 `sid`，且 `sid == authorizationId`。
+- [x] A2：refresh 后 `sid` 不变、`jti` 变；旧 jti 的 Redis key 不残留。
+- [x] A3：管理员按 sid 下线后，Access Token 立即被 RS 拒绝，Refresh Token 换发失败。
+- [x] A4：`STANDARD` 客户端执行 A3 同样成功（不再 JWT-only 放行）。
+- [x] A5：BFF 自助登出与管理员下线共用同一 `SessionRevocationService`（均经 Auth Inner；Authorization + 会话索引）。
+- [x] A6：UNIQUE / `maxSessions=1` 新登录踢旧后，旧 Refresh Token 无效。
+- [x] A7：密码修改、密码重置、锁定、禁用后，该用户当前租户会话全部失效。
+- [x] A8：安全中心可按租户+Client 分页查看在线会话，并展示用户/租户名称（PMS 拼装）。
+- [x] A9：不部署安全中心时，登录 / refresh / BFF 自助登出 / local 并发策略仍可用。
+- [x] A10：`mode=remote` 时停安全中心，并发策略走 LKG 或 Nacos 地板；改 Nacos 地板无重启后新登录行为变化（动态刷新）。
+- [x] A11：强制下线写入 `SESSION_REVOKED`（或并发场景 `SESSION_CONCURRENT_KICKOUT`），含 sid 与原因。
+- [x] A12：过期在线用户清理不再调用 `RedisTemplate.keys`。
+- [x] A13：`TokenEndpoint` 及 `/token/**` 已删除；代码与网关均无该路径；无 deprecated 包装（D8 / D17）。
+- [x] A14：D1–D21 已在 DESIGN 决策表闭合，实现与决议一致。
+- [x] A15：无 `sid` claim 的 JWT 被 RS 拒绝，代码中不存在 jti 回退或 `convertFromJwtOnly` 放行分支。
+- [x] A16：BFF 自助登出按 `BffSession.sid` 调 Auth Inner 撤销成功（含 Access Token 已过期的场景），并清除自己的会话键与 Cookie。
+- [x] A17：管理员下线 BFF 来源会话后，Auth 侧代码路径未访问 `in:bff_session:*`；该浏览器下次请求得 401 且重登可恢复（D19 行为断言）。
+- [x] A18：`ingot-auth-api` 已落地；会话与 Token Feign 契约均在该模块，`ingot-security-api` 与 BFF 内无重复定义；BFF 自建 `AuthClient` 已删除（D20）。
+- [x] A19：网关 `in-service-auth` 路由仅剩 `/auth/client/**`。

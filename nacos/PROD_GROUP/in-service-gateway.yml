@@ -39,7 +39,7 @@ spring:
             - id: in-service-auth
               uri: lb://in-service-auth
               predicates:
-                - Path=/auth/client/**,/auth/token/**
+                - Path=/auth/client/**
               filters:
                 - StripPrefix=1
 
@@ -82,8 +82,7 @@ ingot:
         enabled: false
   vc:
     verifyUrls:
-      - image,/auth/oauth2/token,POST
-      - image,/auth/oauth2/pre_authorize,POST
+      # 登录入口统一在 BFF；/auth/oauth2/** 不经网关暴露，无需校验验证码
       - image,/bff/auth/login,POST
     image:
       opsLimitGetPerMinute: 20

@@ -116,41 +116,39 @@ sid  = InJwtClaimNames.SID  （值 = authorizationId）
 | refresh_token | 同一 Authorization 原地更新 | 同上 |
 | 自定义 grant（`OAuth2CustomAuthenticationProvider`） | 生成 token 时 **尚无** Authorization | Provider **先** `UUID` 作为 id，构造 stub `OAuth2Authorization` 放入 `DefaultOAuth2TokenContext.authorization(...)`，token 生成后再 `authorizationBuilder.id(sid)` 保存 |
 
-`JwtOAuth2TokenCustomizer.customizeWithUser`：写入 `sid` claim，调用 `onlineTokenService.save(user, sid, jti, expiresAt)`。refresh 时 save 为 upsert：更新当前 jti、过期时间、lastAccessAt，删除旧 jti 索引。
+`JwtOAuth2TokenCustomizer.customizeWithUser`：写入 `sid` claim，调用 `onlineTokenService.save(user, registration)`。refresh 时 save 为 upsert：更新当前 jti、过期时间、lastAccessAt。
 
 ### Redis 会话 schema
 
-`RedisKeyConstants.OnlineToken` 收口全部前缀（现 `token:user:` / `token:user:set:` / `online:user:` 硬编码在 Service 内，一并迁入）。
+`RedisKeyConstants.OnlineToken` 收口全部前缀。
 
 | Key | 类型 | TTL | 用途 |
 |-----|------|-----|------|
 | `token:sid:{sid}` | String(OnlineToken) | 与 **Refresh Token 剩余寿命** 对齐（无 RT 则对齐 AT） | **会话主数据** |
-| `token:jti:{jti}` | String(sid) | Access Token 剩余寿命 | jti → sid 索引，仅供排错与 Phase 01–02 期间旧 `/token/jti` 管理接口；**非权威**，Phase 03 旧接口退役后可移除 |
-| `token:user:{tenantId}:{clientId}:{userId}` | String(sid) | 同会话 | UNIQUE / maxSessions=1 当前 sid |
-| `token:user:set:{tenantId}:{clientId}:{userId}` | Set\<sid\> | max(成员会话 TTL) | 用户会话集合；**禁止**用当前 AT TTL 缩短导致集合早过期 |
-| `online:user:{tenantId}:{clientId}` | ZSet\<userId, expiresAtMs\> | 无（靠注册表 + 定时清理） | 在线用户分页 |
-| `session:ip:{tenantId}:{ip}` | Set\<sid\> | 同会话 | 同 IP 查询 |
+| `token:user:set:{tenantId}:{clientId}:{userId}` | Set\<sid\> | max(成员会话 TTL)；`SADD` 新建后必须补 `EXPIRE`（`-1` 视为未设过期，不是永久） | 用户会话集合；读路径 `MGET` 主数据后 `SREM` 墓碑 |
+| `online:user:{tenantId}:{clientId}` | ZSet\<userId, expiresAtMs\> | 无（靠注册表 + 小时任务按 score 清理） | 在线用户分页；撤销后按剩余会话最晚过期时间回写 score |
+| `session:ip:{tenantId}:{ip}` | Set\<sid\> | 同 userSet（只延长不缩短） | 同 IP 查询；成员数默认上限 1000（`ingot.security.session.ip-set-max-members`），超限不再 `SADD` |
 | `session:online:registry` | Set\<online:user:... key\> | 无 | 定时清理注册表，替代 KEYS |
 
-> `token:jti:{jti}` 的值语义在本 change 从「完整 OnlineToken 对象」变为「sid 字符串」。因 D2 不做兼容，**无需双读**：旧键随发布作废。
->
+运行时**不再写入**：
+
+- `token:jti:{jti}`：RS 按 JWT `sid` 读主数据；旧管理接口已删。前缀仅供发布清存量脚本匹配。
+- `token:user:{tenantId}:{clientId}:{userId}` UNIQUE 索引：互踢走完整 `revokeBySid`，Converter 在 sid 缺失时拒绝。`InTokenAuthFilter` 只放 `SessionContextHolder`。
+
 > BFF 私有的 `in:bff_session:{sessionId}` 不在本表内：它由 BFF 独占写入，Auth 不读不写（D19）。不新增 `in:bff_session:sid:*` 反向索引。
 
-`OnlineToken` 增补字段：`sid`、`lastAccessAt`、`currentJti`（可与现 `jti` 字段等同，refresh 时覆盖）。保留 authorities / userType / 登录环境字段。
+`OnlineToken` 增补字段：`sid`、`lastAccessAt`；`jti` 仍表示当前 Access Token（管理面展示），但不再建 jti Redis 索引。保留 authorities / userType / 登录环境字段（R-2026-021 不得拆掉 Converter 补全 `InUser` 的契约）。
 
-**TTL 修正（修现网 bug）**：用户 Set 的 expire 必须取「集合内最晚过期会话」，不能每次 save 用当前 AT TTL 覆盖。实现：save/remove 后重算 max TTL，或对 Set 不设 TTL、依赖主数据 miss 时惰性剔除。
+**TTL**：集合索引「只延长不缩短」。`extendExpire` 在 `TTL=-1`（存在未设过期）时补上本次会话寿命；`-2`（键不存在）跳过。小时任务 `ZREM` 过期 userId 时 `DEL` 对应 `token:user:set`。IP 孤儿集合靠该 IP 下次登录补 TTL，不 `SCAN`。
 
 **读取路径（D2：无兼容分支）：**
 
 ```text
 getBySid(sid):
   读 token:sid:{sid}，miss → empty
-
-getByJti(jti):            // 仅排错 / 旧管理接口
-  读 token:jti:{jti} 得 sid → getBySid(sid)
 ```
 
-RS 校验：JWT 无 `sid` → 直接拒绝（`invalid_token`）；有 sid → `getBySid` / `isOnlineSid`，miss 即拒绝。不存在「无 sid 时回退 jti」的分支，也不保留 `convertFromJwtOnly` 路径。
+RS 校验：JWT 无 `sid` → 直接拒绝（`invalid_token`）；有 sid → `getBySid`，miss 即拒绝。不存在「无 sid 时回退 jti」的分支，也不保留 `convertFromJwtOnly` 路径。
 
 ### 撤销实现（统一）
 
@@ -251,41 +249,53 @@ BFF 删除自建 `com.ingot.cloud.bff.client.AuthClient`，改依赖 `ingot-auth
 
 ### 安全中心 Platform API（Phase 03）
 
-前缀 `/platform/security/session`。
+前缀 `/platform/security/sessions`（实施期修订：原文「前缀 `/platform/security/session` + 路径 `/sessions`」会拼成 `session/sessions`，属笔误，按资源名复数收敛，与 `access/login-failure-policies` 同风格）。
 
 | 方法 | 路径 | 权限 |
 |------|------|------|
-| GET | `/sessions` | `platform:security:session:query` |
-| GET | `/sessions/{sid}` | 同上 |
-| DELETE | `/sessions/{sid}` | `platform:security:session:revoke` |
-| DELETE | `/sessions/user` | 同上 |
+| GET | `` | `platform:security:session:query` |
+| GET | `/{sid}` | 同上 |
+| DELETE | `/{sid}` | `platform:security:session:revoke` |
+| DELETE | `/user` | 同上 |
 
 VO 在 api 模块定义（不暴露 Auth 的 `OnlineToken` 到前端）：用户名、租户名由 provider 调 `RemotePmsUserDetailsService` / `RemotePmsTenantDetailsService` 拼装；PMS 失败时名称字段为空，sid 级字段仍返回。
 
-Phase 03 交付 `PLATFORM-API.md`（对齐 L4），不在步骤 A 预写死字段，以免与实现漂移。
+下线接口用 query 参数而非请求体（DELETE body 会被部分网关/浏览器丢弃）；`reason` 固定 `ADMIN_REVOKE`、`actorId` 取当前登录管理员，不接受前端传入。
+
+查询范围：会话按「租户 + Client」组织，分页游标建立在该维度的在线用户有序集上，因此 `clientId` 与 `userId` 至少给一个 —— 只给 `userId` 时走 Inner 的按用户查询以跨 Client，结果由中心内存分页。
+
+Phase 03 交付 [`PLATFORM-API.md`](./PLATFORM-API.md)（对齐 L4），不在步骤 A 预写死字段，以免与实现漂移。
 
 ### 并发策略表（Phase 04）
 
 **库**：`ingot_security`  
-**migration**：`014_session_concurrency_policy.sql` + `rollback_014_session_concurrency_policy.sql`
+**migration**：`016_session_concurrency_policy.sql` + `rollback_016_session_concurrency_policy.sql`（原定 `014`，该序号已被 Phase 03 权限种子占用）
 
 | 列 | 类型 | 说明 |
 |----|------|------|
 | `id` | bigint PK | |
-| `scope` | varchar(32) | `GLOBAL` / `CLIENT` / `USER_TYPE`（P0 先 GLOBAL + 可选 CLIENT） |
-| `client_id` | varchar(64) NULL | `scope=CLIENT` 时必填 |
-| `user_type` | varchar(16) NULL | 预留；管理员禁止并发可用 `user_type=ADMIN` + max_sessions=1 |
+| `scope` | varchar(16) | `GLOBAL` / `CLIENT` / `USER_TYPE` |
+| `client_id` | varchar(64) NOT NULL DEFAULT `''` | `scope=CLIENT` 时必填，其余落空串 |
+| `user_type` | varchar(8) NOT NULL DEFAULT `''` | `scope=USER_TYPE` 时必填，取 `UserTypeEnum` 的**存储值**（`0` ADMIN / `1` APP），其余落空串 |
 | `max_sessions` | int | `0` = 无限；`1` = 单会话 |
-| `dimension` | varchar(32) | P0 仅 `USER_CLIENT` |
+| `dimension` | varchar(16) | P0 仅 `USER_CLIENT` |
 | `overflow` | varchar(16) | `REJECT` / `KICK_OLDEST` / `KICK_ALL` |
 | `admin_forbid_concurrent` | tinyint | true 时 ADMIN 强制 max_sessions=1 |
 | `enabled` | tinyint | |
 | `remark` | varchar(255) | |
 | `created_at` / `updated_at` | timestamp | |
 
-种子：一行 GLOBAL，`max_sessions=0`（无限，兼容现网 STANDARD 默认）。
+唯一索引 `uq_session_concurrency_scope (scope, client_id, user_type)`：一个生效范围只允许一条策略。
 
-`SecurityPolicyDomain` 新增 `SESSION_CONCURRENCY`。PUT 后发 `SecurityPolicyChangedSpringEvent` → 失效广播。
+**As-Built 修订**：`client_id` / `user_type` 定为 `NOT NULL DEFAULT ''` 而非原设计的 `NULL`。MySQL 唯一索引不比较 `NULL`，用 `NULL` 会让同一 scope 插出多条重复行，唯一约束形同虚设；服务层在写入前把不适用的定位字段归一为空串。`user_type` 存枚举值（`0` / `1`）而非名称（`ADMIN`），与库内其它表的 `user_type` 列一致，故长度取 varchar(8)。
+
+种子：一行 GLOBAL，`max_sessions=0`（无限，兼容现网 STANDARD 默认）。该行**不允许删除**（删除后 remote 模式只剩 LKG / 地板兜底，语义比「把 `max_sessions` 改成 0」更难解释）；关闭限制请改 `max_sessions`。
+
+`scope` 匹配为**命中即止**（`CLIENT` > `USER_TYPE` > `GLOBAL`），不做字段级合并：窄 scope 命中后，宽 scope 的 `overflow` / `admin_forbid_concurrent` 一律不参与。
+
+`SecurityPolicyDomain` 新增 `SESSION_CONCURRENCY`。写操作（POST / PUT / DELETE）后发 `SecurityPolicyChangedSpringEvent` → 失效广播。
+
+**权限码**：`platform:security:session:policy:query` / `:update`，种子在 `017_session_policy_permission_seed.sql`（目标库 `ingot_core`，与 `016` 的 `ingot_security` 不同库，故拆两个脚本）。
 
 ### 并发策略配置与降级
 
@@ -295,16 +305,24 @@ Phase 03 交付 `PLATFORM-API.md`（对齐 L4），不在步骤 A 预写死字�
 ingot:
   security:
     session:
+      store-unavailable-grace: 30s   # D1 Redis 故障宽限
       mode: local                    # local | remote；生产默认 remote
       policy:
+        resilience-enabled: true
         fallback:
-          local-floor-enabled: true
-      concurrency:                   # mode=local 生效；mode=remote 时作 Nacos 地板
-        max-sessions: 0              # 0=无限
+          local-floor-enabled: true  # false 时「远端不可用且无 LKG」fail-closed 拒绝新登录
+        cache:
+          l1-ttl: 1m
+          l2-ttl: 10m
+      concurrency:
+        enabled: true                # false 退回「只认 client UNIQUE/STANDARD」，紧急回退开关
+        max-sessions: 0              # 0=无限；mode=local 直接生效，mode=remote 时作 Nacos 地板
         dimension: USER_CLIENT
         overflow: KICK_OLDEST
         admin-forbid-concurrent: false
 ```
+
+三环境取值：DEV `mode=local`（保留无中心路径的日常覆盖），TEST / PROD `mode=remote`；PROD 地板保持 `max-sessions: 0`，避免中心不可用时因地板过严误伤登录。
 
 **dataId**：`in-service-auth.yml`，`spring.config.import` 已有 `?refreshEnabled=true`（与 access/credential 相同）。地板绑定 `@ConfigurationProperties(prefix="ingot.security.session.concurrency")`，rebinder / `@RefreshScope` 热刷新。
 
@@ -315,8 +333,11 @@ LayeredCacheBuilder named "session-concurrency-policy"
   loader = Feign RemoteSessionConcurrencyPolicyService
            （SECURITY_SERVICE GET /inner/security/session/concurrency-policies）
   resilientSingleKey(LKG Redis + Nacos FloorSupplier)
-  可选 L1 Caffeine
+  l2SingleKey(Redis 热缓存) + L1 Caffeine
+  registry = LayeredCacheRegistry（Actuator 暴露当前来源）
 ```
+
+装配入口 `SessionConcurrencyConfiguration`（经 `@EnableInAuthorizationServer` 导入），按 `concurrency.enabled` / `mode` 三态互斥选择 resolver。失效广播订阅另置于 `SessionConcurrencyInvalidationAutoConfiguration`：`SessionConcurrencyConfiguration` 属用户配置，评估早于自动配置，其中的 `@ConditionalOnBean(InvalidationBus.class)` 恒为假。
 
 配置键归属 **Auth 消费模块**（`ingot.security.session.*`），框架只收 `LayeredCacheSettings`，不改模块键名。
 
