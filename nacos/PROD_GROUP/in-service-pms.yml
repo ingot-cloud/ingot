@@ -6,31 +6,6 @@ spring:
 # 业务配置
 ingot:
   security:
-    event:
-      # 安全事件总开关；false 时不做任何上报
-      enabled: true
-      # 投递目标：local=本库 security_event，center=上报 ingot-security
-      target: local
-      # target=local 时指定主 Store，典型值 mysql
-      primary-store: mysql
-      # 迁移 shadow；稳定态留空
-      shadow-targets: []
-      # 写入 security_event.source_module
-      sourceModule: PMS
-      # 按事件大类过滤（enabled=true 时生效）
-      categories:
-        auth: true
-        account: true
-        credential: true
-        access: true
-      retention:
-        enabled: true
-        days: 30
-        batchSize: 500
-        maxRounds: 100
-    # 永久锁 Redis 信号 TTL（天）；锁定 transition afterCommit 双写 uid/name key
-    account-lock-signal:
-      permanent-lock-ttl-days: 30
     account:
       # local 或 remote
       mode: local
@@ -50,6 +25,88 @@ ingot:
         # 第 4 次：剩余 1 次
         # 第 5 次：触发自动锁定，下次登录命中锁定分支
         hintAfterAttempts: 3
+    account-lock-signal:
+      # 永久锁定时 uid/name key 的 TTL（天），默认 30。
+      permanent-lock-ttl-days: 30
+    event:
+      # 总开关。false：SecurityEventPublisher 不投递任何事件；true：由 target 决定落点。
+      enabled: true
+      # 主投递目标。
+      # local  = 写入本服务库 security_event（须 classpath 有 Store，通常配 primary-store: mysql）
+      # center = 经 Feign/Transport 上报 ingot-security 中心 admission
+      target: local
+      # target=local 且 classpath 存在多个 SecurityEventStore 时的主 Store id。
+      # 可选值：mysql（MySqlSecurityEventStore）、log（LogSecurityEventStore）。
+      # 仅有一个 Store Bean 时可省略，自动选中。
+      primary-store: mysql
+      # 次要投递目标（迁移 shadow 双写用）。稳定态留空 []。
+      # 元素取值：local | center；与主 target 去重后额外投递一份，shadow 失败不影响主链路 ack。
+      shadow-targets: []
+      # 上报方模块标识，写入 security_event.source_module。
+      # PMS 填 PMS，Member 填 MEMBER。
+      source-module: PMS
+      # 按事件大类过滤是否上报（enabled=true 时生效）；false 则该类别事件在 Publisher 层被丢弃。
+      categories:
+        # AUTH：登录成功/失败等认证类事件
+        auth: true
+        # ACCOUNT：锁定/解锁/创建/删除等账号类事件
+        account: true
+        # CREDENTIAL：改密/重置/强制改密等凭证类事件
+        credential: true
+        # ACCESS：网关封禁/限流违规等访问防护类；PMS/Member 通常不产生，可保持 true
+        access: true
+      # 投递层：BEST_EFFORT 走 memory，DURABLE 走 spool（两条独立管道，非溢出关系）。
+      delivery:
+        # BEST_EFFORT 有界内存队列参数；后台线程 security-recording-memory 攒批后投递。
+        memory:
+          # 内存队列容量；满时新 BEST_EFFORT 事件 DROPPED，不阻塞业务线程。
+          queue-capacity: 2048
+          # memory worker 单次 claim 条数上限。
+          batch-size: 32
+          # worker 攒批 poll 超时（毫秒）；队列空则等待该时长后再次 poll。
+          poll-timeout-ms: 100
+          # 进程关闭时等待 memory worker 排空队列的最长时间（毫秒）。
+          shutdown-timeout-ms: 5000
+        # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
+        spool:
+          # spool 根目录（append-only segment 文件）。
+          directory: /ingot-data/security-recording/spool
+          # spool 目录总磁盘配额（如 1GB、512MB）。
+          max-bytes: 1GB
+          # 单个 segment 文件大小上限，达上限滚动新文件。
+          segment-bytes: 64MB
+          # 业务线程同步等待 spool 接纳 DURABLE 事件的最长时间（毫秒）；超时返回 FAILED（业务仍 fail-open）。
+          durable-ack-timeout-ms: 20
+          # durable worker 每次从 spool claim 的条数上限。
+          replay-batch-size: 32
+          # 投递失败 nack 后重试初始退避（毫秒）。
+          retry-initial-ms: 1000
+          # 重试退避上限（毫秒）。
+          retry-max-ms: 60000
+      # MySQL SecurityEventStore 写入侧参数（target=local 且 primary-store=mysql 时生效）。
+      mysql:
+        # 并发写入信号量许可数；默认 1，避免 canonical security_event 热点写冲突。
+        max-concurrent-writes: 1
+        # 单批 INSERT 事务超时（秒）。
+        transaction-timeout-seconds: 5
+      # canonical security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
+      retention:
+        # 是否启用定时清理；false 等同永久保留。
+        enabled: true
+        # 保留天数；早于 now-days 的记录被删除；0 表示永久保留。
+        days: 30
+        # 单批 DELETE LIMIT 条数，避免长事务与大锁。
+        batch-size: 500
+        # 单次定时任务最多连续执行的批次数。
+        max-rounds: 100
+        # 单次 retention 任务最大执行时长（秒），超时停止本轮。
+        max-duration-seconds: 30
+        # memory/spool 队列使用率超过该百分比时，retention 让步暂停删除。
+        yield-queue-usage-percent: 50
+      # 按 eventType 覆盖默认优先级（BEST_EFFORT | DURABLE），支持 Nacos 热刷新。
+      # 未配置时使用 DefaultPriorityClassifier 内置默认表；示例：
+      # LOGIN_FAILURE: DURABLE
+      priority-overrides: {}
   oss:
     minio:
       url: ${MINIO_URL:http://ingot-cloud:9090}

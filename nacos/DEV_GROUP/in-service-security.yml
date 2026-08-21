@@ -7,26 +7,24 @@ spring:
 ingot:
   security:
     event:
-      # 安全事件总开关；false 时不做任何上报
+      # 中心 admission 接收的事件异步入库；false 则 admission 入队被禁用。
       enabled: true
-      # 投递目标：local=本库 security_event
+      # 中心将事件写入本库 ingot_security.security_event。
       target: local
-      # target=local 时指定主 Store，典型值 mysql
       primary-store: mysql
       shadow-targets: []
-      # 写入 security_event.source_module
-      sourceModule: SECURITY
+      source-module: SECURITY
       categories:
         auth: true
         account: true
         credential: true
         access: true
-      # 过期事件物理删除策略（canonical security_event）
+      # 中心库数据量大，retention.days 可按合规要求拉长（如 90～180）。
       retention:
         enabled: true
-        days: 30
-        batchSize: 500
-        maxRounds: 100
+        days: 90
+        batch-size: 500
+        max-rounds: 100
         max-duration-seconds: 30
         yield-queue-usage-percent: 50
   # MyBatis SQL日志配置

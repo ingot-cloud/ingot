@@ -100,7 +100,7 @@ mybatis:
 
 # MyBatis-Plus配置优化
 mybatis-plus:
-  mapper-locations: classpath:/mapper/*Mapper.xml,classpath*:/mapper/*Mapper.xml,classpath*:sdk/mapper/*.xml
+  mapper-locations: classpath:/mapper/*Mapper.xml,classpath*:sdk/mapper/*.xml
   configuration:
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.CompositeEnumTypeHandler
     # 关闭MyBatis-Plus自带日志（使用SLF4J）

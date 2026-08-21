@@ -1,16 +1,19 @@
 ingot:
   security:
-    # 账号锁定 BFF 登录短路：解密后查 Redis name key；默认拦截不调 Auth
-    account-lock-bff:
-      enabled: true
-      emit-login-failure-on-bff-block: false
-    # 永久锁 Redis key TTL（天）；PMS/Auth/BFF 共用
-    account-lock-signal:
-      permanent-lock-ttl-days: 30
     oauth2:
       resource:
         public-urls:
           - /crypto/public-keys,GET
+    # 账号锁定 BFF 登录短路：解密后查 Redis name key；默认拦截不调 Auth
+    account-lock-bff:
+      # 是否在登录解密后检查 Redis name key，默认开启。
+      enabled: true
+      # BFF 拦截时是否仍调 Auth 以产生 LOGIN_FAILURE；默认关闭。
+      emit-login-failure-on-bff-block: false
+    # 永久锁 Redis key TTL（天）；PMS/Auth/BFF 共用
+    account-lock-signal:
+      # 永久锁定时 uid/name key 的 TTL（天），默认 30。
+      permanent-lock-ttl-days: 30
   bff:
     client-id: ingot-bff
     scope: system

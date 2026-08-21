@@ -31,25 +31,38 @@ ingot:
       master-key: ${AUTH_JWK_MASTER_KEY:a7A7FJ9KdQutfjbQh8sZSt2kcNtl/JUkmEI73aCR080=}
       enable-encryption: true
     access:
-      mode: remote
+      mode: local
+      loginFailure:
+        ip:
+          enabled: true
+          # 50次命中
+          maxAttempts: 50
+          # 时间窗口
+          windowMinutes: 1
+          # 锁定时间，秒
+          blockTtlSec: 3600
+          blockKeyType: "IP"
+        device:
+          enabled: false
+        client:
+          enabled: false
+        accountIp:
+          enabled: false
     session:
       # 会话存储不可用宽限期；超期一律拒绝，会话键不存在不在宽限范围内
       store-unavailable-grace: 30s
-      # remote：并发策略取自安全中心，下面的 concurrency 段退化为 Nacos 地板
-      mode: remote
-      policy:
-        resilience-enabled: true
-        fallback:
-          # 远端不可用且无 LKG 时回落地板；置 false 则该场景 fail-closed 拒绝新登录
-          local-floor-enabled: true
-        cache:
-          l1-ttl: 1m
-          l2-ttl: 10m
+      # local：并发策略只读下面的 concurrency 段，不依赖安全中心（A9 场景）
+      mode: local
       concurrency:
+        # 关闭后登录路径退回「只认 Client 的 UNIQUE / STANDARD」，紧急回退开关
         enabled: true
+        # 0 = 不限并发；此时 Client 配置为 UNIQUE 仍按单会话处理
         max-sessions: 0
+        # 会话数统计维度
         dimension: USER_CLIENT
+        # 超限处置方式
         overflow: KICK_OLDEST
+        # 管理用户（UserTypeEnum.ADMIN）是否强制单会话
         admin-forbid-concurrent: false
     event:
       # 安全事件总开关；false 时不做任何上报
@@ -59,10 +72,15 @@ ingot:
       shadow-targets: []
       # 写入 security_event.source_module
       sourceModule: AUTH
+      # 安全事件大类上报开关
       categories:
         auth: true
+        account: false
+        credential: false
+        access: false
       retention:
         enabled: false
+
   # MyBatis SQL日志配置
   mybatis:
     show-sql-log: ${MYBATIS_SHOW_SQL:true}  # 生产环境关闭

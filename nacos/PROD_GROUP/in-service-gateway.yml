@@ -39,54 +39,137 @@ spring:
             - id: in-service-auth
               uri: lb://in-service-auth
               predicates:
-                - Path=/auth/client/**
+                - Path=/auth/client/**,/auth/token/**
               filters:
                 - StripPrefix=1
 
 ingot:
-  security:
-    # 账号锁定 Gateway Filter：JWT uid key 命中返回 403；Redis 不可用 fail-open
-    account-lock-gateway:
-      enabled: true
-      exclude-path-patterns:
-        - /actuator/**
-        - /bff/auth/**
-    policy:
-      client:
-        invalidation-enabled: true
-        resilience-enabled: true
-        local-floor-enabled: true
-    ratelimit:
-      enabled: true
-      policy:
-        mode: remote
-    blacklist:
-      enabled: true
-      policy:
-        mode: remote
-    violation-escalation:
-      enabled: true
-      policy:
-        mode: remote
-    event:
-      # 安全事件总开关；false 时不做任何上报
-      enabled: true
-      # center：ACCESS 事件 Feign 上报安全中心，不写网关本地库
-      target: center
-      shadow-targets: []
-      # 写入 security_event.source_module
-      sourceModule: GATEWAY
-      categories:
-        access: true
-      retention:
-        enabled: false
   vc:
     verifyUrls:
-      # 登录入口统一在 BFF；/auth/oauth2/** 不经网关暴露，无需校验验证码
+      - image,/auth/oauth2/token,POST
+      - image,/auth/oauth2/pre_authorize,POST
       - image,/bff/auth/login,POST
     image:
       opsLimitGetPerMinute: 20
       opsLimitCheckPerMinute: 40
+  security:
+    account-lock-gateway:
+      # 是否启用账号锁定 AccountLockFilter，默认开启
+      enabled: true
+      # 不检查锁定状态的路径 Ant 模式。
+      excludePathPatterns:
+        - /actuator/**
+        - /bff/auth/**
+    policy:
+      # GatewayRuleClientProperties
+      client:
+        # 跨节点失效订阅开关
+        invalidation-enabled: true
+        # 是否启用 remote → LKG → Nacos 地板 弹性降级链
+        resilience-enabled: true
+        # remote 不可用且 LKG 为空时，是否回落到 Nacos 地板配置
+        local-floor-enabled: true
+        # 共享快照的分层缓存参数。
+        cache:
+          # 1级缓存存活时间
+          l1-ttl: 5m
+          # 2级缓存存活时间
+          l2-ttl: 30m
+    # 限流域：编译为 Sentinel GatewayFlowRule；未配置的路径默认不限流（白名单式）
+    ratelimit:
+      enabled: true
+      policy:
+        mode: local
+        groups:
+          - code: login-auth-floor
+            name: 登录授权层
+            enabled: true
+            pattern-list:
+              - path: /bff/auth/login  # 网关对外路径（Ant 风格）；非下游 /test/**
+                method: POST           # 当前 Sentinel 编译忽略 method，保留供扩展
+          - code: api-business-floor
+            name: 公共业务层
+            enabled: true
+            pattern-list:
+              - path: /pms/**
+                method: ANY
+              - path: /member/**
+                method: ANY
+              - path: /security/**
+                method: ANY
+        rules:
+          - code: login-ip-floor
+            group-code: login-auth-floor
+            # IP / DEVICE / USER
+            dimension: IP  
+            # 平均 QPS
+            qps: 8
+            # 突发容量
+            burst: 12
+            # 统计窗口（秒）
+            interval-sec: 60
+            # F=快速失败(429) Q=排队
+            control-behavior: F
+            enabled: true
+            priority: 0
+          - code: biz-ip-floor
+            group-code: api-business-floor
+            dimension: IP
+            qps: 150
+            burst: 225
+            interval-sec: 1
+            control-behavior: F
+            enabled: true
+            priority: 10
+    # 黑白名单：静态名单 + Redis 临时封禁（限流违规升级）
+    blacklist:
+      enabled: false
+      policy:
+        mode: local
+        items:
+          # BLACK / WHITE
+          - list-type: WHITE
+            # IP / DEVICE / USER / CIDR / USER_AGENT / REFERER
+            key-type: IP
+            key-value: 127.0.0.1
+            enabled: true
+    # 限流违规升级：滑动窗口计数
+    violation-escalation:
+      enabled: true
+      policy:
+        mode: local
+        window-sec: 60
+        block-threshold: 25
+        temp-block-ttl-sec: 900
+        enabled: true
+    # 事件配置
+    event:
+      # 总开关；Gateway 仅在上报 ACCESS 类事件时依赖此项。
+      enabled: true
+      # center：经 Feign 上报 ingot-security admission；不写网关本地 security_event 表。
+      target: center
+      # Gateway 稳定态不需要 shadow；留空 []。
+      shadow-targets: []
+      # 写入中心 security_event.source_module。
+      source-module: GATEWAY
+      # Gateway 通常只产生 ACCESS 类事件；其余类别关闭可减少无效配置。
+      categories:
+        auth: false
+        account: false
+        credential: false
+        access: true
+      # target=center 时 BEST_EFFORT 仍走 memory 缓冲后再 Feign 批量上报。
+      delivery:
+        memory:
+          queue-capacity: 2048
+          batch-size: 32
+          poll-timeout-ms: 100
+          shutdown-timeout-ms: 5000
+        # DURABLE 事件（如 BLACKLIST_BLOCK）仍需要 spool；未显式配置时使用下方 Java 默认值：
+        # spool.directory=./logs/security-recording/spool, max-bytes=1GB, ...
+      # Gateway 不写本地 canonical 表，通常不需要 retention；中心库由 in-service-security 清理。
+      retention:
+        enabled: false
 
 # SpringDoc/Swagger配置（生产环境关闭）
 springdoc:

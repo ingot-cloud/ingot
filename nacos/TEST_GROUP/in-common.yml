@@ -74,8 +74,7 @@ management:
     web:
       exposure:
         # 仅暴露必要端点，生产环境需要通过网关或防火墙限制访问
-        # credentialpolicy / securitypolicy / loginfailurepolicy 用于观测策略降级来源
-        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,credentialpolicy,securitypolicy,loginfailurepolicy}
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics}
       base-path: /actuator
   endpoint:
     health:
