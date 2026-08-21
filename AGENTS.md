@@ -12,16 +12,36 @@
 
 详细目录、状态机、工件职责和归档规则以 [specs/README.md](./specs/README.md) 为准。
 
+# 魔法值与配置取值
+
+业务语义不得在调用点裸写字符串或数字。这是编码门禁，不必等用户提醒。规则如下：
+
+1. 至少抽常量：同一字面量出现在条件、装配、YAML 绑定或跨类比较时，必须有命名常量，禁止复制 `"local"`、`"remote"` 这类散落字面量。
+2. 封闭且有语义的取值用枚举：策略来源、投递目标、状态机、维度等固定集合用枚举，而不是平行的字符串常量。跨模块复用的枚举放 `ingot-commons`（或该语义已有的基础包），禁止每个属性类再复制一份内部 `Mode`。
+3. 注解只能用编译期常量：`@ConditionalOnProperty(havingValue = ...)` 等注解属性不能写枚举本身，把 YAML 字面量做成枚举上的 `public static final String`（如 `PolicySourceMode.VALUE_LOCAL`）。
+4. 语义不同不要合成一个枚举：例如策略来源 `local/remote` 与事件投递 `local/center` 是两套词汇。各域自有 mode（字典客户端 `AUTO/NONE`、发号器 `redis/machine`）不强行统一。
+5. 新增配置项时，属性字段用枚举或常量类型，而不是 `String` 承载封闭取值。
+
 # 代码注释规范
 
-Java 类型级注释（`class`、`interface`、`enum`、`record`、`@interface` 及嵌套类型）统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借助 `.agents/skills/java-class-javadoc` skill 生成、补全或审查。规则如下：
+Java 注释统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借助 `.agents/skills/java-class-javadoc` skill 生成、补全或审查。与本节冲突时以该文件为准。这是编码门禁，新增或修改对外契约时必须一并写上，不必等用户说「补注释」。
 
-1. 以标准为准：动笔前先读 `docs/standards/Javadoc.md`，与本节冲突时以该文件为准；仅处理类型级注释，不改动方法、构造器、字段、枚举常量与包注释（除非任务明确要求）。
-2. 结构：首段用一个 `<p>...</p>` 一句话说明该类型职责；仅当设计意图、核心职责、使用场景、边界或约束确有帮助时才追加第二段；能从可见 API 推导出正确示例时用 `<pre>{@code ... }</pre>` 给出。
-3. 标签顺序：`@author`、`@since`、可选 `@see`、可选 `@apiNote`（面向调用者的限制/性能/生命周期）、可选 `@implNote`（实现原理/不变量/取舍/扩展）；代码不支持的内容一律省略，禁止占位符与空标签。
-4. 作者与版本优先级：① 使用用户/当前任务显式指定的 `@author`/`@since`；② 更新既有注释时保留其非空 `@author`/`@since`；③ 新建且无显式值时用 `@author jy`、`@since 1.0.0`。不得从 Git 历史、邻近文件或当前日期推断，除非用户明确要求。
-5. 真实性：所有 `{@link}`/`@see`/示例必须对应真实符号并与实现或公共契约一致；保留仍然有效的既有信息，仅修正错误、过时、冗余或不符合规范之处。
-6. 落盘时机：仅在用户明确要求"应用/修正注释"时改写源码；否则只给出建议注释或审查结论。
+必须注释的范围：
+
+1. 所有类型：`class`、`interface`、`enum`、`record`、`@interface` 及嵌套类型。
+2. 对外方法：接口方法、供其他模块或调用方使用的 `public` 方法（含抽象方法）。
+3. 对外字段：`@ConfigurationProperties` 绑定字段、会被其他模块 get/set 的 field。Lombok 生成的 getter/setter 不写注释，注释写在 field 上。
+
+不强制注释：`private` 实现、包内 helper、与类型注释重复的成员列表、语义已由枚举名表达清楚的常量（仍建议给非显而易见的枚举常量补一句）。
+
+规则如下：
+
+1. 动笔前先读 `docs/standards/Javadoc.md`。类型注释结构：首段用一个 `<p>...</p>` 一句话说明职责；仅当设计意图、场景、边界或约束确有帮助时才追加第二段；能从可见 API 推导出正确示例时用 `<pre>{@code ... }</pre>` 给出。
+2. 方法注释写清做什么、关键参数、返回值与失败语义，不要复述方法名。字段注释写清含义、默认值、合法取值或 YAML 语义。
+3. 类型标签顺序：`@author`、`@since`、可选 `@see`、可选 `@apiNote`、可选 `@implNote`。方法按需使用 `@param`、`@return`、`@throws`。禁止占位符与空标签。
+4. 作者与版本优先级：① 用户/当前任务显式指定的 `@author`/`@since`；② 更新既有注释时保留其非空值；③ 新建且无显式值时用 `@author jy`、`@since 1.0.0`。不得从 Git 历史、邻近文件或当前日期推断，除非用户明确要求。
+5. 真实性：所有 `{@link}`/`@see`/示例必须对应真实符号并与实现或公共契约一致；只修正错误、过时、冗余或不符合规范之处。
+6. 落盘时机：新增或修改上述对外契约时，注释作为实现的一部分写入源码。用户明确要求「只审查、先不要改文件」时，只给建议不改源码。补历史代码的专项任务按用户指定范围改。
 
 # 缓存接入规范
 
@@ -33,4 +53,3 @@ Java 类型级注释（`class`、`interface`、`enum`、`record`、`@interface` 
 4. 配置键归属消费模块，框架只接收映射后的 `LayeredCacheSettings`，不得为兼容框架而改动模块已上线的配置键。
 5. 编译产物（`Pattern`、`PathPattern`、预建索引等）不进 L2，改用 `VersionedDerivedCache`，失效键必须是 `(source, version)` 二元组而非版本号本身。
 6. 详细契约与迁移记录以 [specs/current/framework/layered-cache/](./specs/current/framework/layered-cache/) 为准；该基线建立前参考 [active change DESIGN](./specs/changes/active/20260730-framework-layered-cache/DESIGN.md)。
-
