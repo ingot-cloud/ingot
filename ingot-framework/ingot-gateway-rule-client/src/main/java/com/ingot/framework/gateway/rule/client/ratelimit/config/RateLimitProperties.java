@@ -3,6 +3,7 @@ package com.ingot.framework.gateway.rule.client.ratelimit.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
 import lombok.Getter;
@@ -109,15 +110,18 @@ public class RateLimitProperties {
         /**
          * 加载模式：
          * <ul>
-         *     <li>{@link Mode#LOCAL}（默认）— 规则来自本类的 {@link #rules} / {@link #groups}，
-         *         适合本机调试、单实例或规则极简的场景。</li>
-         *     <li>{@link Mode#REMOTE} — 启动期 + 每次失效后通过
+         *     <li>{@link PolicySourceMode#LOCAL}（默认）— 规则来自本类的 {@link #rules} / {@link #groups}，
+         *         适合本机调试、单实例或规则极简的场景。配置变更时由
+         *         {@code ConfigurationPropertiesRebinder} 重绑定，
+         *         {@link com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener}
+         *         触发缓存失效；网关侧 Sentinel 规则同步热重载，无需重启。</li>
+         *     <li>{@link PolicySourceMode#REMOTE} — 启动期 + 每次失效后通过
          *         {@code RemoteSnapshotFetcher} 调 ingot-service-security 的
          *         {@code GET /inner/security/policy/snapshot} 拉取，由
          *         Platform 页面维护。</li>
          * </ul>
          */
-        private Mode mode = Mode.LOCAL;
+        private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
         /**
          * local 模式下的限流规则列表；remote 模式下被忽略。
@@ -129,23 +133,5 @@ public class RateLimitProperties {
          * 也可以为空（规则全部使用内联 {@code patternList}）。remote 模式下被忽略。
          */
         private List<EndpointGroup> groups = new ArrayList<>();
-    }
-
-    /**
-     * 限流规则加载模式。
-     */
-    public enum Mode {
-        /**
-         * 从本机 yaml / Nacos {@code in-security-policy.yml} 加载。
-         * 配置变更时由 {@code ConfigurationPropertiesRebinder} 重绑定 Properties，
-         * {@link com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener}
-         * 触发缓存失效；网关侧 Sentinel 规则同步热重载，无需重启。
-         */
-        LOCAL,
-        /**
-         * 从 ingot-service-security 远端快照加载（{@code GET /inner/security/policy/snapshot}）。
-         * 适合生产 / 多节点；配合 {@code invalidation-enabled=true} 实现 Platform 改规则后热更新。
-         */
-        REMOTE
     }
 }

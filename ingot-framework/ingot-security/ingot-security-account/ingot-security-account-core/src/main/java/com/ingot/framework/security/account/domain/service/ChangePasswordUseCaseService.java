@@ -3,14 +3,17 @@ package com.ingot.framework.security.account.domain.service;
 import java.time.LocalDateTime;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.security.account.domain.config.AccountMessageSource;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ChangePasswordUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
+import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
+import com.ingot.framework.security.account.domain.support.AfterCommitActions;
 import com.ingot.framework.commons.utils.AssertionUtil;
 import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
@@ -36,6 +39,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
     private final UserAccountPort userAccountPort;
     private final UserCredentialPort userCredentialPort;
     private final SecurityEventPort securityEventPort;
+    private final SessionRevocationPort sessionRevocationPort;
     private final CredentialSecurityService credentialSecurityService;
     private final PasswordEncoder passwordEncoder;
 
@@ -90,6 +94,9 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
         securityEventPort.publishEvent(AccountSecurityEvent.passwordChanged(
                 command.getUserId(), command.getUserType()));
 
+        // 7. 旧密码签发的会话必须一并下线，否则改密无法阻断已泄露凭据
+        revokeSessionsAfterCommit(command.getUserId(), command.getUserId());
+
         log.info("用户 {} 密码修改成功", command.getUserId());
     }
 
@@ -131,6 +138,9 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 .operatorName(command.getOperatorName())
                 .createdAt(LocalDateTime.now())
                 .build());
+
+        // 4. 重置与自助改密同一口径：旧密码签发的会话全部下线
+        revokeSessionsAfterCommit(command.getUserId(), command.getOperatorId());
 
         log.info("用户 {} 密码重置成功", command.getUserId());
     }
@@ -179,6 +189,14 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 .build());
 
         log.info("用户 {} 密码强制修改成功", command.getUserId());
+    }
+
+    /**
+     * 提交后撤销该用户全部会话；事务未提交就下线会造成「会话已断而密码未变」的错觉。
+     */
+    private void revokeSessionsAfterCommit(Long userId, Long actorId) {
+        AfterCommitActions.run(() -> sessionRevocationPort.revokeUserSessions(
+                userId, SessionRevokeReason.PASSWORD_CHANGED, actorId));
     }
 
     private String getMessage(String code) {

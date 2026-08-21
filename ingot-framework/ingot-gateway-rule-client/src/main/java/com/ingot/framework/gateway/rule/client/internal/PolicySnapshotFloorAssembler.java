@@ -134,7 +134,8 @@ public class PolicySnapshotFloorAssembler {
         group.setName("登录入口（地板）");
         group.setEnabled(true);
         EndpointPatternVO pattern = new EndpointPatternVO();
-        pattern.setPath("/auth/token/**");
+        // 登录主入口是 BFF；Auth 的 /auth/token/** 已随 TokenEndpoint 摘除，护住它没有意义
+        pattern.setPath("/bff/auth/login/**");
         pattern.setMethod("ANY");
         group.setPatternList(List.of(pattern));
         return group;

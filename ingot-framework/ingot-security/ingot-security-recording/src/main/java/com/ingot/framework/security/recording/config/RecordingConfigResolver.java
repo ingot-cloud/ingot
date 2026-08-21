@@ -5,7 +5,6 @@ import com.ingot.framework.security.recording.model.RecordingTarget;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -27,10 +26,8 @@ public final class RecordingConfigResolver {
     }
 
     static RecordingTarget resolveTarget(SecurityEventProperties properties) {
-        if (properties.getTarget() == null || properties.getTarget().isBlank()) {
-            return RecordingTarget.LOCAL;
-        }
-        return parseTarget(properties.getTarget());
+        RecordingTarget target = properties.getTarget();
+        return target == null ? RecordingTarget.LOCAL : target;
     }
 
     static List<RecordingTarget> resolveShadowTargets(
@@ -38,12 +35,8 @@ public final class RecordingConfigResolver {
             RecordingTarget primary) {
         Set<RecordingTarget> shadows = new LinkedHashSet<>();
         if (properties.getShadowTargets() != null) {
-            for (String raw : properties.getShadowTargets()) {
-                if (raw == null || raw.isBlank()) {
-                    continue;
-                }
-                RecordingTarget parsed = parseTarget(raw);
-                if (parsed != primary) {
+            for (RecordingTarget parsed : properties.getShadowTargets()) {
+                if (parsed != null && parsed != primary) {
                     shadows.add(parsed);
                 }
             }
@@ -58,13 +51,5 @@ public final class RecordingConfigResolver {
             return delivery.getMemory();
         }
         return new SecurityEventProperties.MemoryQueueSettings();
-    }
-
-    private static RecordingTarget parseTarget(String raw) {
-        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
-            case "center", "remote" -> RecordingTarget.CENTER;
-            case "local" -> RecordingTarget.LOCAL;
-            default -> throw new IllegalArgumentException("Unknown recording target: " + raw);
-        };
     }
 }

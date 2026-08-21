@@ -23,8 +23,8 @@ import reactor.core.publisher.Mono;
 /**
  * <p>账号锁定 Gateway Filter：uid key 命中时返回 403，fail-open。</p>
  *
- * <p>userId / userType 优先取 {@link ClientIdentity}（由上游 JWT + OnlineToken 补全）；
- * 缺 userType 时再尝试遗留 JWT claim {@code ut}。仍缺则放行。</p>
+ * <p>userId / userType 优先取 {@link ClientIdentity}（由上游 JWT + 会话补全），
+ * 其次取 {@link AuthContextAttributes}；仍缺 userType 则放行，锁定判定交由下游资源服务器。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -107,11 +107,7 @@ public class AccountLockFilter implements GlobalFilter, Ordered {
             return identity.getUserType();
         }
         Object attr = exchange.getAttributes().get(AuthContextAttributes.USER_TYPE);
-        if (attr instanceof String text && StringUtils.hasText(text)) {
-            return text;
-        }
-        String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        return BearerJwtPayloadReader.readUserType(authorization);
+        return attr instanceof String text && StringUtils.hasText(text) ? text : null;
     }
 
     private boolean isExcluded(String path) {

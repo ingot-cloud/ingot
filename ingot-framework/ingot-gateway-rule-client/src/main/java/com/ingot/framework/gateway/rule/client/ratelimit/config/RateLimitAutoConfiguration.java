@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.ratelimit.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
@@ -55,7 +56,7 @@ public class RateLimitAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RateLimitRuleService.class)
     @ConditionalOnProperty(prefix = "ingot.security.ratelimit.policy",
-            name = "mode", havingValue = "local", matchIfMissing = true)
+            name = "mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public RateLimitRuleService localRateLimitRuleService(RateLimitProperties properties) {
         log.info("[RateLimit] using local rule service");
         return new LocalRateLimitRuleService(properties);
@@ -68,7 +69,7 @@ public class RateLimitAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RateLimitRuleService.class)
     @ConditionalOnProperty(prefix = "ingot.security.ratelimit.policy",
-            name = "mode", havingValue = "remote")
+            name = "mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public RateLimitRuleService remoteRateLimitRuleService(RemoteSnapshotFetcher fetcher) {
         log.info("[RateLimit] using remote rule service");
         return new RemoteRateLimitRuleService(fetcher);
@@ -110,7 +111,7 @@ public class RateLimitAutoConfiguration {
                 coordinator.register(SecurityPolicyDomain.ENDPOINT_GROUP, evict);
             }
             if (refreshListener != null && rateLimitRuleService != null && properties != null
-                    && properties.getPolicy().getMode() == RateLimitProperties.Mode.LOCAL) {
+                    && properties.getPolicy().getMode() == PolicySourceMode.LOCAL) {
                 refreshListener.register("ingot.security.ratelimit.", rateLimitRuleService::evictAll);
             }
         }

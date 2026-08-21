@@ -2,6 +2,7 @@ package com.ingot.cloud.bff.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
@@ -10,13 +11,20 @@ import java.util.List;
 import java.util.Map;
 
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.bff.client.AuthClient;
+import com.ingot.cloud.auth.api.model.dto.InnerSessionRevokeDTO;
+import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
+import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
 import com.ingot.cloud.bff.config.BffProperties;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
+import com.ingot.framework.commons.constants.InJwtClaimNames;
+import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.constants.SecurityConstants;
 import com.ingot.framework.commons.model.bff.BffSession;
+import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.utils.JwtPayloadUtil;
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.oauth2.core.endpoint.PreAuthorizationGrantType;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +33,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.stereotype.Service;
 
 /**
@@ -38,7 +49,7 @@ import org.springframework.stereotype.Service;
  * <ol>
  *     <li>{@link #login} — 预授权：账号密码认证，返回可选租户列表</li>
  *     <li>{@link #selectTenant} — 选租户：获取授权码 + 换取 Token，Token 存 Redis</li>
- *     <li>{@link #logout} — 登出：撤销 auth Token + 清除 BFF session</li>
+ *     <li>{@link #logout} — 登出：按 sid 撤销 Auth 会话 + 清除 BFF session</li>
  * </ol>
  *
  * @author jy
@@ -48,7 +59,8 @@ import org.springframework.stereotype.Service;
  * （登录成功后会被真正的 JWT 覆盖）。
  * Auth 服务的 JSESSIONID 暂存在 BffSession 的 authCookie 字段中，
  * 用于 authorize 调用时恢复 Auth 的 SecurityContext。
- * @see AuthClient
+ * @see RemoteAuthTokenService
+ * @see RemoteAuthSessionService
  * @see BffSessionService
  * @since 1.0.0
  */
@@ -58,10 +70,28 @@ import org.springframework.stereotype.Service;
 public class BffAuthService {
     private static final String CODE_ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
     private static final String MSG_ACCOUNT_LOCKED = "账号已被锁定，请联系管理员";
+    private static final String CODE_SESSION_NOT_FOUND = "S0401";
+    private static final String MSG_SESSION_NOT_FOUND = "session not found, please login first";
+
+    /** {@code state} 与 {@code redirect_uri} 合并暂存于 {@link BffSession#getRefreshToken()} 时的分隔符。 */
+    private static final char STATE_URI_DELIMITER = '|';
+    private static final int STATE_URI_PARTS = 2;
+
+    private static final String AUTH_COOKIE_NAME = "JSESSIONID";
+    private static final String COOKIE_ATTRIBUTE_DELIMITER = ";";
+
+    /** 前端跳转地址的响应字段名。 */
+    private static final String FIELD_REDIRECT_URI = "redirectUri";
+
+    private static final String CODE_CHALLENGE_ALGORITHM = "SHA-256";
+    private static final int CODE_VERIFIER_BYTES = 32;
+    private static final int STATE_BYTES = 8;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final BffProperties properties;
     private final BffSessionService sessionService;
-    private final AuthClient authClient;
+    private final RemoteAuthTokenService remoteAuthTokenService;
+    private final RemoteAuthSessionService remoteAuthSessionService;
     private final AccountLockSignalPort accountLockSignalPort;
     private final AccountLockBffProperties accountLockBffProperties;
 
@@ -87,15 +117,16 @@ public class BffAuthService {
         String redirectUri = properties.getRedirectUri();
 
         Map<String, String> formData = new HashMap<>();
-        formData.put("username", dto.getUsername());
-        formData.put("password", dto.getPassword());
+        formData.put(OAuth2ParameterNames.USERNAME, dto.getUsername());
+        formData.put(OAuth2ParameterNames.PASSWORD, dto.getPassword());
 
         ResponseEntity<R<Map<String, Object>>> responseEntity;
         try {
-            responseEntity = authClient.preAuthorize(null,
+            responseEntity = remoteAuthTokenService.preAuthorize(null,
                     properties.getUserType(), PreAuthorizationGrantType.PASSWORD.value(),
                     properties.getClientId(), codeChallenge,
-                    "code", redirectUri, properties.getScope(), state,
+                    OAuth2AuthorizationResponseType.CODE.getValue(),
+                    redirectUri, properties.getScope(), state,
                     formData);
         } catch (Exception e) {
             log.error("[BffAuth] pre_authorize failed", e);
@@ -114,7 +145,7 @@ public class BffAuthService {
             BffSession session = new BffSession();
             session.setClientId(properties.getClientId());
             session.setAccessToken(codeVerifier);
-            session.setRefreshToken(state + "|" + redirectUri);
+            session.setRefreshToken(state + STATE_URI_DELIMITER + redirectUri);
             session.setAuthCookie(authCookie);
 
             String sessionId = sessionService.createSession(session, request, response);
@@ -136,14 +167,14 @@ public class BffAuthService {
     public R<?> selectTenant(String tenantId, String frontRedirectUri, HttpServletRequest request, HttpServletResponse response) {
         BffSession session = sessionService.getSession(request);
         if (session == null) {
-            return R.error("S0401", "session not found, please login first");
+            return R.error(CODE_SESSION_NOT_FOUND, MSG_SESSION_NOT_FOUND);
         }
 
         String sessionId = sessionService.getSessionIdFromCookie(request);
         String codeVerifier = session.getAccessToken();
-        String[] stateAndUri = session.getRefreshToken().split("\\|", 2);
-        String state = stateAndUri[0];
-        String redirectUri = stateAndUri.length > 1 ? stateAndUri[1] : properties.getRedirectUri();
+        List<String> stateAndUri = StrUtil.split(session.getRefreshToken(), STATE_URI_DELIMITER, STATE_URI_PARTS);
+        String state = stateAndUri.getFirst();
+        String redirectUri = stateAndUri.size() > 1 ? stateAndUri.get(1) : properties.getRedirectUri();
         String codeChallenge = generateCodeChallenge(codeVerifier);
 
         // 使用 Auth 服务的 session cookie（预授权阶段捕获），而非浏览器的 cookie
@@ -151,10 +182,11 @@ public class BffAuthService {
 
         R<Map<String, Object>> authorizeResult;
         try {
-            authorizeResult = authClient.authorize(
+            authorizeResult = remoteAuthTokenService.authorize(
                     authCookie, PreAuthorizationGrantType.PASSWORD.value(),
                     tenantId, properties.getClientId(), codeChallenge,
-                    "code", redirectUri, properties.getScope(), state);
+                    OAuth2AuthorizationResponseType.CODE.getValue(),
+                    redirectUri, properties.getScope(), state);
         } catch (Exception e) {
             log.error("[BffAuth] authorize failed", e);
             return R.error500(e.getMessage());
@@ -164,18 +196,17 @@ public class BffAuthService {
             return authorizeResult;
         }
 
-        String code = String.valueOf(authorizeResult.getData().get("code"));
-
         Map<String, String> tokenForm = new HashMap<>();
-        tokenForm.put("code", code);
-        tokenForm.put("grant_type", "authorization_code");
-        tokenForm.put("code_verifier", codeVerifier);
-        tokenForm.put("client_id", properties.getClientId());
-        tokenForm.put("redirect_uri", redirectUri);
+        tokenForm.put(OAuth2ParameterNames.CODE,
+                String.valueOf(authorizeResult.getData().get(OAuth2ParameterNames.CODE)));
+        tokenForm.put(OAuth2ParameterNames.GRANT_TYPE, SecurityConstants.GrantType.AUTHORIZATION_CODE);
+        tokenForm.put(PkceParameterNames.CODE_VERIFIER, codeVerifier);
+        tokenForm.put(OAuth2ParameterNames.CLIENT_ID, properties.getClientId());
+        tokenForm.put(OAuth2ParameterNames.REDIRECT_URI, redirectUri);
 
         R<Map<String, Object>> tokenResult;
         try {
-            tokenResult = authClient.token(tokenForm);
+            tokenResult = remoteAuthTokenService.token(tokenForm);
         } catch (Exception e) {
             log.error("[BffAuth] token exchange failed", e);
             return R.error500(e.getMessage());
@@ -186,37 +217,47 @@ public class BffAuthService {
         }
 
         Map<String, Object> tokenData = tokenResult.getData();
-        String accessToken = (String) tokenData.get("accessToken");
-        String refreshToken = tokenData.get("refreshToken") != null ? (String) tokenData.get("refreshToken") : "";
-        long expiresIn = Long.parseLong(String.valueOf(tokenData.get("expiresIn")));
+        String accessToken = (String) tokenData.get(InOAuth2ParameterNames.ACCESS_TOKEN);
+        String refreshToken = StrUtil.emptyIfNull((String) tokenData.get(InOAuth2ParameterNames.REFRESH_TOKEN));
+        long expiresIn = Long.parseLong(String.valueOf(tokenData.get(InOAuth2ParameterNames.EXPIRES_IN)));
 
         session.setAccessToken(accessToken);
         session.setRefreshToken(refreshToken);
         session.setExpiresAt(Instant.now().getEpochSecond() + expiresIn);
         session.setTenantId(tenantId);
         session.setAuthCookie(authCookie);
+        // 记录 Auth 会话 ID，登出时无需依赖 Access Token 是否仍在有效期
+        session.setSid(JwtPayloadUtil.readClaim(accessToken, InJwtClaimNames.SID));
         sessionService.updateSession(sessionId, session, expiresIn, response);
 
-        log.info("[BffAuth] selectTenant success, sessionId={}, tenantId={}", sessionId, tenantId);
+        log.info("[BffAuth] selectTenant success, sessionId={}, tenantId={}, sid={}",
+                sessionId, tenantId, session.getSid());
 
         String validatedRedirectUri = resolveAndValidateRedirectUri(frontRedirectUri);
         if (validatedRedirectUri != null) {
-            return R.ok(Map.of("redirectUri", validatedRedirectUri));
+            return R.ok(Map.of(FIELD_REDIRECT_URI, validatedRedirectUri));
         }
         return R.ok();
     }
 
-
     /**
-     * 登出：撤销 auth token + 清除 BFF session。
+     * 登出：按会话 ID 请求 Auth 撤销会话，随后清除 BFF 自己的会话键与 Cookie。
+     *
+     * <p>撤销依据是登录时记录的 {@link BffSession#getSid()}，因此 Access Token 已过期也能撤销成功；
+     * sid 缺失说明这条 BFF 会话没走完登录流程，此时只清本地键，不做任何猜测性撤销。
+     * Auth 侧撤销失败不阻塞本地清理，浏览器仍会失去凭据，残留的 Auth 会话由自身 TTL 收敛。</p>
      */
     public R<?> logout(HttpServletRequest request, HttpServletResponse response) {
         BffSession session = sessionService.getSession(request);
-        if (session != null && StrUtil.isNotEmpty(session.getAccessToken())) {
+        if (session != null && StrUtil.isNotEmpty(session.getSid())) {
+            InnerSessionRevokeDTO params = InnerSessionRevokeDTO.builder()
+                    .reason(SessionRevokeReason.USER_LOGOUT)
+                    .build();
             try {
-                authClient.revokeToken(session.getAuthCookie(), "Bearer " + session.getAccessToken());
+                // 回传 Auth 的 JSESSIONID，让 Auth 同步清掉自己的登录态，避免凭旧 Cookie 再走 session 预授权
+                remoteAuthSessionService.revokeBySid(session.getAuthCookie(), session.getSid(), params);
             } catch (Exception e) {
-                log.warn("[BffAuth] token revoke failed on auth service", e);
+                log.warn("[BffAuth] session revoke failed on auth service, sid={}", session.getSid(), e);
             }
         }
         sessionService.removeSession(request, response);
@@ -276,36 +317,36 @@ public class BffAuthService {
         if (setCookies == null) {
             return null;
         }
+        String cookiePrefix = AUTH_COOKIE_NAME + "=";
         for (String setCookie : setCookies) {
-            if (setCookie.startsWith("JSESSIONID=")) {
-                String value = setCookie.split(";")[0];
-                return value;
+            if (setCookie.startsWith(cookiePrefix)) {
+                return StrUtil.subBefore(setCookie, COOKIE_ATTRIBUTE_DELIMITER, false);
             }
         }
         return null;
     }
 
     private String generateCodeVerifier() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[32];
-        random.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        return randomUrlSafeToken(CODE_VERIFIER_BYTES);
     }
 
     private String generateCodeChallenge(String codeVerifier) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(CODE_CHALLENGE_ALGORITHM);
             byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate code challenge", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Failed to generate PKCE code challenge", e);
         }
     }
 
     private String generateState() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[8];
-        random.nextBytes(bytes);
+        return randomUrlSafeToken(STATE_BYTES);
+    }
+
+    private String randomUrlSafeToken(int byteLength) {
+        byte[] bytes = new byte[byteLength];
+        RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

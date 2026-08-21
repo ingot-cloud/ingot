@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
 import com.ingot.cloud.security.api.rpc.RemoteLoginFailurePolicyService;
 import com.ingot.framework.commons.constants.RedisKeyConstants;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
 import com.ingot.framework.security.access.actuate.LoginFailurePolicyEndpoint;
@@ -78,7 +79,7 @@ public class AccessAdapterAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(LoginFailurePolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.security.access.mode", havingValue = "local", matchIfMissing = true)
+    @ConditionalOnProperty(name = "ingot.security.access.mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public LoginFailurePolicyLoader localLoginFailurePolicyLoader(AccessProtectionProperties properties) {
         return new LocalLoginFailurePolicyLoader(properties);
     }
@@ -86,7 +87,7 @@ public class AccessAdapterAutoConfiguration {
     @Bean
     @ConditionalOnClass(RemoteLoginFailurePolicyService.class)
     @ConditionalOnMissingBean(LoginFailurePolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.security.access.mode", havingValue = "remote")
+    @ConditionalOnProperty(name = "ingot.security.access.mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public LoginFailurePolicyLoader resilientLoginFailurePolicyLoader(
             RemoteLoginFailurePolicyService remoteService,
             LoginFailureLkgStore lkgStore,

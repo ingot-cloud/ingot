@@ -1,120 +1,123 @@
 package com.ingot.framework.security.oauth2.server.authorization;
 
-import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import com.ingot.framework.security.core.userdetails.InUser;
 
 /**
- * 在线Token服务
- * 职责：
- * 1. 管理当前在线的Token信息
- * 2. 支持唯一登录验证
- * 3. 支持强制下线
- * 4. Token信息查询
+ * <p>在线会话存储，按 sid 组织会话主数据及其查询索引。</p>
  *
- * <p>Author: wangchao</p>
- * <p>Date: 2024/12/17</p>
+ * <p>本接口只负责会话数据的读写。撤销 OAuth2 Authorization、发布安全事件、执行并发策略
+ * 都不在此层 —— 完整撤销由 Auth 侧的会话撤销领域服务编排，本接口的 {@link #removeBySid}
+ * 只是其中一步。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
+ * @apiNote 资源服务器只应调用只读方法；写入方仅 Auth 签发链与撤销链。
+ * @see OnlineToken
  */
 public interface OnlineTokenService {
 
     /**
-     * 保存在线 Token 信息
+     * 落库会话（登录新建或 refresh 原地更新）。
      *
-     * @param user      用户信息
-     * @param jti       JTI
-     * @param expiresAt 过期时间
+     * <p>同一 sid 重复调用为 upsert：保留原始创建时间与登录环境，更新当前 jti、过期时间与
+     * 最近活动时间。</p>
+     *
+     * @param user         当前登录用户，权限与部门须已切片到目标租户
+     * @param registration 会话标识与时效参数
      */
-    void save(InUser user, String jti, Instant expiresAt);
+    void save(InUser user, OnlineSessionRegistration registration);
 
     /**
-     * 根据用户信息获取当前在线Token
-     * 用于唯一登录验证
+     * 按会话 ID 读取会话主数据。
      *
-     * @param userId   用户ID
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return Token信息
+     * @param sid 会话 ID
+     * @return 会话；不存在（已过期或已撤销）时为空
      */
-    Optional<OnlineToken> getByUser(Long userId, Long tenantId, String clientId);
+    Optional<OnlineToken> getBySid(String sid);
 
     /**
-     * 根据JTI获取Token信息
-     * 用于资源服务器验证Token时获取扩展信息
+     * 列出用户在指定 Client 下仍然在线的全部会话 ID。
      *
-     * @param jti JWT ID
-     * @return Token信息
+     * @return 会话 ID 列表；顺序不保证
      */
-    Optional<OnlineToken> getByJti(String jti);
+    List<String> listSids(Long tenantId, String clientId, Long userId);
 
     /**
-     * 删除指定用户的在线Token（强制下线）
+     * 列出用户在当前租户下全部 Client 仍然在线的会话 ID。
      *
-     * @param userId   用户ID
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
+     * <p>账号改密、锁定、禁用等联动撤销不区分登录入口，必须覆盖该用户在本租户的所有 Client。</p>
+     *
+     * @return 会话 ID 列表；顺序不保证
+     * @implNote Client 列表由在线用户注册表推导，不扫描 key 空间。
      */
-    void removeByUser(Long userId, Long tenantId, String clientId);
+    List<String> listSids(Long tenantId, Long userId);
 
     /**
-     * 删除指定JTI的Token
-     *
-     * @param jti JWT ID
+     * 列出同一 IP 下仍然在线的全部会话 ID。
      */
-    void removeByJti(String jti);
+    List<String> listSidsByIp(Long tenantId, String ip);
 
     /**
-     * 检查Token是否在线（未被强制下线）
-     *
-     * @param jti JWT ID
-     * @return true-在线，false-已下线
+     * 列出用户在指定 Client 下的全部在线会话，按创建时间倒序。
      */
-    boolean isOnline(String jti);
+    List<OnlineToken> listUserSessions(Long tenantId, String clientId, Long userId);
 
     /**
-     * 获取在线用户列表（分页）
+     * 列出用户在当前租户下全部 Client 的在线会话，按创建时间倒序。
+     */
+    List<OnlineToken> listUserSessions(Long tenantId, Long userId);
+
+    /**
+     * 列出若干用户在指定 Client 下的在线会话，按创建时间倒序。
      *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @param offset   偏移量
-     * @param limit    数量
-     * @return 用户ID列表
+     * <p>管理面按在线用户分页展开会话时使用：一次拉取这些用户的集合与主数据，避免逐用户往返。</p>
+     */
+    List<OnlineToken> listUserSessions(Long tenantId, String clientId, Collection<Long> userIds);
+
+    /**
+     * 判断会话是否在线。
+     *
+     * @param sid 会话 ID
+     * @return {@code true} 表示会话主数据存在
+     */
+    boolean isOnlineSid(String sid);
+
+    /**
+     * 删除会话主数据及其全部索引。
+     *
+     * @param sid 会话 ID
+     */
+    void removeBySid(String sid);
+
+    /**
+     * 分页获取在线用户 ID，按会话最晚过期时间倒序。
+     *
+     * @param offset 偏移量
+     * @param limit  数量
      */
     List<Long> getOnlineUsers(Long tenantId, String clientId, long offset, long limit);
 
     /**
-     * 获取在线用户总数
-     *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return 在线用户数
+     * 获取在线用户总数（不含已过期条目）。
      */
     long getOnlineUserCount(Long tenantId, String clientId);
 
     /**
-     * 获取用户所有在线 Token
+     * 清理指定租户 Client 下已过期的在线用户条目。
      *
-     * @param userId   用户ID
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return Token列表
-     */
-    List<OnlineToken> getUserAllTokens(Long userId, Long tenantId, String clientId);
-
-    /**
-     * 清理过期的在线用户（定时任务调用）
-     *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return 清理的用户数
+     * @return 清理条目数
      */
     long cleanExpiredOnlineUsers(Long tenantId, String clientId);
 
     /**
-     * 清理所有租户的过期在线用户（定时任务调用）
+     * 遍历在线用户注册表清理全部已过期条目，摘除已消亡的注册表成员，并删除对应的用户会话集合。
      *
-     * @return 清理的总用户数
+     * @return 清理条目数
+     * @implNote 通过注册表枚举待清理 key，不得使用 {@code KEYS} 扫描生产 Redis。
      */
     long cleanAllExpiredOnlineUsers();
 }

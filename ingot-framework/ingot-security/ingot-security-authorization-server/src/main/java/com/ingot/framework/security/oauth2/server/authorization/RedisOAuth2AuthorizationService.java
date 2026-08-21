@@ -1,19 +1,13 @@
 package com.ingot.framework.security.oauth2.server.authorization;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.commons.utils.DigestUtil;
-import com.ingot.framework.security.core.userdetails.InUser;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
-import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.jackson2.RedisObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,19 +24,18 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.util.Assert;
 
 /**
- * Redis实现的OAuth2AuthorizationService <br/>
- * 优化点： <br/>
- * 1. 使用 AuthorizationSnapshot 避免直接序列化 OAuth2Authorization <br/>
- * 2. 完整索引策略：支持Authorization Code、State、AccessToken、RefreshToken <br/>
- * 3. 按需TTL：授权码5分钟，AccessToken根据配置 <br/>
- * 4. 集成OnlineTokenService存储在线Token信息 <br/>
- * <br/>
- * Redis Key结构： <br/>
- * - oauth2:auth:{authorizationId} → AuthorizationSnapshot（主数据，普通POJO） <br/>
- * - oauth2:token:{tokenHash} → authorizationId（索引，支持所有Token类型） <br/>
+ * <p>基于 Redis 的 {@link OAuth2AuthorizationService}，以 {@code AuthorizationSnapshot} 落库并为各类
+ * Token 建立哈希索引。</p>
  *
- * <p>Author: jy</p>
- * <p>Date: 2025/12/17</p>
+ * <p>Key 结构：{@code oauth2:auth:{authorizationId}} 存主数据，
+ * {@code oauth2:token:{sha256(token)}} 反查 authorizationId。TTL 取该 Authorization 名下最长的
+ * Token 过期时间，与在线会话主数据的 TTL 口径一致。</p>
+ *
+ * @author jy
+ * @since 1.0.0
+ * @implNote {@link #remove(OAuth2Authorization)} 会级联删除同 ID 的在线会话（sid 即
+ * authorizationId），这是「彻底撤销」不出现半撤销状态的关键；因此撤销 Access Token 与
+ * Refresh Token 只需删除本记录一处。
  */
 @Slf4j
 public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationService {
@@ -112,11 +105,8 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
         // 2. 删除索引
         removeIndexes(authorization);
 
-        // 3. 删除在线Token信息
-        String jti = extractJti(authorization);
-        if (StrUtil.isNotEmpty(jti)) {
-            onlineTokenService.removeByJti(jti);
-        }
+        // 3. 级联删除在线会话：sid 即 authorizationId，两者必须同生共死
+        onlineTokenService.removeBySid(authorizationId);
 
         log.debug("[RedisOAuth2AuthorizationService] Removed OAuth2Authorization: id={}", authorizationId);
     }
@@ -314,50 +304,6 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
             redisTemplate.delete(tokenKey);
             log.debug("[RedisOAuth2AuthorizationService] Removed DeviceCode index");
         }
-    }
-
-    /**
-     * 从OAuth2Authorization中提取JTI
-     */
-    private String extractJti(OAuth2Authorization authorization) {
-        if (authorization.getAccessToken() != null) {
-            // 从 AccessToken 的 metadata 中获取 claims
-            Map<String, Object> metadata = authorization.getAccessToken().getMetadata();
-            if (metadata != null && metadata.containsKey("claims")) {
-                Object claimsObj = metadata.get("claims");
-                if (claimsObj instanceof Map) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> claimsMap = (Map<String, Object>) claimsObj;
-                    if (claimsMap.containsKey("jti")) {
-                        return String.valueOf(claimsMap.get("jti"));
-                    }
-                }
-            }
-        }
-
-        // 如果找不到，尝试使用authorizationId（临时方案）
-        log.warn("[RedisOAuth2AuthorizationService] JTI not found in AccessToken metadata, using authorizationId as fallback");
-        return authorization.getId();
-    }
-
-    /**
-     * 获取 InUser
-     */
-    private Optional<InUser> getUser(OAuth2Authorization authorization) {
-        if (authorization == null) {
-            return Optional.empty();
-        }
-        Object principal = authorization.getAttribute(Principal.class.getName());
-        if (principal instanceof OAuth2PreAuthorizationCodeRequestAuthenticationToken preAuthToken) {
-            principal = preAuthToken.getPrincipal();
-        }
-        if (principal instanceof OAuth2UserDetailsAuthenticationToken userDetailsToken) {
-            principal = userDetailsToken.getPrincipal();
-        }
-        if (principal instanceof InUser user) {
-            return Optional.of(user);
-        }
-        return Optional.empty();
     }
 
     /**

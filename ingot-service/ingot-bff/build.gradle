@@ -12,10 +12,9 @@ dependencies {
     implementation project(ingot.framework_tenant)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_data_redis)
-    implementation project(ingot.framework_feign)
-    implementation project(ingot.framework_sentinel)
     implementation project(ingot.framework_commons)
     implementation project(ingot.framework_openapi)
     implementation project(ingot.framework_security_crypto)
     implementation project(ingot.framework_security_account_core)
+    implementation project(ingot.auth_api)
 }

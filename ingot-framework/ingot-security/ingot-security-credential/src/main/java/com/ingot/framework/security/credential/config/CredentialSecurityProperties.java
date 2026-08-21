@@ -3,6 +3,7 @@ package com.ingot.framework.security.credential.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -24,9 +25,10 @@ public class CredentialSecurityProperties {
     @Data
     public static class PolicyConfig {
         /**
-         * 策略模式，local, remote
+         * 策略来源：{@link PolicySourceMode#LOCAL} 读本类本地策略，
+         * {@link PolicySourceMode#REMOTE} 走安全中心。
          */
-        private String mode = "local";
+        private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
         /**
          * 降级兜底配置（{@code remote} 模式生效）

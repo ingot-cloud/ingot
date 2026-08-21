@@ -13,11 +13,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 在线Token信息
- * 存储当前有效的Token完整信息
+ * <p>在线会话主数据，以 {@link #sid} 为主键存放于 Redis，是在线态与权限补全的唯一权威来源。</p>
  *
- * <p>Author: wangchao</p>
- * <p>Date: 2024/12/17</p>
+ * <p>{@link #sid} 等于 {@code OAuth2Authorization.id}，refresh 换发不变；{@link #jti} 只标识
+ * 当前那一个 Access Token，每次 refresh 都会被覆盖。因此「会话是否在线」只能按 sid 判断，
+ * 不能按 jti 判断。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
+ * @see OnlineTokenService
  */
 @Data
 @Builder
@@ -30,7 +34,12 @@ public class OnlineToken implements Serializable {
 
 	// ========== 核心标识 ==========
 	/**
-	 * JWT ID（使用Snowflake生成）
+	 * 会话 ID，等于 {@code OAuth2Authorization.id}
+	 */
+	private String sid;
+
+	/**
+	 * 当前 Access Token 的 JWT ID，refresh 后指向新 Token
 	 */
 	private String jti;
 
@@ -85,14 +94,20 @@ public class OnlineToken implements Serializable {
 
 	// ========== 时间信息 ==========
 	/**
-	 * 颁发时间
+	 * 会话创建时间，refresh 不改写
 	 */
 	private Instant issuedAt;
 
     /**
-     * 过期时间
+     * 会话过期时间，对齐 Refresh Token 剩余寿命（无 Refresh Token 时对齐 Access Token）
      */
     private Instant expiresAt;
+
+    /**
+     * 最近一次凭据活动时间，登录与 refresh 时更新
+     * <p>资源服务器热路径不写该字段，避免每请求写 Redis 造成写放大。</p>
+     */
+    private Instant lastAccessAt;
 
     /**
      * 登录IP地址

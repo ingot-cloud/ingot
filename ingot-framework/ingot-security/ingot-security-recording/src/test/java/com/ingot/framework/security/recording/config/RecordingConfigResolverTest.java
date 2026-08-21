@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * <p>{@link RecordingConfigResolver} 配置解析单测。</p>
@@ -30,10 +29,10 @@ class RecordingConfigResolverTest {
     }
 
     @Test
-    @DisplayName("target=center 解析为 CENTER")
+    @DisplayName("target=CENTER 透传")
     void centerTarget() {
         SecurityEventProperties properties = new SecurityEventProperties();
-        properties.setTarget("center");
+        properties.setTarget(RecordingTarget.CENTER);
 
         EffectiveRecordingConfig config = RecordingConfigResolver.resolve(properties);
 
@@ -58,22 +57,12 @@ class RecordingConfigResolverTest {
     @DisplayName("shadow-targets 与主 target 去重")
     void shadowTargetsDedupPrimary() {
         SecurityEventProperties properties = new SecurityEventProperties();
-        properties.setTarget("center");
-        properties.setShadowTargets(List.of("center", "local"));
+        properties.setTarget(RecordingTarget.CENTER);
+        properties.setShadowTargets(List.of(RecordingTarget.CENTER, RecordingTarget.LOCAL));
 
         EffectiveRecordingConfig config = RecordingConfigResolver.resolve(properties);
 
         assertThat(config.primaryTarget()).isEqualTo(RecordingTarget.CENTER);
         assertThat(config.shadowTargets()).containsExactly(RecordingTarget.LOCAL);
-    }
-
-    @Test
-    @DisplayName("未知 target 抛出异常")
-    void unknownTargetFails() {
-        SecurityEventProperties properties = new SecurityEventProperties();
-        properties.setTarget("invalid");
-
-        assertThatThrownBy(() -> RecordingConfigResolver.resolve(properties))
-                .isInstanceOf(IllegalArgumentException.class);
     }
 }

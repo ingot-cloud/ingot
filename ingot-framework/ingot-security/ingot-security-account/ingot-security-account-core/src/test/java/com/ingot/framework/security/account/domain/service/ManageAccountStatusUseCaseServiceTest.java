@@ -2,6 +2,7 @@ package com.ingot.framework.security.account.domain.service;
 
 import java.util.Optional;
 
+import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
@@ -9,6 +10,7 @@ import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
+import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,12 +35,14 @@ class ManageAccountStatusUseCaseServiceTest {
 
     private final UserAccountPort userAccountPort = mock(UserAccountPort.class);
     private final SecurityEventPort securityEventPort = mock(SecurityEventPort.class);
+    private final SessionRevocationPort sessionRevocationPort = mock(SessionRevocationPort.class);
 
     private ManageAccountStatusUseCaseService service;
 
     @BeforeEach
     void setUp() {
-        service = new ManageAccountStatusUseCaseService(userAccountPort, securityEventPort);
+        service = new ManageAccountStatusUseCaseService(
+                userAccountPort, securityEventPort, sessionRevocationPort);
     }
 
     @Test
@@ -87,6 +91,17 @@ class ManageAccountStatusUseCaseServiceTest {
         verify(securityEventPort).publishEvent(captor.capture());
         assertEquals(SecurityEventType.ACCOUNT_DISABLED, captor.getValue().getEventType());
         verify(userAccountPort).updateStatus(1L, UserTypeEnum.ADMIN, false);
+        verify(sessionRevocationPort).revokeUserSessions(1L, SessionRevokeReason.ACCOUNT_DISABLED, 9L);
+    }
+
+    @Test
+    void enableAccount_doesNotRevokeSessions() {
+        when(userAccountPort.findById(1L, UserTypeEnum.ADMIN))
+                .thenReturn(Optional.of(UserAccount.builder().enabled(false).build()));
+
+        service.enableAccount(statusCommand());
+
+        verify(sessionRevocationPort, never()).revokeUserSessions(anyLong(), any(), any());
     }
 
     private static ManageAccountStatusUseCase.StatusCommand statusCommand() {

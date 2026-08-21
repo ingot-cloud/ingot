@@ -17,7 +17,9 @@ public enum OAuth2ErrorCodesExtension implements ErrorCode {
     USER_STATUS("user_status", "Illegal user status"),
     SIGN_OUT("user_sign_out", "User has been signed out"),
     NOT_ALLOW_CLIENT("not_allow_client", "The user is not allowed to access the client"),
-    PRE_AUTHORIZATION_CODE_EXPIRED("pre_code_expired", "The pre authorization code was expired");
+    PRE_AUTHORIZATION_CODE_EXPIRED("pre_code_expired", "The pre authorization code was expired"),
+    CONCURRENT_SESSION_LIMIT("concurrent_session_limit", "Concurrent session limit exceeded"),
+    SESSION_POLICY_UNAVAILABLE("session_policy_unavailable", "Session concurrency policy is unavailable");
 
     private final String code;
     private final String text;

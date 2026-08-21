@@ -37,6 +37,27 @@ class DefaultPriorityClassifierTest {
     }
 
     @Test
+    @DisplayName("SESSION_REVOKED 默认 DURABLE")
+    void sessionRevokedIsDurable() {
+        SecurityEventRecord record = baseRecord("SESSION_REVOKED").build();
+        assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
+    }
+
+    @Test
+    @DisplayName("SESSION_CONCURRENT_KICKOUT 默认 DURABLE")
+    void sessionConcurrentKickoutIsDurable() {
+        SecurityEventRecord record = baseRecord("SESSION_CONCURRENT_KICKOUT").build();
+        assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
+    }
+
+    @Test
+    @DisplayName("LOGOUT 仍是 BEST_EFFORT，用户自助登出不占持久配额")
+    void logoutIsBestEffort() {
+        SecurityEventRecord record = baseRecord("LOGOUT").build();
+        assertThat(classifier.classify(record)).isEqualTo(RecordPriority.BEST_EFFORT);
+    }
+
+    @Test
     @DisplayName("record 自带 priority 时优先使用")
     void explicitPriorityWins() {
         SecurityEventRecord record = baseRecord("LOGIN_SUCCESS")

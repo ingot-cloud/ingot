@@ -9,17 +9,18 @@ import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.utils.RequestParamsUtil;
 import com.ingot.framework.core.context.RequestContextHolder;
 import com.ingot.framework.security.core.InSecurityProperties;
+import com.ingot.framework.security.oauth2.server.authorization.OnlineToken;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.ingot.framework.security.oauth2.server.resource.authentication.InJwtAuthenticationConverter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
@@ -77,17 +78,17 @@ public class JwtTenantValidator implements OAuth2TokenValidator<Jwt> {
                 .orElse(Collections.emptyList());
         Set<GrantedAuthority> merged = new HashSet<>(authorities);
 
-        // 拼凑缓存中的SCOPE
-        String jti = token.getClaim(JwtClaimNames.JTI);
-        onlineTokenService
-                .getByJti(jti)
-                .ifPresent(onlineToken -> {
-                    if (onlineToken.getAuthorities() != null && !onlineToken.getAuthorities().isEmpty()) {
-                        onlineToken.getAuthorities().forEach(auth ->
-                                merged.add(new SimpleGrantedAuthority(InJwtAuthenticationConverter.AUTHORITY_PREFIX + auth))
-                        );
-                    }
-                });
+        // 补齐会话中的完整权限：忽略租户校验的角色不进 JWT，只存在于会话
+        // 会话读取失败不在此处判定 Token 有效性（由 JwtInUserConverter 统一裁决），退化为严格租户校验
+        try {
+            onlineTokenService
+                    .getBySid(JwtClaimNamesExtension.getSid(token))
+                    .map(OnlineToken::getAuthorities)
+                    .ifPresent(authoritySet -> authoritySet.forEach(auth ->
+                            merged.add(new SimpleGrantedAuthority(InJwtAuthenticationConverter.AUTHORITY_PREFIX + auth))));
+        } catch (DataAccessException e) {
+            log.error("[JwtTenantValidator] 读取会话失败，按严格租户校验处理", e);
+        }
 
         boolean ignoreValidate = merged
                 .stream()

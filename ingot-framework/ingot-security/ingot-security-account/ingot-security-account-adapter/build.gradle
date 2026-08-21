@@ -3,6 +3,9 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 dependencies {
     api project(ingot.framework_security_account_core)
     api project(ingot.security_api)
+    // 会话撤销联动只经 Auth Inner 契约，不直接操作会话存储
+    implementation project(ingot.auth_api)
+    implementation project(ingot.framework_tenant)
     implementation project(ingot.framework_data_mybatis_common)
     implementation project(ingot.framework_security_recording)
     implementation project(ingot.framework_security_event_store_mysql)
@@ -11,10 +14,12 @@ dependencies {
     implementation project(ingot.framework_tss_spring)
 
     compileOnly(deps.spring.spring_cloud.openfeign_starter)
+    compileOnly(deps.spring.spring_boot.actuator_starter)
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
 
     testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_cloud.openfeign_starter)
     testImplementation(deps.h2)
 }
 

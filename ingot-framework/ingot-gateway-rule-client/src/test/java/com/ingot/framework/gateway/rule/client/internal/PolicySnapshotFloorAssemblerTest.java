@@ -154,6 +154,9 @@ class PolicySnapshotFloorAssemblerTest {
         SecurityPolicySnapshotVO vo = PolicySnapshotFloorAssembler.fromLocal(empty, null, null, null);
 
         assertEquals(List.of("login-auth-floor"), groupCodes(vo));
+        // 地板必须护住实际登录入口（BFF），而不是已摘除的 /auth/token/**
+        assertEquals("/bff/auth/login/**",
+                vo.getGroups().get(0).getPatternList().get(0).getPath());
         assertEquals(1, vo.getRateLimitRules().size());
         assertEquals("login-ip-floor", vo.getRateLimitRules().get(0).getCode());
         assertEquals("IP", vo.getRateLimitRules().get(0).getDimension());

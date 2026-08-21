@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
+import com.ingot.framework.security.oauth2.server.authorization.SessionStoreAvailability;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -14,11 +15,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.util.Assert;
 
 /**
- * JWT认证转换器（优化版）
- * 集成OnlineTokenService，从Redis获取Token扩展信息
+ * <p>把校验通过的 JWT 转成 {@link InJwtAuthenticationToken}，权限来源为在线会话与 JWT scope 的并集。</p>
  *
- * <p>Author: wangchao</p>
- * <p>Date: 2021/9/17</p>
+ * @author wangchao
+ * @since 1.0.0
+ * @see JwtInUserConverter
  */
 public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     public static final String AUTHORITY_PREFIX = "SCOPE_";
@@ -28,11 +29,13 @@ public class InJwtAuthenticationConverter implements Converter<Jwt, AbstractAuth
 
     private String principalClaimName;
 
-    public InJwtAuthenticationConverter(OnlineTokenService onlineTokenService) {
+    public InJwtAuthenticationConverter(OnlineTokenService onlineTokenService,
+                                        SessionStoreAvailability sessionStoreAvailability) {
         Assert.notNull(onlineTokenService, "onlineTokenService cannot be null");
+        Assert.notNull(sessionStoreAvailability, "sessionStoreAvailability cannot be null");
 
         // 初始化 JwtInUserConverter
-        this.jwtInUserConverter = new JwtInUserConverter(onlineTokenService);
+        this.jwtInUserConverter = new JwtInUserConverter(onlineTokenService, sessionStoreAvailability);
         
         // 初始化 JwtGrantedAuthoritiesConverter
         jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();

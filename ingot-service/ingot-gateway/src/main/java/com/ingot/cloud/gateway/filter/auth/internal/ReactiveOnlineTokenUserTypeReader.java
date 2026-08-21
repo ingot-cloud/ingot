@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 /**
- * <p>按 JWT {@code jti} 从 Redis OnlineToken JSON 读取 {@code userType}，供网关身份链路补全瘦身 JWT。</p>
+ * <p>按 JWT {@code sid} 从 Redis 会话 JSON 读取 {@code userType}，供网关身份链路补全瘦身 JWT。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -32,24 +32,23 @@ public class ReactiveOnlineTokenUserTypeReader {
     }
 
     /**
-     * 读取 OnlineToken.userType；miss / 解析失败 / Redis 不可用返回 empty。
+     * 读取会话中的 userType；miss / 解析失败 / Redis 不可用返回 empty。
      *
-     * @param jti JWT ID
+     * @param sid 会话 ID
      * @return userType（如 {@code 0}/{@code 1}），无值时 empty
      */
-    public Mono<String> readUserType(String jti) {
-        if (!StringUtils.hasText(jti)) {
+    public Mono<String> readUserType(String sid) {
+        if (!StringUtils.hasText(sid)) {
             return Mono.empty();
         }
         ReactiveStringRedisTemplate redis = redisProvider.getIfAvailable();
         if (redis == null) {
             return Mono.empty();
         }
-        String key = RedisKeyConstants.OnlineToken.jtiKey(jti);
-        return redis.opsForValue().get(key)
+        return redis.opsForValue().get(RedisKeyConstants.OnlineToken.sidKey(sid))
                 .flatMap(this::extractUserType)
                 .onErrorResume(ex -> {
-                    log.warn("[OnlineTokenUserType] read fail-open jti={}: {}", jti, ex.toString());
+                    log.warn("[OnlineTokenUserType] read fail-open sid={}: {}", sid, ex.toString());
                     return Mono.empty();
                 });
     }

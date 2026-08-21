@@ -17,21 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class BearerJwtPayloadReaderTest {
 
     @Test
-    void readUserIdAndUserType_fromLegacyBearerHeader() {
-        String header = bearer("{\"i\":123,\"ut\":\"0\",\"jti\":\"abc\"}");
+    void readUserIdAndSid_fromBearerHeader() {
+        String header = bearer("{\"i\":123,\"sid\":\"session-1\",\"org\":1}");
 
         assertEquals("123", BearerJwtPayloadReader.readUserId(header));
-        assertEquals("0", BearerJwtPayloadReader.readUserType(header));
-        assertEquals("abc", BearerJwtPayloadReader.readJti(header));
-    }
-
-    @Test
-    void readSlimJwt_hasIdAndJti_butNoUserType() {
-        String header = bearer("{\"i\":123,\"jti\":\"slim-jti\",\"org\":1}");
-
-        assertEquals("123", BearerJwtPayloadReader.readUserId(header));
-        assertEquals("slim-jti", BearerJwtPayloadReader.readJti(header));
-        assertNull(BearerJwtPayloadReader.readUserType(header));
+        assertEquals("session-1", BearerJwtPayloadReader.readSid(header));
     }
 
     @Test
@@ -39,8 +29,7 @@ class BearerJwtPayloadReaderTest {
         String header = bearer("{\"sub\":\"x\"}");
 
         assertNull(BearerJwtPayloadReader.readUserId(header));
-        assertNull(BearerJwtPayloadReader.readUserType(header));
-        assertNull(BearerJwtPayloadReader.readJti(header));
+        assertNull(BearerJwtPayloadReader.readSid(header));
     }
 
     private static String bearer(String payloadJson) {

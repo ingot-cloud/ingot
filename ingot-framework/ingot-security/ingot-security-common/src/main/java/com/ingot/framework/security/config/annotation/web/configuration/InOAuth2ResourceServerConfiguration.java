@@ -1,5 +1,6 @@
 package com.ingot.framework.security.config.annotation.web.configuration;
 
+import java.time.Duration;
 import java.util.List;
 
 import com.ingot.framework.security.config.annotation.web.configurers.InHttpConfigurersAdapter;
@@ -13,6 +14,7 @@ import com.ingot.framework.security.core.identity.social.DefaultUserSocialResolv
 import com.ingot.framework.security.core.identity.social.DefaultUserSocialService;
 import com.ingot.framework.security.core.identity.social.UserSocialResolver;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
+import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.core.tenantdetails.DefaultTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.RemoteTenantDetailsService;
 import com.ingot.framework.security.core.tenantdetails.TenantDetailsService;
@@ -21,6 +23,7 @@ import com.ingot.framework.security.oauth2.core.InOAuth2ResourceProperties;
 import com.ingot.framework.security.oauth2.core.PermitResolver;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.ingot.framework.security.oauth2.server.authorization.RedisOnlineTokenService;
+import com.ingot.framework.security.oauth2.server.authorization.SessionStoreAvailability;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.InSecurityExpression;
 import com.ingot.framework.security.web.ClientContextAwareFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -55,20 +59,16 @@ import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 @Slf4j
 @EnableWebSecurity
 @EnableMethodSecurity
+@Import(SessionStoreMetricsConfiguration.class)
 @Configuration(proxyBeanMethods = false)
 public class InOAuth2ResourceServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
-    public static void applyDefaultSecurity(PermitResolver permitResolver,
-                                            OnlineTokenService onlineTokenService,
-                                            HttpSecurity http) throws Exception {
-        applyDefaultSecurity(null, permitResolver, onlineTokenService, http);
-    }
-
     public static void applyDefaultSecurity(InHttpConfigurersAdapter httpConfigurersAdapter,
                                             PermitResolver permitResolver,
                                             OnlineTokenService onlineTokenService,
+                                            SessionStoreAvailability sessionStoreAvailability,
                                             HttpSecurity http) throws Exception {
         if (httpConfigurersAdapter != null) {
             httpConfigurersAdapter.apply(http);
@@ -78,8 +78,9 @@ public class InOAuth2ResourceServerConfiguration {
                     authorizeRequests.anyRequest().authenticated();
                 })
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
-                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(permitResolver, onlineTokenService))
-                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher(), onlineTokenService),
+                .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(
+                        permitResolver, onlineTokenService, sessionStoreAvailability))
+                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher()),
                         Customizer.withDefaults());
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
@@ -89,8 +90,10 @@ public class InOAuth2ResourceServerConfiguration {
     public SecurityFilterChain resourceServerSecurityFilterChain(InHttpConfigurersAdapter httpConfigurersAdapter,
                                                                  PermitResolver permitResolver,
                                                                  OnlineTokenService onlineTokenService,
+                                                                 SessionStoreAvailability sessionStoreAvailability,
                                                                  HttpSecurity http) throws Exception {
-        applyDefaultSecurity(httpConfigurersAdapter, permitResolver, onlineTokenService, http);
+        applyDefaultSecurity(httpConfigurersAdapter, permitResolver,
+                onlineTokenService, sessionStoreAvailability, http);
         return http.build();
     }
 
@@ -155,14 +158,26 @@ public class InOAuth2ResourceServerConfiguration {
     }
 
     /**
-     * OnlineTokenService - 在线Token服务
-     * 管理当前在线的Token信息，支持唯一登录和强制下线
+     * OnlineTokenService - 在线会话存储
+     * 会话是在线态的唯一权威来源，支持单会话约束与强制下线
      */
     @Bean
     @ConditionalOnMissingBean(OnlineTokenService.class)
-    public OnlineTokenService onlineTokenService(RedisTemplate<String, Object> redisTemplate) {
+    public OnlineTokenService onlineTokenService(RedisTemplate<String, Object> redisTemplate,
+                                                 InSecurityProperties properties) {
         log.info("[InOAuth2ResourceServerConfiguration] Creating RedisOnlineTokenService");
-        return new RedisOnlineTokenService(redisTemplate);
+        return new RedisOnlineTokenService(redisTemplate, properties);
+    }
+
+    /**
+     * 会话存储可用性哨兵 - Redis 故障时的有界宽限
+     */
+    @Bean
+    @ConditionalOnMissingBean(SessionStoreAvailability.class)
+    public SessionStoreAvailability sessionStoreAvailability(InSecurityProperties properties) {
+        Duration grace = properties.getSession().getStoreUnavailableGrace();
+        log.info("[InOAuth2ResourceServerConfiguration] Creating SessionStoreAvailability, grace={}", grace);
+        return new SessionStoreAvailability(grace);
     }
 
     @Bean

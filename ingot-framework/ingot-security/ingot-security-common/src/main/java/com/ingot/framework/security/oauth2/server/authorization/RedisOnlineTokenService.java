@@ -2,449 +2,502 @@ package com.ingot.framework.security.oauth2.server.authorization;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.RedisKeyConstants;
-import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.security.core.InSecurityProperties;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.ZSetOperations;
 
 /**
- * Redis 实现的在线 Token 服务 <br>
- * 采用完整索引策略：<br>
- * 1. token:jti:{jti} → OnlineToken对象（主数据）<br>
- * 2. token:user:{tenantId}:{clientId}:{userId} → jti（唯一登录索引，仅唯一登录时存）<br>
- * 3. token:user:set:{tenantId}:{clientId}:{userId} → Set<jti>（用户所有有效 token，支持强制下线）<br>
- * 4. online:user:{tenantId}:{clientId} → ZSet<userId, loginTs>（在线用户列表，支持统计和分页）<br>
+ * <p>{@link OnlineTokenService} 的 Redis 实现，以 sid 为主键并维护用户集合、在线用户与 IP 三类查询索引。</p>
  *
- * <p>Author: wangchao</p>
- * <p>Date: 2024/12/17</p>
+ * <p>存储结构见 {@link RedisKeyConstants.OnlineToken}：sid 键是唯一权威主数据，其余
+ * userSet / ip / online 均为可重建的索引。任何在线态判定都必须回到 sid 主数据，
+ * 不能只信索引存在。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
+ * @implNote 会话主数据 TTL 对齐 Refresh Token 寿命。集合类索引采用「只延长不缩短」的
+ * TTL 策略，避免多会话场景下被最短寿命的会话拖垮；{@code SADD} 新建的 key 无过期，
+ * {@link #extendExpire} 必须把 {@code TTL=-1} 补成有限过期。
  */
 @Slf4j
 @RequiredArgsConstructor
 public class RedisOnlineTokenService implements OnlineTokenService {
 
+    /**
+     * {@code getExpire}：键不存在。
+     */
+    private static final long KEY_NOT_FOUND = -2L;
+
+    /**
+     * ZSet 成员解析失败时的占位值。
+     */
+    private static final long INVALID_USER_ID = -1L;
+
     private final RedisTemplate<String, Object> redisTemplate;
-
-    /**
-     * 用户唯一登录索引Key前缀（仅唯一登录使用）
-     * 格式：token:user:{tenantId}:{clientId}:{userId}
-     */
-    private static final String TOKEN_USER_UNIQUE_PREFIX = "token:user:";
-
-    /**
-     * 用户所有Token集合Key前缀（用于强制下线）
-     * 格式：token:user:set:{tenantId}:{clientId}:{userId}
-     */
-    private static final String TOKEN_USER_SET_PREFIX = "token:user:set:";
-
-    /**
-     * 在线用户ZSet Key前缀（用于统计和分页）
-     * 格式：online:user:{tenantId}:{clientId}
-     */
-    private static final String ONLINE_USER_PREFIX = "online:user:";
+    private final InSecurityProperties properties;
 
     @Override
-    public void save(InUser user, String jti, Instant expiresAt) {
-        long ttl = calculateTTL(expiresAt);
-        if (ttl <= 0) {
-            log.warn("[RedisOnlineTokenService] Token already expired, skip saving");
+    public void save(InUser user, OnlineSessionRegistration registration) {
+        long sessionTtl = remainingSeconds(registration.sessionExpiresAt());
+        if (sessionTtl <= 0) {
+            log.warn("[RedisOnlineTokenService] 会话已过期，跳过落库: sid={}", registration.sid());
             return;
         }
 
-        Set<String> authorities = new HashSet<>(InAuthorityUtils.authorityListToSet(
-                user.getAuthorities(), user.getTenantId()
-        ));
-        // 当前登录租户下的部门 ID 列表（user.deptIds 已是切片后的形态，等同 authorities 的处理方式）
-        List<Long> deptIds = user.getDeptIds() == null ? List.of() : List.copyOf(user.getDeptIds());
+        String sid = registration.sid();
+        OnlineToken previous = getBySid(sid).orElse(null);
+        OnlineToken session = buildSession(user, registration, previous);
+        Long tenantId = session.getTenantId();
+        String clientId = session.getClientId();
+        Long userId = session.getUserId();
 
-        // 提取登录信息（IP、User-Agent等）
-        // 注意：传入 null，LoginInfoExtractor 会自动从 Spring RequestContextHolder 获取
-        LoginInfoExtractor.LoginInfo loginInfo = LoginInfoExtractor.extract(null);
+        redisTemplate.opsForValue().set(RedisKeyConstants.OnlineToken.sidKey(sid),
+                session, sessionTtl, TimeUnit.SECONDS);
 
-        // 构建 OnlineToken
-        OnlineToken onlineToken = OnlineToken.builder()
-                .jti(jti)
+        String userSetKey = RedisKeyConstants.OnlineToken.userSetKey(tenantId, clientId, userId);
+        redisTemplate.opsForSet().add(userSetKey, sid);
+        extendExpire(userSetKey, sessionTtl);
+
+        markUserOnline(tenantId, clientId, userId, registration.sessionExpiresAt());
+        indexByIp(session, sessionTtl);
+
+        log.debug("[RedisOnlineTokenService] 会话已落库: sid={}, jti={}, userId={}, authType={}, "
+                        + "sessionTtl={}s, renew={}",
+                sid, session.getJti(), userId, session.getAuthType(), sessionTtl, previous != null);
+    }
+
+    @Override
+    public Optional<OnlineToken> getBySid(String sid) {
+        if (StrUtil.isEmpty(sid)) {
+            return Optional.empty();
+        }
+        Object value = redisTemplate.opsForValue().get(RedisKeyConstants.OnlineToken.sidKey(sid));
+        return value instanceof OnlineToken session ? Optional.of(session) : Optional.empty();
+    }
+
+    @Override
+    public List<String> listSids(Long tenantId, String clientId, Long userId) {
+        if (!isValidUserScope(tenantId, clientId, userId)) {
+            return Collections.emptyList();
+        }
+        return onlineSids(RedisKeyConstants.OnlineToken.userSetKey(tenantId, clientId, userId));
+    }
+
+    @Override
+    public List<String> listSids(Long tenantId, Long userId) {
+        if (tenantId == null || userId == null) {
+            return Collections.emptyList();
+        }
+        List<String> sids = new ArrayList<>();
+        for (String clientId : listClientIds(tenantId)) {
+            sids.addAll(listSids(tenantId, clientId, userId));
+        }
+        return sids;
+    }
+
+    @Override
+    public List<String> listSidsByIp(Long tenantId, String ip) {
+        if (tenantId == null || StrUtil.isEmpty(ip)) {
+            return Collections.emptyList();
+        }
+        return onlineSids(RedisKeyConstants.OnlineToken.ipSetKey(tenantId, ip));
+    }
+
+    @Override
+    public List<OnlineToken> listUserSessions(Long tenantId, String clientId, Long userId) {
+        return loadSessions(listSids(tenantId, clientId, userId));
+    }
+
+    @Override
+    public List<OnlineToken> listUserSessions(Long tenantId, Long userId) {
+        return loadSessions(listSids(tenantId, userId));
+    }
+
+    @Override
+    public List<OnlineToken> listUserSessions(Long tenantId, String clientId, Collection<Long> userIds) {
+        if (tenantId == null || StrUtil.isEmpty(clientId) || userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> distinct = userIds.stream().filter(id -> id != null).distinct().toList();
+        if (distinct.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (distinct.size() == 1) {
+            return listUserSessions(tenantId, clientId, distinct.getFirst());
+        }
+
+        List<String> setKeys = distinct.stream()
+                .map(userId -> RedisKeyConstants.OnlineToken.userSetKey(tenantId, clientId, userId))
+                .toList();
+        List<Object> memberSets = redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            public Object execute(RedisOperations operations) {
+                for (String setKey : setKeys) {
+                    operations.opsForSet().members(setKey);
+                }
+                return null;
+            }
+        });
+
+        List<String> sids = new ArrayList<>();
+        if (memberSets != null) {
+            for (int i = 0; i < setKeys.size() && i < memberSets.size(); i++) {
+                if (memberSets.get(i) instanceof Set<?> members && !members.isEmpty()) {
+                    sids.addAll(liveSids(setKeys.get(i), members));
+                }
+            }
+        }
+        return loadSessions(sids);
+    }
+
+    @Override
+    public boolean isOnlineSid(String sid) {
+        if (StrUtil.isEmpty(sid)) {
+            return false;
+        }
+        return Boolean.TRUE.equals(redisTemplate.hasKey(RedisKeyConstants.OnlineToken.sidKey(sid)));
+    }
+
+    @Override
+    public void removeBySid(String sid) {
+        if (StrUtil.isEmpty(sid)) {
+            return;
+        }
+
+        OnlineToken session = getBySid(sid).orElse(null);
+        redisTemplate.delete(RedisKeyConstants.OnlineToken.sidKey(sid));
+        if (session == null) {
+            log.debug("[RedisOnlineTokenService] 会话主数据不存在，仅确认删除: sid={}", sid);
+            return;
+        }
+
+        Long tenantId = session.getTenantId();
+        String clientId = session.getClientId();
+        Long userId = session.getUserId();
+
+        if (StrUtil.isNotEmpty(session.getIpAddress())) {
+            String ipSetKey = RedisKeyConstants.OnlineToken.ipSetKey(tenantId, session.getIpAddress());
+            redisTemplate.opsForSet().remove(ipSetKey, sid);
+            Long remaining = redisTemplate.opsForSet().size(ipSetKey);
+            if (remaining == null || remaining == 0) {
+                redisTemplate.delete(ipSetKey);
+            }
+        }
+
+        String userSetKey = RedisKeyConstants.OnlineToken.userSetKey(tenantId, clientId, userId);
+        redisTemplate.opsForSet().remove(userSetKey, sid);
+        List<OnlineToken> remaining = loadSessions(onlineSids(userSetKey));
+        if (remaining.isEmpty()) {
+            redisTemplate.delete(userSetKey);
+            redisTemplate.opsForZSet()
+                    .remove(RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId), userId);
+        } else {
+            Instant latest = remaining.stream()
+                    .map(OnlineToken::getExpiresAt)
+                    .filter(expiresAt -> expiresAt != null)
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+            if (latest != null) {
+                redisTemplate.opsForZSet().add(
+                        RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId),
+                        userId, latest.toEpochMilli());
+            }
+        }
+
+        log.info("[RedisOnlineTokenService] 会话已删除: sid={}, userId={}, tenantId={}, clientId={}",
+                sid, userId, tenantId, clientId);
+    }
+
+    @Override
+    public List<Long> getOnlineUsers(Long tenantId, String clientId, long offset, long limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+
+        String onlineKey = RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId);
+        Set<ZSetOperations.TypedTuple<Object>> tuples = redisTemplate.opsForZSet()
+                .reverseRangeWithScores(onlineKey, offset, offset + limit - 1);
+        if (tuples == null || tuples.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        double now = Instant.now().toEpochMilli();
+        List<Long> userIds = new ArrayList<>(tuples.size());
+        for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+            if (tuple.getScore() == null || tuple.getScore() <= now) {
+                continue;
+            }
+            long userId = NumberUtil.parseLong(StrUtil.toString(tuple.getValue()), INVALID_USER_ID);
+            if (userId != INVALID_USER_ID) {
+                userIds.add(userId);
+            }
+        }
+        return userIds;
+    }
+
+    @Override
+    public long getOnlineUserCount(Long tenantId, String clientId) {
+        String onlineKey = RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId);
+        Long count = redisTemplate.opsForZSet()
+                .count(onlineKey, Instant.now().toEpochMilli(), Double.MAX_VALUE);
+        return count == null ? 0L : count;
+    }
+
+    @Override
+    public long cleanExpiredOnlineUsers(Long tenantId, String clientId) {
+        String onlineKey = RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId);
+        long removed = removeExpiredMembers(onlineKey, tenantId, clientId);
+        if (removed > 0) {
+            log.info("[RedisOnlineTokenService] 已清理过期在线用户: tenantId={}, clientId={}, count={}",
+                    tenantId, clientId, removed);
+        }
+        return removed;
+    }
+
+    @Override
+    public long cleanAllExpiredOnlineUsers() {
+        Set<Object> registered = redisTemplate.opsForSet()
+                .members(RedisKeyConstants.OnlineToken.ONLINE_REGISTRY);
+        if (registered == null || registered.isEmpty()) {
+            return 0L;
+        }
+
+        long total = 0L;
+        for (Object member : registered) {
+            String onlineKey = String.valueOf(member);
+            Long tenantId = RedisKeyConstants.OnlineToken.parseTenantId(onlineKey);
+            String clientId = RedisKeyConstants.OnlineToken.parseClientId(onlineKey, tenantId);
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(onlineKey))) {
+                total += removeExpiredMembers(onlineKey, tenantId, clientId);
+            }
+            if (!Boolean.TRUE.equals(redisTemplate.hasKey(onlineKey))) {
+                redisTemplate.opsForSet()
+                        .remove(RedisKeyConstants.OnlineToken.ONLINE_REGISTRY, onlineKey);
+            }
+        }
+
+        if (total > 0) {
+            log.info("[RedisOnlineTokenService] 已清理全部过期在线用户: registry={}, count={}",
+                    registered.size(), total);
+        }
+        return total;
+    }
+
+    private OnlineToken buildSession(InUser user, OnlineSessionRegistration registration, OnlineToken previous) {
+        Instant now = Instant.now();
+
+        OnlineToken.OnlineTokenBuilder builder = OnlineToken.builder()
+                .sid(registration.sid())
+                .jti(registration.jti())
                 .userId(user.getId())
                 .tenantId(user.getTenantId())
                 .principalName(user.getUsername())
                 .clientId(user.getClientId())
                 .authType(user.getTokenAuthType())
                 .userType(user.getUserType())
-                .authorities(authorities)
-                .deptIds(deptIds)
-                .issuedAt(Instant.now())
-                .expiresAt(expiresAt)
-                // 登录信息
-                .ipAddress(loginInfo.getIpAddress())
-                .userAgent(loginInfo.getUserAgent())
-                .deviceType(loginInfo.getDeviceType())
-                .os(loginInfo.getOs())
-                .browser(loginInfo.getBrowser())
-                .location(loginInfo.getLocation())
+                .authorities(new HashSet<>(InAuthorityUtils.authorityListToSet(
+                        user.getAuthorities(), user.getTenantId())))
+                .deptIds(user.getDeptIds() == null ? List.of() : List.copyOf(user.getDeptIds()))
+                .expiresAt(registration.sessionExpiresAt())
+                .lastAccessAt(now);
+
+        if (previous == null) {
+            LoginInfoExtractor.LoginInfo loginInfo = LoginInfoExtractor.extract(null);
+            return builder.issuedAt(now)
+                    .ipAddress(loginInfo.getIpAddress())
+                    .userAgent(loginInfo.getUserAgent())
+                    .deviceType(loginInfo.getDeviceType())
+                    .os(loginInfo.getOs())
+                    .browser(loginInfo.getBrowser())
+                    .location(loginInfo.getLocation())
+                    .build();
+        }
+
+        return builder.issuedAt(previous.getIssuedAt())
+                .ipAddress(previous.getIpAddress())
+                .userAgent(previous.getUserAgent())
+                .deviceType(previous.getDeviceType())
+                .os(previous.getOs())
+                .browser(previous.getBrowser())
+                .location(previous.getLocation())
+                .attributes(previous.getAttributes())
                 .build();
-
-        // 判断登录类型
-        TokenAuthTypeEnum authType = TokenAuthTypeEnum.getEnum(user.getTokenAuthType());
-        boolean isUnique = (authType == TokenAuthTypeEnum.UNIQUE);
-
-        // 如果是唯一登录，需要先踢掉旧的 token
-        if (isUnique) {
-            kickOldTokenIfUnique(user);
-        }
-
-        // 1. 保存主数据
-        String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(jti);
-        redisTemplate.opsForValue().set(jtiKey, onlineToken, ttl, TimeUnit.SECONDS);
-
-        // 2. 如果是唯一登录，保存唯一登录索引
-        if (isUnique) {
-            String uniqueKey = TOKEN_USER_UNIQUE_PREFIX + buildUserKey(user);
-            redisTemplate.opsForValue().set(uniqueKey, jti, ttl, TimeUnit.SECONDS);
-        }
-
-        // 3. 添加到用户 Token 集合（用于强制下线）
-        String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(user);
-        redisTemplate.opsForSet().add(userSetKey, jti);
-        // 设置 TTL（使用当前 token 的 TTL，会被后续更长的 token 自动延长）
-        redisTemplate.expire(userSetKey, ttl, TimeUnit.SECONDS);
-
-        // 4. 添加到在线用户 ZSet（用于统计和分页）
-        String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(user.getTenantId(), user.getClientId());
-        // 使用过期时间作为 score（便于定期清理过期用户）
-        double score = expiresAt.toEpochMilli();
-        redisTemplate.opsForZSet().add(onlineKey, user.getId(), score);
-
-        log.debug("[RedisOnlineTokenService] Saved online token: userId={}, jti={}, authType={}, ttl={}s, ip={}, device={}",
-                user.getId(), jti, authType, ttl, onlineToken.getIpAddress(), onlineToken.getDeviceType());
     }
 
-    @Override
-    public Optional<OnlineToken> getByUser(Long userId, Long tenantId, String clientId) {
-        if (userId == null || tenantId == null || StrUtil.isEmpty(clientId)) {
-            return Optional.empty();
+    private void markUserOnline(Long tenantId, String clientId, Long userId, Instant sessionExpiresAt) {
+        String onlineKey = RedisKeyConstants.OnlineToken.onlineUserKey(tenantId, clientId);
+        double score = sessionExpiresAt.toEpochMilli();
+        Double current = redisTemplate.opsForZSet().score(onlineKey, userId);
+        if (current == null || current < score) {
+            redisTemplate.opsForZSet().add(onlineKey, userId, score);
         }
-
-        // 1. 通过用户唯一登录索引查找 JTI（仅唯一登录有此索引）
-        String uniqueKey = TOKEN_USER_UNIQUE_PREFIX + buildUserKey(userId, tenantId, clientId);
-        Object jtiObj = redisTemplate.opsForValue().get(uniqueKey);
-
-        if (jtiObj != null) {
-            // 唯一登录模式，直接返回
-            return getByJti(String.valueOf(jtiObj));
-        }
-
-        // 2. 如果没有唯一登录索引，从用户 Token 集合中获取最新的一个
-        String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(userId, tenantId, clientId);
-        Set<Object> jtis = redisTemplate.opsForSet().members(userSetKey);
-
-        if (jtis == null || jtis.isEmpty()) {
-            log.debug("[RedisOnlineTokenService] No online token for user: userId={}, tenantId={}, clientId={}",
-                    userId, tenantId, clientId);
-            return Optional.empty();
-        }
-
-        // 获取最新的 token（按 issuedAt 排序）
-        return jtis.stream()
-                .map(jti -> getByJti(String.valueOf(jti)))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .max(Comparator.comparing(OnlineToken::getIssuedAt));
-    }
-
-    @Override
-    public Optional<OnlineToken> getByJti(String jti) {
-        if (StrUtil.isEmpty(jti)) {
-            return Optional.empty();
-        }
-
-        String key = RedisKeyConstants.OnlineToken.jtiKey(jti);
-        Object value = redisTemplate.opsForValue().get(key);
-
-        if (value != null) {
-            log.debug("[RedisOnlineTokenService] Found online token by jti: {}", jti);
-            return Optional.of((OnlineToken) value);
-        }
-
-        log.debug("[RedisOnlineTokenService] Online token not found by jti: {}", jti);
-        return Optional.empty();
-    }
-
-    @Override
-    public void removeByUser(Long userId, Long tenantId, String clientId) {
-        if (userId == null || tenantId == null || StrUtil.isEmpty(clientId)) {
-            return;
-        }
-
-        // 1. 获取用户所有 token
-        String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(userId, tenantId, clientId);
-        Set<Object> jtis = redisTemplate.opsForSet().members(userSetKey);
-
-        if (jtis == null || jtis.isEmpty()) {
-            log.debug("[RedisOnlineTokenService] No tokens to remove for user: userId={}, tenantId={}, clientId={}",
-                    userId, tenantId, clientId);
-            return;
-        }
-
-        // 2. 删除所有主数据
-        jtis.forEach(jti -> {
-            String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(String.valueOf(jti));
-            redisTemplate.delete(jtiKey);
-        });
-
-        // 3. 删除唯一登录索引（如果存在）
-        String uniqueKey = TOKEN_USER_UNIQUE_PREFIX + buildUserKey(userId, tenantId, clientId);
-        redisTemplate.delete(uniqueKey);
-
-        // 4. 删除用户 Token 集合
-        redisTemplate.delete(userSetKey);
-
-        // 5. 从在线用户 ZSet 中移除
-        String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
-        redisTemplate.opsForZSet().remove(onlineKey, userId);
-
-        log.info("[RedisOnlineTokenService] Forced offline all tokens: userId={}, tenantId={}, clientId={}, count={}",
-                userId, tenantId, clientId, jtis.size());
-    }
-
-    @Override
-    public void removeByJti(String jti) {
-        if (StrUtil.isEmpty(jti)) {
-            return;
-        }
-
-        // 1. 获取完整信息
-        Optional<OnlineToken> tokenOpt = getByJti(jti);
-        if (tokenOpt.isEmpty()) {
-            log.debug("[RedisOnlineTokenService] Token not found for removal: jti={}", jti);
-            return;
-        }
-
-        OnlineToken token = tokenOpt.get();
-
-        // 2. 删除主数据
-        String jtiKey = RedisKeyConstants.OnlineToken.jtiKey(jti);
-        redisTemplate.delete(jtiKey);
-
-        // 3. 从用户 Token 集合中移除
-        String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(token.getUserId(), token.getTenantId(), token.getClientId());
-        redisTemplate.opsForSet().remove(userSetKey, jti);
-
-        // 4. 如果是唯一登录且是当前 token，删除唯一登录索引
-        TokenAuthTypeEnum authType = TokenAuthTypeEnum.getEnum(token.getAuthType());
-        if (authType == TokenAuthTypeEnum.UNIQUE) {
-            String uniqueKey = TOKEN_USER_UNIQUE_PREFIX + buildUserKey(token.getUserId(), token.getTenantId(), token.getClientId());
-            Object currentJti = redisTemplate.opsForValue().get(uniqueKey);
-            if (jti.equals(String.valueOf(currentJti))) {
-                redisTemplate.delete(uniqueKey);
-            }
-        }
-
-        // 5. 检查用户是否还有其他 token，如果没有则从在线用户 ZSet 中移除
-        Set<Object> remainingJtis = redisTemplate.opsForSet().members(userSetKey);
-        if (remainingJtis == null || remainingJtis.isEmpty()) {
-            String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(token.getTenantId(), token.getClientId());
-            redisTemplate.opsForZSet().remove(onlineKey, token.getUserId());
-        }
-
-        log.info("[RedisOnlineTokenService] Removed online token: jti={}, userId={}", jti, token.getUserId());
-    }
-
-    @Override
-    public boolean isOnline(String jti) {
-        if (StrUtil.isEmpty(jti)) {
-            return false;
-        }
-
-        String key = RedisKeyConstants.OnlineToken.jtiKey(jti);
-        return redisTemplate.hasKey(key);
+        redisTemplate.opsForSet().add(RedisKeyConstants.OnlineToken.ONLINE_REGISTRY, onlineKey);
     }
 
     /**
-     * 获取在线用户列表（分页）
-     *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @param offset   偏移量
-     * @param limit    数量
-     * @return 用户ID列表
+     * 写入同 IP 会话索引；集合达到 {@link InSecurityProperties.Session#getIpSetMaxMembers()} 后跳过。
      */
-    @Override
-    public List<Long> getOnlineUsers(Long tenantId, String clientId, long offset, long limit) {
-        String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
+    private void indexByIp(OnlineToken session, long sessionTtl) {
+        if (StrUtil.isEmpty(session.getIpAddress())) {
+            return;
+        }
+        String ipSetKey = RedisKeyConstants.OnlineToken.ipSetKey(session.getTenantId(), session.getIpAddress());
+        int cap = properties.getSession().getIpSetMaxMembers();
+        if (cap > 0) {
+            Long size = redisTemplate.opsForSet().size(ipSetKey);
+            if (size != null && size >= cap) {
+                log.warn("[RedisOnlineTokenService] IP 会话集合已达上限，跳过索引: key={}, size={}, cap={}, sid={}",
+                        ipSetKey, size, cap, session.getSid());
+                return;
+            }
+        }
+        redisTemplate.opsForSet().add(ipSetKey, session.getSid());
+        extendExpire(ipSetKey, sessionTtl);
+    }
 
-        // 按 score 降序获取（最晚过期的在前，即最新登录的）
-        Set<ZSetOperations.TypedTuple<Object>> tuples = redisTemplate.opsForZSet()
-                .reverseRangeWithScores(onlineKey, offset, offset + limit - 1);
-
-        if (tuples == null || tuples.isEmpty()) {
+    private List<String> listClientIds(Long tenantId) {
+        Set<Object> registered = redisTemplate.opsForSet()
+                .members(RedisKeyConstants.OnlineToken.ONLINE_REGISTRY);
+        if (registered == null || registered.isEmpty()) {
             return Collections.emptyList();
         }
+        List<String> clientIds = new ArrayList<>();
+        for (Object member : registered) {
+            String clientId = RedisKeyConstants.OnlineToken
+                    .parseClientId(String.valueOf(member), tenantId);
+            if (StrUtil.isNotEmpty(clientId)) {
+                clientIds.add(clientId);
+            }
+        }
+        return clientIds;
+    }
 
-        long now = Instant.now().toEpochMilli();
-        List<Long> userIds = new ArrayList<>();
-        for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-            // 过滤掉已过期的用户
-            if (tuple.getScore() != null && tuple.getScore() > now) {
-                Object userId = tuple.getValue();
-                Long value = NumberUtil.parseLong(StrUtil.toString(userId), -1L);
-                if (value > -1) {
-                    userIds.add(value);
+    private List<OnlineToken> loadSessions(List<String> sids) {
+        if (sids == null || sids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> keys = sids.stream().map(RedisKeyConstants.OnlineToken::sidKey).toList();
+        List<Object> values = redisTemplate.opsForValue().multiGet(keys);
+        List<OnlineToken> sessions = new ArrayList<>(sids.size());
+        if (values != null) {
+            for (Object value : values) {
+                if (value instanceof OnlineToken session) {
+                    sessions.add(session);
                 }
             }
         }
-
-        return userIds;
+        sessions.sort(Comparator.comparing(OnlineToken::getIssuedAt,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        return sessions;
     }
 
     /**
-     * 获取在线用户总数
-     *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return 在线用户数
+     * 读取 sid 集合并剔除主数据已消亡的成员。
      */
-    @Override
-    public long getOnlineUserCount(Long tenantId, String clientId) {
-        String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
-
-        // 只统计未过期的用户
-        long now = Instant.now().toEpochMilli();
-        Long count = redisTemplate.opsForZSet().count(onlineKey, now, Double.MAX_VALUE);
-        return count != null ? count : 0;
-    }
-
-    /**
-     * 清理过期的在线用户（定时任务调用）
-     *
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return 清理的用户数
-     */
-    @Override
-    public long cleanExpiredOnlineUsers(Long tenantId, String clientId) {
-        String onlineKey = ONLINE_USER_PREFIX + buildTenantClientKey(tenantId, clientId);
-
-        // 删除所有已过期的用户（score < now）
-        long now = Instant.now().toEpochMilli();
-        Long removed = redisTemplate.opsForZSet().removeRangeByScore(onlineKey, 0, now);
-
-        if (removed != null && removed > 0) {
-            log.info("[RedisOnlineTokenService] Cleaned expired online users: tenantId={}, clientId={}, count={}",
-                    tenantId, clientId, removed);
+    private List<String> onlineSids(String setKey) {
+        Set<Object> members = redisTemplate.opsForSet().members(setKey);
+        if (members == null || members.isEmpty()) {
+            return Collections.emptyList();
         }
-
-        return removed != null ? removed : 0;
+        return liveSids(setKey, members);
     }
 
     /**
-     * 清理所有租户的过期在线用户（定时任务调用）
-     *
-     * @return 清理的总用户数
+     * 用主数据 {@code MGET} 过滤仍在线的 sid，墓碑从集合中 {@code SREM}；集合空了则删除 key。
      */
-    @Override
-    public long cleanAllExpiredOnlineUsers() {
-        // 扫描所有 online:user:* 的 key
-        Set<String> keys = redisTemplate.keys(ONLINE_USER_PREFIX + "*");
-        if (keys == null || keys.isEmpty()) {
-            return 0;
-        }
-
-        long totalRemoved = 0;
-        long now = Instant.now().toEpochMilli();
-
-        for (String key : keys) {
-            Long removed = redisTemplate.opsForZSet().removeRangeByScore(key, 0, now);
-            if (removed != null) {
-                totalRemoved += removed;
+    private List<String> liveSids(String setKey, Set<?> members) {
+        List<String> sids = new ArrayList<>(members.size());
+        for (Object member : members) {
+            if (member != null) {
+                sids.add(String.valueOf(member));
             }
         }
-
-        if (totalRemoved > 0) {
-            log.info("[RedisOnlineTokenService] Cleaned all expired online users: total={}", totalRemoved);
-        }
-
-        return totalRemoved;
-    }
-
-    /**
-     * 获取用户所有在线 Token
-     *
-     * @param userId   用户ID
-     * @param tenantId 租户ID
-     * @param clientId 客户端ID
-     * @return Token列表
-     */
-    @Override
-    public List<OnlineToken> getUserAllTokens(Long userId, Long tenantId, String clientId) {
-        String userSetKey = TOKEN_USER_SET_PREFIX + buildUserKey(userId, tenantId, clientId);
-        Set<Object> jtis = redisTemplate.opsForSet().members(userSetKey);
-
-        if (jtis == null || jtis.isEmpty()) {
+        if (sids.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<OnlineToken> tokens = new ArrayList<>();
-        for (Object jti : jtis) {
-            getByJti(String.valueOf(jti)).ifPresent(tokens::add);
+        List<String> keys = sids.stream().map(RedisKeyConstants.OnlineToken::sidKey).toList();
+        List<Object> values = redisTemplate.opsForValue().multiGet(keys);
+        List<String> live = new ArrayList<>(sids.size());
+        List<Object> dead = new ArrayList<>();
+        for (int i = 0; i < sids.size(); i++) {
+            Object value = values != null && i < values.size() ? values.get(i) : null;
+            if (value instanceof OnlineToken) {
+                live.add(sids.get(i));
+            } else {
+                dead.add(sids.get(i));
+            }
         }
-
-        // 按登录时间倒序排序
-        tokens.sort(Comparator.comparing(OnlineToken::getIssuedAt).reversed());
-        return tokens;
-    }
-
-    /**
-     * 唯一登录时踢掉旧 token
-     */
-    private void kickOldTokenIfUnique(InUser user) {
-        String uniqueKey = TOKEN_USER_UNIQUE_PREFIX + buildUserKey(user);
-        Object oldJti = redisTemplate.opsForValue().get(uniqueKey);
-
-        if (oldJti != null) {
-            log.info("[RedisOnlineTokenService] Kicking old token for unique login: userId={}, oldJti={}",
-                    user.getId(), oldJti);
-            removeByJti(String.valueOf(oldJti));
+        if (!dead.isEmpty()) {
+            redisTemplate.opsForSet().remove(setKey, dead.toArray());
+            Long remaining = redisTemplate.opsForSet().size(setKey);
+            if (remaining == null || remaining == 0) {
+                redisTemplate.delete(setKey);
+            }
         }
+        return live;
     }
 
     /**
-     * 构建用户索引Key
+     * 移除在线用户 ZSet 中 score 已早于当前时间的成员，并删除对应的用户会话集合。
      */
-    private String buildUserKey(InUser user) {
-        return buildUserKey(user.getId(), user.getTenantId(), user.getClientId());
-    }
-
-    /**
-     * 构建用户索引Key
-     * 格式：{tenantId}:{clientId}:{userId}
-     */
-    private String buildUserKey(Long userId, Long tenantId, String clientId) {
-        return String.format("%d:%s:%d", tenantId, clientId, userId);
-    }
-
-    /**
-     * 构建租户客户端Key
-     * 格式：{tenantId}:{clientId}
-     */
-    private String buildTenantClientKey(Long tenantId, String clientId) {
-        return String.format("%d:%s", tenantId, clientId);
-    }
-
-    /**
-     * 计算TTL（秒）
-     */
-    private long calculateTTL(Instant expiresAt) {
-        if (expiresAt == null) {
-            return 3600; // 默认1小时
+    private long removeExpiredMembers(String onlineKey, Long tenantId, String clientId) {
+        double now = Instant.now().toEpochMilli();
+        Set<Object> expired = redisTemplate.opsForZSet().rangeByScore(onlineKey, 0, now);
+        if (expired != null && tenantId != null && StrUtil.isNotEmpty(clientId)) {
+            for (Object member : expired) {
+                long userId = NumberUtil.parseLong(StrUtil.toString(member), INVALID_USER_ID);
+                if (userId != INVALID_USER_ID) {
+                    redisTemplate.delete(RedisKeyConstants.OnlineToken.userSetKey(tenantId, clientId, userId));
+                }
+            }
         }
+        Long removed = redisTemplate.opsForZSet().removeRangeByScore(onlineKey, 0, now);
+        return removed == null ? 0L : removed;
+    }
+
+    /**
+     * 延长键的过期时间；已有更长 TTL 时不做变更。
+     *
+     * <p>{@code TTL=-1}（存在但未设过期）视为尚未补 TTL，必须写入本次寿命。
+     * {@code TTL=-2}（键不存在）跳过。</p>
+     */
+    private void extendExpire(String key, long ttlSeconds) {
+        Long current = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        if (current != null && current == KEY_NOT_FOUND) {
+            return;
+        }
+        if (current != null && current >= ttlSeconds) {
+            return;
+        }
+        redisTemplate.expire(key, ttlSeconds, TimeUnit.SECONDS);
+    }
+
+    private boolean isValidUserScope(Long tenantId, String clientId, Long userId) {
+        return tenantId != null && userId != null && StrUtil.isNotEmpty(clientId);
+    }
+
+    private long remainingSeconds(Instant expiresAt) {
         return ChronoUnit.SECONDS.between(Instant.now(), expiresAt);
     }
 }

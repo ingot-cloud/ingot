@@ -2,6 +2,7 @@ package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
 
+import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.AccountLockSignal;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
@@ -13,6 +14,7 @@ import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCa
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
+import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.support.AfterCommitActions;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class LockAccountUseCaseService implements LockAccountUseCase {
     private final LockStatePort lockStatePort;
     private final SecurityEventPort securityEventPort;
     private final AccountLockSignalPort accountLockSignalPort;
+    private final SessionRevocationPort sessionRevocationPort;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -74,6 +77,7 @@ public class LockAccountUseCaseService implements LockAccountUseCase {
         securityEventPort.publishEvent(event);
 
         scheduleWriteLockSignal(command.getUserId(), command.getUserType(), command.getLockedUntil());
+        scheduleRevokeSessions(command.getUserId(), command.getOperatorId());
 
         log.info("用户 {} 已被锁定", command.getUserId());
     }
@@ -123,8 +127,17 @@ public class LockAccountUseCaseService implements LockAccountUseCase {
         securityEventPort.publishEvent(event);
 
         scheduleWriteLockSignal(userId, userType, lockedUntil);
+        scheduleRevokeSessions(userId, null);
 
         log.info("用户 {} 已被自动锁定，到期时间: {}", userId, lockedUntil);
+    }
+
+    /**
+     * 锁定状态只拦截新的认证请求，已签发的会话必须显式撤销才会真正断开。
+     */
+    private void scheduleRevokeSessions(Long userId, Long actorId) {
+        AfterCommitActions.run(() -> sessionRevocationPort.revokeUserSessions(
+                userId, SessionRevokeReason.ACCOUNT_LOCKED, actorId));
     }
 
     private void scheduleWriteLockSignal(Long userId, UserTypeEnum userType, LocalDateTime lockedUntil) {

@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.blacklist.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.blacklist.BlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.internal.LocalBlacklistService;
 import com.ingot.framework.gateway.rule.client.blacklist.internal.RemoteBlacklistService;
@@ -51,7 +52,7 @@ public class BlacklistAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(BlacklistService.class)
     @ConditionalOnProperty(prefix = "ingot.security.blacklist.policy",
-            name = "mode", havingValue = "local", matchIfMissing = true)
+            name = "mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public BlacklistService localBlacklistService(BlacklistProperties properties) {
         log.info("[Blacklist] using local blacklist service");
         return new LocalBlacklistService(properties);
@@ -64,7 +65,7 @@ public class BlacklistAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(BlacklistService.class)
     @ConditionalOnProperty(prefix = "ingot.security.blacklist.policy",
-            name = "mode", havingValue = "remote")
+            name = "mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public BlacklistService remoteBlacklistService(RemoteSnapshotFetcher fetcher) {
         log.info("[Blacklist] using remote blacklist service");
         return new RemoteBlacklistService(fetcher);
@@ -103,7 +104,7 @@ public class BlacklistAutoConfiguration {
                 coordinator.register(SecurityPolicyDomain.IP_LIST, blacklistService::evictAll);
             }
             if (refreshListener != null && blacklistService != null && properties != null
-                    && properties.getPolicy().getMode() == BlacklistProperties.Mode.LOCAL) {
+                    && properties.getPolicy().getMode() == PolicySourceMode.LOCAL) {
                 refreshListener.register("ingot.security.blacklist.", blacklistService::evictAll);
             }
         }

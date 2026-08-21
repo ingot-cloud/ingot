@@ -1,6 +1,7 @@
 package com.ingot.cloud.bff.service;
 
-import com.ingot.cloud.bff.client.AuthClient;
+import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
+import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
 import com.ingot.cloud.bff.config.BffProperties;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
@@ -33,13 +34,14 @@ class BffAuthServiceLoginLockTest {
         lockProps.setEnabled(true);
         lockProps.setEmitLoginFailureOnBffBlock(false);
         AccountLockSignalPort signalPort = mock(AccountLockSignalPort.class);
-        AuthClient authClient = mock(AuthClient.class);
+        RemoteAuthTokenService remoteAuthTokenService = mock(RemoteAuthTokenService.class);
         when(signalPort.isLockedByUsername(UserTypeEnum.ADMIN, "admin")).thenReturn(true);
 
         BffAuthService service = new BffAuthService(
                 properties,
                 mock(BffSessionService.class),
-                authClient,
+                remoteAuthTokenService,
+                mock(RemoteAuthSessionService.class),
                 signalPort,
                 lockProps);
 
@@ -51,6 +53,6 @@ class BffAuthServiceLoginLockTest {
 
         assertFalse(result.isSuccess());
         assertEquals("ACCOUNT_LOCKED", result.getCode());
-        verifyNoInteractions(authClient);
+        verifyNoInteractions(remoteAuthTokenService);
     }
 }

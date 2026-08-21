@@ -1,5 +1,6 @@
 package com.ingot.framework.security.account.domain.config;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
@@ -46,7 +47,7 @@ public class AccountDomainAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(AccountLockoutPolicyLoader.class)
     public AccountLockoutPolicyLoader localAccountLockoutPolicyLoader(AccountDomainProperties properties) {
-        if (properties.getMode() == AccountDomainProperties.PolicyMode.REMOTE) {
+        if (properties.getMode() == PolicySourceMode.REMOTE) {
             log.warn("[AccountDomain] ingot.security.account.mode=remote 但当前未提供远程实现，回退 local。"
                     + "远程弹性阶梯由后续 change 接入。");
         }

@@ -1,3 +1,4 @@
+com.ingot.framework.security.recording.config.RecordingTargetConversionAutoConfiguration
 com.ingot.framework.security.recording.spool.FileSpoolAutoConfiguration
 com.ingot.framework.security.recording.config.SecurityEventRecordingDisabledAutoConfiguration
 com.ingot.framework.security.recording.config.SecurityEventRecordingAutoConfiguration

@@ -35,6 +35,12 @@ public class BffSession implements Serializable {
     private long createdAt;
 
     /**
+     * Auth 侧会话 ID（JWT 的 {@code sid} 声明），登出时据此请求 Auth 撤销会话。
+     * <p>取自 Access Token 声明而非另建索引：Access Token 过期后仍可凭它撤销整条凭据链。</p>
+     */
+    private String sid;
+
+    /**
      * 客户端指纹，用于防止 Cookie 被盗用。
      */
     private String fingerprint;

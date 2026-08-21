@@ -1,0 +1,30 @@
+apply from: "${project.getRootDir().path}/config/service-base.gradle"
+apply from: "${project.getRootDir().path}/config/database.gradle"
+apply from: 'ingot-assemble.gradle'
+
+dependencies {
+    implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.actuator_starter)
+    implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
+    implementation(deps.spring.spring_boot.thymeleaf_starter)
+
+    implementation project(ingot.framework_security_auth_server)
+    implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_sentinel)
+    implementation project(ingot.framework_tenant)
+    implementation project(ingot.framework_openapi)
+    implementation project(ingot.framework_tss_spring)
+
+    implementation project(ingot.auth_api)
+    implementation project(ingot.pms_api)
+    implementation project(ingot.member_api)
+    implementation project(ingot.security_api)
+    implementation project(ingot.framework_security_access_adapter)
+    implementation project(ingot.framework_security_account_core)
+
+    // 会话撤销事件上报：本库不落 security_event，经 Feign 上报安全中心
+    implementation project(ingot.framework_security_recording)
+    implementation project(ingot.framework_security_event_transport_feign)
+}
+
+

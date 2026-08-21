@@ -51,7 +51,9 @@ public class DefaultPriorityClassifier implements PriorityClassifier {
                  "ACCOUNT_UNLOCKED", "ACCOUNT_DELETED", "PASSWORD_CHANGED", "PASSWORD_RESET",
                  "PASSWORD_EXPIRED", "FORCE_CHANGE_PASSWORD", "BLACKLIST_BLOCK",
                  "LOGIN_FAIL_IP_EXCEED", "LOGIN_FAIL_DEVICE_EXCEED", "LOGIN_FAIL_CLIENT_EXCEED",
-                 "LOGIN_FAIL_ACCOUNT_IP_EXCEED" -> DEFAULT_DURABLE;
+                 "LOGIN_FAIL_ACCOUNT_IP_EXCEED",
+                 // 被动下线是安全结论，丢事件等于丢掉「谁在何时被踢下线」的唯一证据
+                 "SESSION_REVOKED", "SESSION_CONCURRENT_KICKOUT" -> DEFAULT_DURABLE;
             default -> DEFAULT_BEST_EFFORT;
         };
     }

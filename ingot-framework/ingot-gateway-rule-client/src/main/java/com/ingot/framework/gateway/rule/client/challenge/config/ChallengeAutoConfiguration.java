@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.challenge.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.internal.LocalChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.internal.RemoteChallengePolicyService;
@@ -88,7 +89,7 @@ public class ChallengeAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ChallengePolicyService.class)
     @ConditionalOnProperty(prefix = "ingot.security.challenge.policy",
-            name = "mode", havingValue = "local", matchIfMissing = true)
+            name = "mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public ChallengePolicyService localChallengePolicyService(ChallengeProperties properties) {
         log.info("[Challenge] using local challenge policy service");
         return new LocalChallengePolicyService(properties);
@@ -101,7 +102,7 @@ public class ChallengeAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ChallengePolicyService.class)
     @ConditionalOnProperty(prefix = "ingot.security.challenge.policy",
-            name = "mode", havingValue = "remote")
+            name = "mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public ChallengePolicyService remoteChallengePolicyService(RemoteSnapshotFetcher fetcher) {
         log.info("[Challenge] using remote challenge policy service");
         return new RemoteChallengePolicyService(fetcher);
@@ -140,7 +141,7 @@ public class ChallengeAutoConfiguration {
                         challengePolicyService::evictAll);
             }
             if (refreshListener != null && challengePolicyService != null && properties != null
-                    && properties.getPolicy().getMode() == ChallengeProperties.Mode.LOCAL) {
+                    && properties.getPolicy().getMode() == PolicySourceMode.LOCAL) {
                 refreshListener.register("ingot.security.challenge.", challengePolicyService::evictAll);
             }
         }

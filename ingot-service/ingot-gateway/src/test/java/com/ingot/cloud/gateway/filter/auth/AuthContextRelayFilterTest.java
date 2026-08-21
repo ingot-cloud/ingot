@@ -19,25 +19,22 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link AuthContextRelayFilter} 瘦身 JWT 经 OnlineToken 补全 userType。
+ * {@link AuthContextRelayFilter} 按 sid 从会话补全 userType。
  *
  * @author jy
  * @since 1.0.0
  */
 class AuthContextRelayFilterTest {
 
+    private static final String SID = "session-1";
+
     @Test
-    void slimJwt_enrichesUserTypeFromOnlineToken() {
+    void slimJwt_enrichesUserTypeFromSession() {
         ReactiveOnlineTokenUserTypeReader reader = mock(ReactiveOnlineTokenUserTypeReader.class);
-        when(reader.readUserType("slim-jti")).thenReturn(Mono.just("0"));
+        when(reader.readUserType(SID)).thenReturn(Mono.just("0"));
         AuthContextRelayFilter filter = new AuthContextRelayFilter(reader);
 
-        String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("{\"i\":9,\"jti\":\"slim-jti\"}".getBytes(StandardCharsets.UTF_8));
-        MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
-                        .build());
+        MockServerWebExchange exchange = exchangeWithPayload("{\"i\":9,\"sid\":\"" + SID + "\"}");
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
@@ -49,17 +46,12 @@ class AuthContextRelayFilterTest {
     }
 
     @Test
-    void slimJwt_onlineTokenMiss_leavesUserTypeEmpty() {
+    void slimJwt_sessionMiss_leavesUserTypeEmpty() {
         ReactiveOnlineTokenUserTypeReader reader = mock(ReactiveOnlineTokenUserTypeReader.class);
-        when(reader.readUserType("slim-jti")).thenReturn(Mono.empty());
+        when(reader.readUserType(SID)).thenReturn(Mono.empty());
         AuthContextRelayFilter filter = new AuthContextRelayFilter(reader);
 
-        String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("{\"i\":9,\"jti\":\"slim-jti\"}".getBytes(StandardCharsets.UTF_8));
-        MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
-                        .build());
+        MockServerWebExchange exchange = exchangeWithPayload("{\"i\":9,\"sid\":\"" + SID + "\"}");
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
@@ -71,24 +63,28 @@ class AuthContextRelayFilterTest {
     }
 
     @Test
-    void legacyJwt_writesUserTypeWithoutRedis() {
+    void jwtWithoutSid_doesNotTouchRedis() {
         ReactiveOnlineTokenUserTypeReader reader = mock(ReactiveOnlineTokenUserTypeReader.class);
         AuthContextRelayFilter filter = new AuthContextRelayFilter(reader);
 
-        String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("{\"i\":9,\"ut\":\"1\"}".getBytes(StandardCharsets.UTF_8));
-        MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
-                        .build());
+        MockServerWebExchange exchange = exchangeWithPayload("{\"i\":9}");
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
         filter.filter(exchange, chain).block();
 
         assertEquals("9", exchange.getAttributes().get(AuthContextAttributes.USER_ID));
-        assertEquals("1", exchange.getAttributes().get(AuthContextAttributes.USER_TYPE));
+        assertNull(exchange.getAttributes().get(AuthContextAttributes.USER_TYPE));
         verify(chain).filter(exchange);
         verifyNoInteractions(reader);
+    }
+
+    private MockServerWebExchange exchangeWithPayload(String claimsJson) {
+        String payload = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(claimsJson.getBytes(StandardCharsets.UTF_8));
+        return MockServerWebExchange.from(
+                MockServerHttpRequest.get("/pms/user")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
+                        .build());
     }
 }

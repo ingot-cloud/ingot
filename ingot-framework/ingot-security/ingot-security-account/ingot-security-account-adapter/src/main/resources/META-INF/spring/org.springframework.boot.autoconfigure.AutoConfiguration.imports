@@ -1,2 +1,3 @@
 com.ingot.framework.security.account.adapter.config.AccountAdapterAutoConfiguration
 com.ingot.framework.security.account.adapter.config.AccountSecurityEventPortAutoConfiguration
+com.ingot.framework.security.account.adapter.config.SessionRevocationPortAutoConfiguration

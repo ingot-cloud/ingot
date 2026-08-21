@@ -14,6 +14,9 @@ public interface RedisKeyConstants {
     /** 平台级 Redis 命名空间根前缀，与 {@link CacheConstants#IGNORE_TENANT_PREFIX} 一致。 */
     String IN_PREFIX = CacheConstants.IGNORE_TENANT_PREFIX;
 
+    /** Key 各段之间的分隔符。 */
+    String SEPARATOR = ":";
+
     /**
      * 网关安全执行面 Redis Key（临时封禁、违规计数、PassToken 等）。
      */
@@ -72,6 +75,20 @@ public interface RedisKeyConstants {
     }
 
     /**
+     * 会话策略分层缓存 Redis Key（Auth 侧并发策略 L2 / LKG）。
+     */
+    interface SessionPolicy {
+
+        String PREFIX = IN_PREFIX + ":sec:session";
+
+        /** 并发策略 L2 热缓存：{@code in:sec:session:concurrency}。 */
+        String CONCURRENCY_SNAPSHOT = PREFIX + ":concurrency";
+
+        /** 并发策略 LKG 快照：{@code in:sec:session:concurrency:lkg}。 */
+        String CONCURRENCY_LKG = PREFIX + ":concurrency:lkg";
+    }
+
+    /**
      * 账号锁定信号 Redis Key（BFF / Gateway / Auth 分层拦截；与网关 temp-block 命名空间独立）。
      */
     interface AccountLock {
@@ -94,18 +111,111 @@ public interface RedisKeyConstants {
     }
 
     /**
-     * 在线 Token Redis Key（Auth 签发瘦身 JWT 后的扩展信息；Gateway 按 jti 读取 userType）。
+     * 在线会话 Redis Key（Auth 签发瘦身 JWT 后的扩展信息；Gateway 按 sid 读取 userType）。
      *
-     * <p>现网前缀为 {@code token:jti:}（无 {@link #IN_PREFIX}），与
-     * {@code RedisOnlineTokenService} 历史 key 对齐，不得改写。</p>
+     * <p>会话主键为 sid（等于 {@code OAuth2Authorization.id}），refresh 换发不变。
+     * {@link #JTI_PREFIX} 与 {@link #USER_UNIQUE_PREFIX} 运行时不再写入，仅供发布清存量脚本匹配。</p>
+     *
+     * <p>前缀延续现网命名（无 {@link #IN_PREFIX}），与 {@code RedisOnlineTokenService} 历史
+     * key 空间对齐，便于运维脚本按同一 pattern 扫描。</p>
      */
     interface OnlineToken {
 
-        /** 主数据：{@code token:jti:{jti}}。 */
+        /** 会话主数据：{@code token:sid:{sid}}。 */
+        String SID_PREFIX = "token:sid:";
+
+        /**
+         * 历史 Access Token 索引前缀：{@code token:jti:{jti}}。
+         * <p>运行时已不再写入；发布脚本仍按此 pattern 清存量。</p>
+         */
         String JTI_PREFIX = "token:jti:";
 
-        static String jtiKey(String jti) {
-            return JTI_PREFIX + jti;
+        /**
+         * 历史单会话索引前缀：{@code token:user:{tenantId}:{clientId}:{userId}}。
+         * <p>运行时已不再写入；与 {@link #USER_SET_PREFIX} 不同，后者仍在使用。
+         * 发布脚本 {@code token:user:*} 会同时覆盖本前缀与用户会话集合。</p>
+         */
+        String USER_UNIQUE_PREFIX = "token:user:";
+
+        /** 用户会话集合：{@code token:user:set:{tenantId}:{clientId}:{userId}} → Set&lt;sid&gt;。 */
+        String USER_SET_PREFIX = "token:user:set:";
+
+        /** 在线用户排序集：{@code online:user:{tenantId}:{clientId}} → ZSet&lt;userId, expiresAtMs&gt;。 */
+        String ONLINE_USER_PREFIX = "online:user:";
+
+        /** 同 IP 会话集合：{@code session:ip:{tenantId}:{ip}} → Set&lt;sid&gt;。 */
+        String IP_SET_PREFIX = "session:ip:";
+
+        /**
+         * 在线用户 ZSet 注册表：{@code session:online:registry}，成员为
+         * {@link #ONLINE_USER_PREFIX} 系列 key。
+         *
+         * <p>定时清理据此枚举待清理的 ZSet，避免对生产 Redis 执行 {@code KEYS}。</p>
+         */
+        String ONLINE_REGISTRY = "session:online:registry";
+
+        static String sidKey(String sid) {
+            return SID_PREFIX + sid;
+        }
+
+        static String userSetKey(Long tenantId, String clientId, Long userId) {
+            return USER_SET_PREFIX + userScope(tenantId, clientId, userId);
+        }
+
+        static String onlineUserKey(Long tenantId, String clientId) {
+            return ONLINE_USER_PREFIX + tenantId + SEPARATOR + clientId;
+        }
+
+        /**
+         * 在线用户排序集的租户前缀：{@code online:user:{tenantId}:}。
+         *
+         * <p>跨 Client 查询据此从 {@link #ONLINE_REGISTRY} 成员中筛出本租户的 ZSet，
+         * 无需扫描 key 空间。</p>
+         */
+        static String onlineUserTenantPrefix(Long tenantId) {
+            return ONLINE_USER_PREFIX + tenantId + SEPARATOR;
+        }
+
+        /**
+         * 从在线用户排序集 key 中解析 clientId。
+         *
+         * @return clientId；key 不属于该租户时返回 {@code null}
+         */
+        static String parseClientId(String onlineUserKey, Long tenantId) {
+            String prefix = onlineUserTenantPrefix(tenantId);
+            if (onlineUserKey == null || !onlineUserKey.startsWith(prefix)) {
+                return null;
+            }
+            return onlineUserKey.substring(prefix.length());
+        }
+
+        /**
+         * 从在线用户排序集 key 中解析租户 ID。
+         *
+         * @return 租户 ID；key 不符合 {@code online:user:{tenantId}:{clientId}} 时返回 {@code null}
+         */
+        static Long parseTenantId(String onlineUserKey) {
+            if (onlineUserKey == null || !onlineUserKey.startsWith(ONLINE_USER_PREFIX)) {
+                return null;
+            }
+            String rest = onlineUserKey.substring(ONLINE_USER_PREFIX.length());
+            int sep = rest.indexOf(SEPARATOR);
+            if (sep <= 0) {
+                return null;
+            }
+            try {
+                return Long.parseLong(rest.substring(0, sep));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+
+        static String ipSetKey(Long tenantId, String ip) {
+            return IP_SET_PREFIX + tenantId + SEPARATOR + ip;
+        }
+
+        private static String userScope(Long tenantId, String clientId, Long userId) {
+            return tenantId + SEPARATOR + clientId + SEPARATOR + userId;
         }
     }
 }

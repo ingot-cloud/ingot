@@ -1,12 +1,13 @@
 package com.ingot.framework.security.recording.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.ingot.framework.security.recording.model.RecordingTarget;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * <p>安全事件唯一运行时配置，前缀 {@code ingot.security.event}。</p>
@@ -36,11 +37,13 @@ public class SecurityEventProperties {
     /**
      * 主投递目标。
      * <ul>
-     *     <li>{@code local}：写入本服务库 canonical {@code security_event}（须配 {@link #primaryStore}）</li>
-     *     <li>{@code center}：经 Feign/Transport 上报 ingot-security 中心 admission</li>
+     *     <li>{@link RecordingTarget#LOCAL}：写入本服务库 canonical {@code security_event}（须配 {@link #primaryStore}）</li>
+     *     <li>{@link RecordingTarget#CENTER}：经 Feign/Transport 上报 ingot-security 中心 admission</li>
      * </ul>
+     * <p>YAML 写 {@code local} / {@code center}；历史值 {@code remote} 由
+     * {@link RecordingTargetConverter} 映射为 {@link RecordingTarget#CENTER}。</p>
      */
-    private String target = "local";
+    private RecordingTarget target = RecordingTarget.LOCAL;
 
     /**
      * {@code target=local} 且 classpath 存在多个 {@code SecurityEventStore} 时的主 Store id。
@@ -50,9 +53,9 @@ public class SecurityEventProperties {
 
     /**
      * 次要投递目标列表（迁移 shadow 用）；稳定态应为空列表。
-     * <p>元素取值同 {@link #target}：{@code local} 或 {@code center}。</p>
+     * <p>元素取值同 {@link #target}：{@link RecordingTarget#LOCAL} 或 {@link RecordingTarget#CENTER}。</p>
      */
-    private List<String> shadowTargets = new ArrayList<>();
+    private List<RecordingTarget> shadowTargets = new ArrayList<>();
 
     /**
      * 上报方模块标识，写入 {@code security_event.source_module}。
@@ -154,7 +157,7 @@ public class SecurityEventProperties {
     public static class Spool {
 
         /** spool 根目录。 */
-        private String directory = "./logs/security-recording/spool";
+        private String directory = "/ingot-data/security-recording/spool";
 
         /** 目录总配额（如 {@code 1GB}）。 */
         private String maxBytes = "1GB";

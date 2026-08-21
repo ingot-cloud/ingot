@@ -4,10 +4,22 @@ dependencies {
     api(deps.spring.security_oauth2_authorization_server)
     api project(ingot.framework_security_common)
 
+    // 并发会话策略：安全中心 Inner 契约 + 分层缓存（remote → LKG → Nacos 地板）
+    implementation project(ingot.framework_cache)
+    implementation project(ingot.security_api)
+
     implementation(deps.spring.spring_boot.security_starter)
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.framework_jdbc)
     implementation(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.jakarta_servlet_api)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
 }

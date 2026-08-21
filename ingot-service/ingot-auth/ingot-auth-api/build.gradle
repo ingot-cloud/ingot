@@ -1,0 +1,10 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+
+dependencies {
+    implementation project(ingot.framework_feign)
+    implementation project(ingot.framework_core)
+
+    // 仅用于引用 OAuth2 / PKCE 标准参数名常量，编译期内联，无运行期依赖
+    compileOnly(deps.spring.security_oauth2_core)
+    compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
+}

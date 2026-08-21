@@ -22,9 +22,9 @@ public class AuthContextAttributes {
     public static final String USER_ID = "ingot.security.auth.userId";
 
     /**
-     * JWT / OnlineToken 解析出的用户类型（{@code UserTypeEnum} 的 value，如 {@code 0}/{@code 1}）。
-     * <p>由 {@link AuthContextRelayFilter} 写入：优先 JWT claim {@code ut}，瘦身 token 则按 jti
-     * 读取 Redis OnlineToken；{@link IdentityResolveFilter} 聚合进
+     * 会话中的用户类型（{@code UserTypeEnum} 的 value，如 {@code 0}/{@code 1}）。
+     * <p>由 {@link AuthContextRelayFilter} 按 JWT claim {@code sid} 读取 Redis 会话后写入；
+     * {@link IdentityResolveFilter} 聚合进
      * {@link com.ingot.cloud.gateway.security.ClientIdentity#getUserType()}。</p>
      */
     public static final String USER_TYPE = "ingot.security.auth.userType";

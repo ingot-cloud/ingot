@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.violation.config;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRefreshListener;
 import com.ingot.framework.gateway.rule.client.internal.RemoteSnapshotFetcher;
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
@@ -35,7 +36,7 @@ public class ViolationEscalationAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ViolationEscalationService.class)
     @ConditionalOnProperty(prefix = "ingot.security.violation-escalation.policy",
-            name = "mode", havingValue = "local", matchIfMissing = true)
+            name = "mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public ViolationEscalationService localViolationEscalationService(ViolationEscalationProperties properties) {
         log.info("[ViolationEscalation] using local service");
         return new LocalViolationEscalationService(properties);
@@ -44,7 +45,7 @@ public class ViolationEscalationAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ViolationEscalationService.class)
     @ConditionalOnProperty(prefix = "ingot.security.violation-escalation.policy",
-            name = "mode", havingValue = "remote")
+            name = "mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public ViolationEscalationService remoteViolationEscalationService(RemoteSnapshotFetcher fetcher) {
         log.info("[ViolationEscalation] using remote service");
         return new RemoteViolationEscalationService(fetcher);
@@ -77,7 +78,7 @@ public class ViolationEscalationAutoConfiguration {
                         violationEscalationService::evictAll);
             }
             if (refreshListener != null && violationEscalationService != null && properties != null
-                    && properties.getPolicy().getMode() == ViolationEscalationProperties.Mode.LOCAL) {
+                    && properties.getPolicy().getMode() == PolicySourceMode.LOCAL) {
                 refreshListener.register("ingot.security.violation-escalation.",
                         violationEscalationService::evictAll);
             }

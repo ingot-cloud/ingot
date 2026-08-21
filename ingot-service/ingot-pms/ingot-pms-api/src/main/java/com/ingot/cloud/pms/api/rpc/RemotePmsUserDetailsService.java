@@ -29,6 +29,11 @@ public interface RemotePmsUserDetailsService {
     @GetMapping("/inner/user/{id}")
     R<InnerUserDTO> getUserInfo(@PathVariable Long id);
 
-    @GetMapping("/inner/user/list")
+    /**
+     * 批量查询用户信息。
+     *
+     * <p>服务端为 {@code POST /inner/user/list}，ID 集合走请求体，不能声明成 GET。</p>
+     */
+    @PostMapping("/inner/user/list")
     R<List<InnerUserDTO>> getAllUserInfo(@RequestBody List<Long> ids);
 }

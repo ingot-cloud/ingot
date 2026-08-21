@@ -1,5 +1,6 @@
 package com.ingot.framework.gateway.rule.client.violation.config;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.violation.model.ViolationEscalationConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +50,7 @@ public class ViolationEscalationProperties {
      * Nacos 地板中的违规升级片段随之为空。</p>
      * <p>注意与 {@link Policy#isEnabled()} 区分：本字段决定 Service 是否装配，
      * {@code policy.enabled} 决定装配后运行期是否真的计数并临时封禁；
-     * 且 {@code policy.enabled} 在 {@link Mode#REMOTE} 下取自远端快照，yaml 值被忽略。</p>
+     * 且 {@code policy.enabled} 在 {@link PolicySourceMode#REMOTE} 下取自远端快照，yaml 值被忽略。</p>
      */
     private boolean enabled = false;
 
@@ -59,8 +60,8 @@ public class ViolationEscalationProperties {
     @Setter
     public static class Policy {
 
-        /** local：yaml 内联；remote：Feign 快照。 */
-        private Mode mode = Mode.LOCAL;
+        /** {@link PolicySourceMode#LOCAL}：yaml 内联；{@link PolicySourceMode#REMOTE}：Feign 快照。 */
+        private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
         /**
          * 违规计数滑动窗口（秒）；local 模式生效。
@@ -81,14 +82,10 @@ public class ViolationEscalationProperties {
         private int tempBlockTtlSec = ViolationEscalationConfig.DEFAULT_TEMP_BLOCK_TTL_SEC;
 
         /**
-         * 运行期是否启用违规计数与临时封禁；仅 {@link Mode#LOCAL} 下取本值，
-         * {@link Mode#REMOTE} 下取自远端快照。与外层
+         * 运行期是否启用违规计数与临时封禁；仅 {@link PolicySourceMode#LOCAL} 下取本值，
+         * {@link PolicySourceMode#REMOTE} 下取自远端快照。与外层
          * {@link ViolationEscalationProperties#isEnabled()}（装配开关）语义不同。
          */
         private boolean enabled = true;
-    }
-
-    public enum Mode {
-        LOCAL, REMOTE
     }
 }

@@ -17,6 +17,8 @@ public enum SecurityEventType {
     LOGIN_FAILURE("LOGIN_FAILURE", SecurityEventCategory.AUTH),
     LOGOUT("LOGOUT", SecurityEventCategory.AUTH),
     TOKEN_REFRESH("TOKEN_REFRESH", SecurityEventCategory.AUTH),
+    SESSION_REVOKED("SESSION_REVOKED", SecurityEventCategory.AUTH),
+    SESSION_CONCURRENT_KICKOUT("SESSION_CONCURRENT_KICKOUT", SecurityEventCategory.AUTH),
 
     ACCOUNT_CREATED("ACCOUNT_CREATED", SecurityEventCategory.ACCOUNT),
     ACCOUNT_ENABLED("ACCOUNT_ENABLED", SecurityEventCategory.ACCOUNT),

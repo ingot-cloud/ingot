@@ -3,6 +3,7 @@ package com.ingot.framework.gateway.rule.client.challenge.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
 import lombok.Getter;
@@ -99,12 +100,13 @@ public class ChallengeProperties {
         /**
          * 加载模式：
          * <ul>
-         *     <li>{@link Mode#LOCAL}（默认）— 读下方 {@link #groups} / {@link #policies} yaml 配置</li>
-         *     <li>{@link Mode#REMOTE} — Feign 拉 ingot-service-security 快照中的
-         *         {@code challengePolicies}，DB 维护由 Platform 页面完成</li>
+         *     <li>{@link PolicySourceMode#LOCAL}（默认）— 读下方 {@link #groups} / {@link #policies} yaml 配置，
+         *         适合本机调试 / 单实例</li>
+         *     <li>{@link PolicySourceMode#REMOTE} — Feign 拉 ingot-service-security 快照中的
+         *         {@code challengePolicies}，适合生产 / 多节点热更新</li>
          * </ul>
          */
-        private Mode mode = Mode.LOCAL;
+        private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
         /**
          * local 模式下的 API 路径分组；策略通过 {@link ChallengePolicy#getGroupCode()} 引用。
@@ -118,15 +120,5 @@ public class ChallengeProperties {
          * PassToken 有效期等，详见 {@link ChallengePolicy}。
          */
         private List<ChallengePolicy> policies = new ArrayList<>();
-    }
-
-    /**
-     * 挑战策略加载模式。
-     */
-    public enum Mode {
-        /** 从本机 yaml {@link Policy#getPolicies()} 加载，适合本机调试 / 单实例。 */
-        LOCAL,
-        /** 从 ingot-service-security 远端快照加载，适合生产 / 多节点热更新。 */
-        REMOTE
     }
 }

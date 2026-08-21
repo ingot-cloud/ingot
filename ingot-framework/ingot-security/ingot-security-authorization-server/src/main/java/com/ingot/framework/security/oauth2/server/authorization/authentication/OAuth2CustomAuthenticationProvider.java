@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.core.OAuth2ErrorUtils;
@@ -78,6 +79,15 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         }
 
         // @formatter:off
+        // 预生成 Authorization：其 id 即会话 ID（sid），Token 定制器需要在签发 JWT 时写入 sid 声明，
+        // 因此不能等到 authorizationBuilder.build() 时由框架兜底生成
+        OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(registeredClient)
+                .id(UUID.randomUUID().toString())
+                .principalName(principal.getName())
+                .authorizationGrantType(customAuthenticationToken.getGrantType())
+                .authorizedScopes(authorizedScopes)
+                .attribute(Principal.class.getName(), principal);
+
         DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
                 .registeredClient(registeredClient)
                 .principal(principal)
@@ -85,7 +95,9 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
                 .authorizedScopes(authorizedScopes)
                 .tokenType(OAuth2TokenType.ACCESS_TOKEN)
                 .authorizationGrantType(customAuthenticationToken.getGrantType())
-                .authorizationGrant(customAuthenticationToken);
+                .authorizationGrant(customAuthenticationToken)
+                // 此刻 Token 尚未生成，仅用于向下游透传 Authorization ID
+                .authorization(authorizationBuilder.build());
         // @formatter:on
 
         // ----- Access token -----
@@ -117,11 +129,6 @@ public class OAuth2CustomAuthenticationProvider implements AuthenticationProvide
         }
 
         // @formatter:off
-        OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(registeredClient)
-                .principalName(principal.getName())
-                .authorizationGrantType(customAuthenticationToken.getGrantType())
-                .authorizedScopes(authorizedScopes)
-                .attribute(Principal.class.getName(), principal);
         if (generatedAccessToken instanceof ClaimAccessor) {
             authorizationBuilder.token(accessToken, (metadata) ->
                     metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME,

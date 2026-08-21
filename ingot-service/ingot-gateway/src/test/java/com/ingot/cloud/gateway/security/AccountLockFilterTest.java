@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link AccountLockFilter} 消费上游身份与遗留 JWT {@code ut} 的单元测试。
+ * {@link AccountLockFilter} 消费上游身份链路解析结果的单元测试。
  *
  * @author jy
  * @since 1.0.0
@@ -60,9 +60,9 @@ class AccountLockFilterTest {
     }
 
     @Test
-    void slimJwtWithoutUserType_passesThrough() {
+    void jwtWithoutResolvedUserType_passesThrough() {
         String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("{\"i\":9,\"jti\":\"abc\"}".getBytes(StandardCharsets.UTF_8));
+                .encodeToString("{\"i\":9,\"sid\":\"session-1\"}".getBytes(StandardCharsets.UTF_8));
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/pms/user")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
@@ -74,23 +74,6 @@ class AccountLockFilterTest {
 
         verify(chain).filter(exchange);
         verify(redis, never()).hasKey(any());
-    }
-
-    @Test
-    void legacyJwtUt_lockHit_returns403() {
-        String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("{\"i\":9,\"ut\":\"0\"}".getBytes(StandardCharsets.UTF_8));
-        MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
-                        .build());
-        when(redis.hasKey(RedisKeyConstants.AccountLock.uidKey("0", 9L))).thenReturn(Mono.just(true));
-
-        GatewayFilterChain chain = mock(GatewayFilterChain.class);
-        filter.filter(exchange, chain).block();
-
-        verify(chain, never()).filter(any());
-        verify(responseWriter).writeJson(any(), org.mockito.ArgumentMatchers.eq(HttpStatus.FORBIDDEN), any());
     }
 
     @Test

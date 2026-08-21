@@ -25,10 +25,9 @@ import reactor.core.publisher.Mono;
  *
  * <h3>行为说明</h3>
  * <ul>
- *     <li>通过 {@link BearerJwtPayloadReader} 读取 claim {@code i}/{@code jti}，不验签</li>
+ *     <li>通过 {@link BearerJwtPayloadReader} 读取 claim {@code i}/{@code sid}，不验签</li>
  *     <li>解析成功写入 {@link AuthContextAttributes#USER_ID}</li>
- *     <li>瘦身 JWT 无 {@code ut} 时按 jti 查 Redis OnlineToken 补 {@link AuthContextAttributes#USER_TYPE}</li>
- *     <li>遗留 token 仍带 {@code ut} 时直接写入，不查 Redis</li>
+ *     <li>按 sid 查 Redis 会话补 {@link AuthContextAttributes#USER_TYPE}（瘦身 JWT 不含该字段）</li>
  *     <li>无 Bearer / 匿名 / 解析失败时不写入 attribute，不阻断请求</li>
  * </ul>
  *
@@ -56,20 +55,14 @@ public class AuthContextRelayFilter implements GlobalFilter, Ordered {
             log.debug("[AuthContextRelay] resolved userId={} path={}", userId, request.getURI().getPath());
         }
 
-        String legacyUserType = BearerJwtPayloadReader.readUserType(authorization);
-        if (StringUtils.hasText(legacyUserType)) {
-            exchange.getAttributes().put(AuthContextAttributes.USER_TYPE, legacyUserType);
+        String sid = BearerJwtPayloadReader.readSid(authorization);
+        if (!StringUtils.hasText(sid)) {
             return chain.filter(exchange);
         }
-
-        String jti = BearerJwtPayloadReader.readJti(authorization);
-        if (!StringUtils.hasText(jti)) {
-            return chain.filter(exchange);
-        }
-        return onlineTokenUserTypeReader.readUserType(jti)
+        return onlineTokenUserTypeReader.readUserType(sid)
                 .doOnNext(userType -> {
                     exchange.getAttributes().put(AuthContextAttributes.USER_TYPE, userType);
-                    log.debug("[AuthContextRelay] resolved userType={} from OnlineToken jti={}", userType, jti);
+                    log.debug("[AuthContextRelay] resolved userType={} from session sid={}", userType, sid);
                 })
                 .then(chain.filter(exchange));
     }

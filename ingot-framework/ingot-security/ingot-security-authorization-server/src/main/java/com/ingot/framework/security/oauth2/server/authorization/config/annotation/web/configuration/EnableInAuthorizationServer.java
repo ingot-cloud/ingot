@@ -20,7 +20,8 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(InOAuth2AuthProperties.class)
 @Import({
         InOAuth2AuthorizationServerConfiguration.class,
-        AuthServerJwtEncoderConfiguration.class
+        AuthServerJwtEncoderConfiguration.class,
+        SessionConcurrencyConfiguration.class
 })
 public @interface EnableInAuthorizationServer {
 }

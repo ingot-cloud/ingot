@@ -2,6 +2,7 @@ package com.ingot.framework.security.credential.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
 import com.ingot.framework.security.credential.actuate.CredentialPolicyEndpoint;
@@ -196,7 +197,7 @@ public class CredentialSecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(CredentialPolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = "local", matchIfMissing = true)
+    @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = PolicySourceMode.VALUE_LOCAL, matchIfMissing = true)
     public CredentialPolicyLoader localCredentialPolicyLoader(CredentialSecurityProperties properties,
                                                               PasswordEncoder passwordEncoder) {
         return new LocalCredentialPolicyLoader(properties, passwordEncoder);
@@ -204,7 +205,7 @@ public class CredentialSecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(CredentialPolicyLoader.class)
-    @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = "remote")
+    @ConditionalOnProperty(name = "ingot.security.credential.policy.mode", havingValue = PolicySourceMode.VALUE_REMOTE)
     public CredentialPolicyLoader credentialPolicyLoader(CredentialPolicyConfigService policyConfigService,
                                                          PasswordEncoder passwordEncoder) {
         return new RemoteCredentialPolicyLoader(policyConfigService, passwordEncoder);

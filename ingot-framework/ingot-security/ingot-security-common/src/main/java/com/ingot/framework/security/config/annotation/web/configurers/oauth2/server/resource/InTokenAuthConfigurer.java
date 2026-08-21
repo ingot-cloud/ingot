@@ -1,6 +1,5 @@
 package com.ingot.framework.security.config.annotation.web.configurers.oauth2.server.resource;
 
-import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.ingot.framework.security.web.InTokenAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,11 +17,10 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class InTokenAuthConfigurer
         extends AbstractHttpConfigurer<InTokenAuthConfigurer, HttpSecurity> {
     private final RequestMatcher ignoreRequestMatcher;
-    private final OnlineTokenService onlineTokenService;
 
     @Override
-    public void configure(HttpSecurity builder) throws Exception {
-        InTokenAuthFilter filter = new InTokenAuthFilter(this.ignoreRequestMatcher, onlineTokenService);
+    public void configure(HttpSecurity builder) {
+        InTokenAuthFilter filter = new InTokenAuthFilter(this.ignoreRequestMatcher);
         builder.addFilterAfter(postProcess(filter), BearerTokenAuthenticationFilter.class);
     }
 }

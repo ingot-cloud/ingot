@@ -4,8 +4,14 @@ import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenServi
 import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationConsentService;
 import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationService;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
+import com.ingot.framework.security.oauth2.server.authorization.session.DefaultSessionRevocationService;
+import com.ingot.framework.security.oauth2.server.authorization.session.SessionRegistrar;
+import com.ingot.framework.security.oauth2.server.authorization.session.SessionRevocationListener;
+import com.ingot.framework.security.oauth2.server.authorization.session.SessionRevocationService;
+import com.ingot.framework.security.oauth2.server.authorization.session.concurrency.SessionConcurrencyEnforcer;
 import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2TokenCustomizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -78,13 +84,40 @@ public class InOAuth2AuthorizationServerConfiguration {
     }
 
     /**
+     * 会话撤销领域服务：彻底撤销的唯一入口。
+     * <p>撤销回调可选，未注册实现时撤销仍然生效，只是不产生安全事件。</p>
+     */
+    @Bean
+    @ConditionalOnMissingBean(SessionRevocationService.class)
+    public SessionRevocationService sessionRevocationService(OAuth2AuthorizationService authorizationService,
+                                                            OnlineTokenService onlineTokenService,
+                                                            ObjectProvider<SessionRevocationListener> listeners) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating DefaultSessionRevocationService");
+        return new DefaultSessionRevocationService(authorizationService, onlineTokenService,
+                listeners.orderedStream().toList());
+    }
+
+    /**
+     * 会话注册入口：签发链上落地会话并执行并发会话约束
+     * <p>约束的判定与执行在 {@link SessionConcurrencyEnforcer}，由
+     * {@link SessionConcurrencyConfiguration} 按部署形态装配策略来源。</p>
+     */
+    @Bean
+    @ConditionalOnMissingBean(SessionRegistrar.class)
+    public SessionRegistrar sessionRegistrar(OnlineTokenService onlineTokenService,
+                                            SessionConcurrencyEnforcer sessionConcurrencyEnforcer) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating SessionRegistrar");
+        return new SessionRegistrar(onlineTokenService, sessionConcurrencyEnforcer);
+    }
+
+    /**
      * JWT Token定制器
      */
     @Bean
     @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
-    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer(OnlineTokenService onlineTokenService) {
-        log.info("[InOAuth2AuthorizationServerConfiguration] Creating JwtOAuth2TokenCustomizer with IdGenerator");
-        return new JwtOAuth2TokenCustomizer(onlineTokenService);
+    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer(SessionRegistrar sessionRegistrar) {
+        log.info("[InOAuth2AuthorizationServerConfiguration] Creating JwtOAuth2TokenCustomizer");
+        return new JwtOAuth2TokenCustomizer(sessionRegistrar);
     }
 
     /**

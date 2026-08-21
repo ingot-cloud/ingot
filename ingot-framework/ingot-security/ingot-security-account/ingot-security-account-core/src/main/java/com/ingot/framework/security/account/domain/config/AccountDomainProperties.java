@@ -1,5 +1,6 @@
 package com.ingot.framework.security.account.domain.config;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -15,25 +16,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AccountDomainProperties {
 
     /**
-     * 策略来源模式：{@code local}（纯 Nacos）| {@code remote}（安全中心弹性阶梯，后续 change 提供实现）。
-     * <p>本期仅实现 {@code local}；配置为 {@code remote} 但无远程实现时回退 {@code local} 并告警。</p>
+     * 策略来源：{@link PolicySourceMode#LOCAL} 纯 Nacos；
+     * {@link PolicySourceMode#REMOTE} 安全中心弹性阶梯（后续 change 提供实现）。
+     * <p>本期仅实现 {@link PolicySourceMode#LOCAL}；配置为 {@link PolicySourceMode#REMOTE}
+     * 但无远程实现时回退 local 并告警。</p>
      */
-    private PolicyMode mode = PolicyMode.LOCAL;
+    private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
     /**
      * 锁定策略配置
      */
     private LockoutPolicy lockout = new LockoutPolicy();
-
-    /**
-     * 账号保护策略来源模式
-     */
-    public enum PolicyMode {
-        /** 纯 Nacos 本地配置 */
-        LOCAL,
-        /** 安全中心中心化 + 弹性降级（后续 change 提供实现） */
-        REMOTE
-    }
 
     @Data
     public static class LockoutPolicy {

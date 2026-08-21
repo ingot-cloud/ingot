@@ -1,33 +1,42 @@
 package com.ingot.framework.security.oauth2.server.resource.authentication;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineToken;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
+import com.ingot.framework.security.oauth2.server.authorization.SessionStoreAvailability;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.dao.DataAccessException;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.util.StringUtils;
 
 /**
- * JWT 转 InUser 转换器 <br>
- * 1. 从JWT中提取核心字段（userId, tenantId, scope） <br>
- * 2. 从OnlineTokenService获取扩展信息（authType, userType, authorities）<br>
- * 3. 合并JWT中的scope和Redis中的完整权限列表 <br>
+ * <p>把校验通过的 JWT 还原成 {@link InUser}：定位性声明取自 JWT，权限与身份属性取自在线会话。</p>
  *
- * <p>Author: wangchao</p>
- * <p>Date: 2021/9/17</p>
+ * <p>Redis 中的会话是在线态的唯一权威来源，因此会话缺失即视为 Token 失效，不存在「仅凭 JWT 声明
+ * 降级放行」的路径 —— 否则已撤销的 Token 会在 Redis 抖动期间重新可用。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
+ * @see OnlineTokenService
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -35,89 +44,90 @@ public class JwtInUserConverter implements Converter<Jwt, InUser> {
     private static final String DEFAULT_AUTHORITIES_CLAIM_DELIMITER = " ";
 
     private final OnlineTokenService onlineTokenService;
+    private final SessionStoreAvailability sessionStoreAvailability;
 
     @Override
     public InUser convert(@NonNull Jwt source) {
-        // 1. 从JWT提取核心字段
-        String jti = source.getClaim(JwtClaimNames.JTI);
-        String username = JwtClaimNamesExtension.getUsername(source);
+        String sid = JwtClaimNamesExtension.getSid(source);
+        if (StrUtil.isEmpty(sid)) {
+            log.error("[JwtInUserConverter] JWT 缺少 sid 声明，拒绝该 Token");
+            throw invalidToken("The sid claim is missing.");
+        }
+
+        OnlineToken session = readSession(sid);
         Long id = JwtClaimNamesExtension.getId(source);
         Long tenantId = JwtClaimNamesExtension.getTenantId(source);
         String clientId = JwtClaimNamesExtension.getAud(source);
+        String username = JwtClaimNamesExtension.getUsername(source);
 
-        if (jti == null) {
-            log.error("[JwtInUserConverter] JTI is missing in JWT claims");
-            throw new OAuth2AuthenticationException(new OAuth2Error("invalid_token", "JTI is missing", null));
+        if (session == null) {
+            // 宽限期内的降级形态：仅保留 JWT 自带的 scope，authType / userType / 部门均不可知
+            return InUser.stateless(id, tenantId, clientId, null, null, username,
+                    getAuthorities(source), List.of(), MapUtil.empty());
         }
 
-        // 2. 从OnlineTokenService获取扩展信息
-        OnlineToken onlineToken = onlineTokenService
-                .getByJti(jti)
-                .orElse(null);
-
-        // 3. 如果Redis中没有找到，尝试降级处理（兼容旧Token或Redis故障）
-        if (onlineToken == null) {
-            log.warn("[JwtInUserConverter] Online token not found in Redis for jti={}, falling back to JWT claims", jti);
-            return convertFromJwtOnly(source, id, tenantId, clientId, username);
-        }
-
-        // 4. 合并JWT中的scope和Redis中的完整权限
-        Collection<GrantedAuthority> authorities = mergeAuthorities(source, onlineToken);
-
-        // 5. 构建InUser（包含完整信息）
-        log.debug("[JwtInUserConverter] Converted JWT to InUser: userId={}, authType={}, userType={}",
-                id, onlineToken.getAuthType(), onlineToken.getUserType());
+        log.debug("[JwtInUserConverter] JWT 已还原为 InUser: sid={}, userId={}, authType={}, userType={}",
+                sid, id, session.getAuthType(), session.getUserType());
 
         return InUser.stateless(
                 id,
                 tenantId,
                 clientId,
-                onlineToken.getAuthType(),
-                onlineToken.getUserType(),
+                session.getAuthType(),
+                session.getUserType(),
                 username,
-                authorities,
-                onlineToken.getDeptIds(),
+                mergeAuthorities(source, session),
+                session.getDeptIds(),
                 MapUtil.empty()
         );
     }
 
     /**
-     * 降级处理：仅从JWT中提取字段（兼容旧Token或Redis故障）
+     * 读取会话；返回 {@code null} 表示会话存储不可用且仍在宽限期内，调用方按降级形态处理。
+     *
+     * <p>会话键不存在与存储访问异常是两件事：前者是明确的「已下线」，必须拒绝；后者只能在有界
+     * 宽限期内放行，超期同样拒绝。</p>
      */
-    private InUser convertFromJwtOnly(Jwt source, Long id, Long tenantId, String clientId, String username) {
-        // 尝试从JWT获取（如果JWT中还有这些字段）
-        String authType = JwtClaimNamesExtension.getAuthType(source);
-        String userType = JwtClaimNamesExtension.getUserType(source);
-        Collection<GrantedAuthority> authorities = getAuthorities(source);
-
-        log.warn("[JwtInUserConverter] Using fallback mode with JWT-only claims");
-
-        return InUser.stateless(id, tenantId, clientId, authType, userType, username, authorities,
-                List.of(), MapUtil.empty());
+    private OnlineToken readSession(String sid) {
+        try {
+            OnlineToken session = onlineTokenService.getBySid(sid).orElse(null);
+            sessionStoreAvailability.markAvailable();
+            if (session == null) {
+                log.warn("[JwtInUserConverter] 会话不存在或已撤销: sid={}", sid);
+                throw invalidToken("The session is no longer active.");
+            }
+            return session;
+        } catch (DataAccessException e) {
+            log.error("[JwtInUserConverter] 读取会话失败: sid={}", sid, e);
+            if (sessionStoreAvailability.markUnavailableAndAllow()) {
+                return null;
+            }
+            throw invalidToken("The session store is unavailable.");
+        }
     }
 
     /**
-     * 合并JWT中的scope和Redis中的完整权限
+     * 合并 JWT 中的 scope 与会话中的完整权限列表。
      */
-    private Collection<GrantedAuthority> mergeAuthorities(Jwt jwt, OnlineToken onlineToken) {
-
-        // 1. 从JWT中获取scope
+    private Collection<GrantedAuthority> mergeAuthorities(Jwt jwt, OnlineToken session) {
         Collection<GrantedAuthority> jwtAuthorities = getAuthorities(jwt);
         Set<GrantedAuthority> merged = new HashSet<>(jwtAuthorities);
 
-        // 2. 从Redis中获取完整权限列表
-        if (onlineToken.getAuthorities() != null && !onlineToken.getAuthorities().isEmpty()) {
-            onlineToken.getAuthorities().forEach(auth ->
+        Set<String> sessionAuthorities = session.getAuthorities();
+        if (sessionAuthorities != null) {
+            sessionAuthorities.forEach(auth ->
                     merged.add(new SimpleGrantedAuthority(InJwtAuthenticationConverter.AUTHORITY_PREFIX + auth))
             );
         }
 
-        log.debug("[JwtInUserConverter] Merged authorities: JWT={}, Redis={}, Total={}",
-                jwtAuthorities.size(),
-                onlineToken.getAuthorities() != null ? onlineToken.getAuthorities().size() : 0,
-                merged.size());
-
+        log.debug("[JwtInUserConverter] 权限合并结果: jwt={}, session={}, total={}",
+                jwtAuthorities.size(), sessionAuthorities == null ? 0 : sessionAuthorities.size(), merged.size());
         return merged;
+    }
+
+    private OAuth2AuthenticationException invalidToken(String description) {
+        return new OAuth2AuthenticationException(
+                new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN, description, null));
     }
 
     private Collection<GrantedAuthority> getAuthorities(Jwt jwt) {
@@ -128,13 +138,10 @@ public class JwtInUserConverter implements Converter<Jwt, InUser> {
     }
 
     private Collection<String> getInnerAuthorities(Jwt jwt) {
-        String claimName = JwtClaimNamesExtension.SCOPE;
-        Object authorities = jwt.getClaim(claimName);
-        if (authorities instanceof String) {
-            if (StringUtils.hasText((String) authorities)) {
-                return Arrays.asList(((String) authorities).split(DEFAULT_AUTHORITIES_CLAIM_DELIMITER));
-            }
-            return Collections.emptyList();
+        Object authorities = jwt.getClaim(JwtClaimNamesExtension.SCOPE);
+        if (authorities instanceof String scope) {
+            return StringUtils.hasText(scope)
+                    ? Arrays.asList(scope.split(DEFAULT_AUTHORITIES_CLAIM_DELIMITER)) : Collections.emptyList();
         }
         if (authorities instanceof Collection) {
             return castAuthoritiesToCollection(authorities);

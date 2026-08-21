@@ -2,6 +2,7 @@ package com.ingot.framework.security.account.domain.service;
 
 import java.util.Optional;
 
+import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.LockState;
@@ -12,6 +13,7 @@ import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCa
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
+import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +41,15 @@ class LockAccountUseCaseServiceTest {
     private final LockStatePort lockStatePort = mock(LockStatePort.class);
     private final SecurityEventPort securityEventPort = mock(SecurityEventPort.class);
     private final AccountLockSignalPort accountLockSignalPort = mock(AccountLockSignalPort.class);
+    private final SessionRevocationPort sessionRevocationPort = mock(SessionRevocationPort.class);
 
     private LockAccountUseCaseService service;
 
     @BeforeEach
     void setUp() {
         service = new LockAccountUseCaseService(
-                userAccountPort, lockStatePort, securityEventPort, accountLockSignalPort);
+                userAccountPort, lockStatePort, securityEventPort,
+                accountLockSignalPort, sessionRevocationPort);
     }
 
     @Test
@@ -67,6 +71,7 @@ class LockAccountUseCaseServiceTest {
                 anyLong(), any(), anyBoolean(), any(), any(), any(), any(), any());
         verify(userAccountPort, never()).updateLockStatus(anyLong(), any(), anyBoolean());
         verify(securityEventPort, never()).publishEvent(any());
+        verify(sessionRevocationPort, never()).revokeUserSessions(anyLong(), any(), any());
     }
 
     @Test
@@ -87,6 +92,7 @@ class LockAccountUseCaseServiceTest {
         verify(securityEventPort).publishEvent(captor.capture());
         assertEquals(SecurityEventType.ACCOUNT_LOCKED, captor.getValue().getEventType());
         verify(userAccountPort).updateLockStatus(1L, UserTypeEnum.ADMIN, true);
+        verify(sessionRevocationPort).revokeUserSessions(1L, SessionRevokeReason.ACCOUNT_LOCKED, 9L);
     }
 
     @Test
@@ -112,5 +118,7 @@ class LockAccountUseCaseServiceTest {
         verify(securityEventPort).publishEvent(captor.capture());
         assertEquals(SecurityEventType.ACCOUNT_LOCKED, captor.getValue().getEventType());
         verify(userAccountPort).updateLockStatus(eq(2L), eq(UserTypeEnum.ADMIN), eq(true));
+        // 系统自动锁定无操作者
+        verify(sessionRevocationPort).revokeUserSessions(2L, SessionRevokeReason.ACCOUNT_LOCKED, null);
     }
 }

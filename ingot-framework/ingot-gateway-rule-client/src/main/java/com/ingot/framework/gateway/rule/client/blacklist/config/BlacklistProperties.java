@@ -3,6 +3,7 @@ package com.ingot.framework.gateway.rule.client.blacklist.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.gateway.rule.client.blacklist.model.IpListItem;
 import lombok.Getter;
 import lombok.Setter;
@@ -112,33 +113,19 @@ public class BlacklistProperties {
         /**
          * 加载模式：
          * <ul>
-         *     <li>{@link Mode#LOCAL}（默认）— 读下方 {@link #items} yaml 配置</li>
-         *     <li>{@link Mode#REMOTE} — Feign 拉 ingot-service-security 快照，
-         *         DB {@code gateway_ip_list} 的短码由 SDK {@code IpKeyType.fromCode} 解析</li>
+         *     <li>{@link PolicySourceMode#LOCAL}（默认）— 读下方 {@link #items} yaml 配置。
+         *         适合本机调试 / 单实例；DB 短码（B/W、IP/DV 等）在 local 模式下也可写枚举全名。</li>
+         *     <li>{@link PolicySourceMode#REMOTE} — Feign 拉 ingot-service-security 快照
+         *         （快照字段 {@code ipList}），DB {@code gateway_ip_list} 的短码由 SDK
+         *         {@code IpKeyType.fromCode} 解析</li>
          * </ul>
          */
-        private Mode mode = Mode.LOCAL;
+        private PolicySourceMode mode = PolicySourceMode.LOCAL;
 
         /**
          * local 模式下的名单条目；remote 模式下被忽略。
          * 黑/白通过 {@link IpListItem#getListType()} 区分。
          */
         private List<IpListItem> items = new ArrayList<>();
-    }
-
-    /**
-     * 黑白名单加载模式。
-     */
-    public enum Mode {
-        /**
-         * 从本机 yaml {@link Policy#getItems()} 加载。
-         * 适合本机调试 / 单实例；DB 短码（B/W、IP/DV 等）在 local 模式下也可写枚举全名。
-         */
-        LOCAL,
-        /**
-         * 从 ingot-service-security 远端快照加载（快照字段 {@code ipList}）。
-         * 适合生产 / 多节点；DB {@code gateway_ip_list} 短码由 SDK {@code fromCode} 解析。
-         */
-        REMOTE
     }
 }

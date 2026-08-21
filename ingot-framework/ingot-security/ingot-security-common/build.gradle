@@ -16,4 +16,16 @@ dependencies {
     implementation(deps.useragent_parse)
 
     compileOnly(deps.jakarta_servlet_api)
+    compileOnly(deps.spring.spring_boot.actuator_autoconfigure)
+    compileOnly(deps.spring.spring_boot.actuator_starter)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.actuator_starter)
+    testImplementation(deps.jakarta_servlet_api)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
 }

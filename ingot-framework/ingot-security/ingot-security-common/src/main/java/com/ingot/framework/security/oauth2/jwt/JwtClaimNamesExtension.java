@@ -56,6 +56,11 @@ public interface JwtClaimNamesExtension {
     String JTI = InJwtClaimNames.JTI;
 
     /**
+     * 会话 ID，等于 {@code OAuth2Authorization.id}
+     */
+    String SID = InJwtClaimNames.SID;
+
+    /**
      * ID
      */
     String ID = InJwtClaimNames.ID;
@@ -75,6 +80,13 @@ public interface JwtClaimNamesExtension {
 
     static String getUsername(Jwt source) {
         return MapUtil.get(source.getClaims(), SUB, String.class);
+    }
+
+    /**
+     * 读取会话 ID；缺失时返回 {@code null}，调用方须按无效 Token 处理。
+     */
+    static String getSid(Jwt source) {
+        return MapUtil.get(source.getClaims(), SID, String.class);
     }
 
     static Long getId(Jwt source) {
