@@ -1,6 +1,6 @@
 # 安全事件类型 SoT 收敛与 code 常量解耦
 
-> 状态：draft
+> 状态：validating
 
 ## 元数据
 

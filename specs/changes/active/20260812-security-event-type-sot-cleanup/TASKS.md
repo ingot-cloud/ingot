@@ -1,6 +1,6 @@
 # Tasks
 
-> 状态：`draft`。全部 **已定决策** 确认且 change 状态为 `approved` 后方可开始编码。
+> 状态：`validating`。Phase 1–2 与 V1–V3 已完成；T3 基线更新与归档待验收确认。
 
 ## 已定决策
 
@@ -18,28 +18,28 @@
 - [x] T0-1：四工件齐备并登记 `specs/README.md` §7
   - 依赖：无
   - 验收：本目录 README/REQUIREMENTS/DESIGN/TASKS 存在；§7 有条目
-- [ ] T0-2：评审 → `approved`
+- [x] T0-2：评审 → `approved`（用户要求开始执行，视为批准）
   - 依赖：T0-1
-  - 验收：README 状态 `approved`；无开放决策
+  - 验收：README 状态先 `approved` 再转入 `implementing`；无开放决策
 
 ## Phase 1 · code 模块与 recording / api
 
-- [ ] T1-1：创建 `ingot-security-event-codes` + `SecurityEventCodes` / `SecurityEventCategoryCodes` + `ingot.gradle` 登记
+- [x] T1-1：创建 `ingot-security-event-codes` + `SecurityEventCodes` / `SecurityEventCategoryCodes` + `ingot.gradle` 登记
   - 依赖：T0-2
   - 验收：常量值与现网 api 枚举 code 逐字一致
-- [ ] T1-2：api 枚举改引用常量
+- [x] T1-2：api 枚举改引用常量
   - 依赖：T1-1
   - 验收：`ingot-security-api` 编译；`fromCode` 单测或既有校验通过
-- [ ] T1-3：`DefaultPriorityClassifier`（及 `SecurityEventProperties` 类别码若适用）改引用常量
+- [x] T1-3：`DefaultPriorityClassifier`（及 `SecurityEventProperties` 类别码若适用）改引用常量
   - 依赖：T1-1
   - 验收：`DefaultPriorityClassifierTest` 通过；无生产路径裸事件类型字面量
 
 ## Phase 2 · account-core 去重
 
-- [ ] T2-1：account-core 依赖 api；`AccountSecurityEvent` / 用例 / 测试改用 api `SecurityEventType`
+- [x] T2-1：account-core 依赖 api；`AccountSecurityEvent` / 用例 / 测试改用 api `SecurityEventType`
   - 依赖：T1-2
   - 验收：相关模块编译；account-core 测试通过
-- [ ] T2-2：删除 account-core `...domain.model.enums.SecurityEventType`
+- [x] T2-2：删除 account-core `...domain.model.enums.SecurityEventType`
   - 依赖：T2-1
   - 验收：全仓仅 api 一份 `SecurityEventType` 枚举（grep）
 
@@ -54,13 +54,13 @@
 
 ## 验证任务
 
-- [ ] V1：`ingot-security-event-codes`、`ingot-security-recording`、`ingot-security-api`、`ingot-security-account-core` 及相关 adapter 测试
-- [ ] V2：确认 `ingot-security-recording` 依赖树不含 `ingot-security-api`
-- [ ] V3：grep 无残留 `com.ingot.framework.security.account.domain.model.enums.SecurityEventType`
+- [x] V1：`ingot-security-event-codes`、`ingot-security-recording`、`ingot-security-api`、`ingot-security-account-core` 及相关 adapter 测试
+- [x] V2：确认 `ingot-security-recording` 依赖树不含 `ingot-security-api`
+- [x] V3：grep 无残留 `com.ingot.framework.security.account.domain.model.enums.SecurityEventType`
 
 ## 完成检查
 
-- [ ] 实现与 DESIGN 一致
+- [x] 实现与 DESIGN 一致
 - [ ] REQUIREMENTS 验收标准全部满足
 - [ ] Current 已更新
 - [ ] Change 已记录完成信息并归档
