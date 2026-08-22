@@ -1,6 +1,6 @@
 # Tasks
 
-> 状态：`validating`。Phase 1–2 与 V1–V3 已完成；T3 基线更新与归档待验收确认。
+> 状态：`completed`。Phase 1–3 与验证任务已完成并归档。
 
 ## 已定决策
 
@@ -45,10 +45,10 @@
 
 ## Phase 3 · 基线与验收
 
-- [ ] T3-1：更新 `specs/current/framework/security-event-recording`
+- [x] T3-1：更新 `specs/current/framework/security-event-recording`
   - 依赖：T1–T2
   - 验收：SPEC 写明 code 模块 + api enum SoT + recording 不依赖 api
-- [ ] T3-2：归档本 change
+- [x] T3-2：归档本 change
   - 依赖：T3-1、验证任务
   - 验收：移入 `specs/changes/archive/2026/`；§7 更新
 
@@ -61,6 +61,6 @@
 ## 完成检查
 
 - [x] 实现与 DESIGN 一致
-- [ ] REQUIREMENTS 验收标准全部满足
-- [ ] Current 已更新
-- [ ] Change 已记录完成信息并归档
+- [x] REQUIREMENTS 验收标准全部满足
+- [x] Current 已更新
+- [x] Change 已记录完成信息并归档

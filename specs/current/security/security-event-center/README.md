@@ -26,8 +26,9 @@
 ## 文档索引
 
 - [SPEC](./SPEC.md)：配置、拓扑、链路与切换
-- Recording 框架：[../../framework/security-event-recording/SPEC.md](../../framework/security-event-recording/SPEC.md)
+- Recording 框架：[../../framework/security-event-recording/SPEC.md](../../framework/security-event-recording/SPEC.md)（含事件 code SoT：`ingot-security-event-codes` + api `SecurityEventType`）
 - 来源变更：
   - `specs/changes/archive/2026/20260804-security-event-storage-pipeline/`
   - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`
   - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表 DROP）
+  - `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（事件 code SoT；account 使用 api 枚举）

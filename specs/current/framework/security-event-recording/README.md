@@ -10,7 +10,8 @@
 
 | 模块 | 职责 |
 |---|---|
-| `ingot-security-recording` | SPI、dispatcher、优先级、file spool、配置、Actuator |
+| `ingot-security-event-codes` | 事件 / 分类 code 字面量 SoT（`SecurityEventCodes` / `SecurityEventCategoryCodes`）；recording 与 api 共用 |
+| `ingot-security-recording` | SPI、dispatcher、优先级、file spool、配置、Actuator；只依赖 codes，不依赖 `ingot-security-api` |
 | `ingot-security-event-store-mysql` | canonical `security_event` 批量写入、游标查询、retention |
 | `ingot-security-event-store-log` | JSONL segment Store（无查询） |
 | `ingot-security-event-transport-feign` | Feign Transport + DTO 映射 |
@@ -56,3 +57,4 @@
 - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（legacy `mode` / 双写 / 配置类合并清理）
 - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
 - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（状态变更/超阈值边沿 vs 活动遥测电平）
+- `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（事件 code 常量模块 + api 枚举唯一 SoT）

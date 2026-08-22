@@ -51,7 +51,7 @@
 - `account_security_event` legacy 表变更（见已归档 [20260811-security-drop-account-security-event](../20260811-security-drop-account-security-event/README.md)）
 - Token 黑名单 / 强制踢下线全量会话（本期仅 Gateway uid key 403 + 自然失效语义）
 - **B 类天然边沿**（`PASSWORD_*` / create-delete）的额外短路 guard（见 REQUIREMENTS R1.1）
-- **`SecurityEventType` 双枚举合并**与 recording 事件 code 常量模块（见 [20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/README.md)）
+- **`SecurityEventType` 双枚举合并**与 recording 事件 code 常量模块（见已归档 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)）
 
 ## 工件
 
@@ -64,7 +64,7 @@
 
 - 依赖已验收的 [security-event-recording](../../../current/framework/security-event-recording/SPEC.md) 与 [account-protection](../../../current/security/account-protection/SPEC.md) 基线。
 - 与 [20260806-security-event-legacy-cleanup](../20260806-security-event-legacy-cleanup/README.md) 正交（本 change 不改 recording SPI）。
-- 正交 follow-up：[20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/README.md)（类型 SoT / code 常量；不阻塞本 change）。
+- 正交 follow-up：已归档 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)（类型 SoT / code 常量）。
 
 ## 完成记录
 
@@ -80,5 +80,5 @@
   2. 账号用例装配条件化：仅 classpath 存在 `DefaultLockStatePortAdapter`（account-adapter）时扫描 UseCase，避免 BFF 缺 `PlatformTransactionManager`。
   3. Gateway uid 拦截身份来自 JWT `i` + OnlineToken `userType`（瘦身 JWT 通常不含 `ut`）；claim 常量下沉 `InJwtClaimNames`。
   4. **T3-4 未做**（明文 Auth token 路径 name key）；生产主路径为 BFF 加密登录 + JWT uid Filter。
-  5. 类型 SoT follow-up 仍为 [20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/README.md)（draft，不阻塞本 change）。
+  5. 类型 SoT follow-up 已归档为 [20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md)。
 - 取消原因：

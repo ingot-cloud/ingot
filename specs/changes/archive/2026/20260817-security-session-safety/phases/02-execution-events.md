@@ -19,7 +19,7 @@ Auth 暴露 Inner 会话查询/撤销 API，供安全中心、账号域与 BFF �
 - Inner 的对外安全性依赖既有机制：`OAuth2InnerResourceFilter` 校验 `In-Inner-From: Inside`，该头由网关入口剥离。Feign 不经网关。
 - 撤销链路一律 `调用方 → Auth Inner`，Auth 不回调任何服务（D19）。
 - `SecurityEventType`：`SESSION_REVOKED`、`SESSION_CONCURRENT_KICKOUT`（AUTH）。
-- `DefaultPriorityClassifier`：上述两类 DURABLE。若 [20260812-security-event-type-sot-cleanup](../../../active/20260812-security-event-type-sot-cleanup/README.md) 已合入，改 codes 模块而非硬编码重复（D3）。
+- `DefaultPriorityClassifier`：上述两类 DURABLE。若 [20260812-security-event-type-sot-cleanup](../../20260812-security-event-type-sot-cleanup/README.md) 已合入，改 codes 模块而非硬编码重复（D3）。
 - **不**修改 account-core 重复枚举（会话事件不由 account-core 生产）。
 - `SessionRevocationService` 在成功删除后发布事件；`reason`/`actor`/`sid` 写入 payload；`session_id` 列填 sid。
 - 用户自助登出发 `LOGOUT`，不发 `SESSION_REVOKED`。

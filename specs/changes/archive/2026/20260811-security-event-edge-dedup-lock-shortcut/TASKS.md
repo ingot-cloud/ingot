@@ -16,7 +16,7 @@
 | 网关限流升级事件 | 保持 `RATE_LIMIT_VIOLATION` 类型；**边沿**触发；并发用 SETNX 去重 | DEV 实测刷库；REQUIREMENTS R6、DESIGN D12–D14 |
 | 每次 429 遥测 | **不做** | 非目标 |
 | 边沿实现强度 | 仅 A 类显式去重；B 类天然边沿本期不加 guard；C 类电平 | REQUIREMENTS R1.1、DESIGN D15 |
-| 类型 SoT / code 常量 | **不做**（另开 follow-up） | DESIGN D16；[20260812-security-event-type-sot-cleanup](../../active/20260812-security-event-type-sot-cleanup/README.md) |
+| 类型 SoT / code 常量 | **不做**（另开 follow-up） | DESIGN D16；[20260812-security-event-type-sot-cleanup](../20260812-security-event-type-sot-cleanup/README.md) |
 
 ## Phase 0 · SDD 与评审
 

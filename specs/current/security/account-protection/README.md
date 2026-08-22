@@ -20,7 +20,7 @@
 - 本能力覆盖**账号维度**登录失败锁定（`user_id + user_type`）。
 - **不含**：remote 弹性阶梯（LKG / Nacos 地板 / L1-L2 缓存 / Actuator）、安全中心 account lockout 策略表与管理面。
 - IP / 设备 / Client / 账号+IP 多维度防爆破见 [access-protection](../access-protection/README.md)（L4）。
-- 跨服务事件聚合与中心入库见 [security-event-center](../security-event-center/README.md)；recording 框架见 [security-event-recording](../../framework/security-event-recording/README.md)。
+- 跨服务事件聚合与中心入库见 [security-event-center](../security-event-center/README.md)；recording 框架见 [security-event-recording](../../framework/security-event-recording/README.md)。账号域发布使用 api `SecurityEventType`（仓库内唯一枚举）；code 字面量见 recording SPEC「事件 code SoT」。
 - B端/C端差异**仅通过服务级 Nacos 配置**表达：PMS 严格（5/30/3），Member 短锁（5/15/3，禁止永久自动锁 `lockDurationMinutes=0`）。
 - `lockout.enabled=false` 时保持 baseline：不写 lock_state / 不发安全事件、不自动锁定。
 
@@ -60,3 +60,4 @@
   - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（事件改写 canonical，停写 legacy 表）
   - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
   - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（边沿事件 + Redis 锁定信号 + BFF/Gateway 短路）
+  - `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（删除本地 `SecurityEventType`，改用 api 枚举）

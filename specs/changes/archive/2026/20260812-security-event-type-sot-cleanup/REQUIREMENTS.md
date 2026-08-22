@@ -41,8 +41,8 @@
 
 ### R4 与边沿语义正交
 
-- 本 change **不**改变边沿 / 电平触发规则（见 [20260811 R1.1](../../archive/2026/20260811-security-event-edge-dedup-lock-shortcut/REQUIREMENTS.md)）。
-- 优先级默认表归属（哪些 BEST_EFFORT / DURABLE）与现网 [`DefaultPriorityClassifier`](../../../../ingot-framework/ingot-security/ingot-security-recording/src/main/java/com/ingot/framework/security/recording/runtime/DefaultPriorityClassifier.java) 一致，仅替换字面量为常量引用。
+- 本 change **不**改变边沿 / 电平触发规则（见 [20260811 R1.1](../20260811-security-event-edge-dedup-lock-shortcut/REQUIREMENTS.md)）。
+- 优先级默认表归属（哪些 BEST_EFFORT / DURABLE）与现网 [`DefaultPriorityClassifier`](../../../../../ingot-framework/ingot-security/ingot-security-recording/src/main/java/com/ingot/framework/security/recording/runtime/DefaultPriorityClassifier.java) 一致，仅替换字面量为常量引用。
 
 ## 边界与非目标
 
@@ -53,9 +53,9 @@
 
 ## 验收标准
 
-- [ ] `ingot-security-event-codes` 模块存在且被 recording、api 依赖
-- [ ] `DefaultPriorityClassifier` 生产路径无裸事件类型字符串字面量（测试 fixture 可用常量）
-- [ ] api `SecurityEventType` / `SecurityEventCategory` 的 code 来自常量
-- [ ] 仓库内仅一份 `SecurityEventType` 枚举（api）；account-core 旧枚举已删除，编译与相关单测通过
-- [ ] recording 模块依赖树不含 `ingot-security-api`
-- [ ] `specs/current/framework/security-event-recording` 已写明 SoT；本 change 已归档
+- [x] `ingot-security-event-codes` 模块存在且被 recording、api 依赖
+- [x] `DefaultPriorityClassifier` 生产路径无裸事件类型字符串字面量（测试 fixture 可用常量）
+- [x] api `SecurityEventType` / `SecurityEventCategory` 的 code 来自常量
+- [x] 仓库内仅一份 `SecurityEventType` 枚举（api）；account-core 旧枚举已删除，编译与相关单测通过
+- [x] recording 模块依赖树不含 `ingot-security-api`
+- [x] `specs/current/framework/security-event-recording` 已写明 SoT；本 change 已归档
