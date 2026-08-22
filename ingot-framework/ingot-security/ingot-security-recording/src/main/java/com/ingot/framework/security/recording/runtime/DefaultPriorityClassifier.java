@@ -3,6 +3,7 @@ package com.ingot.framework.security.recording.runtime;
 import java.util.Locale;
 import java.util.Map;
 
+import com.ingot.framework.security.event.codes.SecurityEventCodes;
 import com.ingot.framework.security.recording.config.SecurityEventProperties;
 import com.ingot.framework.security.recording.model.RecordPriority;
 import com.ingot.framework.security.recording.model.SecurityEventRecord;
@@ -46,14 +47,19 @@ public class DefaultPriorityClassifier implements PriorityClassifier {
     static RecordPriority defaultForType(String eventType) {
         String normalized = eventType.trim().toUpperCase(Locale.ROOT);
         return switch (normalized) {
-            case "LOGIN_SUCCESS", "LOGIN_FAILURE", "RATE_LIMIT_VIOLATION" -> DEFAULT_BEST_EFFORT;
-            case "ACCOUNT_CREATED", "ACCOUNT_ENABLED", "ACCOUNT_DISABLED", "ACCOUNT_LOCKED",
-                 "ACCOUNT_UNLOCKED", "ACCOUNT_DELETED", "PASSWORD_CHANGED", "PASSWORD_RESET",
-                 "PASSWORD_EXPIRED", "FORCE_CHANGE_PASSWORD", "BLACKLIST_BLOCK",
-                 "LOGIN_FAIL_IP_EXCEED", "LOGIN_FAIL_DEVICE_EXCEED", "LOGIN_FAIL_CLIENT_EXCEED",
-                 "LOGIN_FAIL_ACCOUNT_IP_EXCEED",
+            case SecurityEventCodes.LOGIN_SUCCESS, SecurityEventCodes.LOGIN_FAILURE,
+                 SecurityEventCodes.RATE_LIMIT_VIOLATION -> DEFAULT_BEST_EFFORT;
+            case SecurityEventCodes.ACCOUNT_CREATED, SecurityEventCodes.ACCOUNT_ENABLED,
+                 SecurityEventCodes.ACCOUNT_DISABLED, SecurityEventCodes.ACCOUNT_LOCKED,
+                 SecurityEventCodes.ACCOUNT_UNLOCKED, SecurityEventCodes.ACCOUNT_DELETED,
+                 SecurityEventCodes.PASSWORD_CHANGED, SecurityEventCodes.PASSWORD_RESET,
+                 SecurityEventCodes.PASSWORD_EXPIRED, SecurityEventCodes.FORCE_CHANGE_PASSWORD,
+                 SecurityEventCodes.BLACKLIST_BLOCK, SecurityEventCodes.LOGIN_FAIL_IP_EXCEED,
+                 SecurityEventCodes.LOGIN_FAIL_DEVICE_EXCEED, SecurityEventCodes.LOGIN_FAIL_CLIENT_EXCEED,
+                 SecurityEventCodes.LOGIN_FAIL_ACCOUNT_IP_EXCEED,
                  // 被动下线是安全结论，丢事件等于丢掉「谁在何时被踢下线」的唯一证据
-                 "SESSION_REVOKED", "SESSION_CONCURRENT_KICKOUT" -> DEFAULT_DURABLE;
+                 SecurityEventCodes.SESSION_REVOKED,
+                 SecurityEventCodes.SESSION_CONCURRENT_KICKOUT -> DEFAULT_DURABLE;
             default -> DEFAULT_BEST_EFFORT;
         };
     }

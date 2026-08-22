@@ -6,7 +6,7 @@ import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
-import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.UnlockAccountUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;

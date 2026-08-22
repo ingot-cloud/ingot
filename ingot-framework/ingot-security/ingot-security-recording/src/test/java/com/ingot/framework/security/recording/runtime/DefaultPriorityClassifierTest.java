@@ -1,5 +1,7 @@
 package com.ingot.framework.security.recording.runtime;
 
+import com.ingot.framework.security.event.codes.SecurityEventCategoryCodes;
+import com.ingot.framework.security.event.codes.SecurityEventCodes;
 import com.ingot.framework.security.recording.config.SecurityEventProperties;
 import com.ingot.framework.security.recording.model.RecordPriority;
 import com.ingot.framework.security.recording.model.SecurityEventRecord;
@@ -25,42 +27,42 @@ class DefaultPriorityClassifierTest {
     @Test
     @DisplayName("LOGIN_SUCCESS 默认 BEST_EFFORT")
     void loginSuccessIsBestEffort() {
-        SecurityEventRecord record = baseRecord("LOGIN_SUCCESS").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.LOGIN_SUCCESS).build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.BEST_EFFORT);
     }
 
     @Test
     @DisplayName("ACCOUNT_LOCKED 默认 DURABLE")
     void accountLockedIsDurable() {
-        SecurityEventRecord record = baseRecord("ACCOUNT_LOCKED").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.ACCOUNT_LOCKED).build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
     }
 
     @Test
     @DisplayName("SESSION_REVOKED 默认 DURABLE")
     void sessionRevokedIsDurable() {
-        SecurityEventRecord record = baseRecord("SESSION_REVOKED").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.SESSION_REVOKED).build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
     }
 
     @Test
     @DisplayName("SESSION_CONCURRENT_KICKOUT 默认 DURABLE")
     void sessionConcurrentKickoutIsDurable() {
-        SecurityEventRecord record = baseRecord("SESSION_CONCURRENT_KICKOUT").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.SESSION_CONCURRENT_KICKOUT).build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
     }
 
     @Test
     @DisplayName("LOGOUT 仍是 BEST_EFFORT，用户自助登出不占持久配额")
     void logoutIsBestEffort() {
-        SecurityEventRecord record = baseRecord("LOGOUT").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.LOGOUT).build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.BEST_EFFORT);
     }
 
     @Test
     @DisplayName("record 自带 priority 时优先使用")
     void explicitPriorityWins() {
-        SecurityEventRecord record = baseRecord("LOGIN_SUCCESS")
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.LOGIN_SUCCESS)
                 .priority(RecordPriority.DURABLE)
                 .build();
         assertThat(classifier.classify(record)).isEqualTo(RecordPriority.DURABLE);
@@ -70,10 +72,10 @@ class DefaultPriorityClassifierTest {
     @DisplayName("热刷新 override 生效")
     void overrideApplies() {
         SecurityEventProperties properties = new SecurityEventProperties();
-        properties.setPriorityOverrides(Map.of("LOGIN_SUCCESS", "DURABLE"));
+        properties.setPriorityOverrides(Map.of(SecurityEventCodes.LOGIN_SUCCESS, "DURABLE"));
         DefaultPriorityClassifier overridden = new DefaultPriorityClassifier(properties);
 
-        SecurityEventRecord record = baseRecord("LOGIN_SUCCESS").build();
+        SecurityEventRecord record = baseRecord(SecurityEventCodes.LOGIN_SUCCESS).build();
         assertThat(overridden.classify(record)).isEqualTo(RecordPriority.DURABLE);
     }
 
@@ -81,7 +83,7 @@ class DefaultPriorityClassifierTest {
         return SecurityEventRecord.builder()
                 .eventId("01234567890123456789012345678901")
                 .eventType(type)
-                .eventCategory("AUTH")
+                .eventCategory(SecurityEventCategoryCodes.AUTH)
                 .occurredAt(Instant.parse("2026-08-04T00:00:00Z"));
     }
 }

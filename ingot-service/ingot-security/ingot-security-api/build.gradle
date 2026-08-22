@@ -1,10 +1,17 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
+    api project(ingot.framework_security_event_codes)
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_data_mybatis_common)
     api project(ingot.framework_event_bus)
 
     compileOnly(deps.spring.spring_boot.spring_boot_autoconfigure)
+
+    testImplementation(deps.spring.spring_boot.test)
+}
+
+test {
+    useJUnitPlatform()
 }

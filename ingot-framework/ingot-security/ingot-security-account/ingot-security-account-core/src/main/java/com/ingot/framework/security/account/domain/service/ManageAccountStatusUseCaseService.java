@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
-import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;

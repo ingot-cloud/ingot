@@ -1,8 +1,8 @@
 package com.ingot.framework.security.account.domain.model;
 
-import com.ingot.framework.security.account.domain.model.enums.EventSource;
-import com.ingot.framework.security.account.domain.model.enums.SecurityEventType;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import lombok.Builder;
 import lombok.Data;
 
@@ -33,15 +33,17 @@ public class AccountSecurityEvent {
     private UserTypeEnum userType;
 
     /**
-     * 事件类型
+     * 事件类型（{@link SecurityEventType} api SoT）。
      */
     private SecurityEventType eventType;
 
     /**
-     * 事件分类（从 eventType 派生）
+     * 事件分类 code，从 {@link #eventType} 的 category 派生；类型为空时返回 {@code null}。
      */
     public String getEventCategory() {
-        return eventType != null ? eventType.getCategory() : null;
+        return eventType != null && eventType.getCategory() != null
+                ? eventType.getCategory().getCode()
+                : null;
     }
 
     /**

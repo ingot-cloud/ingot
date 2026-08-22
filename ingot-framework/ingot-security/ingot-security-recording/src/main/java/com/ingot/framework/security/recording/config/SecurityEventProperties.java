@@ -3,8 +3,10 @@ package com.ingot.framework.security.recording.config;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import com.ingot.framework.security.event.codes.SecurityEventCategoryCodes;
 import com.ingot.framework.security.recording.model.RecordingTarget;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -88,15 +90,20 @@ public class SecurityEventProperties {
         return enabled;
     }
 
+    /**
+     * 按事件大类判断是否允许上报；空白或未知类别视为开启（fail-open）。
+     *
+     * @param category {@link SecurityEventCategoryCodes} 中的分类 code，大小写不敏感
+     */
     public boolean isCategoryEnabled(String category) {
         if (category == null || category.isBlank()) {
             return true;
         }
-        return switch (category.toUpperCase()) {
-            case "AUTH" -> categories.auth;
-            case "ACCOUNT" -> categories.account;
-            case "CREDENTIAL" -> categories.credential;
-            case "ACCESS" -> categories.access;
+        return switch (category.toUpperCase(Locale.ROOT)) {
+            case SecurityEventCategoryCodes.AUTH -> categories.auth;
+            case SecurityEventCategoryCodes.ACCOUNT -> categories.account;
+            case SecurityEventCategoryCodes.CREDENTIAL -> categories.credential;
+            case SecurityEventCategoryCodes.ACCESS -> categories.access;
             default -> true;
         };
     }
