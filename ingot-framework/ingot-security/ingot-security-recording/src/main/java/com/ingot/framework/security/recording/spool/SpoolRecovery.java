@@ -7,13 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * <p>spool 启动恢复：扫描 segment、截断不完整尾记录、隔离损坏文件。</p>
+ * <p>spool 启动恢复：截断不完整尾记录、回收 inFlight，仅在 state 缺失或损坏时扫描 segment。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -23,16 +21,44 @@ public final class SpoolRecovery {
     private SpoolRecovery() {
     }
 
-    public static void recoverOnStartup(FileSpoolRecordQueue queue) throws IOException {
+    /**
+     * 按 load 结果恢复队列：完好 state 只退回 inFlight；缺失或损坏才扫描 segment 重建 pending。
+     *
+     * @param queue      已持有目录锁的 spool
+     * @param loadResult {@link SpoolState#load} 的结果
+     * @throws IOException 扫描 segment、隔离损坏文件或落盘失败
+     */
+    public static void recoverOnStartup(FileSpoolRecordQueue queue, SpoolState.LoadResult loadResult)
+            throws IOException {
         truncateAllSegmentTails(queue.segmentsDir());
-        rebuildPendingIfEmpty(queue);
+        if (loadResult.isCorrupt()) {
+            queue.quarantineStateFile();
+        }
+        if (loadResult.needsSegmentRebuild()) {
+            rebuildPendingFromSegments(queue);
+        } else {
+            requeueInFlight(queue);
+        }
+        queue.hydrateRecords();
+        queue.reclaimUnreferencedSegments();
         queue.refreshTotalBytes();
         queue.persistState();
     }
 
-    static void rebuildPendingIfEmpty(FileSpoolRecordQueue queue) throws IOException {
+    static void requeueInFlight(FileSpoolRecordQueue queue) {
         SpoolState state = queue.state();
-        if (!state.getPending().isEmpty() || !state.getInFlight().isEmpty()) {
+        for (SpoolState.SpoolEntry entry : state.getInFlight()) {
+            entry.setNextRetryAtEpochMs(0);
+        }
+        state.getPending().addAll(state.getInFlight());
+        state.getInFlight().clear();
+    }
+
+    static void rebuildPendingFromSegments(FileSpoolRecordQueue queue) throws IOException {
+        SpoolState state = queue.state();
+        state.getPending().clear();
+        state.getInFlight().clear();
+        if (!Files.exists(queue.segmentsDir())) {
             return;
         }
         try (Stream<Path> files = Files.list(queue.segmentsDir())) {

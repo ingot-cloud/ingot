@@ -70,7 +70,7 @@ ingot:
 
         # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
         spool:
-          # spool 根目录（append-only segment 文件）。
+          # spool 父目录。运行时实际路径为 {directory}/{spring.application.name}（如 .../spool/in-service-pms）。
           directory: ./logs/security-recording/spool
           # spool 目录总磁盘配额（如 1GB、512MB）。
           max-bytes: 1GB
@@ -147,7 +147,8 @@ ingot:
           poll-timeout-ms: 100
           shutdown-timeout-ms: 5000
         # DURABLE 事件（如 BLACKLIST_BLOCK）仍需要 spool；未显式配置时使用下方 Java 默认值：
-        # spool.directory=./logs/security-recording/spool, max-bytes=1GB, ...
+        # spool.directory 为父目录，运行时再拼 spring.application.name，例如
+        # /ingot-data/security-recording/spool/in-service-gateway
 
       # Gateway 不写本地 canonical 表，通常不需要 retention；中心库由 in-service-security 清理。
       retention:

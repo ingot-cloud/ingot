@@ -163,7 +163,10 @@ public class SecurityEventProperties {
     @Data
     public static class Spool {
 
-        /** spool 根目录。 */
+        /**
+         * spool 父目录，默认 {@code /ingot-data/security-recording/spool}。
+         * <p>运行时实际路径为 {@code {directory}/{spring.application.name}}，避免多服务抢写同一 {@code state.json}。</p>
+         */
         private String directory = "/ingot-data/security-recording/spool";
 
         /** 目录总配额（如 {@code 1GB}）。 */
