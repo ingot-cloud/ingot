@@ -7,8 +7,16 @@ spring:
 ingot:
   security:
     account:
-      # local 或 remote
+      # local 或 remote；remote 时下方 lockout 仅作 Nacos 地板
       mode: local
+      policy:
+        fallback:
+          local-floor-enabled: true
+        cache:
+          l1-enabled: true
+          l1-ttl: 5m
+          l2-enabled: true
+          l2-ttl: 30m
       lockout:
         # 是否启用自动锁定账号
         enabled: ${ACCOUNT_LOCKOUT_ENABLED:true}
