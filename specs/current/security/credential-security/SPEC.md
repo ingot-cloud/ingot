@@ -79,17 +79,17 @@
 
 ### 7.1 `remote` 模式降级阶梯
 
-`getAll()` 由内到外的委托链：
+`getAll()` 由内到外的委托链（`ingot-cache` 装饰器）：
 
 ```
-L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCredentialPolicyConfigService
+L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCacheLayer
                                         remote(新鲜) → LKG(最近成功快照) → Nacos 地板
 ```
 
-- 远端 delegate（`RemoteCredentialPolicyConfigService`）**区分失败与合法空**：调用异常 / 连接失败 / 非成功码统一抛 `CredentialRemoteUnavailableException`；成功（含空）返回真实数据。
-- `ResilientCredentialPolicyConfigService`：远程成功 → 刷新 LKG 并返回（成功空 = 合法无策略，直接接受，不兜底）；远程失败 → 回退 LKG；LKG 缺失 → 回退 Nacos 地板；**永不 fail-open 到「无策略」**。
+- 远端 delegate（`RemoteCredentialPolicyConfigService`）**区分失败与合法空**：调用异常 / 连接失败 / 非成功码统一抛 `CredentialRemoteUnavailableException`（继承框架 `RemoteUnavailableException`）；成功（含空）返回真实数据。
+- Resilient 层：远程成功 → 刷新 LKG 并返回（成功空 = 合法无策略，直接接受，不兜底）；远程失败 → 回退 LKG；LKG 缺失 → 回退 Nacos 地板；**永不 fail-open 到「无策略」**。
 - 失败态返回的是**有效兜底值**（非失败空），L1/L2 本就不缓存空；远程恢复后随 L1/L2 短 TTL 过期自动回到新鲜值。
-- `ingot-security-provider` 的本地 Mapper delegate **不包裹** Resilient（无远程失败语义）。
+- `ingot-security-provider` 的本地 Mapper delegate **不包裹** Resilient（无远程失败语义）；L1/L2 仍叠加其上。
 
 ### 7.2 LKG（Last-Known-Good）
 
@@ -101,7 +101,7 @@ L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCredentialPolicyConfigService
 
 - 由本地属性（`ingot.security.credential.policy.*`）映射为 `List<CredentialPolicyConfigVO>`：strength/history/expiration 按启用纳入，初始密码始终纳入。
 - 必须维护**安全基线**：全部校验类关闭时补最小强度基线，**永不返回空**（否则 D-B 合法空语义会退回 fail-open）。
-- 默认开关 `ingot.security.credential.fallback.local-floor-enabled = true`（可用性优先）。
+- 默认开关 `ingot.security.credential.policy.fallback.local-floor-enabled = true`（可用性优先）。
 
 ### 7.4 `local` 模式与 Nacos 动态刷新
 
@@ -116,8 +116,8 @@ L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCredentialPolicyConfigService
 
 ## 8. 可观测（降级来源）
 
-- `CredentialPolicySourceHolder` 记录当前生效来源（`REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR`）、LKG/地板降级计数与最近降级时间；走兜底时打 WARN 日志。
-- Actuator 端点 `credentialpolicy` 暴露上述状态（`@ConditionalOnClass` 守护，缺 actuator 依赖时不注册）。
+- `CacheSourceHolder` 记录当前生效来源（`REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR`）、LKG/地板降级计数与最近降级时间；走兜底时打 WARN 日志。
+- Actuator 端点 `credentialpolicy` 暴露上述状态（`@ConditionalOnClass` 守护，缺 actuator 依赖时不注册）；框架另提供汇总端点 `layeredcache`。
 
 ## 9. 已知限制 / 后续跟踪
 

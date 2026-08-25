@@ -41,6 +41,23 @@
 
 `WebUtil.getClientIP` 优先读取 `In-Inner-Client-Real-IP`，再按代理头与历史兼容头回退。
 
+### 3.3 Feign 跨进程转发
+
+BFF（及任何 Servlet / WebFlux Feign 调用方）经 `FeignHeaderRelay` 把下列入站头**原样**转到下游，避免 Auth `getRemoteAddr()` 落到 BFF 网卡 IP：
+
+| Header | 说明 |
+|---|---|
+| `Authorization` | 凭证 |
+| `deviceid` | 历史设备头 |
+| `In-Inner-Client-Real-IP` | 网关标准化 IP |
+| `In-Inner-User-Id` | 网关回填 userId |
+| `In-Inner-Client-Id` | 网关回填 client_id |
+| `In-Ca-Sig` | 设备指纹 |
+
+`In-Inner-From` **不**转发入站值；Feign 拦截器一律写 `Inside`。租户头由 `TenantFeignInterceptor` 从 `TenantContextHolder` 写入，不走本清单。
+
+常量清单：`HeaderConstants.IDENTITY_PROPAGATION_HEADERS`（身份头）+ Feign 侧 `Authorization` / `deviceid`。
+
 ## 4. 身份维度与 Sentinel
 
 `IdentityResolveFilter` 构建 `ClientIdentity`：

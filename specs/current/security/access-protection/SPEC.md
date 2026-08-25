@@ -70,14 +70,19 @@ Actuator：`GET /actuator/securitypolicy`（来源）、`GET /actuator/layeredca
 
 前缀：`ingot.security.access`（**配在 `in-service-auth.yml`**，非 Gateway）。
 
-| 键 | 默认（DEV/TEST/PROD） |
+| 键 | 默认 |
 |---|---|
-| `mode` | `remote` |
-| `policy.local-floor-enabled` | `true` |
+| `mode` | `local`（代码缺省；生产 Nacos 为 `remote`） |
+| `policy.fallback.local-floor-enabled` | `true` |
+| `policy.cache.l1-enabled` | `true` |
+| `policy.cache.l1-ttl` | `5m` |
+| `policy.cache.l2-enabled` | `true` |
+| `policy.cache.l2-ttl` | `30m` |
+| `policy.cache.l2-redis-key` | `in:sec:lf:policy:snapshot` |
 
-`mode=local`：读 Nacos `login-failure.*`；`mode=remote`：Feign 拉安全中心四维策略 + `remote → LKG → 地板`。
+`mode=local`：读 Nacos `login-failure.*`；`mode=remote`：Feign 拉安全中心四维策略，走 `ingot-cache` 分层链 `L1 → L2 → remote → LKG → 地板`。失效广播调用 `evictAll()` 会真实清除 L1/L2。
 
-LKG Redis：`in:sec:lf:policy:lkg`。Actuator：`GET /actuator/loginfailurepolicy`（若启用）。
+LKG Redis：`in:sec:lf:policy:lkg`（不随 evict 清除）。Actuator：`GET /actuator/loginfailurepolicy`（若启用）。
 
 ### 2.2 策略表
 
@@ -106,6 +111,7 @@ Platform：`/platform/security/access/login-failure-policies`（CRUD）；变更
 ### 2.4 接线
 
 `DefaultAuthenticationFailureHandler` → `LoginFailureEvent` → `LoginFailureAccessListener` → `LoginFailureProtectionService`。  
+IP / 设备取自 Auth 入站头（`In-Inner-Client-Real-IP` / `In-Ca-Sig`），BFF Feign 须原样转发，否则会写成 BFF 网卡 IP，与网关 `BlacklistFilter` 对不齐。  
 登录成功清零各维度计数。
 
 ## 3. DB 种子（migration 011）

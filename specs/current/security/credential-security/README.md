@@ -35,10 +35,10 @@
 | 凭证服务统一入口（校验 / 历史 / 过期 / 强制改密 / 宽限扣减） | `ingot-security-credential/.../DefaultCredentialSecurityService.java` |
 | 初始密码生成与有效期判定 | `ingot-security-credential/.../DefaultInitialPasswordService.java` |
 | 密码过期持久化（`force_change` / 宽限次数） | `ingot-security-credential-data/.../PasswordExpirationServiceImpl.java` |
-| 弹性降级阶梯（remote → LKG → Nacos 地板） | `ingot-security-credential/.../internal/ResilientCredentialPolicyConfigService.java` |
-| LKG 最近成功快照（Redis 唯一源） | `ingot-security-credential/.../internal/LastKnownGoodStore.java` |
+| 弹性降级阶梯（remote → LKG → Nacos 地板） | `ingot-cache` `LayeredCache` + `ingot-security-credential/.../config/CredentialSecurityAutoConfiguration.java` |
+| LKG 最近成功快照（Redis 唯一源） | `ingot-cache` `LastKnownGoodStore`，key `in:credential:policy:lkg` |
 | Nacos 地板（属性→VO，安全基线非空） | `ingot-security-credential/.../internal/LocalFloorSupplier.java` |
-| 降级来源可观测（holder + actuator） | `ingot-security-credential/.../internal/CredentialPolicySourceHolder.java`、`.../actuate/CredentialPolicyEndpoint.java` |
+| 降级来源可观测（holder + actuator） | `ingot-cache` `CacheSourceHolder`、`.../actuate/CredentialPolicyEndpoint.java` |
 | 本地策略即时编译（Nacos rebinder 刷新） | `ingot-security-credential/.../LocalCredentialPolicyLoader.java` |
 | 注册 / 创建初始密码 + 强制改密置位 | `ingot-security-account-core/.../RegisterUserUseCaseService.java` |
 | 改密清除 / 重置置位 强制改密 | `ingot-security-account-core/.../ChangePasswordUseCaseService.java` |
@@ -52,3 +52,4 @@
 - 来源变更：
   - `specs/changes/archive/2026/20260717-security-credential-closure/`（L1 收口）
   - `specs/changes/archive/2026/20260717-security-credential-resilience/`（弹性降级兜底与初始密码收口对齐）
+  - `specs/changes/archive/2026/20260730-framework-layered-cache/`（内部实现迁入 `ingot-cache`，对外契约不变）

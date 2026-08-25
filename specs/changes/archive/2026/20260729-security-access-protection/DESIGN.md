@@ -1,3 +1,5 @@
+> 2026-08-22：LoginFailure 策略缓存已迁入 `ingot-cache`（见 [20260730-framework-layered-cache](../20260730-framework-layered-cache/)）。remote 模式现为 `L1 → L2 → remote → LKG → 地板`，`evictAll()` 真实清 L1/L2。下文保留 L4 交付时的类名，现行实现以 current [`access-protection`](../../../current/security/access-protection/SPEC.md) 与 [`layered-cache`](../../../current/framework/layered-cache/SPEC.md) 为准。
+
 # Design
 
 ## 方案摘要
@@ -145,6 +147,8 @@ LoginFailurePolicyLoader (facade)
 - **`mode=local`**：仅 `LocalLoginFailurePolicyLoader` 读 `@ConfigurationProperties`，rebinder 热刷新。
 - **`mode=remote`**：走 Resilient 链；与 L2 `AccountLockoutPolicyLoader` **独立**，不共用 Feign 接口。
 - **Actuator**：`loginfailurepolicy` 端点暴露 `source`（REMOTE/LKG/LOCAL_FLOOR）与降级计数。
+
+> 现行实现（2026-08-22）：remote 模式改为 `CachedLoginFailurePolicyLoader` + `ingot-cache` 分层链，补齐 L1+L2；旧 `ResilientLoginFailurePolicyLoader` / `LoginFailureLkgStore` 已删除。
 
 | 子模块 | 执行职责 |
 |--------|----------|

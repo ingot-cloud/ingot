@@ -18,6 +18,7 @@
 - 常量：`ingot-framework/ingot-commons/.../HeaderConstants.java`
 - 网关写入：`ingot-service/ingot-gateway/.../RequestGlobalFilter`、`IdentityResolveFilter`
 - BFF 读取：`ingot-service/ingot-bff/.../BffSessionService`
+- Feign 转发：`ingot-framework/ingot-feign/.../FeignHeaderRelay`
 
 ## 关联模块
 
@@ -29,6 +30,7 @@
 | Sentinel 维度 Header 绑定 | `ingot-gateway/.../SentinelGatewayConfiguration.java` |
 | 限流/黑白名单维度说明 | `ingot-gateway-rule-client/.../RateLimitDimension.java`、`IpKeyType.java` |
 | 客户端 IP 工具 | `ingot-commons/.../WebUtil.java`、`ClientIpResolver.java` |
+| Feign 身份头转发 | `ingot-feign/.../FeignHeaderRelay.java` |
 
 ## 文档索引
 
