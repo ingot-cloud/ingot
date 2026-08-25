@@ -69,7 +69,7 @@ ingot:
           shutdown-timeout-ms: 5000
         # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
         spool:
-          # spool 根目录（append-only segment 文件）。
+          # spool 父目录；运行时实际路径为 {directory}/{spring.application.name}。
           directory: /ingot-data/security-recording/spool
           # spool 目录总磁盘配额（如 1GB、512MB）。
           max-bytes: 1GB

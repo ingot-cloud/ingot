@@ -166,7 +166,7 @@ ingot:
           poll-timeout-ms: 100
           shutdown-timeout-ms: 5000
         # DURABLE 事件（如 BLACKLIST_BLOCK）仍需要 spool；未显式配置时使用下方 Java 默认值：
-        # spool.directory=./logs/security-recording/spool, max-bytes=1GB, ...
+        # spool.directory 为父目录，运行时再拼 spring.application.name。
       # Gateway 不写本地 canonical 表，通常不需要 retention；中心库由 in-service-security 清理。
       retention:
         enabled: false
