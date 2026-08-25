@@ -1,50 +1,36 @@
 package com.ingot.framework.dict.client.internal;
 
+import com.ingot.framework.cache.coordinator.LayeredCacheCoordinator;
 import com.ingot.framework.dict.client.DictService;
 import com.ingot.framework.dict.client.event.DictInvalidationEvent;
 import com.ingot.framework.eventbus.InvalidationBus;
-import com.ingot.framework.eventbus.Subscription;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
- * 订阅 {@link DictInvalidationEvent}，在收到广播后调用根 {@link DictService}
- * 的 {@code evict} / {@code evictAll} 方法，由装饰器链自顶向下清理 L1 + L2。
+ * <p>字典失效广播的订阅入口：全量失效走 {@link DictService#evictAll()}，
+ * 按编码失效走 {@link DictService#evict(String)}。</p>
+ *
+ * <p>字典的域标识是运行期才知道的 {@code dictCode}，无法预先 {@code register} 每个编码，
+ * 因此覆盖 {@link #handle} 直接派发到 {@link DictService}。</p>
  *
  * @author jy
  * @since 2026/4/27
+ * @see LayeredCacheCoordinator
  */
-@Slf4j
-@RequiredArgsConstructor
-public class DictCacheCoordinator {
+public class DictCacheCoordinator extends LayeredCacheCoordinator<DictInvalidationEvent, String> {
 
-    private final InvalidationBus bus;
     private final DictService dictService;
 
-    private Subscription subscription;
-
-    @PostConstruct
-    public void start() {
-        this.subscription = bus.subscribe(DictInvalidationEvent.class, this::handle);
-        log.info("[Dict] cache coordinator subscribed");
+    public DictCacheCoordinator(InvalidationBus bus, DictService dictService) {
+        super(bus, DictInvalidationEvent.class,
+                event -> event.isAll() ? null : event.getDictCode(), null);
+        this.dictService = dictService;
     }
 
-    @PreDestroy
-    public void stop() {
-        if (subscription != null) {
-            subscription.close();
-            subscription = null;
-        }
-    }
-
-    void handle(DictInvalidationEvent event) {
+    @Override
+    protected void handle(DictInvalidationEvent event) {
         if (event.isAll() || event.getDictCode() == null || event.getDictCode().isBlank()) {
-            log.info("[Dict] cache invalidate all (origin={})", event.getOrigin());
             dictService.evictAll();
         } else {
-            log.info("[Dict] cache invalidate dictCode={} (origin={})", event.getDictCode(), event.getOrigin());
             dictService.evict(event.getDictCode());
         }
     }

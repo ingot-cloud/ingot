@@ -1,11 +1,19 @@
 package com.ingot.framework.dict.client.config;
 
+import java.util.List;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.pms.api.rpc.RemotePmsDictService;
+import com.ingot.framework.cache.config.LayeredCacheBuilder;
+import com.ingot.framework.cache.config.LayeredCacheSettings;
+import com.ingot.framework.cache.registry.LayeredCacheRegistry;
+import com.ingot.framework.cache.spi.LayeredCache;
 import com.ingot.framework.dict.client.DictService;
 import com.ingot.framework.dict.client.internal.DictCacheCoordinator;
-import com.ingot.framework.dict.client.internal.DictServiceFactory;
-import com.ingot.framework.dict.client.internal.RedisDictService;
+import com.ingot.framework.dict.client.internal.DictCacheKey;
+import com.ingot.framework.dict.client.internal.LayeredDictService;
+import com.ingot.framework.dict.client.model.DictItem;
 import com.ingot.framework.dict.client.remote.RemoteDictService;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
@@ -25,23 +33,19 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
- * 字典客户端自动配置。
- * <p>
- * 装配顺序：
+ * <p>字典客户端自动配置：按部署形态选择本地或 RPC delegate，再叠加 L1/L2。</p>
+ *
+ * <p>装配顺序：</p>
  * <ol>
  *     <li>L0 delegate：PMS 进程内由 {@code LocalDictConfig} 提供 {@code dictDelegate}；
  *         其它微服务由本类基于 {@link RemotePmsDictService} 注册 {@link RemoteDictService}。</li>
- *     <li>L2 Redis：当 Redis 类路径存在且 {@code ingot.dict.client.redis-enabled=true} 时，
- *         注册 {@link RedisDictService} 包裹 delegate。</li>
- *     <li>L1 Caffeine：最外层，{@code ingot.dict.client.cache-enabled=true} 时启用，作为 {@code @Primary} 暴露。</li>
- *     <li>跨节点失效：{@code InvalidationBus} 存在且 {@code invalidation-enabled=true} 时注册 {@link DictCacheCoordinator}。</li>
+ *     <li>分层缓存：{@code mode=NONE} 时直接暴露 delegate；否则用 {@link LayeredCacheBuilder}
+ *         按既有 {@code cache-*} / {@code redis-*} 键叠加 L1/L2，不启用 LKG 与地板。</li>
+ *     <li>跨节点失效：{@code InvalidationBus} 存在且 {@code invalidation-enabled=true} 时注册
+ *         {@link DictCacheCoordinator}。</li>
  * </ol>
- * <p>
- * 本类<strong>必须</strong>排在 {@link EventBusAutoConfiguration} 之后：{@code dictCacheCoordinator}
- * bean 带有 {@code @ConditionalOnBean(InvalidationBus.class)}；若按 classpath 字母序早于
- * {@code eventbus} 包处理，会导致总线尚未注册、条件不成立，协调器 bean 被<strong>永久跳过</strong>，
- * 典型现象为「PMS 写库后本地缓存正常，其它微服务（如 AUTH）L1 永不失效」。
- * </p>
+ *
+ * <p>本类必须排在 {@link EventBusAutoConfiguration} 之后，否则协调器会因总线尚未注册而被永久跳过。</p>
  *
  * @author jy
  * @since 2026/4/25
@@ -51,11 +55,15 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @AutoConfigureAfter(EventBusAutoConfiguration.class)
 @EnableConfigurationProperties(DictClientProperties.class)
 public class DictClientAutoConfiguration {
+
     public static final String DICT_DELEGATE_SERVICE_NAME = "dictDelegate";
 
-    /**
-     * 远端 delegate（仅在没有本地 delegate 时启用，典型场景：非 PMS 微服务）
-     */
+    public static final String CACHE_BEAN_NAME = "dictItemCache";
+
+    private static final String CACHE_NAME = "dict";
+    private static final TypeReference<List<DictItem>> ITEM_LIST_TYPE = new TypeReference<>() {
+    };
+
     @Bean(name = DICT_DELEGATE_SERVICE_NAME)
     @ConditionalOnClass(Feign.class)
     @ConditionalOnBean(RemotePmsDictService.class)
@@ -65,49 +73,58 @@ public class DictClientAutoConfiguration {
         return new RemoteDictService(remotePmsDictService);
     }
 
-    /**
-     * L2 Redis 共享缓存层。delegate 必须存在；Redis 不可用时跳过。
-     */
-    @Bean
-    @ConditionalOnBean({StringRedisTemplate.class})
-    @ConditionalOnProperty(value = "ingot.dict.client.redis-enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean(RedisDictService.class)
-    public RedisDictService dictRedisLayer(@Qualifier("dictDelegate") DictService delegate,
-                                           StringRedisTemplate redisTemplate,
-                                           ObjectProvider<ObjectMapper> objectMapperProvider,
-                                           DictClientProperties properties) {
-        ObjectMapper mapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
-        RedisDictService layer = DictServiceFactory.composeRedisLayer(delegate, properties, redisTemplate, mapper);
-        if (layer != null) {
-            log.info("[DictClient] L2 Redis layer enabled, ttl={}, keyPrefix={}",
-                    properties.getRedisTtl(), properties.getRedisKeyPrefix());
-        }
-        return layer;
+    @Bean(CACHE_BEAN_NAME)
+    @ConditionalOnBean(name = DICT_DELEGATE_SERVICE_NAME)
+    @ConditionalOnMissingBean(name = CACHE_BEAN_NAME)
+    public LayeredCache<DictCacheKey, List<DictItem>> dictItemCache(
+            @Qualifier(DICT_DELEGATE_SERVICE_NAME) DictService delegate,
+            DictClientProperties properties,
+            ObjectProvider<StringRedisTemplate> redisProvider,
+            ObjectProvider<ObjectMapper> objectMapperProvider,
+            ObjectProvider<LayeredCacheRegistry> registryProvider) {
+        LayeredCacheSettings settings = LayeredCacheSettings.builder()
+                .l1Enabled(properties.isCacheEnabled())
+                .l1Ttl(properties.getCacheTtl())
+                .l1MaximumSize(properties.getCacheMaximumSize())
+                .l2Enabled(properties.isRedisEnabled())
+                .l2Ttl(properties.getRedisTtl())
+                .resilienceEnabled(false)
+                .build();
+
+        StringRedisTemplate redisTemplate = redisProvider.getIfAvailable();
+        ObjectMapper objectMapper = objectMapperProvider.getIfAvailable();
+        String prefix = properties.getRedisKeyPrefix();
+
+        log.info("[DictClient] layered cache assembled (mode={}, l1={}, l2={})",
+                properties.getMode(), properties.isCacheEnabled(), properties.isRedisEnabled());
+        return LayeredCacheBuilder.<DictCacheKey, List<DictItem>>named(CACHE_NAME)
+                .loader(key -> delegate.items(key.code(), key.toQuery()))
+                .settings(settings)
+                .cacheable(v -> v != null && !v.isEmpty())
+                .emptyValue(List::of)
+                .l2(redisTemplate, objectMapper, ITEM_LIST_TYPE,
+                        key -> key.redisKey(prefix), DictCacheKey.redisAllPattern(prefix))
+                .registry(registryProvider.getIfAvailable())
+                .build();
     }
 
-    /**
-     * 对外暴露的 {@link DictService}：在 delegate 之上叠加 L2、L1。
-     */
     @Bean
     @Primary
     @ConditionalOnBean(name = DICT_DELEGATE_SERVICE_NAME)
     public DictService dictService(@Qualifier(DICT_DELEGATE_SERVICE_NAME) DictService delegate,
-                                   ObjectProvider<RedisDictService> redisLayerProvider,
+                                   ObjectProvider<LayeredCache<DictCacheKey, List<DictItem>>> cacheProvider,
                                    DictClientProperties properties) {
-        DictService inner = redisLayerProvider.getIfAvailable();
-        if (inner == null) {
-            inner = delegate;
+        if (properties.getMode() == DictClientProperties.Mode.NONE) {
+            log.info("[DictClient] mode=NONE, expose delegate without cache");
+            return delegate;
         }
-        DictService composed = DictServiceFactory.composeCaffeineLayer(inner, properties);
-        log.info("[DictClient] DictService composed (mode={}, l1={}, l2={})",
-                properties.getMode(), properties.isCacheEnabled(), properties.isRedisEnabled());
-        return composed;
+        LayeredCache<DictCacheKey, List<DictItem>> cache = cacheProvider.getIfAvailable();
+        if (cache == null) {
+            return delegate;
+        }
+        return new LayeredDictService(cache, properties.getRedisKeyPrefix());
     }
 
-    /**
-     * 失效广播协调器：订阅 {@link com.ingot.framework.dict.client.event.DictInvalidationEvent}，
-     * 回调时调用根 {@link DictService}（L1 入口），由装饰器链向下逐层清缓存。
-     */
     @Bean
     @ConditionalOnBean(InvalidationBus.class)
     @ConditionalOnProperty(value = "ingot.dict.client.invalidation-enabled", havingValue = "true", matchIfMissing = true)

@@ -3,6 +3,7 @@ apply from: "${project.getRootDir().path}/config/library-base.gradle"
 dependencies {
     api project(ingot.framework_security_access_core)
     api project(ingot.security_api)
+    implementation project(ingot.framework_cache)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_event_bus)
     implementation project(ingot.framework_feign)
@@ -20,4 +21,13 @@ dependencies {
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
     compileOnly(deps.spring.spring_boot.actuator_autoconfigure)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.jackson.data_bind)
+    testCompileOnly(deps.lombok)
+    testAnnotationProcessor(deps.lombok)
+}
+
+test {
+    useJUnitPlatform()
 }

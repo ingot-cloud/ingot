@@ -7,11 +7,11 @@ import com.ingot.cloud.security.api.model.vo.CredentialPolicyConfigVO;
 /**
  * 凭证策略配置访问 SPI。
  * <p>
- * 由装饰器链统一暴露，对外仅看到一个 {@code @Primary} bean。链路自外向内：
+ * 由分层缓存链统一暴露，对外仅看到一个 {@code @Primary} bean。链路自外向内：
  * <pre>
- * Caffeine (L1) -> Redis (L2) -> Delegate (Local Mapper / Remote Feign)
+ * L1 Caffeine -> L2 Redis -> Resilient(remote -> LKG -> 地板) / Loader
  * </pre>
- * Delegate 在 ingot-security-provider 内是直查 MySQL 的 Local 实现，在其它消费微服务里
+ * Delegate 在 ingot-security-provider 内是直查 MySQL 的 Local 实现（不包 Resilient），在其它消费微服务里
  * 是 Feign 调用 {@code RemoteCredentialService} 的 Remote 实现。
  *
  * @author jy

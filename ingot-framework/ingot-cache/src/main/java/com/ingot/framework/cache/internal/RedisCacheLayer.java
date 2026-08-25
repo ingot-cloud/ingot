@@ -89,16 +89,14 @@ public class RedisCacheLayer<K, V> implements LayeredCache<K, V> {
 
     @Override
     public void evictAll() {
-        try {
-            if (hasWildcard(evictAllPattern)) {
-                scanAndDelete();
-            } else {
-                redisTemplate.delete(evictAllPattern);
-            }
-        } catch (Exception e) {
-            log.warn("[Cache:{}] L2 evictAll failed pattern={}", name, evictAllPattern, e);
-        }
+        deleteByPattern(evictAllPattern);
         delegate.evictAll();
+    }
+
+    @Override
+    public void evictMatching(Predicate<K> matcher, String l2ScanPattern) {
+        deleteByPattern(l2ScanPattern);
+        delegate.evictMatching(matcher, l2ScanPattern);
     }
 
     @Override
@@ -106,8 +104,23 @@ public class RedisCacheLayer<K, V> implements LayeredCache<K, V> {
         return name;
     }
 
-    private void scanAndDelete() {
-        ScanOptions options = ScanOptions.scanOptions().match(evictAllPattern).count(SCAN_BATCH).build();
+    private void deleteByPattern(String pattern) {
+        if (pattern == null || pattern.isEmpty()) {
+            return;
+        }
+        try {
+            if (hasWildcard(pattern)) {
+                scanAndDelete(pattern);
+            } else {
+                redisTemplate.delete(pattern);
+            }
+        } catch (Exception e) {
+            log.warn("[Cache:{}] L2 pattern delete failed pattern={}", name, pattern, e);
+        }
+    }
+
+    private void scanAndDelete(String pattern) {
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(SCAN_BATCH).build();
         List<String> batch = new ArrayList<>(SCAN_BATCH);
         try (Cursor<String> cursor = redisTemplate.scan(options)) {
             while (cursor.hasNext()) {

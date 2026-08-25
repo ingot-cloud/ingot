@@ -8,11 +8,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * WebFlux / Gateway 环境的 Feign 请求拦截器。
+ * <p>WebFlux / Gateway 环境的 Feign 请求拦截器。</p>
  *
  * <p>语义与 {@link com.ingot.framework.feign.OAuth2FeignRequestInterceptor} 对齐：
- * 转发 {@code Authorization} 与 {@code deviceid}，并标记内部调用头；不依赖
- * {@code jakarta.servlet.http.HttpServletRequest}。</p>
+ * 转发 {@link com.ingot.framework.feign.FeignHeaderRelay} 清单中的身份头并标记内部调用；
+ * 不依赖 {@code jakarta.servlet.http.HttpServletRequest}。</p>
+ *
+ * @author jy
+ * @since 1.0.0
  */
 @Slf4j
 public class ReactiveOAuth2FeignRequestInterceptor implements RequestInterceptor {

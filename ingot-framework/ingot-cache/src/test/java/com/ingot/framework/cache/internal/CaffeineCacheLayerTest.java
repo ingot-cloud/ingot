@@ -126,6 +126,25 @@ class CaffeineCacheLayerTest {
     }
 
     @Test
+    @DisplayName("evictMatching 只清匹配的 L1 键")
+    void evictMatchingClearsSubset() {
+        CountingLayer inner = new CountingLayer(List.of("a"));
+        LayeredCache<String, List<String>> layer =
+                new CaffeineCacheLayer<>("test", inner, Duration.ofMinutes(5), 16, NON_EMPTY);
+
+        layer.get("user_status:PLATFORM");
+        layer.get("user_status:TENANT");
+        layer.get("other:PLATFORM");
+
+        layer.evictMatching(k -> k.startsWith("user_status:"), "in:dict:items:user_status:*");
+
+        layer.get("user_status:PLATFORM");
+        layer.get("other:PLATFORM");
+
+        assertThat(inner.calls.get()).isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("多 key 各自独立缓存")
     void cachesPerKey() {
         CountingLayer inner = new CountingLayer(List.of("a"));

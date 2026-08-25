@@ -160,6 +160,25 @@ class RedisCacheLayerTest {
     }
 
     @Test
+    @DisplayName("evictMatching 按 SCAN 模式只清指定前缀，不误删同命名空间的其他键")
+    void evictMatchingScansSubset() {
+        LayeredCache<String, List<String>> layer = new RedisCacheLayer<>("test", inner(),
+                redis.template(), objectMapper, TYPE,
+                k -> "in:test:items:" + k, "in:test:items:*", Duration.ofMinutes(5), NON_EMPTY);
+        layer.get("user_status:PLATFORM");
+        layer.get("user_status:TENANT");
+        layer.get("other:PLATFORM");
+        redis.store().put("in:other:keep", "[\"x\"]");
+
+        layer.evictMatching(k -> k.startsWith("user_status:"), "in:test:items:user_status:*");
+
+        assertThat(redis.has("in:test:items:user_status:PLATFORM")).isFalse();
+        assertThat(redis.has("in:test:items:user_status:TENANT")).isFalse();
+        assertThat(redis.has("in:test:items:other:PLATFORM")).isTrue();
+        assertThat(redis.has("in:other:keep")).isTrue();
+    }
+
+    @Test
     @DisplayName("多 key 各自独立回填")
     void cachesPerKey() {
         LayeredCache<String, List<String>> layer = multiKey();

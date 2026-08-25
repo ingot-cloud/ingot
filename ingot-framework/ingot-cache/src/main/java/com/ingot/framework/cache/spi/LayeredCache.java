@@ -1,11 +1,13 @@
 package com.ingot.framework.cache.spi;
 
+import java.util.function.Predicate;
+
 /**
  * <p>分层缓存的统一读写口，每一层实现都是持有下层引用的装饰器。</p>
  *
  * <p>典型链路自外向内为 {@code L1 Caffeine → L2 Redis → Resilient(remote → LKG → 地板)}，
  * 由 {@code LayeredCacheBuilder} 装配。{@link #get(Object)} 逐层向下穿透并回填，
- * {@link #evict(Object)} 与 {@link #evictAll()} 逐层向下清理热缓存，
+ * {@link #evict(Object)}、{@link #evictAll()} 与 {@link #evictMatching} 逐层向下清理热缓存，
  * 但不会触及 LKG——后者生命周期独立于失效事件。</p>
  *
  * <p>单 key 场景（如策略全量快照）传固定常量 key，多 key 场景（如字典项）传业务 key，
@@ -40,6 +42,21 @@ public interface LayeredCache<K, V> {
      * 清除全部热缓存（L1 + L2），不影响 LKG。
      */
     void evictAll();
+
+    /**
+     * 按条件清除热缓存：L1 用谓词过滤进程内键，L2 用 Redis SCAN 模式删除。
+     *
+     * <p>用于多 key 场景下「按业务前缀失效」，例如字典按 code 清掉该编码下所有 query 变体。
+     * 谓词与 SCAN 模式必须表达同一失效范围，由调用方保证一致。单 key 场景无需使用本方法。</p>
+     *
+     * <p>未覆盖的实现默认退化为 {@link #evictAll()}，保证链路不会因缺一层而漏清。</p>
+     *
+     * @param matcher       L1 键谓词
+     * @param l2ScanPattern L2 Redis SCAN 模式；不含通配符时按单键 DEL
+     */
+    default void evictMatching(Predicate<K> matcher, String l2ScanPattern) {
+        evictAll();
+    }
 
     /**
      * 缓存实例名，用于日志与 Actuator 汇总展示。

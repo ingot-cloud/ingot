@@ -10,7 +10,7 @@
 | 需要 LKG / Nacos 地板降级的只读路径 | 写路径、会话、计数器等 |
 | 编译产物（`Pattern`、`PathPattern`）需留本机的场景 | 纯本地无版本源、且不需要跨节点失效的简单缓存 |
 
-详细契约见 [specs/changes/active/20260730-framework-layered-cache/DESIGN.md](../../specs/changes/active/20260730-framework-layered-cache/DESIGN.md)；接入时可配合 [.agents/skills/layered-cache/SKILL.md](../../.agents/skills/layered-cache/SKILL.md)。
+详细契约见 [specs/current/framework/layered-cache/SPEC.md](../../specs/current/framework/layered-cache/SPEC.md)；接入时可配合 [.agents/skills/layered-cache/SKILL.md](../../.agents/skills/layered-cache/SKILL.md)。
 
 ---
 
@@ -138,7 +138,7 @@ flowchart TD
 
 | 接口 | 职责 |
 |---|---|
-| `LayeredCache<K, V>` | 统一读写口：`get` / `evict` / `evictAll` / `name` |
+| `LayeredCache<K, V>` | 统一读写口：`get` / `evict` / `evictAll` / `evictMatching` / `name` |
 | `CacheValueLoader<K, V>` | 最内层加载器（Feign / DB） |
 | `CacheFloorSupplier<K, V>` | Nacos 等本地地板；必须返回非 null 基线 |
 | `RemoteUnavailableException` | 远端不可用信号；合法空**不得**抛此异常 |
@@ -331,8 +331,10 @@ refreshPublisher.addListener(vo -> reloadIfChanged());
 | gateway-rule-client | `ratelimit/internal/LocalRateLimitRuleService` | `LazyDerivedCache` |
 | ingot-gateway | `security/SentinelGatewayConfiguration` | `CacheRefreshPublisher` 订阅 |
 | gateway-rule-client | `config/SharedSnapshotCacheTest` | 冷启动 Feign 去重、失效后重拉 |
-
-credential、LoginFailure、dict 的迁移见 change [20260730-framework-layered-cache](../../specs/changes/active/20260730-framework-layered-cache/README.md) Phase 03–04。
+| access-adapter | `config/AccessAdapterAutoConfiguration` | LoginFailure 补齐 L1+L2 |
+| credential | `config/CredentialSecurityAutoConfiguration` | 零行为变化内部替换；provider 本地 delegate 不包 Resilient |
+| dict-client | `config/DictClientAutoConfiguration` | 多 key + `evictMatching` |
+| authorization-server | `SessionConcurrencyConfiguration` | 会话并发策略 |
 
 ---
 
@@ -346,7 +348,7 @@ credential、LoginFailure、dict 的迁移见 change [20260730-framework-layered
 - [ ] `evictAll` 清 L1/L2 但 LKG 仍可读
 - [ ] 地板关闭 + 无 LKG → 抛异常而非返回空
 - [ ] `VersionedDerivedCache`：version 回退、同 version 不同 source
-- [ ] 多 key `evictAll` 只清本前缀
+- [ ] 多 key `evictAll` 只清本前缀；按业务前缀失效用 `evictMatching`
 - [ ] `StringRedisTemplate` 为 null 时 L2/LKG 静默 no-op
 
 框架自身单测位于 `src/test/java/com/ingot/framework/cache/`。

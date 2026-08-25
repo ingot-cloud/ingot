@@ -1,14 +1,14 @@
 package com.ingot.cloud.security.api.support;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.ingot.cloud.security.api.model.dto.BlacklistReportDTO;
 import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
 import com.ingot.cloud.security.api.model.enums.BlacklistEventAction;
 import com.ingot.cloud.security.api.model.enums.BlacklistTriggerSource;
 import com.ingot.cloud.security.api.model.enums.SecurityEventCategory;
 import com.ingot.cloud.security.api.model.enums.SecurityEventType;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * 网关封禁审计 DTO → 统一安全事件 DTO 映射。

@@ -1,6 +1,7 @@
 package com.ingot.framework.cache.internal;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 import com.ingot.framework.cache.coordinator.CacheRefreshPublisher;
 import com.ingot.framework.cache.spi.LayeredCache;
@@ -58,6 +59,11 @@ public class RefreshNotifyingCacheLayer<K, V> implements LayeredCache<K, V> {
     @Override
     public void evictAll() {
         delegate.evictAll();
+    }
+
+    @Override
+    public void evictMatching(Predicate<K> matcher, String l2ScanPattern) {
+        delegate.evictMatching(matcher, l2ScanPattern);
     }
 
     @Override

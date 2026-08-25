@@ -70,6 +70,12 @@ public class CaffeineCacheLayer<K, V> implements LayeredCache<K, V> {
     }
 
     @Override
+    public void evictMatching(Predicate<K> matcher, String l2ScanPattern) {
+        cache.asMap().keySet().removeIf(matcher);
+        delegate.evictMatching(matcher, l2ScanPattern);
+    }
+
+    @Override
     public String name() {
         return name;
     }

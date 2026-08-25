@@ -2,53 +2,25 @@ package com.ingot.framework.security.access.internal;
 
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.cloud.security.api.event.SecurityPolicyInvalidationEvent;
+import com.ingot.framework.cache.coordinator.LayeredCacheCoordinator;
 import com.ingot.framework.eventbus.InvalidationBus;
-import com.ingot.framework.eventbus.Subscription;
-import com.ingot.framework.security.access.service.LoginFailurePolicyLoader;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
- * 订阅登录失败策略失效事件并触发重新加载。
+ * <p>登录失败策略失效广播的订阅入口，把通用协调器固化到本模块的事件与域类型上。</p>
+ *
+ * <p>只注册 {@link SecurityPolicyDomain#LOGIN_FAILURE_PROTECTION}；收到
+ * {@link SecurityPolicyDomain#ALL} 时框架会回调全部已注册项，因此全量失效同样生效。</p>
  *
  * @author jy
  * @since 1.0.0
+ * @see LayeredCacheCoordinator
+ * @apiNote 发布方收不到自身广播（bus 已按 origin 过滤回环），因此写侧必须自行清理本地缓存。
  */
-@Slf4j
-@RequiredArgsConstructor
-public class LoginFailurePolicyCacheCoordinator {
+public class LoginFailurePolicyCacheCoordinator
+        extends LayeredCacheCoordinator<SecurityPolicyInvalidationEvent, SecurityPolicyDomain> {
 
-    private final InvalidationBus bus;
-    private final LoginFailurePolicyLoader policyLoader;
-
-    private Subscription subscription;
-
-    @PostConstruct
-    public void start() {
-        subscription = bus.subscribe(SecurityPolicyInvalidationEvent.class, this::handle);
-        log.info("[LoginFailure] policy cache coordinator subscribed");
-    }
-
-    @PreDestroy
-    public void stop() {
-        if (subscription != null) {
-            subscription.close();
-            subscription = null;
-        }
-    }
-
-    void handle(SecurityPolicyInvalidationEvent event) {
-        if (event.getDomain() != SecurityPolicyDomain.LOGIN_FAILURE_PROTECTION
-                && event.getDomain() != SecurityPolicyDomain.ALL) {
-            return;
-        }
-        log.info("[LoginFailure] policy invalidate domain={}", event.getDomain());
-        try {
-            policyLoader.evictAll();
-        } catch (Exception e) {
-            log.warn("[LoginFailure] policy evict failed", e);
-        }
+    public LoginFailurePolicyCacheCoordinator(InvalidationBus bus) {
+        super(bus, SecurityPolicyInvalidationEvent.class,
+                SecurityPolicyInvalidationEvent::getDomain, SecurityPolicyDomain.ALL);
     }
 }

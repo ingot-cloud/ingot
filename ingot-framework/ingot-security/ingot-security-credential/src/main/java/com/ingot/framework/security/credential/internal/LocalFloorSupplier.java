@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ingot.cloud.security.api.model.vo.CredentialPolicyConfigVO;
+import com.ingot.framework.cache.spi.CacheFloorSupplier;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties.ExpirationPolicy;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties.HistoryPolicy;
@@ -16,24 +17,30 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Nacos 本地地板供给器：将 {@link CredentialSecurityProperties} 的本地策略配置映射为
- * {@code List<CredentialPolicyConfigVO>}，作为 {@code remote} 模式下远程不可用且无 LKG 时的最终兜底来源。
+ * <p>Nacos 本地地板供给器：将 {@link CredentialSecurityProperties} 的本地策略配置映射为
+ * {@code List<CredentialPolicyConfigVO>}，作为 remote 模式下远端不可用且无 LKG 时的最终兜底。</p>
  *
- * <p>输出的 VO 结构与安全中心下发的一致，可直接经 {@code RemoteCredentialPolicyLoader} 编译，
- * 从而保证降级路径与正常路径共用同一套编译逻辑。为满足「永不 fail-open」，当本地配置把可校验策略
- * 全部关闭而导致映射为空时，兜底补一个最小强度基线。</p>
+ * <p>输出的 VO 结构与安全中心下发的一致，可直接经 {@code RemoteCredentialPolicyLoader} 编译。
+ * 当本地配置把可校验策略全部关闭而导致映射为空时，兜底补一个最小强度基线，避免 fail-open。</p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor
-public class LocalFloorSupplier {
+public class LocalFloorSupplier implements CacheFloorSupplier<String, List<CredentialPolicyConfigVO>> {
 
     private final CredentialSecurityProperties properties;
 
+    @Override
+    public List<CredentialPolicyConfigVO> get(String key) {
+        return get();
+    }
+
     /**
      * 生成本地地板策略 VO 列表（安全基线，非空）。
+     *
+     * @return 非空策略列表
      */
     public List<CredentialPolicyConfigVO> get() {
         CredentialSecurityProperties.PolicyConfig policy = properties.getPolicy();

@@ -1,8 +1,13 @@
 package com.ingot.framework.security.access.config;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
+import com.ingot.framework.commons.constants.RedisKeyConstants;
 import com.ingot.framework.commons.model.security.PolicySourceMode;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
 
 /**
  * <p>访问防护配置属性，绑定 {@code ingot.security.access}，控制登录失败保护的策略来源与 Nacos 地板。</p>
@@ -60,7 +65,7 @@ public class AccessProtectionProperties {
     private LoginFailureConfig loginFailure = new LoginFailureConfig();
 
     /**
-     * <p>remote 模式的降级参数。</p>
+     * <p>remote 模式的降级参数与分层缓存调参。</p>
      *
      * @author jy
      * @since 1.0.0
@@ -71,6 +76,56 @@ public class AccessProtectionProperties {
          * 远端不可用时的末级回落。
          */
         private Fallback fallback = new Fallback();
+
+        /**
+         * remote 模式的分层缓存参数；local 模式不使用。
+         */
+        private Cache cache = new Cache();
+    }
+
+    /**
+     * <p>登录失败策略 remote 模式的 L1/L2 调参。</p>
+     *
+     * <p>配置键归属本模块（{@code ingot.security.access.policy.cache.*}），由装配侧映射为
+     * 框架的 {@code LayeredCacheSettings}，不引入新的统一前缀。</p>
+     *
+     * @author jy
+     * @since 1.0.0
+     */
+    @Data
+    public static class Cache {
+        /**
+         * 是否启用 L1 进程内缓存。关闭后每次读取都会穿透到 L2 或远端。
+         */
+        private boolean l1Enabled = true;
+
+        /**
+         * L1 存活时间，同时是失效广播丢失时的最长 stale 窗口。
+         * <p>无单位数值按分钟解析，避免误当成毫秒导致写入即过期。</p>
+         */
+        @DurationUnit(ChronoUnit.MINUTES)
+        private Duration l1Ttl = Duration.ofMinutes(5);
+
+        /**
+         * L1 最大条目数；登录失败策略为单 key，取小值即可。
+         */
+        private long l1MaximumSize = 16;
+
+        /**
+         * 是否启用 L2 Redis 共享缓存。Redis 不可用时本项自动失效。
+         */
+        private boolean l2Enabled = true;
+
+        /**
+         * L2 存活时间。无单位数值按分钟解析。
+         */
+        @DurationUnit(ChronoUnit.MINUTES)
+        private Duration l2Ttl = Duration.ofMinutes(30);
+
+        /**
+         * L2 热缓存 Redis key，默认 {@code in:sec:lf:policy:snapshot}。
+         */
+        private String l2RedisKey = RedisKeyConstants.LoginFailure.POLICY_SNAPSHOT;
     }
 
     /**

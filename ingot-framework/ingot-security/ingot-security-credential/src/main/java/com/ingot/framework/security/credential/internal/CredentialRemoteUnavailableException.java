@@ -1,16 +1,18 @@
 package com.ingot.framework.security.credential.internal;
 
+import com.ingot.framework.cache.spi.RemoteUnavailableException;
+
 /**
- * 凭证策略远程数据源不可用异常。
+ * <p>凭证策略远端接口不可用（Feign 失败、非 success 响应等），触发分层缓存的降级阶梯。</p>
  *
- * <p>由 {@code RemoteCredentialPolicyConfigService} 在远程调用失败（响应为空 / 非成功码 / 连接超时 /
- * 抛出异常）时抛出，用于把「调用失败」与「成功返回空（合法无策略）」区分开：仅前者触发
- * {@code ResilientCredentialPolicyConfigService} 的降级兜底阶梯（LKG → Nacos 地板），后者按合法空直接接受。</p>
+ * <p>继承框架的 {@link RemoteUnavailableException} 是接入降级链的前提。
+ * 远端返回成功但策略列表为空属于合法空，不应抛出本异常。</p>
  *
  * @author jy
  * @since 1.0.0
+ * @see RemoteCredentialPolicyConfigService
  */
-public class CredentialRemoteUnavailableException extends RuntimeException {
+public class CredentialRemoteUnavailableException extends RemoteUnavailableException {
 
     public CredentialRemoteUnavailableException(String message) {
         super(message);

@@ -1,54 +1,30 @@
 package com.ingot.framework.security.credential.internal;
 
+import com.ingot.framework.cache.coordinator.LayeredCacheCoordinator;
 import com.ingot.framework.eventbus.InvalidationBus;
-import com.ingot.framework.eventbus.Subscription;
 import com.ingot.framework.security.credential.event.CredentialInvalidationEvent;
 import com.ingot.framework.security.credential.service.CredentialPolicyConfigService;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
- * 订阅 {@link CredentialInvalidationEvent} 的协调器：
- * 收到广播后清空本节点的 L1+L2 凭证策略配置缓存。
- * <p>
- * 注意：发起广播的节点不会收到自身事件（{@code RedisInvalidationBus} 已按 {@code origin} 过滤），
- * 所以发起节点必须由 {@code CredentialInvalidationPublisher} 显式调用 evict 清自己的缓存。
- * </p>
+ * <p>凭证策略失效广播的订阅入口，把通用协调器固化到本模块的事件类型上。</p>
+ *
+ * <p>凭证失效事件没有域维度，一律全量清理 L1+L2。发布方收不到自身广播，写侧必须自行清本地。</p>
  *
  * @author jy
  * @since 2026/5/16
+ * @see LayeredCacheCoordinator
  */
-@Slf4j
-@RequiredArgsConstructor
-public class CredentialCacheCoordinator {
+public class CredentialCacheCoordinator
+        extends LayeredCacheCoordinator<CredentialInvalidationEvent, String> {
 
-    private final InvalidationBus bus;
-    private final CredentialPolicyConfigService policyConfigService;
+    /**
+     * 凭证策略只有全量失效，域标识无业务语义。
+     */
+    private static final String ALL = "all";
 
-    private Subscription subscription;
-
-    @PostConstruct
-    public void start() {
-        this.subscription = bus.subscribe(CredentialInvalidationEvent.class, this::handle);
-        log.info("[Credential] cache coordinator subscribed");
-    }
-
-    @PreDestroy
-    public void stop() {
-        if (subscription != null) {
-            subscription.close();
-            subscription = null;
-        }
-    }
-
-    void handle(CredentialInvalidationEvent event) {
-        log.info("[Credential] cache invalidate all (origin={})", event.getOrigin());
-        try {
-            policyConfigService.evictAll();
-        } catch (Exception e) {
-            log.warn("[Credential] L1+L2 evict failed", e);
-        }
+    public CredentialCacheCoordinator(InvalidationBus bus,
+                                      CredentialPolicyConfigService policyConfigService) {
+        super(bus, CredentialInvalidationEvent.class, event -> ALL, ALL);
+        register(ALL, policyConfigService::evictAll);
     }
 }

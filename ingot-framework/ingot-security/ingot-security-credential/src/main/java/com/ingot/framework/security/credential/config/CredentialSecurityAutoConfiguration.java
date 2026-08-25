@@ -1,19 +1,24 @@
 package com.ingot.framework.security.credential.config;
 
+import java.util.List;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.cloud.security.api.model.vo.CredentialPolicyConfigVO;
 import com.ingot.cloud.security.api.rpc.RemoteCredentialService;
+import com.ingot.framework.cache.config.LayeredCacheBuilder;
+import com.ingot.framework.cache.config.LayeredCacheSettings;
+import com.ingot.framework.cache.registry.LayeredCacheRegistry;
+import com.ingot.framework.cache.source.CacheSourceHolder;
+import com.ingot.framework.cache.spi.LayeredCache;
 import com.ingot.framework.commons.model.security.PolicySourceMode;
 import com.ingot.framework.eventbus.InvalidationBus;
 import com.ingot.framework.eventbus.config.EventBusAutoConfiguration;
 import com.ingot.framework.security.credential.actuate.CredentialPolicyEndpoint;
 import com.ingot.framework.security.credential.internal.CredentialCacheCoordinator;
-import com.ingot.framework.security.credential.internal.CredentialPolicyConfigServiceFactory;
-import com.ingot.framework.security.credential.internal.CredentialPolicySourceHolder;
-import com.ingot.framework.security.credential.internal.LastKnownGoodStore;
+import com.ingot.framework.security.credential.internal.LayeredCredentialPolicyConfigService;
 import com.ingot.framework.security.credential.internal.LocalFloorSupplier;
-import com.ingot.framework.security.credential.internal.RedisCredentialPolicyConfigService;
 import com.ingot.framework.security.credential.internal.RemoteCredentialPolicyConfigService;
-import com.ingot.framework.security.credential.internal.ResilientCredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyConfigService;
 import com.ingot.framework.security.credential.service.CredentialPolicyLoader;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
@@ -44,24 +49,21 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * 凭证安全自动配置。
- * <p>
- * 装配顺序：
+ * <p>凭证安全自动配置：装配策略配置分层缓存、密码校验与初始密码服务。</p>
+ *
+ * <p>装配顺序：</p>
  * <ol>
  *     <li>L0 delegate：默认基于 {@link RemoteCredentialService} 的 Feign 实现；
- *         {@code ingot-security-provider} 进程内通过同名 bean 覆盖为本地 Mapper 直查。</li>
- *     <li>L2 Redis 共享缓存：当 {@link StringRedisTemplate} 存在且
- *         {@code ingot.security.credential.cache.l2-enabled=true} 时启用。</li>
- *     <li>L1 Caffeine：最外层，{@code ingot.security.credential.cache.l1-enabled=true} 时启用，
- *         作为 {@code @Primary} 暴露。</li>
+ *         {@code ingot-security-provider} 进程内通过同名 bean 覆盖为本地 Mapper 直查，不包 Resilient。</li>
+ *     <li>对外 {@link CredentialPolicyConfigService}：在 delegate 之上叠加 L1/L2；
+ *         仅当 delegate 是远端 Feign 时再套 remote → LKG → 地板。</li>
  *     <li>跨节点失效：{@link InvalidationBus} 存在且 {@code invalidation-enabled=true} 时
  *         注册 {@link CredentialCacheCoordinator}。</li>
  * </ol>
- * <p>
- * 本类必须排在 {@link EventBusAutoConfiguration} 之后：{@code credentialCacheCoordinator} bean
- * 带 {@code @ConditionalOnBean(InvalidationBus.class)}；若早于 event-bus 配置类执行，
- * 会因总线尚未注册而导致协调器永远跳过。
- * </p>
+ *
+ * <p>本类必须排在 {@link EventBusAutoConfiguration} 之后：协调器带
+ * {@code @ConditionalOnBean(InvalidationBus.class)}；若早于 event-bus 配置类执行，
+ * 会因总线尚未注册而导致协调器永远跳过。</p>
  *
  * @author jymot
  * @since 2026-01-21
@@ -71,25 +73,34 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @AutoConfigureAfter(EventBusAutoConfiguration.class)
 @EnableConfigurationProperties({CredentialSecurityProperties.class, CredentialCacheProperties.class})
 public class CredentialSecurityAutoConfiguration {
+
     public static final String CREDENTIAL_POLICY_CONFIG_DELEGATE = "credentialPolicyConfigDelegate";
+
+    /**
+     * 凭证策略来源持有者的 Bean 名称，避免与其它模块的 {@link CacheSourceHolder} 混用。
+     */
+    public static final String SOURCE_HOLDER_BEAN = "credentialPolicySourceHolder";
+
+    /**
+     * 策略缓存的 Bean 名称。
+     */
+    public static final String CACHE_BEAN_NAME = "credentialPolicyConfigCache";
 
     /**
      * LKG 快照独立 Redis key（与 L1/L2 热缓存命名空间区分，长存 / 不过期）。
      */
     static final String LKG_REDIS_KEY = "in:credential:policy:lkg";
 
-    /**
-     * 凭证策略生效来源与降级计数持有者（降级可观测）。
-     */
-    @Bean
-    @ConditionalOnMissingBean(CredentialPolicySourceHolder.class)
-    public CredentialPolicySourceHolder credentialPolicySourceHolder() {
-        return new CredentialPolicySourceHolder();
+    private static final String CACHE_NAME = "credential";
+    private static final TypeReference<List<CredentialPolicyConfigVO>> POLICY_LIST_TYPE = new TypeReference<>() {
+    };
+
+    @Bean(SOURCE_HOLDER_BEAN)
+    @ConditionalOnMissingBean(name = SOURCE_HOLDER_BEAN)
+    public CacheSourceHolder credentialPolicySourceHolder() {
+        return new CacheSourceHolder();
     }
 
-    /**
-     * Nacos 本地地板供给器：远程不可用且无 LKG 时的最终兜底来源。
-     */
     @Bean
     @ConditionalOnMissingBean(LocalFloorSupplier.class)
     public LocalFloorSupplier credentialLocalFloorSupplier(CredentialSecurityProperties properties) {
@@ -97,95 +108,85 @@ public class CredentialSecurityAutoConfiguration {
     }
 
     /**
-     * 最近成功快照（LKG）存储：Redis 独立 key 长存 / 不过期，为唯一 LKG 源（不持进程内副本）；
-     * Redis 不可用时 LKG 不可用，交由 Nacos 地板兜底，保证多节点降级来源一致。
-     */
-    @Bean
-    @ConditionalOnMissingBean(LastKnownGoodStore.class)
-    public LastKnownGoodStore credentialLastKnownGoodStore(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
-                                                           ObjectProvider<ObjectMapper> objectMapperProvider) {
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-        ObjectMapper mapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
-        return new LastKnownGoodStore(redisTemplate, mapper, LKG_REDIS_KEY, null);
-    }
-
-    /**
      * L0 Remote delegate（仅在没有本地 delegate 时启用，典型场景：非 ingot-security 微服务）。
-     * <p>原始 Feign delegate 外包裹 {@link ResilientCredentialPolicyConfigService}，成为热缓存链最内层，
-     * 提供 remote → LKG → Nacos 地板 的降级阶梯。{@code ingot-security-provider} 以本地 Mapper delegate
-     * 覆盖本 bean，不经弹性兜底（本地无远程失败语义）。</p>
+     * <p>{@code ingot-security-provider} 以本地 Mapper delegate 覆盖本 bean，不经弹性兜底
+     * （本地无远程失败语义）。L1/L2 与 Resilient 由 {@link #credentialPolicyConfigService} 叠加。</p>
      */
     @Bean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
     @ConditionalOnBean(RemoteCredentialService.class)
     @ConditionalOnMissingBean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
-    public CredentialPolicyConfigService credentialPolicyConfigDelegate(RemoteCredentialService remoteCredentialService,
-                                                                        LastKnownGoodStore lkgStore,
-                                                                        LocalFloorSupplier localFloorSupplier,
-                                                                        CredentialPolicySourceHolder sourceHolder,
-                                                                        CredentialSecurityProperties properties) {
-        RemoteCredentialPolicyConfigService raw = new RemoteCredentialPolicyConfigService(remoteCredentialService);
-        boolean localFloorEnabled = properties.getPolicy().getFallback().isLocalFloorEnabled();
-        log.info("[Credential] register resilient remote delegate (remote -> LKG -> local-floor), localFloorEnabled={}",
-                localFloorEnabled);
-        return new ResilientCredentialPolicyConfigService(raw, lkgStore, localFloorSupplier, localFloorEnabled, sourceHolder);
+    public CredentialPolicyConfigService credentialPolicyConfigDelegate(RemoteCredentialService remoteCredentialService) {
+        log.info("[Credential] register remote delegate (RemoteCredentialPolicyConfigService)");
+        return new RemoteCredentialPolicyConfigService(remoteCredentialService);
     }
 
     /**
-     * L2 Redis 共享缓存层。delegate 必须存在；Redis 不可用时跳过。
+     * 策略配置分层缓存。远端 delegate 套完整降级阶梯；provider 本地 delegate 只叠 L1/L2。
      */
-    @Bean
-    @ConditionalOnBean({StringRedisTemplate.class})
-    @ConditionalOnProperty(value = "ingot.security.credential.cache.l2-enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean(RedisCredentialPolicyConfigService.class)
-    public RedisCredentialPolicyConfigService credentialPolicyConfigRedisLayer(
+    @Bean(CACHE_BEAN_NAME)
+    @ConditionalOnBean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
+    @ConditionalOnMissingBean(name = CACHE_BEAN_NAME)
+    public LayeredCache<String, List<CredentialPolicyConfigVO>> credentialPolicyConfigCache(
             @Qualifier(CREDENTIAL_POLICY_CONFIG_DELEGATE) CredentialPolicyConfigService delegate,
-            StringRedisTemplate redisTemplate,
+            LocalFloorSupplier localFloorSupplier,
+            @Qualifier(SOURCE_HOLDER_BEAN) CacheSourceHolder sourceHolder,
+            CredentialCacheProperties cacheProperties,
+            CredentialSecurityProperties securityProperties,
+            ObjectProvider<StringRedisTemplate> redisProvider,
             ObjectProvider<ObjectMapper> objectMapperProvider,
-            CredentialCacheProperties properties) {
-        ObjectMapper mapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
-        RedisCredentialPolicyConfigService layer = CredentialPolicyConfigServiceFactory
-                .composeRedisLayer(delegate, properties, redisTemplate, mapper);
-        if (layer != null) {
-            log.info("[Credential] L2 Redis layer enabled, ttl={}, keyPrefix={}",
-                    properties.getL2Ttl(), properties.getL2KeyPrefix());
+            ObjectProvider<LayeredCacheRegistry> registryProvider) {
+        boolean remoteDelegate = delegate instanceof RemoteCredentialPolicyConfigService;
+        LayeredCacheSettings settings = LayeredCacheSettings.builder()
+                .l1Enabled(cacheProperties.isL1Enabled())
+                .l1Ttl(cacheProperties.getL1Ttl())
+                .l1MaximumSize(cacheProperties.getL1MaximumSize())
+                .l2Enabled(cacheProperties.isL2Enabled())
+                .l2Ttl(cacheProperties.getL2Ttl())
+                .resilienceEnabled(remoteDelegate)
+                .localFloorEnabled(securityProperties.getPolicy().getFallback().isLocalFloorEnabled())
+                .build();
+
+        StringRedisTemplate redisTemplate = redisProvider.getIfAvailable();
+        ObjectMapper objectMapper = objectMapperProvider.getIfAvailable();
+        String l2Key = cacheProperties.getL2KeyPrefix() + LayeredCredentialPolicyConfigService.CACHE_KEY;
+
+        LayeredCacheBuilder<String, List<CredentialPolicyConfigVO>> builder =
+                LayeredCacheBuilder.<String, List<CredentialPolicyConfigVO>>named(CACHE_NAME)
+                        .loader(key -> delegate.getAll())
+                        .settings(settings)
+                        .cacheable(v -> v != null && !v.isEmpty())
+                        .emptyValue(List::of)
+                        .sourceHolder(sourceHolder)
+                        .l2SingleKey(redisTemplate, objectMapper, POLICY_LIST_TYPE, l2Key)
+                        .registry(registryProvider.getIfAvailable());
+        if (remoteDelegate) {
+            builder.resilientSingleKey(redisTemplate, objectMapper, POLICY_LIST_TYPE,
+                    LKG_REDIS_KEY, localFloorSupplier);
         }
-        return layer;
+        log.info("[Credential] layered cache assembled (l1={}, l2={}, resilient={})",
+                cacheProperties.isL1Enabled(), cacheProperties.isL2Enabled(), remoteDelegate);
+        return builder.build();
     }
 
     /**
-     * 对外暴露的 {@link CredentialPolicyConfigService}：在 delegate 之上叠加 L2、L1。
+     * 对外暴露的 {@link CredentialPolicyConfigService}：{@code @Primary}，供校验与 loader 注入。
      */
     @Bean
     @Primary
-    @ConditionalOnBean(name = CREDENTIAL_POLICY_CONFIG_DELEGATE)
+    @ConditionalOnBean(name = CACHE_BEAN_NAME)
     public CredentialPolicyConfigService credentialPolicyConfigService(
-            @Qualifier(CREDENTIAL_POLICY_CONFIG_DELEGATE) CredentialPolicyConfigService delegate,
-            ObjectProvider<RedisCredentialPolicyConfigService> redisLayerProvider,
-            CredentialCacheProperties properties) {
-        CredentialPolicyConfigService inner = redisLayerProvider.getIfAvailable();
-        if (inner == null) {
-            inner = delegate;
-        }
-        CredentialPolicyConfigService composed = CredentialPolicyConfigServiceFactory
-                .composeCaffeineLayer(inner, properties);
-        log.info("[Credential] CredentialPolicyConfigService composed (l1={}, l2={})",
-                properties.isL1Enabled(), properties.isL2Enabled());
-        return composed;
+            @Qualifier(CACHE_BEAN_NAME) LayeredCache<String, List<CredentialPolicyConfigVO>> credentialPolicyConfigCache) {
+        return new LayeredCredentialPolicyConfigService(credentialPolicyConfigCache);
     }
 
-    /**
-     * 降级可观测 actuator 端点：仅当类路径存在 Spring Boot Actuator 时装配。
-     */
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
     @ConditionalOnMissingBean(CredentialPolicyEndpoint.class)
-    public CredentialPolicyEndpoint credentialPolicyEndpoint(CredentialPolicySourceHolder sourceHolder) {
+    public CredentialPolicyEndpoint credentialPolicyEndpoint(
+            @Qualifier(SOURCE_HOLDER_BEAN) CacheSourceHolder sourceHolder) {
         return new CredentialPolicyEndpoint(sourceHolder);
     }
 
-    /**
-     * 失效广播协调器：订阅 {@code CredentialInvalidationEvent}，回调时清 L1+L2 缓存。
-     */
     @Bean
     @ConditionalOnBean(InvalidationBus.class)
     @ConditionalOnProperty(value = "ingot.security.credential.cache.invalidation-enabled", havingValue = "true", matchIfMissing = true)

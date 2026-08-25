@@ -58,6 +58,9 @@ public interface RedisKeyConstants {
 
         /** 登录失败策略 LKG 快照：{@code in:sec:lf:policy:lkg}。 */
         String POLICY_LKG = PREFIX + ":policy:lkg";
+
+        /** 登录失败策略 L2 热缓存：{@code in:sec:lf:policy:snapshot}。 */
+        String POLICY_SNAPSHOT = PREFIX + ":policy:snapshot";
     }
 
     /**

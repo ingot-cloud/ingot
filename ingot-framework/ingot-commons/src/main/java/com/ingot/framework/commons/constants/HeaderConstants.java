@@ -115,4 +115,15 @@ public interface HeaderConstants {
             INNER_USER_ID,
             INNER_CLIENT_ID,
     };
+
+    /**
+     * 跨进程必须原样传播的身份头（网关标准化后，BFF Feign 等到 Auth 须转发）。
+     * <p>不含 {@link #SECURITY_FROM}：内部调用来源头由 Feign 拦截器另行写入 {@code Inside}。</p>
+     */
+    String[] IDENTITY_PROPAGATION_HEADERS = {
+            INNER_CLIENT_REAL_IP,
+            INNER_USER_ID,
+            INNER_CLIENT_ID,
+            BFF_DEVICE_FINGERPRINT_HEADER,
+    };
 }
