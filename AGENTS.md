@@ -52,4 +52,4 @@ Java 注释统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借�
 3. 不可违反的语义：Resilient 位于 L1/L2 之下；LKG 独立 key、无 TTL、不随失效清除；不缓存空值；远端不可用与合法空严格区分；地板 fail-closed；广播方自行清本地缓存。
 4. 配置键归属消费模块，框架只接收映射后的 `LayeredCacheSettings`，不得为兼容框架而改动模块已上线的配置键。
 5. 编译产物（`Pattern`、`PathPattern`、预建索引等）不进 L2，改用 `VersionedDerivedCache`，失效键必须是 `(source, version)` 二元组而非版本号本身。
-6. 详细契约与迁移记录以 [specs/current/framework/layered-cache/](./specs/current/framework/layered-cache/) 为准；该基线建立前参考 [active change DESIGN](./specs/changes/active/20260730-framework-layered-cache/DESIGN.md)。
+6. 详细契约与迁移记录以 [specs/current/framework/layered-cache/](./specs/current/framework/layered-cache/) 为准。
