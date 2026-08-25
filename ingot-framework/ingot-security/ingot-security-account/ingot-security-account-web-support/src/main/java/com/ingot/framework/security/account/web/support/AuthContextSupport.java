@@ -146,10 +146,11 @@ public class AuthContextSupport {
     private Map<String, Object> buildMeta(Long userId, UserTypeEnum userType, UserDetailsResponse result) {
         Map<String, Object> meta = new HashMap<>(4);
 
-        LockoutPolicy policy = lockoutPolicyLoader != null ? lockoutPolicyLoader.getLockoutPolicy() : null;
-        if (policy != null && policy.isEnabled()) {
-            meta.put(InUserMetaKeys.MAX_FAILED_ATTEMPTS, policy.getMaxAttempts());
-            meta.put(InUserMetaKeys.HINT_AFTER_ATTEMPTS, policy.getHintAfterAttempts());
+        LockoutPolicy policy = lockoutPolicyLoader != null
+                ? lockoutPolicyLoader.getLockoutPolicy(userType) : null;
+        if (policy != null && policy.enabled()) {
+            meta.put(InUserMetaKeys.MAX_FAILED_ATTEMPTS, policy.maxAttempts());
+            meta.put(InUserMetaKeys.HINT_AFTER_ATTEMPTS, policy.hintAfterAttempts());
         }
 
         if (lockStatePort == null) {

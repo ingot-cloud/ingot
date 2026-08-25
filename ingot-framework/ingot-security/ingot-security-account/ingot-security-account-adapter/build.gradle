@@ -12,14 +12,19 @@ dependencies {
     implementation project(ingot.framework_security_event_transport_feign)
     implementation(deps.mybatis.plus_starter)
     implementation project(ingot.framework_tss_spring)
+    implementation project(ingot.framework_cache)
+    implementation project(ingot.framework_event_bus)
 
     compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly(deps.spring.spring_boot.actuator_starter)
+    compileOnly(deps.spring.spring_boot.data_redis_starter)
+    compileOnly(deps.jackson.data_bind)
     compileOnly(deps.lombok)
     annotationProcessor(deps.lombok)
 
     testImplementation(deps.spring.spring_boot.test)
     testImplementation(deps.spring.spring_cloud.openfeign_starter)
+    testImplementation(deps.jackson.data_bind)
     testImplementation(deps.h2)
 }
 

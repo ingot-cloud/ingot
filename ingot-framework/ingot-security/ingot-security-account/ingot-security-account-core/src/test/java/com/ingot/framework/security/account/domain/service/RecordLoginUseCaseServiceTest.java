@@ -52,13 +52,8 @@ class RecordLoginUseCaseServiceTest {
                 lockAccountUseCase,
                 lockoutPolicyLoader,
                 credentialSecurityService);
-        when(lockoutPolicyLoader.getLockoutPolicy()).thenReturn(LockoutPolicy.builder()
-                .enabled(true)
-                .maxAttempts(5)
-                .lockDurationMinutes(30)
-                .attemptWindowMinutes(15)
-                .hintAfterAttempts(3)
-                .build());
+        when(lockoutPolicyLoader.getLockoutPolicy(UserTypeEnum.ADMIN)).thenReturn(new LockoutPolicy(
+                UserTypeEnum.ADMIN, true, 5, 30, 15, 3));
     }
 
     @Test

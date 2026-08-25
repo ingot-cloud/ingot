@@ -92,6 +92,21 @@ public interface RedisKeyConstants {
     }
 
     /**
+     * 账号锁定策略分层缓存 Redis Key（PMS / Member 侧 lockout 策略 L2 / LKG）。
+     * <p>与 {@link AccountLock} 锁定信号命名空间独立。</p>
+     */
+    interface AccountLockoutPolicy {
+
+        String PREFIX = IN_PREFIX + ":sec:account:policy";
+
+        /** L2 热缓存：{@code in:sec:account:policy:snapshot}。 */
+        String SNAPSHOT = PREFIX + ":snapshot";
+
+        /** LKG 快照：{@code in:sec:account:policy:lkg}。 */
+        String LKG = PREFIX + ":lkg";
+    }
+
+    /**
      * 账号锁定信号 Redis Key（BFF / Gateway / Auth 分层拦截；与网关 temp-block 命名空间独立）。
      */
     interface AccountLock {

@@ -90,9 +90,9 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
             return;
         }
 
-        LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy();
-        if (lockout.isEnabled() && command.getUserId() != null && command.getUserType() != null) {
-            int windowMinutes = lockout.getAttemptWindowMinutes();
+        LockoutPolicy lockout = lockoutPolicyLoader.getLockoutPolicy(command.getUserType());
+        if (lockout.enabled() && command.getUserId() != null && command.getUserType() != null) {
+            int windowMinutes = lockout.attemptWindowMinutes();
             lockStatePort.findByUser(command.getUserId(), command.getUserType()).ifPresent(state -> {
                 if (state.getLastFailedAt() != null
                         && state.getLastFailedAt().plusMinutes(windowMinutes).isBefore(LocalDateTime.now())) {
@@ -115,12 +115,12 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
         securityEventPort.publishEvent(event);
 
         // 3. 检查是否需要自动锁定
-        if (lockout.isEnabled()) {
-            int maxAttempts = lockout.getMaxAttempts();
+        if (lockout.enabled()) {
+            int maxAttempts = lockout.maxAttempts();
             if (newFailCount >= maxAttempts) {
                 log.warn("用户 {} 登录失败次数达到 {}，触发自动锁定", command.getUserId(), newFailCount);
 
-                int lockDuration = lockout.getLockDurationMinutes();
+                int lockDuration = lockout.lockDurationMinutes();
                 lockAccountUseCase.lockAutomatically(
                         command.getUserId(),
                         command.getUserType(),

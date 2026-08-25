@@ -12,6 +12,7 @@ package com.ingot.cloud.security.api.event;
  *     <li>{@link #VIOLATION_ESCALATION} — 限流违规升级（滑动窗口 / 封禁阈值 / 临时封禁 TTL）</li>
  *     <li>{@link #LOGIN_FAILURE_PROTECTION} — 登录失败保护策略</li>
  *     <li>{@link #SESSION_CONCURRENCY} — 并发会话策略（最大会话数 / 超限行为）</li>
+ *     <li>{@link #ACCOUNT_LOCKOUT} — 账号登录失败锁定策略（按用户类型）</li>
  *     <li>{@link #ALL} — 全量失效，订阅方清空所有域缓存</li>
  * </ul>
  *
@@ -27,5 +28,6 @@ public enum SecurityPolicyDomain {
     CHALLENGE_POLICY,
     VIOLATION_ESCALATION,
     LOGIN_FAILURE_PROTECTION,
-    SESSION_CONCURRENCY
+    SESSION_CONCURRENCY,
+    ACCOUNT_LOCKOUT
 }
