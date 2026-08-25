@@ -13,7 +13,7 @@ Do **not** use it for entity CRUD caching keyed by id. That is served by `InRedi
 
 ## Workflow
 
-1. Read `specs/current/framework/layered-cache/SPEC.md` if it exists; otherwise read `specs/changes/active/20260730-framework-layered-cache/DESIGN.md`. Treat those as the source of truth when they differ from this skill.
+1. Read `specs/current/framework/layered-cache/SPEC.md`. Treat that as the source of truth when it differs from this skill.
 2. Add `implementation project(ingot.framework_cache)` to the consuming module's `build.gradle`. Keep `spring-boot-starter-data-redis` and `spring-boot-actuator-autoconfigure` as `compileOnly` if the module does not already require them.
 3. Implement `CacheValueLoader<K, V>` over the real data source (Feign or DB).
 4. Map the module's existing configuration properties into a `LayeredCacheSettings`. Do **not** invent a new property prefix for an existing module.
@@ -39,7 +39,9 @@ LayeredCache<String, List<DictItem>> cache = LayeredCacheBuilder
 
 Layer order is fixed at `L1 → refresh notify → L2 → Resilient → loader` and is not configurable. Any optional layer that is unconfigured, switched off, or missing its Redis dependency is skipped without breaking the chain.
 
-Choose the L2 key helper by cardinality: `l2SingleKey` for one aggregate snapshot (evictAll issues a plain DEL), `l2MultiKey` for per-entity keys (evictAll issues a prefix SCAN).
+Choose the L2 key helper by cardinality: `l2SingleKey` for one aggregate snapshot (evictAll issues a plain DEL), `l2MultiKey` for per-entity keys (evictAll issues a prefix SCAN). When a business identifier (for example dict code) must invalidate many query variants, call `cache.evictMatching(predicate, redisScanPattern)` rather than `evict(singleKey)`.
+
+Each consuming module must register its `CacheSourceHolder` as a **named** bean. A type-level `@ConditionalOnMissingBean(CacheSourceHolder.class)` will steal another module's holder in the same process (Auth hosts credential and LoginFailure together).
 
 ## Invariants
 
@@ -80,4 +82,5 @@ A cache whose data is consumed by a runtime that holds its own copy — Sentinel
 - Floor disabled plus no LKG throws instead of returning empty.
 - Derived cache recompiles on version rollback and on same-version-different-source.
 - Multi-key `evictAll` clears only its own prefix.
+- Multi-key `evictMatching` clears only the intended subset (L1 predicate + L2 SCAN pattern).
 - A null `StringRedisTemplate` degrades L2 and LKG to no-ops without throwing.
