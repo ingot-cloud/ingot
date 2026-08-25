@@ -59,6 +59,16 @@ SecurityEventPublisher (业务唯一写入口)
 - DURABLE：spool 拒绝/超时 → `FAILED`（业务仍放行）。
 - at-least-once + Store `event_id` 幂等。
 
+### DURABLE file spool
+
+- 配置键 `delivery.spool.directory` 是**父目录**；运行时实际根为 `{directory}/{spring.application.name}`（缺省子目录名 `application`）。
+- 同目录仅一个 writer：构造时对 `spool.lock` 独占；第二实例快速失败（避免多服务抢写同一 `state.json`）。
+- 消费位点以完好 `state.json` 的 pending / inFlight 为准。**两者皆空时启动不得扫描 segment**，稳定重启是 no-op。
+- 完好 state 中的 inFlight 在启动时全部退回 pending（`nextRetryAt=0`），兑现 ack 前崩溃必重投。
+- `state.json` 缺失或 JSON 损坏：将坏文件移入 `quarantine/`，再扫描现有 segment 重建 pending（一次性 at-least-once）；**不得**让解析异常拖垮 Spring 容器刷新。
+- ack 成功落盘后回收磁盘：无引用的非 active segment 删除；无引用的 **active segment truncate 到 0**。
+- `state.json` 写 `*.tmp` 再原子替换；不 pretty-print；条目不序列化事件 payload（payload 只在 segment）。
+
 ## 6. MySQL Store
 
 - 表：canonical `security_event`（`event_id` UNIQUE、`priority`、`received_at` 索引）。

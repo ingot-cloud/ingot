@@ -33,7 +33,7 @@
 | `source-module` | 写入 `security_event.source_module` |
 | `categories.*` | 按 AUTH/ACCOUNT/CREDENTIAL/ACCESS 过滤 |
 | `delivery.memory.*` | BEST_EFFORT 有界队列 |
-| `delivery.spool.*` | DURABLE file spool |
+| `delivery.spool.*` | DURABLE file spool；`directory` 为父目录，运行时再拼 `spring.application.name` |
 | `mysql.*` | Store 写入并发与事务 |
 | `retention.*` | canonical 表过期清理 |
 | `priority-overrides` | eventType → BEST_EFFORT \| DURABLE |
@@ -58,3 +58,4 @@
 - `specs/changes/archive/2026/20260811-security-drop-account-security-event/`（legacy 表物理 DROP）
 - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（状态变更/超阈值边沿 vs 活动遥测电平）
 - `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（事件 code 常量模块 + api 枚举唯一 SoT）
+- `specs/changes/archive/2026/20260825-framework-security-event-spool-recovery/`（DURABLE spool 按应用隔离、消费位点、state 损坏降级）
