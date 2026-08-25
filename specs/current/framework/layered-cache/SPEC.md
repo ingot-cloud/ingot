@@ -53,6 +53,7 @@
 | 凭证策略 | `credential` | `in:credential:configs:all` | `in:credential:policy:lkg` | `ingot.security.credential.cache.*` | `credentialpolicy` |
 | 字典 | `dict` | `in:dict:items:{code}:{scope}:{tenant}:{app}:{flag}` | 无 | `ingot.dict.client.cache-*` / `redis-*` | 无（仅汇总端点） |
 | 会话并发 | `session-concurrency-policy` | `in:sec:session:concurrency` | `in:sec:session:concurrency:lkg` | `ingot.security.session.policy.cache.*` | 无（仅汇总端点） |
+| 账号锁定策略 | `account-lockout-policy` | `in:sec:account:policy:snapshot` | `in:sec:account:policy:lkg` | `ingot.security.account.policy.cache.*` | `accountlockoutpolicy` |
 
 ### 4.1 登录失败
 
@@ -67,3 +68,7 @@
 `mode=AUTO\|LOCAL\|REMOTE\|NONE` 与 `evict(code)` / `evictAll()` 粒度不变；不启用 LKG/地板。`batchItems` 按键顺序调用 `get`，冷缓存不再折叠为一次批量 RPC，命中 L1/L2 后与迁移前一致。
 
 L2 自定义 `l2(...)` 键映射，按 code 失效走 `evictMatching`。
+
+### 4.4 账号锁定策略
+
+`mode=remote` 装配 L1+L2+Resilient，空列表当远端不可用。`mode=local` 直接读 Nacos，不走分层缓存。失效域 `ACCOUNT_LOCKOUT`。

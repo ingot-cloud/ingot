@@ -190,6 +190,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [账号锁定策略 remote 模式](./changes/archive/2026/20260825-security-account-lockout-remote/README.md)
 - [DURABLE spool 隔离与消费位点修复](./changes/archive/2026/20260825-framework-security-event-spool-recovery/README.md)
 - [统一分层缓存框架抽象与消费者迁移](./changes/archive/2026/20260730-framework-layered-cache/README.md)
 - [用枚举统一策略来源与事件投递配置](./changes/archive/2026/20260821-framework-policy-source-mode-enum/README.md)

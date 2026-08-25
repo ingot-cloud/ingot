@@ -4,30 +4,34 @@
 
 ## 1. 策略配置（`ingot.security.account`）
 
-统一开关：`ingot.security.account.mode = local | remote`（默认 `local`）。本期仅 `local` 有实现；配置为 `remote` 且无远程 Bean 时回退 `local` 并 WARN。
+统一开关：`ingot.security.account.mode = local | remote`（默认 `local`）。
+
+- `local`：每次即时读 Nacos `lockout.*`。
+- `remote`：`L1 → L2 → Feign → LKG → Nacos 地板`；空列表视为远端不可用，不 fail-open。`mode=remote` 但 Loader 未装配时启动失败，不再静默回退 local。
 
 | 配置分组 | 关键属性 | 说明 |
 |---|---|---|
-| `lockout.*` | `enabled` / `maxAttempts` / `lockDurationMinutes` / `attemptWindowMinutes` / `hintAfterAttempts` | 登录失败锁定策略 |
+| `lockout.*` | `enabled` / `maxAttempts` / `lockDurationMinutes` / `attemptWindowMinutes` / `hintAfterAttempts` | local 生效源；remote 时作 Nacos 地板 |
+| `policy.fallback.local-floor-enabled` | 默认 `true` | 无 LKG 时是否落地板 |
+| `policy.cache.*` | L1 5min / L2 30min | 仅 remote 使用 |
 
 默认值（代码 `@ConfigurationProperties`）：`enabled=true`、`maxAttempts=5`、`lockDurationMinutes=30`、`attemptWindowMinutes=15`、`hintAfterAttempts=3`。
 
-**服务级差异化（Nacos）**：
+**B/C 差异**：
 
-| 服务 | dataId | 推荐值 | 说明 |
-|---|---|---|---|
-| PMS（B端） | `in-service-pms.yml` | 5 / 30 / 3 | 可配置永久锁（`lockDurationMinutes=0`） |
-| Member（C端） | `in-service-member.yml` | 5 / 15 / 3 | **禁止** `lockDurationMinutes=0`（规避恶意锁号 DoS） |
+- `mode=local`：仍由服务级 Nacos 表达。PMS 推荐 5 / 30 / 3（允许永久锁）；Member 推荐 5 / 15 / 3。现网 Member Nacos 地板仍可能为 30 分钟。
+- `mode=remote`：安全中心 `account_lockout_policy_config` 按 `user_type` 两行。ADMIN 种子 5 / 30min / 15 / 3；APP 种子 5 / 15min / 15 / 3，管理面禁止 APP `lockDurationMinutes=0`。
 
 旧前缀 `ingot.account.*` 已废弃，代码不再读取。
 
 ## 2. 策略加载 seam
 
-消费侧（`RecordLoginUseCaseService`、`AuthContextSupport`）**只经** `AccountLockoutPolicyLoader.getLockoutPolicy()` 取不可变 `LockoutPolicy` 值对象，不直读 `@ConfigurationProperties`。
+消费侧（`RecordLoginUseCaseService`、`AuthContextSupport`）**只经** `AccountLockoutPolicyLoader.getLockoutPolicy(UserTypeEnum)` 取不可变 `LockoutPolicy` 值对象，不直读 `@ConfigurationProperties`。
 
-- `LocalAccountLockoutPolicyLoader`：每次调用即时从 `AccountDomainProperties` 映射，无进程内缓存。
-- Nacos 变更经 `ConfigurationPropertiesRebinder` 重绑定后，下次读取即生效（免冷启动刷新）。
-- 将来 `remote` 实现只需新增更高优先级 `AccountLockoutPolicyLoader` Bean，消费侧零改动。
+- `LocalAccountLockoutPolicyLoader`：`mode=local` 每次调用即时从 `AccountDomainProperties` 映射，无进程内缓存；Nacos 经 `ConfigurationPropertiesRebinder` 重绑定后下次读取即生效。
+- `CachedAccountLockoutPolicyLoader`（account-adapter）：`mode=remote` 走 `ingot-cache` 链，从全量快照按 `userType` 取行；缺行回落快照第一行（地板单元素）。
+- 缓存名 `account-lockout-policy`；L2 `in:sec:account:policy:snapshot`；LKG `in:sec:account:policy:lkg`。失效域 `SecurityPolicyDomain.ACCOUNT_LOCKOUT`。Actuator `GET /actuator/accountlockoutpolicy`。
+- 安全中心：表 `account_lockout_policy_config`（migration `018`）；Platform `/platform/security/account/lockout-policies`；Inner `/inner/security/account/lockout-policies`；前端契约见 change 内 `PLATFORM-API.md`。
 
 **策略 vs 用户数据分离**：seam 仅覆盖 lockout 策略参数；`account_lock_state` 锁定状态与失败计数永远落 DB，不进入 remote/LKG/缓存链。
 
@@ -128,8 +132,9 @@ Gateway 瘦身 JWT 通常不含 `ut`：`AuthContextRelayFilter` 用 `jti` 读 `t
 
 ## 10. 已知限制 / 后续跟踪
 
-1. **remote 弹性与中心化**（L2 后续 change）：`RemoteAccountLockoutPolicyLoader`、Resilient/LKG/Nacos 地板/L1-L2/Invalidation/Actuator、安全中心 `account_lockout_policy_config` 表与管理 CRUD。依托现有 `mode` 与 seam，消费侧无需再改。
-2. **`attemptWindowMinutes` 滑动窗口**：已在 L4（[access-protection](../access-protection/README.md)）于 `RecordLoginUseCaseService` 实现；窗口外失败计数归零后再递增。
-3. **V1 单元测试**：`InnerLoginRecordAPI`、`LoginEventListener`、`LocalAccountLockoutPolicyLoader` 自动化测试待后续补齐（验收以手工集成/regression 为准）。
-4. Gateway 明文 Auth token 路径的 name key 检查未做（生产主路径为 BFF 加密登录 + JWT uid Filter）。
-5. 手动重复锁定不延长 `lockedUntil`；延长需求另开 change。
+1. **`attemptWindowMinutes` 滑动窗口**：已在 L4（[access-protection](../access-protection/README.md)）于 `RecordLoginUseCaseService` 实现；窗口外失败计数归零后再递增。
+2. **V1 单元测试**：`InnerLoginRecordAPI`、`LoginEventListener` 自动化测试待后续补齐（验收以手工集成/regression 为准）。`LocalAccountLockoutPolicyLoader` 已有单元测试。
+3. Gateway 明文 Auth token 路径的 name key 检查未做（生产主路径为 BFF 加密登录 + JWT uid Filter）。
+4. 手动重复锁定不延长 `lockedUntil`；延长需求另开 change。
+5. 安全中心前端页面不在本能力代码仓；管理面契约见 [PLATFORM-API.md](../../../changes/archive/2026/20260825-security-account-lockout-remote/PLATFORM-API.md)。
+6. 生产 Nacos 默认仍为 `mode=local`；切 `remote` 需先执行 migration 018/019。
