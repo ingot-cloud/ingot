@@ -325,4 +325,31 @@ BEGIN;
 INSERT INTO `session_concurrency_policy` (`id`, `scope`, `client_id`, `user_type`, `max_sessions`, `dimension`, `overflow`, `admin_forbid_concurrent`, `enabled`, `remark`, `created_at`, `updated_at`) VALUES (1, 'GLOBAL', '', '', 0, 'USER_CLIENT', 'KICK_OLDEST', 0, 1, '全局兜底：不限制并发会话', '2026-08-19 10:00:00', '2026-08-19 10:00:00');
 COMMIT;
 
+-- ----------------------------
+-- Table structure for account_lockout_policy_config
+-- ----------------------------
+DROP TABLE IF EXISTS `account_lockout_policy_config`;
+CREATE TABLE `account_lockout_policy_config` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_type` varchar(8) NOT NULL COMMENT '用户类型: 0=ADMIN, 1=APP',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用自动锁定',
+  `max_attempts` int NOT NULL DEFAULT '5' COMMENT '失败次数阈值',
+  `lock_duration_minutes` int NOT NULL DEFAULT '30' COMMENT '锁定时长（分钟），0=永久，仅 ADMIN 允许',
+  `attempt_window_minutes` int NOT NULL DEFAULT '15' COMMENT '失败计数窗口（分钟）',
+  `hint_after_attempts` int NOT NULL DEFAULT '3' COMMENT '从第几次失败开始给出剩余次数提示',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_account_lockout_user_type` (`user_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账号登录失败锁定策略（按用户类型）';
+
+-- ----------------------------
+-- Records of account_lockout_policy_config
+-- ----------------------------
+BEGIN;
+INSERT INTO `account_lockout_policy_config` (`id`, `user_type`, `enabled`, `max_attempts`, `lock_duration_minutes`, `attempt_window_minutes`, `hint_after_attempts`, `remark`, `created_at`, `updated_at`) VALUES (1, '0', 1, 5, 30, 15, 3, 'B端管理员登录失败锁定', '2026-08-25 00:00:00', '2026-08-25 00:00:00');
+INSERT INTO `account_lockout_policy_config` (`id`, `user_type`, `enabled`, `max_attempts`, `lock_duration_minutes`, `attempt_window_minutes`, `hint_after_attempts`, `remark`, `created_at`, `updated_at`) VALUES (2, '1', 1, 5, 15, 15, 3, 'C端用户登录失败锁定', '2026-08-25 00:00:00', '2026-08-25 00:00:00');
+COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;
