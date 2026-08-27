@@ -95,7 +95,7 @@ SDK 按域拆分，各域独立开关与 `policy.mode`（`local` | `remote`）�
 
 ### 3.2 加载模式
 
-**local**：规则写在各域 `*Properties` 的 yaml / Nacos `in-security-policy.yml` 中，适合单机调试与本地联调。Nacos 推送变更后，`ConfigurationPropertiesRebinder` 重绑定 Properties，各域 local Service 的编译缓存自动失效；限流域还会触发 Sentinel 规则热重载，无需重启。  
+**local**：规则写在各域 `*Properties` 的 yaml / Nacos `in-security-gateway.yml` 中，适合单机调试与本地联调。Nacos 推送变更后，`ConfigurationPropertiesRebinder` 重绑定 Properties，各域 local Service 的编译缓存自动失效；限流域还会触发 Sentinel 规则热重载，无需重启。  
 **remote**：通过 `RemoteSnapshotFetcher` 一次 Feign 拉取 `SecurityPolicySnapshotVO`（`GET /inner/security/policy/snapshot`），`SnapshotAssembler` 转为各域内部模型；**失败不 fail-open**，而是按 `remote → LKG(Redis) → Nacos 地板` 阶梯降级，当前来源见 Actuator `securitypolicy` 端点。`local-floor-enabled=false` 且无 LKG 时抛 `PolicyRemoteUnavailableException`（fail-closed）。
 
 远程 HTTP 成功但 `data` 为空视为**合法空快照**：接受、刷新 LKG、编译为空规则集，不触发降级。
