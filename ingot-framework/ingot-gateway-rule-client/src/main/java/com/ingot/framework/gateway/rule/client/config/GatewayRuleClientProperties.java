@@ -76,7 +76,7 @@ public class GatewayRuleClientProperties {
     private boolean resilienceEnabled = true;
 
     /**
-     * remote 不可用且 LKG 为空时，是否回落到 Nacos {@code in-security-policy.yml} 地板配置。
+     * remote 不可用且 LKG 为空时，是否回落到 Nacos {@code in-security-gateway.yml} 地板配置。
      * <p>{@code false} 时该场景抛
      * {@link com.ingot.framework.gateway.rule.client.internal.PolicyRemoteUnavailableException}
      * 而非 fail-open。仅在 {@link #resilienceEnabled} 为 {@code true} 时有意义。</p>

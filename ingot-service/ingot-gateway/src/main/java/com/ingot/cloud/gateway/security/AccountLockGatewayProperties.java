@@ -7,13 +7,16 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * <p>Gateway 账号锁定 Filter 配置。</p>
+ * <p>Gateway 账号锁定 Filter 配置，绑定 {@code ingot.security.account.gateway}。</p>
+ *
+ * <p>仅 Gateway 执行面使用，配在 {@code in-service-gateway.yml}（开关与排除路径），
+ * 不要放进 {@code in-security-gateway.yml} 地板文件。</p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "ingot.security.account-lock-gateway")
+@ConfigurationProperties(prefix = "ingot.security.account.gateway")
 public class AccountLockGatewayProperties {
 
     /**

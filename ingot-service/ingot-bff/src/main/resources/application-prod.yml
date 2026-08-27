@@ -20,4 +20,5 @@ spring:
     import:
       - optional:nacos:in-common.yml
       - optional:nacos:in-security-crypto.yml
+      - optional:nacos:in-security-policy.yml
       - optional:nacos:${spring.application.name}.yml

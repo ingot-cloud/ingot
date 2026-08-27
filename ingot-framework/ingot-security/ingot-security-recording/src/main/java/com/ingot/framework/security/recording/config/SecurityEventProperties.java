@@ -14,9 +14,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * <p>安全事件唯一运行时配置，前缀 {@code ingot.security.event}。</p>
  *
- * <p>PMS、Member、Gateway 与 ingot-security 共用同一配置结构，但各自 Nacos dataId 独立生效
- * （如 {@code in-service-pms.yml}、{@code in-service-member.yml}、{@code in-service-gateway.yml}、
- * {@code in-service-security.yml}）。完整样例见模块根目录 {@code example.yml}。</p>
+ * <p>{@code delivery} / {@code mysql} 由 PMS、Member、Security 从共享
+ * {@code in-security-policy.yml} 读取；{@code enabled}、{@code target}、
+ * {@code source-module}、{@code categories}、{@code retention} 仍配在各服务
+ * {@code in-service-*.yml}。Auth / Gateway 不 import 该共享文件，继续用服务 yml
+ * 短配置加代码默认值。完整样例见模块根目录 {@code example.yml}。</p>
  *
  * <p>经 {@link RecordingConfigResolver} 解析 {@code target}、{@code shadow-targets} 与
  * {@code delivery.memory}，供 dispatcher、Store、Transport 与 retention 消费。</p>

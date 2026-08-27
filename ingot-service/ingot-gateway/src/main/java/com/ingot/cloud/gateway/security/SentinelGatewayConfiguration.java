@@ -1,7 +1,15 @@
 package com.ingot.cloud.gateway.security;
 
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.alibaba.csp.sentinel.adapter.gateway.common.SentinelGatewayConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
+import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPathPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.GatewayApiDefinitionManager;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
@@ -17,11 +25,7 @@ import com.ingot.framework.gateway.rule.client.internal.LocalPolicyEnvironmentRe
 import com.ingot.framework.gateway.rule.client.internal.SecurityPolicyCacheCoordinator;
 import com.ingot.framework.gateway.rule.client.model.EndpointPattern;
 import com.ingot.framework.gateway.rule.client.ratelimit.RateLimitRuleService;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.EndpointGroup;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitControlBehavior;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitDimension;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitRule;
-import com.ingot.framework.gateway.rule.client.ratelimit.model.RateLimitSnapshot;
+import com.ingot.framework.gateway.rule.client.ratelimit.model.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -30,19 +34,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * <p>把 SDK 的 {@link RateLimitSnapshot} 编译为 Sentinel Gateway 的
@@ -56,7 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * <ol>
  *     <li><b>失效广播</b>：Platform 改规则 → {@link SecurityPolicyCacheCoordinator} 回调
  *         {@link #reloadRules()}，先 {@code evictAll()} 清缓存再无条件重载，秒级生效。</li>
- *     <li><b>Nacos 热更新</b>：local 模式下 {@code in-security-policy.yml} 变更 →
+     *     <li><b>Nacos 热更新</b>：local 模式下 {@code in-security-gateway.yml} 变更 →
  *         {@code EnvironmentChangeEvent} 触发 {@link #reloadRules()}，无需重启。</li>
  *     <li><b>TTL 懒刷新</b>：缓存 TTL 到期后由请求流量触发重新拉取，共享快照层广播刷新事件，
  *         本类比对快照引用后按需重载。这条路径是广播丢失时的兜底。</li>

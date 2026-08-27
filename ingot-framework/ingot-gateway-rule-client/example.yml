@@ -55,11 +55,13 @@ ingot:
         block-threshold: 30
         temp-block-ttl-sec: 900
     # 账号锁定 Gateway Filter（JWT uid key）；与 temp-block 命名空间独立
-    account-lock-gateway:
-      enabled: true
-      exclude-path-patterns:
-        - /actuator/**
-        - /bff/auth/**
+    # 执行面开关配在 in-service-gateway.yml，不要放进 in-security-gateway.yml 地板
+    account:
+      gateway:
+        enabled: true
+        exclude-path-patterns:
+          - /actuator/**
+          - /bff/auth/**
     # 挑战策略：ALWAYS → ChallengeFilter 412；ON_RATE_LIMIT → SentinelBlockHandler 412
     challenge:
       enabled: true

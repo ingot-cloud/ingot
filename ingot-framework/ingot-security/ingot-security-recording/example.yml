@@ -1,7 +1,10 @@
 # 安全事件配置参考（ingot.security.event.*）
 #
 # 绑定类（唯一）：com.ingot.framework.security.recording.config.SecurityEventProperties
-# 各服务在 Nacos 使用独立 dataId，仅复制对应场景块即可；未列出的项使用 Java 类中的默认值。
+# L3（enabled / target / source-module / categories / retention）配在各 in-service-*.yml。
+# PMS / Member / Security 的 delivery / mysql 配在共享 in-security-policy.yml。
+# Auth / Gateway 不 import 该共享文件，短配置 + Java 默认值即可。
+# 落点地图：specs/current/security/config-governance/SPEC.md
 #
 # 须显式配置 enabled=true 才会装配 recording；未配置时 Auth 等无 event 需求的服务不会加载本模块。
 # Gradle 前置依赖（target=local 时必需）：
