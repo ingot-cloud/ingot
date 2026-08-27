@@ -2,7 +2,7 @@
 
 > 跟踪 Ingot 平台级能力演进与持续优化。条目进入开发时链接 `specs/changes/active/` change；完成后链接 `specs/current/` 或 `docs/modules/`。
 
-**最后 review**：2026-08-20
+**最后 review**：2026-08-27
 
 ## 状态说明
 
@@ -52,6 +52,7 @@
 | R-2026-026 | 访问防护补全 | 网关策略执行面收口、Sentinel 统一限流、3.1 四维度防爆破与 remote 弹性 | done | [change](../../specs/changes/archive/2026/20260729-security-access-protection/) · [current](../../specs/current/security/access-protection/) · [roadmap](./themes/security-center-roadmap.md) |
 | R-2026-027 | 统一分层缓存框架 | 消除 credential/gateway/access/dict 四处重复的分层缓存与降级实现，补齐 TTL 兜底与共享快照层 | done | [spec](../../specs/current/framework/layered-cache/) · [change](../../specs/changes/archive/2026/20260730-framework-layered-cache/) |
 | R-2026-028 | 会话安全（L5） | 在线会话 sid 模型、强制下线彻底性、安全中心管理面、并发策略可降级 | done | [change](../../specs/changes/archive/2026/20260817-security-session-safety/) · [current](../../specs/current/security/session-safety/) · [roadmap](./themes/security-center-roadmap.md) |
+| R-2026-029 | 挑战验证（L6） | 图形/滑块验证码以 412 + PassToken 接入登录与敏感接口；触发策略 remote/local | in-spec | [change](../../specs/changes/active/20260827-security-challenge-verification/) · [roadmap](./themes/security-center-roadmap.md) |
 
 ---
 
