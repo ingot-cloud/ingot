@@ -1,0 +1,67 @@
+# 网关安全策略地板（仅 Gateway import）。
+# 只放各域 policy 数值（groups / rules / items），不要写 enabled / policy.mode，
+# 以免与 in-service-gateway.yml 同前缀覆盖。
+# 开关与 mode 仍在 in-service-gateway.yml。
+ingot:
+  security:
+    # 限流域：编译为 Sentinel GatewayFlowRule；未配置的路径默认不限流（白名单式）
+    ratelimit:
+      policy:
+        groups:
+          - code: login-auth-floor
+            name: 登录授权层
+            enabled: true
+            pattern-list:
+              - path: /bff/auth/login  # 网关对外路径（Ant 风格）；非下游 /test/**
+                method: POST           # 当前 Sentinel 编译忽略 method，保留供扩展
+          - code: api-business-floor
+            name: 公共业务层
+            enabled: true
+            pattern-list:
+              - path: /pms/**
+                method: ANY
+              - path: /member/**
+                method: ANY
+              - path: /security/**
+                method: ANY
+        rules:
+          - code: login-ip-floor
+            group-code: login-auth-floor
+            # IP / DEVICE / USER
+            dimension: IP
+            # 平均 QPS
+            qps: 8
+            # 突发容量
+            burst: 12
+            # 统计窗口（秒）
+            interval-sec: 60
+            # F=快速失败(429) Q=排队
+            control-behavior: F
+            enabled: true
+            priority: 0
+          - code: biz-ip-floor
+            group-code: api-business-floor
+            dimension: IP
+            qps: 150
+            burst: 225
+            interval-sec: 1
+            control-behavior: F
+            enabled: true
+            priority: 10
+    # 黑白名单：静态名单 + Redis 临时封禁（限流违规升级）
+    blacklist:
+      policy:
+        items:
+          # BLACK / WHITE
+          - list-type: WHITE
+            # IP / DEVICE / USER / CIDR / USER_AGENT / REFERER
+            key-type: IP
+            key-value: 127.0.0.1
+            enabled: true
+    # 限流违规升级：滑动窗口计数
+    violation-escalation:
+      policy:
+        window-sec: 60
+        block-threshold: 25
+        temp-block-ttl-sec: 900
+        enabled: true

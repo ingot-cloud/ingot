@@ -1,3 +1,7 @@
+# 跨服务安全策略地板。消费者：PMS / Member / Security / BFF。
+# Auth、Gateway 不要 import。
+# 含：replay、credential、account.signal、event.delivery/mysql。
+# 不含：event.target/source-module、account.lockout、网关限流规则。
 ingot:
   security:
     ignoreTenantValidateRoleCodeList:
@@ -52,7 +56,7 @@ ingot:
 
         expiration:
           # 是否启用 
-          enabled: true
+          enabled: false
           # 最大有效天数
           max-days: 90
           # 提前警告天数
@@ -73,3 +77,47 @@ ingot:
           oneTime: true
           # 首次登录是否强制修改密码
           forceChangeOnFirstLogin: true
+
+    # 永久锁 Redis TTL（PMS/Member 写、BFF 读）；必须全局同一份
+    account:
+      signal:
+        # 永久锁定时 uid/name key 的 TTL（天），默认 30。
+        permanent-lock-ttl-days: 30
+
+    # PMS/Member/Security 写本地 canonical / spool 时共用。
+    # Auth/Gateway 不 import 本文件；BFF import 但不启用 recording。
+    event:
+      # 投递层：BEST_EFFORT 走 memory，DURABLE 走 spool（两条独立管道，非溢出关系）。
+      delivery:
+        # BEST_EFFORT 有界内存队列参数；后台线程 security-recording-memory 攒批后投递。
+        memory:
+          # 内存队列容量；满时新 BEST_EFFORT 事件 DROPPED，不阻塞业务线程。
+          queue-capacity: 2048
+          # memory worker 单次 claim 条数上限。
+          batch-size: 32
+          # worker 攒批 poll 超时（毫秒）；队列空则等待该时长后再次 poll。
+          poll-timeout-ms: 100
+          # 进程关闭时等待 memory worker 排空队列的最长时间（毫秒）。
+          shutdown-timeout-ms: 5000
+        # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
+        spool:
+          # spool 根目录（append-only segment 文件）。
+          directory: /ingot-data/security-recording/spool
+          # spool 目录总磁盘配额（如 1GB、512MB）。
+          max-bytes: 1GB
+          # 单个 segment 文件大小上限，达上限滚动新文件。
+          segment-bytes: 64MB
+          # 业务线程同步等待 spool 接纳 DURABLE 事件的最长时间（毫秒）；超时返回 FAILED（业务仍 fail-open）。
+          durable-ack-timeout-ms: 20
+          # durable worker 每次从 spool claim 的条数上限。
+          replay-batch-size: 32
+          # 投递失败 nack 后重试初始退避（毫秒）。
+          retry-initial-ms: 1000
+          # 重试退避上限（毫秒）。
+          retry-max-ms: 60000
+      # MySQL SecurityEventStore 写入侧参数（target=local 且 primary-store=mysql 时生效）。
+      mysql:
+        # 并发写入信号量许可数；默认 1，避免 canonical security_event 热点写冲突。
+        max-concurrent-writes: 1
+        # 单批 INSERT 事务超时（秒）。
+        transaction-timeout-seconds: 5

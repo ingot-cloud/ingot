@@ -53,13 +53,14 @@ ingot:
       opsLimitGetPerMinute: 20
       opsLimitCheckPerMinute: 40
   security:
-    account-lock-gateway:
-      # 是否启用账号锁定 AccountLockFilter，默认开启
-      enabled: true
-      # 不检查锁定状态的路径 Ant 模式。
-      excludePathPatterns:
-        - /actuator/**
-        - /bff/auth/**
+    account:
+      gateway:
+        # 是否启用账号锁定 AccountLockFilter，默认开启
+        enabled: true
+        # 不检查锁定状态的路径 Ant 模式。
+        excludePathPatterns:
+          - /actuator/**
+          - /bff/auth/**
     policy:
       # GatewayRuleClientProperties
       client:
@@ -75,73 +76,21 @@ ingot:
           l1-ttl: 5m
           # 2级缓存存活时间
           l2-ttl: 30m
-    # 限流域：编译为 Sentinel GatewayFlowRule；未配置的路径默认不限流（白名单式）
+    # 限流域开关与来源；groups/rules 地板在 in-security-gateway.yml
     ratelimit:
       enabled: true
       policy:
         mode: local
-        groups:
-          - code: login-auth-floor
-            name: 登录授权层
-            enabled: true
-            pattern-list:
-              - path: /bff/auth/login  # 网关对外路径（Ant 风格）；非下游 /test/**
-                method: POST           # 当前 Sentinel 编译忽略 method，保留供扩展
-          - code: api-business-floor
-            name: 公共业务层
-            enabled: true
-            pattern-list:
-              - path: /pms/**
-                method: ANY
-              - path: /member/**
-                method: ANY
-              - path: /security/**
-                method: ANY
-        rules:
-          - code: login-ip-floor
-            group-code: login-auth-floor
-            # IP / DEVICE / USER
-            dimension: IP  
-            # 平均 QPS
-            qps: 8
-            # 突发容量
-            burst: 12
-            # 统计窗口（秒）
-            interval-sec: 60
-            # F=快速失败(429) Q=排队
-            control-behavior: F
-            enabled: true
-            priority: 0
-          - code: biz-ip-floor
-            group-code: api-business-floor
-            dimension: IP
-            qps: 150
-            burst: 225
-            interval-sec: 1
-            control-behavior: F
-            enabled: true
-            priority: 10
-    # 黑白名单：静态名单 + Redis 临时封禁（限流违规升级）
+    # 黑白名单开关与来源；items 地板在 in-security-gateway.yml
     blacklist:
       enabled: false
       policy:
         mode: local
-        items:
-          # BLACK / WHITE
-          - list-type: WHITE
-            # IP / DEVICE / USER / CIDR / USER_AGENT / REFERER
-            key-type: IP
-            key-value: 127.0.0.1
-            enabled: true
-    # 限流违规升级：滑动窗口计数
+    # 限流违规升级开关与来源；阈值地板在 in-security-gateway.yml
     violation-escalation:
       enabled: true
       policy:
         mode: local
-        window-sec: 60
-        block-threshold: 25
-        temp-block-ttl-sec: 900
-        enabled: true
     # 事件配置
     event:
       # 总开关；Gateway 仅在上报 ACCESS 类事件时依赖此项。
