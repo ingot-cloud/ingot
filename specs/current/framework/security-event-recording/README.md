@@ -22,7 +22,7 @@
 
 **唯一绑定类**：`com.ingot.framework.security.recording.config.SecurityEventProperties`（`ingot-security-recording` 模块）
 
-各服务 Nacos dataId 独立生效。完整字段说明与三场景样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml)。
+各服务 Nacos：L3（`enabled` / `target` / `source-module` / `categories` / `retention`）在对应 `in-service-*.yml`；PMS / Member / Security 的 `delivery` / `mysql` 在共享 `in-security-policy.yml`。完整字段说明与三场景样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml)。落点地图见 [config-governance](../../security/config-governance/SPEC.md)。
 
 | 键 | 说明 |
 |---|---|

@@ -84,7 +84,7 @@ Feign/HTTP 上报 → 校验 → `SecurityEventEnqueue` → 异步 Store；HTTP 
 
 ## 8. 配置
 
-唯一 `@ConfigurationProperties`：`com.ingot.framework.security.recording.config.SecurityEventProperties`（前缀 `ingot.security.event`）。字段说明与样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml) 与 [README](./README.md)。
+唯一 `@ConfigurationProperties`：`com.ingot.framework.security.recording.config.SecurityEventProperties`（前缀 `ingot.security.event`）。`delivery`/`mysql` 由 PMS/Member/Security 从 `in-security-policy.yml` 读取；L3 仍在各 `in-service-*.yml`。字段说明与样例见 [example.yml](../../../ingot-framework/ingot-security/ingot-security-recording/example.yml) 与 [README](./README.md)。落点见 [config-governance](../../security/config-governance/SPEC.md)。
 
 ## 9. 稳定态
 

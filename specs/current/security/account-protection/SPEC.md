@@ -117,12 +117,12 @@ in:sec:account:locked:uid:{userType}:{userId}
 in:sec:account:locked:name:{userType}:{username}
 ```
 
-临时锁 TTL 至 `lockedUntil`；永久锁 TTL 默认 30 天（`ingot.security.account-lock-signal.permanent-lock-ttl-days`）。与网关 `in:gw:bl:tmp:*` 命名空间独立。
+临时锁 TTL 至 `lockedUntil`；永久锁 TTL 默认 30 天（`ingot.security.account.signal.permanent-lock-ttl-days`，配在 `in-security-policy.yml`）。与网关 `in:gw:bl:tmp:*` 命名空间独立。
 
 | 层级 | 职责 | 身份来源 |
 |---|---|---|
-| BFF | 加密登录短路（`ingot.security.account-lock-bff`，默认 enabled） | 解密后 username → name key；默认不调 Auth |
-| Gateway | 已认证 API 短路（`ingot.security.account-lock-gateway`，`AccountLockFilter`） | JWT `i` + OnlineToken/`ut` 补全的 userType → uid key；命中 **403** `ACCOUNT_LOCKED` |
+| BFF | 加密登录短路（`ingot.security.account.bff`，默认 enabled，配在 `in-service-bff.yml`） | 解密后 username → name key；默认不调 Auth |
+| Gateway | 已认证 API 短路（`ingot.security.account.gateway`，`AccountLockFilter`，配在 `in-service-gateway.yml`） | JWT `i` + OnlineToken/`ut` 补全的 userType → uid key；命中 **403** `ACCOUNT_LOCKED` |
 | Auth | UserDetails 缓存兜底 | name key hit 则跳过 Feign，返回 `locked=true` |
 | PMS/Member 领域层 | 边沿检测、事件、信号写入 | DB `LockStatePort` |
 

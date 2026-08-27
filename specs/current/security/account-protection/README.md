@@ -57,8 +57,10 @@
 ## 文档索引
 
 - [SPEC](./SPEC.md)：配置、数据模型、回调链路、B/C 差异化、local/remote 加载、已知限制
+- 配置落点：[config-governance](../config-governance/SPEC.md)
 - 前端管理面契约：[PLATFORM-API.md](../../../changes/archive/2026/20260825-security-account-lockout-remote/PLATFORM-API.md)
 - 来源变更：
+  - `specs/changes/archive/2026/20260825-security-config-governance/`（Nacos 落点治理与 `account.*` 前缀收口）
   - `specs/changes/archive/2026/20260825-security-account-lockout-remote/`（lockout 策略 remote）
   - `specs/changes/archive/2026/20260724-security-account-protection/`（L2 闭环 + remote 土台）
   - `specs/changes/archive/2026/20260806-security-event-legacy-cleanup/`（事件改写 canonical，停写 legacy 表）

@@ -62,7 +62,7 @@ Actuator：`GET /actuator/securitypolicy`（来源）、`GET /actuator/layeredca
 
 ### 1.5 Nacos 地板
 
-`in-security-policy.yml`（gateway `spring.config.import`）仅承载**地板数据**（各域 `policy.groups` / `rules` 等），**不声明** `enabled` / `mode`（避免与 `in-service-gateway.yml` 冲突）。
+`in-security-gateway.yml`（仅 Gateway `spring.config.import`）仅承载**地板数据**（各域 `policy.groups` / `rules` / `items` 等），**不声明** `enabled` / `mode`（避免与 `in-service-gateway.yml` 冲突）。跨服务策略（凭证、replay、`account.signal`）在 `in-security-policy.yml`，Gateway **不** import。配置地图见 [config-governance](../config-governance/SPEC.md)。
 
 ## 2. 登录失败保护（Auth）
 

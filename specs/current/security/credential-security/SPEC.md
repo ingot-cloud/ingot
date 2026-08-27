@@ -106,7 +106,7 @@ L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCacheLayer
 ### 7.4 `local` 模式与 Nacos 动态刷新
 
 - `mode=local`：仅走 Nacos 本地配置，**无远程调用**。凭证策略字段全部可降级（strength / history / expiration / initial-password）。
-- dataId：`in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`）。
+- dataId：`in-security-policy.yml`（常量 `NacosConstants.IN_SECURITY_POLICY`）。**仅** PMS / Member / Security（及因 replay/signal 而 import 的 BFF）加载；Auth / Gateway 不 import。
 - 刷新机制：`CredentialSecurityProperties` 为 `@ConfigurationProperties`，Nacos 变更经 `ConfigurationPropertiesRebinder` 重绑定；因加载器每次即时编译，下次 `loadPolicies()` / `getInitialPasswordConfig()` 即读到最新值。**不使用 `@RefreshScope`**，也不再监听 `NacosConfigRefreshEvent`。
 - 「用后失效」依赖 DB 执行状态，属执行数据而非策略配置，不随 Nacos 刷新。
 

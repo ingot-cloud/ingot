@@ -48,6 +48,7 @@
 ## 文档索引
 
 - [SPEC](./SPEC.md)：策略配置、数据模型、宽限 / 强制改密 / 初始密码数据流、来源与弹性降级、可观测、Nacos 刷新
+- 配置落点：[config-governance](../config-governance/SPEC.md)
 - 模块说明：`ingot-framework/ingot-security/ingot-security-credential/README.md`
 - 来源变更：
   - `specs/changes/archive/2026/20260717-security-credential-closure/`（L1 收口）
