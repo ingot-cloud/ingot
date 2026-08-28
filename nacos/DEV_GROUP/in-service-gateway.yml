@@ -45,10 +45,7 @@ spring:
 
 ingot:
   vc:
-    verifyUrls:
-      - image,/auth/oauth2/token,POST
-      - image,/auth/oauth2/pre_authorize,POST
-      - image,/bff/auth/login,POST
+    verifyUrls: []
     image:
       opsLimitGetPerMinute: 20
       opsLimitCheckPerMinute: 40
@@ -88,6 +85,11 @@ ingot:
         mode: local
     # 限流违规升级开关与来源；阈值地板在 in-security-gateway.yml
     violation-escalation:
+      enabled: true
+      policy:
+        mode: local
+    # 挑战验证开关与来源；groups/policies 地板在 in-security-gateway.yml
+    challenge:
       enabled: true
       policy:
         mode: local

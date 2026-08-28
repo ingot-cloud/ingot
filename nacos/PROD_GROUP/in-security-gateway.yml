@@ -65,3 +65,23 @@ ingot:
         block-threshold: 25
         temp-block-ttl-sec: 900
         enabled: true
+    # 挑战验证地板：登录强制滑块。不要写 challenge.enabled / policy.mode
+    challenge:
+      policy:
+        groups:
+          - code: login-auth-floor
+            name: 登录认证入口
+            enabled: true
+            pattern-list:
+              - path: /bff/auth/login
+                method: POST
+        policies:
+          - code: login-always-floor
+            group-code: login-auth-floor
+            trigger: ALWAYS
+            challenge-type: SLIDER
+            scope: login
+            pass-token-ttl-sec: 300
+            pass-token-remaining: 1
+            enabled: true
+            priority: 0
