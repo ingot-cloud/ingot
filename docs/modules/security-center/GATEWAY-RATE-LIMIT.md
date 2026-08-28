@@ -229,23 +229,26 @@ ingot:
 流程：
 
 1. 白名单 → 直接放行
-2. 查询参数 `_vc_pass_token` 存在 → `PassTokenStore.consume(scope, token)`；成功则设置 `ingot.security.passToken.ok=true` 并放行（Sentinel 跳过）
-3. 命中 `ALWAYS` 策略且无有效 token → **412** `CHALLENGE_REQUIRED`
-4. 否则进入 Sentinel；触发限流时由 `SentinelBlockHandler` 处理 `ON_RATE_LIMIT`
+2. `/vc/**` → 直接放行（验码接口不做 ALWAYS）
+3. Header `In-Vc-Pass-Token` 与 `In-Vc-Scope` 均存在 **且** 当前路径 `matchByScope` 命中该 scope → `PassTokenStore.consume(scope, token)`；成功则设置 `ingot.security.passToken.ok=true` 并放行（Sentinel 跳过）。缺 Header、只放 query、或路径未覆盖该 scope 视为无效 token（有 ALWAYS → 412，否则进 Sentinel，不打跳过标记、**不扣次数**）
+4. 命中 `ALWAYS` 策略且无有效 token → **412** `CHALLENGE_REQUIRED`
+5. 否则进入 Sentinel；触发限流时由 `SentinelBlockHandler` 处理 `ON_RATE_LIMIT`
 
 **PassToken 全链路**：
 
 ```
-业务请求 → 412（data 含 scope、checkPath、passTokenParam）
-  → POST /vc/{vcType}/check?_vc_scope={scope} 验码
-  → 响应 data._vc_pass_token
-  → 重试业务 URL?...&_vc_pass_token=...
-  → ChallengeFilter 消费 token → 放行（可跳过 Sentinel）
+业务请求 → 412（data 含 scope、checkPath、passTokenParam、scopeParam；param 为头名）
+  → POST /vc/image/check  Header In-Vc-Scope: {scope} 验码
+  → 响应 data["In-Vc-Pass-Token"]（无 captcha）
+  → 重试业务  Header In-Vc-Pass-Token + In-Vc-Scope
+  → ChallengeFilter matchByScope 后按请求 scope 消费 token → 放行（可跳过 Sentinel）
 ```
 
-签发：`CaptchaVCProcessor` 在挑战域开启且带 `_vc_scope` 时，验码成功后调用 `PassTokenStore.issue`。
+签发：`CaptchaVCProcessor` 在带 Header `In-Vc-Scope` 且能 `findByScope` 时，验码成功后调用 `PassTokenStore.issue`。Redis 不可用或无策略 → check **失败**（fail-closed），不得返回成功且无 token。
 
-Redis Key：`in:gw:vc:pass:{scope}:{token}`，值为剩余次数，消费为 Lua `DECR`（≤0 时删除）。
+Redis Key：`in:gw:vc:pass:{scope}:{token}`，值为剩余次数，消费为 Lua `DECR`（≤0 时删除）。本轮 **不** 把客户端 IP 写入 Redis。
+
+消费 **必须** 使用请求 Header `In-Vc-Scope`，与签发 Redis key 一致；不要回退到 ALWAYS 策略 scope 或默认 `default`。消费前路径必须属于该 scope 策略。
 
 ### 4.4 限流拒绝：`SentinelBlockHandler`
 
@@ -263,7 +266,7 @@ Sentinel 阻断后并行逻辑：
 | `in:gw:vc:pass:{scope}:{token}` | PassToken 剩余次数 |
 | （`ViolationCounter` 内部 key，见实现类） | 限流违规滑动计数 |
 
-无 `ReactiveStringRedisTemplate` 时，临时封禁与 PassToken 能力降级为 no-op（不抛错）。
+无 `ReactiveStringRedisTemplate` 时：临时封禁读取视为未命中；PassToken **签发 fail-closed**（带 Header `In-Vc-Scope` 的 check 返回错误），**消费视为无效**（不打跳过标记）。412/429 仍可返回。
 
 ---
 
@@ -272,7 +275,7 @@ Sentinel 阻断后并行逻辑：
 | 场景 | HTTP | `code` | 说明 |
 |------|------|--------|------|
 | 静态/临时黑名单 | 403 | `FORBIDDEN_BLOCKED` | `BlacklistFilter` |
-| 强制/限流后挑战 | 412 | `CHALLENGE_REQUIRED` | body `data` 含 `vcType`、`scope`、`checkPath`、`passTokenParam` 等 |
+| 强制/限流后挑战 | 412 | `CHALLENGE_REQUIRED` | `data`：`vcType`、`checkPath`、`scope`、`scopeParam`、`passTokenParam` |
 | 纯限流（无 ON_RATE_LIMIT 策略） | 429 | `LIMIT_TOO_MANY` | `Retry-After: 1` |
 
 **单次请求**只会返回上表之一：Filter 顺序为 Blacklist → Challenge → Sentinel，403 最先判定；`ALWAYS` 的 412 在 Sentinel 之前且会终止链路；Sentinel 阻断后 412 与 429 互斥（先匹配 `ON_RATE_LIMIT` 策略）。
@@ -287,15 +290,15 @@ Sentinel 阻断后并行逻辑：
   "msg": "Captcha required",
   "data": {
     "vcType": "image",
-    "scope": "anon",
-    "scopeParam": "_vc_scope",
-    "passTokenParam": "_vc_pass_token",
     "checkPath": "/vc/image/check",
-    "ttlSec": 300,
-    "remaining": 3
+    "scope": "anon",
+    "scopeParam": "In-Vc-Scope",
+    "passTokenParam": "In-Vc-Pass-Token"
   }
 }
 ```
+
+客户端须 **全局拦截** 412：按 `data` 动态拉码、验码并重试原请求。不返回 `ttlSec` / `remaining`。完整约定见 [PLATFORM-API.md](../../../specs/changes/archive/2026/20260827-security-challenge-verification/PLATFORM-API.md) §3；已上线事实见 [challenge-verification](../../../specs/current/security/challenge-verification/SPEC.md)。
 
 ---
 
@@ -329,7 +332,7 @@ Sentinel 阻断后并行逻辑：
 |----|------|------|
 | 限流 | `ingot.security.ratelimit.enabled` | **false**（避免影响现有 Sentinel 部署） |
 | 黑白名单 | `ingot.security.blacklist.enabled` | **false** |
-| 挑战 | `ingot.security.challenge.enabled` | **false** |
+| 挑战 | `ingot.security.challenge.enabled` | 代码缺省 **false**；三环境 Nacos 为 **true**（见 [challenge-verification](../../../specs/current/security/challenge-verification/SPEC.md)） |
 | 违规升级 | `ingot.security.violation-escalation.enabled` | **false**（避免影响现有部署） |
 
 各域 `policy.mode`：`local`（yaml 内联）| `remote`（Feign 快照）。
@@ -399,11 +402,10 @@ spring:
 
 | 场景 | 机制 | 参数 |
 |------|------|------|
-| 业务强制验码 | `VCWebFilter` / `@VCVerify` | 业务请求带 `_vc_code` |
-| 风控降级挑战 | `ChallengeFilter` → 412 → `/vc/{type}/check` | 重试带 `_vc_pass_token`、`_vc_scope` |
-| 登录 password 验码 | `CaptchaVCProcessor.checkOnly` | `/auth/token?grant_type=password` |
+| 风控挑战（登录 / 敏感接口 / 限流后） | `ChallengeFilter` → **412** `CHALLENGE_REQUIRED` | 客户端按 `data` 动态拉码、验码；重试带 `{passTokenParam}`、`{scopeParam}` |
+| 遗留 `verifyUrls` / `@VCVerify` | `VCWebFilter` | 已清空登录路径，**不要**再当安全触发 |
 
-常量定义：`VCConstants`（`QUERY_PARAMS_PASS_TOKEN`、`QUERY_PARAMS_SCOPE` 等）。
+常量：`VCConstants`（`HEADER_PASS_TOKEN`、`HEADER_SCOPE`）。412 字段名见 `ChallengeResponses`。前端全局拦截约定见 [PLATFORM-API.md](../../../specs/changes/archive/2026/20260827-security-challenge-verification/PLATFORM-API.md) §3。
 
 ---
 
