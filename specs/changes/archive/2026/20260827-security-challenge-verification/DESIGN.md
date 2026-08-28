@@ -16,7 +16,7 @@ flowchart TB
   subgraph client [客户端]
     Login[POST /bff/auth/login]
     GetVC[GET /vc/image]
-    CheckVC["POST /vc/image/check?_vc_scope"]
+    CheckVC["POST /vc/image/check Header In-Vc-Scope"]
   end
   subgraph gw [Gateway]
     BF[BlacklistFilter]
@@ -34,7 +34,7 @@ flowchart TB
   GetVC --> Cap
   CheckVC --> Cap
   Cap -->|issue| Redis[(in:gw:vc:pass)]
-  Login -->|带 _vc_pass_token| CF
+  Login -->|带 Header In-Vc-Pass-Token| CF
   CF -->|consume| Redis
   CF --> Sen
   Remote -->|mode=remote| CF
@@ -53,16 +53,20 @@ flowchart TB
 | D5 | SMS / EMAIL 挑战类型 | L6 **不执行**。编译或匹配时跳过并 warn。库列与 VO 可暂留字符串，执行面枚举只认 `IMAGE` / `SLIDER` |
 | D6 | 登录保护哪条路径 | 只保护网关 **`POST /bff/auth/login`**。BFF→Auth Feign 不再套码。删除 `CaptchaVCProcessor` 对 `/auth/oauth2/token`、`pre_authorize` 的 grant 特例 |
 | D7 | `ingot.vc.verifyUrls` | **废弃安全触发**。三环境清空列表。`VCWebFilter` / `@VCVerify` 代码可留作 no-op，登录路径不得再出现在列表里 |
-| D8 | Redis 不可用 | **fail-closed**：`issue` 失败则 check 返回错误，不得 `R.ok` 且无 token；`consume` 失败视为无效。与当前 no-op 的「空 Mono」相比，带 `_vc_scope` 的 check 必须显式失败 |
+| D8 | Redis 不可用 | **fail-closed**：`issue` 失败则 check 返回错误，不得 `R.ok` 且无 token；`consume` 失败视为无效。与当前 no-op 的「空 Mono」相比，带 Header `In-Vc-Scope` 的 check 必须显式失败 |
 | D9 | 白名单 | **保持**现 `ChallengeFilter`：`ATTR_WHITELISTED` 直接放行 |
-| D10 | PassToken 消费用哪个 scope | **请求 query `_vc_scope`**（与 check 签发、412 `data.scope` 同一值）。现网 `ChallengeFilter` 只用 ALWAYS 的 scope，没有则 `default`，导致限流挑战闭环断裂，本 change **必须修** |
+| D10 | PassToken 消费用哪个 scope | **请求 Header `In-Vc-Scope`**（与 check 签发、412 `data.scope` 同一值）。现网 `ChallengeFilter` 只用 ALWAYS 的 scope，没有则 `default`，导致限流挑战闭环断裂，本 change **必须修** |
+| D11 | PassToken 是否绑路径 | **消费时绑定**。带 token 时先 `matchByScope(path, method, scope)`，命中该 scope 覆盖的启用策略才 `consume`。login token 打非 login 路径不得跳过 Sentinel、不得扣次数 |
+| D12 | scope / token 放哪 | **请求头** `In-Vc-Scope` / `In-Vc-Pass-Token`（`VCConstants.HEADER_*`）。412 的 `scopeParam` / `passTokenParam` 为这两个头名。**不保留 query 兼容**。禁止 `In-Inner-*`（网关会剥离） |
+| D13 | 是否绑客户端 IP | **本轮不做，也不加开关**。路径绑定 + Header 已挡住跨路径跳过限流与 URL 泄露；IP 绑定对同 NAT 无效且会因换网 / 代理链误伤。以后若 TTL 或 remaining 显著放大再单独评估 |
+| D14 | check 成功体是否含 `captcha` | **不含**。带 scope 签发成功时 `data` 只有 token 与 scope（键名 = `passTokenParam` / `scopeParam`）。无 Header scope 的 check 仍返回 anji `ResponseModel` |
 
 ### 现网缺陷（L6 必修）
 
 `ChallengeFilter` 当前消费逻辑（bug）：
 
 ```text
-有 _vc_pass_token
+有 PassToken（现网读 query `_vc_pass_token`）
   scope = ALWAYS 策略的 scope，否则 DEFAULT_PASS_TOKEN_SCOPE（"default"）
   consume(scope, token)
   成功 → ATTR_PASS_TOKEN_OK → 跳过 Sentinel
@@ -72,14 +76,15 @@ flowchart TB
 
 签发侧（`PassTokenStore.issue` + 策略 `findByScope`）使用 **挑战策略自己的 `scope`**。E2E / 文档示例里 `ON_RATE_LIMIT` 常用 `scope: anon` / `e2e-anon`。
 
-结果：限流 412 → check 写入 `in:gw:vc:pass:e2e-anon:{token}` → 重试只带 `_vc_pass_token` 时去读 `in:gw:vc:pass:default:{token}` → miss → 再次撞限流。与「验码通过即可跳过本次限流」的设计相反。ALWAYS 登录若 `scope=login` 且消费也取 ALWAYS，碰巧能通，所以登录种子路径掩盖了这个 bug。
+结果：限流 412 → check 写入 `in:gw:vc:pass:e2e-anon:{token}` → 重试只带 token、不带请求 scope 时去读 `in:gw:vc:pass:default:{token}` → miss → 再次撞限流。与「验码通过即可跳过本次限流」的设计相反。ALWAYS 登录若 `scope=login` 且消费也取 ALWAYS，碰巧能通，所以登录种子路径掩盖了这个 bug。
 
 **修复：**
 
-1. 业务重试同时带 `_vc_pass_token` 与 `_vc_scope`（412 已给出两个 param 名）。
-2. `consume` 的 Redis scope **只**用请求 `_vc_scope`；缺则视为无效 token（ALWAYS → 412；仅限流路径 → 进 Sentinel）。
+1. 业务重试同时带 PassToken 与 scope（412 已给出两个 param 名；传输见 D12）。
+2. `consume` 的 Redis scope **只**用请求 Header `In-Vc-Scope`；缺则视为无效 token（ALWAYS → 412；仅限流路径 → 进 Sentinel）。
 3. 不要回退到 `default` 去猜。签发与消费必须同一 scope 字符串。
-4. 单测：无 ALWAYS、策略 scope=`e2e-anon` 的完整 consume + `ATTR_PASS_TOKEN_OK`。
+4. 消费前 `matchByScope(path, method, scope)`：路径未覆盖该 scope 则不 consume、不打跳过标记（D11）。
+5. 单测：无 ALWAYS、策略 scope=`e2e-anon` 的完整 consume + `ATTR_PASS_TOKEN_OK`；login token 打非 login 路径不 consume。
 
 ---
 
@@ -202,32 +207,31 @@ ingot:
   "msg": "Captcha required",
   "data": {
     "vcType": "image",
-    "scope": "login",
-    "scopeParam": "_vc_scope",
-    "passTokenParam": "_vc_pass_token",
     "checkPath": "/vc/image/check",
-    "ttlSec": 300,
-    "remaining": 3
+    "scope": "login",
+    "scopeParam": "In-Vc-Scope",
+    "passTokenParam": "In-Vc-Pass-Token"
   }
 }
 ```
 
+不返回 `ttlSec` / `remaining`。字段语义与全局拦截约定见 [PLATFORM-API.md §3](./PLATFORM-API.md)。
+
 Header：`WWW-Authenticate: Captcha realm="image"`。
 
-验码成功（挑战场景）：
+验码成功（挑战场景，已带 Header `In-Vc-Scope`）：
 
 ```json
 {
   "code": "S0200",
   "data": {
-    "captcha": { },
-    "_vc_pass_token": "...",
-    "_vc_scope": "login"
+    "In-Vc-Pass-Token": "...",
+    "In-Vc-Scope": "login"
   }
 }
 ```
 
-无 `_vc_scope` 的 check：只返回 anji `ResponseModel`（不签发），避免误发 token。
+JSON 键名等于 412 的 `passTokenParam` / `scopeParam`，不要依赖嵌套 `captcha`。无 Header scope 的 check：只返回 anji `ResponseModel`（不签发），避免误发 token。
 
 ### captcha 与 OTP 拆分
 
@@ -243,7 +247,7 @@ ingot-verification-code
 
 - Reactive 路由保留 `/vc/{type}`；`type=image` 只实现 `handle`（get）与 `check`。
 - `checkOnly` 对 image：**不再用于安全拦截**。Gateway 覆盖 Bean 去掉 token 路径特例；若接口仍在，实现为「无操作放行」或委托 check 语义但不挂 `VCWebFilter`。
-- 网关在 `check` 成功后：解析 `_vc_scope` → `findByScope` → `PassTokenStore.issue`；scope 未知则校验失败（防乱签发）。
+- 网关在 `check` 成功后：解析 Header `In-Vc-Scope` → `findByScope` → `PassTokenStore.issue`；scope 未知则校验失败（防乱签发）。
 - Servlet `VCEndpoint` / `DefaultCaptchaVCProvider`：网关是 WebFlux，Servlet 路径不是 L6 执行面；保持可编译，不接 PassToken。
 
 ### Platform API
@@ -262,8 +266,10 @@ ingot-verification-code
 ### 客户端与 BFF
 
 - BFF **不**改登录 JSON；清理 `vcCode` 过时注释。
-- 登录页：捕获 412 → 按 `checkPath`/`scope` 完成滑块 → 原 URL 追加 `passTokenParam` **与** `scopeParam`。
-- PassToken 与 scope 均放 query（现状参数名）；不改 Header。
+- 任意经网关请求：HTTP 客户端 **全局拦截** 412 `CHALLENGE_REQUIRED` → 按 `data` 动态拉码/验码 → 原请求追加 Header `{passTokenParam}` **与** `{scopeParam}`。
+- 不要只在登录页处理；不要写死路径和头名。
+- PassToken 与 scope 均放 **Header**（D12）；不要写 query。跨域须允许 `In-Vc-Scope`、`In-Vc-Pass-Token`。
+- 本轮不绑客户端 IP（D13）。
 
 ---
 
@@ -277,15 +283,16 @@ POST /bff/auth/login
   ChallengeFilter：
     无 ChallengePolicyService（enabled=false）→ 放行
     匹配 ALWAYS
-    有 _vc_pass_token + _vc_scope=login → consume(login, token) 成功 → ATTR_PASS_TOKEN_OK → 放行
-    consume 失败或未带 token → 412
+    有 Header In-Vc-Pass-Token + In-Vc-Scope=login
+      且 matchByScope(login 路径) 命中 → consume(login, token) 成功 → ATTR_PASS_TOKEN_OK → 放行
+    consume 失败、路径未覆盖该 scope、或未带 token → 412
 GET /vc/image → anji get（频率限制）
-POST /vc/image/check?_vc_scope=login
+POST /vc/image/check  Header In-Vc-Scope: login
   anji check 失败 → 业务错误
   scope 无策略 → 错误，不签发
   Redis issue 失败 → 错误（D8）
-  成功 → data._vc_pass_token
-POST /bff/auth/login?_vc_pass_token=...&_vc_scope=login → 进入 BFF
+  成功 → data["In-Vc-Pass-Token"]（无 captcha）
+POST /bff/auth/login  Header In-Vc-Pass-Token + In-Vc-Scope: login → 进入 BFF
 ```
 
 ### ON_RATE_LIMIT（含 D10 修复）
@@ -298,13 +305,13 @@ POST /bff/auth/login?_vc_pass_token=...&_vc_scope=login → 进入 BFF
     匹配 ON_RATE_LIMIT → 412（payload.scope = 策略 scope，例如 e2e-anon）
     否则 → 429
 GET /vc/image
-POST /vc/image/check?_vc_scope=e2e-anon → issue(e2e-anon, token)
-业务请求?_vc_pass_token=...&_vc_scope=e2e-anon
-  ChallengeFilter：consume(e2e-anon, token) 成功 → ATTR_PASS_TOKEN_OK
+POST /vc/image/check  Header In-Vc-Scope: e2e-anon → issue(e2e-anon, token)
+业务请求  Header In-Vc-Pass-Token + In-Vc-Scope: e2e-anon
+  ChallengeFilter：matchByScope 命中且 consume(e2e-anon, token) 成功 → ATTR_PASS_TOKEN_OK
   Sentinel：看到标记 → 跳过 → 200
 ```
 
-无 `_vc_scope` 或 scope 与签发不一致：不打跳过标记，请求仍可能 412/429。
+无 Header scope、scope 与签发不一致、或路径未覆盖该 scope：不打跳过标记，请求仍可能 412/429。只把 token 放 query 视为无 token。
 
 ### 失败
 
@@ -342,9 +349,9 @@ POST /vc/image/check?_vc_scope=e2e-anon → issue(e2e-anon, token)
 
 ## 测试策略
 
-- **单元**：PassToken 签发（含 Redis 失败）；`ChallengeFilter` 按 `_vc_scope` 消费（含 `e2e-anon`、缺 scope、ALWAYS 失败回 412）；`ChallengeTypes` 只映射 IMAGE/SLIDER；Platform `validateChallengePolicy`（`/vc`、SMS、空 scope）；captcha `check` 无 scope 不签发。
+- **单元**：PassToken 签发（含 Redis 失败）；`ChallengeFilter` 按 Header `In-Vc-Scope` 消费（含 `e2e-anon`、缺 scope、ALWAYS 失败回 412、login token 打 `/pms` 不 consume）；`matchByScope`；`ChallengeTypes` 只映射 IMAGE/SLIDER；Platform `validateChallengePolicy`（`/vc`、SMS、空 scope）；captcha `check` 无 Header scope 不签发；签发成功体无 `captcha`。
 - **SDK**：沿用 `ChallengeAutoConfiguration` / 共享快照测试，补「SMS 策略不进入可匹配执行集」。
-- **E2E**：扩展 [test-case/security-policy-e2e.md](../../../../../test-case/security-policy-e2e.md) TC-SP-011～015，**TC-SP-012 必须带 `_vc_scope`**；新增登录 A1/A2；A17 非 default scope 的限流挑战全链路；A5 local 刷新；A10 Redis 失败（可 mock 或停 Redis 专测）。
+- **E2E**：扩展 [test-case/security-policy-e2e.md](../../../../../test-case/security-policy-e2e.md) TC-SP-011～015，**TC-SP-012 必须带 Header `In-Vc-Scope`**；新增登录 A1/A2；A17 非 default scope 的限流挑战全链路；A5 local 刷新；A10 Redis 失败（可 mock 或停 Redis 专测）。
 - **刷新**：TASKS 记录改 Nacos 无重启的操作步骤与期望（A16）。
 
 ## 文档与 current

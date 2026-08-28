@@ -4,7 +4,7 @@
 
 ## 摘要
 
-平台自定义 HTTP Header 统一采用 `In-*` 命名体系：前端/BFF 设备指纹使用 `In-Ca-Sig`；网关内部可信头使用 `In-Inner-*` 前缀（与 `In-Inner-From` 对齐）。常量定义在 `HeaderConstants`，网关入口由 `RequestGlobalFilter` 剥离外部伪造的内部头后按需重写。
+平台自定义 HTTP Header 统一采用 `In-*` 命名体系：前端/BFF 设备指纹使用 `In-Ca-Sig`；网关内部可信头使用 `In-Inner-*` 前缀（与 `In-Inner-From` 对齐）；挑战通行证使用公开头 `In-Vc-Scope` / `In-Vc-Pass-Token`（不要写成 `In-Inner-*`，入口会剥离）。身份与 IP 常量定义在 `HeaderConstants`，挑战头定义在 `VCConstants`。网关入口由 `RequestGlobalFilter` 剥离外部伪造的内部头后按需重写。
 
 ## 边界
 
@@ -37,4 +37,4 @@
 - [SPEC](./SPEC.md)：Header 名称、写入方、Java 常量与数据流
 - 网关限流：[GATEWAY-RATE-LIMIT.md](../../../../docs/modules/security-center/GATEWAY-RATE-LIMIT.md)
 - BFF 指纹：[DEVICE-FINGERPRINT.md](../../../../docs/modules/authorization-server/DEVICE-FINGERPRINT.md)、[BFF-AUTH-FLOW.md](../../../../docs/modules/authorization-server/BFF-AUTH-FLOW.md)
-- 来源变更：`specs/changes/archive/2026/20260715-gateway-header-rename/`、`specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（JWT `i`/`jti` + OnlineToken 补全 userType）
+- 来源变更：`specs/changes/archive/2026/20260715-gateway-header-rename/`、`specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（JWT `i`/`jti` + OnlineToken 补全 userType）、`specs/changes/archive/2026/20260827-security-challenge-verification/`（公开头 `In-Vc-Scope` / `In-Vc-Pass-Token`）

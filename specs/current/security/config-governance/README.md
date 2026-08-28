@@ -11,7 +11,7 @@
 ## 边界
 
 - **含**：Nacos dataId 分配、前缀 → 消费者矩阵、`account.*` 前缀收口后的键名。
-- **不含**：各域策略语义（见 account / access / credential / session / event 各 SPEC）；安全中心 remote 管理面。
+- **不含**：各域策略语义（见 account / access / credential / session / event / challenge 各 SPEC）；安全中心 remote 管理面。
 
 ## 所有者
 

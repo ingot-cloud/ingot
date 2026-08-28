@@ -190,6 +190,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [挑战验证（L6）](./changes/archive/2026/20260827-security-challenge-verification/README.md)
 - [账号锁定策略 remote 模式](./changes/archive/2026/20260825-security-account-lockout-remote/README.md)
 - [DURABLE spool 隔离与消费位点修复](./changes/archive/2026/20260825-framework-security-event-spool-recovery/README.md)
 - [统一分层缓存框架抽象与消费者迁移](./changes/archive/2026/20260730-framework-layered-cache/README.md)
@@ -217,6 +218,7 @@ current/<domain>/<capability>/
 - [framework/security-event-recording](./current/framework/security-event-recording/README.md)
 - [gateway/header-conventions](./current/gateway/header-conventions/README.md)
 - [security/access-protection](./current/security/access-protection/README.md)
+- [security/challenge-verification](./current/security/challenge-verification/README.md)
 - [security/account-protection](./current/security/account-protection/README.md)
 - [security/session-safety](./current/security/session-safety/README.md)
 - [security/security-event-center](./current/security/security-event-center/README.md)

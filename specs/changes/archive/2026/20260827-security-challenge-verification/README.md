@@ -1,6 +1,6 @@
 # 挑战验证（L6）
 
-> 状态：draft
+> 状态：completed
 
 ## 元数据
 
@@ -20,7 +20,7 @@
 把「图形 / 滑块验证码」从 Nacos-only 的 `ingot.vc.verifyUrls` 随请求带码，收口为可验收的挑战验证闭环：
 
 1. **触发策略可降级**：`ingot.security.challenge` 与限流 / 黑名单同一套 `local | remote`。remote 走安全中心 `security_challenge_policy` + 共享快照；local / 地板走 Nacos。
-2. **执行模型统一**：命中策略返回 HTTP 412 `CHALLENGE_REQUIRED`；客户端完成滑块后拿到 `_vc_pass_token`，重试业务请求。登录入口 `POST /bff/auth/login` 与敏感接口共用此模型。
+2. **执行模型统一**：命中策略返回 HTTP 412 `CHALLENGE_REQUIRED`；客户端完成滑块后拿到 PassToken（Header `In-Vc-Pass-Token`），重试业务请求。登录入口 `POST /bff/auth/login` 与敏感接口共用此模型。
 3. **补齐已写一半的闭环**：网关验码成功后签发 PassToken（当前签发逻辑被注释）；打开 L4 未启用的挑战 SDK 执行面。
 4. **验证码引擎与 OTP 解耦**：anji 滑块不再走短信/邮箱那套 `checkOnly` / `VCRepository`；短信/邮箱留给 MFA / 二次确认。
 5. **修既有执行面 bug**：`ON_RATE_LIMIT` 签发的 PassToken 在重试时 scope 对不上，无法跳过 Sentinel（见 D10）。
@@ -48,7 +48,7 @@
 **包含：**
 
 - 打开 `ingot.security.challenge.enabled`；DEV `mode=local`，TEST/PROD `mode=remote`。
-- 412 → `GET/POST /vc/image` → `_vc_pass_token` → 重试业务 的闭环。
+- 412 → `GET/POST /vc/image` → Header PassToken → 重试业务 的闭环。
 - DB 种子：`ALWAYS` + `SLIDER` 覆盖 `POST /bff/auth/login`（复用 L4 分组 `login-auth`，scope=`login`）。
 - Nacos 地板同等策略；敏感接口不写死，由策略配置。
 - `ingot-verification-code` 内拆分 captcha 引擎与 OTP；废弃 `verifyUrls` 作为安全触发面。
@@ -72,11 +72,11 @@
 - [任务](./TASKS.md)
 - [Platform / 客户端契约](./PLATFORM-API.md)
 
-## 待审阅决策（D1–D10）
+## 待审阅决策（D1–D14）
 
-推荐决议见 [DESIGN 决策表](./DESIGN.md#关键设计决策)。计划阶段已确认 **D1（412 + PassToken）**；其余按推荐决议待负责人一并闭合。
+2026-08-27 负责人确认开始实施，D1–D10 按推荐决议闭合。D11–D14 于实施中补齐（路径绑定、Header、不做 IP 绑定、验码去 captcha）。
 
-| ID | 议题 | 推荐决议 |
+| ID | 议题 | 决议 |
 |---|---|---|
 | D1 | 登录 / 敏感接口执行模型 | **412 + PassToken**（已确认 2026-08-27） |
 | D2 | 策略来源 | 复用 `ingot.security.challenge` + 共享快照，不新建 Feign/缓存域 |
@@ -87,14 +87,18 @@
 | D7 | `verifyUrls` | 废弃为安全触发；三环境 Nacos 清空 |
 | D8 | Redis 不可用 | 不签发、不放行（fail-closed） |
 | D9 | 白名单 | 继续跳过挑战 |
-| D10 | PassToken 消费 scope | **以请求 `_vc_scope` 为准**（与签发一致）。禁止仅用 ALWAYS 策略 scope / 默认 `default` 去消费限流挑战签发的 token |
+| D10 | PassToken 消费 scope | **以请求 Header `In-Vc-Scope` 为准**（与签发一致） |
+| D11 | PassToken 路径绑定 | **消费时** `matchByScope`；不匹配不 consume |
+| D12 | 传输位置 | **Header** `In-Vc-Scope` / `In-Vc-Pass-Token`；不保留 query |
+| D13 | IP 绑定 | **本轮不做** |
+| D14 | check 成功体 `captcha` | **不返回** |
 
-审阅通过后 change 转 `approved`，再按 TASKS 实施。**本状态为 draft，不允许改业务代码。**
+审阅已通过，按 TASKS 实施。
 
 ## 完成记录
 
-- 完成日期：
+- 完成日期：2026-08-28
 - 关联提交或 PR：
-- 更新的 current capability：
-- 与原设计的差异：
+- 更新的 current capability：`specs/current/security/challenge-verification/`；同步 `access-protection`、`config-governance`、`gateway/header-conventions`
+- 与原设计的差异：D11 消费路径绑定；D12 Header 定为 `In-Vc-Scope` / `In-Vc-Pass-Token`（曾计划 `X-Vc-*`，后按平台 `In-` 约定改；禁止 `In-Inner-*`）；D13 明确不做 IP 绑定；D14 check 成功体去掉 `captcha`；412 瘦身不含 `ttlSec`/`remaining`。Platform pattern `method` 必须是 `ANY` 或 HTTP 动词，不认 `*`。挑战 `groupCode` 只解析挑战域 groups，不能引用限流 yaml 的 `groupCode`。
 - 取消原因：

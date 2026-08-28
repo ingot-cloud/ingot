@@ -13,7 +13,7 @@
 | 限流 | `ingot.security.ratelimit` | `enabled=true`, `mode=remote` |
 | 黑白名单 | `ingot.security.blacklist` | `enabled=true`, `mode=remote` |
 | 违规升级 | `ingot.security.violation-escalation` | `enabled=true`, `mode=remote` |
-| 挑战 | `ingot.security.challenge` | L4 **未启用** SDK 执行面 |
+| 挑战 | `ingot.security.challenge` | 见 [challenge-verification](../challenge-verification/SPEC.md) |
 
 `local` 模式：规则来自 Nacos yaml（`RateLimitProperties` 等），**不读 LKG**。  
 `remote` 模式：Feign `GET /inner/security/policy/snapshot`；yaml 同前缀下 `groups`/`rules` **仅作 Nacos 地板**。
@@ -141,7 +141,6 @@ LOGIN_FAIL_CLIENT_EXCEED, LOGIN_FAIL_ACCOUNT_IP_EXCEED
 ## 6. 已知限制
 
 1. HTTP Method 不参与 Sentinel 路径匹配。
-2. `ingot.security.challenge` SDK 执行面未在 L4 启用。
-3. Platform 安全事件分页查询 / 封禁审计新 UI 未交付。
-4. 同 IP 试多个账号的行为型防爆破未实现。
-5. local 限流与 remote 快照 **独立**：切 `ratelimit.mode=local` 时不读 LKG；共享 Actuator 来源可能仍反映其他 remote 域。
+2. Platform 安全事件分页查询 / 封禁审计新 UI 未交付。
+3. 同 IP 试多个账号的行为型防爆破未实现。
+4. local 限流与 remote 快照 **独立**：切 `ratelimit.mode=local` 时不读 LKG；共享 Actuator 来源可能仍反映其他 remote 域。

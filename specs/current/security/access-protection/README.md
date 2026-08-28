@@ -15,7 +15,7 @@ L4 已验收闭环，覆盖三块能力：
 ## 边界
 
 - **含**：网关四域 SDK remote 执行、违规升级、登录失败保护策略与执行、共享快照 LKG/地板、ACCESS 类扩展事件（`LOGIN_FAIL_*` / 既有 `RATE_LIMIT_VIOLATION`）。
-- **不含**：账号 lockout remote 中心化、L6 挑战 SDK 启用、行为型防爆破（同 IP 多账号）、Platform 安全事件读侧 / 封禁审计新写入 `gateway_blacklist_event`、HTTP Method 参与 Sentinel 编译。
+- **不含**：账号 lockout remote 中心化、挑战验证执行面（见 [challenge-verification](../challenge-verification/README.md)）、行为型防爆破（同 IP 多账号）、Platform 安全事件读侧 / 封禁审计新写入 `gateway_blacklist_event`、HTTP Method 参与 Sentinel 编译。
 
 ## 所有者
 

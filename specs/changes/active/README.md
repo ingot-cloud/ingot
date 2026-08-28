@@ -12,4 +12,4 @@
 
 当前变更：
 
-- [20260827-security-challenge-verification](./20260827-security-challenge-verification/)（draft）：安全中心 L6 挑战验证（图形验证码接入登录 / 敏感接口）
+- （无）

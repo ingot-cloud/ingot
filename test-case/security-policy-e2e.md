@@ -317,11 +317,14 @@ POST {{GATEWAY}}/platform/security/policy/challenges
 | TC-SP-009 | P0 | 名单 | 白名单跳过限流与挑战 |
 | TC-SP-010 | P0 | 名单 | 临时封禁 403（违规升级） |
 | TC-SP-011 | P0 | 挑战 | ALWAYS 返回 412 |
-| TC-SP-012 | P0 | 挑战 | PassToken 验码后放行 |
+| TC-SP-012 | P0 | 挑战 | PassToken 验码后放行（重试须带 Header `In-Vc-Scope`） |
 | TC-SP-013 | P0 | 挑战 | ON_RATE_LIMIT 限流后 412 |
 | TC-SP-014 | P0 | 挑战 | 无限流挑战策略时 429 |
 | TC-SP-015 | P1 | 挑战 | PassToken scope 不匹配 |
 | TC-SP-016 | P1 | 挑战 | PassToken 次数耗尽 |
+| TC-SP-026 | P0 | 挑战 | 登录 ALWAYS：`POST /bff/auth/login` 返回 412 |
+| TC-SP-027 | P0 | 挑战 | 登录 PassToken：check 带 Header `In-Vc-Scope: login` 后重试登录 |
+| TC-SP-028 | P0 | 挑战 | 非 default scope 的 ON_RATE_LIMIT 消费后跳过 Sentinel |
 | TC-SP-017 | P0 | 热更新 | Platform 改规则后网关生效 |
 | TC-SP-018 | P1 | 热更新 | broadcast-invalidation 强制刷新 |
 | TC-SP-019 | P1 | 降级 | security 不可达时快照为空 |
@@ -441,8 +444,8 @@ curl -s -w "\n%{http_code}\n" -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: 
 | 项 | 内容 |
 |----|------|
 | 前置 | 策略 E 启用；策略 D 禁用；规则 A 可启用或禁用（ALWAYS 在 Sentinel 前） |
-| 步骤 | `POST /test/send`，不带 `_vc_pass_token` |
-| 期望 | **HTTP 412**，`code=CHALLENGE_REQUIRED`，`data` 含：`vcType`、`scope=e2e-always`、`checkPath`、`passTokenParam=_vc_pass_token`、`scopeParam=_vc_scope` |
+| 步骤 | `POST /test/send`，不带 PassToken Header |
+| 期望 | **HTTP 412**，`code=CHALLENGE_REQUIRED`，`data` 含：`vcType`、`scope=e2e-always`、`checkPath`、`passTokenParam`、`scopeParam`；不含 `ttlSec` / `remaining` |
 
 ### TC-SP-012 PassToken 全链路
 
@@ -450,9 +453,9 @@ curl -s -w "\n%{http_code}\n" -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: 
 |----|------|
 | 前置 | 同 TC-SP-011 |
 | 步骤 | 1. 收到 412，记录 `data.scope`、`data.checkPath` |
-| 步骤 | 2. 获取验证码 → `POST {{GATEWAY}}/vc/image/check?_vc_scope=e2e-always`（body 按验证码模块要求） |
-| 步骤 | 3. 从响应取 `data._vc_pass_token` |
-| 步骤 | 4. `POST /test/send?_vc_pass_token=<token>` |
+| 步骤 | 2. 获取验证码 → `POST {{GATEWAY}}/vc/image/check`，Header `In-Vc-Scope: e2e-always`（body 按验证码模块要求） |
+| 步骤 | 3. 从响应取 `data["In-Vc-Pass-Token"]`（无 `captcha`） |
+| 步骤 | 4. `POST /test/send`，Header `In-Vc-Pass-Token` 与 `In-Vc-Scope: e2e-always` |
 | 期望 | 步骤 4 返回 200；网关日志无二次 412；若规则 A 启用，本次应跳过 Sentinel |
 
 ### TC-SP-013 ON_RATE_LIMIT → 412
@@ -476,7 +479,7 @@ curl -s -w "\n%{http_code}\n" -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: 
 | 项 | 内容 |
 |----|------|
 | 前置 | 策略 E 启用 |
-| 步骤 | 使用 scope=`e2e-always` 签发的 token，但请求时故意不带或改错 query（或用过期 token） |
+| 步骤 | 使用 scope=`e2e-always` 签发的 token，但请求时故意不带或改错 Header（或用过期 token） |
 | 期望 | 再次 **412**；不泄露下游业务数据 |
 
 ### TC-SP-016 PassToken 次数耗尽
@@ -484,9 +487,38 @@ curl -s -w "\n%{http_code}\n" -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: 
 | 项 | 内容 |
 |----|------|
 | 前置 | 策略 E，`passTokenRemaining: 1` |
-| 步骤 | 验码后连续 2 次携带同一 `_vc_pass_token` 访问 |
+| 步骤 | 验码后连续 2 次携带同一 `In-Vc-Pass-Token` 与 `In-Vc-Scope` 访问 |
 | 期望 | 第 1 次 200；第 2 次因 token 已消费再次 412 |
 | 验证 | Redis key `in:gw:vc:pass:e2e-always:*` 在消费后删除 |
+
+### TC-SP-026 登录 ALWAYS 412（A1）
+
+| 项 | 内容 |
+|----|------|
+| 前置 | 种子 `login-always` 或地板 `login-always-floor` 启用；`ingot.security.challenge.enabled=true` |
+| 步骤 | `POST /bff/auth/login`，JSON 仅 username/password，不带 PassToken |
+| 期望 | **HTTP 412**，`code=CHALLENGE_REQUIRED`；`data` 含 `vcType=image`、`checkPath=/vc/image/check`、`scope=login`、`scopeParam=In-Vc-Scope`、`passTokenParam=In-Vc-Pass-Token`；**不含** `ttlSec` / `remaining` |
+
+### TC-SP-027 登录 PassToken（A2）
+
+| 项 | 内容 |
+|----|------|
+| 前置 | 同 TC-SP-026 |
+| 步骤 | 1. 收到 412，记录 `data.scope` |
+| 步骤 | 2. `GET /vc/image` 拉码 → `POST /vc/image/check` Header `In-Vc-Scope: login` |
+| 步骤 | 3. 从响应取 `data["In-Vc-Pass-Token"]`（无 `captcha`） |
+| 步骤 | 4. `POST /bff/auth/login` Header `In-Vc-Pass-Token` 与 `In-Vc-Scope: login` |
+| 期望 | 步骤 4 **不再 412**（后续可能是业务 200/账号错误，但不是挑战） |
+
+### TC-SP-028 ON_RATE_LIMIT 非 default scope（A17）
+
+| 项 | 内容 |
+|----|------|
+| 前置 | ALWAYS 策略关闭；`ON_RATE_LIMIT` 策略 `scope=e2e-anon`（或文档示例 `anon`）启用；对应路径限流可打满 |
+| 步骤 | 1. 打满限流得到 412，记录 `data.scope` |
+| 步骤 | 2. `POST /vc/image/check` Header `In-Vc-Scope: e2e-anon` 验码，取 `data["In-Vc-Pass-Token"]` |
+| 步骤 | 3. 重试业务 URL，**同时**带 Header `In-Vc-Pass-Token` 与 `In-Vc-Scope: e2e-anon` |
+| 期望 | 步骤 3 跳过 Sentinel（非 429/412）；若只带 token 不带 scope Header，或只把 token 放 query，再次限流或 412，**不能**靠默认 `default` scope 消费成功 |
 
 ---
 
@@ -546,7 +578,7 @@ curl -s -w "\n%{http_code}\n" -X POST "$GATEWAY/test/send" -H "X-Forwarded-For: 
 | 项 | 内容 |
 |----|------|
 | 步骤 | 断开网关 Redis |
-| 期望 | 启动日志 `[PassTokenStore] reactive redis not available`；PassToken / 临时封禁 no-op；412/429 仍正常 |
+| 期望 | 启动日志 `[PassTokenStore] reactive redis not available`；带 Header `In-Vc-Scope` 的 `/vc/image/check` **失败**（不签发成功空 token）；消费视为无效；临时封禁读取未命中；412/429 仍可返回 |
 
 ### TC-SP-021 拒绝 on_failure_threshold
 
@@ -585,8 +617,10 @@ curl -X POST "$GATEWAY/test/send" \
   -H "In-Ca-Sig: $TEST_DEVICE"
 
 # 带 PassToken
-curl -X POST "$GATEWAY/test/send?_vc_pass_token=YOUR_TOKEN" \
-  -H "X-Forwarded-For: $TEST_IP"
+curl -X POST "$GATEWAY/test/send" \
+  -H "X-Forwarded-For: $TEST_IP" \
+  -H "In-Vc-Scope: e2e-always" \
+  -H "In-Vc-Pass-Token: YOUR_TOKEN"
 ```
 
 ### 11.2 Redis 检查

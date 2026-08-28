@@ -62,7 +62,7 @@ L4 文档曾将挑战策略标为「可只读、前端可隐藏」。L6 **启用
     └── 挑战策略          ← L6 可写
 ```
 
-登录产品页（非安全中心）：账号密码提交必须实现 §3 的 412 重试，不能再依赖「登录请求带验证码」。
+**所有经网关的前端请求**（登录、业务 API、表单提交）都必须按 §3 **统一拦截 HTTP 412**，不要只在登录页处理。不能再依赖「业务请求随带验证码」。
 
 ---
 
@@ -168,26 +168,46 @@ Base：`/platform/security/policy`
 
 ---
 
-## 3. 客户端：412 → 滑块 → 重试
+## 3. 客户端：统一处理 412（任意请求）
 
 执行者不在安全中心服务，而在 **网关**。浏览器只与网关公网入口交互。
 
-### 3.1 何时会出现 412
+**前端必须在 HTTP 客户端（axios / fetch 封装）做全局拦截**，不要只写在登录页。登录、限流后的业务接口、日后新增的 ALWAYS 路径，返回形态相同。
+
+### 3.1 拦截判定
+
+同时满足才走挑战流程，否则按普通错误处理：
+
+1. HTTP 状态码 **412**
+2. 响应体 `code === "CHALLENGE_REQUIRED"`
+3. `data` 含下方动态字段（缺字段则不要猜，当作失败）
+
+| HTTP | `code` | 前端 |
+|---|---|---|
+| **412** | `CHALLENGE_REQUIRED` | **暂停原请求** → 弹滑块 → 按 `data` 验码 → **原样重试**该请求 |
+| 403 | `FORBIDDEN_BLOCKED` | 封禁提示，不是验证码 |
+| 403 | `ACCOUNT_LOCKED` | 账号锁定 |
+| 429 | `LIMIT_TOO_MANY` | 限流；本路径没有 `ON_RATE_LIMIT` 挑战时才会出现 |
+| 其它 | — | 业务错误，与挑战无关 |
+
+不要把 412 当成「登录失败 / 参数错误」直接 toast 后丢弃。
+
+### 3.2 何时会出现 412
 
 | 条件 | 结果 |
 |---|---|
 | `ingot.security.challenge.enabled=false` | 不会 412 |
 | 静态白名单命中 | 不会 412 |
 | 黑名单 / 临时封禁 | **403** `FORBIDDEN_BLOCKED`，先于挑战 |
-| 匹配 `ALWAYS` 且无有效 `_vc_pass_token` | **412** `CHALLENGE_REQUIRED` |
+| 匹配 `ALWAYS` 且无有效 PassToken | **412** |
 | Sentinel 限流且匹配 `ON_RATE_LIMIT` | **412** |
 | Sentinel 限流且无挑战策略 | **429** `LIMIT_TOO_MANY` |
 
-登录（种子启用后）走第一行 ALWAYS。
+登录种子启用后，`POST /bff/auth/login` 走 ALWAYS。其它路径由策略决定，前端 **不维护路径白名单**。
 
-### 3.2 412 响应
+### 3.3 412 `data` 字段（动态契约）
 
-HTTP **412 Precondition Failed**。
+HTTP **412 Precondition Failed**。字段名与取值都以后端本次响应为准，**禁止写死** `/vc/image`、`In-Vc-Scope`、`In-Vc-Pass-Token`。
 
 ```json
 {
@@ -195,99 +215,113 @@ HTTP **412 Precondition Failed**。
   "msg": "Captcha required",
   "data": {
     "vcType": "image",
-    "scope": "login",
-    "scopeParam": "_vc_scope",
-    "passTokenParam": "_vc_pass_token",
     "checkPath": "/vc/image/check",
-    "ttlSec": 300,
-    "remaining": 3
+    "scope": "login",
+    "scopeParam": "In-Vc-Scope",
+    "passTokenParam": "In-Vc-Pass-Token"
   }
 }
 ```
 
-| 字段 | 前端用法 |
-|---|---|
-| `vcType` | 固定按 `image` 拉码：`GET /vc/{vcType}` |
-| `scope` | 验码时原样作为 `scopeParam` 的值 |
-| `scopeParam` | 查询参数名，值为 `_vc_scope` |
-| `passTokenParam` | 重试业务请求时的查询参数名，值为 `_vc_pass_token` |
-| `checkPath` | 验码路径，值为 `/vc/image/check` |
-| `ttlSec` / `remaining` | 展示用；以服务端签发为准 |
+| 字段 | 类型 | 前端必须怎么用 |
+|---|---|---|
+| `vcType` | string | 拉码：`GET /vc/{vcType}`。L6 为 `image`（滑块也走 image，**没有** `/vc/slider`） |
+| `checkPath` | string | 验码：`POST {checkPath}` |
+| `scope` | string | 作用域 **值**，原样作为 Header 值；不同策略不同（登录常为 `login`，限流可能是 `anon`） |
+| `scopeParam` | string | 作用域 **请求头名**。验码与重试都要带该头，值为 `scope` |
+| `passTokenParam` | string | PassToken **请求头名**。验码成功后从 `check` 的 `data[passTokenParam]` 取值；重试业务请求带该头 |
 
-Header：`WWW-Authenticate: Captcha realm="image"`。
+**不返回** `ttlSec`、`remaining`。有效期与可消费次数只在服务端 Redis 执行；过期或用尽会再次 412，拦截器再走一遍即可。
 
-**不要**使用 `data.vcType=slider` 去请求 `/vc/slider/**`（该路由不存在）。
+Header：`WWW-Authenticate: Captcha realm="{vcType}"`（可忽略，以 body 为准）。
 
-### 3.3 推荐时序
+跨域：若网关 CORS 不是 `allowedHeaders: *`，须显式允许 `In-Vc-Scope`、`In-Vc-Pass-Token`。不要使用 `In-Inner-*` 头名（网关会剥离）。
+
+### 3.4 全局处理流程
+
+对「被 412 打断的那一次请求」记为 `original`（方法、URL、headers、body 全部保留）。
 
 ```text
-1. POST /bff/auth/login          JSON { username, password }   → 412
-2. GET  /vc/image                拉拼图（anji get）
-3. 用户完成滑块
-4. POST /vc/image/check?_vc_scope={data.scope}
-     body/query：anji 要求的 pointJson、token
-5. 从响应 data 取 _vc_pass_token
-6. POST /bff/auth/login?_vc_pass_token={token}&_vc_scope={data.scope}
-     JSON 仍为 { username, password }
-7. 200 则进入原登录后续（选租户等）；token 失效则回到 1
+任意 API
+  → 412 + CHALLENGE_REQUIRED
+  → 弹出滑块（同一时刻只处理一个挑战，其余请求排队或等本次完成）
+  → GET /vc/{data.vcType}                         拉码
+  → 用户完成滑块
+  → POST {data.checkPath}
+       Header {data.scopeParam}: {data.scope}
+       另附 anji 要求的 token、pointJson
+  → 从验码响应 data 取 token = data[data.passTokenParam]
+  → 重试 original：原 method / path / body 不变
+       Header 增加 {data.passTokenParam}: {token}
+                 {data.scopeParam}: {data.scope}
+  → 成功则交给原调用方；仍 412 则重新挑战（建议设重试上限，如 2 次）
 ```
 
-PassToken **与 scope** 必须出现在 **第 6 步的 query**，不要放进 BFF JSON——`BffLoginDTO` 没有验证码字段。只带 token、不带 `_vc_scope` 时，限流挑战路径 **无法跳过 Sentinel**（L6 修复后的明确行为）。
+伪代码：
 
-### 3.4 拉码 `GET /vc/image`
+```text
+if (status == 412 && body.code == "CHALLENGE_REQUIRED") {
+  d = body.data
+  captcha = GET  "/vc/" + d.vcType
+  // 用户完成滑块，得到 anji token + pointJson
+  checked = POST d.checkPath  with Header d.scopeParam = d.scope
+  token = checked.data[d.passTokenParam]
+  retry original with Headers:
+      d.passTokenParam = token
+      d.scopeParam     = d.scope
+}
+```
 
-- 无需登录。
-- 响应为 anji `ResponseModel`（含拼图 token、底图等），前端组件与既有 anji-plus 滑块 SDK 对齐即可。
-- 频率受网关 `ingot.vc.image.opsLimitGetPerMinute` 限制，超限返回验证码模块错误，不是 412。
+约束：
 
-### 3.5 验码 `POST /vc/image/check`
+- PassToken **只放 Header**，不要放进 JSON body，也 **不要写 query**（例如 `BffLoginDTO` 没有验证码字段）。
+- `{scopeParam}` 的值必须与本次 412 的 `data.scope`、验码时使用的值 **完全一致**。只带 token、不带 scope 时，限流挑战 **无法跳过 Sentinel**。
+- 该 token 只能用于 412 对应策略覆盖的路径；login 的 token 不能拿去打其它接口并跳过限流。
+- 验码失败（滑块错、签发失败）**不要**重试 `original`，让用户再滑一次。
+- 拉码 / 验码请求本身不要再套一层 412 拦截（`/vc/**` 网关不做 ALWAYS）。
+- 并发：多个请求同时 412 时，建议只弹一次滑块，拿到 token 后按各自的 `scope` 重试；**不要**把 `login` 的 token 用到 `anon` 请求上。
+
+### 3.5 拉码 `GET /vc/{vcType}`
+
+- 无需登录。`vcType` 来自 412，不要写死。
+- 响应为 anji `ResponseModel`（拼图 token、底图等），与 anji-plus 滑块 SDK 对齐。
+- 频率受 `ingot.vc.image.opsLimitGetPerMinute` 限制，超限是验证码模块错误，不是 412。
+
+### 3.6 验码 `POST {checkPath}`
 
 | 参数 | 位置 | 说明 |
 |---|---|---|
-| `_vc_scope` | query | **必须**，等于 412 的 `data.scope` |
+| `{scopeParam}`（如 `In-Vc-Scope`） | **Header** | **必须**，值 = 412 的 `data.scope` |
 | `token` | query 或表单 | anji 拉码返回的 token |
 | `pointJson` | query 或表单 | 滑块轨迹 / 坐标（anji 约定） |
 
-**成功（已带合法 scope）**：
+**成功（已带合法 scope Header）**：
 
 ```json
 {
   "code": "S0200",
   "data": {
-    "captcha": { },
-    "_vc_pass_token": "无连字符 hex/uuid",
-    "_vc_scope": "login"
+    "In-Vc-Pass-Token": "无连字符 hex/uuid",
+    "In-Vc-Scope": "login"
   }
 }
 ```
 
-前端以 `data._vc_pass_token` 为准。不要再用 `captchaVerification` 去登录。
+token / scope 的 JSON 字段名等于 412 的 `passTokenParam` / `scopeParam`，用 `data[passTokenParam]` 读取，不要写死头名。**不要**依赖 `data.captcha`（签发成功体不含 anji `ResponseModel`）。不要再用 `captchaVerification` 跟业务请求走。
 
-**失败**：滑块错误、scope 无对应策略、Redis 无法签发。此时 **不要** 重试业务请求。
+**失败**：滑块错误、scope 无对应策略、Redis 无法签发。不要重试业务请求。
 
-未带 `_vc_scope`：可能只返回 anji 结果且 **没有** PassToken，登录仍会 412。挑战场景必须带 scope。
-
-### 3.6 重试业务请求
-
-原方法、原 path、原 body/header 保持不变，增加：
-
-```text
-?_vc_pass_token=<data._vc_pass_token>&_vc_scope=<data.scope>
-```
-
-`_vc_scope` 必须与 412 / check 响应中的 scope **完全一致**（例如限流策略常用 `anon`，不是 `default`）。若原 URL 已有 query，用 `&` 拼接。`remaining` 次内可重复消费；登录建议每次登录拿新 token。
-
-错误 token、过期、错误 scope → 再次 412，重新走 3.3。
+未带 `{scopeParam}` Header：可能只返回 anji 结果且 **没有** PassToken，原请求仍会 412。挑战场景必须带 scope。只把 scope 放 query **不会**签发。
 
 ### 3.7 与旧模型的差异（破坏性）
 
 | 旧（`verifyUrls`） | 新（L6） |
 |---|---|
-| 登录请求带 `_vc_code` / captchaVerification | 登录请求带 `_vc_pass_token` |
-| 网关 `checkOnly` 拦登录 | 网关先 412，验码在 `/vc/image/check` |
-| 配置在 `ingot.vc.verifyUrls`（仅 Nacos） | 配置在挑战策略（中心或 Nacos） |
+| 业务请求带 `_vc_code` / captchaVerification | 先 412，再带 PassToken **Header** 重试 |
+| 只处理登录页 | **所有**经网关请求统一拦截 412 |
+| 配置在 `ingot.vc.verifyUrls` | 配置在挑战策略；前端不维护 URL 列表 |
 
-旧前端不改会在启用挑战后 **无法登录**（一直 412）。
+未接全局 412 的旧前端，在启用挑战后会 **无法登录**，敏感接口也会一直 412。
 
 ---
 
@@ -308,7 +342,7 @@ PassToken **与 scope** 必须出现在 **第 6 步的 query**，不要放进 BF
 
 | HTTP | `code` | 前端 |
 |---|---|---|
-| 412 | `CHALLENGE_REQUIRED` | 弹滑块，按 §3 |
+| 412 | `CHALLENGE_REQUIRED` | 全局拦截，按 §3 用 `data` 动态拉码 / 验码 / 重试 |
 | 403 | `FORBIDDEN_BLOCKED` | 封禁，不是验证码问题 |
 | 403 | `ACCOUNT_LOCKED` | 账号锁定 |
 | 429 | `LIMIT_TOO_MANY` | 限流；无挑战策略时出现 |
@@ -323,4 +357,4 @@ PassToken **与 scope** 必须出现在 **第 6 步的 query**，不要放进 BF
 | 412 组装 | `ChallengeResponses.buildPayload` |
 | 拦截 | `ChallengeFilter` |
 | 验码签发 | 网关 captcha `check` + `PassTokenStore` |
-| 查询参数名 | `VCConstants.QUERY_PARAMS_PASS_TOKEN` / `QUERY_PARAMS_SCOPE` |
+| 请求头名 | `VCConstants.HEADER_PASS_TOKEN` / `HEADER_SCOPE`（`In-Vc-Pass-Token` / `In-Vc-Scope`） |

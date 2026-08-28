@@ -10,8 +10,10 @@
 | `In-Inner-Client-Real-IP` | `INNER_CLIENT_REAL_IP` | 网关 `RequestGlobalFilter` | 标准化客户端真实 IP；限流 IP、黑白名单 IP、下游 IP 解析首选 |
 | `In-Inner-User-Id` | `INNER_USER_ID` | 网关 `IdentityResolveFilter` | JWT 解析后的 userId；Sentinel USER 维度 |
 | `In-Inner-From` | `SECURITY_FROM` | 网关链路 | 请求来源标识 |
+| `In-Vc-Scope` | `VCConstants.HEADER_SCOPE` | 客户端 | 挑战 scope；与 412 `data.scope` 一致 |
+| `In-Vc-Pass-Token` | `VCConstants.HEADER_PASS_TOKEN` | 客户端 | 挑战通行证；禁止放 query |
 
-定义位置：`com.ingot.framework.commons.constants.HeaderConstants`。
+定义位置：`com.ingot.framework.commons.constants.HeaderConstants`。挑战头定义在 `VCConstants`，**不是**内部头，入口不会剥离。见 [challenge-verification](../../security/challenge-verification/SPEC.md)。
 
 ## 2. 内部头安全约束
 

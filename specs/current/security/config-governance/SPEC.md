@@ -23,7 +23,7 @@
 |---|---|---|
 | `in-security-crypto.yml` | `ingot.security.crypto` | PMS、Member、BFF、Security |
 | `in-security-policy.yml` | `replay`、`credential`、`account.signal`、`event.delivery`/`mysql`、`ignoreTenantValidateRoleCodeList` | PMS、Member、Security、BFF |
-| `in-security-gateway.yml` | 限流 / 黑名单 / 违规升级**地板**（groups/rules/items，**不写**各域 `enabled`/`mode`） | 仅 Gateway |
+| `in-security-gateway.yml` | 限流 / 黑名单 / 违规升级 / 挑战**地板**（groups/rules/items，**不写**各域 `enabled`/`mode`） | 仅 Gateway |
 | `in-service-pms.yml` | `account.mode`/`lockout`、event L3 | PMS |
 | `in-service-member.yml` | `account.mode`/`lockout`、event L3 | Member |
 | `in-service-auth.yml` | `oauth2.auth`、`jwk`、`access`、`session`、event L3 | Auth（**不**挂 policy / crypto / gateway-policy） |
@@ -51,6 +51,8 @@
 | `ingot.security.ratelimit` `enabled`/`mode` | L2 | `in-service-gateway.yml` | Gateway |
 | `ingot.security.ratelimit.policy.groups/rules` | L1 | `in-security-gateway.yml` | Gateway |
 | `ingot.security.blacklist` / `violation-escalation` | 同限流拆分 | 同上 | Gateway |
+| `ingot.security.challenge` `enabled`/`mode` | L2 | `in-service-gateway.yml` | Gateway |
+| `ingot.security.challenge.policy.groups/policies` | L1 | `in-security-gateway.yml` | Gateway |
 | `ingot.security.policy.client` | L2 缓存调参 | `in-service-gateway.yml` | Gateway |
 | `ingot.security.event` L3 | L3 | 各 `in-service-*.yml` | 对应进程 |
 
