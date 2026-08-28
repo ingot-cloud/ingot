@@ -79,7 +79,7 @@ public class ChallengeProperties {
      * <ul>
      *     <li>{@code false}（默认）：不装配 {@link com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService}；
      *         网关限流触发后不弹出验证码，直接返回 Sentinel 429。</li>
-     *     <li>{@code true}：装配 SDK + 网关挑战过滤器，按策略触发 SLIDER / SMS 等验证码。</li>
+     *     <li>{@code true}：装配 SDK + 网关挑战过滤器，按策略触发 IMAGE / SLIDER 验证码。</li>
      * </ul>
      * <p>本字段由 {@link ChallengeAutoConfiguration} 上的 {@code @ConditionalOnProperty} 按属性键
      * {@code ingot.security.challenge.enabled} 消费，是挑战域生效的<b>唯一</b>门控，

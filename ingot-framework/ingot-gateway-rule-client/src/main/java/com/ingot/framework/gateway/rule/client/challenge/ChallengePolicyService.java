@@ -1,5 +1,6 @@
 package com.ingot.framework.gateway.rule.client.challenge;
 
+import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeSnapshot;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger;
@@ -39,6 +40,20 @@ public interface ChallengePolicyService {
     ChallengePolicy match(String requestPath, HttpMethod method, ChallengeTrigger trigger);
 
     /**
+     * 判断当前路径是否被指定 PassToken scope 覆盖（不区分 trigger）。
+     *
+     * <p>消费 PassToken 前调用：仅当编译后的启用策略在该 path + method 上声明了同一
+     * {@link ChallengePolicy#getScope()} 时才允许 consume。不要用未编译的
+     * {@link #findByScope(String)} 做路径判断。</p>
+     *
+     * @param requestPath 请求路径（不含 query string）
+     * @param method      HTTP 方法，可为 null（视为 ANY）
+     * @param scope       请求头中的 PassToken scope；空则返回 null
+     * @return 命中的策略；路径未覆盖该 scope 返回 null
+     */
+    ChallengePolicy matchByScope(String requestPath, HttpMethod method, String scope);
+
+    /**
      * 获取当前挑战策略快照（原始策略列表 + 版本号）。
      */
     ChallengeSnapshot getSnapshot();
@@ -64,7 +79,9 @@ public interface ChallengePolicyService {
             return null;
         }
         return snapshot.getPolicies().stream()
-                .filter(p -> p.isEnabled() && scope.equals(p.getScope()))
+                .filter(p -> p.isEnabled()
+                        && scope.equals(p.getScope())
+                        && ChallengeCaptchaType.isSupported(p.getChallengeType()))
                 .findFirst()
                 .orElse(null);
     }

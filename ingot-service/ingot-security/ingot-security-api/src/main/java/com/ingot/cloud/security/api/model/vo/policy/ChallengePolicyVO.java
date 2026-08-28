@@ -7,7 +7,11 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 挑战策略 VO（Phase 4 启用）。
+ * <p>挑战策略快照与管理面视图对象，对应表 {@code security_challenge_policy}。</p>
+ *
+ * <p>L6 执行面只认 {@link com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType#IMAGE}
+ * / {@link com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType#SLIDER}；
+ * {@code SMS}/{@code EMAIL} 可出现在历史行中，编译时跳过。</p>
  *
  * @author jy
  * @since 2026/5/26
@@ -16,6 +20,26 @@ import java.util.List;
 public class ChallengePolicyVO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 触发条件字面量 {@code always}（匹配即 412）。
+     */
+    public static final String TRIGGER_ALWAYS = "always";
+
+    /**
+     * 触发条件字面量 {@code on_rate_limit}（限流命中后 412）。
+     */
+    public static final String TRIGGER_ON_RATE_LIMIT = "on_rate_limit";
+
+    /**
+     * PassToken {@code scope} 最大长度，与表列 {@code varchar(64)} 一致。
+     */
+    public static final int SCOPE_MAX_LENGTH = 64;
+
+    /**
+     * {@code passTokenTtlSec} / {@code passTokenRemaining} 下限。
+     */
+    public static final int PASS_TOKEN_MIN = 1;
 
     private Long id;
 
@@ -26,12 +50,14 @@ public class ChallengePolicyVO implements Serializable {
     private List<EndpointPatternVO> patternList;
 
     /**
-     * always / on_rate_limit。登录失败锁定由 account-domain 处理，不支持 on_failure_threshold。
+     * 触发条件：{@link #TRIGGER_ALWAYS} 或 {@link #TRIGGER_ON_RATE_LIMIT}。
+     * 登录失败锁定由 account-domain 处理，不支持 {@code on_failure_threshold}。
      */
     private String trigger;
 
     /**
-     * 挑战类型: SLIDER / IMAGE / SMS / EMAIL。
+     * 挑战类型：L6 仅 {@code SLIDER} / {@code IMAGE}（均走 {@code /vc/image}）。
+     * 历史 {@code SMS}/{@code EMAIL} 行执行面跳过。
      */
     private String challengeType;
 

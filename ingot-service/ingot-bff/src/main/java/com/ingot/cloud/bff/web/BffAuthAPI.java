@@ -50,7 +50,8 @@ public class BffAuthAPI implements RShortcuts {
 
     /**
      * 登录：提交账号密码，返回可选租户列表。
-     * 前端只传 username/password/vcCode，不传任何 OAuth2 参数。
+     * 前端只传 username/password，不传任何 OAuth2 参数。
+     * 登录前若网关命中 ALWAYS 挑战，客户端须先完成滑块并携带 PassToken 重试。
      *
      * @param dto      登录参数
      * @param request  当前请求

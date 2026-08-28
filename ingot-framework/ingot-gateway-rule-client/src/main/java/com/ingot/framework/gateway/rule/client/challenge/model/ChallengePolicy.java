@@ -106,16 +106,15 @@ public class ChallengePolicy implements Serializable {
     private ChallengeTrigger trigger;
 
     /**
-     * 验证码类型：{@code SLIDER} / {@code IMAGE} / {@code SMS} / {@code EMAIL}。
-     * 网关侧映射为 VC 路由类型（如 SLIDER → image），见
-     * {@link com.ingot.framework.gateway.rule.client.challenge.internal.ChallengeTypes}。
+     * 验证码类型：L6 执行面仅 {@code SLIDER} / {@code IMAGE}（均映射为 VC 路由 {@code image}）。
+     * 历史 {@code SMS}/{@code EMAIL} 在编译时跳过。
      */
     private String challengeType;
 
     /**
      * PassToken 有效期（秒）。
      * 用户完成验证码后签发的通行令牌在 Redis 中的 TTL；
-     * 客户端在后续请求携带 {@code _vc_pass_token} 可跳过限流或 ALWAYS 挑战。
+     * 客户端在后续请求携带 Header {@code In-Vc-Pass-Token} 可跳过限流或 ALWAYS 挑战。
      */
     private int passTokenTtlSec;
 

@@ -2,6 +2,7 @@ package com.ingot.cloud.gateway.security;
 
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
+import com.ingot.framework.gateway.rule.client.challenge.internal.ChallengeTypes;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger;
 import com.ingot.framework.vc.common.VCConstants;
@@ -27,11 +28,17 @@ import java.util.Map;
  *
  * <p>流程：</p>
  * <ol>
- *     <li>请求带 {@code _vc_pass_token}：消费 token，命中则放行（标记 attribute 让 Sentinel 跳过）</li>
+ *     <li>请求带 Header {@link VCConstants#HEADER_PASS_TOKEN} 与 {@link VCConstants#HEADER_SCOPE}，
+ *         且 {@link ChallengePolicyService#matchByScope} 命中当前路径：按请求 scope 消费 token，
+ *         成功则放行（标记 attribute 让 Sentinel 跳过）</li>
+ *     <li>token 无效、缺 scope、路径未覆盖该 scope、或只把 token 放 query：命中 ALWAYS 则 412，
+ *         否则交后续 Sentinel（不 consume）</li>
  *     <li>未带 token + 命中 ALWAYS 挑战策略：返回 412 + challenge_required</li>
  *     <li>未命中 ALWAYS：交后续 Sentinel，限流触发时由 {@link SentinelBlockHandler} 检查
  *         {@link ChallengeTrigger#ON_RATE_LIMIT} 挑战策略，命中即返回 412 挑战，否则 429。</li>
  * </ol>
+ *
+ * <p>{@code /vc/**} 不做 ALWAYS 挑战，避免验码接口自挑战。白名单请求直接放行。</p>
  *
  * <p>临时封禁（403）由 {@link SentinelBlockHandler} 在限流违规累积达阈值后异步写入，
  * 与验码失败次数无关。登录连续失败锁定由 account-domain 处理，不使用
@@ -76,18 +83,26 @@ public class ChallengeFilter implements GlobalFilter, Ordered {
         if (Boolean.TRUE.equals(exchange.getAttributes().get(BlacklistFilter.ATTR_WHITELISTED))) {
             return chain.filter(exchange);
         }
+        String path = exchange.getRequest().getURI().getPath();
+        if (ChallengeTypes.isVcPath(path)) {
+            return chain.filter(exchange);
+        }
         ChallengePolicyService service = challengeProvider.getIfAvailable();
         if (service == null) {
             return chain.filter(exchange);
         }
-        String path = exchange.getRequest().getURI().getPath();
         ChallengePolicy alwaysPolicy = service.match(path, exchange.getRequest().getMethod(),
                 ChallengeTrigger.ALWAYS);
 
-        String token = firstQueryParam(exchange, VCConstants.QUERY_PARAMS_PASS_TOKEN);
-        if (token != null) {
-            String scope = alwaysPolicy != null && alwaysPolicy.getScope() != null
-                    ? alwaysPolicy.getScope() : GatewaySecurityConstants.DEFAULT_PASS_TOKEN_SCOPE;
+        String token = firstHeader(exchange, VCConstants.HEADER_PASS_TOKEN);
+        if (hasText(token)) {
+            String scope = firstHeader(exchange, VCConstants.HEADER_SCOPE);
+            if (!hasText(scope) || service.matchByScope(path, exchange.getRequest().getMethod(), scope) == null) {
+                if (alwaysPolicy != null) {
+                    return writeChallenge(exchange, alwaysPolicy);
+                }
+                return chain.filter(exchange);
+            }
             return passTokenStore.consume(scope, token)
                     .flatMap(ok -> {
                         if (Boolean.TRUE.equals(ok)) {
@@ -114,12 +129,16 @@ public class ChallengeFilter implements GlobalFilter, Ordered {
     private Mono<Void> writeChallenge(ServerWebExchange exchange, ChallengePolicy policy) {
         Map<String, Object> data = ChallengeResponses.buildPayload(policy);
         exchange.getResponse().getHeaders().add(HttpHeaders.WWW_AUTHENTICATE,
-                "Captcha realm=\"" + data.get("vcType") + "\"");
+                "Captcha realm=\"" + data.get(ChallengeResponses.FIELD_VC_TYPE) + "\"");
         return responseWriter.writeJson(exchange.getResponse(), HttpStatus.PRECONDITION_FAILED,
                 R.error(data, CHALLENGE_CODE, GatewaySecurityConstants.MSG_CAPTCHA_REQUIRED));
     }
 
-    static String firstQueryParam(ServerWebExchange exchange, String key) {
-        return exchange.getRequest().getQueryParams().getFirst(key);
+    static String firstHeader(ServerWebExchange exchange, String name) {
+        return exchange.getRequest().getHeaders().getFirst(name);
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

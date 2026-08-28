@@ -98,7 +98,7 @@ public class BffAuthService {
     /**
      * 第一步：登录（预授权），返回可选租户列表。
      * <p>
-     * 前端只传 username/password/vcCode，BFF 自动生成 PKCE、state 等 OAuth2 参数，
+     * 前端只传 username/password，BFF 自动生成 PKCE、state 等 OAuth2 参数，
      * 并通过 Feign 调用 auth 服务的 pre_authorize 接口。
      * Auth 返回的 JSESSIONID cookie 会被捕获并暂存到 BFF Session，
      * 供后续 selectTenant 调用时转发给 Auth 恢复 SecurityContext。

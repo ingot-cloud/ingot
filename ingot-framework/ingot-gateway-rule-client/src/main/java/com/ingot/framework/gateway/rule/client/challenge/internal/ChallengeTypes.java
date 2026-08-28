@@ -1,12 +1,13 @@
 package com.ingot.framework.gateway.rule.client.challenge.internal;
 
+import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
 import lombok.experimental.UtilityClass;
 
 /**
- * 挑战策略验证码类型 → VC 模块路由类型映射。
+ * <p>挑战策略验证码类型到 VC 模块路由类型的映射。</p>
  *
- * <p>Platform / DB 侧策略字段 {@code challengeType} 常用枚举名（如 {@code SLIDER}）；
- * 网关转发到 VC 服务时需转换为 VC 路由识别的类型字符串（如 {@code image}）。</p>
+ * <p>L6 仅 {@link ChallengeCaptchaType#IMAGE} / {@link ChallengeCaptchaType#SLIDER}
+ * 可执行，均映射为 {@link #VC_IMAGE}。短信 / 邮箱不进入此映射。</p>
  *
  * @author jy
  * @since 2026/5/28
@@ -14,34 +15,36 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ChallengeTypes {
 
-    /** 滑块 / 图形验证码，对应 VC 路由 {@code /vc/image/**}。 */
+    /**
+     * 滑块 / 图形验证码对应的 VC 路由类型，路径前缀 {@code /vc/image}。
+     */
     public static final String VC_IMAGE = "image";
 
-    /** 短信验证码，对应 VC 路由 {@code /vc/sms/**}。 */
-    public static final String VC_SMS = "sms";
-
-    /** 邮件验证码，对应 VC 路由 {@code /vc/email/**}。 */
-    public static final String VC_EMAIL = "email";
+    /**
+     * VC 接口路径前缀，挑战策略不得匹配此前缀，以免验码接口自挑战。
+     */
+    public static final String VC_PATH_PREFIX = ChallengeCaptchaType.VC_PATH_PREFIX;
 
     /**
-     * 将策略 challengeType 转换为 VC 路由类型。
-     * <ul>
-     *     <li>{@code SLIDER} / {@code IMAGE} → {@link #VC_IMAGE}</li>
-     *     <li>{@code SMS} → {@link #VC_SMS}</li>
-     *     <li>{@code EMAIL} → {@link #VC_EMAIL}</li>
-     *     <li>其他值 → 原值转小写透传</li>
-     *     <li>null / 空白 → 默认 {@link #VC_IMAGE}</li>
-     * </ul>
+     * 将策略 challengeType 转为 VC 路由类型。
+     *
+     * @param challengeType 策略字段；{@code SLIDER}/{@code IMAGE}（忽略大小写）→ {@link #VC_IMAGE}
+     * @return VC 类型；不受支持的取值（含 {@code null}、空白、SMS/EMAIL）返回 {@code null}
      */
     public static String toVcType(String challengeType) {
-        if (challengeType == null || challengeType.isBlank()) {
-            return VC_IMAGE;
+        if (!ChallengeCaptchaType.isSupported(challengeType)) {
+            return null;
         }
-        return switch (challengeType.trim().toUpperCase()) {
-            case "SLIDER", "IMAGE" -> VC_IMAGE;
-            case "SMS" -> VC_SMS;
-            case "EMAIL" -> VC_EMAIL;
-            default -> challengeType.trim().toLowerCase();
-        };
+        return VC_IMAGE;
+    }
+
+    /**
+     * 判断请求路径是否为验证码接口，此类请求不得再套 ALWAYS 挑战。
+     *
+     * @param path 网关 path，可为 {@code null}
+     * @return {@code true} 当路径为 {@code /vc} 或其子路径
+     */
+    public static boolean isVcPath(String path) {
+        return ChallengeCaptchaType.isVcPath(path);
     }
 }

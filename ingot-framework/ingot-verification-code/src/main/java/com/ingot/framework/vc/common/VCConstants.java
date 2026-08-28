@@ -100,17 +100,20 @@ public interface VCConstants {
      */
     String QUERY_PARAMS_CODE = "_vc_code";
     /**
-     * 请求参数，挑战通过后下发的临时通行令牌（PassToken）。
+     * 挑战通过后下发的临时通行令牌（PassToken）请求头。
      *
-     * <p>由网关 ChallengeFilter 在限流命中后 / 强制挑战时下发，验证码校验成功后通过
-     * 此查询参数携带，下次同一 scope 内的请求可在 TTL 内免再次挑战。</p>
+     * <p>验码成功后与业务重试均携带此头；禁止放 query。412 {@code data.passTokenParam}
+     * 的值即本常量。公开头使用 {@code In-} 前缀，不要写成 {@code In-Inner-*}（网关入口会剥离）。</p>
      */
-    String QUERY_PARAMS_PASS_TOKEN = "_vc_pass_token";
+    String HEADER_PASS_TOKEN = "In-Vc-Pass-Token";
 
     /**
-     * 请求参数，412 挑战响应中的 scope，验码时回传以便签发 PassToken。
+     * 挑战 scope 请求头。值与 412 {@code data.scope} 一致。
+     *
+     * <p>验码签发与消费均读此头；禁止放 query。412 {@code data.scopeParam} 的值即本常量。
+     * 公开头使用 {@code In-} 前缀，不要写成 {@code In-Inner-*}（网关入口会剥离）。</p>
      */
-    String QUERY_PARAMS_SCOPE = "_vc_scope";
+    String HEADER_SCOPE = "In-Vc-Scope";
 
     /**
      * 验证码类型

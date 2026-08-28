@@ -3,6 +3,9 @@ package com.ingot.cloud.security.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.cloud.security.api.event.SecurityPolicyInvalidationEvent;
+import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
+import com.ingot.cloud.security.api.model.vo.policy.ChallengePolicyVO;
+import com.ingot.cloud.security.api.model.vo.policy.EndpointPatternVO;
 import com.ingot.cloud.security.mapper.GatewayBlacklistEventMapper;
 import com.ingot.cloud.security.mapper.GatewayEndpointGroupMapper;
 import com.ingot.cloud.security.mapper.GatewayIpListMapper;
@@ -195,7 +198,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public SecurityChallengePolicy saveChallengePolicy(SecurityChallengePolicy policy) {
         assertionChecker.checkOperation(policy.getCode() != null, "SecurityPolicy.CodeNotNull");
-        validateChallengeTrigger(policy);
+        validateChallengePolicy(policy);
         LocalDateTime now = DateUtil.now();
         policy.setCreatedAt(now);
         policy.setUpdatedAt(now);
@@ -208,7 +211,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public SecurityChallengePolicy updateChallengePolicy(SecurityChallengePolicy policy) {
         assertionChecker.checkOperation(policy.getId() != null, "SecurityPolicy.IdNotNull");
-        validateChallengeTrigger(policy);
+        validateChallengePolicy(policy);
         policy.setUpdatedAt(DateUtil.now());
         challengeMapper.updateById(policy);
         publishChanged(com.ingot.cloud.security.api.event.SecurityPolicyDomain.CHALLENGE_POLICY);
@@ -330,12 +333,56 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
         return t == null ? 0L : t.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
+    private void validateChallengePolicy(SecurityChallengePolicy policy) {
+        validateChallengeTrigger(policy);
+        String scope = policy.getScope();
+        assertionChecker.checkOperation(scope != null && !scope.isBlank()
+                        && scope.length() <= ChallengePolicyVO.SCOPE_MAX_LENGTH,
+                "SecurityPolicy.ChallengeScopeInvalid");
+        assertionChecker.checkOperation(ChallengeCaptchaType.isSupported(policy.getChallengeType()),
+                "SecurityPolicy.ChallengeTypeInvalid");
+        assertionChecker.checkOperation(policy.getPassTokenTtlSec() != null
+                        && policy.getPassTokenTtlSec() >= ChallengePolicyVO.PASS_TOKEN_MIN
+                        && policy.getPassTokenRemaining() != null
+                        && policy.getPassTokenRemaining() >= ChallengePolicyVO.PASS_TOKEN_MIN,
+                "SecurityPolicy.ChallengePassTokenInvalid");
+        boolean hasGroup = policy.getGroupCode() != null && !policy.getGroupCode().isBlank();
+        boolean hasPatterns = policy.getPatternList() != null && !policy.getPatternList().isEmpty();
+        assertionChecker.checkOperation(hasGroup || hasPatterns, "SecurityPolicy.ChallengePathRequired");
+        assertionChecker.checkOperation(!coversVcPath(policy), "SecurityPolicy.ChallengeVcPathForbidden");
+    }
+
+    private boolean coversVcPath(SecurityChallengePolicy policy) {
+        if (coversVcPath(policy.getPatternList())) {
+            return true;
+        }
+        if (policy.getGroupCode() == null || policy.getGroupCode().isBlank()) {
+            return false;
+        }
+        GatewayEndpointGroup group = groupMapper.selectOne(Wrappers.<GatewayEndpointGroup>lambdaQuery()
+                .eq(GatewayEndpointGroup::getCode, policy.getGroupCode()));
+        return group != null && coversVcPath(group.getPatternList());
+    }
+
+    private static boolean coversVcPath(List<EndpointPatternVO> patterns) {
+        if (patterns == null || patterns.isEmpty()) {
+            return false;
+        }
+        for (EndpointPatternVO pattern : patterns) {
+            if (pattern != null && ChallengeCaptchaType.isVcPath(pattern.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void validateChallengeTrigger(SecurityChallengePolicy policy) {
         String trigger = policy.getTrigger();
         assertionChecker.checkOperation(trigger != null, "SecurityPolicy.ChallengeTriggerNotNull");
         String normalized = trigger.trim().toLowerCase();
         assertionChecker.checkOperation(
-                "always".equals(normalized) || "on_rate_limit".equals(normalized),
+                ChallengePolicyVO.TRIGGER_ALWAYS.equals(normalized)
+                        || ChallengePolicyVO.TRIGGER_ON_RATE_LIMIT.equals(normalized),
                 "SecurityPolicy.ChallengeTriggerInvalid");
     }
 }

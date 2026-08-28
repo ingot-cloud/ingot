@@ -3,23 +3,28 @@ package com.ingot.cloud.gateway.captcha;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cn.hutool.core.util.StrUtil;
 import com.anji.captcha.model.common.ResponseModel;
+import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
 import com.ingot.cloud.gateway.security.PassTokenStore;
-import com.ingot.framework.commons.constants.SecurityConstants;
+import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.utils.reactive.WebUtil;
 import com.ingot.framework.gateway.rule.client.challenge.ChallengePolicyService;
 import com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy;
 import com.ingot.framework.vc.VCGenerator;
+import com.ingot.framework.vc.common.InVCMessageSource;
+import com.ingot.framework.vc.common.InnerCheck;
 import com.ingot.framework.vc.common.VCConstants;
+import com.ingot.framework.vc.common.VCErrorCode;
+import com.ingot.framework.vc.common.VCException;
 import com.ingot.framework.vc.common.VCType;
 import com.ingot.framework.vc.module.captcha.DefaultCaptchaVCProcessor;
+import com.ingot.framework.vc.module.reactive.ReactorUtils;
 import com.ingot.framework.vc.module.reactive.VCProcessor;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -28,17 +33,12 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * 网关 Captcha 处理器：保留原有登录验码逻辑，并在风控挑战场景下签发 PassToken。
+ * 网关 Captcha 处理器：图形/滑块验码，并在挑战场景下签发 PassToken。
  *
  * <p>注册为 VC 路由 {@code image}（bean 名 {@link VCConstants#BEAN_NAME_PROCESSOR_IMAGE}）。
- * 当 {@code POST /vc/image/check?_vc_scope=...} 且挑战域开启时，验码成功后响应
- * {@code data._vc_pass_token}，供业务请求重试携带 {@link VCConstants#QUERY_PARAMS_PASS_TOKEN}。</p>
- *
- * <h3>与挑战策略联动</h3>
- * <ul>
- *     <li>412 响应体中的 {@code vcType} 映射到 VC 路由（见 {@link com.ingot.framework.gateway.rule.client.challenge.internal.ChallengeTypes}）</li>
- *     <li>PassToken 写入 Redis（{@link PassTokenStore}），scope 须与挑战策略 {@code scope} 一致</li>
- * </ul>
+ * {@code POST /vc/image/check} 无 Header {@link VCConstants#HEADER_SCOPE} 时只返回 captcha
+ * 结果；带 scope 时验码成功后签发 PassToken（JSON 键名等于头名，不含嵌套 {@code captcha}）。
+ * Redis 不可用或 scope 无策略时 fail-closed，不得成功且无 token。</p>
  *
  * <h3>相关配置</h3>
  * <pre>{@code
@@ -60,8 +60,6 @@ import reactor.core.publisher.Mono;
 @Component(VCConstants.BEAN_NAME_PROCESSOR_IMAGE)
 @RequiredArgsConstructor
 public class CaptchaVCProcessor implements VCProcessor {
-    private static final String TOKEN_ENDPOINT = "/auth" + SecurityConstants.TOKEN_ENDPOINT_URI;
-    private static final String TOKEN_PRE_AUTHORIZE = "/auth" + SecurityConstants.PRE_AUTHORIZE_URI;
     private final CaptchaService captchaService;
     private final ObjectProvider<ChallengePolicyService> challengeProvider;
     private final PassTokenStore passTokenStore;
@@ -72,79 +70,86 @@ public class CaptchaVCProcessor implements VCProcessor {
         defaultCaptchaVCProcessor = new DefaultCaptchaVCProcessor(captchaService);
     }
 
+    /**
+     * 向 anji 申请一张图形 / 滑块挑战。
+     *
+     * @param request   当前请求
+     * @param generator 未使用；captcha 由 anji 生成
+     * @return 成功时 data 为 anji 拉码结果
+     */
     @Override
     public Mono<ServerResponse> handle(ServerRequest request, VCGenerator generator) {
         return defaultCaptchaVCProcessor.handle(request, generator);
     }
 
+    /**
+     * 登录保护已改为 412 + PassToken，不再随业务请求带码校验。
+     *
+     * @param type     验证码类型
+     * @param exchange 当前请求
+     * @param chain    后续过滤器
+     * @return 直接放行后续链路
+     */
     @Override
     public Mono<Void> checkOnly(VCType type, ServerWebExchange exchange, WebFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String path = request.getURI().getPath();
-
-        if (StrUtil.equals(TOKEN_ENDPOINT, path)) {
-            String grantType = request.getQueryParams().getFirst("grant_type");
-            if (!StrUtil.equals(grantType, SecurityConstants.GrantType.PASSWORD)) {
-                return chain.filter(exchange);
-            }
-        }
-
-        if (StrUtil.equals(TOKEN_PRE_AUTHORIZE, path)) {
-            String preGrantType = request.getQueryParams().getFirst("pre_grant_type");
-            if (StrUtil.equals(preGrantType, SecurityConstants.PreAuthorizationGrantType.SESSION)) {
-                return chain.filter(exchange);
-            }
-        }
-
-        return defaultCaptchaVCProcessor.checkOnly(type, exchange, chain);
+        return chain.filter(exchange);
     }
 
+    /**
+     * 校验滑块/图形结果；带 Header {@link VCConstants#HEADER_SCOPE} 时签发 PassToken。
+     *
+     * @param type    验证码类型
+     * @param request 校验请求，scope 只从 Header 读取
+     * @return 成功响应；验码失败或签发失败为错误流
+     */
     @Override
     public Mono<ServerResponse> check(VCType type, ServerRequest request) {
-//        try {
-//            String pointJson = ReactorUtils.getFromRequest(request, "pointJson");
-//            String token = ReactorUtils.getFromRequest(request, "token");
-//
-//            CaptchaVO vo = new CaptchaVO();
-//            vo.setPointJson(pointJson);
-//            vo.setToken(token);
-//            vo.setBrowserInfo(WebUtil.getClientIP(request));
-//            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
-//            ResponseModel responseModel = captchaService.check(vo);
-//
-//            String scope = request.queryParam(VCConstants.QUERY_PARAMS_SCOPE).orElse(null);
-//            return issuePassToken(scope)
-//                    .map(passToken -> buildCheckResponse(responseModel, scope, passToken))
-//                    .flatMap(ReactorUtils::successResponse);
-//        } catch (VCException e) {
-//            return Mono.error(e);
-//        }
-        return defaultCaptchaVCProcessor.check(type, request);
+        try {
+            String pointJson = ReactorUtils.getFromRequest(request, "pointJson");
+            String token = ReactorUtils.getFromRequest(request, "token");
+
+            CaptchaVO vo = new CaptchaVO();
+            vo.setPointJson(pointJson);
+            vo.setToken(token);
+            vo.setBrowserInfo(WebUtil.getClientIP(request));
+            vo.setCaptchaType(VCConstants.IMAGE_CODE_TYPE);
+            ResponseModel responseModel = captchaService.check(vo);
+            InnerCheck.check(responseModel.isSuccess(), "vc.check.image.checkFailure");
+
+            String scope = request.headers().firstHeader(VCConstants.HEADER_SCOPE);
+            if (scope == null || scope.isBlank()) {
+                return ReactorUtils.successResponse(R.ok(responseModel));
+            }
+            return issuePassToken(scope)
+                    .flatMap(passToken -> ReactorUtils.successResponse(
+                            buildCheckResponse(scope, passToken)));
+        } catch (VCException e) {
+            return Mono.error(e);
+        }
     }
 
     private Mono<String> issuePassToken(String scope) {
-        if (scope == null || scope.isBlank()) {
-            return Mono.empty();
-        }
         ChallengePolicyService service = challengeProvider.getIfAvailable();
         if (service == null) {
-            return Mono.empty();
+            return Mono.error(passTokenIssueFailure());
         }
         ChallengePolicy policy = service.findByScope(scope);
-        if (policy == null) {
-            return Mono.empty();
+        if (policy == null || !ChallengeCaptchaType.isSupported(policy.getChallengeType())) {
+            return Mono.error(passTokenIssueFailure());
         }
-        return passTokenStore.issue(scope, policy.getPassTokenTtlSec(), policy.getPassTokenRemaining());
+        return passTokenStore.issue(scope, policy.getPassTokenTtlSec(), policy.getPassTokenRemaining())
+                .switchIfEmpty(Mono.error(passTokenIssueFailure()));
     }
 
-    private static R<?> buildCheckResponse(ResponseModel captchaResult, String scope, String passToken) {
-        if (passToken == null) {
-            return R.ok(captchaResult);
-        }
+    private static VCException passTokenIssueFailure() {
+        return new VCException(VCErrorCode.Check,
+                InVCMessageSource.getAccessor().getMessage("vc.check.image.passTokenIssueFailure"));
+    }
+
+    private static R<?> buildCheckResponse(String scope, String passToken) {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("captcha", captchaResult);
-        data.put(VCConstants.QUERY_PARAMS_PASS_TOKEN, passToken);
-        data.put(VCConstants.QUERY_PARAMS_SCOPE, scope);
+        data.put(VCConstants.HEADER_PASS_TOKEN, passToken);
+        data.put(VCConstants.HEADER_SCOPE, scope);
         return R.ok(data);
     }
 }

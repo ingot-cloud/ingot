@@ -43,6 +43,12 @@ public class LocalChallengePolicyService implements ChallengePolicyService {
         return resolve().match(requestPath, method, trigger);
     }
 
+    /** 按路径 + 方法 + scope 匹配；委托 {@link CompiledChallengePolicy#matchByScope}。 */
+    @Override
+    public ChallengePolicy matchByScope(String requestPath, HttpMethod method, String scope) {
+        return resolve().matchByScope(requestPath, method, scope);
+    }
+
     /** 返回 yaml 原始策略列表 + 进程内版本号。 */
     @Override
     public ChallengeSnapshot getSnapshot() {

@@ -3,6 +3,7 @@ package com.ingot.framework.gateway.rule.client.challenge.internal;
 import java.util.Collections;
 import java.util.List;
 
+import com.ingot.cloud.security.api.model.enums.ChallengeCaptchaType;
 import com.ingot.cloud.security.api.model.vo.policy.ChallengePolicyVO;
 import com.ingot.cloud.security.api.model.vo.policy.EndpointPatternVO;
 import com.ingot.cloud.security.api.model.vo.policy.SecurityPolicySnapshotVO;
@@ -48,6 +49,12 @@ public class RemoteChallengePolicyService implements ChallengePolicyService {
     @Override
     public ChallengePolicy match(String requestPath, HttpMethod method, ChallengeTrigger trigger) {
         return resolve().compiled.match(requestPath, method, trigger);
+    }
+
+    /** 按路径 + 方法 + scope 匹配；委托已编译索引。 */
+    @Override
+    public ChallengePolicy matchByScope(String requestPath, HttpMethod method, String scope) {
+        return resolve().compiled.matchByScope(requestPath, method, scope);
     }
 
     /** 返回远端快照原始策略列表 + 版本号。 */
@@ -109,7 +116,8 @@ public class RemoteChallengePolicyService implements ChallengePolicyService {
     }
 
     private static boolean isActivePolicy(ChallengePolicy policy) {
-        return policy != null && policy.isEnabled() && policy.getCode() != null;
+        return policy != null && policy.isEnabled() && policy.getCode() != null
+                && ChallengeCaptchaType.isSupported(policy.getChallengeType());
     }
 
     private static EndpointPattern toPattern(EndpointPatternVO v) {
