@@ -248,6 +248,7 @@ CREATE TABLE `security_challenge_policy` (
 -- Records of security_challenge_policy
 -- ----------------------------
 BEGIN;
+INSERT INTO `security_challenge_policy` (`id`, `code`, `group_code`, `pattern_list`, `trigger`, `challenge_type`, `failure_dimension`, `failure_threshold`, `failure_window_sec`, `pass_token_ttl_sec`, `pass_token_remaining`, `challenge_failure_limit`, `block_ttl_sec`, `scope`, `enabled`, `priority`, `remark`, `created_at`, `updated_at`) VALUES (1, 'login-always', 'login-auth', NULL, 'always', 'SLIDER', NULL, NULL, NULL, 300, 3, 5, 900, 'login', 1, 0, 'L6 登录强制滑块挑战', '2026-08-27 00:00:00', '2026-08-27 00:00:00');
 COMMIT;
 
 -- ----------------------------
