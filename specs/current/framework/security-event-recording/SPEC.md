@@ -62,6 +62,8 @@ SecurityEventPublisher (业务唯一写入口)
 ### DURABLE file spool
 
 - 配置键 `delivery.spool.directory` 是**父目录**；运行时实际根为 `{directory}/{spring.application.name}`（缺省子目录名 `application`）。
+- `RecordQueue.claim(limit, wait)` 无可领取记录时执行可中断的定时等待；file spool 的 enqueue/nack 会唤醒等待消费者，空闲 durable worker 不得忙轮询。
+- claim 捕获中断后恢复线程中断标记；`limit <= 0` 立即返回空列表，非正 `wait` 仅执行一次非阻塞领取。
 - 同目录仅一个 writer：构造时对 `spool.lock` 独占；第二实例快速失败（避免多服务抢写同一 `state.json`）。
 - 消费位点以完好 `state.json` 的 pending / inFlight 为准。**两者皆空时启动不得扫描 segment**，稳定重启是 no-op。
 - 完好 state 中的 inFlight 在启动时全部退回 pending（`nextRetryAt=0`），兑现 ack 前崩溃必重投。

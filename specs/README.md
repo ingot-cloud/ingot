@@ -190,6 +190,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [安全事件 DURABLE 队列空闲等待修复](./changes/archive/2026/20260901-framework-security-event-idle-wait/README.md)
 - [挑战验证（L6）](./changes/archive/2026/20260827-security-challenge-verification/README.md)
 - [账号锁定策略 remote 模式](./changes/archive/2026/20260825-security-account-lockout-remote/README.md)
 - [DURABLE spool 隔离与消费位点修复](./changes/archive/2026/20260825-framework-security-event-spool-recovery/README.md)

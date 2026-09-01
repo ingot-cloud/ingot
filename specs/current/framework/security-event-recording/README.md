@@ -59,3 +59,4 @@
 - `specs/changes/archive/2026/20260811-security-event-edge-dedup-lock-shortcut/`（状态变更/超阈值边沿 vs 活动遥测电平）
 - `specs/changes/archive/2026/20260812-security-event-type-sot-cleanup/`（事件 code 常量模块 + api 枚举唯一 SoT）
 - `specs/changes/archive/2026/20260825-framework-security-event-spool-recovery/`（DURABLE spool 按应用隔离、消费位点、state 损坏降级）
+- `specs/changes/archive/2026/20260901-framework-security-event-idle-wait/`（DURABLE worker 空闲等待与队列 claim 契约收口）
