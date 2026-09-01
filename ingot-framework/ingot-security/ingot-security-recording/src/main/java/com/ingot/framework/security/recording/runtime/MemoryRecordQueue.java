@@ -27,11 +27,18 @@ public final class MemoryRecordQueue implements RecordQueue<SecurityEventRecord>
     private final RateLimitedLogger rateLimitedLogger;
     private final AtomicInteger depth = new AtomicInteger();
 
+    /**
+     * 创建指定容量的 BEST_EFFORT 内存队列。
+     *
+     * @param capacity 最大记录数，必须为正数
+     * @param tag 队列满日志的来源标签
+     */
     public MemoryRecordQueue(int capacity, String tag) {
         this.queue = new ArrayBlockingQueue<>(capacity);
         this.rateLimitedLogger = new RateLimitedLogger(tag);
     }
 
+    /** {@inheritDoc} */
     @Override
     public EnqueueResult enqueue(SecurityEventRecord record) {
         ClaimedRecord<SecurityEventRecord> claimed = new ClaimedRecord<>(UUID.randomUUID().toString(), record);
@@ -44,8 +51,12 @@ public final class MemoryRecordQueue implements RecordQueue<SecurityEventRecord>
         return EnqueueResult.rejected("memory queue full");
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ClaimedRecord<SecurityEventRecord>> claim(int limit, Duration wait) {
+        if (limit <= 0) {
+            return List.of();
+        }
         List<ClaimedRecord<SecurityEventRecord>> batch = new ArrayList<>(Math.max(limit, 1));
         try {
             ClaimedRecord<SecurityEventRecord> first = queue.poll(
@@ -62,24 +73,41 @@ public final class MemoryRecordQueue implements RecordQueue<SecurityEventRecord>
         return batch;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void ack(List<String> claimIds) {
         // memory queue: ack is no-op, records already removed on claim
     }
 
+    /** {@inheritDoc} */
     @Override
     public void nack(List<String> claimIds, Throwable cause) {
         // dropped on failure for BEST_EFFORT
     }
 
+    /**
+     * 返回当前尚未领取的记录数。
+     *
+     * @return 当前队列深度
+     */
     public int size() {
         return queue.size();
     }
 
+    /**
+     * 返回队列创建时配置的固定容量。
+     *
+     * @return 最大记录数
+     */
     public int capacity() {
         return queue.size() + queue.remainingCapacity();
     }
 
+    /**
+     * 返回当前深度相对固定容量的比例。
+     *
+     * @return 0 到 1；容量非正时为 0
+     */
     public double usageRatio() {
         int cap = capacity();
         return cap <= 0 ? 0.0 : (double) size() / cap;

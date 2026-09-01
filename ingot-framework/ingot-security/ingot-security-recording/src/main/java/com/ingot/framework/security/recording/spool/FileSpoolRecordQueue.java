@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
@@ -59,6 +60,7 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
     private final long retryInitialMs;
     private final long retryMaxMs;
     private final ReentrantLock lock = new ReentrantLock();
+    private final Condition pendingAvailable = lock.newCondition();
     private final SpoolState state;
     private final FileChannel lockChannel;
     private final FileLock fileLock;
@@ -185,6 +187,7 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
         return objectMapper;
     }
 
+    /** {@inheritDoc} */
     @Override
     public EnqueueResult enqueue(SecurityEventRecord record) {
         lock.lock();
@@ -205,6 +208,7 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
             SpoolState.SpoolEntry entry = new SpoolState.SpoolEntry(segmentName, offset, recordBytes, record);
             state.getPending().add(entry);
             state.setTotalBytes(state.getTotalBytes() + recordBytes);
+            pendingAvailable.signalAll();
             persistState();
             return EnqueueResult.success();
         } catch (IOException e) {
@@ -214,43 +218,62 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ClaimedRecord<SecurityEventRecord>> claim(int limit, Duration wait) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        long timeoutNanos = wait.isNegative() ? 0 : wait.toNanos();
+        long deadlineNanos = System.nanoTime() + timeoutNanos;
         lock.lock();
         try {
-            long now = Instant.now().toEpochMilli();
-            List<ClaimedRecord<SecurityEventRecord>> claimed = new ArrayList<>(Math.max(limit, 1));
-            List<SpoolState.SpoolEntry> moved = new ArrayList<>();
-            var iterator = state.getPending().iterator();
-            while (iterator.hasNext() && claimed.size() < limit) {
-                SpoolState.SpoolEntry entry = iterator.next();
-                if (entry.getNextRetryAtEpochMs() > now) {
-                    continue;
+            while (true) {
+                long now = Instant.now().toEpochMilli();
+                List<ClaimedRecord<SecurityEventRecord>> claimed = new ArrayList<>(limit);
+                List<SpoolState.SpoolEntry> moved = new ArrayList<>();
+                var iterator = state.getPending().iterator();
+                while (iterator.hasNext() && claimed.size() < limit) {
+                    SpoolState.SpoolEntry entry = iterator.next();
+                    if (entry.getNextRetryAtEpochMs() > now) {
+                        continue;
+                    }
+                    if (entry.getRecord() == null) {
+                        continue;
+                    }
+                    iterator.remove();
+                    state.getInFlight().add(entry);
+                    moved.add(entry);
+                    claimed.add(new ClaimedRecord<>(entry.getClaimId(), entry.getRecord()));
                 }
-                if (entry.getRecord() == null) {
-                    continue;
+                if (!claimed.isEmpty()) {
+                    try {
+                        persistState();
+                        return claimed;
+                    } catch (IOException e) {
+                        state.getInFlight().removeAll(moved);
+                        state.getPending().addAll(moved);
+                        return List.of();
+                    }
                 }
-                iterator.remove();
-                state.getInFlight().add(entry);
-                moved.add(entry);
-                claimed.add(new ClaimedRecord<>(entry.getClaimId(), entry.getRecord()));
-            }
-            if (claimed.isEmpty()) {
-                return List.of();
-            }
-            try {
-                persistState();
-                return claimed;
-            } catch (IOException e) {
-                state.getInFlight().removeAll(moved);
-                state.getPending().addAll(moved);
-                return List.of();
+
+                long remainingNanos = deadlineNanos - System.nanoTime();
+                if (remainingNanos <= 0) {
+                    return List.of();
+                }
+                try {
+                    pendingAvailable.awaitNanos(remainingNanos);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return List.of();
+                }
             }
         } finally {
             lock.unlock();
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void ack(List<String> claimIds) {
         if (claimIds == null || claimIds.isEmpty()) {
@@ -286,6 +309,7 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void nack(List<String> claimIds, Throwable cause) {
         if (claimIds == null || claimIds.isEmpty()) {
@@ -306,6 +330,9 @@ public final class FileSpoolRecordQueue implements RecordQueue<SecurityEventReco
                 return true;
             });
             state.getPending().addAll(requeue);
+            if (!requeue.isEmpty()) {
+                pendingAvailable.signalAll();
+            }
             persistState();
         } catch (IOException ignored) {
             // 内存已退回 pending；下次成功 persist 或重启 inFlight 回收与磁盘对齐

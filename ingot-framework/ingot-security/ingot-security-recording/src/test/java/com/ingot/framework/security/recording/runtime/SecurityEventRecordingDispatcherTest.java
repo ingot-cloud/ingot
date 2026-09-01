@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,16 @@ class SecurityEventRecordingDispatcherTest {
         MemoryRecordQueue tinyQueue = new MemoryRecordQueue(1, "test");
         assertThat(tinyQueue.enqueue(bestEffortRecord()).isAccepted()).isTrue();
         assertThat(tinyQueue.enqueue(bestEffortRecord()).isAccepted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("非正领取上限立即返回且不消费内存队列")
+    void nonPositiveClaimLimitDoesNotConsumeMemoryQueue() {
+        MemoryRecordQueue queue = new MemoryRecordQueue(1, "test");
+        assertThat(queue.enqueue(bestEffortRecord()).isAccepted()).isTrue();
+
+        assertThat(queue.claim(0, Duration.ofSeconds(5))).isEmpty();
+        assertThat(queue.size()).isOne();
     }
 
     @Test

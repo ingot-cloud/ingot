@@ -17,6 +17,14 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +39,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class FileSpoolRecordQueueTest {
 
     private static final Duration CLAIM_WAIT = Duration.ofMillis(10);
+    private static final Duration OBSERVABLE_WAIT = Duration.ofMillis(250);
+    private static final Duration LONG_CLAIM_WAIT = Duration.ofSeconds(5);
+    private static final long EARLY_RETURN_CHECK_MS = 50;
+    private static final long ASYNC_RESULT_TIMEOUT_SECONDS = 2;
+    private static final long THREAD_STATE_TIMEOUT_MS = 1000;
+    private static final long THREAD_STATE_POLL_MS = 5;
 
     @TempDir
     Path tempDir;
@@ -47,6 +61,95 @@ class FileSpoolRecordQueueTest {
             queue.ack(List.of(claimed.get(0).claimId()));
 
             assertThat(queue.claim(10, CLAIM_WAIT)).isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("空队列 claim 在等待期限前不返回")
+    void emptyClaimWaitsUntilTimeout() throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try (FileSpoolRecordQueue queue = newQueue()) {
+            CountDownLatch started = new CountDownLatch(1);
+            Future<List<ClaimedRecord<SecurityEventRecord>>> future = executor.submit(() -> {
+                started.countDown();
+                return queue.claim(10, OBSERVABLE_WAIT);
+            });
+
+            assertThat(started.await(ASYNC_RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
+            assertThatThrownBy(() -> future.get(EARLY_RETURN_CHECK_MS, TimeUnit.MILLISECONDS))
+                    .isInstanceOf(TimeoutException.class);
+            assertThat(future.get(ASYNC_RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)).isEmpty();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("enqueue 唤醒正在等待的 claim")
+    void enqueueWakesWaitingClaim() throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try (FileSpoolRecordQueue queue = newQueue()) {
+            AtomicReference<Thread> claimantThread = new AtomicReference<>();
+            Future<List<ClaimedRecord<SecurityEventRecord>>> future = executor.submit(() -> {
+                claimantThread.set(Thread.currentThread());
+                return queue.claim(10, LONG_CLAIM_WAIT);
+            });
+            awaitWaiting(claimantThread);
+
+            assertThat(queue.enqueue(sampleRecord("a1234567890123456789012345678901")).isAccepted()).isTrue();
+
+            assertThat(future.get(ASYNC_RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                    .singleElement()
+                    .extracting(item -> item.record().getEventId())
+                    .isEqualTo("a1234567890123456789012345678901");
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("未到重试时间的 pending 不导致 claim 快速返回")
+    void retryBackoffWaitsUntilTimeout() throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try (FileSpoolRecordQueue queue = newQueue()) {
+            assertThat(queue.enqueue(sampleRecord("b1234567890123456789012345678901")).isAccepted()).isTrue();
+            List<ClaimedRecord<SecurityEventRecord>> claimed = queue.claim(1, CLAIM_WAIT);
+            queue.nack(List.of(claimed.get(0).claimId()), new IllegalStateException("retry"));
+
+            Future<List<ClaimedRecord<SecurityEventRecord>>> future =
+                    executor.submit(() -> queue.claim(1, OBSERVABLE_WAIT));
+
+            assertThatThrownBy(() -> future.get(EARLY_RETURN_CHECK_MS, TimeUnit.MILLISECONDS))
+                    .isInstanceOf(TimeoutException.class);
+            assertThat(future.get(ASYNC_RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)).isEmpty();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("claim 中断后及时返回并保留中断标记")
+    void interruptedClaimReturnsAndPreservesInterrupt() throws Exception {
+        try (FileSpoolRecordQueue queue = newQueue()) {
+            AtomicBoolean interrupted = new AtomicBoolean();
+            AtomicReference<Thread> claimantThread = new AtomicReference<>();
+            Thread claimant = new Thread(() -> {
+                claimantThread.set(Thread.currentThread());
+                queue.claim(1, LONG_CLAIM_WAIT);
+                interrupted.set(Thread.currentThread().isInterrupted());
+            }, "file-spool-claim-test");
+            claimant.start();
+            try {
+                awaitWaiting(claimantThread);
+                claimant.interrupt();
+                claimant.join(THREAD_STATE_TIMEOUT_MS);
+
+                assertThat(claimant.isAlive()).isFalse();
+                assertThat(interrupted).isTrue();
+            } finally {
+                claimant.interrupt();
+                claimant.join(THREAD_STATE_TIMEOUT_MS);
+            }
         }
     }
 
@@ -224,6 +327,21 @@ class FileSpoolRecordQueueTest {
 
     private static ObjectMapper mapper() {
         return new ObjectMapper().findAndRegisterModules();
+    }
+
+    private static void awaitWaiting(AtomicReference<Thread> threadReference) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(THREAD_STATE_TIMEOUT_MS);
+        while (System.nanoTime() < deadline) {
+            Thread thread = threadReference.get();
+            if (thread != null && (thread.getState() == Thread.State.WAITING
+                    || thread.getState() == Thread.State.TIMED_WAITING)) {
+                return;
+            }
+            Thread.sleep(THREAD_STATE_POLL_MS);
+        }
+        Thread thread = threadReference.get();
+        assertThat(thread).isNotNull();
+        assertThat(thread.getState()).isIn(Thread.State.WAITING, Thread.State.TIMED_WAITING);
     }
 
     private static SecurityEventRecord sampleRecord(String eventId) {
