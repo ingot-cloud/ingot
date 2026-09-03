@@ -26,10 +26,10 @@
 
 ## 验收标准
 
-- [ ] 创建 Directory/Menu（默认链接）且未传 `viewPath` 失败
-- [ ] 创建时传入注册键与任意 `path`，库中 `view_path` 仍为该注册键，不是 `@/pages...`
-- [ ] 仅更新 `path` 时 `view_path` 不变
-- [ ] 菜单树响应不再包含 `customViewPath`
-- [ ] 迁移后不存在 `menu_type='1'` 且 `view_path LIKE '@/pages/%'` 的有效行
-- [ ] `021` 与 `rollback_021` 可在测试库执行；全新库仅靠 `ingot_core.sql` 无 `custom_view_path` 列
-- [ ] 现有 `BizMenuUtilsTest` 通过
+- [x] 创建 Directory/Menu（默认链接）且未传 `viewPath` 失败
+- [x] 创建时传入注册键与任意 `path`，库中 `view_path` 仍为该注册键，不是 `@/pages...`
+- [x] 仅更新 `path` 时 `view_path` 不变
+- [x] 菜单树响应不再包含 `customViewPath`
+- [x] 迁移后不存在 `menu_type='1'` 且 `view_path LIKE '@/pages/%'` 的有效行
+- [x] `021` 与 `rollback_021` 可在测试库执行；全新库仅靠 `ingot_core.sql` 无 `custom_view_path` 列
+- [x] 现有 `BizMenuUtilsTest` 通过

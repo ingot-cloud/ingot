@@ -34,6 +34,8 @@
 |---|---|
 | `app_id` | 所属应用 |
 | `pid` | 父菜单 ID |
+| `path` | 浏览器 URL；权限码仍由 path 派生 |
+| `view_path` | 前端页面或布局注册键，与 `path` 独立；创建与更新原样落库，不由 path 推导 |
 | `access_mode` | 访问模式，`AccessModeEnum`：`0` 开放(OPEN) / `1` 需权限(PERMISSION)，菜单可见性的唯一来源 |
 | `permission_id` | 菜单托管 `NAVIGATION` 权限 ID |
 
@@ -44,6 +46,10 @@
 - `OPEN` 只跳过角色权限检查，不跳过应用状态与租户应用授权检查。
 - `access_mode` 为菜单访问控制唯一来源（旧 `enable_permission` 列已删除）。
 - 平台端/租户端由应用 `app_type` 派生（旧 `org_type` 列已删除）。
+- 已无 `custom_view_path` 列与 `customViewPath` 接口字段。
+- 创建 Directory / Menu 且 `linkType=Default` 时 `viewPath` 必填；Button 可选。
+- 更新仅在请求显式传入 `viewPath` 时覆盖；修改 `path` 或改为 IFrame / External 不重算、不清空 `viewPath`（非 Default 仅自动生成 `path`）。
+- 后端不解析、不校验注册键格式。
 
 ### 1.3 权限 `platform_permission`
 
@@ -77,7 +83,7 @@
 | 新增子菜单/按钮 | 父菜单（非目录）托管权限码由精确码升级为 `:**`，使授予父菜单即覆盖其下全部子权限 |
 | 删除最后一个子菜单/按钮 | 父菜单（非目录）已无子节点时，托管权限码由 `:**` 降级回精确码 |
 | 修改名称/父级 | 同步权限名称/父级 |
-| 修改路由 | 不自动修改权限编码 |
+| 修改路由 | 不自动修改权限编码，也不按 path 重算 `view_path` |
 | 切换 `access_mode` | 不删除权限与角色绑定 |
 | 删除菜单 | 叶子菜单且托管权限无子权限时删除托管权限 |
 

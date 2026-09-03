@@ -20,5 +20,5 @@
 
 - [x] 实现与 DESIGN 一致
 - [x] REQUIREMENTS 验收标准全部满足
-- [ ] Current 已更新（验收后）
-- [ ] Change 已记录完成信息并归档
+- [x] Current 已更新
+- [x] Change 已记录完成信息并归档

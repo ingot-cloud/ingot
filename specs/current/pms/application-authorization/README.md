@@ -37,3 +37,4 @@ PMS 以**应用**为资源归属与租户授权边界的统一授权能力。应
 - 来源变更：
   - `specs/changes/archive/2026/20260612-pms-application-authorization/`（发布 A：应用中心化模型）
   - `specs/changes/archive/2026/20260622-pms-authorization-ddl-cleanup/`（发布 B：旧字段破坏性清理）
+  - `specs/changes/archive/2026/20260903-pms-menu-view-path/`（`view_path` 为页面注册键，下线 `customViewPath`）

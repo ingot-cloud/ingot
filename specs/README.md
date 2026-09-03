@@ -190,6 +190,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [菜单 view_path 编码化与 customViewPath 下线](./changes/archive/2026/20260903-pms-menu-view-path/README.md)
 - [安全事件 DURABLE 队列空闲等待修复](./changes/archive/2026/20260901-framework-security-event-idle-wait/README.md)
 - [挑战验证（L6）](./changes/archive/2026/20260827-security-challenge-verification/README.md)
 - [账号锁定策略 remote 模式](./changes/archive/2026/20260825-security-account-lockout-remote/README.md)

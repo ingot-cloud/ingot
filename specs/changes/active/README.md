@@ -12,4 +12,4 @@
 
 当前变更：
 
-- [菜单 view_path 编码化与 customViewPath 下线](./20260903-pms-menu-view-path/README.md)
+- （无）

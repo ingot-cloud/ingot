@@ -1,6 +1,6 @@
 # 菜单 view_path 编码化与 customViewPath 下线
 
-> 状态：validating
+> 状态：completed
 
 ## 元数据
 
@@ -37,8 +37,8 @@
 
 ## 完成记录
 
-- 完成日期：
-- 关联提交或 PR：
-- 更新的 current capability：
-- 与原设计的差异：
+- 完成日期：2026-09-03
+- 关联提交或 PR：`b2be5380`
+- 更新的 current capability：`specs/current/pms/application-authorization`
+- 与原设计的差异：无
 - 取消原因：
