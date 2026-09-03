@@ -76,12 +76,7 @@ public class PlatformMenu extends BaseModel<PlatformMenu> implements MenuType {
     private Long permissionId;
 
     /**
-     * 是否自定义视图路径
-     */
-    private Boolean customViewPath;
-
-    /**
-     * 视图路径
+     * 前端页面或布局注册键，与 {@code path} 独立；创建与更新时原样落库，不由 path 推导。
      */
     private String viewPath;
 

@@ -48,11 +48,7 @@ public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
      */
     private String permissionCode;
     /**
-     * 是否自定义视图路径
-     */
-    private Boolean customViewPath;
-    /**
-     * 视图路径
+     * 前端页面或布局注册键，与 path 独立
      */
     private String viewPath;
     /**

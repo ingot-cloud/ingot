@@ -80,19 +80,6 @@ public class BizMenuUtils {
     }
 
     /**
-     * 根据path生成视图路径
-     *
-     * @param menu {@link PlatformMenu}
-     */
-    public static void setViewPathAccordingToPath(PlatformMenu menu) {
-        String path = menu.getPath();
-        if (BooleanUtil.isTrue(menu.getProps())) {
-            path = StrUtil.subBefore(path, "/", true);
-        }
-        menu.setViewPath("@/pages" + path + "/IndexPage.vue");
-    }
-
-    /**
      * 获取菜单权限code, 将菜单path替换为编码<br>
      * path：/a/b/c => a:b:c
      *

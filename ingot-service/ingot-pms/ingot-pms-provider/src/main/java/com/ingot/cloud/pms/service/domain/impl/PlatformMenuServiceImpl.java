@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.PlatformMenu;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.common.CacheKey;
 import com.ingot.cloud.pms.core.BizMenuUtils;
@@ -81,12 +81,9 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
             params.setOrgType(parent.getOrgType());
         }
 
-        // 如果是自定义视图路径，则viewPath不能为空
-        if (BooleanUtil.isTrue(params.getCustomViewPath())) {
+        if (requiresViewPath(params.getMenuType(), params.getLinkType())) {
             assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
                     "PlatformMenuServiceImpl.ViewPathNotNull");
-        } else {
-            BizMenuUtils.setViewPathAccordingToPath(params);
         }
 
         params.setCreatedAt(DateUtil.now());
@@ -117,33 +114,10 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
         // 如果修改了链接类型，并且修改的内容不是默认类型，那么需要自动处理path
         if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnum.Default) {
             BizMenuUtils.setMenuOuterLinkPath(params, current.getPid(), this);
-            // 修改为外部链接，customViewPath设置为false
-            params.setCustomViewPath(Boolean.FALSE);
         }
 
-        if (params.getCustomViewPath() == null) {
-            params.setCustomViewPath(current.getCustomViewPath());
-        }
         if (params.getProps() == null) {
             params.setProps(current.getProps());
-        }
-
-        // 非自定义视图
-        if (BooleanUtil.isFalse(params.getCustomViewPath())) {
-            // path不为空，并且链接类型是默认类型
-            if (StrUtil.isNotEmpty(params.getPath())
-                    && (params.getLinkType() == MenuLinkTypeEnum.Default
-                    || (params.getLinkType() == null && current.getLinkType() == MenuLinkTypeEnum.Default))) {
-                // 如果修改了路径，那么需要修改默认视图path
-                BizMenuUtils.setViewPathAccordingToPath(params);
-            }
-        } else {
-            // 自定义视图
-            // 如果当前自定义视图路径是空，那么更新字段不能为空
-            if (StrUtil.isEmpty(current.getViewPath())) {
-                assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
-                        "PlatformMenuServiceImpl.ViewPathNotNull");
-            }
         }
 
         params.setUpdatedAt(DateUtil.now());
@@ -174,5 +148,10 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
 
     private PlatformMenu innerGetById(Long id) {
         return SpringContextHolder.getBean(PlatformMenuService.class).getById(id);
+    }
+
+    private static boolean requiresViewPath(MenuTypeEnum menuType, MenuLinkTypeEnum linkType) {
+        return linkType == MenuLinkTypeEnum.Default
+                && (menuType == MenuTypeEnum.Directory || menuType == MenuTypeEnum.Menu);
     }
 }

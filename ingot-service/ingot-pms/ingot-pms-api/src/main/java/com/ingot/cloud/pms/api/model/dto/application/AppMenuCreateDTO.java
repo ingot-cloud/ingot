@@ -37,10 +37,7 @@ public class AppMenuCreateDTO implements Serializable {
     @Schema(description = "访问模式")
     private AccessModeEnum accessMode;
 
-    @Schema(description = "是否自定义视图路径")
-    private Boolean customViewPath;
-
-    @Schema(description = "视图路径")
+    @Schema(description = "页面或布局注册键，与 path 独立；默认链接的目录/菜单必填，原样落库")
     private String viewPath;
 
     @Schema(description = "命名路由")
