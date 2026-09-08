@@ -10,6 +10,7 @@ import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.security.core.identity.UserIdentityResolver;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
 import com.ingot.framework.tenant.TenantEnv;
@@ -34,6 +35,8 @@ public class SocialIdentityResolver implements UserIdentityResolver {
     private final BizUserService bizUserService;
     private final BizUserDeptService bizUserDeptService;
 
+    private final OssService ossService;
+
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
         return type == UserIdentityTypeEnum.SOCIAL;
@@ -48,7 +51,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             UserDetailsResponse response = IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
                     request.getUserType(), request.getTenant(),
                     sysTenantService, sysUserTenantService,
-                    bizUserService, bizAppService, bizRoleService, bizUserDeptService);
+                    bizUserService, bizAppService, bizRoleService, bizUserDeptService, ossService);
             return response;
         });
     }

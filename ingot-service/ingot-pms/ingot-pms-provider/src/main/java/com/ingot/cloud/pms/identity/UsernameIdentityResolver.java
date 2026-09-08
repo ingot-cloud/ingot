@@ -9,6 +9,7 @@ import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.security.account.web.support.AuthContextSupport;
 import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
@@ -36,6 +37,8 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
     private final BizUserDeptService bizUserDeptService;
     private final AuthContextSupport authContextSupport;
 
+    private final OssService ossService;
+
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
         return type == UserIdentityTypeEnum.USERNAME;
@@ -54,7 +57,7 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
         }
         UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), request.getTenant(),
                 sysTenantService, sysUserTenantService,
-                bizUserService, bizAppService, bizRoleService, bizUserDeptService);
+                bizUserService, bizAppService, bizRoleService, bizUserDeptService, ossService);
         // 用户名/密码登录：由账号域共享工具填充认证上下文
         // - 硬过期位 credentialsNonExpired：用于阻断登录
         // - meta：锁定到期时间 / 失败计数 / 阈值 / 提示节奏，用于 Auth 侧生成友好提示

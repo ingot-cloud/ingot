@@ -28,6 +28,7 @@ import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.commons.oss.OssService;
 import com.ingot.framework.security.core.authority.InAuthorityUtils;
 import com.ingot.framework.tenant.TenantEnv;
 import lombok.extern.slf4j.Slf4j;
@@ -62,10 +63,12 @@ public class IdentityUtil {
                                           BizUserService bizUserService,
                                           BizAppService bizAppService,
                                           BizRoleService bizRoleService,
-                                          BizUserDeptService bizUserDeptService) {
+                                          BizUserDeptService bizUserDeptService,
+                                          OssService ossService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
                 .map(value -> {
                     List<TenantMainDTO> allows = getAllowTenants(user, sysTenantService, sysUserTenantService);
+                    allows.forEach(item -> item.setAvatar(ossService.getObjectURL(item.getAvatar())));
 
                     // 租户维度可访问性：allows 不为空，且登录 tenant 在允许列表内
                     boolean tenantAccessible = CollUtil.isNotEmpty(allows)
