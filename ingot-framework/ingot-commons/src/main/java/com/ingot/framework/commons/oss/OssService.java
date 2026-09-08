@@ -32,19 +32,19 @@ public interface OssService {
     void getFile(String bucket, String fileName, HttpServletResponse response);
 
     /**
-     * 根据url获取临时访问路径
+     * 将库内存储路径转换为带过期时间的临时访问 URL。
      *
-     * @param url 当前存储的url，兼容全路径和bucket/fileName
-     * @return 带过期时间的url
+     * @param url 当前存储路径，兼容全路径和 {@code bucket/objectName}；{@code null} 或空串原样返回
+     * @return 预签名 URL；解析失败、签名失败或超时时返回入参原值
      */
     String getObjectURL(String url);
 
     /**
-     * 根据url获取临时访问路径
+     * 将库内存储路径转换为指定过期时间的临时访问 URL。
      *
-     * @param url            当前存储的url，兼容全路径和bucket/fileName
-     * @param expiredSeconds 过期时间
-     * @return 带过期时间的url
+     * @param url            当前存储路径，兼容全路径和 {@code bucket/objectName}；{@code null} 或空串原样返回
+     * @param expiredSeconds 过期时间，单位秒
+     * @return 预签名 URL；解析失败、签名失败或超时时返回入参原值
      */
     String getObjectURL(String url, int expiredSeconds);
 }

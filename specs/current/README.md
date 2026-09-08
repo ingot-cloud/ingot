@@ -23,4 +23,5 @@
 - [security / session-safety](./security/session-safety/README.md)：sid 会话模型、强制下线、安全中心会话管理面与可降级并发策略。
 - [gateway / header-conventions](./gateway/header-conventions/README.md)：网关自定义 Header 命名与内部头安全约定。
 - [pms / application-authorization](./pms/application-authorization/README.md)：应用中心化授权（应用、菜单、权限归属与租户授权、权限匹配语义；菜单 `view_path` 为页面注册键）。
+- [framework / oss](./framework/oss/README.md)：对象访问 URL 预签名与失败回退原始路径。
 

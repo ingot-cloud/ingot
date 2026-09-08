@@ -5,4 +5,11 @@ dependencies {
 
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_web)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.jakarta_servlet_api)
+}
+
+test {
+    useJUnitPlatform()
 }

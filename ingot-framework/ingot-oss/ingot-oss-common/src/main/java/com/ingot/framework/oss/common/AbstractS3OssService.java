@@ -59,21 +59,28 @@ public abstract class AbstractS3OssService implements OssService {
 
     @Override
     public String getObjectURL(String url) {
-        OssObjectInfo objectInfo = OssPathParser.parse(url);
-        return getS3Client().getPresignedObjectUrl(
-                objectInfo.bucket(),
-                objectInfo.objectName(),
-                getDefaultExpiredTime(),
-                TimeUnit.SECONDS);
+        return presignOrOriginal(url, getDefaultExpiredTime());
     }
 
     @Override
     public String getObjectURL(String url, int expiredSeconds) {
-        OssObjectInfo objectInfo = OssPathParser.parse(url);
-        return getS3Client().getPresignedObjectUrl(
-                objectInfo.bucket(),
-                objectInfo.objectName(),
-                expiredSeconds,
-                TimeUnit.SECONDS);
+        return presignOrOriginal(url, expiredSeconds);
+    }
+
+    private String presignOrOriginal(String url, int expiredSeconds) {
+        if (url == null || url.isEmpty()) {
+            return url;
+        }
+        try {
+            OssObjectInfo objectInfo = OssPathParser.parse(url);
+            return getS3Client().getPresignedObjectUrl(
+                    objectInfo.bucket(),
+                    objectInfo.objectName(),
+                    expiredSeconds,
+                    TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("OSS 预签名失败，返回原始路径: {}", url, e);
+            return url;
+        }
     }
 }

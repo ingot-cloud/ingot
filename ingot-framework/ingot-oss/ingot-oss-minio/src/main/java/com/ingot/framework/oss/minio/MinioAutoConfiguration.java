@@ -28,7 +28,9 @@ public class MinioAutoConfiguration {
         return new MinioService(
                 properties.getUrl(),
                 properties.getAccessKey(),
-                properties.getSecretKey()
+                properties.getSecretKey(),
+                properties.getRegion(),
+                properties.getConnectTimeout()
         );
     }
 

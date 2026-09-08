@@ -38,6 +38,8 @@ public class MinioService implements S3Client, InitializingBean {
     private final String endpoint;
     private final String accessKey;
     private final String secretKey;
+    private final String region;
+    private final Duration connectTimeout;
     private MinioClient client;
 
     @Override
@@ -84,7 +86,9 @@ public class MinioAutoConfiguration {
         return new MinioService(
                 properties.getUrl(),
                 properties.getAccessKey(),
-                properties.getSecretKey()
+                properties.getSecretKey(),
+                properties.getRegion(),
+                properties.getConnectTimeout()
         );
     }
 

@@ -1,5 +1,6 @@
 package com.ingot.framework.oss.rustfs.properties;
 
+import com.ingot.framework.oss.common.OssDefaults;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +31,9 @@ public class RustfsProperties {
     private String secretKey;
     
     /**
-     * 区域，默认为 us-east-1
+     * 区域，默认 {@link OssDefaults#DEFAULT_REGION}。
      */
-    private String region = "us-east-1";
+    private String region = OssDefaults.DEFAULT_REGION;
     
     /**
      * 过期时间，单位秒，默认300秒过期时间

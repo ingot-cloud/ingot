@@ -1,11 +1,13 @@
 package com.ingot.framework.oss.minio.service;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import com.ingot.framework.oss.common.OssDefaults;
 import com.ingot.framework.oss.common.S3Client;
 import com.ingot.framework.oss.minio.common.MinioItem;
 import io.minio.*;
@@ -27,6 +29,8 @@ public class MinioService implements S3Client, InitializingBean {
     private final String endpoint;
     private final String accessKey;
     private final String secretKey;
+    private final String region;
+    private final Duration connectTimeout;
     private MinioClient client;
 
     @Override
@@ -182,9 +186,18 @@ public class MinioService implements S3Client, InitializingBean {
         Assert.hasText(endpoint, "Minio url 为空");
         Assert.hasText(accessKey, "Minio accessKey为空");
         Assert.hasText(secretKey, "Minio secretKey为空");
+        Assert.hasText(region, "Minio region为空");
+        Duration resolvedConnectTimeout = connectTimeout != null
+                ? connectTimeout : OssDefaults.DEFAULT_CONNECT_TIMEOUT;
         this.client = MinioClient.builder()
                 .endpoint(endpoint)
-                .credentials(accessKey, secretKey).build();
+                .credentials(accessKey, secretKey)
+                .region(region)
+                .build();
+        this.client.setTimeout(
+                resolvedConnectTimeout.toMillis(),
+                OssDefaults.DEFAULT_TRANSFER_TIMEOUT.toMillis(),
+                OssDefaults.DEFAULT_TRANSFER_TIMEOUT.toMillis());
     }
 
 }

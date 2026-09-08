@@ -190,6 +190,7 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [OSS 预签名失败回退原始路径](./changes/archive/2026/20260908-framework-oss-presign-fallback/README.md)
 - [菜单 view_path 编码化与 customViewPath 下线](./changes/archive/2026/20260903-pms-menu-view-path/README.md)
 - [安全事件 DURABLE 队列空闲等待修复](./changes/archive/2026/20260901-framework-security-event-idle-wait/README.md)
 - [挑战验证（L6）](./changes/archive/2026/20260827-security-challenge-verification/README.md)
@@ -216,6 +217,7 @@ current/<domain>/<capability>/
 
 对应 current 能力：
 
+- [framework/oss](./current/framework/oss/README.md)
 - [framework/layered-cache](./current/framework/layered-cache/README.md)
 - [framework/security-event-recording](./current/framework/security-event-recording/README.md)
 - [gateway/header-conventions](./current/gateway/header-conventions/README.md)
