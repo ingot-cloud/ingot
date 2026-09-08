@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conventional Commits"
+  short_description: "按 Conventional Commits 与仓库约定起草 git 提交信息"
+  default_prompt: "使用 $conventional-commits，根据当前暂存/未暂存变更起草符合约定式提交的中文提交信息。"

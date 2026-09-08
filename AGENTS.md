@@ -43,6 +43,20 @@ Java 注释统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借�
 5. 真实性：所有 `{@link}`/`@see`/示例必须对应真实符号并与实现或公共契约一致；只修正错误、过时、冗余或不符合规范之处。
 6. 落盘时机：新增或修改上述对外契约时，注释作为实现的一部分写入源码。用户明确要求「只审查、先不要改文件」时，只给建议不改源码。补历史代码的专项任务按用户指定范围改。
 
+# Git 提交规范
+
+本仓库提交默认遵循 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/zh-hans/v1.0.0/)。创建或改写提交信息时必须使用 `.agents/skills/conventional-commits` skill。这是提交门禁，不必等用户提醒格式。与本节冲突时以该规范和 skill 为准。
+
+规则如下：
+
+1. 标题：`<type>[optional scope][!]: <description>`。`type` 小写；冒号为英文半角，后面一个空格。
+2. 允许的 type：`feat`、`fix`、`docs`、`style`、`refactor`、`perf`、`test`、`build`、`ci`、`chore`、`revert`。新功能用 `feat`，修 bug 用 `fix`，禁止自造类型。
+3. `description` 用中文，写清意图（为什么），不要罗列文件或写「功能提交」；标题不加句号。
+4. scope 可选：仅当变更明确落在单一模块或域时使用，小写名词，如 `oss`、`cache`、`security`。不要用 PascalCase。
+5. 破坏性变更必须在 type/scope 后加 `!`，或在 footer 写 `BREAKING CHANGE: `；需要迁移说明时两者都写。
+6. 标题不足以说明动机、风险或迁移时再写 body；`Co-authored-by` 等 git trailer 放 footer。
+7. 未明确要求提交时不要创建 commit。
+
 # 缓存接入规范
 
 远端拉取的只读参考数据（策略、配置、字典、租户参数等）一律接入统一分层缓存框架 `ingot-framework/ingot-cache`，不再手写 L1/L2/降级逻辑，可借助 `.agents/skills/layered-cache` skill 完成接入或审查。规则如下：
