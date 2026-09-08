@@ -23,6 +23,14 @@ public interface OssService {
     OSSResult uploadFile(String bucket, String fileName, InputStream inputStream);
 
     /**
+     * 删除文件
+     *
+     * @param bucketName bucket name
+     * @param objectName file name
+     */
+    void removeFile(String bucketName, String objectName);
+
+    /**
      * 获取文件
      *
      * @param bucket   bucket name

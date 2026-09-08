@@ -47,6 +47,15 @@ public abstract class AbstractS3OssService implements OssService {
     }
 
     @Override
+    public void removeFile(String bucketName, String objectName) {
+        try {
+            getS3Client().removeObject(bucketName, objectName);
+        } catch (Exception e) {
+            throw new RuntimeException("文件删除失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void getFile(String bucket, String fileName, HttpServletResponse response) {
         try (InputStream inputStream = getS3Client().getObject(bucket, fileName)) {
             response.setContentType("application/octet-stream; charset=UTF-8");
