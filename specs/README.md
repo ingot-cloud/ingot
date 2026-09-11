@@ -188,6 +188,8 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [多租户 RBAC、菜单解耦与数据权限](./changes/active/20260910-pms-rbac-data-authorization/README.md)（implementing）
+
 已归档（2026）：
 
 - [OSS 预签名失败回退原始路径](./changes/archive/2026/20260908-framework-oss-presign-fallback/README.md)
