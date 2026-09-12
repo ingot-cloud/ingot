@@ -11,8 +11,8 @@ PMS 统一授权解析器 ← 应用状态/租户覆盖
                     ↓
 服务端有效授权快照 + 统一分层缓存
         ├─ 菜单可见性 / 前端有效权限
-        ├─ API 具体操作鉴权
-        └─ 该操作对应的资源范围 → SQL / 写归属校验
+        ├─ API 功能准入（`@AdminOrHasAnyAuthority` / `@HasAnyAuthority`）
+        └─ 该操作对应的资源范围（`@DataScope` / `DataScopeGuard`）→ SQL 谓词 / 写归属校验
 ```
 
 PMS 内直接调用核心解析器，外部资源服务经受保护的内部接口访问。请求身份来自已认证上下文，不以用户传入角色码代替实际成员关系。默认租户的平台运营授权与租户应用授权分域处理，租户管理员不获得平台运营角色。
@@ -136,11 +136,44 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 - 菜单树节点：`permissionIds`、`permissionMatchMode` 替代 `permissionId`/`permissionCode`；用户菜单与配置菜单均不返回 Button。
 - 权限树节点：`resourceId`、`nodeType`（仅 GROUP/ACTION）；不再返回 `type` / `managed` / `readOnly`。全量树 `GET /v1/platform/config/permission/tree` 与角色权限树同样不再返回 `type`，改返回 `nodeType`。
 
-### 4.6 数据权限注解与写校验
+### 4.6 注解职责与写校验
 
-`@DataScope` 必填 `resource`、`permission`（具体操作码）。表映射来自可信代码或 `ingot.mybatis.scope` 配置：`table`、`scopeColumn`（默认 `dept_id`）、`userColumn`（默认资源归属用户字段，不固定 `created_by`）。禁止把请求参数拼进 SQL 标识。
+功能准入与数据范围分两层，不互相替代，也不在 DataScope 里再判一遍「有没有这个操作码」。
 
-写归属校验：`DataScopeGuard.assertWritable(resource, permission, target)`，验证目标租户、用户/部门归属。列表/详情/更新/删除走同一 `(resource, permission)` 规则。旧空参 `@DataScope` 同次发布删除。
+| 层 | 注解 / API | 只回答 |
+|---|---|---|
+| 功能准入 | `@AdminOrHasAnyAuthority` / `@HasAnyAuthority` | 当前方法能不能进；超管走 `ROLE_ADMIN` 短路。快照 `permissionCodes` 由 `AuthorizationSnapshotFilter` 合并进 `Authentication` 后供 PreAuthorize 使用 |
+| 数据范围 | `@DataScope(resource, permission)` | 按 `(resource, permission)` 从快照取出范围帧，供后续 SQL 改写。`permission` 是**选哪条规则的键**（同一资源上 query/update/delete 可以不同范围），不是第二道功能鉴权 |
+| 写归属 | `DataScopeGuard.assertWritable(resource, permission, target)` | INSERT、改部门、改归属人是否落在同一规则内。列表/详情/更新/删除与写校验共用 `(resource, permission)` |
+
+消费约定：
+
+- 纯功能接口（配置、策略、无行过滤的 CRUD）只加功能注解。
+- 会查询受保护表的列表/详情/更新/删除：功能注解 + `@DataScope`；更新若改归属再加 Guard。
+- 创建：功能注解 + Guard；INSERT 不靠 `@DataScope` 改 SQL。
+- 漏了功能注解时，读接口因无规则变成 `1=2` 返回空，写接口因无规则 `ds_forbidden`。这是 fail-closed，**不能**当成可以省略 PreAuthorize；明确无功能权限的 HTTP 语义仍是 403，由方法安全给出。
+
+`@DataScope` / Guard **不再**因「快照 `permissionCodes` 不含该码」单独抛 `AuthorizationDenied`。无匹配规则不得解释为 ALL。表映射来自可信代码或 `ingot.mybatis.scope`：`table`、`scopeColumn`（默认 `dept_id`）、`userColumn`（默认资源归属用户字段，不固定 `created_by`）。禁止把请求参数拼进 SQL 标识。旧空参 `@DataScope` 同次发布删除。
+
+### 4.6.1 SQL 谓词与大数据量
+
+行过滤必须在数据库完成，禁止查出后再在内存筛。租户条件由既有 `TenantLineInnerInterceptor` 追加 `tenant_id`；DataScope 只在当前帧上追加本人 / 部门谓词。分页、count、UPDATE、DELETE 走同一谓词。
+
+默认谓词（在已有租户条件之上）：
+
+| 范围 | SQL |
+|---|---|
+| ALL | 不加行条件（只消去该资源过滤） |
+| SELF | `{userColumn} = :userId` |
+| 部门（DEPT / DEPT_AND_CHILD / CUSTOM） | `{scopeColumn} IN (:deptIds)` |
+| 本人与部门并集 | `({userColumn} = :userId OR {scopeColumn} IN (:deptIds))` |
+| 无规则 / 空部门 / 跨资源表套用当前帧 | `1 = 2` |
+
+`DEPT_AND_CHILD` 在组装快照时展开为部门 ID 列表（随快照缓存，不超过授权期限），运行时不再每条 SQL 走一遍树。受保护业务表必须具备可用索引：至少 `(tenant_id, {scopeColumn})`；SELF 热路径另加 `(tenant_id, {userColumn})`。列名以 `@DataScopeTable` / 配置映射为准。
+
+本形态适合单租户、部门规模大约几十到几百、索引齐全的查询。本 change 只交付上述默认谓词。
+
+规模升级（超大 `IN` 改闭包表 / 物化路径、`OR` 恶化改 `UNION ALL`）已拆到独立 change [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)，不在本 change 实现。未上线该能力前，中小规模租户行为不受影响。跨资源 JOIN 未提供各资源授权上下文时仍 `1 = 2`，不得把当前帧套到未声明资源的表。
 
 ### 4.7 错误码与 HTTP 语义
 
@@ -164,19 +197,21 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 
 验证用户/成员/角色状态 → 按实际绑定读取默认及私有授权 → 匹配启用具体权限 → 按应用和租户授权过滤。租户管理员动态获得本租户有效应用内能力，不能穿透到平台运营域。所有入口使用同一判定，不单独排除“应用根权限 ID”冒充整个应用过滤。
 
+请求进入业务方法前由 `@AdminOrHasAnyAuthority` / `@HasAnyAuthority` 执行本判定（含超管短路）。`@DataScope` 不再重复扫描 `permissionCodes`。
+
 ### 数据判定
 
-对 `(tenant, user, resource, permission)`：
+对 `(tenant, user, resource, permission)`，在功能准入已经成立的前提下计算行范围：
 
-1. 验证具体操作属于该资源且用户拥有操作权限；未登记或映射不符拒绝。
+1. 用注解上的 `resource` + `permission` 选择规则；权限码必须属于该资源。未登记资源、映射不符或无匹配规则拒绝（读 `1=2`，写 `ds_forbidden`），不解释为 ALL，也不改口成功能 403。
 2. 保留所有授予该操作的角色绑定，按精确或通配授权找到该资源规则。
 3. 部门角色以绑定部门为 DEPT/DEPT_AND_CHILD 根；非部门角色使用当前所属部门；SELF 对应资源的归属用户字段。
-4. 合并为 `tenantCondition AND (selfCondition OR deptCondition ...)`；ALL 仅消去该资源的行范围条件。空规则/无有效部门/无角色不解释为 ALL。
+4. 合并为 `tenantCondition AND (selfCondition OR deptCondition ...)`，谓词形态见 §4.6.1；ALL 仅消去该资源的行范围条件。空规则/无有效部门/无角色不解释为 ALL。
 5. 不同资源或操作重新计算。嵌套上下文栈保存并恢复；注册表缺少上下文拒绝；异步必须显式建立身份及授权边界，不能靠继承 ThreadLocal 放行。
 6. SELECT/UPDATE/DELETE 覆盖 MyBatis 支持的入口，测试关联查询和分页总数；跨资源 SQL 未明确提供各资源授权上下文时拒绝，不将同一范围套到所有表。
 7. INSERT 及归属变更显式校验；修改既有记录需先满足原记录操作范围，再验证新归属。批量写入逐项满足，不允许部分越权后静默成功。
 
-租户管理员对本租户已登记有效资源拥有 ALL；其他角色按规则计算。框架不默认给未登记业务资源授权。
+租户管理员对本租户已登记有效资源拥有 ALL；其他角色按规则计算。框架不默认给未登记业务资源授权。行过滤始终下推 SQL，大数据量按 §4.6.1 换谓词，不改为内存过滤。
 
 ### 委派上限
 
@@ -225,7 +260,7 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 | `platform_menu.permission_id` 单关联；Button=`menu_type=9` 伪路由 | `platform_menu_permission` 多对多；ANY/ALL；树不返回 Button |
 | `tenant_role_user_private.dept_id` 已有，绑定去重仅 `roleId+userId`，无唯一索引 | 唯一键含部门；空部门用生成列哨兵 `0`；业务参数仍用 null |
 | 菜单走 `ApplicationAuthorizationResolver`，登录走 `IdentityUtil.getScopes` 写入 `OnlineToken.authorities` | 统一解析器；会话不再合并旧业务权限集合；JWT 仍瘦身 |
-| `@DataScope` 无属性；角色级 `scope_type`；DEPT_AND_CHILD 按用户全部部门展开 | 按 `(resource, permission)`；角色表不再有范围列；部门角色用绑定部门 |
+| `@DataScope` 无属性；角色级 `scope_type`；DEPT_AND_CHILD 按用户全部部门展开 | 按 `(resource, permission)` 取规则改 SQL，不再重复功能鉴权；角色表不再有范围列；部门角色用绑定部门 |
 | PMS 用 `@Cacheable`，未用 `LayeredCacheBuilder` | 授权快照按分层缓存接入，无 Resilient/LKG 放行 |
 | `tenant_app_config` 无记录默认不可用（current）；无 `default_access_mode` | 默认 OPEN；CLOSED 为申请制；显式覆盖不因到期回退 |
 | 无资源目录、无按资源数据规则表 | 新增 `platform_resource` 与两套 data_rule 表 |

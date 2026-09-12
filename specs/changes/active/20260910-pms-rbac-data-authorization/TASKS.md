@@ -17,8 +17,10 @@
 | 细化实现 | 表结构、接口字段、失败处理与迁移策略见 DESIGN | 本次形成评审稿 |
 | 权限遗留列 | 删除 `type`/`managed`/`source_type`/`source_id`，`node_type` 仅 GROUP/ACTION；应用根用 `platform_app.permission_id` | 用户确认不再保留兼容列 |
 | 角色级范围列 | 删除 `platform_role` / `tenant_role_private` 的 `scope_type`/`scopes`；范围只配 data-rules | 用户确认避免误导配置 |
+| 注解职责 | 功能准入只走 `HasAnyAuthority` 一类；`@DataScope` 只取 `(resource, permission)` 范围改 SQL，不再扫 `permissionCodes` 抛 403 | 用户确认职责划分 |
+| SQL 谓词 | 本 change 交付行过滤下推与默认 `IN` / `OR`；禁止内存过滤。闭包表 / `UNION ALL` 拆至 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/) | 规模升级不再纳入本 change |
 
-本 change 状态为 implementing。T0–T8 已完成；下一步为 V1 自动化验收与前端联调，验收前不更新 `specs/current/`。
+本 change 状态为 implementing。T0–T9 已完成；下一步为 V1 自动化验收与前端联调。验收前不更新 `specs/current/`。
 
 ## 评审任务
 
@@ -69,10 +71,15 @@
   - 内容：实体、VO、角色 CRUD 与前端角色模型不再暴露这两列；`026` DROP `platform_role` / `tenant_role_private` 列。`filter_dept` 保留。
   - 验收：角色接口与角色表单不再出现全局数据范围；配置入口只有 data-rules。
 
+- [x] T9：注解职责与 SQL 谓词对齐 DESIGN §4.6 / §4.6.1
+  - 依赖：T5、用户确认职责划分。
+  - 内容：`DataScopeAOP` / `DataScopeGuard` 不再因快照缺少权限码抛 `AuthorizationDenied`；无匹配规则仍 fail-closed（读 `1=2`、写 `ds_forbidden`）。示例与业务接口保持功能注解 + DataScope/Guard。文档化默认谓词与索引要求。闭包表 / `UNION ALL` 不在本任务实现，见 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)。
+  - 验收：漏功能注解时读空写拒绝，不误报功能 403；有功能无规则与无功能权 HTTP 语义可区分；对应 A08、A09。
+
 ## 验证与发布任务
 
 - [ ] V1：自动化验收
-  - 依赖：T1—T8。
+  - 依赖：T1—T9。
   - 验收：A01—A14 有逐项测试/联调证据；数据库、HTTP、缓存多节点测试覆盖真实边界，而非仅 mock 实现。
 - [ ] V2：迁移及回滚演练
   - 依赖：V1。
