@@ -15,7 +15,7 @@ L5 已验收闭环：登录态从 jti 级 OnlineToken 索引收口为 **sid 会�
 ## 边界
 
 - **含**：sid 签发与 refresh 复用、Redis 会话 schema（含 TTL / 墓碑清理）、RS 校验、Auth Inner 查询与撤销、Platform 会话管理、账号域改密/锁定/禁用联动撤会话、`SESSION_REVOKED` / `SESSION_CONCURRENT_KICKOUT` 事件、并发策略 CRUD 与登录时执行、Auth 拆 `ingot-auth-api` / `ingot-auth-provider`、网关摘 `/auth/token/**`。
-- **不含**：登录设备（需求 5.2）、登录地点解析、会话历史落库、MFA / 风险规则触发下线、交互式选择踢哪一个会话、管理员路径清除 BFF 会话键、`DevClientAPI` / `/auth/client/**` 迁移、JWT 权限列表从 `OnlineToken` 拆出（见 [R-2026-021 开工约束](../../../../docs/requirements/ROADMAP.md#r-2026-021-开工约束写-spec-前必读)）。
+- **不含**：登录设备（需求 5.2）、登录地点解析、会话历史落库、MFA / 风险规则触发下线、交互式选择踢哪一个会话、管理员路径清除 BFF 会话键、`DevClientAPI` / `/auth/client/**` 迁移。业务 RBAC 权限码已改由授权快照补全，见 [data-authorization](../../pms/data-authorization/README.md)；`OnlineToken.authorities` 仍保存登录角色码，不在本能力删除该字段。
 
 ## 所有者
 
@@ -43,4 +43,7 @@ L5 已验收闭环：登录态从 jti 级 OnlineToken 索引收口为 **sid 会�
 ## 文档索引
 
 - [SPEC](./SPEC.md)：会话模型、Redis schema、接口、并发策略、配置、已知限制
-- 来源变更：`specs/changes/archive/2026/20260817-security-session-safety/`
+- 关联能力：[data-authorization](../../pms/data-authorization/README.md)（业务权限快照，不走 JWT / 会话集合并）
+- 来源变更：
+  - `specs/changes/archive/2026/20260817-security-session-safety/`
+  - `specs/changes/archive/2026/20260910-pms-rbac-data-authorization/`（业务权限改为服务端快照）

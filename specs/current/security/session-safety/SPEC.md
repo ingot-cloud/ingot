@@ -7,7 +7,7 @@
 - 会话主键 **`sid`** = `OAuth2Authorization.id`，登录时写入 JWT claim `sid`（`InJwtClaimNames.SID`），此后 refresh 不换 sid。
 - 自定义 grant 在签发前预生成 authorizationId，写入 stub `OAuth2Authorization`，保证 Customizer 能取到 sid。
 - 运行时类型名仍为 `OnlineToken` / `OnlineTokenService`；主键与查询入口是 sid（`getBySid` / `removeBySid` / `isOnlineSid`）。`jti` 仅表示当前 Access Token，供管理面展示，不再建 Redis 索引。
-- JWT 仍为瘦身形态：定位字段（`sid` / userId / tenantId / scope）+ 会话补全。`JwtInUserConverter` 按 sid 读 `token:sid:{sid}`，合并 `authorities` / `userType` / `deptIds` 构建 `InUser`。不得从会话主数据删掉这些字段却无等价补全路径（R-2026-021）。
+- JWT 仍为瘦身形态：定位字段（`sid` / userId / tenantId / 客户端 OAuth scope）。`JwtInUserConverter` 按 sid 读 `token:sid:{sid}`，合并会话中的**角色码**、`userType`、`deptIds` 构建 `InUser`。业务权限码不进 JWT，也不以 `OnlineToken.authorities` 为 RBAC 事实来源；请求期由 `AuthorizationSnapshotFilter` 把快照 `permissionCodes` 合并进 `Authentication`，见 [data-authorization](../../pms/data-authorization/SPEC.md)。会话存储宽限不延长业务授权期限。
 
 ## 2. Redis 会话 schema
 
@@ -192,6 +192,6 @@ remote 缓存名 `session-concurrency-policy`：`LayeredCacheBuilder`（L1 → �
 - 非自助路径不清 BFF 会话键（依赖单向）。残键不是漏洞：对应 Refresh Token 已随 Authorization 失效。
 - 网关仍暴露 `/auth/client/**`。
 - Inner `DELETE /inner/session/tenant/{tenantId}` 返回 501；Platform 无租户级踢光交互。
-- `OnlineToken` 仍内嵌 `authorities` / `deptIds`，不在本能力瘦身。
+- `OnlineToken` 仍内嵌 `authorities`（登录角色码）与 `deptIds`，不在本能力删除；业务 RBAC 以授权快照为准。
 - 小时任务不扫描 `session:ip:*`；IP 孤儿集合靠下次登录补 TTL。
 - `oauth2:auth:*` / `oauth2:token:*` 的 TTL 取授权下最晚过期（通常 RT），本能力未改。

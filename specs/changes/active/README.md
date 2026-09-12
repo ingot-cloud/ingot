@@ -12,4 +12,4 @@
 
 当前变更：
 
-- [多租户 RBAC、菜单解耦与数据权限](./20260910-pms-rbac-data-authorization/README.md)（implementing）
+- [DataScope SQL 谓词规模升级](./20260912-mybatis-data-scope-predicate-scale/README.md)（draft）

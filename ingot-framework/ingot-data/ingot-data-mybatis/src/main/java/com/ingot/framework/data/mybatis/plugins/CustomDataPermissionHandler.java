@@ -28,7 +28,9 @@ import net.sf.jsqlparser.schema.Table;
  * @author jy
  * @since 1.0.0
  * @implNote 受保护表应具备 {@code (tenant_id, 部门列)} 索引；SELF 热路径另加归属用户列索引。
- * 默认 {@code IN} 适合部门几十到几百；组织树过大或 {@code OR} 无法走索引时，按 DESIGN §4.6.1 改为路径/闭包表或 {@code UNION ALL}。
+ * 默认 {@code IN} 适合部门几十到几百；组织树过大或 {@code OR} 无法走索引时，见
+ * {@code specs/current/pms/data-authorization} 与
+ * {@code specs/changes/active/20260912-mybatis-data-scope-predicate-scale}。
  */
 @RequiredArgsConstructor
 public class CustomDataPermissionHandler implements MultiDataPermissionHandler {

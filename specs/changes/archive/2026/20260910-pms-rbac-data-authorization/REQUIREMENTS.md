@@ -44,7 +44,7 @@
 - 部门角色的 DEPT/DEPT_AND_CHILD 从角色绑定部门展开；非部门角色从用户当前部门展开。
 - 缺少数据范围规则默认无数据授权，不从角色全局 ALL 兜底；平台默认规则不得写入某个租户的部门 ID。有功能权但无规则时，查询得到空结果，写入拒绝；这不是故障空包，明确无功能权仍由方法安全返回 403。
 - 查询、更新、删除应使用相同资源操作规则；新增或修改数据归属须显式校验，不能依赖读过滤实现写安全。
-- 行过滤必须下推为 SQL 谓词（租户条件 AND 本人/部门），禁止在应用内存过滤结果集。受保护表须有 `(tenant_id, 部门列)` 索引，SELF 热路径另有归属用户列索引。本 change 交付默认 `IN (已展开部门 ID)` 与本人 `OR` 部门。超大组织树与 `OR` 恶化的谓词升级见 [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)，不纳入本 change 验收。
+- 行过滤必须下推为 SQL 谓词（租户条件 AND 本人/部门），禁止在应用内存过滤结果集。受保护表须有 `(tenant_id, 部门列)` 索引，SELF 热路径另有归属用户列索引。本 change 交付默认 `IN (已展开部门 ID)` 与本人 `OR` 部门。超大组织树与 `OR` 恶化的谓词升级见 [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)，不纳入本 change 验收。
 
 ### R5 在线授权和失败处理
 

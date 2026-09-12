@@ -54,6 +54,7 @@
 | 字典 | `dict` | `in:dict:items:{code}:{scope}:{tenant}:{app}:{flag}` | 无 | `ingot.dict.client.cache-*` / `redis-*` | 无（仅汇总端点） |
 | 会话并发 | `session-concurrency-policy` | `in:sec:session:concurrency` | `in:sec:session:concurrency:lkg` | `ingot.security.session.policy.cache.*` | 无（仅汇总端点） |
 | 账号锁定策略 | `account-lockout-policy` | `in:sec:account:policy:snapshot` | `in:sec:account:policy:lkg` | `ingot.security.account.policy.cache.*` | `accountlockoutpolicy` |
+| 授权快照 | `authorization-snapshot` | `in:auth:snapshot:{tenantId}:{userId}` | 无 | `ingot.mybatis.scope.*` | 无（仅汇总端点） |
 
 ### 4.1 登录失败
 
@@ -72,3 +73,7 @@ L2 自定义 `l2(...)` 键映射，按 code 失效走 `evictMatching`。
 ### 4.4 账号锁定策略
 
 `mode=remote` 装配 L1+L2+Resilient，空列表当远端不可用。`mode=local` 直接读 Nacos，不走分层缓存。失效域 `ACCOUNT_LOCKOUT`。
+
+### 4.5 授权快照
+
+装配 L1+L2，**关闭** Resilient/LKG/地板。空授权不写热缓存。TTL cap 到 30s。写路径事务提交后本节点 `evictAll` 并广播 `authorization.invalidate`。过期刷新失败 fail-closed（503），不以旧授权放行。配置键归属 `ingot.mybatis.scope`，见 [data-authorization](../../pms/data-authorization/SPEC.md)。

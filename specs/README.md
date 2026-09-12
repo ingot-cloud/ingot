@@ -188,10 +188,11 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [多租户 RBAC、菜单解耦与数据权限](./changes/active/20260910-pms-rbac-data-authorization/README.md)（implementing）
+- [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
 
+- [多租户 RBAC、菜单解耦与数据权限](./changes/archive/2026/20260910-pms-rbac-data-authorization/README.md)
 - [OSS 预签名失败回退原始路径](./changes/archive/2026/20260908-framework-oss-presign-fallback/README.md)
 - [菜单 view_path 编码化与 customViewPath 下线](./changes/archive/2026/20260903-pms-menu-view-path/README.md)
 - [安全事件 DURABLE 队列空闲等待修复](./changes/archive/2026/20260901-framework-security-event-idle-wait/README.md)
@@ -232,3 +233,4 @@ current/<domain>/<capability>/
 - [security/jwk-management](./current/security/jwk-management/README.md)
 - [security/transport-crypto](./current/security/transport-crypto/README.md)
 - [pms/application-authorization](./current/pms/application-authorization/README.md)
+- [pms/data-authorization](./current/pms/data-authorization/README.md)

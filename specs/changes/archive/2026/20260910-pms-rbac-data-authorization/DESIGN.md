@@ -173,7 +173,7 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 
 本形态适合单租户、部门规模大约几十到几百、索引齐全的查询。本 change 只交付上述默认谓词。
 
-规模升级（超大 `IN` 改闭包表 / 物化路径、`OR` 恶化改 `UNION ALL`）已拆到独立 change [`20260912-mybatis-data-scope-predicate-scale`](../20260912-mybatis-data-scope-predicate-scale/)，不在本 change 实现。未上线该能力前，中小规模租户行为不受影响。跨资源 JOIN 未提供各资源授权上下文时仍 `1 = 2`，不得把当前帧套到未声明资源的表。
+规模升级（超大 `IN` 改闭包表 / 物化路径、`OR` 恶化改 `UNION ALL`）已拆到独立 change [`20260912-mybatis-data-scope-predicate-scale`](../../active/20260912-mybatis-data-scope-predicate-scale/)，不在本 change 实现。未上线该能力前，中小规模租户行为不受影响。跨资源 JOIN 未提供各资源授权上下文时仍 `1 = 2`，不得把当前帧套到未声明资源的表。
 
 ### 4.7 错误码与 HTTP 语义
 

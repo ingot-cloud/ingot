@@ -9,7 +9,7 @@
 - 负责人：jy
 - 创建日期：2026-09-12
 - 目标发布日期：TBD（父 change 验收后，按组织规模触发再实施）
-- 前置依赖：[`20260910-pms-rbac-data-authorization`](../20260910-pms-rbac-data-authorization/) 已交付默认 `IN` / `OR` 谓词
+- 前置依赖：[`20260910-pms-rbac-data-authorization`](../../archive/2026/20260910-pms-rbac-data-authorization/) 已交付默认 `IN` / `OR` 谓词
 
 ## 目标
 
@@ -30,7 +30,7 @@
 
 ## 相关变更
 
-- 父 change [`20260910-pms-rbac-data-authorization`](../20260910-pms-rbac-data-authorization/DESIGN.md) §4.6.1：已交付默认谓词；规模升级路径从该节拆出，以本 change 为准。
+- 父 change [`20260910-pms-rbac-data-authorization`](../../archive/2026/20260910-pms-rbac-data-authorization/DESIGN.md) §4.6.1：已交付默认谓词；规模升级路径从该节拆出，以本 change 为准。当前默认谓词见 [data-authorization](../../../current/pms/data-authorization/SPEC.md)。
 - 当前部门模型仅为邻接表（`tenant_dept.pid`），无 path / 闭包表。
 
 ## 完成记录
