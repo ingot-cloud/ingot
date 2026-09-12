@@ -366,8 +366,6 @@ CREATE TABLE `platform_role` (
   `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '角色类型',
   `org_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0' COMMENT '组织类型',
   `filter_dept` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否过滤部门',
-  `scope_type` int NOT NULL DEFAULT '0' COMMENT '数据范围类型',
-  `scopes` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '[]' COMMENT '数据范围',
   `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
   `created_at` datetime DEFAULT NULL COMMENT '创建日期',
   `updated_at` datetime DEFAULT NULL COMMENT '更新日期',
@@ -380,11 +378,11 @@ CREATE TABLE `platform_role` (
 -- Records of platform_role
 -- ----------------------------
 BEGIN;
-INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `scope_type`, `scopes`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 0, '超级管理员', 'role_admin', '0', '0', '0', 0, 0, '[]', '0', '2021-01-03 11:07:59', '2025-04-03 16:46:14', NULL);
-INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `scope_type`, `scopes`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (2, 1000, '管理员', 'role_org_admin', '0', '0', '1', 0, 0, '[]', '0', '2021-06-23 09:28:19', '2024-05-13 14:04:55', NULL);
-INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `scope_type`, `scopes`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (3, 1000, '子管理员', 'role_org_sub_admin', '0', '0', '1', 0, 0, '[]', '0', '2021-06-23 09:28:33', '2025-11-27 14:15:06', NULL);
-INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `scope_type`, `scopes`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1000, 0, '默认', '', '0', '1', '1', 0, 0, '[]', '0', '2025-11-24 16:59:34', '2025-11-25 13:04:57', NULL);
-INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `scope_type`, `scopes`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075807902184353794, 1000, '主管', 'role_org_manager', '0', '0', '1', 1, 2, '[]', '0', '2025-03-06 15:42:33', '2025-04-29 17:29:02', NULL);
+INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, 0, '超级管理员', 'role_admin', '0', '0', '0', 0, '0', '2021-01-03 11:07:59', '2025-04-03 16:46:14', NULL);
+INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (2, 1000, '管理员', 'role_org_admin', '0', '0', '1', 0, '0', '2021-06-23 09:28:19', '2024-05-13 14:04:55', NULL);
+INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (3, 1000, '子管理员', 'role_org_sub_admin', '0', '0', '1', 0, '0', '2021-06-23 09:28:33', '2025-11-27 14:15:06', NULL);
+INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1000, 0, '默认', '', '0', '1', '1', 0, '0', '2025-11-24 16:59:34', '2025-11-25 13:04:57', NULL);
+INSERT INTO `platform_role` (`id`, `pid`, `name`, `code`, `subject`, `type`, `org_type`, `filter_dept`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1075807902184353794, 1000, '主管', 'role_org_manager', '0', '0', '1', 1, '0', '2025-03-06 15:42:33', '2025-04-29 17:29:02', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -837,8 +835,6 @@ CREATE TABLE `tenant_role_private` (
   `code` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '角色编码',
   `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0' COMMENT '角色类型',
   `filter_dept` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否过滤部门',
-  `scope_type` int NOT NULL DEFAULT '0' COMMENT '数据范围类型',
-  `scopes` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '[]' COMMENT '数据范围',
   `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态, 0:正常，9:禁用',
   `sort` int NOT NULL DEFAULT '0' COMMENT '排序',
   `created_at` datetime DEFAULT NULL COMMENT '创建日期',
@@ -852,9 +848,9 @@ CREATE TABLE `tenant_role_private` (
 -- Records of tenant_role_private
 -- ----------------------------
 BEGIN;
-INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `scope_type`, `scopes`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171742951152807937, 0, 1, '测试组', '', '1', 0, 0, '[]', '0', 0, '2025-11-26 09:14:11', '2025-11-26 09:14:35', NULL);
-INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `scope_type`, `scopes`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171746929370460162, 0, 1, '测试组2', '', '1', 0, 0, '[]', '0', 0, '2025-11-26 09:29:59', '2025-11-26 09:29:59', NULL);
-INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `scope_type`, `scopes`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171747701302751233, 1171742951152807937, 1, '测试角色', 'role_org_2368148', '0', 1, 2, '[]', '0', 0, '2025-11-26 09:33:03', '2025-11-27 16:05:48', NULL);
+INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171742951152807937, 0, 1, '测试组', '', '1', 0, '0', 0, '2025-11-26 09:14:11', '2025-11-26 09:14:35', NULL);
+INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171746929370460162, 0, 1, '测试组2', '', '1', 0, '0', 0, '2025-11-26 09:29:59', '2025-11-26 09:29:59', NULL);
+INSERT INTO `tenant_role_private` (`id`, `pid`, `tenant_id`, `name`, `code`, `type`, `filter_dept`, `status`, `sort`, `created_at`, `updated_at`, `deleted_at`) VALUES (1171747701302751233, 1171742951152807937, 1, '测试角色', 'role_org_2368148', '0', 1, '0', 0, '2025-11-26 09:33:03', '2025-11-27 16:05:48', NULL);
 COMMIT;
 
 -- ----------------------------

@@ -32,6 +32,7 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 | `platform_permission` | 保留 ID、app_id、稳定 code、状态；`node_type` 仅 GROUP / ACTION；删除 `type` / `managed` / `source_type` / `source_id`；应用根以 `platform_app.permission_id` 识别 |
 | `platform_resource` | 应用内资源目录，id、app_id、稳定 code、name、status；资源代码全局使用应用命名空间，唯一约束 app_id/code |
 | 权限与资源 | 具体数据操作权限关联一个 resource_id；导航专用和纯配置权限可无资源；通配跨资源通过各资源独立规则限制 |
+| `platform_role` / `tenant_role_private` | 删除角色级 `scope_type` / `scopes`；数据范围只存在于规则表。保留 `filter_dept` |
 | `platform_role_data_rule` | 平台角色、授予权限、资源、scope_type、scopes 的规则，平台默认范围不允许 CUSTOM 租户部门 ID |
 | `tenant_role_data_rule_private` | tenant_id、role_id、platform_role、permission_id、resource_id、scope_type、scopes；表达租户追加规则 |
 | `tenant_role_user_private` | 沿用 role_id/platform_role/user_id/dept_id/tenant_id；部门上下文必须贯穿读取、去重、授权和撤销 |
@@ -224,7 +225,7 @@ PMS 内直接调用核心解析器，外部资源服务经受保护的内部接�
 | `platform_menu.permission_id` 单关联；Button=`menu_type=9` 伪路由 | `platform_menu_permission` 多对多；ANY/ALL；树不返回 Button |
 | `tenant_role_user_private.dept_id` 已有，绑定去重仅 `roleId+userId`，无唯一索引 | 唯一键含部门；空部门用生成列哨兵 `0`；业务参数仍用 null |
 | 菜单走 `ApplicationAuthorizationResolver`，登录走 `IdentityUtil.getScopes` 写入 `OnlineToken.authorities` | 统一解析器；会话不再合并旧业务权限集合；JWT 仍瘦身 |
-| `@DataScope` 无属性；角色级 `scope_type`；DEPT_AND_CHILD 按用户全部部门展开 | 按 `(resource, permission)`；部门角色用绑定部门 |
+| `@DataScope` 无属性；角色级 `scope_type`；DEPT_AND_CHILD 按用户全部部门展开 | 按 `(resource, permission)`；角色表不再有范围列；部门角色用绑定部门 |
 | PMS 用 `@Cacheable`，未用 `LayeredCacheBuilder` | 授权快照按分层缓存接入，无 Resilient/LKG 放行 |
 | `tenant_app_config` 无记录默认不可用（current）；无 `default_access_mode` | 默认 OPEN；CLOSED 为申请制；显式覆盖不因到期回退 |
 | 无资源目录、无按资源数据规则表 | 新增 `platform_resource` 与两套 data_rule 表 |
@@ -238,7 +239,7 @@ GROUP 通配统一 `:**`。迁移将旧 `:*` 转为 `:**`；创建接口不再�
 
 ## 10. 迁移映射清单格式
 
-操作脚本：`databases/migrations/022_pms_rbac_data_authorization.sql`（schema）、`022_pms_rbac_data_authorization_data.sql`（数据，支持 dry-run 开关）、`023_pms_menu_permission_finalize.sql`（通配页关联叶子并 DROP `platform_menu.permission_id`）、`024_pms_permission_drop_legacy_columns.sql`（收口 NAVIGATION 并 DROP `managed`/`source_type`/`source_id`）、`025_pms_permission_drop_type.sql`（DROP `platform_permission.type`）、`rollback_022_*.sql` / `rollback_023_*.sql` / `rollback_024_*.sql` / `rollback_025_*.sql`。Java 规则与报告：`AuthorizationMigrationAnalyzer`，禁止猜测修复。
+操作脚本：`databases/migrations/022_pms_rbac_data_authorization.sql`（schema）、`022_pms_rbac_data_authorization_data.sql`（数据，支持 dry-run 开关）、`023_pms_menu_permission_finalize.sql`（通配页关联叶子并 DROP `platform_menu.permission_id`）、`024_pms_permission_drop_legacy_columns.sql`（收口 NAVIGATION 并 DROP `managed`/`source_type`/`source_id`）、`025_pms_permission_drop_type.sql`（DROP `platform_permission.type`）、`026_pms_role_drop_legacy_scope.sql`（DROP 角色级 `scope_type`/`scopes`）、`rollback_022_*.sql` / `rollback_023_*.sql` / `rollback_024_*.sql` / `rollback_025_*.sql` / `rollback_026_*.sql`。Java 规则与报告：`AuthorizationMigrationAnalyzer`，禁止猜测修复。
 
 ### 10.1 阻断类别
 
@@ -263,7 +264,7 @@ GROUP 通配统一 `:**`。迁移将旧 `:*` 转为 `:**`；创建接口不再�
 4. Button 行：对应权限改为 ACTION 并保留绑定；删除菜单行，不写入可见性关联。
 5. OPEN 菜单：不写可见性关联，即使旧 `permission_id` 非空。
 6. 旧 `:*`：等价改为 `:**`；冲突阻断。
-7. 角色级 `scope_type`/`scopes` 仅在已登记资源上生成规则；未登记资源不自动套过滤。平台 CUSTOM 含租户部门：能唯一归属则写入该租户私有规则，否则阻断。本 change 不为 PMS 用户/部门/角色表注册行过滤。
+7. 角色级 `scope_type`/`scopes` 不再作为授权或迁移写入来源，也不再生成规则。`022` dry-run 仍可在 DROP 前报告旧 CUSTOM 跨租户部门；`026` 从 `platform_role` / `tenant_role_private` DROP 这两列。本 change 不为 PMS 用户/部门/角色表注册行过滤。
 8. 既有应用 `default_access_mode=OPEN`。`tenant_app_config` 增加 `(tenant_id, app_id)` 唯一约束。
 9. 新增管理操作权限种子（独立 ACTION，挂应用根 GROUP）：`platform:config:app:resource:query|create|update|delete`、`platform:config:role:data-rule:query|set`、`org:contacts:role:data-rule:query|set`。持有对应 `:**` 的角色动态获得，无需再绑叶子。
 10. 映射完成后删除 `platform_permission.managed` / `source_type` / `source_id` / `type` 及 `idx_permission_source`。残留 `node_type=NAVIGATION` 按第 2、3 条再收口一次。应用根只认 `platform_app.permission_id`。`PermissionNodeTypeEnum` 删除 `NAVIGATION`；删除 `PermissionSourceTypeEnum`。旧 `type`（菜单权限/API 权限）不再作为授权事实，节点形态只认 `node_type`。

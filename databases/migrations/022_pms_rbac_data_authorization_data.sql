@@ -9,6 +9,8 @@
 --   3. 不猜测修复；歧义行必须人工处理后重跑报告。
 --   4. 通配页优先关联已有 {ns}:query，否则已有 {ns}:view；二者都没有时不要猜测新建。
 --      映射收口并 DROP platform_menu.permission_id 见 023_pms_menu_permission_finalize.sql。
+--   5. PLATFORM_CUSTOM_TENANT_DEPT 读取角色表遗留列 scope_type/scopes，必须在
+--      026_pms_role_drop_legacy_scope.sql 之前执行；026 之后该查询会因缺列失败。
 -- Java 规则对照：AuthorizationMigrationAnalyzer
 -- ============================================================
 
@@ -89,7 +91,8 @@ WHERE m.deleted_at IS NULL
   AND m.access_mode = '1'
   AND (p.code LIKE '%:**' OR (p.code LIKE '%:*' AND p.code NOT LIKE '%:**'));
 
--- PLATFORM_CUSTOM_TENANT_DEPT：平台 CUSTOM 部门无法拆到唯一租户
+-- PLATFORM_CUSTOM_TENANT_DEPT：平台 CUSTOM 部门无法拆到唯一租户。
+-- 依赖角色表遗留列，必须在 026 DROP 之前执行。
 SELECT 'PLATFORM_CUSTOM_TENANT_DEPT' AS reason, r.id AS role_id
 FROM platform_role r
 WHERE r.deleted_at IS NULL

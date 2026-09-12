@@ -53,7 +53,7 @@
 | 字段或接口 | 说明 |
 |---|---|
 | `UserEffectivePermissionVO.permissions` | 已展开的具体权限码，通配不会出现 |
-| `expiresAt` / `version` / `generatedAt` | 权限列表缓存期限；过期或 503 后重拉 |
+| `expiresAt` / `version` / `generatedAt` | 这份列表对应的后端快照时刻；**不是**前端定时轮询间隔 |
 | `defaultAccessMode` | 应用：`"0"` OPEN / `"1"` CLOSED |
 | `resourceId` | 权限节点可选；数据操作应绑定资源 |
 | `/apps/{appId}/resources` | 资源目录 CRUD |
@@ -67,7 +67,7 @@
 2. **菜单不再返回 Button 节点**；页面按钮用具体权限码控制。受保护页用 `permissionIds` + `permissionMatchMode`，不再用单个 `permissionId` / path 生成权限。
 3. **权限树不再返回 `type` / `managed` / `readOnly`**。展示与创建只用 `nodeType`（GROUP `"0"` / ACTION `"2"`）。创建权限 **不要传 `type`**。
 4. **GROUP 通配统一 `:**`**（例如 `contacts:**`），不再用 `:*` 创建。
-5. 撤权最多 **30 秒**生效。权限列表带 `expiresAt`，过期后应重新拉取；若接口返回 **503**（`AuthorizationSnapshot.Unavailable`）表示授权服务暂时不可用，**不要当成无权限空数组**。
+5. 撤权在后端最多 **30 秒**生效（业务接口鉴权，不靠前端轮询）。`expiresAt` 只说明当前这份 UI 权限列表对应哪次快照，**不要按它 setInterval**。任意已登录接口可能返回 **503**（`AuthorizationSnapshot.Unavailable`），表示授权服务暂时不可用，**不要当成无权限空数组**。
 6. JWT / 会话不再展开业务权限码；前端不要从 token 解析 RBAC。
 7. 权限增删改走应用中心化接口 `/v1/platform/config/apps/{appId}/permissions`；`GET /v1/platform/config/permission/tree` 仅只读全量树。
 
@@ -108,9 +108,21 @@
 }
 ```
 
-- `permissions`：当前启用的 **具体** 权限码，用于 `v-if` / 路由 `meta`。
-- 通配不会出现在该数组；服务端已展开。
-- 建议缓存到 `expiresAt` 前，过期或收到 503 后重拉。
+- `permissions`：当前启用的 **具体** 权限码，用于 `v-if` / 页内能力；通配不会出现，服务端已展开。
+- `generatedAt` / `version` / `expiresAt`：这份列表对应的后端快照。`expiresAt` 约 `generatedAt + 30s`，表示 **后端** 授权判定的新鲜度上限，不是前端心跳。
+- **不要定时拉取。** 按钮显隐可以暂时不准；真正拦请求的是业务 API（撤权后最多 30 秒内旧授权失效，再请求会 403/503）。
+
+登录后三个接口并行 bootstrap 一次即可；路由守卫只在尚未加载时等待这次结果，**不要每个 `beforeEach` 都打 info / menus / permissions**。
+
+之后只在这些时机再拉 `permissions`：
+
+1. 切换租户、重新登录
+2. 窗口重新可见（`visibilitychange` / focus）且本地已过 `expiresAt`（可选，用来尽快藏掉已撤按钮）
+3. 业务接口返回明确无权限的 **403**，或快照不可用的 **503** 时再拉一次以对齐界面；503 提示稍后重试，不要清空成游客
+
+菜单同理：bootstrap + 切租户足够。若权限刷新后 `version` 变了，可顺带再拉一次 menus，不必定时拉。
+
+`roles` 在 info 里是身份（展示、少量产品态），**不要**用角色编码做按钮/路由放行。
 
 ### 用户菜单节点（`MenuTreeNodeVO`）
 
@@ -144,7 +156,7 @@
 | permissionIds | 可见性条件权限 ID 列表；**不再返回**旧单列 `permissionId` / `permissionCode` |
 | permissionMatchMode | `"0"` ANY（默认）/ `"1"` ALL |
 
-前端路由守卫：受保护页（`menuType=菜单` 且 `accessMode=PERMISSION`）用当前用户 `permissions` 去匹配这些 ID 对应的码；更简单的做法是 **只信任服务端已过滤的菜单树**，按钮再用 `permissions` 做 `v-if`。
+前端路由守卫：**只信任服务端已过滤的菜单树** 做动态路由/侧栏，不要用 `permissionIds` 在前端再算一遍「能不能进这一页」。页内按钮用 bootstrap 得到的 `permissions` 做 `v-if`。
 
 ---
 
@@ -433,11 +445,9 @@ GET 返回该来源层完整列表（不是树）：
 
 ## 8. 建议联调顺序
 
-1. 执行 `022_pms_rbac_data_authorization.sql`、`022_pms_rbac_data_authorization_data.sql`（先 dry-run）、`023_pms_menu_permission_finalize.sql`、`024_pms_permission_drop_legacy_columns.sql`、**`025_pms_permission_drop_type.sql`**。
-2. 登录后立刻打 `GET /v1/auth/user/info`：确认 **没有** `authorities`。
-3. 打 `GET /v1/auth/user/permissions`：用 `permissions` 做按钮/路由；缓存到 `expiresAt`（ISO-8601，约 29 秒）。
-4. 打 `GET /v1/auth/user/menus`：无 Button 节点；受保护页看 `permissionIds` + `permissionMatchMode`，无旧 `permissionId`。
-5. 打权限树：确认节点只有 `nodeType`，**没有** `type` / `managed` / `readOnly`。创建权限只传 `nodeType`，不传 `type`。
-6. 配置页：资源目录 → 权限绑定 `resourceId` → 菜单关联 `permissionIds` → 角色权限 → 角色 data-rules。
-7. 撤权后 30 秒内旧权限可能仍可用；过期后重拉 permissions。任意已登录接口都可能返回 **503** `AuthorizationSnapshot.Unavailable`，前端应提示稍后重试，不要清空权限当成游客。
-8. 行级过滤示例直连 ingot-test `http://localhost:5210`（网关默认未配 test 路由）。
+1. 执行 `022_pms_rbac_data_authorization.sql`、`022_pms_rbac_data_authorization_data.sql`（先 dry-run）、`023_pms_menu_permission_finalize.sql`、`024_pms_permission_drop_legacy_columns.sql`、**`025_pms_permission_drop_type.sql`**、**`026_pms_role_drop_legacy_scope.sql`**。角色 CRUD **不再**返回或接受 `scopeType`/`scopes`，数据范围只走 data-rules。
+2. 登录后并行打 `info` / `menus` / `permissions` 各一次（bootstrap）：info **没有** `authorities`；menus 无 Button、无旧 `permissionId`；permissions 用具体码做按钮。之后不要按路由或 30 秒定时再打。
+3. 打权限树：确认节点只有 `nodeType`，**没有** `type` / `managed` / `readOnly`。创建权限只传 `nodeType`，不传 `type`。
+4. 配置页：资源目录 → 权限绑定 `resourceId` → 菜单关联 `permissionIds` → 角色权限 → 角色 data-rules。
+5. 撤权后业务 API 最多 30 秒内拒绝旧授权；前端按钮可能晚一点消失，点了会 403，属预期。任意已登录接口都可能返回 **503** `AuthorizationSnapshot.Unavailable`，提示稍后重试，不要清空权限当成游客。
+6. 行级过滤示例直连 ingot-test `http://localhost:5210`（网关默认未配 test 路由）。

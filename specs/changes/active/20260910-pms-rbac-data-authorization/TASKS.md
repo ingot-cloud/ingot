@@ -16,8 +16,9 @@
 | 通配 | 包含命名空间下未来新增具体操作，数据范围独立 | 讨论结论，随工件评审 |
 | 细化实现 | 表结构、接口字段、失败处理与迁移策略见 DESIGN | 本次形成评审稿 |
 | 权限遗留列 | 删除 `type`/`managed`/`source_type`/`source_id`，`node_type` 仅 GROUP/ACTION；应用根用 `platform_app.permission_id` | 用户确认不再保留兼容列 |
+| 角色级范围列 | 删除 `platform_role` / `tenant_role_private` 的 `scope_type`/`scopes`；范围只配 data-rules | 用户确认避免误导配置 |
 
-本 change 状态为 implementing。T0–T7 已完成；下一步为 V1 自动化验收与前端联调，验收前不更新 `specs/current/`。
+本 change 状态为 implementing。T0–T8 已完成；下一步为 V1 自动化验收与前端联调，验收前不更新 `specs/current/`。
 
 ## 评审任务
 
@@ -63,10 +64,15 @@
   - 内容：`node_type` 仅 GROUP/ACTION；DROP `type`/`managed`/`source_type`/`source_id`；应用根与审计改认 `platform_app.permission_id`。
   - 验收：权限树不再返回 `type`/托管标记；创建/更新/删除不再判断 NAVIGATION、managed 或 MENU/API type；残留兼容列不出现在实体与基线 DDL。
 
+- [x] T8：删除角色级 `scope_type`/`scopes`
+  - 依赖：T2、data-rules 已是唯一范围事实来源。
+  - 内容：实体、VO、角色 CRUD 与前端角色模型不再暴露这两列；`026` DROP `platform_role` / `tenant_role_private` 列。`filter_dept` 保留。
+  - 验收：角色接口与角色表单不再出现全局数据范围；配置入口只有 data-rules。
+
 ## 验证与发布任务
 
 - [ ] V1：自动化验收
-  - 依赖：T1—T7。
+  - 依赖：T1—T8。
   - 验收：A01—A14 有逐项测试/联调证据；数据库、HTTP、缓存多节点测试覆盖真实边界，而非仅 mock 实现。
 - [ ] V2：迁移及回滚演练
   - 依赖：V1。
