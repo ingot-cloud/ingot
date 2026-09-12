@@ -2,18 +2,15 @@ package com.ingot.cloud.pms.api.model.domain;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.annotation.TenantTable;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
-import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -30,7 +27,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @TenantTable
-@TableName(value = "tenant_role_private", autoResultMap = true)
+@TableName("tenant_role_private")
 public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements RoleType {
 
     @Serial
@@ -73,17 +70,6 @@ public class TenantRolePrivate extends BaseModel<TenantRolePrivate> implements R
      * 是否过滤部门
      */
     private Boolean filterDept;
-
-    /**
-     * 数据范围类型
-     */
-    private DataScopeTypeEnum scopeType;
-
-    /**
-     * 数据权限范围
-     */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Long> scopes;
 
     /**
      * 排序

@@ -1,9 +1,7 @@
 package com.ingot.cloud.pms.identity;
 
-import com.ingot.cloud.pms.service.biz.BizAppService;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
+import com.ingot.cloud.pms.authorization.engine.EffectiveAuthorizationService;
 import com.ingot.cloud.pms.service.biz.BizUserDeptService;
-import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
@@ -30,9 +28,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
     private final SysTenantService sysTenantService;
     private final SysUserTenantService sysUserTenantService;
 
-    private final BizAppService bizAppService;
-    private final BizRoleService bizRoleService;
-    private final BizUserService bizUserService;
+    private final EffectiveAuthorizationService effectiveAuthorizationService;
     private final BizUserDeptService bizUserDeptService;
 
     private final OssService ossService;
@@ -51,7 +47,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             UserDetailsResponse response = IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
                     request.getUserType(), request.getTenant(),
                     sysTenantService, sysUserTenantService,
-                    bizUserService, bizAppService, bizRoleService, bizUserDeptService, ossService);
+                    effectiveAuthorizationService, bizUserDeptService, ossService);
             return response;
         });
     }

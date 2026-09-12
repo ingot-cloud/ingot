@@ -37,11 +37,12 @@ public class BizMenuUtils {
 
         List<MenuTreeNodeVO> nodeList = allNodeList.stream()
                 // 1.访问模式为开放（OPEN）的菜单无需鉴权
-                // 2.其余菜单需拥有对应权限且权限可用
+                // 2.其余菜单需拥有对应可见性权限且权限可用
                 .filter(node -> node.getAccessMode() == AccessModeEnum.OPEN ||
                         authorities.stream()
                                 .anyMatch(authority ->
-                                        node.getPermissionId().equals(authority.getId())
+                                        node.getPermissionIds() != null
+                                                && node.getPermissionIds().contains(authority.getId())
                                                 && authority.getStatus() == CommonStatusEnum.ENABLE))
                 .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
                 .sorted(Comparator.comparingInt(MenuTreeNodeVO::getSort))

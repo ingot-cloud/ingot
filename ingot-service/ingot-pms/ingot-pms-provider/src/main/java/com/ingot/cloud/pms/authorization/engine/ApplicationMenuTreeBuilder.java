@@ -11,10 +11,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ingot.cloud.pms.api.model.domain.PlatformApp;
-import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
+import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.domain.PlatformAppService;
+import com.ingot.cloud.pms.service.domain.PlatformMenuPermissionService;
 import com.ingot.cloud.pms.service.domain.PlatformMenuService;
+import com.ingot.cloud.pms.service.domain.PlatformPermissionService;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
@@ -24,7 +27,7 @@ import org.springframework.stereotype.Service;
 /**
  * <p>应用菜单树生成器，按应用排序聚合可见菜单并递归排序子节点。</p>
  *
- * <p>过滤禁用、不可访问应用与无权限菜单，并自动补齐可见菜单的祖先节点。</p>
+ * <p>过滤按钮、禁用与不可访问应用；受保护页按菜单关联权限的 ANY/ALL 判定；目录靠祖先补齐。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -35,18 +38,32 @@ public class ApplicationMenuTreeBuilder {
 
     private final PlatformMenuService platformMenuService;
     private final PlatformAppService platformAppService;
+    private final PlatformMenuPermissionService platformMenuPermissionService;
+    private final PlatformPermissionService platformPermissionService;
 
+    /**
+     * 按有效授权构建当前用户可见菜单树。
+     *
+     * @param authorization 有效授权
+     * @return 按应用排序的菜单根节点
+     */
     public List<MenuTreeNodeVO> build(EffectiveAuthorization authorization) {
         List<MenuTreeNodeVO> allNodes = platformMenuService.nodeList();
-        Set<Long> accessibleAppIds = authorization.getAccessibleAppIds();
+        Set<Long> accessibleAppIds = authorization.safeAccessibleAppIds();
         Map<Long, PlatformApp> appById = platformAppService.list().stream()
                 .collect(Collectors.toMap(PlatformApp::getId, item -> item,
                         (a, b) -> a, LinkedHashMap::new));
+        Map<Long, List<Long>> permissionIdsByMenu = platformMenuPermissionService.mapPermissionIds();
+        Map<Long, String> permissionCodeById = platformPermissionService.list().stream()
+                .collect(Collectors.toMap(PlatformPermission::getId, PlatformPermission::getCode, (a, b) -> a));
 
         List<MenuTreeNodeVO> visibleNodes = allNodes.stream()
+                .filter(node -> node.getMenuType() != MenuTypeEnum.Button)
                 .filter(node -> node.getStatus() == CommonStatusEnum.ENABLE)
                 .filter(node -> isAppAccessible(node, accessibleAppIds))
-                .filter(node -> isMenuVisible(node, authorization))
+                .peek(node -> node.setPermissionIds(
+                        permissionIdsByMenu.getOrDefault(node.getId(), List.of())))
+                .filter(node -> isMenuVisible(node, permissionIdsByMenu, permissionCodeById, authorization))
                 .sorted(Comparator.comparing(MenuTreeNodeVO::getOrgType)
                         .thenComparing(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -94,16 +111,15 @@ public class ApplicationMenuTreeBuilder {
         return accessibleAppIds.contains(node.getAppId());
     }
 
-    private boolean isMenuVisible(MenuTreeNodeVO node, EffectiveAuthorization authorization) {
-        // access_mode 为单一来源：仅 OPEN 视为无需鉴权，其余（含未设置）一律按权限校验
-        if (node.getAccessMode() == AccessModeEnum.OPEN) {
-            return true;
-        }
-        String permissionCode = node.getPermissionCode();
-        if (permissionCode == null) {
-            return false;
-        }
-        return authorization.hasPermission(permissionCode);
+    private boolean isMenuVisible(MenuTreeNodeVO node,
+                                  Map<Long, List<Long>> permissionIdsByMenu,
+                                  Map<Long, String> permissionCodeById,
+                                  EffectiveAuthorization authorization) {
+        List<String> requiredCodes = permissionIdsByMenu.getOrDefault(node.getId(), List.of()).stream()
+                .map(permissionCodeById::get)
+                .toList();
+        return MenuVisibility.visible(node.getMenuType(), node.getAccessMode(),
+                node.getPermissionMatchMode(), requiredCodes, authorization);
     }
 
     private List<MenuTreeNodeVO> appendAncestors(List<MenuTreeNodeVO> allNodes, List<MenuTreeNodeVO> visibleNodes) {

@@ -8,6 +8,7 @@ import com.ingot.cloud.pms.api.model.convert.UserConvert;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.vo.auth.UserEffectivePermissionVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.authorization.ApplicationAuthorizationResolver;
 import com.ingot.cloud.pms.common.BizUtils;
@@ -16,6 +17,8 @@ import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
+import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationSnapshotAccess;
+import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationSnapshotHolder;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.credential.model.CredentialErrorCode;
 import com.ingot.framework.security.credential.model.CredentialScene;
@@ -44,6 +47,7 @@ public class BizAuthServiceImpl implements BizAuthService {
     private final SysUserTenantService userTenantService;
 
     private final ApplicationAuthorizationResolver applicationAuthorizationResolver;
+    private final AuthorizationSnapshotAccess authorizationSnapshotAccess;
     private final CredentialSecurityService credentialSecurityService;
 
     private final UserConvert userConvert;
@@ -119,6 +123,20 @@ public class BizAuthServiceImpl implements BizAuthService {
 
     @Override
     public List<MenuTreeNodeVO> getUserMenus(InUser user) {
-        return applicationAuthorizationResolver.resolveMenus(user.getRoleCodeList());
+        return applicationAuthorizationResolver.resolveMenus(user.getId());
+    }
+
+    @Override
+    public UserEffectivePermissionVO getUserPermissions(InUser user) {
+        var snapshot = AuthorizationSnapshotHolder.get();
+        if (snapshot == null) {
+            snapshot = authorizationSnapshotAccess.require(user.getTenantId(), user.getId());
+        }
+        UserEffectivePermissionVO vo = new UserEffectivePermissionVO();
+        vo.setPermissions(snapshot.getPermissionCodes());
+        vo.setVersion(snapshot.getVersion());
+        vo.setGeneratedAt(snapshot.getGeneratedAt());
+        vo.setExpiresAt(snapshot.getExpiresAt());
+        return vo;
     }
 }

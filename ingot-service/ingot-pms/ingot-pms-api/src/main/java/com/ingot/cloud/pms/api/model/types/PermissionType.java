@@ -1,14 +1,14 @@
 package com.ingot.cloud.pms.api.model.types;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionNodeTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 
 /**
- * <p>Description  : 权限类型.</p>
- * <p>Author       : jy.</p>
- * <p>Date         : 2023/11/25.</p>
- * <p>Time         : 10:49.</p>
+ * <p>权限树节点共用字段：编码、节点类型、组织维度与状态。</p>
+ *
+ * @author jy
+ * @since 1.0.0
  */
 public interface PermissionType {
     /**
@@ -44,11 +44,18 @@ public interface PermissionType {
     void setCode(String code);
 
     /**
-     * 权限类型
+     * 节点类型，仅 GROUP 或 ACTION
      */
-    PermissionTypeEnum getType();
+    PermissionNodeTypeEnum getNodeType();
 
-    void setType(PermissionTypeEnum type);
+    void setNodeType(PermissionNodeTypeEnum nodeType);
+
+    /**
+     * 关联资源 ID，非数据操作可空
+     */
+    Long getResourceId();
+
+    void setResourceId(Long resourceId);
 
     /**
      * 组织类型

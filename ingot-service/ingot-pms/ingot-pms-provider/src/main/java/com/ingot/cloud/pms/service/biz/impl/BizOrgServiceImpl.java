@@ -18,6 +18,7 @@ import com.ingot.cloud.pms.api.model.dto.app.AppEnabledDTO;
 import com.ingot.cloud.pms.api.model.dto.org.CreateOrgDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.core.TenantEngine;
 import com.ingot.cloud.pms.service.biz.BizAppService;
@@ -56,6 +57,7 @@ public class BizOrgServiceImpl implements BizOrgService {
     private final BizAppService bizAppService;
     private final AuthorityConvert authorityConvert;
     private final RemoteMemberTenantService remoteMemberTenantService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
 
     @Override
     public IPage<SysTenant> conditionPage(Page<SysTenant> page, SysTenant params) {
@@ -127,11 +129,13 @@ public class BizOrgServiceImpl implements BizOrgService {
             tenantAppConfig.setAppId(params.getId());
             tenantAppConfig.setEnabled(params.getEnabled());
             tenantAppConfigService.create(tenantAppConfig);
+            authorizationChangeNotifier.markAll();
             return;
         }
 
         tenantAppConfig.setEnabled(params.getEnabled());
         tenantAppConfigService.update(tenantAppConfig);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override

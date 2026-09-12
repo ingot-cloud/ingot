@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.TenantAppConfig;
+import com.ingot.cloud.pms.api.model.enums.AppDefaultAccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.domain.PlatformAppService;
@@ -53,7 +54,8 @@ public class BizAppServiceImpl implements BizAppService {
                 .findFirst()
                 .orElse(null);
         if (appConfig == null) {
-            return app.getStatus() == CommonStatusEnum.ENABLE;
+            return app.getStatus() == CommonStatusEnum.ENABLE
+                    && app.getDefaultAccessMode() != AppDefaultAccessModeEnum.CLOSED;
         }
         if (!Boolean.TRUE.equals(appConfig.getEnabled())) {
             return false;

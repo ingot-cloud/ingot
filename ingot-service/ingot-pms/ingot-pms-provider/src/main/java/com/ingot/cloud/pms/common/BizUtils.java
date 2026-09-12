@@ -76,7 +76,6 @@ public class BizUtils {
         RoleTreeNodeVO item = roleConvert.to(role);
         item.setTypeText(role.getType().getText());
         item.setOrgTypeText(role.getOrgType().getText());
-        item.setScopeTypeText(role.getScopeType().getText());
         item.setStatusText(role.getStatus().getText());
         return item;
     }

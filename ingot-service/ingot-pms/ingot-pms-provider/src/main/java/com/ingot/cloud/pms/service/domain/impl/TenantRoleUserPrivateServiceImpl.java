@@ -62,14 +62,19 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
             return;
         }
 
-        // 避免重复绑定
-        List<Long> alreadyExistsUserIds = CollUtil.emptyIfNull(list(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
-                .eq(TenantRoleUserPrivate::getRoleId, roleId)
-                .in(TenantRoleUserPrivate::getUserId, bindIds))
-                .stream().map(TenantRoleUserPrivate::getUserId).toList());
+        List<Long> alreadyBoundUserIds = CollUtil.emptyIfNull(list(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                        .eq(TenantRoleUserPrivate::getRoleId, roleId)
+                        .eq(TenantRoleUserPrivate::getPlatformRole, platformFlag)
+                        .eq(deptId != null, TenantRoleUserPrivate::getDeptId, deptId)
+                        .isNull(deptId == null, TenantRoleUserPrivate::getDeptId)
+                        .in(TenantRoleUserPrivate::getUserId, bindIds)))
+                .stream()
+                .map(TenantRoleUserPrivate::getUserId)
+                .toList();
 
         List<TenantRoleUserPrivate> bindList = bindIds.stream()
-                .filter(userId -> !alreadyExistsUserIds.contains(userId))
+                .distinct()
+                .filter(userId -> !alreadyBoundUserIds.contains(userId))
                 .map(userId -> {
                     TenantRoleUserPrivate bind = new TenantRoleUserPrivate();
                     bind.setRoleId(roleId);
@@ -115,6 +120,13 @@ public class TenantRoleUserPrivateServiceImpl extends BaseServiceImpl<TenantRole
     public void clearByUserId(long userId) {
         remove(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
                 .eq(TenantRoleUserPrivate::getUserId, userId));
+    }
+
+    @Override
+    public void clearByUserAndDept(long userId, long deptId) {
+        remove(Wrappers.<TenantRoleUserPrivate>lambdaQuery()
+                .eq(TenantRoleUserPrivate::getUserId, userId)
+                .eq(TenantRoleUserPrivate::getDeptId, deptId));
     }
 
     @Override

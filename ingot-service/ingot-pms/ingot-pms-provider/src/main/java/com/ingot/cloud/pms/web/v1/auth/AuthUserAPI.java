@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.web.v1.auth;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.vo.auth.UserEffectivePermissionVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizAuthService;
 import com.ingot.framework.commons.model.support.R;
@@ -40,5 +41,11 @@ public class AuthUserAPI implements RShortcuts {
     @Operation(summary = "用户菜单", description = "获取当前用户菜单")
     public R<List<MenuTreeNodeVO>> getUserMenus() {
         return ok(bizAuthService.getUserMenus(SecurityAuthContext.getUser()));
+    }
+
+    @GetMapping(value = "/permissions")
+    @Operation(summary = "用户有效权限", description = "获取当前用户启用的具体权限码，禁止指定其它用户")
+    public R<UserEffectivePermissionVO> getUserPermissions() {
+        return ok(bizAuthService.getUserPermissions(SecurityAuthContext.getUser()));
     }
 }

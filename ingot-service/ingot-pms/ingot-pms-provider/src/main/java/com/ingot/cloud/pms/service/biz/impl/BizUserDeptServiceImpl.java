@@ -12,7 +12,9 @@ import cn.hutool.core.collection.ListUtil;
 import com.ingot.cloud.pms.api.model.domain.TenantDept;
 import com.ingot.cloud.pms.service.biz.BizDeptService;
 import com.ingot.cloud.pms.service.biz.BizUserDeptService;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.service.domain.TenantDeptService;
+import com.ingot.cloud.pms.service.domain.TenantRoleUserPrivateService;
 import com.ingot.cloud.pms.service.domain.TenantUserDeptPrivateService;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -35,7 +37,9 @@ public class BizUserDeptServiceImpl implements BizUserDeptService {
 
     private final TenantDeptService tenantDeptService;
     private final TenantUserDeptPrivateService tenantUserDeptPrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
     private final BizDeptService bizDeptService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
     private final AssertionChecker assertionChecker;
 
     @Override
@@ -119,7 +123,13 @@ public class BizUserDeptServiceImpl implements BizUserDeptService {
             }
         }
         // 底层 TenantUserDeptPrivateService 已通过 @CacheEvict 清理缓存
+        Set<Long> previous = new HashSet<>(getDeptIds(userId));
         tenantUserDeptPrivateService.setDepartments(userId, targets);
+        previous.removeAll(targets);
+        for (Long deptId : previous) {
+            tenantRoleUserPrivateService.clearByUserAndDept(userId, deptId);
+        }
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -130,6 +140,7 @@ public class BizUserDeptServiceImpl implements BizUserDeptService {
     @Override
     public void clear(long userId) {
         tenantUserDeptPrivateService.clearByUserId(userId);
+        authorizationChangeNotifier.markAll();
     }
 
     /**

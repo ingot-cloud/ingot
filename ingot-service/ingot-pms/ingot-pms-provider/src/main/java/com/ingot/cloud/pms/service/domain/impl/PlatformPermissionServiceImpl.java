@@ -56,8 +56,6 @@ public class PlatformPermissionServiceImpl extends BaseServiceImpl<PlatformPermi
     @Override
     @CacheEvict(value = CacheConstants.PLATFORM_PERMISSIONS, allEntries = true)
     public Long createAndReturnId(PlatformPermission authority, boolean fillParentCode) {
-        assertionChecker.checkOperation(authority.getType() != null,
-                "PlatformAuthorityServiceImpl.TypeNonNull");
         assertionChecker.checkOperation(authority.getOrgType() != null,
                 "PlatformAuthorityServiceImpl.OrgTypeNonNull");
 

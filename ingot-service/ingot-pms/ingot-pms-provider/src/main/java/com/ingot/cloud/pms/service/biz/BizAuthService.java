@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.service.biz;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.dto.user.UserInfoDTO;
+import com.ingot.cloud.pms.api.model.vo.auth.UserEffectivePermissionVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.framework.security.core.userdetails.InUser;
 
@@ -29,4 +30,12 @@ public interface BizAuthService {
      * @return {@link MenuTreeNodeVO} List
      */
     List<MenuTreeNodeVO> getUserMenus(InUser user);
+
+    /**
+     * 返回当前用户同源授权快照中的具体权限码。
+     *
+     * @param user 当前登录用户，禁止用请求参数替换
+     * @return 有效权限视图
+     */
+    UserEffectivePermissionVO getUserPermissions(InUser user);
 }

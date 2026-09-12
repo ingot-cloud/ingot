@@ -2,11 +2,13 @@ package com.ingot.cloud.test.mybatis;
 
 import java.util.List;
 
+import com.ingot.cloud.test.authorization.DemoDataScopeConstants;
 import com.ingot.cloud.test.model.domain.TStudent;
 import com.ingot.cloud.test.service.domain.TStudentService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.data.mybatis.scope.config.DataScope;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +29,8 @@ public class ScopeTestAPI implements RShortcuts {
     private final TStudentService studentService;
 
     @GetMapping
-    @DataScope
+    @AdminOrHasAnyAuthority({DemoDataScopeConstants.PERM_STUDENT_QUERY})
+    @DataScope(resource = DemoDataScopeConstants.RESOURCE_STUDENT, permission = DemoDataScopeConstants.PERM_STUDENT_QUERY)
     public R<?> testScope() {
         return ok(students());
     }

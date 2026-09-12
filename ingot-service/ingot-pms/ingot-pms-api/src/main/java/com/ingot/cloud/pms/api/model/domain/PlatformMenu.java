@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionMatchModeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
@@ -18,7 +19,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <p>平台菜单实体，归属于应用并关联托管 NAVIGATION 权限。</p>
+ * <p>平台菜单实体，归属于应用；受保护页面通过可见性关联权限，不再托管权限生命周期。</p>
  *
  * @author jymot
  * @since 2025-11-12
@@ -49,6 +50,11 @@ public class PlatformMenu extends BaseModel<PlatformMenu> implements MenuType {
     private AccessModeEnum accessMode;
 
     /**
+     * 受保护页面的权限匹配模式，缺省 {@link PermissionMatchModeEnum#ANY}
+     */
+    private PermissionMatchModeEnum permissionMatchMode;
+
+    /**
      * 父ID
      */
     private Long pid;
@@ -69,11 +75,6 @@ public class PlatformMenu extends BaseModel<PlatformMenu> implements MenuType {
      */
     @TableField("`path`")
     private String path;
-
-    /**
-     * 权限ID
-     */
-    private Long permissionId;
 
     /**
      * 前端页面或布局注册键，与 {@code path} 独立；创建与更新时原样落库，不由 path 推导。

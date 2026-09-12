@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.ingot.cloud.pms.api.model.enums.AppDefaultAccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,6 +45,9 @@ public class AppDetailVO implements Serializable {
 
     @Schema(description = "状态")
     private CommonStatusEnum status;
+
+    @Schema(description = "无租户覆盖时的默认访问策略")
+    private AppDefaultAccessModeEnum defaultAccessMode;
 
     @Schema(description = "根权限 ID")
     private Long rootPermissionId;

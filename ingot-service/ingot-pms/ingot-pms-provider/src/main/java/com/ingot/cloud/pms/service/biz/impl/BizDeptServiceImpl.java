@@ -51,37 +51,7 @@ public class BizDeptServiceImpl implements BizDeptService {
 
     @Override
     public List<TenantDept> getDescendantList(Long deptId, boolean includeSelf) {
-        // 查询全部部门
-        List<TenantDept> allDeptList = tenantDeptService.list();
-
-        // 递归查询所有子节点
-        List<TenantDept> resDeptList = new ArrayList<>();
-        recursiveDept(allDeptList, deptId, resDeptList);
-
-        // 添加当前节点
-        if (includeSelf) {
-            resDeptList.addAll(allDeptList.stream()
-                    .filter(sysDept -> deptId.equals(sysDept.getId()))
-                    .toList());
-        }
-        return resDeptList;
-    }
-
-    /**
-     * 递归查询所有子节点。
-     *
-     * @param allDeptList 所有部门列表
-     * @param parentId    父部门ID
-     * @param resDeptList 结果集合
-     */
-    private void recursiveDept(List<TenantDept> allDeptList, Long parentId, List<TenantDept> resDeptList) {
-        // 使用 Stream API 进行筛选和遍历
-        allDeptList.stream()
-                .filter(sysDept -> sysDept.getPid().equals(parentId))
-                .forEach(sysDept -> {
-                    resDeptList.add(sysDept);
-                    recursiveDept(allDeptList, sysDept.getId(), resDeptList);
-                });
+        return tenantDeptService.getDescendantList(deptId, includeSelf);
     }
 
     @Override

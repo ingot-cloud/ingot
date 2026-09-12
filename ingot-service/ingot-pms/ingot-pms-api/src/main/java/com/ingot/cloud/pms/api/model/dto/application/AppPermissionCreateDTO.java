@@ -26,11 +26,14 @@ public class AppPermissionCreateDTO implements Serializable {
     @Schema(description = "权限名称")
     private String name;
 
-    @Schema(description = "权限编码片段或完整编码；GROUP 须以 :* 结尾")
+    @Schema(description = "权限编码片段或完整编码；GROUP 须以 :** 结尾")
     private String code;
 
     @Schema(description = "节点类型：GROUP 或 ACTION")
     private PermissionNodeTypeEnum nodeType;
+
+    @Schema(description = "数据操作权限关联的资源 ID，可空")
+    private Long resourceId;
 
     @Schema(description = "备注")
     private String remark;

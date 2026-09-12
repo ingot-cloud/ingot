@@ -44,6 +44,28 @@ public final class PermissionMatcher {
     }
 
     /**
+     * 判断已持有的授权是否覆盖拟授予编码，用于委派上限。
+     *
+     * <p>持有通配可以覆盖同命名空间或更窄的通配/精确码；仅持有叶子精确码不能覆盖未来通配。</p>
+     *
+     * @param grantedCode  授予者已持有的编码
+     * @param proposedCode 拟授予编码
+     * @return 已持有编码可证明覆盖拟授予编码时返回 {@code true}
+     */
+    public static boolean covers(String grantedCode, String proposedCode) {
+        if (StrUtil.isBlank(grantedCode) || StrUtil.isBlank(proposedCode)) {
+            return false;
+        }
+        if (isWildcard(proposedCode)) {
+            if (!isWildcard(grantedCode)) {
+                return false;
+            }
+            return wildcardNamespace(proposedCode).startsWith(wildcardNamespace(grantedCode));
+        }
+        return matches(grantedCode, proposedCode);
+    }
+
+    /**
      * 是否为通配授权码（{@code :*} 或 {@code :**}）。
      */
     public static boolean isWildcard(String code) {

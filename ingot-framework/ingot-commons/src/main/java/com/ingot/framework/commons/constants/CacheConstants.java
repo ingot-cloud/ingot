@@ -55,6 +55,26 @@ public interface CacheConstants {
     String PLATFORM_APPS = IGNORE_TENANT_PREFIX + ":platform:apps";
 
     /**
+     * 平台-资源目录
+     */
+    String PLATFORM_RESOURCES = IGNORE_TENANT_PREFIX + ":platform:resources";
+
+    /**
+     * 平台-菜单可见性关联
+     */
+    String PLATFORM_MENU_PERMISSIONS = IGNORE_TENANT_PREFIX + ":platform:menu_permissions";
+
+    /**
+     * 平台-角色数据规则
+     */
+    String PLATFORM_ROLE_DATA_RULES = IGNORE_TENANT_PREFIX + ":platform:role_data_rules";
+
+    /**
+     * 用户有效授权快照（租户/用户维度）
+     */
+    String AUTHORIZATION_SNAPSHOT = IGNORE_TENANT_PREFIX + ":auth:snapshot";
+
+    /**
      * 平台-字典
      */
     String PLATFORM_DICTS = IGNORE_TENANT_PREFIX + ":platform:dicts";
@@ -84,6 +104,11 @@ public interface CacheConstants {
      * 组织角色权限
      */
     String TENANT_ROLE_PERMISSIONS = "role_permissions";
+
+    /**
+     * 组织角色数据规则
+     */
+    String TENANT_ROLE_DATA_RULES = "role_data_rules";
 
     /**
      * 组织用户部门关联

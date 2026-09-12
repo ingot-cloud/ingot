@@ -1,13 +1,10 @@
 package com.ingot.cloud.pms.api.model.types;
 
-import java.util.List;
-
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 
 /**
  * <p>Description  : RoleType.</p>
@@ -77,20 +74,6 @@ public interface RoleType {
     Boolean getFilterDept();
 
     void setFilterDept(Boolean filterDept);
-
-    /**
-     * 域类型
-     */
-    DataScopeTypeEnum getScopeType();
-
-    void setScopeType(DataScopeTypeEnum scopeType);
-
-    /**
-     * Scopes
-     */
-    List<Long> getScopes();
-
-    void setScopes(List<Long> scopes);
 
     /**
      * 状态, 0:正常，9:禁用

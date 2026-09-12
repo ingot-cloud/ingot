@@ -27,4 +27,14 @@ class PermissionMatcherTest {
         assertTrue(PermissionMatcher.matches("contacts:**", "contacts:system:role:query"));
         assertFalse(PermissionMatcher.matches("contacts:**", "contact:user"));
     }
+
+    @Test
+    void wildcardCoversNarrowerWildcardAndExact() {
+        assertTrue(PermissionMatcher.covers("contacts:**", "contacts:user:**"));
+        assertTrue(PermissionMatcher.covers("contacts:**", "contacts:user:query"));
+        assertTrue(PermissionMatcher.covers("contacts:user:**", "contacts:user:**"));
+        assertFalse(PermissionMatcher.covers("contacts:user:**", "contacts:**"));
+        assertFalse(PermissionMatcher.covers("contacts:user:query", "contacts:user:**"));
+        assertTrue(PermissionMatcher.covers("contacts:user:query", "contacts:user:query"));
+    }
 }

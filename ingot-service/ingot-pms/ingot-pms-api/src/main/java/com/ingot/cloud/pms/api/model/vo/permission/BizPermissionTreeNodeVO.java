@@ -1,18 +1,18 @@
 package com.ingot.cloud.pms.api.model.vo.permission;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionNodeTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>Description  : BizAuthorityTreeNodeVO.</p>
- * <p>Author       : jy.</p>
- * <p>Date         : 2025/11/18.</p>
- * <p>Time         : 16:27.</p>
+ * <p>角色权限树节点，在权限树上标记是否由平台角色绑定及是否预设。</p>
+ *
+ * @author jy
+ * @since 1.0.0
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -34,9 +34,14 @@ public class BizPermissionTreeNodeVO extends TreeNode<Long, BizPermissionTreeNod
     private String code;
 
     /**
-     * 权限类型
+     * 节点类型，GROUP 或 ACTION
      */
-    private PermissionTypeEnum type;
+    private PermissionNodeTypeEnum nodeType;
+
+    /**
+     * 关联资源 ID，非数据操作可空
+     */
+    private Long resourceId;
 
     /**
      * 组织类型

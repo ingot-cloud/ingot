@@ -6,17 +6,15 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.PermissionNodeTypeEnum;
-import com.ingot.cloud.pms.api.model.enums.PermissionSourceTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <p>平台权限实体，归属于应用，支持精确编码与通配编码（{@code :*} / {@code :**}）。</p>
+ * <p>平台权限实体，归属于应用；{@link PermissionNodeTypeEnum#GROUP} 为通配节点，{@link PermissionNodeTypeEnum#ACTION} 为具体能力。</p>
  *
  * @author jymot
  * @since 2025-11-12
@@ -41,24 +39,14 @@ public class PlatformPermission extends BaseModel<PlatformPermission> implements
     private Long appId;
 
     /**
-     * 节点类型
+     * 节点类型，仅 {@link PermissionNodeTypeEnum#GROUP} 或 {@link PermissionNodeTypeEnum#ACTION}
      */
     private PermissionNodeTypeEnum nodeType;
 
     /**
-     * 来源类型
+     * 关联资源 ID；数据操作权限必填，纯配置权限可空
      */
-    private PermissionSourceTypeEnum sourceType;
-
-    /**
-     * 来源资源 ID
-     */
-    private Long sourceId;
-
-    /**
-     * 是否系统托管
-     */
-    private Boolean managed;
+    private Long resourceId;
 
     /**
      * 父ID
@@ -76,12 +64,6 @@ public class PlatformPermission extends BaseModel<PlatformPermission> implements
      */
     @TableField("`code`")
     private String code;
-
-    /**
-     * 权限类型
-     */
-    @TableField("`type`")
-    private PermissionTypeEnum type;
 
     /**
      * 组织类型

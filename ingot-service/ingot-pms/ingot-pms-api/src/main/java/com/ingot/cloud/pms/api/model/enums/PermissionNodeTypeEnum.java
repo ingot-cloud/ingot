@@ -11,9 +11,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * <p>权限节点类型：分组、菜单导航、操作。</p>
+ * <p>权限节点类型：通配分组或具体操作。</p>
  *
- * <p>NAVIGATION 由菜单托管生成，不可通过权限接口直接增删改。</p>
+ * <p>GROUP 编码必须以 {@code :**} 结尾；ACTION 必须为不含通配的精确编码。取值 {@code 0}/{@code 2} 与库内历史值对齐，不使用 {@code 1}。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PermissionNodeTypeEnum {
     GROUP("0", "分组"),
-    NAVIGATION("1", "导航"),
     ACTION("2", "操作");
 
     @JsonValue

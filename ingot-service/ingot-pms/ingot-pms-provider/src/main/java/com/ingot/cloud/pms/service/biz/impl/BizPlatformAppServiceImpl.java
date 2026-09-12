@@ -52,7 +52,6 @@ public class BizPlatformAppServiceImpl implements BizPlatformAppService {
                 "BizPlatformAppServiceImpl.MenuNonNull");
         assert menu != null;
 
-        params.setPermissionId(menu.getPermissionId());
         if (params.getAppType() == null) {
             params.setAppType(OrgTypeEnum.Tenant);
         }
@@ -71,8 +70,9 @@ public class BizPlatformAppServiceImpl implements BizPlatformAppService {
 
         appService.create(params);
 
-        // 创建一个应用，就需要给组织管理员角色绑定相关权限
-        bizRoleService.orgManagerAssignPermissions(List.of(params.getPermissionId()), true);
+        if (params.getPermissionId() != null) {
+            bizRoleService.orgManagerAssignPermissions(List.of(params.getPermissionId()), true);
+        }
     }
 
     @Override

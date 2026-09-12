@@ -11,6 +11,8 @@ import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import com.ingot.cloud.pms.api.model.domain.PlatformRole;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
+import com.ingot.cloud.pms.authorization.engine.GrantCeilingService;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.BizUtils;
 import com.ingot.cloud.pms.core.BizPermissionUtils;
@@ -42,6 +44,8 @@ public class BizPlatformRoleServiceImpl implements BizPlatformRoleService {
 
     private final RoleConvert roleConvert;
     private final AuthorityConvert authorityConvert;
+    private final GrantCeilingService grantCeilingService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
 
     @Override
     public List<Option<Long>> options(PlatformRole condition) {
@@ -97,10 +101,20 @@ public class BizPlatformRoleServiceImpl implements BizPlatformRoleService {
         roleUserPrivateService.clearByRoleId(id);
         // 删除角色
         roleService.delete(id);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
     public void setPermissions(SetDTO<Long, Long> params) {
+        List<String> codes = CollUtil.emptyIfNull(params.getSetIds()).isEmpty()
+                ? List.of()
+                : authorityService.list(Wrappers.<PlatformPermission>lambdaQuery()
+                        .in(PlatformPermission::getId, params.getSetIds()))
+                .stream()
+                .map(PlatformPermission::getCode)
+                .toList();
+        grantCeilingService.assertCanGrantCodes(codes);
         roleAuthorityService.roleSetPermissions(params);
+        authorizationChangeNotifier.markAll();
     }
 }

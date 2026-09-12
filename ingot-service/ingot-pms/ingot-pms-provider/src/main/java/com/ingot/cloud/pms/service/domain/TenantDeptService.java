@@ -67,6 +67,15 @@ public interface TenantDeptService extends BaseService<TenantDept> {
     TenantDept getMainDept();
 
     /**
+     * 列出指定部门的子孙节点，不经过业务层以免与角色服务形成循环依赖。
+     *
+     * @param deptId      部门 ID
+     * @param includeSelf 是否包含当前部门
+     * @return 子孙部门；当前部门不存在时可能为空列表
+     */
+    List<TenantDept> getDescendantList(Long deptId, boolean includeSelf);
+
+    /**
      * 更具租户ID清除数据
      *
      * @param tenantId 租户ID

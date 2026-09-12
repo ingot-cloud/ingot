@@ -60,7 +60,7 @@ class BizMenuUtilsTest {
         node.setId(id);
         node.setPid(pid);
         node.setAccessMode(accessMode);
-        node.setPermissionId(permissionId);
+        node.setPermissionIds(permissionId == null ? List.of() : List.of(permissionId));
         node.setSort(sort);
         node.setStatus(CommonStatusEnum.ENABLE);
         return node;

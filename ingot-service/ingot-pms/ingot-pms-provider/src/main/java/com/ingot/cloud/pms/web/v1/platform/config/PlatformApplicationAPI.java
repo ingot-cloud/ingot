@@ -5,6 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.pms.api.model.domain.PlatformApp;
+import com.ingot.cloud.pms.api.model.domain.PlatformResource;
 import com.ingot.cloud.pms.api.model.dto.application.*;
 import com.ingot.cloud.pms.api.model.vo.application.AppDetailVO;
 import com.ingot.cloud.pms.api.model.vo.application.AppPermissionTreeNodeVO;
@@ -90,7 +91,7 @@ public class PlatformApplicationAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"platform:config:app:menu:create"})
     @PostMapping("/{appId}/menus")
-    @Operation(summary = "创建应用菜单", description = "自动创建托管 NAVIGATION 权限；目录类型追加 :**")
+    @Operation(summary = "创建应用菜单", description = "受保护页面关联已有权限；不再托管生成权限")
     public R<Long> createMenu(@PathVariable Long appId, @RequestBody AppMenuCreateDTO dto) {
         return ok(applicationResourceService.createMenu(appId, dto));
     }
@@ -115,14 +116,14 @@ public class PlatformApplicationAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"platform:config:app:permission:query"})
     @GetMapping("/{appId}/permissions/tree")
-    @Operation(summary = "应用权限树", description = "托管 NAVIGATION 权限标记 managed/readOnly")
+    @Operation(summary = "应用权限树")
     public R<List<AppPermissionTreeNodeVO>> permissionTree(@PathVariable Long appId) {
         return ok(applicationResourceService.getPermissionTree(appId));
     }
 
     @AdminOrHasAnyAuthority({"platform:config:app:permission:create"})
     @PostMapping("/{appId}/permissions")
-    @Operation(summary = "创建应用权限", description = "仅 GROUP / ACTION；GROUP 编码须以 :* 结尾")
+    @Operation(summary = "创建应用权限", description = "仅 GROUP / ACTION；GROUP 编码须以 :** 结尾")
     public R<Long> createPermission(@PathVariable Long appId,
                                     @RequestBody AppPermissionCreateDTO dto) {
         return ok(applicationResourceService.createPermission(appId, dto));
@@ -130,7 +131,7 @@ public class PlatformApplicationAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"platform:config:app:permission:update"})
     @PutMapping("/{appId}/permissions/{permissionId}")
-    @Operation(summary = "更新应用权限", description = "托管权限只读")
+    @Operation(summary = "更新应用权限", description = "不可改编码、应用或资源绑定")
     public R<?> updatePermission(@PathVariable Long appId,
                                  @PathVariable Long permissionId,
                                  @RequestBody AppPermissionUpdateDTO dto) {
@@ -140,9 +141,42 @@ public class PlatformApplicationAPI implements RShortcuts {
 
     @AdminOrHasAnyAuthority({"platform:config:app:permission:delete"})
     @DeleteMapping("/{appId}/permissions/{permissionId}")
-    @Operation(summary = "删除应用权限", description = "不可删除根权限与托管权限")
+    @Operation(summary = "删除应用权限", description = "仍被菜单、角色或数据规则引用时拒绝")
     public R<?> deletePermission(@PathVariable Long appId, @PathVariable Long permissionId) {
         applicationResourceService.deletePermission(appId, permissionId);
+        return ok();
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:app:resource:query"})
+    @GetMapping("/{appId}/resources")
+    @Operation(summary = "应用资源目录")
+    public R<List<PlatformResource>> listResources(@PathVariable Long appId) {
+        return ok(applicationResourceService.listResources(appId));
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:app:resource:create"})
+    @PostMapping("/{appId}/resources")
+    @Operation(summary = "创建应用资源")
+    public R<Long> createResource(@PathVariable Long appId,
+                                  @RequestBody AppResourceCreateDTO dto) {
+        return ok(applicationResourceService.createResource(appId, dto));
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:app:resource:update"})
+    @PutMapping("/{appId}/resources/{resourceId}")
+    @Operation(summary = "更新应用资源")
+    public R<?> updateResource(@PathVariable Long appId,
+                               @PathVariable Long resourceId,
+                               @RequestBody AppResourceUpdateDTO dto) {
+        applicationResourceService.updateResource(appId, resourceId, dto);
+        return ok();
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:app:resource:delete"})
+    @DeleteMapping("/{appId}/resources/{resourceId}")
+    @Operation(summary = "删除应用资源")
+    public R<?> deleteResource(@PathVariable Long appId, @PathVariable Long resourceId) {
+        applicationResourceService.deleteResource(appId, resourceId);
         return ok();
     }
 }

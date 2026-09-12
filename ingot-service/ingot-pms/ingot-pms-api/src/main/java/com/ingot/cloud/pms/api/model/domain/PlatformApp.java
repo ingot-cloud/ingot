@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.ingot.cloud.pms.api.model.enums.AppDefaultAccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
@@ -77,6 +78,11 @@ public class PlatformApp extends BaseModel<PlatformApp> {
      */
     @TableField("`status`")
     private CommonStatusEnum status;
+
+    /**
+     * 无租户覆盖时的默认访问策略，缺省 {@link AppDefaultAccessModeEnum#OPEN}
+     */
+    private AppDefaultAccessModeEnum defaultAccessMode;
 
     /**
      * 创建时间

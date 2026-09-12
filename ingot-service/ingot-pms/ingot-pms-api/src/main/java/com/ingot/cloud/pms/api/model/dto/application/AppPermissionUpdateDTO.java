@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * <p>更新非托管应用权限请求，仅覆盖显式传入的非空字段。</p>
+ * <p>更新应用权限请求，仅覆盖显式传入的非空字段；不可改编码、应用或资源绑定。</p>
  *
  * @author jy
  * @since 1.0.0

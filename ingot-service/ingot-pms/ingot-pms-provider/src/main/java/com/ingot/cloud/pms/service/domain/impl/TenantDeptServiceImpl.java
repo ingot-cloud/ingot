@@ -1,5 +1,6 @@
 package com.ingot.cloud.pms.service.domain.impl;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -96,6 +97,28 @@ public class TenantDeptServiceImpl extends BaseServiceImpl<TenantDeptMapper, Ten
     public TenantDept getMainDept() {
         return getOne(Wrappers.<TenantDept>lambdaQuery()
                 .eq(TenantDept::getMainFlag, Boolean.TRUE));
+    }
+
+    @Override
+    public List<TenantDept> getDescendantList(Long deptId, boolean includeSelf) {
+        List<TenantDept> allDeptList = list();
+        List<TenantDept> resDeptList = new ArrayList<>();
+        recursiveDept(allDeptList, deptId, resDeptList);
+        if (includeSelf) {
+            resDeptList.addAll(allDeptList.stream()
+                    .filter(dept -> deptId.equals(dept.getId()))
+                    .toList());
+        }
+        return resDeptList;
+    }
+
+    private void recursiveDept(List<TenantDept> allDeptList, Long parentId, List<TenantDept> resDeptList) {
+        allDeptList.stream()
+                .filter(dept -> dept.getPid().equals(parentId))
+                .forEach(dept -> {
+                    resDeptList.add(dept);
+                    recursiveDept(allDeptList, dept.getId(), resDeptList);
+                });
     }
 
     @Override

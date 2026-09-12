@@ -16,11 +16,14 @@ import com.ingot.cloud.pms.api.model.domain.*;
 import com.ingot.cloud.pms.api.model.dto.biz.UserOrgEditDTO;
 import com.ingot.cloud.pms.api.model.dto.user.*;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
+import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.vo.biz.UserOrgInfoVO;
 import com.ingot.cloud.pms.api.model.vo.user.OrgUserProfileVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserPageItemWithBindRoleStatusVO;
 import com.ingot.cloud.pms.api.model.vo.user.UserProfileVO;
+import com.ingot.cloud.pms.authorization.engine.GrantCeilingService;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.core.BizRoleUtils;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserDeptService;
@@ -74,6 +77,8 @@ public class BizUserServiceImpl implements BizUserService {
     private final UnlockAccountUseCase unlockAccountUseCase;
     private final AssertionChecker assertionChecker;
     private final UserOpsChecker userOpsChecker;
+    private final GrantCeilingService grantCeilingService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
     private final UserConvert userConvert;
     private final InitialPasswordService initialPasswordService;
 
@@ -117,6 +122,16 @@ public class BizUserServiceImpl implements BizUserService {
                         .noneMatch(item -> item.getType() == RoleTypeEnum.GROUP),
                 "BizUserServiceImpl.CantBindRoleGroup");
 
+        for (RoleType role : roles) {
+            List<String> codes = bizRoleService.getRolesPermissions(List.of(role)).stream()
+                    .map(PermissionType::getCode)
+                    .filter(Objects::nonNull)
+                    .toList();
+            grantCeilingService.assertCanGrantCodes(codes);
+            grantCeilingService.assertCanBindRole(role.getId(), role.getPlatformRole(),
+                    null, List.of(userId));
+        }
+
         List<BizAssignRoleBO> assignRoles = roles.stream()
                 .map(item -> {
                     BizAssignRoleBO role = new BizAssignRoleBO();
@@ -126,6 +141,7 @@ public class BizUserServiceImpl implements BizUserService {
                 }).toList();
 
         tenantRoleUserPrivateService.setRoles(userId, assignRoles);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -274,6 +290,7 @@ public class BizUserServiceImpl implements BizUserService {
             bizUserDeptService.clear(userId);
             // 取消关联角色
             tenantRoleUserPrivateService.clearByUserId(userId);
+            authorizationChangeNotifier.markAll();
         });
     }
 

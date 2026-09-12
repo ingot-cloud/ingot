@@ -63,6 +63,14 @@ public interface TenantRoleUserPrivateService extends BaseService<TenantRoleUser
     void clearByUserId(long userId);
 
     /**
+     * 根据用户和部门清除对应的部门角色绑定。
+     *
+     * @param userId 用户 ID
+     * @param deptId 部门 ID
+     */
+    void clearByUserAndDept(long userId, long deptId);
+
+    /**
      * 根据部门ID清空角色用户关系
      *
      * @param deptId 部门ID

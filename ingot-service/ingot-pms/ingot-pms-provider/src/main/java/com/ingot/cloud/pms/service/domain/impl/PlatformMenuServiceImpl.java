@@ -100,9 +100,8 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
                 "PlatformMenuServiceImpl.NonExist");
         assert current != null;
 
-        // 菜单权限编码不可修改，菜单pid不可修改
+        // 菜单 pid 不可修改
         params.setPid(null);
-        params.setPermissionId(null);
 
         // 路径不为空，需要判断是否重复
         if (StrUtil.isNotEmpty(params.getPath())) {

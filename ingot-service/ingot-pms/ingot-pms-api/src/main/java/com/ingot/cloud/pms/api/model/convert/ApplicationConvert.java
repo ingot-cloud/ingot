@@ -32,12 +32,12 @@ public interface ApplicationConvert {
     AppDetailVO toDetail(PlatformApp source);
 
     /**
-     * 创建菜单 DTO 转菜单实体（默认值由调用方补充）。
+     * 创建菜单 DTO 转菜单实体（默认值与权限关联由调用方补充）。
      */
     PlatformMenu toMenu(AppMenuCreateDTO source);
 
     /**
-     * 权限实体转应用权限树节点（{@code readOnly} 由调用方补充）。
+     * 权限实体转应用权限树节点。
      */
     AppPermissionTreeNodeVO toPermissionTreeNode(PlatformPermission source);
 

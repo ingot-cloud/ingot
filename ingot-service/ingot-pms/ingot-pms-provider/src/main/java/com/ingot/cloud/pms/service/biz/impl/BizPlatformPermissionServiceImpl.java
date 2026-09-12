@@ -4,17 +4,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.convert.AuthorityConvert;
+import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
-import com.ingot.cloud.pms.api.model.enums.PermissionSourceTypeEnum;
 import com.ingot.cloud.pms.api.model.types.PermissionType;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.service.biz.BizPlatformPermissionService;
+import com.ingot.cloud.pms.service.domain.PlatformAppService;
 import com.ingot.cloud.pms.service.domain.PlatformPermissionService;
 import com.ingot.cloud.pms.service.domain.PlatformRolePermissionService;
-import com.ingot.framework.commons.constants.IDConstants;
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionService {
     private final PlatformPermissionService authorityService;
     private final PlatformRolePermissionService roleAuthorityService;
+    private final PlatformAppService appService;
 
     private final AuthorityConvert authorityConvert;
     private final AssertionChecker assertionChecker;
@@ -53,14 +54,10 @@ public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionSe
 
     @Override
     public void createNonMenuPermission(PlatformPermission authority) {
-        assertionChecker.checkOperation(authority.getType() != PermissionTypeEnum.MENU,
-                "BizPlatformAuthorityServiceImpl.CantCreateMenuAuthority");
-
         if (authority.getPid() != null) {
             PlatformPermission parent = authorityService.getById(authority.getPid());
             assertionChecker.checkOperation(parent != null, "BizPlatformAuthorityServiceImpl.ParentNotExist");
             assert parent != null;
-            authority.setType(parent.getType());
             authority.setOrgType(parent.getOrgType());
         }
 
@@ -72,8 +69,6 @@ public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionSe
         PlatformPermission current = authorityService.getById(authority.getId());
         assertionChecker.checkOperation(current != null, "BizPlatformAuthorityServiceImpl.NotExist");
         assert current != null;
-        assertionChecker.checkOperation(current.getType() != PermissionTypeEnum.MENU,
-                "BizPlatformAuthorityServiceImpl.CantUpdateMenuAuthority");
 
         authorityService.update(authority);
     }
@@ -83,13 +78,10 @@ public class BizPlatformPermissionServiceImpl implements BizPlatformPermissionSe
         PlatformPermission current = authorityService.getById(id);
         assertionChecker.checkOperation(current != null, "BizPlatformAuthorityServiceImpl.NotExist");
         assert current != null;
-        assertionChecker.checkOperation(current.getType() != PermissionTypeEnum.MENU,
-                "BizPlatformAuthorityServiceImpl.CantDeleteMenuAuthority");
 
-        // 判断是否为应用根（系统根权限），如果是那么不可删除
-        boolean isApplicationRoot = current.getAppId() != null
-                && current.getSourceType() == PermissionSourceTypeEnum.SYSTEM
-                && (current.getPid() == null || current.getPid() <= IDConstants.ROOT_TREE_ID);
+        // 判断是否为应用根，如果是那么不可删除
+        boolean isApplicationRoot = appService.count(Wrappers.<PlatformApp>lambdaQuery()
+                .eq(PlatformApp::getPermissionId, id)) > 0;
         assertionChecker.checkOperation(!isApplicationRoot,
                 "BizPlatformAuthorityServiceImpl.IsApplication");
 

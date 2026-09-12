@@ -2,10 +2,13 @@ package com.ingot.cloud.pms.api.model.vo.menu;
 
 import java.io.Serial;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionMatchModeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
 import lombok.Data;
@@ -40,13 +43,13 @@ public class MenuTreeNodeVO extends TreeNode<Long, MenuTreeNodeVO> {
      */
     private AccessModeEnum accessMode;
     /**
-     * 权限ID
+     * 可见性关联的具体权限 ID
      */
-    private Long permissionId;
+    private List<Long> permissionIds;
     /**
-     * 权限编码
+     * 权限匹配模式
      */
-    private String permissionCode;
+    private PermissionMatchModeEnum permissionMatchMode;
     /**
      * 前端页面或布局注册键，与 path 独立
      */

@@ -55,7 +55,7 @@ class ApplicationResourceCodeTest {
 
     private String invokeAppendAntSubtreeSuffix(String code) {
         ApplicationResourceServiceImpl service = new ApplicationResourceServiceImpl(
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         try {
             var method = ApplicationResourceServiceImpl.class.getDeclaredMethod(
                     "appendAntSubtreeSuffix", String.class);
@@ -68,7 +68,7 @@ class ApplicationResourceCodeTest {
 
     private String invokeBuildChildCode(PlatformPermission parent, String code, String appCode) {
         ApplicationResourceServiceImpl service = new ApplicationResourceServiceImpl(
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         try {
             var method = ApplicationResourceServiceImpl.class.getDeclaredMethod(
                     "buildChildCode", PlatformPermission.class, String.class, String.class);

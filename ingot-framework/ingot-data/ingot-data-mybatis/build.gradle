@@ -13,4 +13,11 @@ dependencies {
     implementation project(ingot.framework_tenant)
 
     compileOnly(deps.alibaba.druid)
+
+    testImplementation(deps.junit.jupiter)
+    testRuntimeOnly(deps.junit.platform_launcher)
+}
+
+test {
+    useJUnitPlatform()
 }

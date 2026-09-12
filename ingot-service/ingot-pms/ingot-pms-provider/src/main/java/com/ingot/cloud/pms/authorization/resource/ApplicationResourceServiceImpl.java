@@ -2,11 +2,11 @@ package com.ingot.cloud.pms.authorization.resource;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -19,12 +19,11 @@ import com.ingot.cloud.pms.api.model.vo.application.AppDetailVO;
 import com.ingot.cloud.pms.api.model.vo.application.AppPermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.menu.MenuTreeNodeVO;
 import com.ingot.cloud.pms.authorization.engine.PermissionMatcher;
-import com.ingot.cloud.pms.core.BizMenuUtils;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.domain.*;
 import com.ingot.framework.commons.constants.IDConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.commons.model.enums.PermissionTypeEnum;
 import com.ingot.framework.commons.utils.RoleUtil;
 import com.ingot.framework.commons.utils.tree.TreeUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -53,10 +52,16 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     private final PlatformMenuService menuService;
     private final PlatformPermissionService permissionService;
     private final PlatformRolePermissionService rolePermissionService;
+    private final PlatformMenuPermissionService menuPermissionService;
+    private final PlatformResourceService resourceService;
+    private final PlatformRoleDataRuleService platformRoleDataRuleService;
+    private final TenantRoleDataRulePrivateService tenantRoleDataRuleService;
+    private final TenantRolePermissionPrivateService tenantRolePermissionService;
     private final TenantAppConfigService tenantAppConfigService;
     private final BizRoleService bizRoleService;
     private final AssertionChecker assertionChecker;
     private final ApplicationConvert applicationConvert;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
 
     @Override
     public IPage<PlatformApp> pageApps(Page<PlatformApp> page, PlatformApp condition) {
@@ -105,11 +110,8 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         PlatformPermission rootPermission = new PlatformPermission();
         rootPermission.setName(dto.getName());
         rootPermission.setCode(rootCode);
-        rootPermission.setType(PermissionTypeEnum.API);
         rootPermission.setOrgType(orgType);
         rootPermission.setNodeType(PermissionNodeTypeEnum.GROUP);
-        rootPermission.setSourceType(PermissionSourceTypeEnum.SYSTEM);
-        rootPermission.setManaged(false);
         rootPermission.setPid(IDConstants.ROOT_TREE_ID);
         permissionService.createAndReturnId(rootPermission, false);
 
@@ -120,6 +122,9 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         app.setIcon(dto.getIcon());
         app.setIntro(dto.getIntro());
         app.setSort(dto.getSort() == null ? 999 : dto.getSort());
+        app.setDefaultAccessMode(dto.getDefaultAccessMode() == null
+                ? AppDefaultAccessModeEnum.OPEN
+                : dto.getDefaultAccessMode());
         app.setPermissionId(rootPermission.getId());
         appService.create(app);
 
@@ -130,6 +135,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         if (app.getAppType() == OrgTypeEnum.Tenant) {
             bizRoleService.orgManagerAssignPermissions(List.of(rootPermission.getId()), true);
         }
+        authorizationChangeNotifier.markAll();
         return app.getId();
     }
 
@@ -145,6 +151,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         }
         applicationConvert.updateApp(dto, app);
         appService.update(app);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -154,6 +161,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         PlatformApp app = requireApp(appId);
         app.setStatus(dto.getStatus());
         appService.update(app);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -195,6 +203,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         }
 
         appService.delete(appId);
+        authorizationChangeNotifier.markAll();
     }
 
     /**
@@ -220,12 +229,21 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         }
 
         permissionService.deleteByAppId(appId);
+        List<PlatformMenu> menus = menuService.list(Wrappers.<PlatformMenu>lambdaQuery()
+                .eq(PlatformMenu::getAppId, appId)
+                .select(PlatformMenu::getId));
+        for (PlatformMenu menu : menus) {
+            menuPermissionService.clearByMenuId(menu.getId());
+        }
+        resourceService.remove(Wrappers.<PlatformResource>lambdaQuery()
+                .eq(PlatformResource::getAppId, appId));
         menuService.deleteByAppId(appId);
         TenantEnv.globalRun(() -> tenantAppConfigService.clearByAppId(appId));
         appService.delete(appId);
 
         log.warn("[ForceDeleteApp] 超级管理员强制删除应用 appId={}, code={}, 删除权限数={}",
                 appId, app.getCode(), permissionIds.size());
+        authorizationChangeNotifier.markAll();
     }
 
     /**
@@ -242,8 +260,14 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     @Override
     public List<MenuTreeNodeVO> getMenuTree(long appId) {
         requireApp(appId);
+        Map<Long, List<Long>> permissionIds = menuPermissionService.mapPermissionIds();
         List<MenuTreeNodeVO> nodes = menuService.nodeList().stream()
                 .filter(node -> Objects.equals(node.getAppId(), appId))
+                .filter(node -> node.getMenuType() != MenuTypeEnum.Button)
+                .peek(node -> {
+                    List<Long> ids = permissionIds.getOrDefault(node.getId(), List.of());
+                    node.setPermissionIds(ids);
+                })
                 .sorted(Comparator.comparing(MenuTreeNodeVO::getSort))
                 .collect(Collectors.toList());
         return TreeUtil.build(nodes);
@@ -254,6 +278,8 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     public Long createMenu(long appId, AppMenuCreateDTO dto) {
         requireNonNull(dto, "ApplicationResourceServiceImpl.ParamNonNull");
         requireNotBlank(dto.getName(), "ApplicationResourceServiceImpl.NameNonNull");
+        assertionChecker.checkOperation(dto.getMenuType() != MenuTypeEnum.Button,
+                "ApplicationResourceServiceImpl.CantCreateButtonMenu");
         PlatformApp app = requireApp(appId);
         PlatformMenu menu = applicationConvert.toMenu(dto);
         if (menu.getSort() == null) {
@@ -261,6 +287,9 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         }
         if (menu.getStatus() == null) {
             menu.setStatus(CommonStatusEnum.ENABLE);
+        }
+        if (menu.getPermissionMatchMode() == null) {
+            menu.setPermissionMatchMode(PermissionMatchModeEnum.ANY);
         }
         menu.setAppId(appId);
         menu.setOrgType(app.getAppType());
@@ -270,23 +299,9 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         }
         syncAccessMode(menu);
         validateParentMenu(appId, menu.getPid());
-
-        // 菜单即应用：根级菜单且其编码与应用编码一致时，复用应用根权限，不再新建权限
-        boolean isAppRootMenu = isRootLevelMenu(menu)
-                && app.getPermissionId() != null
-                && StrUtil.equals(BizMenuUtils.getMenuAuthorityCode(menu), app.getCode());
-        if (isAppRootMenu) {
-            menu.setPermissionId(app.getPermissionId());
-            menuService.create(menu);
-            return menu.getId();
-        }
-
-        Long permissionId = createManagedMenuPermission(app, menu);
-        menu.setPermissionId(permissionId);
+        List<Long> permissionIds = validateMenuPermissions(appId, menu, dto.getPermissionIds());
         menuService.create(menu);
-        syncManagedPermissionSource(menu);
-        // 子节点创建后，父菜单（非目录）托管权限码升级为 :**，覆盖其下全部子权限
-        promoteParentManagedPermission(app, menu);
+        menuPermissionService.replace(menu.getId(), permissionIds);
         return menu.getId();
     }
 
@@ -294,21 +309,27 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     @Transactional(rollbackFor = Exception.class)
     public void updateMenu(long appId, long menuId, AppMenuUpdateDTO dto) {
         requireNonNull(dto, "ApplicationResourceServiceImpl.ParamNonNull");
-        PlatformApp app = requireApp(appId);
-        PlatformMenu current = requireMenu(appId, menuId);
+        requireApp(appId);
+        requireMenu(appId, menuId);
         PlatformMenu menu = new PlatformMenu();
         menu.setId(menuId);
         applicationConvert.updateMenu(dto, menu);
-
-        // 名称、状态变更同步到托管权限；共享应用根权限时不同步，避免篡改应用根权限
-        boolean sharesAppRoot = Objects.equals(current.getPermissionId(), app.getPermissionId());
-        if (!sharesAppRoot && (menu.getName() != null || menu.getStatus() != null)) {
-            PlatformPermission authority = new PlatformPermission();
-            authority.setId(current.getPermissionId());
-            authority.setName(menu.getName());
-            authority.setStatus(menu.getStatus());
-            authority.setOrgType(current.getOrgType());
-            permissionService.update(authority);
+        if (dto.getPermissionIds() != null || dto.getPermissionMatchMode() != null || dto.getAccessMode() != null) {
+            PlatformMenu current = requireMenu(appId, menuId);
+            if (dto.getAccessMode() != null) {
+                current.setAccessMode(dto.getAccessMode());
+            }
+            if (dto.getMenuType() != null) {
+                current.setMenuType(dto.getMenuType());
+            }
+            if (dto.getPermissionMatchMode() != null) {
+                current.setPermissionMatchMode(dto.getPermissionMatchMode());
+            }
+            List<Long> permissionIds = dto.getPermissionIds() != null
+                    ? dto.getPermissionIds()
+                    : menuPermissionService.listPermissionIds(menuId);
+            validateMenuPermissions(appId, current, permissionIds);
+            menuPermissionService.replace(menuId, permissionIds);
         }
         menuService.update(menu);
     }
@@ -316,28 +337,13 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(long appId, long menuId) {
-        PlatformApp app = requireApp(appId);
-        PlatformMenu current = requireMenu(appId, menuId);
+        requireApp(appId);
+        requireMenu(appId, menuId);
         assertionChecker.checkOperation(menuService.count(Wrappers.<PlatformMenu>lambdaQuery()
                         .eq(PlatformMenu::getPid, menuId)) == 0,
                 "PlatformMenuServiceImpl.ExistLeaf");
-
-        // 菜单即应用：共享应用根权限时仅删菜单行，权限归应用由 deleteApp 管理
-        if (Objects.equals(current.getPermissionId(), app.getPermissionId())) {
-            menuService.delete(menuId);
-            demoteParentManagedPermission(app, current);
-            return;
-        }
-
-        assertionChecker.checkOperation(permissionService.count(Wrappers.<PlatformPermission>lambdaQuery()
-                        .eq(PlatformPermission::getPid, current.getPermissionId())) == 0,
-                "ApplicationResourceServiceImpl.MenuPermissionHasChildren");
-
-        rolePermissionService.clearByPermissionId(current.getPermissionId());
-        permissionService.delete(current.getPermissionId());
+        menuPermissionService.clearByMenuId(menuId);
         menuService.delete(menuId);
-        // 子节点删除后，父菜单（非目录）若已无子节点，托管权限码降级回精确码
-        demoteParentManagedPermission(app, current);
     }
 
     @Override
@@ -347,12 +353,7 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
                 .filter(item -> Objects.equals(item.getAppId(), appId))
                 .sorted(Comparator.comparing(PlatformPermission::getOrgType)
                         .thenComparing(PlatformPermission::getId))
-                .map(permission -> {
-                    AppPermissionTreeNodeVO node = applicationConvert.toPermissionTreeNode(permission);
-                    node.setReadOnly(BooleanUtil.isTrue(permission.getManaged())
-                            || permission.getNodeType() == PermissionNodeTypeEnum.NAVIGATION);
-                    return node;
-                })
+                .map(applicationConvert::toPermissionTreeNode)
                 .collect(Collectors.toList());
         List<AppPermissionTreeNodeVO> tree = TreeUtil.build(nodes);
         TreeUtil.compensate(tree, nodes);
@@ -367,9 +368,6 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         requireNotBlank(dto.getName(), "ApplicationResourceServiceImpl.NameNonNull");
         requireNonNull(dto.getNodeType(), "ApplicationResourceServiceImpl.NodeTypeNonNull");
         PlatformApp app = requireApp(appId);
-        assertionChecker.checkOperation(dto.getNodeType() != PermissionNodeTypeEnum.NAVIGATION,
-                "ApplicationResourceServiceImpl.CantCreateNavigation");
-
         PlatformPermission parent = requirePermission(appId, dto.getPid());
         validatePermissionCode(app, dto.getNodeType(), dto.getCode());
 
@@ -377,51 +375,123 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         permission.setPid(parent.getId());
         permission.setName(dto.getName());
         permission.setCode(buildChildCode(parent, dto.getCode(), app.getCode()));
-        permission.setType(PermissionTypeEnum.API);
         permission.setOrgType(parent.getOrgType());
         permission.setAppId(appId);
         permission.setNodeType(dto.getNodeType());
-        permission.setSourceType(PermissionSourceTypeEnum.MANUAL);
-        permission.setManaged(false);
+        permission.setResourceId(resolveResourceId(appId, dto.getResourceId()));
         permission.setRemark(dto.getRemark());
         if (dto.getStatus() != null) {
             permission.setStatus(dto.getStatus());
         }
-        return permissionService.createAndReturnId(permission, false);
+        Long id = permissionService.createAndReturnId(permission, false);
+        authorizationChangeNotifier.markAll();
+        return id;
     }
 
     @Override
     public void updatePermission(long appId, long permissionId, AppPermissionUpdateDTO dto) {
         requireNonNull(dto, "ApplicationResourceServiceImpl.ParamNonNull");
-        PlatformPermission current = requirePermission(appId, permissionId);
-        assertionChecker.checkOperation(!BooleanUtil.isTrue(current.getManaged()),
-                "ApplicationResourceServiceImpl.CantUpdateManaged");
-        assertionChecker.checkOperation(current.getNodeType() != PermissionNodeTypeEnum.NAVIGATION,
-                "ApplicationResourceServiceImpl.CantUpdateNavigation");
-
+        requirePermission(appId, permissionId);
         PlatformPermission permission = new PlatformPermission();
         permission.setId(permissionId);
         applicationConvert.updatePermission(dto, permission);
         permissionService.update(permission);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deletePermission(long appId, long permissionId) {
         PlatformApp app = requireApp(appId);
-        PlatformPermission current = requirePermission(appId, permissionId);
+        requirePermission(appId, permissionId);
         assertionChecker.checkOperation(!Objects.equals(app.getPermissionId(), permissionId),
                 "ApplicationResourceServiceImpl.CantDeleteRoot");
-        assertionChecker.checkOperation(!BooleanUtil.isTrue(current.getManaged()),
-                "ApplicationResourceServiceImpl.CantDeleteManaged");
-        assertionChecker.checkOperation(current.getNodeType() != PermissionNodeTypeEnum.NAVIGATION,
-                "ApplicationResourceServiceImpl.CantDeleteNavigation");
+        assertionChecker.checkOperation(menuPermissionService.count(Wrappers.<PlatformMenuPermission>lambdaQuery()
+                        .eq(PlatformMenuPermission::getPermissionId, permissionId)) == 0,
+                "ApplicationResourceServiceImpl.PermissionInUse");
         assertionChecker.checkOperation(rolePermissionService.count(Wrappers.<PlatformRolePermission>lambdaQuery()
                         .eq(PlatformRolePermission::getPermissionId, permissionId)) == 0,
                 "ApplicationResourceServiceImpl.HasRoleBinding");
+        Long tenantRefs = TenantEnv.globalApply(() -> tenantRolePermissionService.count(
+                Wrappers.<TenantRolePermissionPrivate>lambdaQuery()
+                        .eq(TenantRolePermissionPrivate::getPermissionId, permissionId)));
+        assertionChecker.checkOperation(tenantRefs == 0, "ApplicationResourceServiceImpl.PermissionInUse");
 
         rolePermissionService.clearByPermissionId(permissionId);
         permissionService.delete(permissionId);
+        authorizationChangeNotifier.markAll();
+    }
+
+    @Override
+    public List<PlatformResource> listResources(long appId) {
+        requireApp(appId);
+        return resourceService.list(Wrappers.<PlatformResource>lambdaQuery()
+                .eq(PlatformResource::getAppId, appId)
+                .orderByAsc(PlatformResource::getCode));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long createResource(long appId, AppResourceCreateDTO dto) {
+        requireNonNull(dto, "ApplicationResourceServiceImpl.ParamNonNull");
+        requireNotBlank(dto.getCode(), "ApplicationResourceServiceImpl.CodeNonNull");
+        requireNotBlank(dto.getName(), "ApplicationResourceServiceImpl.NameNonNull");
+        requireApp(appId);
+        assertionChecker.checkOperation(resourceService.count(Wrappers.<PlatformResource>lambdaQuery()
+                        .eq(PlatformResource::getAppId, appId)
+                        .eq(PlatformResource::getCode, dto.getCode().trim())) == 0,
+                "ApplicationResourceServiceImpl.ExistResourceCode");
+        PlatformResource resource = new PlatformResource();
+        resource.setAppId(appId);
+        resource.setCode(dto.getCode().trim());
+        resource.setName(dto.getName());
+        resource.setStatus(dto.getStatus() == null ? CommonStatusEnum.ENABLE : dto.getStatus());
+        resourceService.save(resource);
+        authorizationChangeNotifier.markAll();
+        return resource.getId();
+    }
+
+    @Override
+    public void updateResource(long appId, long resourceId, AppResourceUpdateDTO dto) {
+        requireNonNull(dto, "ApplicationResourceServiceImpl.ParamNonNull");
+        requireApp(appId);
+        PlatformResource resource = requireResource(appId, resourceId);
+        if (StrUtil.isNotBlank(dto.getName())) {
+            resource.setName(dto.getName());
+        }
+        if (dto.getStatus() != null) {
+            resource.setStatus(dto.getStatus());
+        }
+        resourceService.updateById(resource);
+        authorizationChangeNotifier.markAll();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteResource(long appId, long resourceId) {
+        requireApp(appId);
+        requireResource(appId, resourceId);
+        assertionChecker.checkOperation(permissionService.count(Wrappers.<PlatformPermission>lambdaQuery()
+                        .eq(PlatformPermission::getResourceId, resourceId)) == 0,
+                "ApplicationResourceServiceImpl.ResourceInUse");
+        assertionChecker.checkOperation(platformRoleDataRuleService.count(Wrappers.<PlatformRoleDataRule>lambdaQuery()
+                        .eq(PlatformRoleDataRule::getResourceId, resourceId)) == 0,
+                "ApplicationResourceServiceImpl.ResourceInUse");
+        Long tenantRules = TenantEnv.globalApply(() -> tenantRoleDataRuleService.count(
+                Wrappers.<TenantRoleDataRulePrivate>lambdaQuery()
+                        .eq(TenantRoleDataRulePrivate::getResourceId, resourceId)));
+        assertionChecker.checkOperation(tenantRules == 0, "ApplicationResourceServiceImpl.ResourceInUse");
+        resourceService.removeById(resourceId);
+        authorizationChangeNotifier.markAll();
+    }
+
+    private PlatformResource requireResource(long appId, long resourceId) {
+        PlatformResource resource = resourceService.getById(resourceId);
+        assertionChecker.checkOperation(resource != null, "ApplicationResourceServiceImpl.ResourceNonExist");
+        assert resource != null;
+        assertionChecker.checkOperation(Objects.equals(resource.getAppId(), appId),
+                "ApplicationResourceServiceImpl.ResourceAppMismatch");
+        return resource;
     }
 
     private PlatformApp requireApp(long appId) {
@@ -458,6 +528,46 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         return menu.getPid() == null || menu.getPid() <= IDConstants.ROOT_TREE_ID;
     }
 
+    private List<Long> validateMenuPermissions(long appId, PlatformMenu menu, List<Long> permissionIds) {
+        boolean protectedPage = menu.getMenuType() == MenuTypeEnum.Menu
+                && menu.getAccessMode() == AccessModeEnum.PERMISSION;
+        boolean allowEmpty = menu.getMenuType() == MenuTypeEnum.Directory
+                || menu.getAccessMode() == AccessModeEnum.OPEN;
+        if (protectedPage) {
+            assertionChecker.checkOperation(CollUtil.isNotEmpty(permissionIds),
+                    "ApplicationResourceServiceImpl.ProtectedMenuRequiresPermissions");
+        } else if (allowEmpty) {
+            assertionChecker.checkOperation(CollUtil.isEmpty(permissionIds),
+                    "ApplicationResourceServiceImpl.OpenOrDirectoryMenuNoPermissions");
+            return List.of();
+        } else {
+            assertionChecker.checkOperation(CollUtil.isEmpty(permissionIds),
+                    "ApplicationResourceServiceImpl.OpenOrDirectoryMenuNoPermissions");
+            return List.of();
+        }
+        List<Long> distinct = permissionIds.stream().distinct().toList();
+        for (Long permissionId : distinct) {
+            PlatformPermission permission = requirePermission(appId, permissionId);
+            assertionChecker.checkOperation(permission.getNodeType() == PermissionNodeTypeEnum.ACTION,
+                    "ApplicationResourceServiceImpl.MenuPermissionMustAction");
+            assertionChecker.checkOperation(permission.getStatus() == CommonStatusEnum.ENABLE,
+                    "ApplicationResourceServiceImpl.MenuPermissionDisabled");
+        }
+        return distinct;
+    }
+
+    private Long resolveResourceId(long appId, Long resourceId) {
+        if (resourceId == null) {
+            return null;
+        }
+        PlatformResource resource = resourceService.getById(resourceId);
+        assertionChecker.checkOperation(resource != null, "ApplicationResourceServiceImpl.ResourceNonExist");
+        assert resource != null;
+        assertionChecker.checkOperation(Objects.equals(resource.getAppId(), appId),
+                "ApplicationResourceServiceImpl.ResourceAppMismatch");
+        return resourceId;
+    }
+
     private void validateParentMenu(long appId, Long pid) {
         if (pid == null || pid <= IDConstants.ROOT_TREE_ID) {
             return;
@@ -467,121 +577,6 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
         assert parent != null;
         assertionChecker.checkOperation(Objects.equals(parent.getAppId(), appId),
                 "ApplicationResourceServiceImpl.MenuAppMismatch");
-    }
-
-    private Long createManagedMenuPermission(PlatformApp app, PlatformMenu menu) {
-        PlatformPermission authority = new PlatformPermission();
-        authority.setName(menu.getName());
-        authority.setStatus(menu.getStatus() == null ? CommonStatusEnum.ENABLE : menu.getStatus());
-        authority.setType(PermissionTypeEnum.MENU);
-        authority.setOrgType(menu.getOrgType());
-        authority.setAppId(app.getId());
-        authority.setNodeType(PermissionNodeTypeEnum.NAVIGATION);
-        authority.setSourceType(PermissionSourceTypeEnum.MENU);
-        authority.setManaged(true);
-
-        String menuCode = BizMenuUtils.getMenuAuthorityCode(menu);
-        if (menu.getPid() != null && menu.getPid() > IDConstants.ROOT_TREE_ID) {
-            PlatformMenu parent = menuService.getById(menu.getPid());
-            if (parent != null) {
-                authority.setPid(parent.getPermissionId());
-                PlatformPermission parentPermission = permissionService.getById(parent.getPermissionId());
-                authority.setCode(buildChildCode(parentPermission, menuCode, app.getCode()));
-            } else {
-                authority.setCode(menuCode);
-            }
-        } else if (app.getPermissionId() != null) {
-            authority.setPid(app.getPermissionId());
-            PlatformPermission root = permissionService.getById(app.getPermissionId());
-            authority.setCode(buildChildCode(root, menuCode, app.getCode()));
-        } else {
-            authority.setCode(menuCode);
-        }
-        if (isDirectoryMenu(menu)) {
-            authority.setCode(appendAntSubtreeSuffix(authority.getCode()));
-        }
-        return permissionService.createAndReturnId(authority, false);
-    }
-
-    /**
-     * 子菜单/按钮创建后，将父菜单（非目录）的托管权限码由精确码升级为 Ant 子树通配 {@code :**}，
-     * 使授予父菜单即可覆盖其下全部子权限。
-     *
-     * <p>守卫：仅处理非根级且非「菜单即应用」共享应用根权限的父菜单；目录始终 {@code :**} 不参与；
-     * 父码已为通配码时跳过。</p>
-     *
-     * @param app       应用
-     * @param childMenu 新建的子菜单
-     */
-    private void promoteParentManagedPermission(PlatformApp app, PlatformMenu childMenu) {
-        PlatformPermission parentPermission = resolveAdjustableParentPermission(app, childMenu.getPid());
-        if (parentPermission == null || PermissionMatcher.isWildcard(parentPermission.getCode())) {
-            return;
-        }
-        PlatformPermission update = new PlatformPermission();
-        update.setId(parentPermission.getId());
-        update.setCode(appendAntSubtreeSuffix(parentPermission.getCode()));
-        permissionService.update(update);
-    }
-
-    /**
-     * 子菜单/按钮删除后，若父菜单（非目录）已无任何子节点，则将其托管权限码由 {@code :**} 降级回精确码。
-     *
-     * <p>守卫同 {@link #promoteParentManagedPermission}，并要求父菜单当前已无子节点且父码为 {@code :**}。</p>
-     *
-     * @param app         应用
-     * @param deletedMenu 已删除的子菜单
-     */
-    private void demoteParentManagedPermission(PlatformApp app, PlatformMenu deletedMenu) {
-        PlatformPermission parentPermission = resolveAdjustableParentPermission(app, deletedMenu.getPid());
-        if (parentPermission == null || !PermissionMatcher.isAntSubtreeWildcard(parentPermission.getCode())) {
-            return;
-        }
-        long remaining = menuService.count(Wrappers.<PlatformMenu>lambdaQuery()
-                .eq(PlatformMenu::getPid, deletedMenu.getPid()));
-        if (remaining > 0) {
-            return;
-        }
-        PlatformPermission update = new PlatformPermission();
-        update.setId(parentPermission.getId());
-        update.setCode(PermissionMatcher.wildcardPathPrefix(parentPermission.getCode()));
-        permissionService.update(update);
-    }
-
-    /**
-     * 解析可参与升降级的父菜单托管权限：父菜单须存在、非根级、非目录、未共享应用根权限。
-     *
-     * @param app 应用
-     * @param pid 父菜单ID
-     * @return 可调整的父托管权限；不满足条件返回 {@code null}
-     */
-    private PlatformPermission resolveAdjustableParentPermission(PlatformApp app, Long pid) {
-        if (pid == null || pid <= IDConstants.ROOT_TREE_ID) {
-            return null;
-        }
-        PlatformMenu parent = menuService.getById(pid);
-        if (parent == null || parent.getPermissionId() == null) {
-            return null;
-        }
-        // 共享应用根权限（菜单即应用）不处理，避免篡改应用根权限
-        if (Objects.equals(parent.getPermissionId(), app.getPermissionId())) {
-            return null;
-        }
-        // 目录始终 :**，不参与升降级
-        if (isDirectoryMenu(parent)) {
-            return null;
-        }
-        return permissionService.getById(parent.getPermissionId());
-    }
-
-    private void syncManagedPermissionSource(PlatformMenu menu) {
-        PlatformPermission permission = permissionService.getById(menu.getPermissionId());
-        if (permission == null) {
-            return;
-        }
-        permission.setSourceId(menu.getId());
-        permission.setAppId(menu.getAppId());
-        permissionService.update(permission);
     }
 
     private void syncAccessMode(PlatformMenu menu) {
@@ -636,13 +631,6 @@ public class ApplicationResourceServiceImpl implements ApplicationResourceServic
             return parent.getCode() + StrUtil.COLON + code;
         }
         return namespace + code;
-    }
-
-    /**
-     * 目录菜单对应的托管权限使用 Ant 子树通配 {@code :**}。
-     */
-    private boolean isDirectoryMenu(PlatformMenu menu) {
-        return menu.getMenuType() == MenuTypeEnum.Directory;
     }
 
     /**

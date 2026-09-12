@@ -3,6 +3,7 @@ package com.ingot.cloud.pms.api.model.dto.application;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.ingot.cloud.pms.api.model.enums.AppDefaultAccessModeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -29,4 +30,7 @@ public class AppUpdateDTO implements Serializable {
 
     @Schema(description = "排序")
     private Integer sort;
+
+    @Schema(description = "无租户覆盖时的默认访问策略")
+    private AppDefaultAccessModeEnum defaultAccessMode;
 }

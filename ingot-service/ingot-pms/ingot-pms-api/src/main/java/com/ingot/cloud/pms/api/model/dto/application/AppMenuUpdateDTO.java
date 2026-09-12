@@ -3,9 +3,12 @@ package com.ingot.cloud.pms.api.model.dto.application;
 import java.io.Serial;
 import java.io.Serializable;
 
+import java.util.List;
+
 import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuLinkTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionMatchModeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -33,6 +36,12 @@ public class AppMenuUpdateDTO implements Serializable {
 
     @Schema(description = "访问模式")
     private AccessModeEnum accessMode;
+
+    @Schema(description = "可见性关联的具体权限 ID；传入则整体替换")
+    private List<Long> permissionIds;
+
+    @Schema(description = "权限匹配模式")
+    private PermissionMatchModeEnum permissionMatchMode;
 
     @Schema(description = "页面或布局注册键，与 path 独立；传入则原样覆盖，不随 path 重算")
     private String viewPath;

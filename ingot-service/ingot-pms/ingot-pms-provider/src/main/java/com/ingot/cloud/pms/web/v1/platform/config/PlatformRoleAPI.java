@@ -3,9 +3,12 @@ package com.ingot.cloud.pms.web.v1.platform.config;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.PlatformRole;
+import com.ingot.cloud.pms.api.model.domain.PlatformRoleDataRule;
+import com.ingot.cloud.pms.api.model.dto.role.RoleDataRuleSetDTO;
 import com.ingot.cloud.pms.api.model.vo.permission.PermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.service.biz.BizPlatformRoleService;
+import com.ingot.cloud.pms.service.biz.BizRoleDataRuleService;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
 import com.ingot.framework.commons.model.support.R;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PlatformRoleAPI implements RShortcuts {
     private final BizPlatformRoleService bizPlatformRoleService;
+    private final BizRoleDataRuleService bizRoleDataRuleService;
 
     @AdminOrHasAnyAuthority({"platform:config:role:query"})
     @GetMapping(value = "/options")
@@ -84,6 +88,22 @@ public class PlatformRoleAPI implements RShortcuts {
     @Operation(summary = "获取角色权限", description = "获取角色权限")
     public R<List<PermissionTreeNodeVO>> getPermissions(@PathVariable Long id) {
         return ok(bizPlatformRoleService.getRolePermissionsTree(id));
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:role:data-rule:query"})
+    @GetMapping("/{id}/data-rules")
+    @Operation(summary = "角色数据规则")
+    public R<List<PlatformRoleDataRule>> getDataRules(@PathVariable Long id) {
+        return ok(bizRoleDataRuleService.listPlatform(id));
+    }
+
+    @AdminOrHasAnyAuthority({"platform:config:role:data-rule:set"})
+    @PutMapping("/{id}/data-rules")
+    @Operation(summary = "设置角色数据规则")
+    public R<Void> setDataRules(@PathVariable Long id,
+                                @RequestBody RoleDataRuleSetDTO dto) {
+        bizRoleDataRuleService.replacePlatform(id, dto);
+        return ok();
     }
 
 }

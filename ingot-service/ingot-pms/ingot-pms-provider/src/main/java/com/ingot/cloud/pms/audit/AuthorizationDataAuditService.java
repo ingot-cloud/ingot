@@ -4,23 +4,26 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.PlatformMenu;
+import com.ingot.cloud.pms.api.model.domain.PlatformMenuPermission;
 import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
 import com.ingot.cloud.pms.api.model.domain.PlatformRole;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePermissionPrivate;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.domain.TenantRoleUserPrivate;
+import com.ingot.cloud.pms.api.model.enums.AccessModeEnum;
 import com.ingot.cloud.pms.api.model.enums.AuthorizationAuditCategoryEnum;
-import com.ingot.cloud.pms.api.model.enums.PermissionSourceTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.MenuTypeEnum;
+import com.ingot.cloud.pms.api.model.enums.PermissionNodeTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.authorization.AuthorizationAuditIssueVO;
 import com.ingot.cloud.pms.api.model.vo.authorization.AuthorizationAuditReportVO;
 import com.ingot.cloud.pms.service.domain.PlatformAppService;
+import com.ingot.cloud.pms.service.domain.PlatformMenuPermissionService;
 import com.ingot.cloud.pms.service.domain.PlatformMenuService;
 import com.ingot.cloud.pms.service.domain.PlatformPermissionService;
 import com.ingot.cloud.pms.service.domain.PlatformRolePermissionService;
@@ -46,6 +49,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationDataAuditService {
 
     private final PlatformMenuService platformMenuService;
+    private final PlatformMenuPermissionService platformMenuPermissionService;
     private final PlatformPermissionService platformPermissionService;
     private final PlatformAppService platformAppService;
     private final PlatformRoleService platformRoleService;
@@ -84,6 +88,9 @@ public class AuthorizationDataAuditService {
         Map<Long, PlatformPermission> permissionById = permissions.stream()
                 .collect(Collectors.toMap(PlatformPermission::getId, item -> item, (a, b) -> a));
 
+        Map<Long, List<PlatformMenuPermission>> linksByMenu = platformMenuPermissionService.list().stream()
+                .collect(Collectors.groupingBy(PlatformMenuPermission::getMenuId));
+
         for (PlatformMenu menu : menus) {
             Long pid = menu.getPid();
             if (pid != null && pid > IDConstants.ROOT_TREE_ID && !menuById.containsKey(pid)) {
@@ -92,29 +99,30 @@ public class AuthorizationDataAuditService {
                         "菜单父节点不存在: pid=" + pid,
                         "修复菜单父级或恢复缺失父菜单"));
             }
-            if (menu.getPermissionId() == null || menu.getPermissionId() <= 0) {
-                issues.add(issue(AuthorizationAuditCategoryEnum.MENU_PERMISSION_MISMATCH,
-                        "platform_menu", menu.getId(),
-                        "菜单未关联权限",
-                        "为菜单创建或绑定托管权限"));
+            if (menu.getMenuType() != MenuTypeEnum.Menu || menu.getAccessMode() != AccessModeEnum.PERMISSION) {
                 continue;
             }
-            PlatformPermission permission = permissionById.get(menu.getPermissionId());
-            if (permission == null) {
+            List<PlatformMenuPermission> links = linksByMenu.getOrDefault(menu.getId(), List.of());
+            if (links.isEmpty()) {
                 issues.add(issue(AuthorizationAuditCategoryEnum.MENU_PERMISSION_MISMATCH,
                         "platform_menu", menu.getId(),
-                        "菜单关联权限不存在: permissionId=" + menu.getPermissionId(),
-                        "修复 permission_id 或恢复缺失权限"));
+                        "受保护页面未关联具体权限",
+                        "在 platform_menu_permission 绑定同应用 ACTION"));
                 continue;
             }
-            if (pid != null && pid > IDConstants.ROOT_TREE_ID) {
-                PlatformMenu parentMenu = menuById.get(pid);
-                if (parentMenu != null && parentMenu.getPermissionId() != null && permission.getPid() != null
-                        && !Objects.equals(parentMenu.getPermissionId(), permission.getPid())) {
-                    issues.add(issue(AuthorizationAuditCategoryEnum.MENU_PERMISSION_PARENT_MISMATCH,
+            for (PlatformMenuPermission link : links) {
+                PlatformPermission permission = permissionById.get(link.getPermissionId());
+                if (permission == null) {
+                    issues.add(issue(AuthorizationAuditCategoryEnum.MENU_PERMISSION_MISMATCH,
                             "platform_menu", menu.getId(),
-                            "菜单权限父级与菜单父级不一致",
-                            "同步菜单权限 pid 与父菜单 permission_id"));
+                            "菜单关联权限不存在: permissionId=" + link.getPermissionId(),
+                            "修复可见性关联或恢复缺失权限"));
+                } else if (permission.getNodeType() != PermissionNodeTypeEnum.ACTION
+                        || (permission.getCode() != null && permission.getCode().contains("*"))) {
+                    issues.add(issue(AuthorizationAuditCategoryEnum.MENU_PERMISSION_MISMATCH,
+                            "platform_menu", menu.getId(),
+                            "可见性关联必须是非通配 ACTION: permissionId=" + link.getPermissionId(),
+                            "改为关联具体操作权限"));
                 }
             }
         }
@@ -139,18 +147,15 @@ public class AuthorizationDataAuditService {
             }
         });
 
-        Set<Long> appIdsWithSystemRoot = permissions.stream()
-                .filter(item -> item.getAppId() != null
-                        && item.getSourceType() == PermissionSourceTypeEnum.SYSTEM
-                        && (item.getPid() == null || item.getPid() <= IDConstants.ROOT_TREE_ID))
-                .map(PlatformPermission::getAppId)
-                .collect(Collectors.toSet());
         for (PlatformApp app : apps) {
-            if (!appIdsWithSystemRoot.contains(app.getId())) {
+            PlatformPermission root = app.getPermissionId() == null
+                    ? null
+                    : permissionById.get(app.getPermissionId());
+            if (root == null || root.getNodeType() != PermissionNodeTypeEnum.GROUP) {
                 issues.add(issue(AuthorizationAuditCategoryEnum.APP_ROOT_REFERENCE_MISSING,
                         "platform_app", app.getId(),
-                        "应用缺少系统根权限: appId=" + app.getId(),
-                        "确认应用根权限 app_id/source_type/pid 是否正确"));
+                        "应用缺少根 GROUP 权限: appId=" + app.getId(),
+                        "确认 platform_app.permission_id 指向同应用 GROUP"));
             }
         }
 

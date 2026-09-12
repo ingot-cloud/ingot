@@ -29,6 +29,8 @@ import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
 import com.ingot.cloud.pms.common.BizFilter;
 import com.ingot.cloud.pms.common.BizUtils;
+import com.ingot.cloud.pms.authorization.engine.GrantCeilingService;
+import com.ingot.cloud.pms.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.pms.core.BizPermissionUtils;
 import com.ingot.cloud.pms.service.biz.BizAppService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
@@ -69,6 +71,8 @@ public class BizRoleServiceImpl implements BizRoleService {
     private final AuthorityConvert authorityConvert;
     private final RoleConvert roleConvert;
     private final AssertionChecker assertionChecker;
+    private final GrantCeilingService grantCeilingService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
 
     @Override
     public PlatformRole getPlatformRole(long id) {
@@ -293,6 +297,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         tenantRoleUserPrivateService.clearByRoleId(id);
         // 删除角色
         tenantRolePrivateService.delete(id);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -337,11 +342,16 @@ public class BizRoleServiceImpl implements BizRoleService {
         }
 
         // 平台角色，和自定义角色，都在私有绑定关系中进行绑定
+        Set<Long> resultIds = new HashSet<>(CollUtil.emptyIfNull(bindList));
+        resultIds.addAll(roleAuthorityService.getRoleBindPermissionIds(params.getId()));
+        grantCeilingService.assertCanGrantCodes(permissionCodesOf(resultIds));
+
         BizBindDTO bindParams = new BizBindDTO();
         bindParams.setId(params.getId());
         bindParams.setPlatformFlag(platformRole != null);
         bindParams.setAssignIds(bindList);
         tenantRolePermissionPrivateService.roleSetPermissions(bindParams);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -357,6 +367,16 @@ public class BizRoleServiceImpl implements BizRoleService {
         assertionChecker.checkOperation(role.getType() != RoleTypeEnum.GROUP,
                 "BizRoleServiceImpl.CantBindRoleGroup");
 
+        if (CollUtil.isNotEmpty(params.getAssignIds())) {
+            List<String> codes = getRolesPermissions(List.of(role)).stream()
+                    .map(PermissionType::getCode)
+                    .filter(Objects::nonNull)
+                    .toList();
+            grantCeilingService.assertCanGrantCodes(codes);
+            grantCeilingService.assertCanBindRole(role.getId(), role.getPlatformRole(),
+                    deptId, params.getAssignIds());
+        }
+
         BizRoleAssignUsersBO bindParams = new BizRoleAssignUsersBO();
         bindParams.setId(params.getId());
         bindParams.setPlatformFlag(role.getPlatformRole());
@@ -364,6 +384,7 @@ public class BizRoleServiceImpl implements BizRoleService {
         bindParams.setAssignIds(params.getAssignIds());
         bindParams.setUnassignIds(params.getUnassignIds());
         tenantRoleUserPrivateService.roleBindUsers(bindParams);
+        authorizationChangeNotifier.markAll();
     }
 
     @Override
@@ -378,5 +399,18 @@ public class BizRoleServiceImpl implements BizRoleService {
             bindParams.setUnassignIds(ids);
         }
         roleAuthorityService.roleAssignPermissions(bindParams);
+        authorizationChangeNotifier.markAll();
+    }
+
+    private List<String> permissionCodesOf(Collection<Long> permissionIds) {
+        if (CollUtil.isEmpty(permissionIds)) {
+            return List.of();
+        }
+        return authorityService.list(Wrappers.<PlatformPermission>lambdaQuery()
+                        .in(PlatformPermission::getId, permissionIds))
+                .stream()
+                .map(PlatformPermission::getCode)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

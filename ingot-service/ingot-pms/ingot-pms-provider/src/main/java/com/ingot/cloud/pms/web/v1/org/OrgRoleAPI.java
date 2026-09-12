@@ -3,12 +3,15 @@ package com.ingot.cloud.pms.web.v1.org;
 import java.util.List;
 
 import com.ingot.cloud.pms.api.model.domain.PlatformPermission;
+import com.ingot.cloud.pms.api.model.domain.TenantRoleDataRulePrivate;
 import com.ingot.cloud.pms.api.model.domain.TenantRolePrivate;
 import com.ingot.cloud.pms.api.model.dto.common.IdsDTO;
 import com.ingot.cloud.pms.api.model.dto.role.BizRoleAssignUsersDTO;
+import com.ingot.cloud.pms.api.model.dto.role.RoleDataRuleSetDTO;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.vo.permission.BizPermissionTreeNodeVO;
 import com.ingot.cloud.pms.api.model.vo.role.RoleTreeNodeVO;
+import com.ingot.cloud.pms.service.biz.BizRoleDataRuleService;
 import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.framework.commons.model.common.SetDTO;
 import com.ingot.framework.commons.model.support.Option;
@@ -36,6 +39,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrgRoleAPI implements RShortcuts {
     private final BizRoleService bizRoleService;
+    private final BizRoleDataRuleService bizRoleDataRuleService;
 
     @Operation(summary = "角色选项", description = "角色选项")
     @AdminOrHasAnyAuthority({"org:contacts:role:query"})
@@ -111,5 +115,21 @@ public class OrgRoleAPI implements RShortcuts {
     public R<List<BizPermissionTreeNodeVO>> getRolePermissionsTree(@PathVariable Long id,
                                                                    PlatformPermission condition) {
         return ok(bizRoleService.getRolePermissionsTree(id, condition));
+    }
+
+    @Operation(summary = "角色数据规则", description = "当前租户追加层")
+    @AdminOrHasAnyAuthority("org:contacts:role:data-rule:query")
+    @GetMapping("/{id}/data-rules")
+    public R<List<TenantRoleDataRulePrivate>> getDataRules(@PathVariable Long id) {
+        return ok(bizRoleDataRuleService.listTenant(id));
+    }
+
+    @Operation(summary = "设置角色数据规则", description = "只替换租户追加层")
+    @AdminOrHasAnyAuthority("org:contacts:role:data-rule:set")
+    @PutMapping("/{id}/data-rules")
+    public R<Void> setDataRules(@PathVariable Long id,
+                                @RequestBody RoleDataRuleSetDTO dto) {
+        bizRoleDataRuleService.replaceTenant(id, dto);
+        return ok();
     }
 }

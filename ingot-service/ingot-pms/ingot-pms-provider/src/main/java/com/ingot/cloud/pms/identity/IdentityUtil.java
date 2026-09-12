@@ -2,26 +2,26 @@ package com.ingot.cloud.pms.identity;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import com.ingot.cloud.pms.api.model.convert.UserConvert;
-import com.ingot.cloud.pms.api.model.domain.PlatformApp;
 import com.ingot.cloud.pms.api.model.domain.SysUser;
 import com.ingot.cloud.pms.api.model.domain.SysUserTenant;
-import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.cloud.pms.api.model.types.UserTenantType;
+import com.ingot.cloud.pms.authorization.engine.EffectiveAuthorization;
+import com.ingot.cloud.pms.authorization.engine.EffectiveAuthorizationService;
+import com.ingot.cloud.pms.authorization.engine.RoleBinding;
 import com.ingot.cloud.pms.common.BizUtils;
-import com.ingot.cloud.pms.service.biz.BizAppService;
-import com.ingot.cloud.pms.service.biz.BizRoleService;
 import com.ingot.cloud.pms.service.biz.BizUserDeptService;
-import com.ingot.cloud.pms.service.biz.BizUserService;
 import com.ingot.cloud.pms.service.domain.SysTenantService;
 import com.ingot.cloud.pms.service.domain.SysUserTenantService;
 import com.ingot.framework.commons.constants.PermissionConstants;
@@ -49,10 +49,8 @@ public class IdentityUtil {
      * @param tenant               租户ID
      * @param sysTenantService     租户服务
      * @param sysUserTenantService 用户租户服务
-     * @param bizUserService       用户服务
-     * @param bizAppService        应用服务
-     * @param bizRoleService       角色服务
-     * @param bizUserDeptService   用户部门服务
+     * @param effectiveAuthorizationService 统一授权解析
+     * @param bizUserDeptService            用户部门服务
      * @return 用户信息
      */
     public static UserDetailsResponse map(SysUser user,
@@ -60,9 +58,7 @@ public class IdentityUtil {
                                           Long tenant,
                                           SysTenantService sysTenantService,
                                           SysUserTenantService sysUserTenantService,
-                                          BizUserService bizUserService,
-                                          BizAppService bizAppService,
-                                          BizRoleService bizRoleService,
+                                          EffectiveAuthorizationService effectiveAuthorizationService,
                                           BizUserDeptService bizUserDeptService,
                                           OssService ossService) {
         return TenantEnv.applyAs(tenant, () -> Optional.ofNullable(user)
@@ -102,7 +98,7 @@ public class IdentityUtil {
 
                     // 确认登录的租户不为空，那么查询用户在当前租户下的 Scope 与部门
                     if (tenant != null) {
-                        scopes.addAll(getScopes(tenant, user, bizUserService, bizAppService, bizRoleService));
+                        scopes.addAll(getScopes(tenant, user.getId(), effectiveAuthorizationService));
                         result.setDeptIds(getUserDeptIds(user, bizUserDeptService));
                     } else {
                         // 未指定租户：把所有 allow 租户的 scope 串扁平，部门按租户聚合到 Map
@@ -110,7 +106,7 @@ public class IdentityUtil {
                         for (TenantMainDTO org : allows) {
                             Long t = Long.parseLong(org.getId());
                             List<Long> deptIds = TenantEnv.applyAs(t, () -> {
-                                scopes.addAll(getScopes(t, user, bizUserService, bizAppService, bizRoleService));
+                                scopes.addAll(getScopes(t, user.getId(), effectiveAuthorizationService));
                                 return getUserDeptIds(user, bizUserDeptService);
                             });
                             tenantDeptIds.put(t, deptIds);
@@ -144,36 +140,19 @@ public class IdentityUtil {
     }
 
     private static List<String> getScopes(Long tenant,
-                                          SysUser user,
-                                          BizUserService bizUserService,
-                                          BizAppService bizAppService,
-                                          BizRoleService bizRoleService) {
-        // 查询所有角色
-        List<RoleType> roles = bizUserService.getUserRoles(user.getId());
-        if (CollUtil.isEmpty(roles)) {
-            return ListUtil.empty();
+                                          long userId,
+                                          EffectiveAuthorizationService effectiveAuthorizationService) {
+        EffectiveAuthorization authorization = effectiveAuthorizationService.resolve(tenant, userId);
+        List<String> scopes = new ArrayList<>();
+        Set<String> roleCodes = new LinkedHashSet<>();
+        for (RoleBinding binding : authorization.safeRoleBindings()) {
+            if (binding.getRoleCode() != null) {
+                roleCodes.add(binding.getRoleCode());
+            }
         }
-        // InAuthorityUtils.authorityWithTenant 包装角色编码
-        List<String> scopes = new ArrayList<>(getRoleCodes(roles, tenant));
-        // 查询组织不可用应用
-        List<PlatformApp> disabledApps = bizAppService.getDisabledApps();
-        List<String> authorities = bizRoleService.getRolesPermissions(roles).stream()
-                .filter(auth -> disabledApps.stream()
-                        .noneMatch(app -> Objects.equals(auth.getId(), app.getPermissionId())))
-                .map(auth -> InAuthorityUtils.authorityWithTenant(auth.getCode(), tenant))
-                .toList();
-        scopes.addAll(authorities);
-
+        for (String code : roleCodes) {
+            scopes.add(InAuthorityUtils.authorityWithTenant(code, tenant));
+        }
         return scopes;
-    }
-
-    private static List<String> getRoleCodes(List<? extends RoleType> roles, Long loginTenant) {
-        if (CollUtil.isEmpty(roles)) {
-            return ListUtil.empty();
-        }
-        return roles.stream()
-                .map(item ->
-                        InAuthorityUtils.authorityWithTenant(item.getCode(), loginTenant))
-                .toList();
     }
 }

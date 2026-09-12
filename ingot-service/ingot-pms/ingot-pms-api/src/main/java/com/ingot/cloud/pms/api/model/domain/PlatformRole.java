@@ -2,16 +2,13 @@ package com.ingot.cloud.pms.api.model.domain;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.data.mybatis.common.model.BaseModel;
-import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -27,7 +24,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@TableName(value = "platform_role", autoResultMap = true)
+@TableName("platform_role")
 public class PlatformRole extends BaseModel<PlatformRole> implements RoleType {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -70,17 +67,6 @@ public class PlatformRole extends BaseModel<PlatformRole> implements RoleType {
      * 是否过滤部门
      */
     private Boolean filterDept;
-
-    /**
-     * 数据范围类型
-     */
-    private DataScopeTypeEnum scopeType;
-
-    /**
-     * 数据权限范围
-     */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Long> scopes;
 
     /**
      * 状态, 0:正常，9:禁用

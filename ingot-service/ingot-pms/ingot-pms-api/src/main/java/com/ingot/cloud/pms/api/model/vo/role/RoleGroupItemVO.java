@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
-import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Data;
 
 /**
@@ -44,14 +43,6 @@ public class RoleGroupItemVO implements Serializable {
      * 是否过滤部门
      */
     private Boolean filterDept;
-    /**
-     * 数据权限类型
-     */
-    private DataScopeTypeEnum scopeType;
-    /**
-     * 数据权限范围
-     */
-    private List<Long> scopes;
     /**
      * 状态, 0:正常，9:禁用
      */

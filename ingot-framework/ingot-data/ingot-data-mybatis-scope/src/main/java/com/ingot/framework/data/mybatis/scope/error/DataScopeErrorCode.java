@@ -15,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 public enum DataScopeErrorCode implements ErrorCode {
     DS_401("ds_unauthorized", "未授权"),
     DS_403("ds_forbidden", "无权访问"),
+    /**
+     * 授权快照不可用或过期刷新失败。
+     */
+    DS_503("AuthorizationSnapshot.Unavailable", "授权服务不可用或过期刷新失败"),
     DS_COMMON("ds_common", "公共异常");
 
     private final String code;

@@ -2,14 +2,12 @@ package com.ingot.cloud.pms.api.model.vo.role;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.ingot.cloud.pms.api.model.enums.OrgTypeEnum;
 import com.ingot.cloud.pms.api.model.enums.RoleTypeEnum;
 import com.ingot.cloud.pms.api.model.types.RoleType;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.utils.tree.TreeNode;
-import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -51,16 +49,6 @@ public class RoleTreeNodeVO extends TreeNode<Long, RoleTreeNodeVO> implements Ro
     private Boolean filterDept;
 
     /**
-     * 数据范围类型
-     */
-    private DataScopeTypeEnum scopeType;
-
-    /**
-     * 数据权限范围
-     */
-    private List<Long> scopes;
-
-    /**
      * 状态, 0:正常，9:禁用
      */
     private CommonStatusEnum status;
@@ -78,7 +66,6 @@ public class RoleTreeNodeVO extends TreeNode<Long, RoleTreeNodeVO> implements Ro
     /* --- 扩展 --- */
     private String typeText;
     private String orgTypeText;
-    private String scopeTypeText;
     private String statusText;
     /**
      * 是否为租户创建的
