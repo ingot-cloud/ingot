@@ -1,0 +1,492 @@
+{
+  "components" : {
+    "schemas" : {
+      "ActionGrant" : {
+        "required" : [ "actionId", "scopes" ],
+        "type" : "object",
+        "properties" : {
+          "actionId" : {
+            "type" : "string",
+            "description" : "操作 ID"
+          },
+          "scopes" : {
+            "type" : "array",
+            "description" : "按并集合成的范围项",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeExpression"
+            }
+          }
+        },
+        "description" : "操作及其范围，不允许脱离操作合并范围"
+      },
+      "ActionScopeCeiling" : {
+        "required" : [ "actionId", "scopeBindings", "scopes" ],
+        "type" : "object",
+        "properties" : {
+          "actionId" : {
+            "type" : "string",
+            "description" : "操作 ID"
+          },
+          "scopes" : {
+            "type" : "array",
+            "description" : "该操作允许范围的并集",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeExpression"
+            }
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            },
+            "description" : "委派范围参数，不接受未绑定的管理范围"
+          }
+        },
+        "description" : "限定委派允许的单个操作与范围，范围参数在该委派内绑定"
+      },
+      "AssignmentBatchInput" : {
+        "required" : [ "items" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "description" : "非空分配列表",
+            "items" : {
+              "$ref" : "#/components/schemas/AssignmentInput"
+            }
+          }
+        },
+        "description" : "承载一次原子批量分配，任一条校验失败均不得保存"
+      },
+      "AssignmentInput" : {
+        "required" : [ "roleRevisionRef", "scopeBindings", "subject" ],
+        "type" : "object",
+        "properties" : {
+          "subject" : {
+            "$ref" : "#/components/schemas/SubjectRef"
+          },
+          "roleRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            },
+            "description" : "命名参数绑定，未使用参数时为空对象"
+          },
+          "validFrom" : {
+            "type" : "string",
+            "description" : "UTC 生效时间，包含；为空时由提交时间补齐",
+            "format" : "date-time"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "description" : "UTC 失效时间，不包含；为空表示长期但仍受委派约束",
+            "format" : "date-time"
+          },
+          "delegationGrantId" : {
+            "type" : "string",
+            "description" : "来源委派 ID，治理直接分配时可空"
+          }
+        },
+        "description" : "描述单条角色分配输入，角色、主体、范围与来源委派须在提交时共同校验"
+      },
+      "AuthorizationContext" : {
+        "required" : [ "accountId", "domain", "memberId" ],
+        "type" : "object",
+        "properties" : {
+          "domain" : {
+            "type" : "string",
+            "description" : "当前管理域",
+            "enum" : [ "PLATFORM", "TENANT" ]
+          },
+          "tenantId" : {
+            "type" : "string",
+            "description" : "租户域必填；平台域为空"
+          },
+          "accountId" : {
+            "type" : "string",
+            "description" : "全局账号 ID"
+          },
+          "memberId" : {
+            "type" : "string",
+            "description" : "当前域的成员 ID"
+          }
+        },
+        "description" : "经认证选择的当前成员身份；不接受客户端直接指定权限域",
+        "readOnly" : true
+      },
+      "CreatedResource" : {
+        "required" : [ "id", "version" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "创建的对象 ID"
+          },
+          "version" : {
+            "type" : "string",
+            "description" : "创建后的版本，字符串传输"
+          }
+        },
+        "description" : "返回创建结果的对象 ID 与乐观锁版本"
+      },
+      "DelegationInput" : {
+        "required" : [ "actionScopeCeilings", "administratorMemberId", "allowedRoleRevisionRefs", "maxAssignmentDuration", "recipientSelection" ],
+        "type" : "object",
+        "properties" : {
+          "administratorMemberId" : {
+            "type" : "string",
+            "description" : "当前域的授权管理员成员 ID"
+          },
+          "allowedRoleRevisionRefs" : {
+            "type" : "array",
+            "description" : "允许分配的固定角色版本集合",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleRevisionRef"
+            }
+          },
+          "recipientSelection" : {
+            "$ref" : "#/components/schemas/Selection"
+          },
+          "actionScopeCeilings" : {
+            "type" : "array",
+            "description" : "逐操作范围上限",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionScopeCeiling"
+            }
+          },
+          "validFrom" : {
+            "type" : "string",
+            "description" : "UTC 生效时间，包含；空值无起始边界",
+            "format" : "date-time"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "description" : "UTC 失效时间，不包含；空值无结束边界",
+            "format" : "date-time"
+          },
+          "maxAssignmentDuration" : {
+            "type" : "string",
+            "description" : "单次分配最长持续时间，ISO-8601 duration，必须为正",
+            "format" : "duration"
+          }
+        },
+        "description" : "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
+      },
+      "DepartmentSelection" : {
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "部门 ID"
+          },
+          "includeDescendants" : {
+            "type" : "boolean",
+            "description" : "是否包含下级，默认 false"
+          }
+        },
+        "description" : "租户部门选择项；平台域不支持"
+      },
+      "DirectoryRule" : {
+        "required" : [ "effect", "targetSelection", "viewerSelection" ],
+        "type" : "object",
+        "properties" : {
+          "effect" : {
+            "type" : "string",
+            "description" : "允许或禁止效果",
+            "enum" : [ "ALLOW", "DENY" ]
+          },
+          "viewerSelection" : {
+            "$ref" : "#/components/schemas/Selection"
+          },
+          "targetSelection" : {
+            "$ref" : "#/components/schemas/Selection"
+          }
+        },
+        "description" : "描述通讯录查看者对应的允许或禁止目标，默认范围单独保存"
+      },
+      "FieldAccess" : {
+        "required" : [ "visibility" ],
+        "type" : "object",
+        "properties" : {
+          "visibility" : {
+            "type" : "string",
+            "description" : "字段可见程度",
+            "enum" : [ "HIDDEN", "MASKED", "FULL" ]
+          },
+          "editable" : {
+            "type" : "boolean",
+            "description" : "是否允许编辑，非 FULL 必须为 false"
+          }
+        },
+        "description" : "描述服务端计算后的字段输出与编辑能力，不独立授予对象或写操作权限"
+      },
+      "FieldRule" : {
+        "required" : [ "fieldKey", "scenario", "scopeBindings", "targetScope", "viewerSelection", "visibility" ],
+        "type" : "object",
+        "properties" : {
+          "scenario" : {
+            "type" : "string",
+            "description" : "后台或通讯录场景",
+            "enum" : [ "MANAGEMENT", "DIRECTORY" ]
+          },
+          "fieldKey" : {
+            "type" : "string",
+            "description" : "资源目录已注册的字段键"
+          },
+          "viewerSelection" : {
+            "$ref" : "#/components/schemas/Selection"
+          },
+          "targetScope" : {
+            "type" : "array",
+            "description" : "目标范围项的并集，不独立开放对象",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeExpression"
+            }
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            },
+            "description" : "目标范围的命名参数值"
+          },
+          "visibility" : {
+            "type" : "string",
+            "description" : "字段可见程度",
+            "enum" : [ "HIDDEN", "MASKED", "FULL" ]
+          },
+          "editable" : {
+            "type" : "boolean",
+            "description" : "编辑上限，仍受对象、操作和平台规则限制"
+          }
+        },
+        "description" : "描述场景、字段、查看者和目标范围对应的字段限制"
+      },
+      "ObjectCapability" : {
+        "type" : "object",
+        "properties" : {
+          "allowed" : {
+            "type" : "boolean",
+            "description" : "当前计算是否允许"
+          },
+          "reasonCode" : {
+            "type" : "string",
+            "description" : "拒绝或受限原因，允许时可空",
+            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "AuthorizationUnavailable" ]
+          },
+          "message" : {
+            "type" : "string",
+            "description" : "可展示中文说明，不泄露越界对象"
+          }
+        },
+        "description" : "表达当前对象上的操作能力，不能作为后续提交的授权凭证"
+      },
+      "RoleDelta" : {
+        "required" : [ "actionId", "operation" ],
+        "type" : "object",
+        "properties" : {
+          "actionId" : {
+            "type" : "string",
+            "description" : "操作 ID"
+          },
+          "operation" : {
+            "type" : "string",
+            "description" : "差异操作",
+            "enum" : [ "ADD", "REMOVE", "REPLACE_SCOPE" ]
+          },
+          "scopes" : {
+            "type" : "array",
+            "description" : "仅新增或替换使用；省略时为空集合",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeExpression"
+            }
+          }
+        },
+        "description" : "共享角色的单操作差异；同版本同操作最多一项"
+      },
+      "RoleMetadataOverrides" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "名称覆盖，空值继承"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "说明覆盖，空值继承"
+          },
+          "groupName" : {
+            "type" : "string",
+            "description" : "展示分组覆盖，空值继承"
+          }
+        },
+        "description" : "保存租户定制版本的最小元数据覆盖，空值表示继承固定基础版本"
+      },
+      "RoleParameterDefinition" : {
+        "required" : [ "key", "kind" ],
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string",
+            "description" : "命名参数键，在当前版本内唯一"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "允许的绑定集合类型",
+            "enum" : [ "DEPARTMENTS", "OBJECTS" ]
+          }
+        },
+        "description" : "声明角色版本中的命名范围参数及其绑定类型"
+      },
+      "RoleRevision" : {
+        "required" : [ "deltas", "grants", "id", "kind", "parameterDefinitions", "revision", "roleId" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "版本 ID"
+          },
+          "roleId" : {
+            "type" : "string",
+            "description" : "角色定义 ID"
+          },
+          "revision" : {
+            "type" : "string",
+            "description" : "版本序号，字符串传输"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "角色来源种类",
+            "enum" : [ "SYSTEM", "SHARED", "PLATFORM_CUSTOM", "TENANT_CUSTOM" ]
+          },
+          "baseRevisionId" : {
+            "type" : "string",
+            "description" : "定制租户版本固定的共享基础版本 ID，其余为空"
+          },
+          "grants" : {
+            "type" : "array",
+            "description" : "完整定义的逐操作范围；定制版本不复制基础授权",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionGrant"
+            }
+          },
+          "deltas" : {
+            "type" : "array",
+            "description" : "租户定制差异，其余为空集合",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleDelta"
+            }
+          },
+          "parameterDefinitions" : {
+            "type" : "array",
+            "description" : "命名参数定义，键及类型须一致",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleParameterDefinition"
+            }
+          },
+          "metadataOverrides" : {
+            "$ref" : "#/components/schemas/RoleMetadataOverrides"
+          }
+        },
+        "description" : "传输不可变角色版本及原始定义，不持久化租户合成后的完整副本"
+      },
+      "RoleRevisionRef" : {
+        "required" : [ "id", "kind" ],
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "description" : "角色版本来源种类",
+            "enum" : [ "SYSTEM", "SHARED", "PLATFORM_CUSTOM", "TENANT_CUSTOM" ]
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "角色版本 ID，不是角色定义 ID"
+          }
+        },
+        "description" : "引用明确来源的不可变角色版本，服务端还须校验域、状态及可分配性"
+      },
+      "ScopeBinding" : {
+        "required" : [ "ids", "kind" ],
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "description" : "部门或对象集合类型",
+            "enum" : [ "DEPARTMENTS", "OBJECTS" ]
+          },
+          "ids" : {
+            "type" : "array",
+            "description" : "字符串 ID 集合",
+            "items" : {
+              "type" : "string",
+              "description" : "字符串 ID 集合"
+            }
+          }
+        },
+        "description" : "命名范围参数的类型化值"
+      },
+      "ScopeExpression" : {
+        "required" : [ "kind" ],
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "description" : "范围种类",
+            "enum" : [ "ALL", "SELF", "MEMBER_DEPARTMENTS", "MANAGED_DEPARTMENTS", "OBJECT_SET" ]
+          },
+          "parameterKey" : {
+            "type" : "string",
+            "description" : "管理部门或对象集合的命名参数"
+          },
+          "includeDescendants" : {
+            "type" : "boolean",
+            "description" : "部门范围是否包含下级"
+          }
+        },
+        "description" : "操作范围表达式；资源能力、参数及归属需由服务端验证"
+      },
+      "Selection" : {
+        "type" : "object",
+        "properties" : {
+          "members" : {
+            "type" : "array",
+            "description" : "成员 ID 集合，默认空数组",
+            "items" : {
+              "type" : "string",
+              "description" : "成员 ID 集合，默认空数组"
+            }
+          },
+          "departments" : {
+            "type" : "array",
+            "description" : "部门集合，平台域必须为空",
+            "items" : {
+              "$ref" : "#/components/schemas/DepartmentSelection"
+            }
+          }
+        },
+        "description" : "当前域内的成员与部门选择"
+      },
+      "SubjectRef" : {
+        "required" : [ "id", "type" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "主体种类",
+            "enum" : [ "MEMBER", "GROUP" ]
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "成员或组 ID"
+          }
+        },
+        "description" : "当前域内的授权主体引用，不携带切换域或租户的权限"
+      }
+    }
+  }
+}

@@ -15,12 +15,13 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 | 实体 | 必要内容与约束 |
 |---|---|
 | Account | 全局 ID、登录标识、凭证及安全状态；保留账户身份，不承载租户部门 |
+| PlatformMember | 独立的平台成员 ID、accountId、平台资料与状态；账号唯一；不借用默认租户成员身份 |
 | Tenant / TenantMember | 组织、ownerMemberId；成员 ID、accountId、组织资料及状态；租户+账号唯一；所有者须为有效成员 |
 | Department / MemberDepartment | 组织内树、成员多部门关系、主部门；禁止跨租户、循环及重复关系 |
-| SubjectGroup / GroupEntry | 租户内组；成员或部门引用、includeDescendants；不允许嵌套 |
+| SubjectGroup / GroupEntry | 组明确归属 PLATFORM 或 TENANT；平台组仅引用平台成员，租户组引用本租户成员或部门及 includeDescendants；不允许嵌套或跨域引用 |
 | Application / Resource / Action / Menu | 管理域、应用命名空间、合法范围/字段能力、精确操作码、导航关联 |
 | TenantAppEntitlement / AppAudience | 显式开通与期限、来源；租户应用可用人群，停用强于授权 |
-| RoleDefinition / RoleRevision | 归属域、系统/共享/自定义类型、状态；不可变版本；角色分组仅展示 |
+| RoleDefinition / RoleRevision | 归属域、SYSTEM/SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM 类型、状态；不可变版本；角色分组仅展示 |
 | RoleGrant | 版本中的操作与范围表达式；版本+操作唯一；范围不能脱离操作存在 |
 | TenantRoleRevision / RoleDelta | 固定 sharedRevisionId、元数据覆盖、操作差异；差异类型 ADD/REMOVE/REPLACE_SCOPE |
 | RoleAssignment | 主体、版本引用、范围参数、起止时间、状态、delegationGrantId、来源；同一次批量操作原子提交 |
@@ -31,6 +32,32 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 角色引用采用明确的 kind + revisionId，不能用 platformRole 布尔值推测来源。逻辑 ID 在 API 中为字符串。封闭取值使用 commons 共享枚举；注解取值使用编译期命名常量。
 
 平台域对象和租户域对象必须在引用时验证归属。操作 code 全局唯一，资源 code 在应用内唯一，角色 code 在所属域/组织内唯一。所有映射集合去重并设数据库约束。被引用的资源、操作、版本拒绝物理删除，提供停用行为。租户所有者转交是独立治理操作，不能通过普通成员编辑或停用移除最后所有者。
+
+### 2.1 平台成员与多身份（D01，2026-09-13 已确认）
+
+一个 Account 可同时关联一个 PlatformMember 和多个租户的 TenantMember，不重复创建登录账号。PLATFORM 上下文必须带平台 memberId、accountId，tenantId 为空；TENANT 上下文必须带当前租户 memberId、accountId、tenantId。成员必须属于该账号和当前域，组和委派接收者也在该域内解析。ID 相同或账号相同都不构成跨域授权依据。
+
+平台成员暂停/移出只影响平台身份；租户成员暂停/移出只影响该租户；全局账号禁用约束全部身份。身份切换通过认证流程重新建立上下文，清除旧授权视图，权限永不跨身份叠加。平台组仅包含平台成员，不新增平台部门模型；平台角色、选择器及委派不接受租户部门参数。平台成员身份本身不自动授予治理权限。
+
+平台成员管理及平台组管理均为平台资源，拥有各自的明确 ACTION；全局账号安全管理仍不允许读取、编辑租户组织资料。平台委派 administratorMemberId 指平台成员，租户委派指当前租户成员。内部服务调用也必须校验域及成员归属。
+
+### 2.2 身份物理结构（T01）
+
+`databases/iam/001_identity.sql` 定义独立目标库的 Account、PlatformMember、Tenant、TenantMember、Department、MemberDepartment，以及分表保存的 PlatformGroup/TenantGroup 和成员/部门关系，共 11 张表。ID 为正数 BIGINT UNSIGNED，API 保持字符串；成员状态使用共享 MemberStatus（ACTIVE/SUSPENDED/REMOVED）。租户关系通过包含 tenant_id 的复合外键拒绝跨租户，平台组外键只引用平台成员表。
+
+同域成员按账号唯一，移出保留成员行与历史标识。主部门使用生成列唯一约束保证最多一个；完整主部门业务规则、部门子树检查及所有者状态检查由事务服务负责。为完成组织/成员循环引用，owner_member_id 在创建事务内可暂空，但提交前必须填入有效本租户所有者；外键只保证归属，不代替最终业务校验。
+
+表结构不包含默认账号或隐式治理授权，不挂入旧数据库初始化流程。真实登录、授权、组影响校验及原子组织初始化仍属于 T05/T08/T09，不能以结构测试代替这些任务。
+
+### 2.3 目录、版本及分配物理结构（T01）
+
+`002_catalog_role.sql` 定义应用、资源、精确操作、菜单引用、显式开通、人群、套餐、角色及不可变版本/参数/操作范围/差异。应用人群的成员、部门和组关系使用独立关联表，数据库去重并校验租户归属。角色 kind 补齐已有平台自定义能力的 PLATFORM_CUSTOM；TENANT_CUSTOM 的 baseRevisionId 非空表示定制，否则为完整租户自定义。定制的基础外键限定为 SHARED，禁止多层差异继承；发布只插入新版本，不更新既有引用。
+
+`003_assignment_delegation.sql` 定义委派管理员、固定版本白名单、接收成员/部门、逐操作上限及分配记录。两域成员/组使用独立类型化外键列，并通过 CHECK 保证恰好一个合法主体；委派来源使用域、租户和 ID 的复合外键，不能跨域或拼接来源。JSON 仅保存类型化范围表达式和参数值，其结构、资源归属及范围包含关系须由应用事务验证。委派持续生效、版本归属、受限组扩大和授权范围不能仅靠这些外键证明。
+
+授权/委派状态为 ACTIVE/REVOKED；期限到期由时间判定，不依赖异步状态更新。分配来源为 MANUAL/INITIALIZATION/MIGRATION；组或直接分配由主体类型判定，来源委派由 delegationGrantId 判定。未传 validFrom 的分配在提交时落为当前 UTC 时间，以便计算最长分配期限。委派最长时长保存秒及纳秒两列，与 Duration 精度一致。
+
+`004_policy_audit_migration.sql` 保存不可变默认策略引用、独立默认范围与允许/禁止规则、字段规则及事务审计事实。选择器关联按租户加成员/部门 ID 唯一；字段非 FULL 时数据库也拒绝 editable=true。审计与批次表只保证结构，不替代脱敏、可靠投递、授权等价比较及验证状态机。`005_auxiliary.sql` 仅保留 MIGRATION 列出的 9 张辅助表定义，无旧数据写入；旧 ID 列须映射到新模型后验证引用。各编号 SQL 合计 55 张目标表，均只用于显式指定的隔离目标库。
 
 ## 3. 角色合成与版本
 

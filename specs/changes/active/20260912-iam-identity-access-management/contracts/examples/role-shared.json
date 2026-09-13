@@ -1,0 +1,27 @@
+{
+  "id": "9007199254740993",
+  "roleId": "role-viewer",
+  "revision": "1",
+  "kind": "SHARED",
+  "baseRevisionId": null,
+  "grants": [
+    {
+      "actionId": "member-read",
+      "scopes": [
+        {
+          "kind": "MANAGED_DEPARTMENTS",
+          "parameterKey": "managedDepartments",
+          "includeDescendants": true
+        }
+      ]
+    }
+  ],
+  "deltas": [],
+  "parameterDefinitions": [
+    {
+      "key": "managedDepartments",
+      "kind": "DEPARTMENTS"
+    }
+  ],
+  "metadataOverrides": null
+}

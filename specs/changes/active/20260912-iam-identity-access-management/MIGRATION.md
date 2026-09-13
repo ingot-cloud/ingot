@@ -14,6 +14,7 @@
 |---|---|
 | sys_user | Account，保留可用 ID、摘要和安全状态；组织资料初始化自有明确来源，不把新成员字段写回全局 |
 | sys_user_tenant | TenantMember；唯一 account+tenant，保存旧关系→memberId 映射；该表 name/avatar 是组织信息，不误作成员姓名头像 |
+| 经确认的平台人员映射 | PlatformMember；Account 复用，平台成员独立 ID；不能将默认租户全部账号或旧角色名自动转换为平台治理授权 |
 | sys_tenant | Tenant；验证所有者资料，缺失则使用显式映射，不把所有 org_admin 都升为 owner |
 | tenant_dept / tenant_user_dept_private | Department / MemberDepartment，保留可用 ID，多部门、主部门验证 |
 | platform_app / resource / permission / menu | 目标目录及操作映射；菜单与操作独立，不能从 path 自动推导新权限 |
@@ -37,6 +38,7 @@
 操作映射显式记录旧 ID/code 到新 ACTION，支持旧粗权限拆分但须评审拆分后的能力；不能根据字符串相似或角色名称自动授予。通配符按源快照有效具体目录展开，不包括未来新 ACTION。
 
 旧多角色合并先识别合法来源；不能把跨角色拼出的 ALL 视为目标必需能力。规则明确则保留，有以下情况列阻塞项：
+- 平台身份、平台治理授权缺少显式映射，或旧平台身份与租户身份无法拆分；同一账号可以分别保留两域成员，但不得合并权限。
 - 无法对应操作/资源、数据范围不明确或引用缺失。
 - 账号/成员跨租户引用、重复业务键、部门循环/孤儿。
 - 多候选所有者或没有可靠所有权。

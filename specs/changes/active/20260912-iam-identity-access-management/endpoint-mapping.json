@@ -1,0 +1,1635 @@
+{
+  "description": "T01 显式入口处置与目标 ACTION 设计；不是授权迁移的自动授予规则，也不表示执行器已实现",
+  "entries": [
+    {
+      "legacyMethod": "TestAPI.test",
+      "legacyHttp": "GET",
+      "legacyPath": "/test/limit",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 测试限流入口不随 IAM 业务 API 发布"
+    },
+    {
+      "legacyMethod": "InnerAuthorizationAPI.snapshot",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/authorization/snapshot",
+      "domain": "SERVICE",
+      "resource": "Authorization",
+      "action": null,
+      "target": "POST /inner/authorization/snapshot",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerDictAPI.items",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/dict/items",
+      "domain": "SERVICE",
+      "resource": "Dict",
+      "action": null,
+      "target": "POST /inner/dict/items",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerDictAPI.nodes",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/dict/nodes",
+      "domain": "SERVICE",
+      "resource": "Dict",
+      "action": null,
+      "target": "POST /inner/dict/nodes",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerDictAPI.batchItems",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/dict/batch",
+      "domain": "SERVICE",
+      "resource": "Dict",
+      "action": null,
+      "target": "POST /inner/dict/batch",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerIdAPI.appId",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/id/appId",
+      "domain": "SERVICE",
+      "resource": "Id",
+      "action": null,
+      "target": "GET /inner/id/appId",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerLoginRecordAPI.record",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/user/login/record",
+      "domain": "SERVICE",
+      "resource": "LoginRecord",
+      "action": null,
+      "target": "POST /inner/user/login/record",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSocialDetailsAPI.getSocialDetailsByType",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/social/detailList/{type}",
+      "domain": "SERVICE",
+      "resource": "SocialDetails",
+      "action": null,
+      "target": "GET /inner/social/detailList/{type}",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSocialDetailsAPI.getDetailsByAppId",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/social/appId/{appId}",
+      "domain": "SERVICE",
+      "resource": "SocialDetails",
+      "action": null,
+      "target": "GET /inner/social/appId/{appId}",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerTenantDetailsAPI.getUserTenantDetails",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/tenant/details/{username}",
+      "domain": "SERVICE",
+      "resource": "TenantDetails",
+      "action": null,
+      "target": "POST /inner/tenant/details/{username}",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerTenantDetailsAPI.getTenantByIds",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/tenant/detailsList",
+      "domain": "SERVICE",
+      "resource": "TenantDetails",
+      "action": null,
+      "target": "POST /inner/tenant/detailsList",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerTenantDetailsAPI.getTenantById",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/tenant/{id}",
+      "domain": "SERVICE",
+      "resource": "TenantDetails",
+      "action": null,
+      "target": "GET /inner/tenant/{id}",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerUserDetailsAPI.getUserAuthDetail",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/user/details",
+      "domain": "SERVICE",
+      "resource": "UserDetails",
+      "action": null,
+      "target": "POST /inner/user/details",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerUserDetailsAPI.getUserInfo",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/user/{id}",
+      "domain": "SERVICE",
+      "resource": "UserDetails",
+      "action": null,
+      "target": "GET /inner/user/{id}",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerUserDetailsAPI.getAllUserInfo",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/user/list",
+      "domain": "SERVICE",
+      "resource": "UserDetails",
+      "action": null,
+      "target": "POST /inner/user/list",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "AuthUserAPI.getUserInfo",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/auth/user/info",
+      "domain": "CURRENT",
+      "resource": "identity",
+      "action": null,
+      "target": "GET /v1/me/bootstrap",
+      "execution": "AUTHENTICATED_SELF: 可信当前身份及同一未到期授权视图"
+    },
+    {
+      "legacyMethod": "AuthUserAPI.getUserMenus",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/auth/user/menus",
+      "domain": "CURRENT",
+      "resource": "identity",
+      "action": null,
+      "target": "GET /v1/me/bootstrap",
+      "execution": "AUTHENTICATED_SELF: 可信当前身份及同一未到期授权视图"
+    },
+    {
+      "legacyMethod": "AuthUserAPI.getUserPermissions",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/auth/user/permissions",
+      "domain": "CURRENT",
+      "resource": "identity",
+      "action": null,
+      "target": "GET /v1/me/capabilities",
+      "execution": "AUTHENTICATED_SELF: 可信当前身份及同一未到期授权视图"
+    },
+    {
+      "legacyMethod": "OSSCommonAPI.upload",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/oss/upload",
+      "domain": "CURRENT",
+      "resource": "asset",
+      "action": "按当前域分别注册 iam-platform:asset:upload / iam-tenant:asset:upload",
+      "target": "POST /v1/oss/upload",
+      "execution": "ASSET_OWNER: 上传绑定当前域/成员及合法用途，后续挂载对象仍须写范围校验"
+    },
+    {
+      "legacyMethod": "OrgAuthAPI.getOrgAuthTree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/auth/tree",
+      "domain": "TENANT",
+      "resource": "application",
+      "action": "iam-tenant:application:read",
+      "target": "GET /v1/tenant/applications/{id}/actions",
+      "execution": "CATALOG_CANDIDATE: 当前租户已开通应用的操作与范围能力；仅候选，不授予这些操作"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/dept/tree",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:read",
+      "target": "GET /v1/tenant/departments",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.tree2",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/dept/tree2",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:read",
+      "target": "GET /v1/tenant/departments",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.simpleTree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/dept/simpleTree",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:read",
+      "target": "GET /v1/tenant/departments",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/org/dept",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:create",
+      "target": "POST /v1/tenant/departments",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/dept",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:update",
+      "target": "PUT /v1/tenant/departments/{id}",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgDeptAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/org/dept/{id}",
+      "domain": "TENANT",
+      "resource": "department",
+      "action": "iam-tenant:department:delete",
+      "target": "DELETE /v1/tenant/departments/{id}",
+      "execution": "DEPARTMENT: 同租户 SQL 范围；移动校验子树及新父，非空删除拒绝"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.options",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/role/options",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:read",
+      "target": "GET /v1/tenant/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/role/tree",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:read",
+      "target": "GET /v1/tenant/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/org/role",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:create",
+      "target": "POST /v1/tenant/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/role",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:publish",
+      "target": "POST /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/org/role/{id}",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:delete",
+      "target": "DELETE /v1/tenant/roles/{id}",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.sort",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/role/sort",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:publish",
+      "target": "POST /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.assignUsers",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/role/{id}/users",
+      "domain": "TENANT",
+      "resource": "assignment",
+      "action": "iam-tenant:assignment:create",
+      "target": "POST /v1/tenant/assignments",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.setPermissions",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/role/{id}/permissions",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:publish",
+      "target": "POST /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.getRolePermissionsTree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/role/{id}/permissions",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:read",
+      "target": "GET /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.getDataRules",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/role/{id}/data-rules",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:read",
+      "target": "GET /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgRoleAPI.setDataRules",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/role/{id}/data-rules",
+      "domain": "TENANT",
+      "resource": "role",
+      "action": "iam-tenant:role:publish",
+      "target": "POST /v1/tenant/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/user/page",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:read",
+      "target": "GET /v1/tenant/members",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.pageWithRoleStatus",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/user/role/{roleId}/page",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:read",
+      "target": "GET /v1/tenant/members",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/org/user",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:create",
+      "target": "POST /v1/tenant/members",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/user",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:update",
+      "target": "PATCH /v1/tenant/members/{id}",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/org/user/{id}",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:remove",
+      "target": "POST /v1/tenant/members/{id}/remove",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.userProfile",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/org/user/detail/{id}",
+      "domain": "TENANT",
+      "resource": "member",
+      "action": "iam-tenant:member:read",
+      "target": "GET /v1/tenant/members/{id}",
+      "execution": "MEMBER: 关联部门 EXISTS；查看/资料编辑任一关系，移出覆盖全部关系；字段策略；拒绝账号凭证字段"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.initFixPwd",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/user/pwd/init",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 租户管理不得重置全局账号密码"
+    },
+    {
+      "legacyMethod": "OrgUserAPI.fixPwd",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/org/user/pwd",
+      "domain": "ACCOUNT_SELF",
+      "resource": "account",
+      "action": null,
+      "target": "PUT /v1/me/password",
+      "execution": "AUTHENTICATED_SELF: 取认证 accountId；沿用凭证验证及安全事件，禁止提交其他账号 ID"
+    },
+    {
+      "legacyMethod": "SystemDeptAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/dept/tree/{orgId}",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 平台不得代入租户读取部门；使用当前租户部门接口"
+    },
+    {
+      "legacyMethod": "SystemRoleAPI.options",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/role/tree/{orgId}",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 平台不得代入租户读取角色；使用当前租户角色接口"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.searchByPhone",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/user/searchByPhone",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:lookup",
+      "target": "POST /v1/platform/accounts/lookup",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/user/page",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:read",
+      "target": "GET /v1/platform/accounts",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/admin/user",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:create",
+      "target": "POST /v1/platform/accounts",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:update",
+      "target": "PATCH /v1/platform/accounts/{id}",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/admin/user/{id}",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:delete",
+      "target": "DELETE /v1/platform/accounts/{id}",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.orgInfo",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/user/orgInfo/{userId}",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 平台账号接口不返回租户组织资料"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.userOrgEdit",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/org",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 组织资料写入仅在对应租户成员上下文执行"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.userOrgLeave",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/admin/user/org",
+      "domain": null,
+      "resource": null,
+      "action": null,
+      "target": null,
+      "execution": "RETIRED: 移出组织仅在对应租户成员上下文执行"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.resetPwd",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/{userId}/reset-password",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:reset-password",
+      "target": "POST /v1/platform/accounts/{id}/reset-password",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.userProfile",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/admin/user/profile/{id}",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:read",
+      "target": "GET /v1/platform/accounts/{id}",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.updateUserBaseInfo",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/base",
+      "domain": "ACCOUNT_SELF",
+      "resource": "account",
+      "action": null,
+      "target": "PATCH /v1/me/profile",
+      "execution": "AUTHENTICATED_SELF: 取认证 accountId；沿用凭证验证及安全事件，禁止提交其他账号 ID"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.enableAccount",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/{userId}/enable",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:enable",
+      "target": "POST /v1/platform/accounts/{id}/enable",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.disableAccount",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/{userId}/disable",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:disable",
+      "target": "POST /v1/platform/accounts/{id}/disable",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.lockAccount",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/{userId}/lock",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:lock",
+      "target": "POST /v1/platform/accounts/{id}/lock",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "SystemUserAPI.unlockAccount",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/admin/user/{userId}/unlock",
+      "domain": "PLATFORM",
+      "resource": "account",
+      "action": "iam-platform:account:unlock",
+      "target": "POST /v1/platform/accounts/{id}/unlock",
+      "execution": "ACCOUNT: 全局账号对象范围及独立安全操作；不返回组织资料；lookup 精确匹配且限制用途、结果与字段"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/apps/page",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:read",
+      "target": "GET /v1/platform/applications",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.detail",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/apps/{appId}",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:read",
+      "target": "GET /v1/platform/applications/{id}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/apps",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:create",
+      "target": "POST /v1/platform/applications",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/apps/{appId}",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:update",
+      "target": "PUT /v1/platform/applications/{id}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.patchStatus",
+      "legacyHttp": "PATCH",
+      "legacyPath": "/v1/platform/config/apps/{appId}/status",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:update",
+      "target": "PATCH /v1/platform/applications/{id}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.delete",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/apps/{appId}",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:delete",
+      "target": "DELETE /v1/platform/applications/{id}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.menuTree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/apps/{appId}/menus/tree",
+      "domain": "PLATFORM",
+      "resource": "menu",
+      "action": "iam-platform:menu:read",
+      "target": "GET /v1/platform/applications/{id}/menus",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.createMenu",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/apps/{appId}/menus",
+      "domain": "PLATFORM",
+      "resource": "menu",
+      "action": "iam-platform:menu:create",
+      "target": "POST /v1/platform/applications/{id}/menus",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.updateMenu",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/apps/{appId}/menus/{menuId}",
+      "domain": "PLATFORM",
+      "resource": "menu",
+      "action": "iam-platform:menu:update",
+      "target": "PUT /v1/platform/applications/{id}/menus/{menuId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.deleteMenu",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/apps/{appId}/menus/{menuId}",
+      "domain": "PLATFORM",
+      "resource": "menu",
+      "action": "iam-platform:menu:delete",
+      "target": "DELETE /v1/platform/applications/{id}/menus/{menuId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.permissionTree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/apps/{appId}/permissions/tree",
+      "domain": "PLATFORM",
+      "resource": "action",
+      "action": "iam-platform:action:read",
+      "target": "GET /v1/platform/applications/{id}/actions",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.createPermission",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/apps/{appId}/permissions",
+      "domain": "PLATFORM",
+      "resource": "action",
+      "action": "iam-platform:action:create",
+      "target": "POST /v1/platform/applications/{id}/actions",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.updatePermission",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/apps/{appId}/permissions/{permissionId}",
+      "domain": "PLATFORM",
+      "resource": "action",
+      "action": "iam-platform:action:update",
+      "target": "PUT /v1/platform/applications/{id}/actions/{actionId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.deletePermission",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/apps/{appId}/permissions/{permissionId}",
+      "domain": "PLATFORM",
+      "resource": "action",
+      "action": "iam-platform:action:delete",
+      "target": "DELETE /v1/platform/applications/{id}/actions/{actionId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.listResources",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/apps/{appId}/resources",
+      "domain": "PLATFORM",
+      "resource": "resource",
+      "action": "iam-platform:resource:read",
+      "target": "GET /v1/platform/applications/{id}/resources",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.createResource",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/apps/{appId}/resources",
+      "domain": "PLATFORM",
+      "resource": "resource",
+      "action": "iam-platform:resource:create",
+      "target": "POST /v1/platform/applications/{id}/resources",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.updateResource",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/apps/{appId}/resources/{resourceId}",
+      "domain": "PLATFORM",
+      "resource": "resource",
+      "action": "iam-platform:resource:update",
+      "target": "PUT /v1/platform/applications/{id}/resources/{resourceId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformApplicationAPI.deleteResource",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/apps/{appId}/resources/{resourceId}",
+      "domain": "PLATFORM",
+      "resource": "resource",
+      "action": "iam-platform:resource:delete",
+      "target": "DELETE /v1/platform/applications/{id}/resources/{resourceId}",
+      "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/dict/tree",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:read",
+      "target": "GET /v1/platform/dictionaries",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/dict/page",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:read",
+      "target": "GET /v1/platform/dictionaries",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.items",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/dict/items/{code}",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:read",
+      "target": "GET /v1/platform/dictionaries",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/dict",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:create",
+      "target": "POST /v1/platform/dictionaries",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/dict",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:update",
+      "target": "PUT /v1/platform/dictionaries/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.changeStatus",
+      "legacyHttp": "PATCH",
+      "legacyPath": "/v1/platform/config/dict/{id}/status/{status}",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:update",
+      "target": "PUT /v1/platform/dictionaries/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.sort",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/dict/sort",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:update",
+      "target": "PUT /v1/platform/dictionaries/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformDictAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/dict/{id}",
+      "domain": "PLATFORM",
+      "resource": "dictionary",
+      "action": "iam-platform:dictionary:delete",
+      "target": "DELETE /v1/platform/dictionaries/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "PlatformMenuAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/menu/tree",
+      "domain": "PLATFORM",
+      "resource": "menu",
+      "action": "iam-platform:menu:read",
+      "target": "GET /v1/platform/applications/{id}/menus",
+      "execution": "CATALOG: 收敛到应用内查询，校验应用归属与平台对象范围"
+    },
+    {
+      "legacyMethod": "PlatformPermissionAPI.tree",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/permission/tree",
+      "domain": "PLATFORM",
+      "resource": "action",
+      "action": "iam-platform:action:read",
+      "target": "GET /v1/platform/applications/{id}/actions",
+      "execution": "CATALOG: 收敛到应用内查询，校验应用归属与平台对象范围"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.options",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/role/options",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:read",
+      "target": "GET /v1/platform/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.conditionList",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/role/list",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:read",
+      "target": "GET /v1/platform/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/config/role",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:create",
+      "target": "POST /v1/platform/roles",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/role",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:publish",
+      "target": "POST /v1/platform/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.delete",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/config/role/{id}",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:delete",
+      "target": "DELETE /v1/platform/roles/{id}",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.bindAuthorities",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/role/{id}/permissions",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:publish",
+      "target": "POST /v1/platform/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.getPermissions",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/role/{id}/permissions",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:read",
+      "target": "GET /v1/platform/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.getDataRules",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/config/role/{id}/data-rules",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:read",
+      "target": "GET /v1/platform/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "PlatformRoleAPI.setDataRules",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/config/role/{id}/data-rules",
+      "domain": "PLATFORM",
+      "resource": "role",
+      "action": "iam-platform:role:publish",
+      "target": "POST /v1/platform/roles/{id}/revisions",
+      "execution": "ROLE_GRANT: 域/对象范围、版本、精确操作及范围共同校验；分配另校验接收者和委派来源；系统角色禁止修改"
+    },
+    {
+      "legacyMethod": "DevAuthorizationAuditAPI.audit",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/dev/authorization/audit",
+      "domain": "PLATFORM",
+      "resource": "migration",
+      "action": "iam-platform:migration:read",
+      "target": "GET /v1/platform/migration/reports",
+      "execution": "MIGRATION_REPORT: 只读已生成的脱敏报告，目标租户数据不可穿透"
+    },
+    {
+      "legacyMethod": "DevIdAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/dev/id/page",
+      "domain": "PLATFORM",
+      "resource": "id-allocation",
+      "action": "iam-platform:id-allocation:read",
+      "target": "GET /v1/platform/id-allocations",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevIdAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/dev/id",
+      "domain": "PLATFORM",
+      "resource": "id-allocation",
+      "action": "iam-platform:id-allocation:create",
+      "target": "POST /v1/platform/id-allocations",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevIdAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/dev/id",
+      "domain": "PLATFORM",
+      "resource": "id-allocation",
+      "action": "iam-platform:id-allocation:update",
+      "target": "PUT /v1/platform/id-allocations/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevIdAPI.remove",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/dev/id/{id}",
+      "domain": "PLATFORM",
+      "resource": "id-allocation",
+      "action": "iam-platform:id-allocation:delete",
+      "target": "DELETE /v1/platform/id-allocations/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevSocialAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/dev/social/page",
+      "domain": "PLATFORM",
+      "resource": "social-config",
+      "action": "iam-platform:social-config:read",
+      "target": "GET /v1/platform/social-configs",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevSocialAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/dev/social",
+      "domain": "PLATFORM",
+      "resource": "social-config",
+      "action": "iam-platform:social-config:create",
+      "target": "POST /v1/platform/social-configs",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevSocialAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/dev/social",
+      "domain": "PLATFORM",
+      "resource": "social-config",
+      "action": "iam-platform:social-config:update",
+      "target": "PUT /v1/platform/social-configs/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "DevSocialAPI.remove",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/dev/social/{id}",
+      "domain": "PLATFORM",
+      "resource": "social-config",
+      "action": "iam-platform:social-config:delete",
+      "target": "DELETE /v1/platform/social-configs/{id}",
+      "execution": "AUXILIARY: 保留业务语义；校验对象域/租户/应用归属及写两端；密钥不原值输出"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.search",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/org/tenant/search",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:read",
+      "target": "GET /v1/platform/tenants",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.getTenantInfo",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/org/tenant/{id}",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:read",
+      "target": "GET /v1/platform/tenants/{id}",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/org/tenant/page",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:read",
+      "target": "GET /v1/platform/tenants",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.getApps",
+      "legacyHttp": "GET",
+      "legacyPath": "/v1/platform/org/tenant/apps",
+      "domain": "PLATFORM",
+      "resource": "entitlement",
+      "action": "iam-platform:entitlement:read",
+      "target": "GET /v1/platform/tenants/{id}/entitlements",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.updateAppStatus",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/org/tenant/app/status",
+      "domain": "PLATFORM",
+      "resource": "entitlement",
+      "action": "iam-platform:entitlement:update",
+      "target": "PUT /v1/platform/tenants/{id}/entitlements",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/org/tenant",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:create",
+      "target": "POST /v1/platform/tenants",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/v1/platform/org/tenant",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:update",
+      "target": "PATCH /v1/platform/tenants/{id}",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "AdminTenantAPI.removeById",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/v1/platform/org/tenant/{id}",
+      "domain": "PLATFORM",
+      "resource": "tenant",
+      "action": "iam-platform:tenant:update",
+      "target": "PATCH /v1/platform/tenants/{id}",
+      "execution": "TENANT_GOVERNANCE: 只访问租户实体/开通；删除旧入口改为停用且保留事实；创建原子初始化"
+    },
+    {
+      "legacyMethod": "InnerAccountLockoutPolicyAPI.listPolicies",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/security/account/lockout-policies",
+      "domain": "SERVICE",
+      "resource": "AccountLockoutPolicy",
+      "action": null,
+      "target": "GET /inner/security/account/lockout-policies",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerCredentialAPI.getPolicyConfigs",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/credential/policy-configs",
+      "domain": "SERVICE",
+      "resource": "Credential",
+      "action": null,
+      "target": "GET /inner/credential/policy-configs",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerLoginFailurePolicyAPI.listPolicies",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/security/access/login-failure-policies",
+      "domain": "SERVICE",
+      "resource": "LoginFailurePolicy",
+      "action": null,
+      "target": "GET /inner/security/access/login-failure-policies",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSecurityEventAPI.report",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/security/event/report",
+      "domain": "SERVICE",
+      "resource": "SecurityEvent",
+      "action": null,
+      "target": "POST /inner/security/event/report",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSecurityEventAPI.reportBatch",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/security/event/report/batch",
+      "domain": "SERVICE",
+      "resource": "SecurityEvent",
+      "action": null,
+      "target": "POST /inner/security/event/report/batch",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSecurityPolicyAPI.snapshot",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/security/policy/snapshot",
+      "domain": "SERVICE",
+      "resource": "SecurityPolicy",
+      "action": null,
+      "target": "GET /inner/security/policy/snapshot",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSecurityPolicyAPI.reportBlacklist",
+      "legacyHttp": "POST",
+      "legacyPath": "/inner/security/blacklist/report",
+      "domain": "SERVICE",
+      "resource": "SecurityPolicy",
+      "action": null,
+      "target": "POST /inner/security/blacklist/report",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "InnerSessionConcurrencyPolicyAPI.listPolicies",
+      "legacyHttp": "GET",
+      "legacyPath": "/inner/security/session/concurrency-policies",
+      "domain": "SERVICE",
+      "resource": "SessionConcurrencyPolicy",
+      "action": null,
+      "target": "GET /inner/security/session/concurrency-policies",
+      "execution": "SERVICE_CONTEXT: 服务身份、目标域及成员归属校验；凭证数据不对前端暴露"
+    },
+    {
+      "legacyMethod": "AccountLockoutPolicyAPI.list",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/account/lockout-policies",
+      "domain": "PLATFORM",
+      "resource": "account-lockout-policy",
+      "action": "platform:security:account:lockout:query",
+      "target": "GET /platform/security/account/lockout-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "AccountLockoutPolicyAPI.getByUserType",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/account/lockout-policies/{userType}",
+      "domain": "PLATFORM",
+      "resource": "account-lockout-policy",
+      "action": "platform:security:account:lockout:query",
+      "target": "GET /platform/security/account/lockout-policies/{userType}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "AccountLockoutPolicyAPI.upsert",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/account/lockout-policies",
+      "domain": "PLATFORM",
+      "resource": "account-lockout-policy",
+      "action": "platform:security:account:lockout:update",
+      "target": "PUT /platform/security/account/lockout-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "CredentialPolicyConfigAPI.getAllPolicyConfigs",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/credential/policy-config/list",
+      "domain": "PLATFORM",
+      "resource": "credential-policy",
+      "action": "platform:security:credential:policy:query",
+      "target": "GET /platform/security/credential/policy-config/list",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "CredentialPolicyConfigAPI.savePolicyConfig",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/credential/policy-config",
+      "domain": "PLATFORM",
+      "resource": "credential-policy",
+      "action": "platform:security:credential:policy:create",
+      "target": "POST /platform/security/credential/policy-config",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "CredentialPolicyConfigAPI.updatePolicyConfig",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/credential/policy-config",
+      "domain": "PLATFORM",
+      "resource": "credential-policy",
+      "action": "platform:security:credential:policy:update",
+      "target": "PUT /platform/security/credential/policy-config",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "CredentialPolicyConfigAPI.deletePolicyConfig",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/credential/policy-config/{id}",
+      "domain": "PLATFORM",
+      "resource": "credential-policy",
+      "action": "platform:security:credential:policy:delete",
+      "target": "DELETE /platform/security/credential/policy-config/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "LoginFailureProtectionAPI.list",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/access/login-failure-policies",
+      "domain": "PLATFORM",
+      "resource": "login-failure-policy",
+      "action": "platform:security:access:login-failure:query",
+      "target": "GET /platform/security/access/login-failure-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "LoginFailureProtectionAPI.getByDimension",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/access/login-failure-policies/{dimension}",
+      "domain": "PLATFORM",
+      "resource": "login-failure-policy",
+      "action": "platform:security:access:login-failure:query",
+      "target": "GET /platform/security/access/login-failure-policies/{dimension}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "LoginFailureProtectionAPI.upsert",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/access/login-failure-policies",
+      "domain": "PLATFORM",
+      "resource": "login-failure-policy",
+      "action": "platform:security:access:login-failure:update",
+      "target": "PUT /platform/security/access/login-failure-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "PlatformSessionAPI.page",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/sessions",
+      "domain": "PLATFORM",
+      "resource": "session",
+      "action": "platform:security:session:query",
+      "target": "GET /platform/security/sessions",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "PlatformSessionAPI.getBySid",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/sessions/{sid}",
+      "domain": "PLATFORM",
+      "resource": "session",
+      "action": "platform:security:session:query",
+      "target": "GET /platform/security/sessions/{sid}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "PlatformSessionAPI.revokeBySid",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/sessions/{sid}",
+      "domain": "PLATFORM",
+      "resource": "session",
+      "action": "platform:security:session:revoke",
+      "target": "DELETE /platform/security/sessions/{sid}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "PlatformSessionAPI.revokeByUser",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/sessions/user",
+      "domain": "PLATFORM",
+      "resource": "session",
+      "action": "platform:security:session:revoke",
+      "target": "DELETE /platform/security/sessions/user",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.listGroups",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/groups",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/groups",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.saveGroup",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/policy/groups",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:create",
+      "target": "POST /platform/security/policy/groups",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.updateGroup",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/policy/groups",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "PUT /platform/security/policy/groups",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.deleteGroup",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/policy/groups/{id}",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:delete",
+      "target": "DELETE /platform/security/policy/groups/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.listRules",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/rules",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/rules",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.saveRule",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/policy/rules",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:create",
+      "target": "POST /platform/security/policy/rules",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.updateRule",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/policy/rules",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "PUT /platform/security/policy/rules",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.deleteRule",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/policy/rules/{id}",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:delete",
+      "target": "DELETE /platform/security/policy/rules/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.listIpList",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/ip-list",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/ip-list",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.saveIpList",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/policy/ip-list",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:create",
+      "target": "POST /platform/security/policy/ip-list",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.updateIpList",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/policy/ip-list",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "PUT /platform/security/policy/ip-list",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.deleteIpList",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/policy/ip-list/{id}",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:delete",
+      "target": "DELETE /platform/security/policy/ip-list/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.listEvents",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/events",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/events",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.listChallengePolicies",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/challenges",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/challenges",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.saveChallengePolicy",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/policy/challenges",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:create",
+      "target": "POST /platform/security/policy/challenges",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.updateChallengePolicy",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/policy/challenges",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "PUT /platform/security/policy/challenges",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.deleteChallengePolicy",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/policy/challenges/{id}",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:delete",
+      "target": "DELETE /platform/security/policy/challenges/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.getViolationEscalation",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/policy/violation-escalation",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:query",
+      "target": "GET /platform/security/policy/violation-escalation",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.saveViolationEscalation",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/policy/violation-escalation",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "PUT /platform/security/policy/violation-escalation",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SecurityPolicyAPI.broadcastInvalidationAll",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/policy/broadcast-invalidation",
+      "domain": "PLATFORM",
+      "resource": "security-policy",
+      "action": "platform:security:policy:update",
+      "target": "POST /platform/security/policy/broadcast-invalidation",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SessionConcurrencyPolicyAPI.list",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/session/concurrency-policies",
+      "domain": "PLATFORM",
+      "resource": "session-concurrency-policy",
+      "action": "platform:security:session:policy:query",
+      "target": "GET /platform/security/session/concurrency-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SessionConcurrencyPolicyAPI.getById",
+      "legacyHttp": "GET",
+      "legacyPath": "/platform/security/session/concurrency-policies/{id}",
+      "domain": "PLATFORM",
+      "resource": "session-concurrency-policy",
+      "action": "platform:security:session:policy:query",
+      "target": "GET /platform/security/session/concurrency-policies/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SessionConcurrencyPolicyAPI.create",
+      "legacyHttp": "POST",
+      "legacyPath": "/platform/security/session/concurrency-policies",
+      "domain": "PLATFORM",
+      "resource": "session-concurrency-policy",
+      "action": "platform:security:session:policy:update",
+      "target": "POST /platform/security/session/concurrency-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SessionConcurrencyPolicyAPI.update",
+      "legacyHttp": "PUT",
+      "legacyPath": "/platform/security/session/concurrency-policies",
+      "domain": "PLATFORM",
+      "resource": "session-concurrency-policy",
+      "action": "platform:security:session:policy:update",
+      "target": "PUT /platform/security/session/concurrency-policies",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    },
+    {
+      "legacyMethod": "SessionConcurrencyPolicyAPI.delete",
+      "legacyHttp": "DELETE",
+      "legacyPath": "/platform/security/session/concurrency-policies/{id}",
+      "domain": "PLATFORM",
+      "resource": "session-concurrency-policy",
+      "action": "platform:security:session:policy:update",
+      "target": "DELETE /platform/security/session/concurrency-policies/{id}",
+      "execution": "SECURITY: 原服务执行；移除超管短路，平台 ACTION 和对象范围；账号安全操作不开放组织资料"
+    }
+  ]
+}

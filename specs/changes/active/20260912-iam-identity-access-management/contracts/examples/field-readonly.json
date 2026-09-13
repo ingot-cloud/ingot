@@ -1,0 +1,20 @@
+{
+  "scenario": "MANAGEMENT",
+  "fieldKey": "phone",
+  "viewerSelection": {
+    "members": [
+      "member-a"
+    ],
+    "departments": []
+  },
+  "targetScope": [
+    {
+      "kind": "ALL",
+      "parameterKey": null,
+      "includeDescendants": null
+    }
+  ],
+  "scopeBindings": {},
+  "visibility": "MASKED",
+  "editable": false
+}

@@ -1,6 +1,6 @@
 # IAM 多租户身份与访问管理重构
 
-> 状态：review
+> 状态：implementing
 
 ## 元数据
 
@@ -9,7 +9,8 @@
 - 负责人：jy
 - 创建日期：2026-09-12
 - 目标发布日期：TBD（迁移演练及前端联调通过后确定）
-- 当前阶段：规格评审；未授权实施业务代码，未执行迁移
+- 当前阶段：阶段 1 / T01 契约与预检；已补齐 55 张目标表、旧入口处置映射及 21 个公共 DTO schema，完整端点契约及运行时业务尚未接入，未执行实际数据迁移
+- 批准记录：2026-09-13，jy 明确要求开始实施本 change；据此由 review 经 approved 转入 implementing。实施遵循已确认的 REQUIREMENTS/DESIGN/API；T01 发现的契约缺口单独记录并确认，不视为授权 Agent 自行改变业务语义。
 - 发布方式：新模型单次切换；内部按 TASKS 阶段推进，不分批对外发布新旧混合授权行为
 
 ## 目标
@@ -33,6 +34,9 @@
 5. [迁移方案](./MIGRATION.md)：来源、映射、异常处理、演练与切换。
 6. [验收矩阵](./ACCEPTANCE.md)：后端、迁移与后续前端验收。
 7. [任务](./TASKS.md)：实施顺序、依赖和完成门禁。
+8. [实施核对记录](./IMPLEMENTATION.md)：T01 发现、待确认决策与实施证据。
+9. [旧入口目标映射](./endpoint-mapping.json)：163 个入口的目标操作、域、执行约束或移除说明。
+10. [已验证契约快照](./contracts/README.md)：生成的 schemas、示例、验证方法与未完成范围。
 
 前端 Agent 至少读取 REQUIREMENTS、DESIGN、API、FRONTEND、ACCEPTANCE；不依赖聊天记录推测行为。API 与实现导出的 OpenAPI 必须一致，实施若改变契约先回写并重新确认。
 
