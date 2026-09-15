@@ -73,3 +73,8 @@
 只在新系统尚未接受业务写入的窗口允许切回旧系统。开放写入后禁止直接切回丢弃新数据；采用前向修复，若必须回退，先制定并确认反向数据处理方案。本 change 不实现双写、CDC 或通用反向迁移。
 
 实际源快照、停写时间及环境凭证为执行时输入，不由 Spec 编造；缺少输入阻止执行迁移，但不阻止先开发工具和夹具测试。
+
+
+## 已实现的离线预检入口
+
+`tools/iam/migration/preflight.py` 接收脱敏元数据清单和显式映射，输出阻塞报告；输入格式、测试样例及限制见 `tools/iam/migration/README.md`。`import_tool.py` 在预检通过后提供 dry-run / import / verify / report，幂等映射写入显式 `--target-dir` JSON，不打开业务库 JDBC。PREFLIGHTED 不表示 VERIFIED，导入与切换许可始终为 false。

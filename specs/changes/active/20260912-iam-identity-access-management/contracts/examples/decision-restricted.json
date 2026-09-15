@@ -1,0 +1,10 @@
+{
+  "allowed": false,
+  "reasonCode": "ActionDenied",
+  "message": "无操作权限",
+  "sources": [],
+  "scopeSummary": "仅返回当前请求的判断",
+  "fieldAccess": {},
+  "version": "9007199254740993",
+  "expiresAt": "2026-09-14T00:00:00Z"
+}

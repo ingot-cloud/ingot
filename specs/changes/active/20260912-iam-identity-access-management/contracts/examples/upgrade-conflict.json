@@ -1,0 +1,18 @@
+{
+  "version": "9007199254740993",
+  "oldBaseRevisionId": "rev-1",
+  "newBaseRevisionId": "rev-2",
+  "changes": [],
+  "conflicts": [
+    {
+      "key": "action:member-read",
+      "actionId": "member-read",
+      "reasonCode": "RevisionConflict",
+      "message": "基础版本与本地差异冲突"
+    }
+  ],
+  "affectedAssignments": [],
+  "impactSummary": {
+    "restricted": true
+  }
+}

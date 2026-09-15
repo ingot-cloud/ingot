@@ -1,0 +1,28 @@
+{
+  "id": "audit-1",
+  "actor": {
+    "accountId": "9007199254740993",
+    "memberId": "platform-member-1"
+  },
+  "context": {
+    "domain": "PLATFORM",
+    "accountId": "9007199254740993",
+    "memberId": "platform-member-1",
+    "tenantId": null
+  },
+  "target": {
+    "resource": "role",
+    "id": "role-1"
+  },
+  "changeType": "PUBLISH",
+  "before": {
+    "ROLE_REVISION": "rev-1"
+  },
+  "after": {
+    "ROLE_REVISION": "rev-2"
+  },
+  "revisions": {
+    "authorization": "9007199254740993"
+  },
+  "timestamp": "2026-09-13T00:00:00Z"
+}

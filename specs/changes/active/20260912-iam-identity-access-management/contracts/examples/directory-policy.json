@@ -1,0 +1,29 @@
+{
+  "expectedVersion": "v-directory-1",
+  "policy": {
+    "defaultRevisionId": "default-directory-1",
+    "defaultOverride": {
+      "scope": "SELF"
+    },
+    "rules": [
+      {
+        "effect": "ALLOW",
+        "viewerSelection": {
+          "members": [
+            "member-1"
+          ],
+          "departments": []
+        },
+        "targetSelection": {
+          "members": [],
+          "departments": [
+            {
+              "id": "department-1",
+              "includeDescendants": true
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

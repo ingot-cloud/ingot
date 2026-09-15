@@ -1,0 +1,26 @@
+{
+  "expectedVersion": "v-field-1",
+  "policy": {
+    "defaultRevisionId": "default-field-1",
+    "rules": [
+      {
+        "scenario": "MANAGEMENT",
+        "fieldKey": "phone",
+        "viewerSelection": {
+          "members": [
+            "member-1"
+          ],
+          "departments": []
+        },
+        "targetScope": [
+          {
+            "kind": "SELF"
+          }
+        ],
+        "scopeBindings": {},
+        "visibility": "MASKED",
+        "editable": false
+      }
+    ]
+  }
+}

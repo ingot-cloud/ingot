@@ -19,7 +19,7 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 | Tenant / TenantMember | 组织、ownerMemberId；成员 ID、accountId、组织资料及状态；租户+账号唯一；所有者须为有效成员 |
 | Department / MemberDepartment | 组织内树、成员多部门关系、主部门；禁止跨租户、循环及重复关系 |
 | SubjectGroup / GroupEntry | 组明确归属 PLATFORM 或 TENANT；平台组仅引用平台成员，租户组引用本租户成员或部门及 includeDescendants；不允许嵌套或跨域引用 |
-| Application / Resource / Action / Menu | 管理域、应用命名空间、合法范围/字段能力、精确操作码、导航关联 |
+| Application / Resource / Action / Menu | 管理域、应用命名空间、合法范围/字段能力、精确操作码、导航关联；租户域应用可标记 baseline，仅这些应用在组织初始化时缺省开通 |
 | TenantAppEntitlement / AppAudience | 显式开通与期限、来源；租户应用可用人群，停用强于授权 |
 | RoleDefinition / RoleRevision | 归属域、SYSTEM/SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM 类型、状态；不可变版本；角色分组仅展示 |
 | RoleGrant | 版本中的操作与范围表达式；版本+操作唯一；范围不能脱离操作存在 |
@@ -51,7 +51,7 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 
 ### 2.3 目录、版本及分配物理结构（T01）
 
-`002_catalog_role.sql` 定义应用、资源、精确操作、菜单引用、显式开通、人群、套餐、角色及不可变版本/参数/操作范围/差异。应用人群的成员、部门和组关系使用独立关联表，数据库去重并校验租户归属。角色 kind 补齐已有平台自定义能力的 PLATFORM_CUSTOM；TENANT_CUSTOM 的 baseRevisionId 非空表示定制，否则为完整租户自定义。定制的基础外键限定为 SHARED，禁止多层差异继承；发布只插入新版本，不更新既有引用。
+`002_catalog_role.sql` 定义应用、资源、精确操作、菜单引用、显式开通、人群、套餐、角色及不可变版本/参数/操作范围/差异。应用可标记 baseline，数据库拒绝把平台应用标为基础开通。应用人群的成员、部门和组关系使用独立关联表，数据库去重并校验租户归属。角色 kind 补齐已有平台自定义能力的 PLATFORM_CUSTOM；TENANT_CUSTOM 的 baseRevisionId 非空表示定制，否则为完整租户自定义。定制的基础外键限定为 SHARED，禁止多层差异继承；发布只插入新版本，不更新既有引用。
 
 `003_assignment_delegation.sql` 定义委派管理员、固定版本白名单、接收成员/部门、逐操作上限及分配记录。两域成员/组使用独立类型化外键列，并通过 CHECK 保证恰好一个合法主体；委派来源使用域、租户和 ID 的复合外键，不能跨域或拼接来源。JSON 仅保存类型化范围表达式和参数值，其结构、资源归属及范围包含关系须由应用事务验证。委派持续生效、版本归属、受限组扩大和授权范围不能仅靠这些外键证明。
 
@@ -134,3 +134,36 @@ FieldAccess 由服务端计算；MASKED 只返回脱敏值，HIDDEN 不返回业
 迁移与回滚遵循 [MIGRATION](./MIGRATION.md)，验收遵循 [ACCEPTANCE](./ACCEPTANCE.md)。业务全新初始化与历史迁移是独立入口。当前库不执行 destructive DDL；工具只写专用目标库，源库只读。
 
 Java 新增及变更公共契约按仓库 JavaDoc 规范落盘；业务枚举、注解常量、统一缓存门禁在实施任务中执行。本次 Spec 不提前修改 current。
+
+
+## 当前实施落点：命名与身份基础
+
+源码、RPC 与构建已使用 IAM 名称。独立数据库由 IAM_DATABASE 显式指定，不再默认连接旧 ingot_core；IAM 连接使用 UTC 并强制数据库会话时区。此配置仅准备切换，尚未发布或迁移实际环境。
+
+IdentityRepository 对新 iam_account / iam_platform_member / iam_tenant_member / iam_tenant 执行参数化联表查询，按可信身份限制账号、成员、租户并同时检查状态；不读取密码、不回退旧表、不合并域。ActiveIdentityService 区分身份无效与数据库不可用。标识在绑定前按目标数据库无符号整数校验，避免数据库数值隐式转换。
+
+TenantInitializer 是内部事务流程：调用方先验证创建组织 ACTION，再从服务器基础目录生成 TenantInitializationPlan。计划不是 HTTP DTO，不接受客户端决定系统治理版本或基础开通。InitializationCatalog 读取唯一启用的租户域系统角色最新版本、最新默认策略，以及 baseline 租户应用或指定套餐内的启用租户应用；HTTP 只接收 TenantCreateInput。TenantInitializationService 在平台域恢复身份并校验 `iam-platform:tenant:preview|create` 后调用目录与初始化事务。预览无写入；目录表缺少展示名列时预览名称回退为应用 code。事务检查所有者账号、租户域系统治理版本、应用与默认策略版本，写入组织、所有者成员、根部门关系、单条治理授权、基础开通与人群、固定默认引用及审计。没有复制角色/默认条目；审计失败同样回滚。
+
+
+## 当前实施落点：成员上下文与生命周期（2026-09-14）
+
+认证结果可以显式携带 AuthorizationContext，InUser 构造时检查账号、租户与成员上下文一致，禁止平台带部门及任意 IAM 身份带多租户部门映射。OnlineToken 持久化该上下文，OAuth2 自定义 JSON 恢复器和资源服务器从会话恢复；不会从 JWT 扩展字段、角色或 header 推断成员。已有 sid 带 IAM 上下文时不能换身份；新身份不能使用旧预授权部门切片，也不能进入旧账号/租户授权快照合并。非 IAM 用户保留其原协议。
+
+ActiveIdentityService.selectAuthenticated 只供凭证认证成功后的 Auth 编排选择单一域成员；CurrentIdentityService 只读取已认证 SecurityContext，再校验新模型状态。二者均不授予 ACTION。UsernameIdentityResolver 优先加载 `iam_account`：命中后按请求 tenant（空=平台）选择成员，不合并旧授权快照；未命中或目标表不可用时回退 SysUser，旧会话没有 AuthorizationContext，不能调用新管理接口。账号安全端口与内部用户查询同样双读。社交登录在社交表的 `user_id` 能对应 `iam_account.id` 时走新账号，否则回退旧用户表。平台会话 Redis 索引对无租户会话使用租户位 `0`。
+
+MemberLifecycle 在租户行与成员写锁下进行资格或关系变更。暂停/恢复/移出把完整部门集合交给 MemberMutationGuard；任职替换分别交付受影响旧、新关系（主部门切换同时视为两端变化）。生产路径使用 GrantPresenceMemberGuard：在同一事务可见的直接 MEMBER 分配中检查精确 ACTION 是否存在，拒绝空实现。成员与部门写路径另用 ResourceAccess 检查范围覆盖。完整引擎按分配合成操作后绑定范围并与委派上限求交。随后校验 expectedVersion、禁止移出后经 status 恢复、保护当前所有者，事务提交成员版本和审计；审计失败整体回滚。移出保留成员行和引用，不改账号及其他身份。HTTP 由 MemberCommandService 接入平台/租户 status、remove 及租户任职 PUT。
+
+## 当前实施落点：管理命令契约与目录计划（2026-09-14）
+
+管理请求已补齐成员/组织/部门/应用/资源/操作/菜单/套餐/开通及角色创建、发布、升级命令。升级冲突必须显式选择 ACCEPT_BASE、KEEP_DELTA 或 REPLACE_SCOPE。目标 OpenAPI 覆盖 API 第 3、4 节管理面路径；组织创建/预览与成员写入 7 个操作标记为已实现，其余仍为 false。InitializationCatalog 从目录生成初始化计划；HTTP 只接收 TenantCreateInput。
+
+
+## 2026-09-14 已批准的持久化与注入统一调整
+
+用户确认本次 IAM 生产数据库操作统一迁移到 MyBatis Plus，并确认 Lambda 优先、复杂 SQL 必要时放具名 Mapper/XML。普通查询/更新使用实体字段引用；联表优先复用现有 MPJ。Service 不拼接表列名或 SQL，不引入任意 SQL 执行 Mapper。范围条件改为类型化对象，列表/count/详情/导出保持相同权限谓词。独立迁移工具、DDL、测试数据准备不属于生产访问替换范围。
+
+新实体位于 provider 持久化包，不暴露为 API。新 Mapper 明确隔离旧租户/权限改写，由 Repository 强制可信域与租户条件，不全局关闭其他模块拦截器。保留原版本加一、事务与行锁、审计原子性、提交后失效、UTC 和字段转换；不直接使用将 Long 版本替换为时间戳的旧 @Version 行为。
+
+Bean 默认使用 private final 与 @RequiredArgsConstructor。限定注入、继承构造或必要初始化无法可靠由 Lombok 表达时保留显式构造器并说明原因；禁止自有字段/Setter 注入以及为测试便利保留多套生产注入入口。遵循新增 spring-constructor-injection skill。
+
+本调整已由用户以“开始实施这个计划”授权，状态为 implementing。生产访问已迁到 Mapper/Repository，业务类不再使用 `Jdbc*` 前缀。研发期间编译，整体完成后集中回归与分布式验证。

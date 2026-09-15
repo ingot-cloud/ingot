@@ -1,6 +1,6 @@
 # IAM 接口与前端契约
 
-> 目标契约，主 change 已进入 implementing，当前处于 T01 校对阶段。尚未实现，不能据此调用线上接口。实现导出的 OpenAPI 必须与此一致；实体完整字段在对应业务 DTO 中显式声明，不直接透传 ORM 实体。
+> 目标契约，主 change 已进入 implementing。管理面请求/响应类型已闭合，完整端点 OpenAPI 已生成但运行时未实现，不能据此调用线上接口。实现导出的 OpenAPI 必须与此一致；实体完整字段在对应业务 DTO 中显式声明，不直接透传 ORM 实体。
 
 ## 1. 通用约定
 
@@ -36,7 +36,7 @@
 
 ScopeBindings 值使用 { kind: DEPARTMENTS/OBJECTS, ids[] }，不接收任意表达式；部门是否包含下级来自角色规则。范围/字段候选来源为资源目录能力，前端不能硬编码所有资源均有 SELF 或部门选项。
 
-T01 已落地范围基础类型：`ingot-commons` 中的 `com.ingot.framework.commons.model.iam`。ScopeExpression、ScopeBinding、ActionGrant、RoleDelta 使用本节字段；必填集合缺失由 Bean Validation 拒绝，RoleDelta 的 REMOVE 操作省略 scopes 时输出空数组。当前只有基础 JSON 契约测试，完整端点 OpenAPI 和业务校验尚未完成，不作为前端联调已就绪的依据。
+T01 已落地范围基础类型：`ingot-commons` 中的 `com.ingot.framework.commons.model.iam`。ScopeExpression、ScopeBinding、ActionGrant、RoleDelta 使用本节字段；必填集合缺失由 Bean Validation 拒绝，RoleDelta 的 REMOVE 操作省略 scopes 时输出空数组。当前已验证管理请求/响应 JSON 契约与目标端点 OpenAPI；运行时执行器和业务校验尚未完成，不作为前端联调已就绪的依据。
 
 T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind 使用 DEPARTMENTS/OBJECTS；RoleMetadataOverrides 为 `{name?,description?,groupName?}`。ActionScopeCeiling 为 `{actionId,scopes,scopeBindings}`，FieldRule 也携带 scopeBindings 绑定目标范围参数。maxAssignmentDuration 为正的 ISO-8601 duration 字符串，如 `PT24H`。FieldRule 的 scenario 为 MANAGEMENT/DIRECTORY。新增/替换差异必须显式携带 scopes（允许空数组），只有 REMOVE 可以省略并规范化为空数组。
 
@@ -71,7 +71,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/members/{id}/departments | PUT 调整关系，校验两端 |
 | /v1/tenant/members/{id}/status | PATCH 暂停/恢复成员资格 |
 | /v1/tenant/members/{id}/remove | POST 移出组织，不删除账号 |
-| /v1/tenant/members/export | POST 受独立操作、范围和字段限制的导出 |
+| /v1/tenant/members/export | POST 受独立操作、范围和字段限制的导出；GET /{id} 下载时再次校验 |
 | /v1/tenant/departments | GET 树/候选；POST；/{id} GET/PUT/DELETE |
 | /v1/tenant/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
 | /v1/tenant/settings | GET/PUT 组织设置；所有者转交使用独立 /owner-transfer POST |
@@ -127,4 +127,32 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 旧入口的逐项目标与处置见 [endpoint-mapping.json](./endpoint-mapping.json)。其中 RETIRED 表示新系统不保留该旧入口；SERVICE 和 AUTHENTICATED_SELF 仍须各自身份校验，不是匿名或超管 bypass。该表是执行接入清单，不用于自动向迁移账号授予新操作。补充保留能力的目标路由包括平台 accounts/dictionaries/id-allocations/social-configs、当前账号 me/password/me/profile 及已生成的 migration/reports；具体方法按映射清单核对。
 
-当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，不包含尚未实现的完整端点路径或 bootstrap/预览诊断等全部响应。
+当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，包含管理命令、bootstrap、资源详情、预览/升级/诊断/审计响应及 R 信封实例；目标端点路径已列入 openapi.json，运行时仍未接入。
+
+### 已落地的响应细节
+
+分页 total/page/pageSize 和可见影响数量使用 JSON 数字；ID 与版本保持字符串。配置状态 ConfigurationStatus 为 ENABLED/DISABLED，持久化映射到 enabled；成员资格继续使用独立 MemberStatus。每条成员列表 item 为 ResourceDetail<MemberRecord>，包含 record、fieldAccess、capabilities、version。
+
+MemberRecord 不包含凭证；隐藏资料以 null 表示并在 JSON 中省略，脱敏值必须由服务端先行投影。DTO 本身不执行字段策略。DepartmentRecord 的 navigationOnly 标识祖先导航骨架，不携带隐藏成员计数。
+
+UsageSummary 与 ImpactSummary 仅披露允许查看的数量，无法披露的项省略并标记 restricted，不能用 0 代替未知值。Decision 的 sources 只包含可披露来源，受限时返回 []，fieldAccess 无可披露项时为 {}。Preview 在 errors 非空时 valid 必须为 false；无法产生有效结果时省略 effectiveResult。UpgradePreview 另外携带 version 与受限 impactSummary，冲突以稳定 key 表达。
+
+AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、状态、角色版本、范围、接收对象、有效期、开通、策略版本和所有者。服务端仍须构造安全摘要，禁止将原始请求、凭证或未脱敏个人资料填入任何字符串值。审计 DTO 不能替代业务层脱敏和可靠落库。
+
+
+### 策略与版本命令的精确定义
+
+- DirectoryPolicyDraft 为 `{defaultRevisionId, defaultOverride?, rules[]}`，FieldPolicyDraft 为 `{defaultRevisionId, rules[]}`；默认版本与本地显式规则分别保存。DirectoryDefault 为 `{scope, selection?}`，仅 SELECTED 必须携带 selection，ALL/SELF 不允许携带。
+- 两类策略 PUT 请求分别为 DirectoryPolicyInput / FieldPolicyInput：`{expectedVersion, policy}`；policy 是完整草稿，rules=[] 清除本地规则并使用固定默认版本。读取和替换成功均返回相应 ResourceDetail 包装，包含当前 version。
+- PolicyDraft 为 `{kind, directory?, field?}`，DIRECTORY/FIELD 必须且只能携带匹配配置。PolicyPreviewInput 为 `{policyDraft, viewerMemberId, target?}`，target 为可选目标成员 ID。预览返回 Preview<PolicyPreviewResult>，含经过操作者权限限制的成员样例、部门导航骨架及 restricted 标志；没有总人数泄露。
+- DiagnoseInput 为 `{memberId?, accountId?, applicationId, actionId, targetId?}`；两种身份必须二选一且非空。accountId 仅在当前可信域中解析成员，不支持切换或聚合域。
+- MemberStatusInput 为 `{status, expectedVersion}`，只允许 ACTIVE/SUSPENDED，REMOVED 通过独立 remove 命令；ConfigurationStatusInput 使用 ENABLED/DISABLED。OwnerTransferInput 为 `{expectedVersion,newOwnerMemberId}`。
+- GroupUpdateInput 为 `{expectedVersion,group:{name,description?,selection}}`；AudienceUpdateInput 为 `{expectedVersion,audience:{kind,selection?,groupIds[]}}`，ALL 不携带选择器或组，SELECTED 携带选择器和组列表。平台组的部门限制仍须按可信域校验。
+- AssignmentUpdateInput / DelegationUpdateInput 分别为 `{expectedVersion,assignment}` / `{expectedVersion,delegation}`；服务端重验原委派来源、接收对象和所有派生授权，DTO 不赋予绕过资格。分配预览返回 Preview<AssignmentPreviewResult>，逐主体列出 allowed、errors、可披露 grants。
+- RoleCreateInput 为 `{code,name,description?,groupName?,kind,baseRevisionId?,definition}`；kind 只允许 SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM。仅 TENANT_CUSTOM 可绑定共享基础，此时 grants 必须为空。RoleDefinitionDraft 为 `{grants,deltas,parameterDefinitions,metadataOverrides?}`，完整版本与差异不能同时非空。RolePublishInput 为 `{expectedVersion,definition}`，发布不自动升级授权。预览待发布定义直接提交 RoleDefinitionDraft。
+- UpgradePreviewInput 为 `{newBaseRevisionId,resolutions?}`；UpgradeInput 为 `{expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}`。UpgradeResolution 为 `{key,choice,scopes?}`，choice 为 ACCEPT_BASE/KEEP_DELTA/REPLACE_SCOPE，只有替换范围必须携带 scopes。未解决冲突拒绝提交；默认不选择既有授权。
+- MemberCreateInput 为 `{accountId,displayName?,departments[]}`，不创建凭证；平台任职必须由服务拒绝非空部门。MemberProfileInput 为 `{expectedVersion,displayName?,avatar?,phone?,email?}`，禁止状态和凭证字段；phone/email 可空表示不修改，不可编辑或脱敏占位由服务拒绝。MemberDepartmentInput 为 `{expectedVersion,departments[{id,primary}]}`，部门不得重复且最多一个主部门。
+- TenantCreateInput 为 `{name,ownerAccountId,ownerDisplayName?,rootDepartmentName?,avatar?,planId?}`。客户端不能提交治理版本、默认策略或任意应用清单；服务器从基础目录或指定套餐解析开通。预览返回 TenantPreviewResult，不含可回写的版本 ID。TenantUpdateInput / TenantSettingsInput 分别更新平台可见实体与租户设置。
+- ApplicationDraft 可标记 baseline，仅租户域允许。组织初始化缺省开通 baseline 应用；指定 planId 时改为该套餐内租户域启用应用。EntitlementReplaceInput 为 `{expectedVersion,entitlements[{applicationId,status,validFrom?,validUntil?}]}`。组与委派影响预览返回 ReferenceImpactPreview。
+
+管理面目标路径见 `contracts/openapi.json` 与 `contracts/routes.json`，覆盖 API 第 3、4 节列出的身份、目录、角色、授权、策略、诊断和审计接口，以及成员导出下载。控制器接入后对应操作 `x-runtime-implemented=true`。内部 RPC 与账号安全保留入口仍按 endpoint-mapping 接入，不计入此前管理面清单。该文档不是线上已发布接口证明。

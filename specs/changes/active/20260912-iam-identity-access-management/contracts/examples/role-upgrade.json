@@ -1,0 +1,13 @@
+{
+  "expectedVersion": "4",
+  "newBaseRevisionId": "rev-2",
+  "resolutions": [
+    {
+      "key": "action:member-read",
+      "choice": "ACCEPT_BASE"
+    }
+  ],
+  "assignmentIds": [
+    "assignment-1"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "policyDraft": {
+    "kind": "DIRECTORY",
+    "directory": {
+      "defaultRevisionId": "default-directory-1",
+      "rules": []
+    }
+  },
+  "viewerMemberId": "member-1",
+  "target": "member-2"
+}
