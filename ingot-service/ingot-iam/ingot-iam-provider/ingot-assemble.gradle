@@ -1,0 +1,24 @@
+apply plugin: 'com.ingot.plugin.assemble'
+
+ingotAssemble {
+    docker {
+        registry "docker-registry.ingotcloud.top"
+        username JY_DOCKER_REGISTRY_USERNAME
+        password JY_DOCKER_REGISTRY_PASSWORD
+        platform "linux/amd64"
+
+        env("dev") {
+            name = "ingot/iam"
+            saveName = "ingot-iam.tar"
+        }
+        env("test") {
+            name = "ingot/iam"
+            saveName = "ingot-iam.tar"
+        }
+        env("prod") {
+            name = "ingot/iam"
+            saveName = "ingot-iam.tar"
+            platform = "linux/arm64"
+        }
+    }
+}

@@ -1,0 +1,156 @@
+package com.ingot.cloud.iam.service.domain.impl;
+
+import java.io.Serializable;
+import java.util.List;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.api.model.domain.PlatformMenu;
+import com.ingot.cloud.iam.api.model.enums.MenuLinkTypeEnum;
+import com.ingot.cloud.iam.api.model.enums.MenuTypeEnum;
+import com.ingot.cloud.iam.api.model.vo.menu.MenuTreeNodeVO;
+import com.ingot.cloud.iam.common.CacheKey;
+import com.ingot.cloud.iam.core.BizMenuUtils;
+import com.ingot.cloud.iam.mapper.PlatformMenuMapper;
+import com.ingot.cloud.iam.service.domain.PlatformMenuService;
+import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.core.context.SpringContextHolder;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+/**
+ * <p>
+ * 服务实现类
+ * </p>
+ *
+ * @author jymot
+ * @since 2025-11-12
+ */
+@Service
+@RequiredArgsConstructor
+public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper, PlatformMenu> implements PlatformMenuService {
+    private final AssertionChecker assertionChecker;
+
+    @Override
+    @Cacheable(value = CacheConstants.PLATFORM_MENUS + "#" + CacheKey.DefaultExpiredTimeSeconds,
+            key = CacheKey.ListKey,
+            unless = "#result.isEmpty()")
+    public List<MenuTreeNodeVO> nodeList() {
+        return CollUtil.emptyIfNull(baseMapper.getAll());
+    }
+
+    @Override
+    @Cacheable(value = CacheConstants.PLATFORM_MENUS + "#" + CacheKey.DefaultExpiredTimeSeconds,
+            key = CacheKey.ItemKey,
+            unless = "#result == null")
+    public PlatformMenu getById(Serializable id) {
+        PlatformMenu menu = super.getById(id);
+        assertionChecker.checkOperation(menu != null,
+                "PlatformMenuServiceImpl.NonExist");
+        return menu;
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_MENUS, allEntries = true)
+    public void create(PlatformMenu params) {
+        if (params.getLinkType() == null) {
+            params.setLinkType(MenuLinkTypeEnum.Default);
+        }
+        // 链接类型不是默认, 自动生成path
+        if (params.getLinkType() != MenuLinkTypeEnum.Default) {
+            BizMenuUtils.setMenuOuterLinkPath(params, params.getPid(), this);
+        }
+
+        // 外部链接，path可以为空
+        assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getPath()), "PlatformMenuServiceImpl.PathNonNull");
+        assertionChecker.checkOperation(count(Wrappers.<PlatformMenu>lambdaQuery()
+                        .eq(PlatformMenu::getPath, params.getPath())) == 0,
+                "PlatformMenuServiceImpl.ExistPath");
+
+        // 如果是子菜单， 默认和父菜单orgType一致
+        if (params.getPid() != null && params.getPid() > 0) {
+            PlatformMenu parent = innerGetById(params.getPid());
+            assertionChecker.checkOperation(parent != null, "PlatformMenuServiceImpl.ParentNonExist");
+            assert parent != null;
+            params.setOrgType(parent.getOrgType());
+        }
+
+        if (requiresViewPath(params.getMenuType(), params.getLinkType())) {
+            assertionChecker.checkOperation(StrUtil.isNotEmpty(params.getViewPath()),
+                    "PlatformMenuServiceImpl.ViewPathNotNull");
+        }
+
+        params.setCreatedAt(DateUtil.now());
+        params.setUpdatedAt(params.getCreatedAt());
+
+        save(params);
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_MENUS, allEntries = true)
+    public void update(PlatformMenu params) {
+        PlatformMenu current = innerGetById(params.getId());
+        assertionChecker.checkOperation(current != null,
+                "PlatformMenuServiceImpl.NonExist");
+        assert current != null;
+
+        // 菜单 pid 不可修改
+        params.setPid(null);
+
+        // 路径不为空，需要判断是否重复
+        if (StrUtil.isNotEmpty(params.getPath())) {
+            assertionChecker.checkOperation(count(Wrappers.<PlatformMenu>lambdaQuery()
+                            .eq(PlatformMenu::getPath, params.getPath())) == 0,
+                    "PlatformMenuServiceImpl.ExistPath");
+        }
+
+        // 如果修改了链接类型，并且修改的内容不是默认类型，那么需要自动处理path
+        if (params.getLinkType() != null && params.getLinkType() != MenuLinkTypeEnum.Default) {
+            BizMenuUtils.setMenuOuterLinkPath(params, current.getPid(), this);
+        }
+
+        if (params.getProps() == null) {
+            params.setProps(current.getProps());
+        }
+
+        params.setUpdatedAt(DateUtil.now());
+        updateById(params);
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_MENUS, allEntries = true)
+    public void delete(long id) {
+        PlatformMenu current = innerGetById(id);
+        assertionChecker.checkOperation(current != null,
+                "PlatformMenuServiceImpl.NonExist");
+        assert current != null;
+
+        // 判断是否为叶子节点
+        assertionChecker.checkOperation(count(Wrappers.<PlatformMenu>lambdaQuery()
+                        .eq(PlatformMenu::getPid, id)) == 0,
+                "PlatformMenuServiceImpl.ExistLeaf");
+
+        removeById(id);
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.PLATFORM_MENUS, allEntries = true)
+    public void deleteByAppId(long appId) {
+        remove(Wrappers.<PlatformMenu>lambdaQuery().eq(PlatformMenu::getAppId, appId));
+    }
+
+    private PlatformMenu innerGetById(Long id) {
+        return SpringContextHolder.getBean(PlatformMenuService.class).getById(id);
+    }
+
+    private static boolean requiresViewPath(MenuTypeEnum menuType, MenuLinkTypeEnum linkType) {
+        return linkType == MenuLinkTypeEnum.Default
+                && (menuType == MenuTypeEnum.Directory || menuType == MenuTypeEnum.Menu);
+    }
+}

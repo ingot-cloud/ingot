@@ -1,0 +1,26 @@
+-- H2 JDBC 事务夹具，仅包含被测流程使用的列；正式 MySQL DDL 由独立容器测试验证。
+CREATE TABLE iam_account(id BIGINT PRIMARY KEY, enabled BOOLEAN DEFAULT TRUE, deleted_at TIMESTAMP, version BIGINT DEFAULT 0);
+CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16), version BIGINT DEFAULT 0);
+CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY, name VARCHAR(128), owner_member_id BIGINT, enabled BOOLEAN DEFAULT TRUE, deleted_at TIMESTAMP, version BIGINT DEFAULT 0);
+CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, tenant_id BIGINT REFERENCES iam_tenant(id), account_id BIGINT REFERENCES iam_account(id), display_name VARCHAR(128), status VARCHAR(16), version BIGINT DEFAULT 0, UNIQUE(tenant_id,account_id));
+ALTER TABLE iam_tenant ADD FOREIGN KEY(owner_member_id) REFERENCES iam_tenant_member(id);
+CREATE TABLE iam_department(id BIGINT PRIMARY KEY, tenant_id BIGINT REFERENCES iam_tenant(id), name VARCHAR(128));
+CREATE TABLE iam_member_department(tenant_id BIGINT, member_id BIGINT REFERENCES iam_tenant_member(id), department_id BIGINT REFERENCES iam_department(id), is_primary BOOLEAN);
+CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT, kind VARCHAR(24), code VARCHAR(128), name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE);
+CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT REFERENCES iam_role_definition(id), kind VARCHAR(24), revision BIGINT DEFAULT 1);
+CREATE TABLE iam_role_assignment(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT REFERENCES iam_tenant(id), subject_type VARCHAR(16), tenant_member_id BIGINT REFERENCES iam_tenant_member(id), revision_id BIGINT REFERENCES iam_role_revision(id), revision_kind VARCHAR(24), scope_bindings VARCHAR(1024), valid_from TIMESTAMP, source VARCHAR(16));
+CREATE TABLE iam_application(id BIGINT PRIMARY KEY, domain VARCHAR(16), code VARCHAR(64), name VARCHAR(128), icon VARCHAR(512), sort_order INT DEFAULT 0, baseline BOOLEAN DEFAULT FALSE, enabled BOOLEAN DEFAULT TRUE);
+CREATE TABLE iam_plan(id BIGINT PRIMARY KEY, name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE);
+CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT, PRIMARY KEY(plan_id, application_id));
+CREATE TABLE iam_tenant_app_entitlement(id BIGINT PRIMARY KEY, tenant_id BIGINT REFERENCES iam_tenant(id), application_id BIGINT REFERENCES iam_application(id), enabled BOOLEAN, source VARCHAR(16), valid_from TIMESTAMP);
+CREATE TABLE iam_app_audience(tenant_id BIGINT, application_id BIGINT, audience_kind VARCHAR(16));
+CREATE TABLE iam_default_policy_revision(id BIGINT PRIMARY KEY, kind VARCHAR(16), revision BIGINT DEFAULT 1);
+CREATE TABLE iam_directory_policy(tenant_id BIGINT REFERENCES iam_tenant(id), default_revision_id BIGINT REFERENCES iam_default_policy_revision(id));
+CREATE TABLE iam_field_policy(tenant_id BIGINT REFERENCES iam_tenant(id), default_revision_id BIGINT REFERENCES iam_default_policy_revision(id));
+CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY, event_id VARCHAR(64), actor_account_id BIGINT, actor_member_id BIGINT, domain VARCHAR(16), target_type VARCHAR(64), target_id VARCHAR(128), change_type VARCHAR(64), safe_before VARCHAR(2048), safe_after VARCHAR(2048), revisions VARCHAR(2048), occurred_at TIMESTAMP);
+INSERT INTO iam_account(id) VALUES (1),(2);
+INSERT INTO iam_platform_member(id,account_id,status) VALUES (1001,1,'ACTIVE');
+INSERT INTO iam_role_definition(id,domain,kind,code,name) VALUES (1,'TENANT','SYSTEM','tenant-admin','租户治理'),(2,'TENANT','SHARED','viewer','Viewer'),(3,'PLATFORM','SYSTEM','platform-admin','平台治理');
+INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES (11,1,'SYSTEM',1),(12,2,'SHARED',1),(13,3,'SYSTEM',1);
+INSERT INTO iam_application(id,domain,code,name,baseline) VALUES (1,'TENANT','iam-tenant','Tenant',TRUE),(2,'PLATFORM','iam-platform','Platform',FALSE);
+INSERT INTO iam_default_policy_revision(id,kind,revision) VALUES (21,'DIRECTORY',1),(22,'FIELD',1);

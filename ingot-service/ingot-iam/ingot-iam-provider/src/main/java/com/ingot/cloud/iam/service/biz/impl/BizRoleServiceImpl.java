@@ -1,0 +1,416 @@
+package com.ingot.cloud.iam.service.biz.impl;
+
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.api.model.bo.permission.PermissionIdBO;
+import com.ingot.cloud.iam.api.model.bo.role.BizRoleAssignUsersBO;
+import com.ingot.cloud.iam.api.model.convert.AuthorityConvert;
+import com.ingot.cloud.iam.api.model.convert.RoleConvert;
+import com.ingot.cloud.iam.api.model.domain.PlatformPermission;
+import com.ingot.cloud.iam.api.model.domain.PlatformRole;
+import com.ingot.cloud.iam.api.model.domain.TenantRolePermissionPrivate;
+import com.ingot.cloud.iam.api.model.domain.TenantRolePrivate;
+import com.ingot.cloud.iam.api.model.dto.common.BizBindDTO;
+import com.ingot.cloud.iam.api.model.dto.role.BizRoleAssignUsersDTO;
+import com.ingot.cloud.iam.api.model.enums.OrgTypeEnum;
+import com.ingot.cloud.iam.api.model.enums.RoleTypeEnum;
+import com.ingot.cloud.iam.api.model.types.PermissionType;
+import com.ingot.cloud.iam.api.model.types.RoleType;
+import com.ingot.cloud.iam.api.model.vo.permission.BizPermissionTreeNodeVO;
+import com.ingot.cloud.iam.api.model.vo.permission.BizPermissionVO;
+import com.ingot.cloud.iam.api.model.vo.role.RoleTreeNodeVO;
+import com.ingot.cloud.iam.common.BizFilter;
+import com.ingot.cloud.iam.common.BizUtils;
+import com.ingot.cloud.iam.authorization.engine.GrantCeilingService;
+import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
+import com.ingot.cloud.iam.core.BizPermissionUtils;
+import com.ingot.cloud.iam.service.biz.BizAppService;
+import com.ingot.cloud.iam.service.biz.BizRoleService;
+import com.ingot.cloud.iam.service.domain.*;
+import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.framework.commons.model.common.AssignDTO;
+import com.ingot.framework.commons.model.common.SetDTO;
+import com.ingot.framework.commons.model.enums.CommonStatusEnum;
+import com.ingot.framework.commons.model.support.Option;
+import com.ingot.framework.commons.utils.RoleUtil;
+import com.ingot.framework.commons.utils.tree.TreeNode;
+import com.ingot.framework.commons.utils.tree.TreeUtil;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
+import com.ingot.framework.tenant.TenantContextHolder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * <p>Description  : BizRoleServiceImpl.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/18.</p>
+ * <p>Time         : 09:34.</p>
+ */
+@Service
+@RequiredArgsConstructor
+public class BizRoleServiceImpl implements BizRoleService {
+    private final PlatformRoleService platformRoleService;
+    private final PlatformPermissionService authorityService;
+    private final PlatformRolePermissionService roleAuthorityService;
+
+    private final TenantRolePrivateService tenantRolePrivateService;
+    private final TenantRoleUserPrivateService tenantRoleUserPrivateService;
+    private final TenantRolePermissionPrivateService tenantRolePermissionPrivateService;
+
+    private final BizAppService bizAppService;
+
+    private final AuthorityConvert authorityConvert;
+    private final RoleConvert roleConvert;
+    private final AssertionChecker assertionChecker;
+    private final GrantCeilingService grantCeilingService;
+    private final AuthorizationChangeNotifier authorizationChangeNotifier;
+
+    @Override
+    public PlatformRole getPlatformRole(long id) {
+        return platformRoleService.getById(id);
+    }
+
+    @Override
+    public RoleType getRole(long id) {
+        PlatformRole platformRole = platformRoleService.getById(id);
+        if (platformRole != null) {
+            return platformRole;
+        }
+        return tenantRolePrivateService.getById(id);
+    }
+
+    @Override
+    public List<RoleType> getRoles(List<Long> ids) {
+        List<RoleType> result = new ArrayList<>();
+
+        result.addAll(platformRoleService.list().stream()
+                .filter(item -> ids.contains(item.getId()))
+                .toList());
+
+        result.addAll(tenantRolePrivateService.list().stream()
+                .filter(item -> ids.contains(item.getId()))
+                .toList());
+
+        return result;
+    }
+
+    @Override
+    public List<RoleType> getRolesByCodes(List<String> codes) {
+        List<RoleType> result = new ArrayList<>();
+
+        if (codes.stream().anyMatch(RoleUtil::isPlatformRoleCode)) {
+            result.addAll(platformRoleService.list().stream()
+                    .filter(item -> codes.contains(item.getCode()))
+                    .toList());
+        }
+
+        if (codes.stream().anyMatch(RoleUtil::isOrgRoleCode)) {
+            result.addAll(tenantRolePrivateService.list().stream()
+                    .filter(item -> codes.contains(item.getCode()))
+                    .toList());
+        }
+
+        return result;
+    }
+
+    @Override
+    public RoleType getByCode(String code) {
+        if (RoleUtil.isPlatformRoleCode(code)) {
+            return platformRoleService.getByCode(code);
+        }
+        return tenantRolePrivateService.getByCode(code);
+    }
+
+    @Override
+    public List<Option<Long>> options(TenantRolePrivate condition) {
+        // meta
+        List<Option<Long>> options = new ArrayList<>(platformRoleService.list(
+                        Wrappers.<PlatformRole>lambdaQuery()
+                                .eq(PlatformRole::getType, RoleTypeEnum.ROLE)
+                                .eq(PlatformRole::getOrgType, OrgTypeEnum.Tenant)
+                                .eq(PlatformRole::getStatus, CommonStatusEnum.ENABLE))
+                .stream()
+                .filter(item -> item.getOrgType() == OrgTypeEnum.Tenant)
+                .filter(BizFilter.roleFilter(condition))
+                .map(role -> Option.of(role.getId(), role.getName()))
+                .toList());
+        // tenant
+        List<Option<Long>> tenantOptions = tenantRolePrivateService.list(
+                        Wrappers.<TenantRolePrivate>lambdaQuery()
+                                .eq(TenantRolePrivate::getType, RoleTypeEnum.ROLE)
+                                .eq(TenantRolePrivate::getStatus, CommonStatusEnum.ENABLE)
+                )
+                .stream()
+                .filter(BizFilter.roleFilter(condition))
+                .sorted(Comparator.comparing(TenantRolePrivate::getSort))
+                .map(role -> Option.of(role.getId(), role.getName()))
+                .toList();
+        options.addAll(tenantOptions);
+        return options;
+    }
+
+    @Override
+    public List<RoleTreeNodeVO> conditionTree(TenantRolePrivate condition) {
+        List<RoleTreeNodeVO> list = new ArrayList<>(platformRoleService.list(
+                        Wrappers.<PlatformRole>lambdaQuery()
+                                .eq(PlatformRole::getOrgType, OrgTypeEnum.Tenant)).
+                stream()
+                .filter(BizFilter.roleFilter(condition))
+                .map(role -> BizUtils.convert(role, roleConvert))
+                .toList());
+        list.addAll(tenantRolePrivateService.list()
+                .stream().filter(BizFilter.roleFilter(condition))
+                .sorted(Comparator.comparing(TenantRolePrivate::getSort))
+                .map(role -> {
+                    RoleTreeNodeVO item = BizUtils.convert(role, roleConvert);
+                    item.setCustom(true);
+                    return item;
+                })
+                .toList());
+        return TreeUtil.build(list);
+    }
+
+    @Override
+    public List<PermissionIdBO> getRolePermissionIds(long roleId) {
+        // private
+        List<TenantRolePermissionPrivate> tenant = tenantRolePermissionPrivateService.getRoleBindPermissionIds(roleId);
+        Set<Long> ids = new HashSet<>(tenant.stream().map(TenantRolePermissionPrivate::getPermissionId).toList());
+        // platform
+        List<Long> platformIds = roleAuthorityService.getRoleBindPermissionIds(roleId);
+        ids.addAll(platformIds);
+
+        List<PermissionIdBO> permissions = new ArrayList<>(tenant.stream()
+                .map(item ->
+                        PermissionIdBO.of(item.getPermissionId(), item.getPlatformRole(), false))
+                .toList());
+        permissions.addAll(platformIds.stream().map(id -> PermissionIdBO.of(id, true, true)).toList());
+
+        return ids.stream()
+                .map(id -> permissions.stream()
+                        .filter(item -> item.getId().equals(id)).findFirst()
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    public List<BizPermissionVO> getRolePermissions(long roleId) {
+        List<PermissionIdBO> ids = getRolePermissionIds(roleId);
+        if (CollUtil.isEmpty(ids)) {
+            return ListUtil.empty();
+        }
+        if (CollUtil.size(ids) == 1) {
+            PlatformPermission permission = authorityService.getById(ids.getFirst().getId());
+            BizPermissionVO result = authorityConvert.to(permission);
+            result.setPlatformRoleBind(ids.getFirst().getPlatformRoleBind());
+            result.setDefaultFlag(ids.getFirst().getDefaultFlag());
+            return List.of(result);
+        }
+
+        return authorityService.list(Wrappers.<PlatformPermission>lambdaQuery()
+                        .in(PlatformPermission::getId, ids.stream().map(PermissionIdBO::getId).toList()))
+                .stream()
+                .map(item -> {
+                    BizPermissionVO vo = authorityConvert.to(item);
+                    ids.stream()
+                            .filter(id -> id.getId().equals(item.getId()))
+                            .findFirst()
+                            .ifPresent(target -> {
+                                vo.setPlatformRoleBind(target.getPlatformRoleBind());
+                                vo.setDefaultFlag(target.getDefaultFlag());
+                            });
+                    return vo;
+                })
+                .toList();
+    }
+
+    @Override
+    public List<BizPermissionTreeNodeVO> getRolePermissionsTree(long roleId, PlatformPermission condition) {
+        List<BizPermissionVO> authorities = getRolePermissions(roleId);
+        List<BizPermissionVO> finallyAuthorities = BizPermissionUtils.filterOrgLockAuthority(
+                authorities, bizAppService);
+        return BizPermissionUtils.bizMapTree(finallyAuthorities, authorityConvert, condition);
+    }
+
+    @Override
+    public List<PermissionType> getRolesPermissions(List<RoleType> roles) {
+        List<PlatformPermission> enabledAuthorities = authorityService.list()
+                .stream()
+                .filter(auth -> auth.getStatus() == CommonStatusEnum.ENABLE)
+                .toList();
+        return roles.stream()
+                .flatMap(role -> {
+                    OrgTypeEnum orgType = role.getOrgType();
+                    if (orgType == OrgTypeEnum.Platform) {
+                        return roleAuthorityService.getRoleBindPermissionIds(role.getId()).stream()
+                                .map(id -> enabledAuthorities.stream()
+                                        .filter(item -> item.getId().equals(id))
+                                        .findFirst()
+                                        .orElse(null))
+                                .filter(Objects::nonNull);
+                    }
+                    return getRolePermissionIds(role.getId())
+                            .stream()
+                            .map(PermissionIdBO::getId)
+                            .map(id -> enabledAuthorities.stream()
+                                    .filter(item -> item.getId().equals(id))
+                                    .findFirst()
+                                    .orElse(null))
+                            .filter(Objects::nonNull);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PermissionType> getRolesPermissionsAndChildren(List<RoleType> roles) {
+        List<PlatformPermission> all = authorityService.list();
+        CopyOnWriteArrayList<PermissionType> authorities = new CopyOnWriteArrayList<>(getRolesPermissions(roles));
+        authorities.forEach(item -> BizPermissionUtils.fillChildren(authorities, all, item));
+        return authorities;
+    }
+
+    @Override
+    public void create(TenantRolePrivate params) {
+        tenantRolePrivateService.create(params);
+    }
+
+    @Override
+    public void update(TenantRolePrivate params) {
+        tenantRolePrivateService.update(params);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(long id) {
+        // 清除关联权限
+        tenantRolePermissionPrivateService.clearByRoleId(id);
+        // 清除关联用户
+        tenantRoleUserPrivateService.clearByRoleId(id);
+        // 删除角色
+        tenantRolePrivateService.delete(id);
+        authorizationChangeNotifier.markAll();
+    }
+
+    @Override
+    public void sort(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+
+        AtomicInteger index = new AtomicInteger(0);
+        List<TenantRolePrivate> list = ids.stream().map(id -> {
+            TenantRolePrivate role = new TenantRolePrivate();
+            role.setId(id);
+            role.setSort(index.getAndIncrement());
+            return role;
+        }).toList();
+
+        tenantRolePrivateService.updateBatchById(list);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setPermissions(SetDTO<Long, Long> params) {
+        List<Long> bindList = params.getSetIds();
+
+        PlatformRole platformRole = platformRoleService.getById(params.getId());
+        if (platformRole != null) {
+            assertionChecker.checkOperation(!StrUtil.equals(platformRole.getCode(), RoleConstants.ROLE_ORG_ADMIN_CODE),
+                    "BizRoleServiceImpl.OrgAdminCanNotBindAuth");
+            // 如果绑定的是平台创建的角色，那么默认不处理已经预设的权限，在bindList中去掉预设内容
+            List<Long> platformIds = roleAuthorityService.getRoleBindPermissionIds(params.getId());
+            bindList = bindList.stream()
+                    .filter(id -> !platformIds.contains(id))
+                    .toList();
+        }
+
+        if (CollUtil.isNotEmpty(bindList)) {
+            List<Long> authorities = CollUtil.emptyIfNull(BizPermissionUtils.getTenantAuthorities(
+                            TenantContextHolder.get(), bizAppService, authorityService, authorityConvert))
+                    .stream().map(TreeNode::getId).toList();
+            boolean canBind = new HashSet<>(authorities).containsAll(bindList);
+            assertionChecker.checkOperation(canBind, "BizRoleServiceImpl.CantBindAndUnBindAuth");
+        }
+
+        // 平台角色，和自定义角色，都在私有绑定关系中进行绑定
+        Set<Long> resultIds = new HashSet<>(CollUtil.emptyIfNull(bindList));
+        resultIds.addAll(roleAuthorityService.getRoleBindPermissionIds(params.getId()));
+        grantCeilingService.assertCanGrantCodes(permissionCodesOf(resultIds));
+
+        BizBindDTO bindParams = new BizBindDTO();
+        bindParams.setId(params.getId());
+        bindParams.setPlatformFlag(platformRole != null);
+        bindParams.setAssignIds(bindList);
+        tenantRolePermissionPrivateService.roleSetPermissions(bindParams);
+        authorizationChangeNotifier.markAll();
+    }
+
+    @Override
+    public void assignUsers(BizRoleAssignUsersDTO params) {
+        Long deptId = params.getDeptId();
+        RoleType role = getRole(params.getId());
+        assertionChecker.checkOperation(role != null, "BizRoleServiceImpl.RoleNonNul");
+        assert role != null;
+        // 如果需要分配用户，那么需要判断是否传递了部门ID
+        assertionChecker.checkOperation(CollUtil.isNotEmpty(params.getAssignIds()),
+                BooleanUtil.isFalse(role.getFilterDept()) || deptId != null,
+                "BizRoleServiceImpl.BindDeptRoleDeptNonNull");
+        assertionChecker.checkOperation(role.getType() != RoleTypeEnum.GROUP,
+                "BizRoleServiceImpl.CantBindRoleGroup");
+
+        if (CollUtil.isNotEmpty(params.getAssignIds())) {
+            List<String> codes = getRolesPermissions(List.of(role)).stream()
+                    .map(PermissionType::getCode)
+                    .filter(Objects::nonNull)
+                    .toList();
+            grantCeilingService.assertCanGrantCodes(codes);
+            grantCeilingService.assertCanBindRole(role.getId(), role.getPlatformRole(),
+                    deptId, params.getAssignIds());
+        }
+
+        BizRoleAssignUsersBO bindParams = new BizRoleAssignUsersBO();
+        bindParams.setId(params.getId());
+        bindParams.setPlatformFlag(role.getPlatformRole());
+        bindParams.setDeptId(deptId);
+        bindParams.setAssignIds(params.getAssignIds());
+        bindParams.setUnassignIds(params.getUnassignIds());
+        tenantRoleUserPrivateService.roleBindUsers(bindParams);
+        authorizationChangeNotifier.markAll();
+    }
+
+    @Override
+    public void orgManagerAssignPermissions(List<Long> ids, boolean assign) {
+        RoleType managerRole = getByCode(RoleConstants.ROLE_ORG_ADMIN_CODE);
+
+        AssignDTO<Long, Long> bindParams = new AssignDTO<>();
+        bindParams.setId(managerRole.getId());
+        if (assign) {
+            bindParams.setAssignIds(ids);
+        } else {
+            bindParams.setUnassignIds(ids);
+        }
+        roleAuthorityService.roleAssignPermissions(bindParams);
+        authorizationChangeNotifier.markAll();
+    }
+
+    private List<String> permissionCodesOf(Collection<Long> permissionIds) {
+        if (CollUtil.isEmpty(permissionIds)) {
+            return List.of();
+        }
+        return authorityService.list(Wrappers.<PlatformPermission>lambdaQuery()
+                        .in(PlatformPermission::getId, permissionIds))
+                .stream()
+                .map(PlatformPermission::getCode)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+}

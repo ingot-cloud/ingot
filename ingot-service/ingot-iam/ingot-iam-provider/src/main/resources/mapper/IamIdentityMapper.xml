@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ingot.cloud.iam.persistence.mapper.IamIdentityMapper">
+    <resultMap id="identity" type="com.ingot.cloud.iam.persistence.projection.IdentityRow">
+        <id column="member_id" property="memberId"/>
+        <result column="account_version" property="accountVersion"/>
+        <result column="member_version" property="memberVersion"/>
+        <result column="tenant_version" property="tenantVersion"/>
+    </resultMap>
+    <select id="platform" resultMap="identity">
+        SELECT a.version AS account_version, m.version AS member_version, m.id AS member_id,
+               NULL AS tenant_version
+          FROM iam_account a JOIN iam_platform_member m ON m.account_id = a.id
+         WHERE a.id = #{accountId} AND a.enabled = TRUE AND a.deleted_at IS NULL AND m.status = #{active}
+        <if test="memberId != null">AND m.id = #{memberId}</if>
+    </select>
+    <select id="tenant" resultMap="identity">
+        SELECT a.version AS account_version, m.version AS member_version, t.version AS tenant_version,
+               m.id AS member_id
+          FROM iam_account a JOIN iam_tenant_member m ON m.account_id = a.id
+          JOIN iam_tenant t ON t.id = m.tenant_id
+         WHERE a.id = #{accountId} AND m.tenant_id = #{tenantId}
+           AND a.enabled = TRUE AND a.deleted_at IS NULL AND m.status = #{active}
+           AND t.enabled = TRUE AND t.deleted_at IS NULL
+        <if test="memberId != null">AND m.id = #{memberId}</if>
+    </select>
+</mapper>

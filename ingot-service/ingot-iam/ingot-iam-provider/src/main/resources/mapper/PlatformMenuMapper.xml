@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ingot.cloud.iam.mapper.PlatformMenuMapper">
+
+    <select id="getAll" resultType="com.ingot.cloud.iam.api.model.vo.menu.MenuTreeNodeVO">
+        SELECT menu.*,
+               menu.app_id AS app_id,
+               app.code    AS app_code
+        FROM platform_menu AS menu
+                 LEFT JOIN platform_app AS app ON app.id = menu.app_id
+        WHERE menu.deleted_at IS NULL
+    </select>
+</mapper>

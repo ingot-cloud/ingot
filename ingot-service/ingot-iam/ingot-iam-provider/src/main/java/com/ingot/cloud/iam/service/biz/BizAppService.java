@@ -1,0 +1,28 @@
+package com.ingot.cloud.iam.service.biz;
+
+import java.util.List;
+
+import com.ingot.cloud.iam.api.model.domain.PlatformApp;
+
+/**
+ * <p>Description  : BizAppService.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/11/18.</p>
+ * <p>Time         : 14:21.</p>
+ */
+public interface BizAppService {
+
+    /**
+     * 获取当前可用的应用列表，受租户限制
+     *
+     * @return {@link PlatformApp}
+     */
+    List<PlatformApp> getEnabledApps();
+
+    /**
+     * 获取当前禁用列表，受租户限制
+     *
+     * @return {@link PlatformApp}
+     */
+    List<PlatformApp> getDisabledApps();
+}

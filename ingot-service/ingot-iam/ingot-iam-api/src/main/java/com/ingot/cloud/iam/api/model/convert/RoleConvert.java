@@ -1,0 +1,22 @@
+package com.ingot.cloud.iam.api.model.convert;
+
+import com.ingot.cloud.iam.api.model.bo.role.BizAssignRoleBO;
+import com.ingot.cloud.iam.api.model.domain.TenantRoleUserPrivate;
+import com.ingot.cloud.iam.api.model.types.RoleType;
+import com.ingot.cloud.iam.api.model.vo.role.RoleTreeNodeVO;
+import com.ingot.framework.commons.model.transform.CommonTypeTransform;
+import org.mapstruct.Mapper;
+
+/**
+ * <p>Description  : RoleTrans.</p>
+ * <p>Author       : wangchao.</p>
+ * <p>Date         : 2021/3/22.</p>
+ * <p>Time         : 4:22 下午.</p>
+ */
+@Mapper(componentModel = "spring", uses = CommonTypeTransform.class)
+public interface RoleConvert {
+
+    RoleTreeNodeVO to(RoleType in);
+
+    TenantRoleUserPrivate to(BizAssignRoleBO in);
+}

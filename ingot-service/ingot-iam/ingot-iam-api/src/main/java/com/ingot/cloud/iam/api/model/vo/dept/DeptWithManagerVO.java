@@ -1,0 +1,27 @@
+package com.ingot.cloud.iam.api.model.vo.dept;
+
+import java.util.List;
+
+import com.ingot.cloud.iam.api.model.domain.TenantDept;
+import com.ingot.cloud.iam.api.model.vo.user.SimpleUserVO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * <p>Description  : DeptWithManagerVO.</p>
+ * <p>Author       : jy.</p>
+ * <p>Date         : 2025/3/6.</p>
+ * <p>Time         : 17:24.</p>
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class DeptWithManagerVO extends TenantDept {
+    /**
+     * 部门主管
+     */
+    private List<SimpleUserVO> managerUsers;
+    /**
+     * 部门人员数量
+     */
+    private Long memberCount;
+}
