@@ -1,5 +1,5 @@
 {
-  "description": "T01 显式入口处置与目标 ACTION 设计；不是授权迁移的自动授予规则，也不表示执行器已实现",
+  "description": "2026-09-15：既有功能逐项保留/退出的目标清单，不代表实现或授权授予；框架能力复用原模块，migration/reports退出本次全新系统交付；完整契约须经T01/T13核对。",
   "entries": [
     {
       "legacyMethod": "TestAPI.test",
@@ -999,7 +999,7 @@
       "resource": "migration",
       "action": "iam-platform:migration:read",
       "target": "GET /v1/platform/migration/reports",
-      "execution": "MIGRATION_REPORT: 只读已生成的脱敏报告，目标租户数据不可穿透"
+      "execution": "OUT_OF_SCOPE: 历史迁移报告退出本次新系统交付；原目标保留作处置记录，不要求实现或发布该路由"
     },
     {
       "legacyMethod": "DevIdAPI.page",

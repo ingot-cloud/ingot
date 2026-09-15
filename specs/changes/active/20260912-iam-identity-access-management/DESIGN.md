@@ -1,12 +1,14 @@
 # Design
 
+> 2026-09-15 修订：按全新系统交付，限定 IAM 授权及关联接入；框架复用、缺陷修正目标见 [REMEDIATION](./REMEDIATION.md)。下方“历史实施记录”仅说明当时实现，不覆盖当前设计。
+
 ## 1. 架构与命名
 
 模块 ingot-pms / ingot-pms-api / ingot-pms-provider 分别更名 ingot-iam / ingot-iam-api / ingot-iam-provider。Java com.ingot.cloud.pms 更名 com.ingot.cloud.iam，RemotePms 类型更名 RemoteIam；服务注册 in-service-pms 更名 in-service-iam，网关外部前缀为 /api/iam。
 
 Gradle、Feign contextId、服务常量、Nacos DEV/TEST/PROD dataId、镜像/Compose/环境变量、脚本和运行文档同步调整。旧路径不保留兼容代理。旧归档历史不批量替换；current 验收后按实际行为更新。所有当前运行配置中旧名均需归类检查，不把历史数据来源标识误当残留代码。
 
-IAM 按 identity、organization、catalog、authorization、policy、audit、migration 分域。Auth 保持协议及认证会话职责，Security 保持现有安全职责。字典、发号按辅助模块保留。使用本地接口/已有内部 RPC 协作，不能为了重命名扩展拆服务范围。
+IAM 按 identity、organization、catalog、authorization、policy、audit 分域；历史 migration 工具不属于新系统运行时。Auth 保持协议及认证会话职责，Security 保持现有安全职责。字典、发号按辅助模块保留。使用本地接口/已有内部 RPC 协作，不能为了重命名扩展拆服务范围。
 
 ## 2. 逻辑数据模型
 
@@ -14,7 +16,7 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 
 | 实体 | 必要内容与约束 |
 |---|---|
-| Account | 全局 ID、登录标识、凭证及安全状态；保留账户身份，不承载租户部门 |
+| Account | 全局 ID、登录标识、凭证及账号自身状态；锁定等安全事实复用既有框架端口，不重复定义其持久化；不承载租户部门 |
 | PlatformMember | 独立的平台成员 ID、accountId、平台资料与状态；账号唯一；不借用默认租户成员身份 |
 | Tenant / TenantMember | 组织、ownerMemberId；成员 ID、accountId、组织资料及状态；租户+账号唯一；所有者须为有效成员 |
 | Department / MemberDepartment | 组织内树、成员多部门关系、主部门；禁止跨租户、循环及重复关系 |
@@ -57,7 +59,7 @@ IAM 按 identity、organization、catalog、authorization、policy、audit、mig
 
 授权/委派状态为 ACTIVE/REVOKED；期限到期由时间判定，不依赖异步状态更新。分配来源为 MANUAL/INITIALIZATION/MIGRATION；组或直接分配由主体类型判定，来源委派由 delegationGrantId 判定。未传 validFrom 的分配在提交时落为当前 UTC 时间，以便计算最长分配期限。委派最长时长保存秒及纳秒两列，与 Duration 精度一致。
 
-`004_policy_audit_migration.sql` 保存不可变默认策略引用、独立默认范围与允许/禁止规则、字段规则及事务审计事实。选择器关联按租户加成员/部门 ID 唯一；字段非 FULL 时数据库也拒绝 editable=true。审计与批次表只保证结构，不替代脱敏、可靠投递、授权等价比较及验证状态机。`005_auxiliary.sql` 仅保留 MIGRATION 列出的 9 张辅助表定义，无旧数据写入；旧 ID 列须映射到新模型后验证引用。各编号 SQL 合计 55 张目标表，均只用于显式指定的隔离目标库。
+`004_policy_audit_migration.sql` 保存不可变默认策略引用、独立默认范围与允许/禁止规则、字段规则及事务审计事实。选择器关联按租户加成员/部门 ID 唯一；字段非 FULL 时数据库也拒绝 editable=true。审计与批次表只保证结构，不替代脱敏、可靠投递、授权等价比较及验证状态机。`005_auxiliary.sql` 当时提取了9张辅助表定义，无旧数据写入；旧ID列名不能作为继续依赖旧用户模型的理由。已有DDL合计55张表属于阶段证据，不是最终表数验收指标。按全新系统部署时应复用安全框架权威schema及适配器，明确各表唯一归属；重复/仅迁移所需结构由T01/T18盘点后处置，不在本轮文档修改中执行DDL。
 
 ## 3. 角色合成与版本
 
@@ -131,12 +133,16 @@ FieldAccess 由服务端计算；MASKED 只返回脱敏值，HIDDEN 不返回业
 
 新建组织原子写入组织、所有者成员、根部门关系、共享治理角色引用和基础应用开通；默认策略只引用固定版本。创建失败不留下半组织。其他成员不批量生成重复基础角色授权。
 
-迁移与回滚遵循 [MIGRATION](./MIGRATION.md)，验收遵循 [ACCEPTANCE](./ACCEPTANCE.md)。业务全新初始化与历史迁移是独立入口。当前库不执行 destructive DDL；工具只写专用目标库，源库只读。
+验收遵循 [ACCEPTANCE](./ACCEPTANCE.md)，冷启动与修正目标遵循 [REMEDIATION](./REMEDIATION.md)。本次不实施历史数据迁移；MIGRATION 保留为已退出范围的历史方案。初始化只作用于显式指定的新环境，不覆盖既有业务库。
 
 Java 新增及变更公共契约按仓库 JavaDoc 规范落盘；业务枚举、注解常量、统一缓存门禁在实施任务中执行。本次 Spec 不提前修改 current。
 
 
-## 当前实施落点：命名与身份基础
+## 历史实施记录（2026-09-15 复评前，非最终设计）
+
+> 以下保留过程证据，其中旧表双读、重复锁定态持久化、仅直接授权门闩及接口完成描述均须按 REMEDIATION 纠正，不授权继续保留。
+
+### 命名与身份基础
 
 源码、RPC 与构建已使用 IAM 名称。独立数据库由 IAM_DATABASE 显式指定，不再默认连接旧 ingot_core；IAM 连接使用 UTC 并强制数据库会话时区。此配置仅准备切换，尚未发布或迁移实际环境。
 
@@ -167,3 +173,16 @@ MemberLifecycle 在租户行与成员写锁下进行资格或关系变更。暂�
 Bean 默认使用 private final 与 @RequiredArgsConstructor。限定注入、继承构造或必要初始化无法可靠由 Lombok 表达时保留显式构造器并说明原因；禁止自有字段/Setter 注入以及为测试便利保留多套生产注入入口。遵循新增 spring-constructor-injection skill。
 
 本调整已由用户以“开始实施这个计划”授权，状态为 implementing。生产访问已迁到 Mapper/Repository，业务类不再使用 `Jdbc*` 前缀。研发期间编译，整体完成后集中回归与分布式验证。
+
+## 9. 当前修订的实施约束
+
+1. 成熟框架只做本次必要的边界适配。账号锁定读写复用安全框架端口与用例；IAM 的 UserAccountPort 适配仅负责新 Account 数据，不反向写入 LockStatePort 造成递归或第二次状态转换。IAM 新增的重复锁定态实体/Mapper 及直接 upsert 分支退出。失败传播沿用既有框架契约，不能将查询故障伪装成无账号或吞掉锁定失败。
+2. 平台认证不返回允许访问租户，兼容共享 DTO 时 allows=[]；不改变 Auth 协议、挑战、加密、凭证检查和 Member 登录逻辑。租户切换须重建身份，不从平台管理租户列表取得业务授权。
+3. 完整角色以 baseRevisionId 是否为空区分独立自定义与共享定制。发布和升级验证操作域、资源能力和参数；升级选中授权必须属于当前租户及被升级角色，逐条锁定/版本校验并重验委派和范围，任一失败全部回滚。
+4. 治理授权与受限委派分开准入：无完整治理资格时必须绑定属于当前操作者的单一有效委派，不得省略来源绕过。运行时持续检查角色白名单、接收人、逐操作范围及期限；组/部门变化也须受同一约束。
+5. 所有者治理授权必须与 ownerMemberId 同步。转交原子移动由所有者身份产生的治理授权，撤销旧所有者对应来源并赋予新所有者；其他独立合法授权不自动删除。锁定组织及相关成员，保护治理入口并在提交后失效。
+6. 通讯录按“匹配允许目标并集替代默认 → 扣除全部禁止 → 恢复本人基础资料”求值，不依赖规则顺序。默认读取固定版本；字段合并平台最终上限；原值查询不能以本人字段权限代替所有待查询目标的权限。
+7. 到期上限取授权、委派、开通等最近时间边界及最长 30 秒的最小值，每次读取检查 expiresAt；关键治理写重新求值并控制并发。修正在 IAM 消费层完成，不改变其他缓存消费者的 LKG、地板或 TTL 语义。
+8. IAM HTTP 错误按 API 映射；使用 IAM 范围异常处理或明确类型映射，不能为 IAM 改写所有服务 BizException 的既有返回行为。Security 只更换必要的功能/对象授权接入，保留原业务用例与协议。
+9. 预览、对象能力和诊断复用真实求值，草稿参与预览，来源披露受操作者范围限制。导出完整遍历授权数据，异步及下载重新校验身份和权限，支持多实例与状态/失败处理。
+10. 具体缺陷、保留功能、清理范围和可复现验收以 REMEDIATION 为任务级清单；声明一个 DTO、Mapper 或控制器不构成该项完成证据。

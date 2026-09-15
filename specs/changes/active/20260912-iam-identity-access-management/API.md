@@ -1,6 +1,6 @@
 # IAM 接口与前端契约
 
-> 目标契约，主 change 已进入 implementing。管理面请求/响应类型已闭合，完整端点 OpenAPI 已生成但运行时未实现，不能据此调用线上接口。实现导出的 OpenAPI 必须与此一致；实体完整字段在对应业务 DTO 中显式声明，不直接透传 ORM 实体。
+> 目标契约，主 change 保持 implementing。2026-09-15 复评确认必要保留能力、登录及运行时语义仍有缺口；当前77路径/132操作快照不是完整交付。T01/T03/T13重新核对，代码和生成JSON尚未随本轮文档修订。不直接透传ORM实体。
 
 ## 1. 通用约定
 
@@ -11,6 +11,28 @@
 状态与种类使用语义枚举：PLATFORM/TENANT、MEMBER/GROUP、SYSTEM/SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM、ADD/REMOVE/REPLACE_SCOPE、HIDDEN/MASKED/FULL。PLATFORM_CUSTOM 补齐本契约已有的平台自定义角色接口类型，不改变平台与租户隔离规则。开始时间包含、结束时间不包含。
 
 集合 GET 支持分页及该资源明确定义的过滤项，不能接受任意字段名/SQL 排序。POST 创建返回 { id, version }；PUT 配置整体替换并传 expectedVersion；PATCH 状态显式 { status, expectedVersion }。删除被引用对象返回稳定 InUse 错误。
+
+### 1.1 平台登录与租户选择
+
+沿用Auth既有协议，只调整IAM身份投影。平台登录上下文为PLATFORM、tenantId=null、平台memberId；不返回允许访问的租户集合。共享UserDetailsResponse等模型保留allows时，平台分支固定[]，不调用租户成员列表填充该响应；Bootstrap不新增租户列表。不得把tenantId=0作为平台业务身份。
+
+前端平台入口无需组织选择，完成原认证要求后直接bootstrap。有效平台身份即使没有租户成员关系也可以登录。租户身份仅在独立租户认证流程中验证，平台组织管理列表不能用作登录候选或授权依据；同账号拥有多个身份不改变此规则。Member(APP)原有选择与认证行为不变。完整交互见FRONTEND第0节。
+
+### 1.2 必要保留功能与接口清单
+
+以下目标来自既有功能映射，必须进入完整交付清单及真实HTTP验证；没有DTO/运行时证据的接口仍为待实现。安全用例复用原模块，不创建IAM副本。
+
+| 目标 | 必须保留的子能力 |
+|---|---|
+| /v1/platform/accounts；/{id}；/lookup | GET列表/详情、POST创建/受限精确查询、PATCH资料、DELETE账号；独立于成员管理 |
+| /v1/platform/accounts/{id}/enable、disable、lock、unlock、reset-password | POST，分别通过既有账号/安全用例执行，不直接重复写锁定表 |
+| /v1/me/profile；/v1/me/password | 本人资料PATCH、本人密码操作按endpoint-mapping；初始改密与普通改密均保持既有校验和事件 |
+| /v1/platform/dictionaries | 树、分页、按code查询、CRUD、状态和排序；合并路由仍须明确请求与子能力 |
+| /v1/platform/id-allocations；/v1/platform/social-configs | 原管理能力、内部服务调用和相应配置保护 |
+| 既有上传、内部字典/发号/社会化/账号/组织接口 | 保留业务能力，内部RPC验证调用身份及目标边界；读取新账号/组织事实 |
+| Security原有管理路由 | 保留原服务/用例，仅替换必要平台ACTION与对象授权，避免IAM复制安全业务 |
+
+完整请求字段、过滤排序白名单、purpose、ACTION和响应应在T01/T13核对既有领域契约后落入OpenAPI；不得凭本表臆造密码协议或删去未列出的原子功能。历史migration/reports退出本次交付。
 
 ## 2. 主要 DTO
 
@@ -125,9 +147,9 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 后端实现阶段须补齐上述端点的 OpenAPI schemas、字段必填/只读、合法过滤排序、完整示例、操作 code 映射并通过契约测试；不得由前端 Agent 猜测实际 DTO。业务语义变化必须先修改本契约再实施。前端开发前以本文件及后端已验证 OpenAPI 配套读取。
 
-旧入口的逐项目标与处置见 [endpoint-mapping.json](./endpoint-mapping.json)。其中 RETIRED 表示新系统不保留该旧入口；SERVICE 和 AUTHENTICATED_SELF 仍须各自身份校验，不是匿名或超管 bypass。该表是执行接入清单，不用于自动向迁移账号授予新操作。补充保留能力的目标路由包括平台 accounts/dictionaries/id-allocations/social-configs、当前账号 me/password/me/profile 及已生成的 migration/reports；具体方法按映射清单核对。
+旧入口的逐项目标与处置见 [endpoint-mapping.json](./endpoint-mapping.json)。其中 RETIRED 表示新系统不保留该旧入口；SERVICE 和 AUTHENTICATED_SELF 仍须各自身份校验，不是匿名或超管 bypass。该表是执行接入清单，不用于自动向迁移账号授予新操作。补充保留能力的目标路由包括平台 accounts/dictionaries/id-allocations/social-configs、当前账号 me/password/me/profile；具体方法按映射清单核对。历史 migration/reports 已退出本次交付。
 
-当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，包含管理命令、bootstrap、资源详情、预览/升级/诊断/审计响应及 R 信封实例；目标端点路径已列入 openapi.json，运行时仍未接入。
+当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，包含管理命令、bootstrap、资源详情、预览/升级/诊断/审计响应及 R 信封实例；部分目标路径已列入 openapi.json，但未覆盖账号安全/辅助等完整保留能力，本轮修订尚未同步到生成JSON。
 
 ### 已落地的响应细节
 
@@ -156,3 +178,13 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - ApplicationDraft 可标记 baseline，仅租户域允许。组织初始化缺省开通 baseline 应用；指定 planId 时改为该套餐内租户域启用应用。EntitlementReplaceInput 为 `{expectedVersion,entitlements[{applicationId,status,validFrom?,validUntil?}]}`。组与委派影响预览返回 ReferenceImpactPreview。
 
 管理面目标路径见 `contracts/openapi.json` 与 `contracts/routes.json`，覆盖 API 第 3、4 节列出的身份、目录、角色、授权、策略、诊断和审计接口，以及成员导出下载。控制器接入后对应操作 `x-runtime-implemented=true`。内部 RPC 与账号安全保留入口仍按 endpoint-mapping 接入，不计入此前管理面清单。该文档不是线上已发布接口证明。
+
+## 6. 本轮修正的运行时契约门禁
+
+- 业务错误须用IAM局部处理映射真实HTTP 400/401/403/404/409/503及稳定reasonCode；不得改写全仓库BizException行为来满足IAM。
+- capabilities按具体对象和操作批量计算，空映射不视为已实现；字段不可见/不可编辑不由客户端猜测。候选purpose、名称搜索等实际过滤项必须在完整schema中列明。
+- 升级授权ID限定本租户和当前角色，逐条最新校验；不存在、不匹配、委派/参数不兼容均整批失败，不能静默跳过。独立TENANT_CUSTOM允许base为空并使用完整grants。
+- 预览草稿进入真实引擎且受操作者披露边界限制；诊断验证application/action关联与targetId对象范围，不能仅凭actionCodes包含返回目标允许；未知/受限影响不用0伪造。
+- 导出交付覆盖全部获授权记录，不能以第一页200条代表导出；T13应给出任务状态、失败、下载、过期及多实例语义的实际接口，不把本地临时文件当作完整契约。
+- bootstrap菜单先检查域、应用状态/开通/人群，再判定菜单条件，OPEN不绕过这些边界。授权version应反映相关事实，expiresAt不跨越最近有效期边界。
+- 本轮没有重新生成schemas/routes/openapi/examples；x-runtime-implemented仅说明当时控制器存在，不证明安全语义或本轮修订已验证。完整快照须随实现和HTTP验证重新发布。

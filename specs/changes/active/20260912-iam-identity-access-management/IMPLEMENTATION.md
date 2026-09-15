@@ -1,5 +1,7 @@
 # 实施核对记录
 
+> 2026-09-15 复评说明：本文既有段落是历史实施证据，不是当前完成判定。业务缺陷、重复框架持久化、平台登录与全新系统范围已在 REMEDIATION/TASKS 重开；本轮仅修改 Spec，没有修复代码或补跑测试。
+
 ## 2026-09-13：实施启动与 T01
 
 用户已明确批准开始后端实施。工作区启动时干净；已读取 SDD 工作流、全部 change 工件、应用授权与数据授权 current 基线。未修改 current、历史归档及相邻前端仓库，未连接数据库或执行迁移。
@@ -202,3 +204,10 @@ IAM commons 枚举已对齐 `CommonStatusEnum`：`@Getter`/`@RequiredArgsConstru
 
 对应测试同步改名。验证：`./gradlew :ingot-service:ingot-iam:ingot-iam-provider:test` 通过；生产 `src/main/java` 无 `Jdbc*` 业务类。未改 `specs/current/`、未 commit。
 
+## 2026-09-15 后端复评与范围修订（仅文档）
+
+依据用户明确要求，移出旧库升级/迁移门禁，保留必要既有功能，限定角色权限及关联接入；已核对安全框架存在 LockStatePort、DefaultLockStatePortAdapter 和 AccountLockStateMapper，IAM 的同表 Entity/Mapper 属重复实现，应在后续实施中移除并复用既有端口。平台登录不再返回允许访问租户，前端不再强制平台用户选择组织。
+
+前轮静态评估确认角色升级归属、委派持续约束、通讯录/字段规则、期限缓存、并发写、所有者转交、旧能力迁入、HTTP 错误、角色形态、组展开、导出、诊断/预览/对象能力和菜单过滤等缺口。REMEDIATION 记录修正目标，TASKS 和 ACCEPTANCE 重新建立门禁；原 T01/T03 的局部结构通过不再表示扩展后的完整契约完成。MP 历史机械迁移检查不证明功能正确或框架职责合理。
+
+本轮未改 Java/SQL/配置、前端、生成的契约 JSON、current 或 Git 提交；未执行运行时测试。
