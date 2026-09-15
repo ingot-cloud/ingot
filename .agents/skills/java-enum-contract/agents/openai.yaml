@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java 业务枚举契约"
+  short_description: "按 CommonStatusEnum 注解与 EnumUtils 索引编写或审查业务枚举"
+  default_prompt: "使用 $java-enum-contract，按仓库枚举契约补齐 @Getter/@RequiredArgsConstructor、@JsonValue/@EnumValue、@JsonCreator getEnum 与 EnumUtils 索引。"
