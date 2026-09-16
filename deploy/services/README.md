@@ -21,7 +21,7 @@ docker/
 │   ├── auth.env               # Auth服务配置
 │   ├── gateway.env            # Gateway服务配置
 │   ├── member.env             # Member服务配置
-│   └── pms.env                # PMS服务配置
+│   └── iam.env                # IAM服务配置
 │
 ├── swarm-deploy.sh             # Swarm一键部署脚本
 ├── standalone-deploy.sh        # 单机一键部署脚本
@@ -181,7 +181,7 @@ DRUID_PASSWORD=DruidAdmin@2024
 | Gateway | 7980 | 8980 | 对外网关 |
 | Auth | 5100 | 6100 | 认证服务 |
 | Member | 5300 | 6300 | 会员服务 |
-| PMS | 5200 | 6200 | 权限服务 |
+| IAM | 5200 | 6200 | 权限服务 |
 
 ## 资源配置（8核16G 推荐）
 
@@ -192,7 +192,7 @@ DRUID_PASSWORD=DruidAdmin@2024
 | Gateway | 2 | 1.5核 | 2.5G | 对外服务，双副本高可用 |
 | Auth | 1 | 2核 | 3G | 认证服务 |
 | Member | 1 | 2核 | 3G | 业务服务 |
-| PMS | 1 | 2核 | 3G | 业务服务 |
+| IAM | 1 | 2核 | 3G | 业务服务 |
 
 ### 资源分配
 
@@ -244,7 +244,7 @@ docker-compose down
 | Gateway | http://localhost:7980 | 直接访问 |
 | Auth | http://localhost:5100 | 认证服务 |
 | Member | http://localhost:5300 | 会员服务 |
-| PMS | http://localhost:5200 | 权限服务 |
+| IAM | http://localhost:5200 | 权限服务 |
 
 ### 健康检查
 
@@ -253,7 +253,7 @@ docker-compose down
 curl http://localhost:7980/actuator/health  # Gateway
 curl http://localhost:19000/actuator/health # Auth管理端口
 curl http://localhost:15300/actuator/health # Member管理端口
-curl http://localhost:15200/actuator/health # PMS管理端口
+curl http://localhost:15200/actuator/health # IAM管理端口
 ```
 
 ## 性能优化
@@ -359,3 +359,11 @@ docker network inspect ingot-overlay
 **版本：** v1.0.0  
 **更新日期：** 2026-01-02  
 **维护者：** Ingot Cloud Team
+
+
+### IAM 重构期间的目标库配置
+
+IAM 使用显式 `IAM_DATABASE`，必须填写已经完成迁移与校验的独立目标库；缺失时 Compose 配置检查拒绝继续。三环境 Nacos 的 IAM 数据源统一采用 UTC 连接与会话时区。旧源库 `MYSQL_DATABASE` 不作为 IAM 默认值。当前重构尚未完成认证/授权切换及迁移演练，不因源码可构建而部署替换现有服务。
+
+
+IAM 的 CI 组装产物位于 `output/ingot-iam-provider/`，通过本流水线 artifacts 传给镜像构建，不从旧 output 缓存或 `output/ingot-iam/<version>` 目录读取。IAM build/run 使用同一 `IAM_IMAGE_NAME`，并分别依赖本流水线的组装和镜像构建作业。这里只修改配置，正式运行仍须完成 IAM 重构和迁移门禁。

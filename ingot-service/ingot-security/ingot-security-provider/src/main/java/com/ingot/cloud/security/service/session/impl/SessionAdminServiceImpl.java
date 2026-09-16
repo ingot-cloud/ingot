@@ -19,10 +19,10 @@ import com.ingot.cloud.auth.api.model.dto.InnerUserSessionRevokeDTO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionPageVO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionVO;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.api.model.dto.user.InnerUserDTO;
-import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;
+import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.user.InnerUserDTO;
+import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamUserDetailsService;
 import com.ingot.cloud.security.api.model.dto.session.PlatformSessionQueryDTO;
 import com.ingot.cloud.security.api.model.dto.session.PlatformUserSessionRevokeDTO;
 import com.ingot.cloud.security.api.model.vo.session.PlatformSessionVO;
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service;
  * @since 1.0.0
  * @implNote 指定 clientId 时直接复用 Auth Inner 的分页（游标建立在「租户 + Client」的在线用户有序集上）；
  * 只给 userId 时改走 Inner 的按用户查询以支持跨 Client，结果集有界，由本层排序后内存分页。
- * 名称补全在分页切片之后进行，避免为不展示的记录调用 PMS。
+ * 名称补全在分页切片之后进行，避免为不展示的记录调用 IAM。
  */
 @Slf4j
 @Service
@@ -70,8 +70,8 @@ public class SessionAdminServiceImpl implements SessionAdminService {
             PlatformSessionVO::getIssuedAt, Comparator.nullsLast(Comparator.reverseOrder()));
 
     private final RemoteAuthSessionService remoteAuthSessionService;
-    private final RemotePmsUserDetailsService remotePmsUserDetailsService;
-    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService;
+    private final RemoteIamUserDetailsService remoteIamUserDetailsService;
+    private final RemoteIamTenantDetailsService remoteIamTenantDetailsService;
     private final PlatformSessionConvert sessionConvert;
     private final AssertionChecker assertionChecker;
 
@@ -207,10 +207,10 @@ public class SessionAdminServiceImpl implements SessionAdminService {
     }
 
     /**
-     * 用 PMS 数据补全展示名称。
+     * 用 IAM 数据补全展示名称。
      *
-     * <p>PMS 是管理面的旁路依赖：查询失败只让名称为空，不影响 sid 级字段与下线操作。
-     * C 端用户不在 PMS 用户表内，只保留会话里的登录账号名。</p>
+     * <p>IAM 是管理面的旁路依赖：查询失败只让名称为空，不影响 sid 级字段与下线操作。
+     * C 端用户不在 IAM 用户表内，只保留会话里的登录账号名。</p>
      */
     private List<PlatformSessionVO> enrich(Long tenantId, List<PlatformSessionVO> records) {
         if (records.isEmpty()) {
@@ -236,7 +236,7 @@ public class SessionAdminServiceImpl implements SessionAdminService {
 
     private String queryTenantName(Long tenantId) {
         try {
-            R<SysTenant> response = remotePmsTenantDetailsService.getTenantById(tenantId);
+            R<SysTenant> response = remoteIamTenantDetailsService.getTenantById(tenantId);
             if (response != null && response.isSuccess() && response.getData() != null) {
                 return response.getData().getName();
             }
@@ -258,7 +258,7 @@ public class SessionAdminServiceImpl implements SessionAdminService {
         }
 
         try {
-            R<List<InnerUserDTO>> response = remotePmsUserDetailsService.getAllUserInfo(new ArrayList<>(userIds));
+            R<List<InnerUserDTO>> response = remoteIamUserDetailsService.getAllUserInfo(new ArrayList<>(userIds));
             if (response != null && response.isSuccess() && response.getData() != null) {
                 return response.getData().stream()
                         .filter(user -> user.getId() != null)

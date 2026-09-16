@@ -10,10 +10,10 @@ spring:
                 - Path=/v3/api-docs/**
               filters:
                 - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/$\{path}/v3/api-docs
-            - id: in-service-pms
-              uri: lb://in-service-pms
+            - id: in-service-iam
+              uri: lb://in-service-iam
               predicates:
-                - Path=/pms/**
+                - Path=/iam/**
               filters:
                 - StripPrefix=1
             - id: in-service-member

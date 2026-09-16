@@ -4,9 +4,10 @@ import java.util.List;
 
 import com.ingot.cloud.security.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.security.service.PolicyConfigService;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @GetMapping("/list")
     @Operation(summary = "获取所有策略配置")
-    @AdminOrHasAnyAuthority({"platform:security:credential:policy:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_READ})
     public R<List<CredentialPolicyConfig>> getAllPolicyConfigs() {
         try {
             return ok(policyConfigService.getAllPolicyConfigs());
@@ -48,7 +49,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @PostMapping
     @Operation(summary = "保存策略配置")
-    @AdminOrHasAnyAuthority({"platform:security:credential:policy:create"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_CREATE})
     public R<Void> savePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
             policyConfigService.savePolicyConfig(config);
@@ -67,7 +68,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @PutMapping
     @Operation(summary = "更新策略配置")
-    @AdminOrHasAnyAuthority({"platform:security:credential:policy:update"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_UPDATE})
     public R<Void> updatePolicyConfig(@RequestBody CredentialPolicyConfig config) {
         try {
             policyConfigService.updatePolicyConfig(config);
@@ -83,7 +84,7 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除策略配置")
-    @AdminOrHasAnyAuthority({"platform:security:credential:policy:delete"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_DELETE})
     public R<Void> deletePolicyConfig(@PathVariable Long id) {
         try {
             policyConfigService.deletePolicyConfig(id);

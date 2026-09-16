@@ -25,4 +25,11 @@ dependencies {
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
+
+    testImplementation(deps.junit.jupiter)
+    testRuntimeOnly(deps.junit.platform_launcher)
+}
+
+test {
+    useJUnitPlatform()
 }

@@ -12,6 +12,10 @@
 
 详细目录、状态机、工件职责和归档规则以 [specs/README.md](./specs/README.md) 为准。
 
+# 业务枚举契约
+
+新增或修改业务枚举时，使用 `.agents/skills/java-enum-contract` skill。形态对齐 `CommonStatusEnum`：`@Getter`、`@RequiredArgsConstructor`，稳定字面量同时标 `@JsonValue`、`@EnumValue`，`@JsonCreator getEnum` 走 `EnumUtils` 索引。禁止每个枚举手写 HashMap。这是编码门禁，不必等用户提醒。
+
 # 魔法值与配置取值
 
 业务语义不得在调用点裸写字符串或数字。这是编码门禁，不必等用户提醒。规则如下：
@@ -67,3 +71,9 @@ Java 注释统一遵循 [Javadoc 规范](./docs/standards/Javadoc.md)，可借�
 4. 配置键归属消费模块，框架只接收映射后的 `LayeredCacheSettings`，不得为兼容框架而改动模块已上线的配置键。
 5. 编译产物（`Pattern`、`PathPattern`、预建索引等）不进 L2，改用 `VersionedDerivedCache`，失效键必须是 `(source, version)` 二元组而非版本号本身。
 6. 详细契约与迁移记录以 [specs/current/framework/layered-cache/](./specs/current/framework/layered-cache/) 为准。
+
+# Spring Bean 依赖注入规范
+
+新增或修改 Bean 依赖时，使用 `.agents/skills/spring-constructor-injection` skill。默认使用 `private final` 字段及 `@RequiredArgsConstructor` 构造注入；不新增自有字段或 Setter 注入。唯一构造器不加 `@Autowired`。
+
+限定 Bean、延迟依赖、父类构造及必要初始化须保留语义；Lombok 无法可靠表达时允许明确说明原因的显式构造器。不把必需依赖改成可选，不使用强制无参构造器或服务定位器规避注入。`@Bean` 参数、测试框架与第三方内部注入不纳入此门禁。仅清理当前任务范围，不自动扩展为全仓库重构。

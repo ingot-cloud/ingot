@@ -2,7 +2,7 @@
 #
 # 绑定类（唯一）：com.ingot.framework.security.recording.config.SecurityEventProperties
 # L3（enabled / target / source-module / categories / retention）配在各 in-service-*.yml。
-# PMS / Member / Security 的 delivery / mysql 配在共享 in-security-policy.yml。
+# IAM / Member / Security 的 delivery / mysql 配在共享 in-security-policy.yml。
 # Auth / Gateway 不 import 该共享文件，短配置 + Java 默认值即可。
 # 落点地图：specs/current/security/config-governance/SPEC.md
 #
@@ -10,7 +10,7 @@
 # Gradle 前置依赖（target=local 时必需）：
 #   implementation project(ingot.framework_security_event_store_mysql)
 # account-adapter 已 transitively 引入 recording，但业务服务须显式依赖 store-mysql 以确保
-# SecurityEventStoreMapper 与 MySqlSecurityEventStore 自动装配（PMS/Member/Security 中心）。
+# SecurityEventStoreMapper 与 MySqlSecurityEventStore 自动装配（IAM/Member/Security 中心）。
 # target=center 时（Gateway）须依赖 ingot.framework_security_event_transport_feign。
 #
 # 优先级说明（无需在此文件配置，由 DefaultPriorityClassifier 决定）：
@@ -19,8 +19,8 @@
 # 可通过 priority-overrides 按 eventType 覆盖内置默认表。
 #
 # =============================================================================
-# 场景 A：PMS / Member（业务库本地 canonical security_event）
-# 用于：in-service-pms.yml、in-service-member.yml
+# 场景 A：IAM / Member（业务库本地 canonical security_event）
+# 用于：in-service-iam.yml、in-service-member.yml
 # =============================================================================
 
 ingot:
@@ -44,8 +44,8 @@ ingot:
       shadow-targets: []
 
       # 上报方模块标识，写入 security_event.source_module。
-      # PMS 填 PMS，Member 填 MEMBER。
-      source-module: PMS
+      # IAM 填 IAM，Member 填 MEMBER。
+      source-module: IAM
 
       # 按事件大类过滤是否上报（enabled=true 时生效）；false 则该类别事件在 Publisher 层被丢弃。
       categories:
@@ -55,7 +55,7 @@ ingot:
         account: true
         # CREDENTIAL：改密/重置/强制改密等凭证类事件
         credential: true
-        # ACCESS：网关封禁/限流违规等访问防护类；PMS/Member 通常不产生，可保持 true
+        # ACCESS：网关封禁/限流违规等访问防护类；IAM/Member 通常不产生，可保持 true
         access: true
 
       # 投递层：BEST_EFFORT 走 memory，DURABLE 走 spool（两条独立管道，非溢出关系）。
@@ -73,7 +73,7 @@ ingot:
 
         # DURABLE 本地 file spool；后台线程 security-recording-durable 持续 claim → 投递 → ack/nack 重试。
         spool:
-          # spool 父目录。运行时实际路径为 {directory}/{spring.application.name}（如 .../spool/in-service-pms）。
+          # spool 父目录。运行时实际路径为 {directory}/{spring.application.name}（如 .../spool/in-service-iam）。
           directory: ./logs/security-recording/spool
           # spool 目录总磁盘配额（如 1GB、512MB）。
           max-bytes: 1GB

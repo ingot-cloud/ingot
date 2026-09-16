@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * UserAccountPort 空实现
  * <p>
  * 当不需要用户账号管理时，使用此空实现作为默认值。
- * 各业务服务（PMS/Member）应提供自己的实现来替换此类。
+ * 各业务服务（IAM/Member）应提供自己的实现来替换此类。
  * </p>
  *
  * @author jymot

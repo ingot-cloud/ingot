@@ -2,7 +2,7 @@
 
 本目录包含针对 **8C16G 服务器、1000 并发用户、微服务多实例共存场景** 优化的配置文件示例。
 
-> ⚠️ **重要提示**：配置已针对**单机运行多个微服务**（Gateway + Auth + PMS + Member 等）的场景进行优化，避免资源争抢。
+> ⚠️ **重要提示**：配置已针对**单机运行多个微服务**（Gateway + Auth + IAM + Member 等）的场景进行优化，避免资源争抢。
 
 ## 📁 文件列表
 
@@ -56,7 +56,7 @@ spring:
 | remove-abandoned-timeout | 180s | 60s | 更快检测连接泄漏 |
 | pool-prepared-statements | 未设置 | true | 启用 PSCache 提升性能 |
 
-**⚠️ 连接数说明**：假设单机运行 4 个服务（Gateway/Auth/PMS/Member），每服务 50 个连接，总计 200 个连接，需确保 MySQL `max_connections ≥ 300`（预留余量）。
+**⚠️ 连接数说明**：假设单机运行 4 个服务（Gateway/Auth/IAM/Member），每服务 50 个连接，总计 200 个连接，需确保 MySQL `max_connections ≥ 300`（预留余量）。
 
 ### 网关限流配置对比
 
@@ -83,7 +83,7 @@ spring:
 
 | 服务组合 | 总 QPS | CPU | 内存 |
 |---------|--------|-----|------|
-| Gateway+Auth+PMS+Member | 400-600 | 70% | 75% |
+| Gateway+Auth+IAM+Member | 400-600 | 70% | 75% |
 
 ⚠️ **注意**：总 QPS 受限于最慢的服务（通常是 Auth 认证服务）。
 
@@ -98,8 +98,8 @@ spring:
 
 **部署架构**：
 ```
-服务器 1：Gateway + Auth + PMS + Member
-服务器 2：Gateway + Auth + PMS + Member
+服务器 1：Gateway + Auth + IAM + Member
+服务器 2：Gateway + Auth + IAM + Member
 数据库：独立部署（推荐）或与应用同机
 负载均衡：Nginx 或硬件 LB
 ```
@@ -114,7 +114,7 @@ spring:
 |------|-----------|----------|----------|
 | Gateway | 2G | 2.5G | 2.0 核 |
 | Auth | 2G | 2.5G | 2.0 核 |
-| PMS | 2G | 2.5G | 1.5 核 |
+| IAM | 2G | 2.5G | 1.5 核 |
 | Member | 2G | 2.5G | 1.5 核 |
 | MySQL | - | 1G | 1.0 核 |
 | Redis | - | 512M | 0.5 核 |
@@ -131,7 +131,7 @@ SET GLOBAL max_connections = 500;
 -- 连接数分配
 Gateway: 0 (不直连数据库)
 Auth:    50
-PMS:     50
+IAM:     50
 Member:  50
 其他:    50
 ---------
@@ -164,7 +164,7 @@ cp application-prod-optimized.yml application-prod.yml
 
 ```bash
 # 使用优化版本的 Dockerfile
-cd ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/
+cd ingot-service/ingot-iam/ingot-iam-provider/src/main/docker/prod/
 cp Dockerfile Dockerfile.backup
 cp Dockerfile.optimized Dockerfile
 ```
@@ -173,24 +173,24 @@ cp Dockerfile.optimized Dockerfile
 
 ```bash
 # 构建镜像
-./gradlew :ingot-service:ingot-pms:ingot-pms-provider:build
-docker build -t ingot-pms:optimized .
+./gradlew :ingot-service:ingot-iam:ingot-iam-provider:build
+docker build -t ingot-iam:optimized .
 
 # 部署
 docker-compose up -d
 # 或
-docker run -d --name ingot-pms \
+docker run -d --name ingot-iam \
   -p 5200:5200 \
   -v /data/ingot-data:/ingot-data \
   -v /data/logs:/app/logs \
-  ingot-pms:optimized
+  ingot-iam:optimized
 ```
 
 ### 步骤 5：验证配置
 
 ```bash
 # 1. 检查应用是否启动成功
-docker logs -f ingot-pms
+docker logs -f ingot-iam
 
 # 2. 检查健康状态
 curl http://localhost:5200/actuator/health
@@ -237,7 +237,7 @@ wrk -t8 -c100 -d30s http://localhost:5200/your-api
 ```yaml
 # prometheus.yml
 scrape_configs:
-  - job_name: 'ingot-pms'
+  - job_name: 'ingot-iam'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['localhost:5200']
@@ -253,7 +253,7 @@ scrape_configs:
 
 ```bash
 # 运行诊断脚本
-./bin/troubleshoot.sh ingot-pms
+./bin/troubleshoot.sh ingot-iam
 
 # 查看诊断报告
 cat troubleshoot_*/REPORT.md
@@ -270,7 +270,7 @@ cat troubleshoot_*/REPORT.md
 ```bash
 export MYSQL_HOST=your-mysql-host
 export MYSQL_PORT=3306
-export MYSQL_DATABASE=ingot_pms
+export MYSQL_DATABASE=ingot_iam
 export MYSQL_USERNAME=your-username
 export MYSQL_PASSWORD=your-password
 export REDIS_HOST=your-redis-host
@@ -281,11 +281,11 @@ export REDIS_PASSWORD=your-redis-password
 
 ```yaml
 services:
-  ingot-pms:
+  ingot-iam:
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
-      - MYSQL_DATABASE=ingot_pms
+      - MYSQL_DATABASE=ingot_iam
       - MYSQL_USERNAME=root
       - MYSQL_PASSWORD=root
       - REDIS_HOST=redis
@@ -334,7 +334,7 @@ redis-cli CONFIG GET maxmemory
 
 - [故障排查指南](../troubleshooting/TROUBLESHOOTING-SERVICE-HANG.md)
 - **[微服务资源规划指南](../performance/MICROSERVICES-RESOURCE-PLANNING.md)** ⭐ 重点阅读
-- [优化后的 Dockerfile](../../ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile)
+- [优化后的 Dockerfile](../../ingot-service/ingot-iam/ingot-iam-provider/src/main/docker/prod/Dockerfile)
 - [诊断脚本](../../bin/troubleshoot.sh)
 
 ## 📞 支持

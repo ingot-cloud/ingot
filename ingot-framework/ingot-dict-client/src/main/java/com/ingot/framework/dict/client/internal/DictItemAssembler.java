@@ -3,18 +3,18 @@ package com.ingot.framework.dict.client.internal;
 import java.util.List;
 import java.util.Objects;
 
-import com.ingot.cloud.pms.api.model.domain.PlatformDict;
-import com.ingot.cloud.pms.api.model.dto.dict.DictQueryDTO;
-import com.ingot.cloud.pms.api.model.enums.DictScopeEnum;
-import com.ingot.cloud.pms.api.model.enums.DictTypeEnum;
-import com.ingot.cloud.pms.api.model.vo.dict.DictItemVO;
+import com.ingot.cloud.iam.api.model.domain.PlatformDict;
+import com.ingot.cloud.iam.api.model.dto.dict.DictQueryDTO;
+import com.ingot.cloud.iam.api.model.enums.DictScopeEnum;
+import com.ingot.cloud.iam.api.model.enums.DictTypeEnum;
+import com.ingot.cloud.iam.api.model.vo.dict.DictItemVO;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.dict.client.model.DictItem;
 import com.ingot.framework.dict.client.model.DictQuery;
 import com.ingot.framework.dict.client.model.DictScope;
 
 /**
- * PMS DTO/VO/Domain 与字典客户端稳定模型之间的装配器。
+ * IAM DTO/VO/Domain 与字典客户端稳定模型之间的装配器。
  *
  * @author jy
  * @since 2026/4/25

@@ -76,7 +76,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.ingot.pms.mapper" level="DEBUG">
+    <logger name="com.ingot.iam.mapper" level="DEBUG">
         <appender-ref ref="MyBatisStatistics"/>
     </logger>
 

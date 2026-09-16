@@ -1,0 +1,18 @@
+{
+  "expectedVersion": "3",
+  "definition": {
+    "grants": [
+      {
+        "actionId": "member-read",
+        "scopes": [
+          {
+            "kind": "ALL"
+          }
+        ]
+      }
+    ],
+    "deltas": [],
+    "parameterDefinitions": [],
+    "metadataOverrides": null
+  }
+}

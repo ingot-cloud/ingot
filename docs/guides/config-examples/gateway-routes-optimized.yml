@@ -13,10 +13,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: ingot-service-pms
-          uri: lb://ingot-service-pms
+        - id: ingot-service-iam
+          uri: lb://ingot-service-iam
           predicates:
-            - Path=/pms/**
+            - Path=/iam/**
           filters:
             # ========== 路径重写 ==========
             - StripPrefix=1
@@ -36,8 +36,8 @@ spring:
             # ========== 熔断配置 ==========
             - name: CircuitBreaker
               args:
-                name: pmsFallback
-                fallbackUri: forward:/fallback/pms
+                name: iamFallback
+                fallbackUri: forward:/fallback/iam
                 # 滑动窗口类型（COUNT_BASED 或 TIME_BASED）
                 slidingWindowType: TIME_BASED
                 # 滑动窗口大小（秒）
@@ -162,7 +162,7 @@ resilience4j:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
     instances:
-      pmsFallback:
+      iamFallback:
         base-config: default
   
   # ========== 限流配置 ==========
@@ -176,7 +176,7 @@ resilience4j:
         # 超时等待时间
         timeout-duration: 5s
     instances:
-      pmsRateLimiter:
+      iamRateLimiter:
         base-config: default
   
   # ========== 超时配置 ==========
@@ -188,7 +188,7 @@ resilience4j:
         # 是否取消正在运行的 Future
         cancel-running-future: true
     instances:
-      pmsTimeout:
+      iamTimeout:
         base-config: default
 
 # ========== 监控配置 ==========

@@ -1,6 +1,6 @@
 # Java 服务假死问题排查指南
 
-> 适用于 8C16G 服务器环境，基于 ingot-pms 服务配置
+> 适用于 8C16G 服务器环境，基于 ingot-iam 服务配置
 
 ## 目录
 
@@ -35,23 +35,23 @@
 
 ```bash
 # 查看容器是否运行
-docker ps -a | grep ingot-pms
+docker ps -a | grep ingot-iam
 
 # 查看容器资源使用情况
-docker stats ingot-pms --no-stream
+docker stats ingot-iam --no-stream
 
 # 查看容器日志（最后1000行）
-docker logs --tail 1000 ingot-pms
+docker logs --tail 1000 ingot-iam
 
 # 实时查看日志
-docker logs -f ingot-pms
+docker logs -f ingot-iam
 ```
 
 #### 检查进程状态
 
 ```bash
 # 进入容器
-docker exec -it ingot-pms sh
+docker exec -it ingot-iam sh
 
 # 查看 Java 进程
 ps aux | grep java
@@ -66,7 +66,7 @@ top -p $(pgrep java)
 
 ```bash
 # 进入容器
-docker exec -it ingot-pms sh
+docker exec -it ingot-iam sh
 
 # 找到 Java 进程 PID
 PID=$(pgrep java)
@@ -79,7 +79,7 @@ sleep 3
 jstack $PID > /app/logs/jstack_3.log
 
 # 复制到宿主机分析
-docker cp ingot-pms:/app/logs/jstack_1.log ./
+docker cp ingot-iam:/app/logs/jstack_1.log ./
 ```
 
 **重点关注：**
@@ -111,7 +111,7 @@ jmap -histo:live $PID | head -n 20
 
 # 如果怀疑内存泄漏，导出堆转储（会暂停应用）
 jmap -dump:live,format=b,file=/app/logs/heapdump.hprof $PID
-docker cp ingot-pms:/app/logs/heapdump.hprof ./
+docker cp ingot-iam:/app/logs/heapdump.hprof ./
 ```
 
 **内存分析工具：**
@@ -189,19 +189,19 @@ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 
 ```bash
 # 查找异常
-docker logs ingot-pms 2>&1 | grep -i "exception\|error" | tail -n 100
+docker logs ingot-iam 2>&1 | grep -i "exception\|error" | tail -n 100
 
 # 查找超时
-docker logs ingot-pms 2>&1 | grep -i "timeout" | tail -n 50
+docker logs ingot-iam 2>&1 | grep -i "timeout" | tail -n 50
 
 # 查找数据库相关问题
-docker logs ingot-pms 2>&1 | grep -i "connection\|jdbc\|sql" | tail -n 50
+docker logs ingot-iam 2>&1 | grep -i "connection\|jdbc\|sql" | tail -n 50
 
 # 查找 OOM
-docker logs ingot-pms 2>&1 | grep -i "OutOfMemoryError"
+docker logs ingot-iam 2>&1 | grep -i "OutOfMemoryError"
 
 # 统计错误类型
-docker logs ingot-pms 2>&1 | grep "Exception" | awk -F: '{print $NF}' | sort | uniq -c | sort -rn
+docker logs ingot-iam 2>&1 | grep "Exception" | awk -F: '{print $NF}' | sort | uniq -c | sort -rn
 ```
 
 ---
@@ -673,10 +673,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: ingot-service-pms
-          uri: lb://ingot-service-pms
+        - id: ingot-service-iam
+          uri: lb://ingot-service-iam
           predicates:
-            - Path=/pms/**
+            - Path=/iam/**
           filters:
             - StripPrefix=1
             # ========== 限流配置 ==========
@@ -693,8 +693,8 @@ spring:
             # ========== 熔断配置 ==========
             - name: CircuitBreaker
               args:
-                name: pmsFallback
-                fallbackUri: forward:/fallback/pms
+                name: iamFallback
+                fallbackUri: forward:/fallback/iam
             
             # ========== 重试配置 ==========
             - name: Retry
@@ -934,7 +934,7 @@ logging:
     root: INFO
     com.ingot: DEBUG
     # SQL 日志
-    com.ingot.pms.mapper: DEBUG
+    com.ingot.iam.mapper: DEBUG
     # 慢 SQL
     druid.sql.Statement: DEBUG
   
@@ -1048,11 +1048,11 @@ HEALTHCHECK --interval=30s \
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ingot-pms
+  name: ingot-iam
 spec:
   containers:
-  - name: ingot-pms
-    image: ingot-pms:latest
+  - name: ingot-iam
+    image: ingot-iam:latest
     
     # 存活探针：容器是否运行
     livenessProbe:
@@ -1095,41 +1095,41 @@ spec:
 
 ```bash
 # 优雅重启（推荐）
-docker restart ingot-pms
+docker restart ingot-iam
 
 # 强制重启（如果优雅重启失败）
-docker kill ingot-pms
-docker start ingot-pms
+docker kill ingot-iam
+docker start ingot-iam
 ```
 
 #### 方案 2：回滚到上一个版本
 
 ```bash
 # 拉取上一个稳定版本
-docker pull your-registry/ingot-pms:stable
+docker pull your-registry/ingot-iam:stable
 
 # 停止当前容器
-docker stop ingot-pms
+docker stop ingot-iam
 
 # 启动稳定版本
-docker run -d --name ingot-pms \
+docker run -d --name ingot-iam \
   --restart=always \
   -p 5200:5200 \
   -v /data/ingot-data:/ingot-data \
   -v /data/logs:/app/logs \
-  your-registry/ingot-pms:stable
+  your-registry/ingot-iam:stable
 ```
 
 #### 方案 3：临时扩容
 
 ```bash
 # 启动第二个实例（不同端口）
-docker run -d --name ingot-pms-2 \
+docker run -d --name ingot-iam-2 \
   --restart=always \
   -p 5201:5200 \
   -v /data/ingot-data:/ingot-data \
   -v /data/logs-2:/app/logs \
-  your-registry/ingot-pms:latest
+  your-registry/ingot-iam:latest
 
 # 更新网关配置，添加新实例到负载均衡
 ```
@@ -1151,13 +1151,13 @@ docker exec -it mysql mysql -uroot -p -e "SHOW PROCESSLIST;" | grep "Query" | aw
 
 ```bash
 # 1. 立即导出堆转储（如果服务还能响应）
-docker exec -it ingot-pms sh -c 'jmap -dump:live,format=b,file=/app/logs/emergency_heap.hprof $(pgrep java)'
+docker exec -it ingot-iam sh -c 'jmap -dump:live,format=b,file=/app/logs/emergency_heap.hprof $(pgrep java)'
 
 # 2. 增加内存限制（Docker）
-docker update --memory=8g --memory-swap=8g ingot-pms
+docker update --memory=8g --memory-swap=8g ingot-iam
 
 # 3. 重启服务
-docker restart ingot-pms
+docker restart ingot-iam
 
 # 4. 分析堆转储找到内存泄漏根源
 # 使用 Eclipse MAT 或 VisualVM
@@ -1167,14 +1167,14 @@ docker restart ingot-pms
 
 ```bash
 # 1. 找到占用 CPU 的线程
-docker exec -it ingot-pms sh -c 'top -Hp $(pgrep java) -n 1'
+docker exec -it ingot-iam sh -c 'top -Hp $(pgrep java) -n 1'
 
 # 2. 转换线程 ID 为十六进制
 # 假设线程 ID 为 12345
 printf "%x\n" 12345  # 输出：3039
 
 # 3. 导出线程堆栈
-docker exec -it ingot-pms sh -c 'jstack $(pgrep java) | grep -A 30 3039'
+docker exec -it ingot-iam sh -c 'jstack $(pgrep java) | grep -A 30 3039'
 
 # 4. 分析堆栈找到问题代码，修复后发布
 ```
@@ -1290,9 +1290,9 @@ public Result blockHandler(BlockException e) {
 
 ```bash
 # ========== Docker ==========
-docker stats --no-stream ingot-pms
-docker logs --tail 1000 -f ingot-pms
-docker exec -it ingot-pms sh
+docker stats --no-stream ingot-iam
+docker logs --tail 1000 -f ingot-iam
+docker exec -it ingot-iam sh
 
 # ========== JVM 诊断 ==========
 jps -lv                          # 查看 Java 进程

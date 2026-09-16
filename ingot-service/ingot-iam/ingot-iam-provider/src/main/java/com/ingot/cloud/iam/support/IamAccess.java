@@ -33,9 +33,19 @@ public class IamAccess {
      * @return 状态有效的当前成员
      */
     public ActiveIdentity require(AuthorizationDomain domain, IamAction action) {
+        return admit(domain, action).actor();
+    }
+
+    /**
+     * 限定接口管理域、确认 ACTION 并给出治理资格来源。
+     *
+     * @param domain 服务器声明的管理域
+     * @param action 本接口精确 ACTION
+     * @return 当前成员与准入结论
+     */
+    public IamAdmission admit(AuthorizationDomain domain, IamAction action) {
         ActiveIdentity actor = current.requireDomain(domain);
-        authorizer.require(actor.context(), action);
-        return actor;
+        return new IamAdmission(actor, authorizer.admit(actor.context(), action).governed());
     }
 
     /**

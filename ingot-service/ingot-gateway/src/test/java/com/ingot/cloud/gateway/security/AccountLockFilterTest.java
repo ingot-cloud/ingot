@@ -47,7 +47,7 @@ class AccountLockFilterTest {
     @Test
     void identityWithUserType_lockHit_returns403() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user").build());
+                MockServerHttpRequest.get("/iam/user").build());
         exchange.getAttributes().put(GatewaySecurityConstants.ATTR_CLIENT_IDENTITY,
                 ClientIdentity.builder().userId("9").userType("0").build());
         when(redis.hasKey(RedisKeyConstants.AccountLock.uidKey("0", 9L))).thenReturn(Mono.just(true));
@@ -64,7 +64,7 @@ class AccountLockFilterTest {
         String payload = Base64.getUrlEncoder().withoutPadding()
                 .encodeToString("{\"i\":9,\"sid\":\"session-1\"}".getBytes(StandardCharsets.UTF_8));
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
+                MockServerHttpRequest.get("/iam/user")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
                         .build());
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
@@ -79,7 +79,7 @@ class AccountLockFilterTest {
     @Test
     void attributeUserType_lockMiss_passesThrough() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user").build());
+                MockServerHttpRequest.get("/iam/user").build());
         exchange.getAttributes().put(AuthContextAttributes.USER_ID, "9");
         exchange.getAttributes().put(AuthContextAttributes.USER_TYPE, "0");
         when(redis.hasKey(RedisKeyConstants.AccountLock.uidKey("0", 9L))).thenReturn(Mono.just(false));

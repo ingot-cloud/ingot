@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <p>账号锁定策略 Inner API，供 PMS / Member Feign 拉取全量快照。</p>
+ * <p>账号锁定策略 Inner API，供 IAM / Member Feign 拉取全量快照。</p>
  *
  * @author jy
  * @since 1.0.0

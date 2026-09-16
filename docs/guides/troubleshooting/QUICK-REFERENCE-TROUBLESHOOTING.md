@@ -4,7 +4,7 @@
 
 ## ⚠️ 重要提示：微服务多实例场景
 
-本参考基于 **8C16G 服务器运行多个微服务**（Gateway + Auth + PMS + Member 等）的场景。配置已针对资源共享进行优化：
+本参考基于 **8C16G 服务器运行多个微服务**（Gateway + Auth + IAM + Member 等）的场景。配置已针对资源共享进行优化：
 - 单服务 JVM：**2G**（不是 6G）
 - 单服务连接池：**50**（不是 100）
 - 单服务线程池：**120**（不是 256）
@@ -15,7 +15,7 @@
 
 ```bash
 # 1. 运行自动诊断脚本（推荐）
-./bin/troubleshoot.sh ingot-pms
+./bin/troubleshoot.sh ingot-iam
 
 # 2. 查看诊断报告
 cat troubleshoot_*/REPORT.md
@@ -28,19 +28,19 @@ cat troubleshoot_*/REPORT.md
 ### 服务完全假死
 ```bash
 # 立即重启
-docker restart ingot-pms
+docker restart ingot-iam
 
 # 如果重启失败，强制重启
-docker kill ingot-pms && docker start ingot-pms
+docker kill ingot-iam && docker start ingot-iam
 ```
 
 ### 服务响应慢但未死
 ```bash
 # 查看实时资源使用
-docker stats ingot-pms
+docker stats ingot-iam
 
 # 查看实时日志
-docker logs -f --tail 100 ingot-pms
+docker logs -f --tail 100 ingot-iam
 ```
 
 ---
@@ -50,13 +50,13 @@ docker logs -f --tail 100 ingot-pms
 ### 第 1 步：看日志（2分钟）
 ```bash
 # 查找异常
-docker logs --tail 1000 ingot-pms | grep -i "exception\|error" | tail -n 20
+docker logs --tail 1000 ingot-iam | grep -i "exception\|error" | tail -n 20
 
 # 查找 OOM
-docker logs --tail 1000 ingot-pms | grep -i "OutOfMemoryError"
+docker logs --tail 1000 ingot-iam | grep -i "OutOfMemoryError"
 
 # 查找超时
-docker logs --tail 1000 ingot-pms | grep -i "timeout" | tail -n 10
+docker logs --tail 1000 ingot-iam | grep -i "timeout" | tail -n 10
 ```
 
 **常见关键字**：
@@ -68,7 +68,7 @@ docker logs --tail 1000 ingot-pms | grep -i "timeout" | tail -n 10
 ### 第 2 步：看线程（3分钟）
 ```bash
 # 进入容器
-docker exec -it ingot-pms sh
+docker exec -it ingot-iam sh
 
 # 导出线程堆栈
 PID=$(pgrep java)
@@ -160,8 +160,8 @@ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 日志中出现：java.lang.OutOfMemoryError
 
 # 快速处理
-1. docker restart ingot-pms
-2. 临时增加内存：docker update --memory=8g ingot-pms
+1. docker restart ingot-iam
+2. 临时增加内存：docker update --memory=8g ingot-iam
 3. 分析堆转储找根因
 
 # 长期方案
@@ -368,7 +368,7 @@ QPS = 1000 ÷ (5 + 0.2) ≈ 192
 - 整机能力（4服务）：400-600 QPS
 
 1000 用户建议：
-- 2 台应用服务器（每台运行 Gateway+Auth+PMS+Member）
+- 2 台应用服务器（每台运行 Gateway+Auth+IAM+Member）
 - 1 台数据库服务器（MySQL+Redis）
 - 负载均衡（Nginx）
 ```
@@ -383,7 +383,7 @@ QPS = 1000 ÷ (5 + 0.2) ≈ 192
 - **配置对比**：`docs/guides/performance/CONFIGURATION-COMPARISON.md` ⭐
 - **配置示例**：`docs/guides/config-examples/`
 - **诊断脚本**：`bin/troubleshoot.sh`
-- **优化 Dockerfile**：`ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile`
+- **优化 Dockerfile**：`ingot-service/ingot-iam/ingot-iam-provider/src/main/docker/prod/Dockerfile`
 
 ---
 

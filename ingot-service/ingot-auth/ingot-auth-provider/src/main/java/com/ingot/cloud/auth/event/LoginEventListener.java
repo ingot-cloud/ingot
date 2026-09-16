@@ -1,7 +1,7 @@
 package com.ingot.cloud.auth.event;
 
 import com.ingot.cloud.member.api.rpc.RemoteMemberLoginRecordService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsLoginRecordService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamLoginRecordService;
 import com.ingot.framework.commons.model.common.AuthFailureDTO;
 import com.ingot.framework.commons.model.common.AuthSuccessDTO;
 import com.ingot.framework.commons.model.event.LoginSuccessEvent;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  * <p>
  * 异步处理登录成功/失败事件，按用户类型分发到对应服务更新登录状态：
  * <ul>
- *   <li>ADMIN（B 端）→ PMS：{@link RemotePmsLoginRecordService}</li>
+ *   <li>ADMIN（B 端）→ IAM：{@link RemoteIamLoginRecordService}</li>
  *   <li>APP（C 端）→ Member：{@link RemoteMemberLoginRecordService}</li>
  * </ul>
  * 成功更新 last_login_at/ip 并重置失败计数；失败累加失败计数并触发自动锁定策略。
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LoginEventListener {
 
-    private final RemotePmsLoginRecordService pmsLoginRecordService;
+    private final RemoteIamLoginRecordService iamLoginRecordService;
     private final RemoteMemberLoginRecordService memberLoginRecordService;
 
     @Async
@@ -47,15 +47,15 @@ public class LoginEventListener {
         String userType = payload.getUserType();
         try {
             if (UserTypeEnum.ADMIN.getValue().equals(userType)) {
-                com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO dto =
-                        new com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO();
+                com.ingot.cloud.iam.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.iam.api.model.dto.auth.LoginRecordDTO();
                 dto.setSuccess(true);
                 dto.setUserId(payload.getUserId());
                 dto.setUsername(payload.getUsername());
                 dto.setClientIp(payload.getIp());
                 dto.setUserType(userType);
                 dto.setLoginAt(payload.getTime());
-                pmsLoginRecordService.record(dto);
+                iamLoginRecordService.record(dto);
             } else if (UserTypeEnum.APP.getValue().equals(userType)) {
                 com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO dto =
                         new com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO();
@@ -87,8 +87,8 @@ public class LoginEventListener {
         Long tenantId = parseTenantId(payload.getTenantId());
         try {
             if (UserTypeEnum.ADMIN.getValue().equals(userType)) {
-                com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO dto =
-                        new com.ingot.cloud.pms.api.model.dto.auth.LoginRecordDTO();
+                com.ingot.cloud.iam.api.model.dto.auth.LoginRecordDTO dto =
+                        new com.ingot.cloud.iam.api.model.dto.auth.LoginRecordDTO();
                 dto.setSuccess(false);
                 dto.setUsername(payload.getUsername());
                 dto.setClientIp(payload.getIp());
@@ -96,7 +96,7 @@ public class LoginEventListener {
                 dto.setLoginAt(payload.getTime());
                 dto.setFailureReason(payload.getErrorCode());
                 dto.setTenantId(tenantId);
-                pmsLoginRecordService.record(dto);
+                iamLoginRecordService.record(dto);
             } else if (UserTypeEnum.APP.getValue().equals(userType)) {
                 com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO dto =
                         new com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO();

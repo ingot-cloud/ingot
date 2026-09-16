@@ -54,6 +54,12 @@ public class OnlineToken implements Serializable {
 	 */
 	private Long tenantId;
 
+    /**
+     * IAM 认证后固定的域、账号及成员身份；刷新时保留，切换身份须重新认证。
+     * 非 IAM 会话为空，旧会话不得据此补造平台或租户成员。
+     */
+    private com.ingot.framework.commons.model.iam.AuthorizationContext authorizationContext;
+
 	/**
 	 * 用户名
 	 */

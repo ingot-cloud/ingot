@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.cloud.iam.catalog.JdbcEntitlementService;
+import com.ingot.cloud.iam.catalog.EntitlementService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.EntitlementPreviewResult;
 import com.ingot.framework.commons.model.iam.EntitlementRecord;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/platform/tenants/{tenantId}/entitlements")
 @RequiredArgsConstructor
 public class PlatformEntitlementAPI implements RShortcuts {
-    private final JdbcEntitlementService entitlements;
+    private final EntitlementService entitlements;
 
     /**
      * 读取组织开通清单。

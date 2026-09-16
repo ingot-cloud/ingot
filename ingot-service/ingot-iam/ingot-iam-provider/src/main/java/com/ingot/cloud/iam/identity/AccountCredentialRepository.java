@@ -11,13 +11,14 @@ import com.ingot.cloud.iam.api.model.dto.user.InnerUserDTO;
 import com.ingot.framework.commons.model.common.TenantMainDTO;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.security.account.domain.model.LockState;
+import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 /**
  * <p>通过 MyBatis Plus 与 MPJ 查询账号凭证和当前域关系，不复用旧用户实体。</p>
- * <p>保留既有登录优先级与锁定查询行为；认证是否回退由上层编排决定。</p>
+ * <p>保留既有登录优先级；锁定事实由安全框架 {@link LockStatePort} 提供，本类不持久化锁定态。</p>
  * @author jy
  * @since 1.0.0
  */
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class AccountCredentialRepository {
     private final IamAccountMapper accounts;
-    private final IamAccountLockStateMapper locks;
+    private final LockStatePort lockStates;
     private final IamTenantMemberMapper members;
     private final IamMemberDepartmentMapper departments;
 
@@ -77,8 +78,26 @@ public class AccountCredentialRepository {
                 .stream().map(row -> row.getDepartmentId().longValueExact()).toList();
     }
 
-    /** 转为既有内部账号 RPC 视图，不返回凭证哈希。 */
-    public InnerUserDTO toInnerUser(AccountCredentials account) {
+    /**
+     * 读取账号当前锁定事实，直接复用安全框架端口。
+     *
+     * @param accountId 全局账号 ID
+     * @return 是否锁定；无锁定记录视为未锁定
+     * @throws org.springframework.dao.DataAccessException 锁定态不可读时向上传播，不得降级为未锁定
+     */
+    public boolean locked(long accountId) {
+        return lockStates.findByUser(accountId, UserTypeEnum.ADMIN)
+                .map(LockState::isLocked).orElse(false);
+    }
+
+    /**
+     * 转为既有内部账号 RPC 视图，不返回凭证哈希。
+     *
+     * @param account 账号凭证事实
+     * @param locked 由 {@link #locked(long)} 解析的锁定事实
+     * @return 内部账号视图
+     */
+    public InnerUserDTO toInnerUser(AccountCredentials account, boolean locked) {
         InnerUserDTO dto = new InnerUserDTO();
         dto.setId(account.id());
         dto.setUsername(account.username());
@@ -86,29 +105,16 @@ public class AccountCredentialRepository {
         dto.setPhone(account.phone());
         dto.setEmail(account.email());
         dto.setEnabled(account.enabled());
-        dto.setLocked(account.locked());
+        dto.setLocked(locked);
         return dto;
     }
 
     private AccountCredentials map(IamAccountEntity row) {
-        long id = row.getId().longValueExact();
-        return new AccountCredentials(id, row.getUsername(), row.getPasswordHash(), row.getPhone(), row.getEmail(),
-                Boolean.TRUE.equals(row.getEnabled()), Boolean.TRUE.equals(row.getMustChangePassword()), locked(id),
+        return new AccountCredentials(row.getId().longValueExact(), row.getUsername(), row.getPasswordHash(),
+                row.getPhone(), row.getEmail(),
+                Boolean.TRUE.equals(row.getEnabled()), Boolean.TRUE.equals(row.getMustChangePassword()),
                 row.getPasswordChangedAt(), row.getLastLoginAt(), row.getVersion().longValueExact(),
                 row.getCreatedAt(), row.getUpdatedAt());
-    }
-
-    private boolean locked(long accountId) {
-        try {
-            return locks.selectList(Wrappers.<IamAccountLockStateEntity>lambdaQuery()
-                    .select(IamAccountLockStateEntity::getLocked)
-                    .eq(IamAccountLockStateEntity::getUserId, accountId)
-                    .eq(IamAccountLockStateEntity::getUserType, UserTypeEnum.ADMIN.getValue()))
-                    .stream().findFirst().map(row -> Boolean.TRUE.equals(row.getLocked())).orElse(false);
-        } catch (DataAccessException exception) {
-            // 保留当前锁定辅助表兼容行为；本次仅迁移持久化，不调整认证回退规则。
-            return false;
-        }
     }
 
     /**
@@ -123,7 +129,6 @@ public class AccountCredentialRepository {
      * @param email 邮箱，可空
      * @param enabled 全局启用
      * @param mustChangePassword 是否必须改密
-     * @param locked 账号锁定，来自辅助锁定表
      * @param passwordChangedAt 最近改密时间
      * @param lastLoginAt 最近登录时间
      * @param version 乐观锁版本
@@ -131,7 +136,7 @@ public class AccountCredentialRepository {
      * @param updatedAt 更新时间
      */
     public record AccountCredentials(long id, String username, String passwordHash, String phone, String email,
-                                     boolean enabled, boolean mustChangePassword, boolean locked,
+                                     boolean enabled, boolean mustChangePassword,
                                      java.time.LocalDateTime passwordChangedAt,
                                      java.time.LocalDateTime lastLoginAt, long version,
                                      java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {

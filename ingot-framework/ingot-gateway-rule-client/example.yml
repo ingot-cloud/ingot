@@ -19,15 +19,15 @@ ingot:
       policy:
         mode: local
         groups:
-          - code: e2e-pms
-            name: PMS 网关路径
+          - code: e2e-iam
+            name: IAM 网关路径
             enabled: true
             pattern-list:
-              - path: /pms/**      # 网关对外路径（Ant 风格）；非下游 /test/**
+              - path: /iam/**      # 网关对外路径（Ant 风格）；非下游 /test/**
                 method: ANY        # 当前 Sentinel 编译忽略 method，保留供扩展
         rules:
-          - code: e2e-pms-ip
-            group-code: e2e-pms  # 引用上方分组；与 pattern-list 二选一
+          - code: e2e-iam-ip
+            group-code: e2e-iam  # 引用上方分组；与 pattern-list 二选一
             dimension: IP        # IP / DEVICE / USER
             qps: 1               # 平均 QPS
             burst: 1             # 突发容量
@@ -78,8 +78,8 @@ ingot:
             enabled: false
         groups:
           - code: e2e-public
-            name: PMS 网关路径
+            name: IAM 网关路径
             enabled: true
             pattern-list:
-              - path: /pms/**
+              - path: /iam/**
                 method: ANY

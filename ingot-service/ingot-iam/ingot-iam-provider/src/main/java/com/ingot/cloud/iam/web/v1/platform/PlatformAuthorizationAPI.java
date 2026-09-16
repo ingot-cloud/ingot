@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.cloud.iam.diagnose.JdbcDiagnoseAuditService;
+import com.ingot.cloud.iam.diagnose.DiagnoseAuditService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuditEntry;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/platform/authorization")
 @RequiredArgsConstructor
 public class PlatformAuthorizationAPI implements RShortcuts {
-    private final JdbcDiagnoseAuditService diagnoses;
+    private final DiagnoseAuditService diagnoses;
 
     /**
      * 对平台成员做只读诊断。

@@ -1,4 +1,4 @@
-# 跨服务安全策略地板。消费者：PMS / Member / Security / BFF。
+# 跨服务安全策略地板。消费者：IAM / Member / Security / BFF。
 # Auth、Gateway 不要 import。
 # 含：replay、credential、account.signal、event.delivery/mysql。
 # 不含：event.target/source-module、account.lockout、网关限流规则。
@@ -78,13 +78,13 @@ ingot:
           # 首次登录是否强制修改密码
           forceChangeOnFirstLogin: true
 
-    # 永久锁 Redis TTL（PMS/Member 写、BFF 读）；必须全局同一份
+    # 永久锁 Redis TTL（IAM/Member 写、BFF 读）；必须全局同一份
     account:
       signal:
         # 永久锁定时 uid/name key 的 TTL（天），默认 30。
         permanent-lock-ttl-days: 30
 
-    # PMS/Member/Security 写本地 canonical / spool 时共用。
+    # IAM/Member/Security 写本地 canonical / spool 时共用。
     # Auth/Gateway 不 import 本文件；BFF import 但不启用 recording。
     event:
       # 投递层：BEST_EFFORT 走 memory，DURABLE 走 spool（两条独立管道，非溢出关系）。

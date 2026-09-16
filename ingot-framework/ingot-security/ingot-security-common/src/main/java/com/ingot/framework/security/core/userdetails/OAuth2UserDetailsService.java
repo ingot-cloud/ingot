@@ -19,10 +19,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
- * <p>Description  : OAuth2扩展UserDetailsService.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2019/7/11.</p>
- * <p>Time         : 4:33 PM.</p>
+ * <p>扩展认证用户加载协议，将内部身份响应转换为保留单一成员上下文的认证用户。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 public interface OAuth2UserDetailsService extends UserDetailsService {
 
@@ -65,7 +65,8 @@ public interface OAuth2UserDetailsService extends UserDetailsService {
                             data.getUsername(), data.getPassword(),
                             enabled, true, credentialsNonExpired, nonLocked, authorities,
                             data.getMeta(),
-                            data.getDeptIds(), data.getTenantDeptIds());
+                            data.getDeptIds(), data.getTenantDeptIds())
+                            .toBuilder().authorizationContext(data.getAuthorizationContext()).build();
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }

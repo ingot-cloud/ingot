@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.delegation.JdbcDelegationService;
+import com.ingot.cloud.iam.delegation.DelegationService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/tenant/delegations")
 @RequiredArgsConstructor
 public class TenantDelegationAPI implements RShortcuts {
-    private final JdbcDelegationService delegations;
+    private final DelegationService delegations;
 
     /**
      * 分页列出租户委派。

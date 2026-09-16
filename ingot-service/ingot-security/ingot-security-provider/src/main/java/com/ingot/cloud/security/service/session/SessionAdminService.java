@@ -9,8 +9,8 @@ import com.ingot.cloud.security.api.model.vo.session.PlatformSessionVO;
  * <p>安全中心会话管理面，向管理员提供在线会话查询与强制下线。</p>
  *
  * <p>会话主数据只在 Auth 侧 Redis，本服务不直连该存储，一律经 Auth Inner RPC 读写；
- * 用户名与租户名不在会话事实里，由本层调 PMS 补全，PMS 不可用时降级为空名称，
- * 保证 PMS 故障时管理员仍能按 sid 下线。</p>
+ * 用户名与租户名不在会话事实里，由本层调 IAM 补全，IAM 不可用时降级为空名称，
+ * 保证 IAM 故障时管理员仍能按 sid 下线。</p>
  *
  * @author jy
  * @since 1.0.0

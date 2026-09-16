@@ -154,7 +154,7 @@ public class AccountSecurityEvent {
     /**
      * 创建账号锁定事件
      *
-     * @param source 来源（手动锁定传 {@link EventSource#PMS}，自动锁定传 {@link EventSource#SYSTEM}）
+     * @param source 来源（手动锁定传 {@link EventSource#IAM}，自动锁定传 {@link EventSource#SYSTEM}）
      */
     public static AccountSecurityEvent accountLocked(Long userId, UserTypeEnum userType,
                                                      String reasonCode, String reasonDetail,
@@ -176,7 +176,7 @@ public class AccountSecurityEvent {
     /**
      * 创建账号解锁事件
      *
-     * @param source 来源（手动解锁传 {@link EventSource#PMS} 等，自动解锁传 {@link EventSource#SYSTEM}）
+     * @param source 来源（手动解锁传 {@link EventSource#IAM} 等，自动解锁传 {@link EventSource#SYSTEM}）
      */
     public static AccountSecurityEvent accountUnlocked(Long userId, UserTypeEnum userType,
                                                        String reason, EventSource source,
@@ -196,7 +196,7 @@ public class AccountSecurityEvent {
     /**
      * 创建账号删除事件
      *
-     * @param source 来源（管理端传 {@link EventSource#PMS}，自助注销传对应来源）
+     * @param source 来源（管理端传 {@link EventSource#IAM}，自助注销传对应来源）
      */
     public static AccountSecurityEvent accountDeleted(Long userId, UserTypeEnum userType,
                                                       EventSource source, Long operatorId,

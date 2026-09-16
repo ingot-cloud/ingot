@@ -7,9 +7,12 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.RoleUtil;
@@ -21,10 +24,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 /**
- * <p>Description  : 自定义User.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2019/6/28.</p>
- * <p>Time         : 12:54 PM.</p>
+ * <p>保存认证用户及单一 IAM 成员身份，供登录、会话持久化和资源服务器恢复使用。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 @Slf4j
 @Getter
@@ -53,7 +56,7 @@ public class InUser extends User implements InUserDetails {
     private final String userType;
     /**
      * 认证上下文元数据（仅登录流程使用，不序列化进 JWT）
-     * <p>key 定义见 {@link InUserMetaKeys}，值由 PMS/Member 在
+     * <p>key 定义见 {@link InUserMetaKeys}，值由 IAM/Member 在
      * {@code UserDetailsResponse.meta} 中填充，后续请求复用 Token 时此字段为 null。</p>
      */
     @Getter(onMethod_ = @JsonIgnore)
@@ -68,6 +71,27 @@ public class InUser extends User implements InUserDetails {
      */
     private final Map<Long, List<Long>> tenantDeptIds;
 
+    /** 经 IAM 校验的单一成员身份；非 IAM 用户为空，不能由请求头替换。 */
+    private final AuthorizationContext authorizationContext;
+
+    /**
+     * 构造不携带 IAM 成员身份的既有用户；不会从账号或租户推断成员身份。
+     */
+    public InUser(Long id, Long tenantId, String clientId, String tokenAuthType, String userType,
+                  String username, String password, boolean enabled, boolean accountNonExpired,
+                  boolean credentialsNonExpired, boolean accountNonLocked,
+                  Collection<? extends GrantedAuthority> authorities, Map<String, Object> meta,
+                  List<Long> deptIds, Map<Long, List<Long>> tenantDeptIds) {
+        this(id, tenantId, clientId, tokenAuthType, userType, username, password, enabled,
+                accountNonExpired, credentialsNonExpired, accountNonLocked, authorities, meta,
+                deptIds, tenantDeptIds, null);
+    }
+
+    /**
+     * 保存已认证的成员身份，并拒绝账号、租户及部门上下文混用。
+     * @param authorizationContext 经身份服务验证的唯一身份，非 IAM 用户可为空
+     * @throws IllegalArgumentException 身份与账号、租户或部门上下文不一致
+     */
     @JsonCreator
     public InUser(Long id,
                   Long tenantId,
@@ -83,7 +107,8 @@ public class InUser extends User implements InUserDetails {
                   Collection<? extends GrantedAuthority> authorities,
                   Map<String, Object> meta,
                   List<Long> deptIds,
-                  Map<Long, List<Long>> tenantDeptIds) {
+                  Map<Long, List<Long>> tenantDeptIds,
+                  AuthorizationContext authorizationContext) {
         super(username, password, enabled,
                 accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
@@ -92,8 +117,18 @@ public class InUser extends User implements InUserDetails {
         this.clientId = clientId;
         this.userType = userType;
         this.meta = meta;
-        this.deptIds = deptIds;
-        this.tenantDeptIds = tenantDeptIds;
+        this.deptIds = authorizationContext != null && deptIds != null ? List.copyOf(deptIds) : deptIds;
+        this.tenantDeptIds = authorizationContext != null && tenantDeptIds != null ? Map.copyOf(tenantDeptIds) : tenantDeptIds;
+        if (authorizationContext != null) {
+            if (id == null || !Objects.equals(id.toString(), authorizationContext.accountId())
+                    || !Objects.equals(tenantId == null ? null : tenantId.toString(), authorizationContext.tenantId())
+                    || (tenantDeptIds != null && !tenantDeptIds.isEmpty())
+                    || (authorizationContext.domain() == AuthorizationDomain.PLATFORM
+                        && deptIds != null && !deptIds.isEmpty())) {
+                throw new IllegalArgumentException("IAM 身份与账号、租户或部门上下文不一致");
+            }
+        }
+        this.authorizationContext = authorizationContext;
     }
 
     /**
@@ -232,6 +267,7 @@ public class InUser extends User implements InUserDetails {
                 authorities, meta, deptIds, tenantDeptIds);
     }
 
+    /** 按指定账号状态和权限构造既有用户，不推断 IAM 成员身份。 */
     public static InUser standard(Long id, Long tenantId, String clientId,
                                   String tokenAuthType, String userType,
                                   String username, String password,
@@ -247,34 +283,40 @@ public class InUser extends User implements InUserDetails {
                 authorities, meta, deptIds, tenantDeptIds);
     }
 
+    /** 创建保留账号、成员身份及认证状态的构建器。 */
     public Builder toBuilder() {
         return new Builder(this);
     }
 
+    /** {@inheritDoc} */
     @JsonIgnore
     @Override
     public String getPassword() {
         return super.getPassword();
     }
 
+    /** {@inheritDoc} */
     @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return super.isAccountNonExpired();
     }
 
+    /** {@inheritDoc} */
     @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return super.isAccountNonLocked();
     }
 
+    /** {@inheritDoc} */
     @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return super.isCredentialsNonExpired();
     }
 
+    /** {@inheritDoc} */
     @JsonIgnore
     @Override
     public boolean isEnabled() {
@@ -295,6 +337,11 @@ public class InUser extends User implements InUserDetails {
                 .toList();
     }
 
+    /**
+     * <p>复制认证用户并更新协议属性，构造时检查 IAM 身份绑定不变式。</p>
+     * @author jy
+     * @since 1.0.0
+     */
     public static class Builder {
         private final String password;
         private final String username;
@@ -312,6 +359,7 @@ public class InUser extends User implements InUserDetails {
         private Map<String, Object> meta;
         private List<Long> deptIds;
         private Map<Long, List<Long>> tenantDeptIds;
+        private AuthorizationContext authorizationContext;
 
         private Builder(InUser user) {
             this.password = user.getPassword();
@@ -330,49 +378,68 @@ public class InUser extends User implements InUserDetails {
             this.meta = user.meta;
             this.deptIds = user.deptIds;
             this.tenantDeptIds = user.tenantDeptIds;
+            this.authorizationContext = user.authorizationContext;
         }
 
+        /** 指定会话租户；IAM 成员上下文不匹配时构造失败。 */
         public Builder tenantId(Long id) {
             this.tenantId = id;
             return this;
         }
 
+        /** 指定本次认证客户端。 */
         public Builder clientId(String id) {
             this.clientId = id;
             return this;
         }
 
+        /** 指定令牌认证类型。 */
         public Builder tokenAuthType(String type) {
             this.tokenAuthType = type;
             return this;
         }
 
+        /** 指定用户体系类型。 */
         public Builder userType(String userType) {
             this.userType = userType;
             return this;
         }
 
+        /** 附带仅用于认证的安全状态提示。 */
         public Builder meta(Map<String, Object> meta) {
             this.meta = meta;
             return this;
         }
 
+        /** 保存当前身份的部门关系，不接受平台成员的租户部门。 */
         public Builder deptIds(List<Long> deptIds) {
             this.deptIds = deptIds;
             return this;
         }
 
+        /** 保存旧预授权流程的部门映射；IAM 身份禁止非空映射。 */
         public Builder tenantDeptIds(Map<Long, List<Long>> tenantDeptIds) {
             this.tenantDeptIds = tenantDeptIds;
             return this;
         }
 
+        /**
+         * 绑定经身份服务校验的成员上下文，构造时再次检查与账号、租户的一致性。
+         * @param context 可信身份；非 IAM 用户可为空
+         * @return 当前构建器
+         */
+        public Builder authorizationContext(AuthorizationContext context) {
+            this.authorizationContext = context;
+            return this;
+        }
+
+        /** 生成用户并验证 IAM 身份与账号、租户、部门的一致性。 */
         public InUser build() {
-            return InUser.standard(this.id, this.tenantId, this.clientId, this.tokenAuthType,
+            return new InUser(this.id, this.tenantId, this.clientId, this.tokenAuthType,
                     this.userType,
                     this.username, this.password,
                     this.enabled, this.accountNonExpired, this.credentialsNonExpired, this.accountNonLocked,
-                    this.authorities, this.meta, this.deptIds, this.tenantDeptIds);
+                    this.authorities, this.meta, this.deptIds, this.tenantDeptIds, this.authorizationContext);
         }
     }
 }

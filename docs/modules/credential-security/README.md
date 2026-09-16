@@ -476,7 +476,7 @@ Copyright © 2026 Ingot Cloud
 Credential Service DB (ingot_credential)
 └── 策略配置、审计日志（集中管理）
 
-Member Service DB / PMS Service DB
+Member Service DB / IAM Service DB
 └── password_history, password_expiration（本地管理）
 ```
 
@@ -563,7 +563,7 @@ CREATE TABLE password_expiration (
 **数据库脚本位置：**
 - `databases/ingot_security.sql` - Credential Service 初始化
 - `databases/migrations/001_add_password_history_member.sql` - Member Service
-- `databases/migrations/add_password_history.sql` - PMS Service
+- `databases/migrations/add_password_history.sql` - IAM Service
 
 ---
 
@@ -578,7 +578,7 @@ mysql -u root -p < databases/ingot_security.sql
 # Member Service
 mysql -u root -p < databases/migrations/001_add_password_history_member.sql
 
-# PMS Service
+# IAM Service
 mysql -u root -p < databases/migrations/add_password_history.sql
 ```
 
@@ -616,7 +616,7 @@ docker run -d \
 | 项目 | 之前 | 现在（使用 ingot-security-credential-data） | 减少 |
 |-----|------|-------------------------------------------|------|
 | Member Service | ~400行代码 | 1行依赖 | **99.75%** |
-| PMS Service | ~400行代码 | 1行依赖 | **99.75%** |
+| IAM Service | ~400行代码 | 1行依赖 | **99.75%** |
 
 ### 集成时间对比
 

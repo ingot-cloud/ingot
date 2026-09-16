@@ -1,0 +1,21 @@
+{
+  "subject": {
+    "type": "MEMBER",
+    "id": "member-a"
+  },
+  "roleRevisionRef": {
+    "kind": "SHARED",
+    "id": "shared-revision"
+  },
+  "scopeBindings": {
+    "managedDepartments": {
+      "kind": "DEPARTMENTS",
+      "ids": [
+        "department-rd"
+      ]
+    }
+  },
+  "validFrom": "2026-09-13T00:00:00Z",
+  "validUntil": "2026-09-14T00:00:00Z",
+  "delegationGrantId": "delegation-a"
+}

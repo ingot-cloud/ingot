@@ -3,8 +3,8 @@ package com.ingot.framework.data.mybatis.scope.config;
 import java.util.List;
 import java.util.Set;
 
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationResourceRuleDTO;
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationResourceRuleDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
 import com.ingot.framework.data.mybatis.common.model.DataScopeTypeEnum;
 import com.ingot.framework.data.mybatis.scope.context.DataScopeContextHolder;
 import org.junit.jupiter.api.Test;

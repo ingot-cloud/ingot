@@ -45,20 +45,74 @@ public final class ScopeBinder {
     }
 
     /**
-     * 将授权条款与委派上限求交；上限不含该操作时返回 {@code null} 表示整项无效。
+     * 将授权条款与委派上限求交，上限缺省时原样返回。
      *
      * @param grantClauses 授权条款
-     * @param ceiling 委派上限；空表示无委派
-     * @return 收缩后的条款；操作不在上限内时为 {@code null}
+     * @param ceiling 委派上限；{@code null} 表示无委派
+     * @return 收缩后的条款；与上限不相交时为空
      */
     public static List<ScopeClause> constrain(List<ScopeClause> grantClauses, ActionScopeCeiling ceiling) {
         if (ceiling == null) {
             return grantClauses == null ? List.of() : List.copyOf(grantClauses);
         }
-        List<ScopeClause> ceilingClauses = bind(new ActionGrant(ceiling.actionId(),
-                ceiling.scopes() == null ? List.of() : ceiling.scopes()),
+        return intersect(grantClauses, bind(ceiling));
+    }
+
+    /**
+     * 绑定一条委派上限自身的范围条款。
+     *
+     * @param ceiling 委派逐操作上限
+     * @return 并集条款；无范围表达式时为空
+     */
+    public static List<ScopeClause> bind(ActionScopeCeiling ceiling) {
+        if (ceiling == null) {
+            return List.of();
+        }
+        return bind(new ActionGrant(ceiling.actionId(), ceiling.scopes() == null ? List.of() : ceiling.scopes()),
                 ceiling.scopeBindings() == null ? Map.of() : ceiling.scopeBindings());
-        return intersect(grantClauses, ceilingClauses);
+    }
+
+    /**
+     * 判断委派上限是否覆盖请求的范围，用于写入时拒绝超限分配。
+     *
+     * <p>按字面比较：显式部门与对象 ID 必须逐个出现在同一条上限条款中，连带下级只能由同样连带下级的上限覆盖，
+     * 不在写入路径展开部门树。无法证明被覆盖时按失败关闭判为超限。</p>
+     *
+     * @param ceilingClauses 委派上限条款
+     * @param requestedClauses 分配请求的条款
+     * @return 完全被覆盖时为 true；请求无对象时视为覆盖
+     */
+    public static boolean covers(List<ScopeClause> ceilingClauses, List<ScopeClause> requestedClauses) {
+        if (requestedClauses == null || requestedClauses.isEmpty()) {
+            return true;
+        }
+        if (ceilingClauses == null || ceilingClauses.isEmpty()) {
+            return false;
+        }
+        return requestedClauses.stream()
+                .allMatch(requested -> ceilingClauses.stream().anyMatch(ceiling -> covers(ceiling, requested)));
+    }
+
+    private static boolean covers(ScopeClause ceiling, ScopeClause requested) {
+        if (ceiling.all()) {
+            return true;
+        }
+        if (requested.all()) {
+            return false;
+        }
+        if (requested.self() && !ceiling.self()) {
+            return false;
+        }
+        if (requested.memberDepartments() && (!ceiling.memberDepartments()
+                || (requested.memberDepartmentDescendants() && !ceiling.memberDepartmentDescendants()))) {
+            return false;
+        }
+        if (!requested.departmentIds().isEmpty()
+                && (!ceiling.departmentIds().containsAll(requested.departmentIds())
+                || (requested.departmentDescendants() && !ceiling.departmentDescendants()))) {
+            return false;
+        }
+        return requested.objectIds().isEmpty() || ceiling.objectIds().containsAll(requested.objectIds());
     }
 
     /**

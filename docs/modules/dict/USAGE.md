@@ -6,7 +6,7 @@
 
 ### 1.1 添加依赖
 
-任意微服务（包括 PMS 自身）：
+任意微服务（包括 IAM 自身）：
 
 ```gradle
 dependencies {
@@ -14,7 +14,7 @@ dependencies {
 }
 ```
 
-跨服务调用 PMS 字典还需要依赖 PMS 的 API 包以引入 Feign 接口（`ingot-pms-api`）。**通常项目里已经依赖**，无需额外配置。
+跨服务调用 IAM 字典还需要依赖 IAM 的 API 包以引入 Feign 接口（`ingot-iam-api`）。**通常项目里已经依赖**，无需额外配置。
 
 事件总线模块 `ingot-event-bus` 是 `ingot-dict-client` 的传递依赖，无需显式添加。Spring Boot 会通过自动配置在类路径存在 Redis 时启用 `RedisInvalidationBus`。
 
@@ -57,7 +57,7 @@ public class UserBizService {
 }
 ```
 
-业务方**只需要面向 `DictService` 接口编程**，无需关心是否运行在 PMS 内、是否启用了缓存或失效广播。
+业务方**只需要面向 `DictService` 接口编程**，无需关心是否运行在 IAM 内、是否启用了缓存或失效广播。
 
 ---
 
@@ -145,9 +145,9 @@ Map<Long, DictItem> byId = DictService.indexBy(items, DictItem::getId);
 
 ---
 
-## 3. 写操作（PMS 管理端）
+## 3. 写操作（IAM 管理端）
 
-字典写操作只暴露在 PMS 管理端，不通过 RPC 提供（避免任意服务"擅自"修改全局字典）。
+字典写操作只暴露在 IAM 管理端，不通过 RPC 提供（避免任意服务"擅自"修改全局字典）。
 
 ```http
 POST   /v1/platform/base/dict                         创建
@@ -246,18 +246,18 @@ String color = extra == null ? null : (String) extra.get("color");
 | L2 Redis | 启用，30 分钟 TTL，key 前缀 `in` |
 | 失效广播 | 启用，channel `in:bus:dict.invalidate` |
 
-业务方做"读"操作时**永远不需要手动 evict**——PMS 的写操作会自动触发跨节点失效。
+业务方做"读"操作时**永远不需要手动 evict**——IAM 的写操作会自动触发跨节点失效。
 
 ### 5.2 何时需要手动 `evict`
 
 仅在以下罕见场景：
 
-1. **绕过 PMS 直接写库**（例如运维通过 SQL 直接修改 `platform_dict`）：
+1. **绕过 IAM 直接写库**（例如运维通过 SQL 直接修改 `platform_dict`）：
    ```java
    dictService.evict("user_status");      // 单 code
    dictService.evictAll();                 // 全量
    ```
-   注意：这种情况下其它节点不会自动收到广播，需要在每个节点都手动调用，或者通过 PMS 提供的"刷新"运维接口（如有）发起一次伪写操作触发广播。
+   注意：这种情况下其它节点不会自动收到广播，需要在每个节点都手动调用，或者通过 IAM 提供的"刷新"运维接口（如有）发起一次伪写操作触发广播。
 
 2. **本地调试**：希望立即看到修改后的字典，最简单是重启服务或调用 `evictAll()`。
 
@@ -282,7 +282,7 @@ ingot:
       mode: NONE
 ```
 
-> 生产环境强烈建议保持默认（开启 L1+L2），否则 PMS 数据库压力会显著上升。
+> 生产环境强烈建议保持默认（开启 L1+L2），否则 IAM 数据库压力会显著上升。
 
 ### 5.4 关闭失效广播（不推荐）
 
@@ -294,13 +294,13 @@ ingot:
     type: none
 ```
 
-此时 `DictCacheCoordinator` 不会注册，PMS 的写操作仍会清自身 Redis L2，但其它节点的 L1 只能等 TTL 自然过期（默认 5 分钟）后才能感知到变更。
+此时 `DictCacheCoordinator` 不会注册，IAM 的写操作仍会清自身 Redis L2，但其它节点的 L1 只能等 TTL 自然过期（默认 5 分钟）后才能感知到变更。
 
 ---
 
-## 6. 与 PMS 写操作的协作
+## 6. 与 IAM 写操作的协作
 
-PMS 内部业务代码若需要在自定义流程中"通知字典变更"，应当发布 `DictChangedSpringEvent`：
+IAM 内部业务代码若需要在自定义流程中"通知字典变更"，应当发布 `DictChangedSpringEvent`：
 
 ```java
 @Service
@@ -317,7 +317,7 @@ public class CustomDictBusinessService {
 }
 ```
 
-`DictInvalidationPublisher` 会在事务提交后自动接管：清自身 L2 + 广播失效事件。`DictChangedSpringEvent` 是 PMS 内部 API，不应该由其它微服务直接发布；其它微服务只读字典，不应该发起字典级广播。
+`DictInvalidationPublisher` 会在事务提交后自动接管：清自身 L2 + 广播失效事件。`DictChangedSpringEvent` 是 IAM 内部 API，不应该由其它微服务直接发布；其它微服务只读字典，不应该发起字典级广播。
 
 ---
 
@@ -325,7 +325,7 @@ public class CustomDictBusinessService {
 
 ### ✅ 推荐做法
 
-1. **统一通过 `DictService` 访问字典**，不要直接注入 `BizPlatformDictService` 或 `RemotePmsDictService`，否则会绕过缓存。
+1. **统一通过 `DictService` 访问字典**，不要直接注入 `BizPlatformDictService` 或 `RemoteIamDictService`，否则会绕过缓存。
 2. **在表单校验、状态机入口使用 `exists` 而不是手动 `contains`**：
    ```java
    if (!dictService.exists("order_status", value, DictQuery.platform())) {
@@ -357,7 +357,7 @@ public class CustomDictBusinessService {
    ```
    即便 L1 命中也意味着每条记录一次 `Caffeine.get`，比 `labelMap` 一次性拿到 Map 慢得多。
 
-2. **❌ 直接读 `PlatformDict` 实体或 SQL**——绕过缓存，且会引入 PMS 数据库依赖：
+2. **❌ 直接读 `PlatformDict` 实体或 SQL**——绕过缓存，且会引入 IAM 数据库依赖：
    ```java
    @Autowired
    PlatformDictMapper mapper;       // ❌ 业务代码不应直接接触
@@ -398,12 +398,12 @@ public class CustomDictBusinessService {
 启动日志会输出客户端组合情况：
 
 ```
-[DictClient] register local delegate (LocalDictService)            ← PMS 进程
+[DictClient] register local delegate (LocalDictService)            ← IAM 进程
 [DictClient] register remote delegate (RemoteDictService)           ← 其它服务
 [DictClient] L2 Redis layer enabled, ttl=PT30M, keyPrefix=in
 [DictClient] DictService composed (mode=AUTO, l1=true, l2=true)
 [DictClient] cache coordinator subscribed                           ← 失效广播已订阅
-[EventBus] initialized RedisInvalidationBus origin=ingot-pms:xxx, topicPrefix=in:bus
+[EventBus] initialized RedisInvalidationBus origin=ingot-iam:xxx, topicPrefix=in:bus
 ```
 
 如果看不到 `cache coordinator subscribed`，检查：
@@ -419,11 +419,11 @@ public class CustomDictBusinessService {
 ```bash
 redis-cli psubscribe 'in:bus:*'
 
-# 触发一次 PMS 字典更新后会看到：
+# 触发一次 IAM 字典更新后会看到：
 # 1) "pmessage"
 # 2) "in:bus:*"
 # 3) "in:bus:dict.invalidate"
-# 4) "{\"origin\":\"ingot-pms:xxx\",\"timestamp\":1714...,\"dictCode\":\"user_status\",\"all\":false}"
+# 4) "{\"origin\":\"ingot-iam:xxx\",\"timestamp\":1714...,\"dictCode\":\"user_status\",\"all\":false}"
 ```
 
 ### 8.3 验证缓存键
@@ -443,7 +443,7 @@ redis-cli get 'in:dict:items:user_status:PLATFORM:_:_:0'
 redis-cli --scan --pattern 'in:dict:items:*' | xargs -r redis-cli del
 ```
 
-或在任意 PMS 实例触发一次空操作（例如调一次"切换状态再切回来"），让所有节点 L1 跟着失效。
+或在任意 IAM 实例触发一次空操作（例如调一次"切换状态再切回来"），让所有节点 L1 跟着失效。
 
 ### 8.5 打开 DEBUG 日志
 

@@ -5,9 +5,10 @@ import com.ingot.cloud.security.api.model.dto.session.PlatformSessionQueryDTO;
 import com.ingot.cloud.security.api.model.dto.session.PlatformUserSessionRevokeDTO;
 import com.ingot.cloud.security.api.model.vo.session.PlatformSessionVO;
 import com.ingot.cloud.security.service.session.SessionAdminService;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,28 +42,28 @@ public class PlatformSessionAPI implements RShortcuts {
 
     @GetMapping
     @Operation(summary = "分页查询在线会话")
-    @AdminOrHasAnyAuthority({"platform:security:session:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_READ})
     public R<IPage<PlatformSessionVO>> page(PlatformSessionQueryDTO params) {
         return ok(sessionAdminService.page(params));
     }
 
     @GetMapping("/{sid}")
     @Operation(summary = "查询会话详情")
-    @AdminOrHasAnyAuthority({"platform:security:session:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_READ})
     public R<PlatformSessionVO> getBySid(@PathVariable String sid) {
         return ok(sessionAdminService.getBySid(sid));
     }
 
     @DeleteMapping("/{sid}")
     @Operation(summary = "强制下线指定会话")
-    @AdminOrHasAnyAuthority({"platform:security:session:revoke"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_REVOKE})
     public R<Boolean> revokeBySid(@PathVariable String sid) {
         return ok(sessionAdminService.revokeBySid(sid, currentUserId()));
     }
 
     @DeleteMapping("/user")
     @Operation(summary = "强制下线用户全部会话")
-    @AdminOrHasAnyAuthority({"platform:security:session:revoke"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_REVOKE})
     public R<Integer> revokeByUser(PlatformUserSessionRevokeDTO params) {
         return ok(sessionAdminService.revokeByUser(params, currentUserId()));
     }

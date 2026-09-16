@@ -9,7 +9,7 @@ import lombok.Data;
 
 /**
  * 字典项稳定模型，业务代码与 {@code com.ingot.framework.dict.client.DictService} 的输出契约。
- * 该模型与 {@code PlatformDict} 解耦，避免业务直接依赖 PMS 实体或 VO。
+ * 该模型与 {@code PlatformDict} 解耦，避免业务直接依赖 IAM 实体或 VO。
  *
  * @author jy
  * @since 2026/4/25

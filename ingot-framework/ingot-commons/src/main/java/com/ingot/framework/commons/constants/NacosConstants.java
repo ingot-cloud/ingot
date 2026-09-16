@@ -9,7 +9,7 @@ package com.ingot.framework.commons.constants;
 public interface NacosConstants {
 
     /**
-     * 跨服务安全策略地板：凭证、防重放、{@code account.signal}、PMS/Member/Security 的 event.delivery。
+     * 跨服务安全策略地板：凭证、防重放、{@code account.signal}、IAM/Member/Security 的 event.delivery。
      * <p>仅凭证/重放/锁信号的消费者 import；Auth 与 Gateway 不挂。</p>
      */
     String IN_SECURITY_POLICY = "in-security-policy.yml";

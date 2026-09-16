@@ -190,7 +190,7 @@ deploy_stack() {
     echo "  - Gateway副本: ${GATEWAY_REPLICAS:-1}"
     echo "  - Auth副本: ${AUTH_REPLICAS:-1}"
     echo "  - Member副本: ${MEMBER_REPLICAS:-1}"
-    echo "  - PMS副本: ${PMS_REPLICAS:-1}"
+    echo "  - IAM副本: ${IAM_REPLICAS:-1}"
 
     # 使用 docker stack deploy 部署
     log_info "部署服务栈: ingot"

@@ -24,8 +24,9 @@
 - [ ] **0.1 独立目标库**
   - 环境：本机或隔离 Docker MySQL 8.4，**禁止**指向现网/共享业务库。
   - 数据：空库；会话时区 UTC。
-  - 步骤：创建库名并导出为 `IAM_DATABASE`；依次执行 `databases/iam/001_identity.sql` … `005_auxiliary.sql`，再执行 `databases/iam/seed-manual-verification.sql`。
-  - 预期：55 张表存在；种子账号 `platform` / `owner` 明文口令均为 `password`；leaf 标签 `iam` 的 `max_id >= 1000000`。
+  - 步骤：创建库名并导出为 `IAM_DATABASE`；依次执行 `databases/iam/001_identity.sql` … `005_auxiliary.sql`、`databases/iam/007_member_export.sql`、框架 DDL（`account_lock_state`、`password_history`/`password_expiration`）、`databases/iam/006_bootstrap.sql`，再执行 `databases/iam/seed-manual-verification.sql`。
+  - 预期：55 张表存在；`006` 写入 2 个应用、40 个资源、145 个 ACTION、24 个菜单、每域一个 SYSTEM 治理角色及 145 条授权、2 个默认策略版本；种子账号 `platform` / `owner` 明文口令均为 `password`；leaf 标签 `iam` 的 `max_id >= 1000000`。
+  - 说明：`006` 可重复执行且不覆盖人工修改；平台受控账号另有 `ingot.iam.bootstrap.enabled` 启动器路径，与本清单的固定口令夹具互斥，两者只用其一。
   - 证据：执行日志或 `SHOW TABLES` / 账号行截图（不含密码哈希扩散到聊天）。
 
 - [ ] **0.2 运行配置**
@@ -49,6 +50,22 @@
   - 步骤：确认 Nacos 出现 `in-service-iam`；经 Gateway 访问 `POST /api/iam/v1/platform/tenants/preview`。
   - 预期：请求到达 IAM 新控制器，而不是 `/v1/platform/org/tenant`；401/403/200 均来自新信封，无旧 PMS 服务名。
   - 证据：Gateway 路由日志、Nacos 实例列表、HTTP 状态与 `code`。
+
+## A21 正式冷启动（T05 / T16）
+
+冷启动分两段：目录与治理角色由 `databases/iam/006_bootstrap.sql` 落库，受控平台账号由 provider 启动器经安全框架注册用例创建。0.1 已覆盖 SQL 段的行数与幂等，本段只验证 Java 段与真实登录。
+
+- [ ] **A21.1 受控平台账号首启**
+  - 环境：空库执行完 001–005、`007_member_export.sql`、框架 DDL 与 `006_bootstrap.sql`，**不要**执行 `seed-manual-verification.sql`；IAM 进程设 `ingot.iam.bootstrap.enabled=true`。
+  - 数据：`iam_account`、`iam_platform_member`、`iam_role_assignment` 均为空。
+  - 步骤：启动 IAM 进程一次，从启动日志取 WARN 行给出的初始口令；用该账号走 Auth 密码登录且不传 `tenant`。
+  - 预期：`iam_account` 出现配置的登录名（默认 `platform`），`iam_platform_member` 一行，治理 assignment 指向平台域 SYSTEM 角色版本；口令未硬编码在源码或 SQL 中；首次登录被要求改密，口令超出有效期后失效。
+  - 证据：启动日志 WARN 行（口令打码）、三张表查询结果、登录响应中的改密标志。
+
+- [ ] **A21.2 重复启动与开关默认关闭**
+  - 步骤：保持 `enabled=true` 再启动一次；随后去掉该配置（默认关闭）再启动一次。
+  - 预期：第二次启动不新增账号/成员/授权，也不重置既有口令；关闭后启动日志无冷启动动作，且不实例化冷启动相关 Bean。
+  - 证据：两次启动前后的行数对照、关闭后日志。
 
 ## A01 / A01a / A01b 身份隔离（T05 运行时）
 
@@ -88,9 +105,9 @@
   - 预期：两个组织 ID 不同；`iam_role_definition` / `iam_application` / `iam_action` / `iam_menu` 行数不因创建而增加；每个组织仅有所有者成员、根部门、一条治理分配、baseline 开通与默认策略引用；无空 `iam_role_delta`。
   - 证据：两次 `CreatedResource`；创建前后目录表计数；每个 `tenant_id` 的成员/开通/分配查询。
 
-## A08 / A09 任职与暂停（范围引擎未完成，本段只验生命周期）
+## A08 / A09 任职与暂停
 
-以下 **不能** 当作 A08 数据范围验收通过。当前 Guard 只检查 ACTION 是否出现在直接分配中，**不**计算所属部门/指定部门范围。
+以下 **不能** 当作 A08 数据范围验收通过。求值器已按任职与 `includeDescendants` 计算部门/组范围（H2 与隔离 MySQL CTE 核对过），但 ACCEPTANCE 要求真实 HTTP 下调整任职后授权随之变化。
 
 - [ ] **A09.1 多部门暂停 / 移出覆盖全部关系**
   - 数据：租户内成员挂两个部门；操作者具备 `iam-tenant:member:status` 与 `remove`（新组织所有者默认具备种子治理角色）。
@@ -103,8 +120,8 @@
   - 预期：部门关系整体替换；响应不含手机号/邮箱原值；过期 version 返回 409 `RevisionConflict`。跨租户部门 ID 返回 404。
   - 证据：任职表、成功响应、409 body。
 
-- [ ] **A08 所属部门 vs 指定部门（待 T09，当前应记失败或跳过）**
-  - 说明：完整引擎未接入前，给“仅所属部门”与“指定部门”两类授权后调整任职，**不应**勾选通过。若你执行了，把实际结果记在证据里（预期：现在只要有 ACTION 就会放行，这是已知缺口）。
+- [ ] **A08 所属部门 vs 指定部门**
+  - 说明：给「仅所属部门」与「指定部门」两类授权后调整任职，HTTP 预期前者失效、后者不变。H2 `AuthorizationEvaluatorTest` 已覆盖该语义，本项仍须真实会话证据才能勾选。
 
 ## T02 / T15 源库快照
 
@@ -122,9 +139,22 @@
 
 ## 已知限制（遇到时不要当成环境配错）
 
-1. 旧 `/v1/platform/org/tenant` 等 PMS 控制器仍在；验收新行为请走 `/v1/platform/tenants*` 与 `/v1/tenant/members*`。
-2. 新模型登录优先 `iam_account`；同名 `sys_user` 不会再作为该账号的权威身份。
-3. 社交登录在社交表 `user_id` 能对应 `iam_account.id` 时走新账号，否则回退旧用户表。
-4. 管理面 132 个操作已有控制器；字段策略与导出下载已按当前身份重验，人工 A14/A10 仍须在真实环境执行。
-5. OpenAPI 管理面操作 `x-runtime-implemented=true`；未启动业务镜像前不能当作联调通过。
-6. 授权求值含组、差异、委派上限与部门范围；热缓存关闭过期放行。多实例失效见 A15。
+1. 旧 `/v1/platform/org/tenant` 等 PMS HTTP 已删除；验收只走 `/v1/platform/*`、`/v1/tenant/*`、`/v1/me/*`、`/v1/directory/*`。内部 RPC 仍在 `/inner/*`，不进管理面 OpenAPI。
+2. 登录权威是 `iam_account`；同名 `sys_user` 行不是该账号的身份来源。`SysUser`/`SysTenant` 只作为 Feign 外形。
+3. 社交绑定 `user_id` 指向 `iam_account`；未绑定返回空，不再回读 `sys_user`。
+4. OpenAPI 为 96 路径 / 161 操作，`x-runtime-implemented=true` 只表示 `/v1` 控制器存在。字段策略与导出下载已按当前身份重验，人工 A14/A10/A27 仍须真实环境。
+5. 未启动 Auth/Gateway/IAM 业务进程前，不能把单测或契约快照当作 A18/A23/A24/A28 通过。
+6. 授权求值含组、差异、委派上限与部门范围；热缓存关闭过期放行。多实例失效见 A15，多实例导出见 A27。
+
+## 2026-09-16 T16 自动化证据（不勾选 A 系列）
+
+本轮 Agent 在隔离环境跑通下列回归，**不能**替代 0.1 起的真实进程、登录与 HTTP：
+
+| 证据 | 结果 | 对应 A 项缺口 |
+|---|---|---|
+| `python3 databases/iam/test_identity_schema.py` | 20 项 MySQL 8.4 约束通过（一次性容器，不连现网库） | 结构/跨域 FK；不证明 HTTP |
+| `python3 databases/iam/test_bootstrap_seed.py` | 9 项：145 ACTION、幂等、无凭证行 | A21 SQL 段；缺 A21.1 进程首启 |
+| IAM provider `test` | 192 项 H2 通过 | 规则组合；不证明 MySQL 并发/多实例 |
+| `LockAccountUseCaseServiceTest` / `UnlockAccountUseCaseServiceTest` | 框架锁定用例通过；IAM 无 `IamAccountLockState` | A22 代码归属；缺失败计数运行时 |
+| `python3 tools/iam/test_contract.py` | 7 项，96/161 快照可复现 | A19 映射对账；缺逐入口 HTTP |
+| 静态：`ServiceNameConstants.IAM_SERVICE=in-service-iam`，镜像 `ingot/iam`，无 `ingot-pms` 部署名 | 通过 | A18 命名；缺镜像启动与 Gateway |

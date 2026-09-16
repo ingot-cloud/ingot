@@ -10,7 +10,7 @@ dependencies {
     // 其他依赖
     implementation project(ingot.framework_commons)
     implementation project(ingot.framework_data_mybatis_common)
-    implementation project(ingot.pms_api)
+    implementation project(ingot.iam_api)
 
     compileOnly(deps.spring.framework_spring_web)
 }

@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.group.JdbcGroupService;
+import com.ingot.cloud.iam.group.GroupService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/tenant/groups")
 @RequiredArgsConstructor
 public class TenantGroupAPI implements RShortcuts {
-    private final JdbcGroupService groups;
+    private final GroupService groups;
 
     /**
      * 分页列出租户用户组。

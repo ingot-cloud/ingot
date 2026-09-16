@@ -6,6 +6,7 @@ import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
+import com.ingot.framework.commons.model.iam.ExportTask;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberDepartmentInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
@@ -151,6 +152,18 @@ public class TenantMemberCommandAPI implements RShortcuts {
     @PostMapping("/export")
     public R<CreatedResource> export(@Valid @RequestBody VersionInput input) {
         return ok(exports.create(input));
+    }
+
+    /**
+     * 读取导出任务状态，不返回成员快照。
+     *
+     * @param id 导出任务 ID
+     * @return 任务状态
+     */
+    @Operation(summary = "查询成员导出任务")
+    @GetMapping("/export/{id}/status")
+    public R<ExportTask> exportStatus(@PathVariable String id) {
+        return ok(exports.status(id));
     }
 
     /**

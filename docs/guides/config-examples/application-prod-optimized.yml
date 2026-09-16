@@ -37,12 +37,12 @@ server:
 
 spring:
   application:
-    name: ingot-service-pms
+    name: ingot-service-iam
   
   # ========== 数据源配置 ==========
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_pms}?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_iam}?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:root}
     type: com.alibaba.druid.pool.DruidDataSource
@@ -199,7 +199,7 @@ logging:
     root: INFO
     com.ingot: DEBUG
     # SQL 日志
-    com.ingot.pms.mapper: DEBUG
+    com.ingot.iam.mapper: DEBUG
     # Druid SQL
     druid.sql.Statement: ERROR
   

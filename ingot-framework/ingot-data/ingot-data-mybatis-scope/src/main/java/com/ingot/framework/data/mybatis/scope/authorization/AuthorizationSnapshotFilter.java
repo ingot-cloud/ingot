@@ -11,7 +11,7 @@ import java.util.Set;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.data.mybatis.scope.error.AuthorizationSnapshotException;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
@@ -58,7 +58,9 @@ public class AuthorizationSnapshotFilter extends OncePerRequestFilter {
             return;
         }
         InUser user = SecurityAuthContext.getUser();
-        if (user == null || user.getId() == null || user.getTenantId() == null) {
+        // IAM 成员上下文由新引擎求值，禁止用旧账号/租户快照扩充权限。
+        if (user == null || user.getAuthorizationContext() != null
+                || user.getId() == null || user.getTenantId() == null) {
             filterChain.doFilter(request, response);
             return;
         }

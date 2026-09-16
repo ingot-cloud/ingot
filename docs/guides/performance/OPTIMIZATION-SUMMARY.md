@@ -56,7 +56,7 @@
 ├─ 系统预留：      2G
 ├─ Gateway：       2.5G (JVM 2G)
 ├─ Auth：          2.5G (JVM 2G)
-├─ PMS：           2.5G (JVM 2G)
+├─ IAM：           2.5G (JVM 2G)
 ├─ Member：        2.5G (JVM 2G)
 ├─ MySQL：         1G
 ├─ Redis：         512M
@@ -107,7 +107,7 @@ redis-rate-limiter:
 |------|-----|----------|------|
 | Gateway | 2000-3000 | 20-50ms | 路由转发 |
 | Auth | 300-500 | 100-200ms | 认证计算 |
-| PMS | 300-500 | 100-200ms | 业务逻辑 |
+| IAM | 300-500 | 100-200ms | 业务逻辑 |
 | Member | 300-500 | 100-200ms | 业务逻辑 |
 | **整机** | **400-600** | **150ms** | **总体能力** |
 
@@ -129,14 +129,14 @@ redis-rate-limiter:
 
 ```bash
 # 1. 运行自动诊断脚本（推荐）
-./bin/troubleshoot.sh ingot-pms
+./bin/troubleshoot.sh ingot-iam
 
 # 2. 查看诊断报告
 cat troubleshoot_*/REPORT.md
 
 # 3. 手动快速检查
 docker stats --no-stream
-docker logs --tail 100 ingot-pms | grep -i error
+docker logs --tail 100 ingot-iam | grep -i error
 ```
 
 ### 深度排查（15 分钟）
@@ -144,14 +144,14 @@ docker logs --tail 100 ingot-pms | grep -i error
 #### 第 1 步：看日志
 ```bash
 # 异常
-docker logs --tail 1000 ingot-pms | grep -i "exception\|error"
+docker logs --tail 1000 ingot-iam | grep -i "exception\|error"
 # OOM
-docker logs --tail 1000 ingot-pms | grep -i "OutOfMemoryError"
+docker logs --tail 1000 ingot-iam | grep -i "OutOfMemoryError"
 ```
 
 #### 第 2 步：看线程
 ```bash
-docker exec -it ingot-pms sh
+docker exec -it ingot-iam sh
 jstack $(pgrep java) | grep "java.lang.Thread.State" | sort | uniq -c
 ```
 
@@ -187,13 +187,13 @@ docker exec -it mysql mysql -uroot -p -e "SHOW PROCESSLIST;"
 **快速处理**：
 ```bash
 # 1. 重启服务
-docker restart ingot-pms
+docker restart ingot-iam
 
 # 2. 临时增加内存
-docker update --memory=3g ingot-pms
+docker update --memory=3g ingot-iam
 
 # 3. 导出堆转储分析
-docker exec ingot-pms sh -c 'jmap -dump:live,format=b,file=/app/logs/heap.hprof $(pgrep java)'
+docker exec ingot-iam sh -c 'jmap -dump:live,format=b,file=/app/logs/heap.hprof $(pgrep java)'
 ```
 
 **长期方案**：
@@ -217,7 +217,7 @@ docker exec mysql mysql -uroot -p -e "SHOW PROCESSLIST;"
 docker exec mysql mysql -uroot -p -e "KILL <id>;"
 
 # 3. 重启服务
-docker restart ingot-pms
+docker restart ingot-iam
 ```
 
 **长期方案**：
@@ -263,7 +263,7 @@ docker stats
 docker stop ingot-member
 
 # 3. 调整资源限制
-docker update --memory=2g ingot-pms
+docker update --memory=2g ingot-iam
 ```
 
 **长期方案**：
@@ -321,10 +321,10 @@ groups:
 ```
 ┌─────────────────────────────────────┐
 │         应用服务器 1 (8C16G)        │
-│  Gateway + Auth + PMS + Member      │
+│  Gateway + Auth + IAM + Member      │
 │  ↓ 负载均衡                         │
 │         应用服务器 2 (8C16G)        │
-│  Gateway + Auth + PMS + Member      │
+│  Gateway + Auth + IAM + Member      │
 └─────────────────────────────────────┘
               ↓ 连接
 ┌─────────────────────────────────────┐
@@ -379,7 +379,7 @@ groups:
 - [配置示例](../config-examples/README.md)
 
 ### 配置文件
-- [Dockerfile](../ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/prod/Dockerfile)
+- [Dockerfile](../ingot-service/ingot-iam/ingot-iam-provider/src/main/docker/prod/Dockerfile)
 - [应用配置](../config-examples/application-prod-optimized.yml)
 - [网关配置](../config-examples/gateway-routes-optimized.yml)
 
@@ -404,13 +404,13 @@ groups:
 docker stats
 
 # 运行诊断
-./bin/troubleshoot.sh ingot-pms
+./bin/troubleshoot.sh ingot-iam
 
 # 查看日志
-docker logs -f --tail 100 ingot-pms
+docker logs -f --tail 100 ingot-iam
 
 # 重启服务
-docker restart ingot-pms
+docker restart ingot-iam
 
 # 查看数据库连接
 docker exec mysql mysql -uroot -p -e "SHOW PROCESSLIST;"

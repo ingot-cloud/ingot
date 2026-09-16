@@ -17,7 +17,7 @@
 │      └─ CaffeineDictService          ← L1 进程内缓存               │
 │            └─ RedisDictService       ← L2 集群共享缓存             │
 │                  └─ delegate (dictDelegate bean)                  │
-│                        ├─ LocalDictService（PMS 进程内）           │
+│                        ├─ LocalDictService（IAM 进程内）           │
 │                        └─ RemoteDictService（其它服务，Feign）     │
 │                                                                   │
 │   DictCacheCoordinator   ←── 订阅 InvalidationBus，回调 evict      │
@@ -34,7 +34,7 @@
                               │
                               ▼ publishes
 ┌──────────────────────────────────────────────────────────────────┐
-│  PMS（写端）                                                       │
+│  IAM（写端）                                                       │
 │  ──────────────────────────────────────────────────────────────  │
 │   PlatformDictServiceImpl                                         │
 │      ├─ create/update/delete/changeStatus/batchSort               │
@@ -73,17 +73,17 @@ Caffeine (L1) → Redis (L2) → delegate (Local | Remote)
 
 | 顺序 | Bean | 作用 | 注册条件 |
 |-----|------|------|---------|
-| 1 | `dictDelegate`（`RemoteDictService`） | RPC 远端实现 | 类路径有 `Feign` + 存在 `RemotePmsDictService` + 不存在同名 bean |
-| 1' | `dictDelegate`（`LocalDictService`） | 本地实现 | 由 PMS 的 `LocalDictConfig` 提前注册（同名 bean，优先生效） |
+| 1 | `dictDelegate`（`RemoteDictService`） | RPC 远端实现 | 类路径有 `Feign` + 存在 `RemoteIamDictService` + 不存在同名 bean |
+| 1' | `dictDelegate`（`LocalDictService`） | 本地实现 | 由 IAM 的 `LocalDictConfig` 提前注册（同名 bean，优先生效） |
 | 2 | `RedisDictService` | L2 共享缓存层 | 存在 `StringRedisTemplate` + `redis-enabled=true` |
 | 3 | `dictService` `@Primary` | 业务方注入入口 | 存在 `dictDelegate`，按 `cacheEnabled` 决定是否叠加 L1 |
 | 4 | `DictCacheCoordinator` | 失效广播订阅器 | 存在 `InvalidationBus` + `invalidation-enabled=true` |
 
 ### 自动选择 Local vs Remote 的关键
 
-PMS 自身：在自身 `LocalDictConfig` 中提前注册同名 bean `dictDelegate`（`LocalDictService`），此后 `DictClientAutoConfiguration` 中带 `@ConditionalOnMissingBean(name = "dictDelegate")` 的远端实现自动让位。
+IAM 自身：在自身 `LocalDictConfig` 中提前注册同名 bean `dictDelegate`（`LocalDictService`），此后 `DictClientAutoConfiguration` 中带 `@ConditionalOnMissingBean(name = "dictDelegate")` 的远端实现自动让位。
 
-其它微服务：没有 `LocalDictConfig`，但通过 `ingot-pms-api` 引入了 `RemotePmsDictService` Feign 接口；此时框架自动注册 `RemoteDictService`，业务方注入到的 `DictService` 就是远端实现。
+其它微服务：没有 `LocalDictConfig`，但通过 `ingot-iam-api` 引入了 `RemoteIamDictService` Feign 接口；此时框架自动注册 `RemoteDictService`，业务方注入到的 `DictService` 就是远端实现。
 
 业务方代码完全不需要感知差异。
 
@@ -96,12 +96,12 @@ PMS 自身：在自身 `LocalDictConfig` 中提前注册同名 bean `dictDelegat
 | 层级 | 实现 | 默认 TTL | 作用域 | 命中延迟 | 解决的问题 |
 |------|------|---------|-------|----------|-----------|
 | L1 | Caffeine（进程内） | 5 min | 单 JVM | < 1 ms | 高频读取的就地复用，零网络开销 |
-| L2 | Redis（集群共享） | 30 min | 全集群 | 2–5 ms | 同 dict 在多实例间共享缓存，避免每节点都打 PMS |
+| L2 | Redis（集群共享） | 30 min | 全集群 | 2–5 ms | 同 dict 在多实例间共享缓存，避免每节点都打 IAM |
 | L3 | MySQL | — | 持久化 | 10–30 ms | 源数据 |
 
 L1 与 L2 的取舍：
 
-- **没有 L2 仅有 L1**：每个节点首次访问都要回源，且节点数量越多，PMS 压力越大；多节点缓存相互独立，更新失效后存在短暂不一致窗口。
+- **没有 L2 仅有 L1**：每个节点首次访问都要回源，且节点数量越多，IAM 压力越大；多节点缓存相互独立，更新失效后存在短暂不一致窗口。
 - **没有 L1 仅有 L2**：每次都要走网络访问 Redis，对超高频字典调用不够极致。
 - **L1 + L2 组合**：高频字典几乎全部在 L1 命中；新节点冷启动或 L1 过期后从 L2 拿到一份共享结果，回源压力被 Redis 完全吸收。
 
@@ -217,12 +217,12 @@ RedisInvalidationBus.MessageListener
 
 `@TransactionalEventListener(phase = AFTER_COMMIT, fallbackExecution = true)` 保证：
 
-- 事务回滚时**不**广播，避免其它节点错误地删了自己的缓存又从 PMS 重新加载到旧值；
+- 事务回滚时**不**广播，避免其它节点错误地删了自己的缓存又从 IAM 重新加载到旧值；
 - 即使没有事务上下文（例如脚本/管理任务直接调用），`fallbackExecution = true` 仍会触发广播，避免功能在无事务场景下静默失效。
 
 #### (b) 为什么 origin 节点要"先清 L2 再广播"
 
-```37:51:ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/service/dict/DictInvalidationPublisher.java
+```37:51:ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/service/dict/DictInvalidationPublisher.java
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onDictChanged(DictChangedSpringEvent event) {
         // 1) origin 端立即清 L2，避免广播到达前其它节点回填旧值
@@ -268,7 +268,7 @@ T4   节点 B 收到广播清 L1+L2
                 handler.accept(event);
 ```
 
-origin 节点的 L1 是否也需要清？答案是——**写 PMS 的请求也是经过 `DictService` 装饰器链的吗？不是**。`PlatformDictServiceImpl` 直接走 MyBatis，并不会主动 evict L1；所以严格地说 origin 自身的 L1 仍需要显式清除。当前实现选择用一个独立的本地 Spring listener（如有需要可补充）或依赖 L1 短 TTL（默认 5 min）兜底。
+origin 节点的 L1 是否也需要清？答案是——**写 IAM 的请求也是经过 `DictService` 装饰器链的吗？不是**。`PlatformDictServiceImpl` 直接走 MyBatis，并不会主动 evict L1；所以严格地说 origin 自身的 L1 仍需要显式清除。当前实现选择用一个独立的本地 Spring listener（如有需要可补充）或依赖 L1 短 TTL（默认 5 min）兜底。
 
 > **设计取舍**：当前方案不要求"原节点写完立刻读到新值"——管理员页面在写后通常会重新拉列表，此时新值会从 L2 / DB 命中再回填。若有强一致需求，可在 `DictInvalidationPublisher` 里追加一行 `dictService.evict(...)`（直接走 origin 自身的装饰器链）。
 
@@ -320,9 +320,9 @@ origin 节点的 L1 是否也需要清？答案是——**写 PMS 的请求也�
 
 | 故障 | 影响 | 行为 |
 |-----|------|-----|
-| Redis 宕机 | L2 不可用 | `RedisDictService` 所有读写都 try-catch，失败时 fallback 到 delegate（PMS Local 或 Feign），日志 WARN |
+| Redis 宕机 | L2 不可用 | `RedisDictService` 所有读写都 try-catch，失败时 fallback 到 delegate（IAM Local 或 Feign），日志 WARN |
 | `RedisInvalidationBus.publish` 失败 | 此次写入未广播 | log WARN；其它节点等 L1 自然过期（默认 5 min）后回源恢复一致 |
-| Feign 调用 PMS 失败 | 远端 delegate 拿不到数据 | `RemoteDictService` 返回 `List.of()`，业务方收到空列表（视上下文使用 `label()` 的 fallback：返回原始 value） |
+| Feign 调用 IAM 失败 | 远端 delegate 拿不到数据 | `RemoteDictService` 返回 `List.of()`，业务方收到空列表（视上下文使用 `label()` 的 fallback：返回原始 value） |
 | ObjectMapper 反序列化失败 | 单条 L2 数据格式异常 | log WARN，当作 L2 miss，回源后用新值覆盖 |
 | 事件总线被禁用 (`ingot.event-bus.type=none`) | 没有跨节点失效 | `DictCacheCoordinator` 因缺 `InvalidationBus` 不注册；其它节点依赖 L1 TTL 收敛 |
 
@@ -335,7 +335,7 @@ origin 节点的 L1 是否也需要清？答案是——**写 PMS 的请求也�
 | 方案 | 一致性 | 写开销 | 运维复杂度 | 备注 |
 |-----|-------|-------|-----------|------|
 | 仅 L1 + 短 TTL | 弱（最长 TTL 不一致） | 低 | 低 | 简单但不适合管理端要求"立即生效"的场景 |
-| L1 + Redis L2 + TTL | 弱 | 低 | 中 | 节省 PMS 压力但仍有不一致窗口 |
+| L1 + Redis L2 + TTL | 弱 | 低 | 中 | 节省 IAM 压力但仍有不一致窗口 |
 | **L1 + L2 + 失效广播（本方案）** | 最终一致（< 50 ms） | 低（一次 evict + 一次 PUBLISH） | 中 | 当前选型 |
 | L1 + L2 + 强一致（分布式锁/版本号） | 强 | 高（每读取 GET 校验版本） | 高 | 字典读多写极少，性价比不足 |
 
@@ -437,7 +437,7 @@ public DictService dictDelegate() {
 4. **节点 `origin` 规则**：默认 `${spring.application.name}:UUID`，每次重启变化。如需稳定 origin（例如运维侧调试），可显式配置 `ingot.event-bus.origin`。
 5. **Redis Pub/Sub 不持久化**：节点宕机期间错过的失效事件不会重放；恢复后依赖 L1/L2 TTL 自然收敛。如需可靠投递可替换为 Kafka 实现。
 6. **`RedisMessageListenerContainer` 全应用唯一**：框架 `InRedisMessageConfiguration#redisContainer` 提供唯一一个 `@ConditionalOnMissingBean` 容器。`ingot-event-bus` 的 `RedisInvalidationBus`、以及任何自定义 `InvalidationBus` 的 Redis 实现，均应**注入并复用**该容器注册订阅，**不要自建第二个容器**——否则会触发「required a single bean, but 2 were found」类启动错误。社交配置跨节点失效已走 `InvalidationBus`（`SocialInvalidationEvent`），不再使用独立 `in:social:config:changed` 频道或单独向容器注册 legacy social 监听器。
-7. **自动配置顺序与跨节点失效**：`EventBusAutoConfiguration` 通过 `@ConditionalOnBean(RedisMessageListenerContainer.class)` 注册 `InvalidationBus`。该类**必须**排在 `ingot-data-redis` 的 `InRedisTemplateConfiguration` / `InRedisMessageConfiguration` **之后**执行；若仅靠 `@AutoConfigureAfter(RedisAutoConfiguration.class)`，在拓扑排序下仍可能早于上述 Configuration，导致总线 bean 整条链路静默跳过——表现恰为「PMS 写端本地缓存正常失效，其它服务（如 AUTH）L1 永远不过期」。已在 `ingot-event-bus` 中用 `@AutoConfigureAfter(..., name = { InRedisTemplateConfiguration, InRedisMessageConfiguration })` 显式约束。启动后应在**每个消费字典的微服务**日志中看到：`[EventBus] initialized RedisInvalidationBus`、`[EventBus] subscribed channel=...dict.invalidate`、`[Dict] cache coordinator subscribed`；缺任何一条都说明订阅链路未装配。
+7. **自动配置顺序与跨节点失效**：`EventBusAutoConfiguration` 通过 `@ConditionalOnBean(RedisMessageListenerContainer.class)` 注册 `InvalidationBus`。该类**必须**排在 `ingot-data-redis` 的 `InRedisTemplateConfiguration` / `InRedisMessageConfiguration` **之后**执行；若仅靠 `@AutoConfigureAfter(RedisAutoConfiguration.class)`，在拓扑排序下仍可能早于上述 Configuration，导致总线 bean 整条链路静默跳过——表现恰为「IAM 写端本地缓存正常失效，其它服务（如 AUTH）L1 永远不过期」。已在 `ingot-event-bus` 中用 `@AutoConfigureAfter(..., name = { InRedisTemplateConfiguration, InRedisMessageConfiguration })` 显式约束。启动后应在**每个消费字典的微服务**日志中看到：`[EventBus] initialized RedisInvalidationBus`、`[EventBus] subscribed channel=...dict.invalidate`、`[Dict] cache coordinator subscribed`；缺任何一条都说明订阅链路未装配。
 
 ---
 

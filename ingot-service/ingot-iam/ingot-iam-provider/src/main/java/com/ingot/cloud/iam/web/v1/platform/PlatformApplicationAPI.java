@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.cloud.iam.catalog.JdbcCatalogService;
+import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.ActionDraft;
 import com.ingot.framework.commons.model.iam.ActionRecord;
@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/platform/applications")
 @RequiredArgsConstructor
 public class PlatformApplicationAPI implements RShortcuts {
-    private final JdbcCatalogService catalog;
+    private final CatalogService catalog;
 
     /**
      * 分页列出应用目录。

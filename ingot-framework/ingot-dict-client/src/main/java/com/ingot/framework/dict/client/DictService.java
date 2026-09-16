@@ -13,7 +13,7 @@ import com.ingot.framework.dict.client.model.DictQuery;
  * 字典统一访问入口。
  * <p>
  * 业务代码注入此接口即可使用字典能力，由 {@code DictClientAutoConfiguration} 在不同
- * 服务上下文中自动选择本地实现（PMS）或 RPC 实现（其它微服务）。
+ * 服务上下文中自动选择本地实现（IAM）或 RPC 实现（其它微服务）。
  * </p>
  *
  * @author jy

@@ -9,8 +9,8 @@ import lombok.Data;
 /**
  * <p>安全中心在线会话视图，一条记录对应一个会话（sid），是管理面强制下线的操作对象。</p>
  *
- * <p>会话事实来自 Auth Inner，用户名 / 租户名由安全中心调 PMS 补全；PMS 不可用时
- * 名称字段为空，sid 级字段仍完整返回，保证管理员在 PMS 故障时依然能下线会话。
+ * <p>会话事实来自 Auth Inner，用户名 / 租户名由安全中心调 IAM 补全；IAM 不可用时
+ * 名称字段为空，sid 级字段仍完整返回，保证管理员在 IAM 故障时依然能下线会话。
  * 不复用 Auth 的 {@code OnlineToken}，避免把授权服务器内部模型暴露到前端。</p>
  *
  * @author jy
@@ -36,24 +36,24 @@ public class PlatformSessionVO implements Serializable {
     private Long userId;
 
     /**
-     * 登录账号名，PMS 不可用时回落为会话内的 principalName。
+     * 登录账号名，IAM 不可用时回落为会话内的 principalName。
      */
     private String username;
 
     /**
-     * 用户昵称，PMS 不可用或非管理用户时为空。
+     * 用户昵称，IAM 不可用或非管理用户时为空。
      */
     private String nickname;
 
     /**
-     * 用户头像，PMS 不可用或非管理用户时为空。
+     * 用户头像，IAM 不可用或非管理用户时为空。
      */
     private String avatar;
 
     private Long tenantId;
 
     /**
-     * 租户名称，PMS 不可用时为空。
+     * 租户名称，IAM 不可用时为空。
      */
     private String tenantName;
 

@@ -20,12 +20,12 @@ import lombok.experimental.UtilityClass;
  *
  * <p><b>注意</b>：SCG 适配器的 PREFIX 策略调用 {@code RouteMatchers.antPath(pattern)}
  *（Spring {@code AntPathMatcher}），<b>不会</b>做「去掉 {@code /**} 后按字符串前缀」匹配。
- * 若把 {@code /pms/**} 截成 {@code /pms}，{@code AntPathMatcher.isPattern("/pms")} 为 false，
+ * 若把 {@code /iam/**} 截成 {@code /iam}，{@code AntPathMatcher.isPattern("/iam")} 为 false，
  * 规则永远不命中。</p>
  *
  * <h3>编译示例</h3>
  * <pre>
- * /api/pms/order/**  → PREFIX, pattern=/api/pms/order/**
+ * /api/iam/order/**  → PREFIX, pattern=/api/iam/order/**
  * /api/health       → EXACT,  pattern=/api/health
  * </pre>
  */

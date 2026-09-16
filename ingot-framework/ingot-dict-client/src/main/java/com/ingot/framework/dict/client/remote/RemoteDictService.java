@@ -4,9 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ingot.cloud.pms.api.model.dto.dict.DictQueryDTO;
-import com.ingot.cloud.pms.api.model.vo.dict.DictItemVO;
-import com.ingot.cloud.pms.api.rpc.RemotePmsDictService;
+import com.ingot.cloud.iam.api.model.dto.dict.DictQueryDTO;
+import com.ingot.cloud.iam.api.model.vo.dict.DictItemVO;
+import com.ingot.cloud.iam.api.rpc.RemoteIamDictService;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.dict.client.DictService;
 import com.ingot.framework.dict.client.internal.DictItemAssembler;
@@ -16,8 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 基于 {@link RemotePmsDictService} 的字典 RPC 实现，由 dict-client 自动配置在
- * 非 PMS 服务中注册。
+ * 基于 {@link RemoteIamDictService} 的字典 RPC 实现，由 dict-client 自动配置在
+ * 非 IAM 服务中注册。
  *
  * @author jy
  * @since 2026/4/25
@@ -26,13 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RemoteDictService implements DictService {
 
-    private final RemotePmsDictService remotePmsDictService;
+    private final RemoteIamDictService remoteIamDictService;
 
     @Override
     public List<DictItem> items(String dictCode, DictQuery query) {
         DictQueryDTO dto = DictItemAssembler.toQueryDTO(query);
         try {
-            R<List<DictItemVO>> response = remotePmsDictService.items(dictCode, dto);
+            R<List<DictItemVO>> response = remoteIamDictService.items(dictCode, dto);
             if (response == null || !response.isSuccess()) {
                 log.warn("[Dict] Remote call failed for dictCode={}, response={}", dictCode, response);
                 return List.of();
@@ -51,7 +51,7 @@ public class RemoteDictService implements DictService {
         }
         DictQueryDTO dto = DictItemAssembler.toQueryDTO(query);
         try {
-            R<Map<String, List<DictItemVO>>> response = remotePmsDictService.batchItems(dictCodes, dto);
+            R<Map<String, List<DictItemVO>>> response = remoteIamDictService.batchItems(dictCodes, dto);
             if (response == null || !response.isSuccess()) {
                 log.warn("[Dict] Remote batch call failed for dictCodes={}, response={}", dictCodes, response);
                 return defaultEmpty(dictCodes);

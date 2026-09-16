@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -20,16 +22,16 @@ import org.springframework.security.core.GrantedAuthority;
 import static com.ingot.framework.security.oauth2.server.authorization.jackson2.JsonNodeUtils.*;
 
 /**
- * <p>Description  : {@link InUser} Deserializer.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2021/9/26.</p>
- * <p>Time         : 4:52 下午.</p>
- * <p>
- * 仅从 JSON 还原 {@link InUser} 的业务核心字段，meta 不参与序列化，
- * 因此无状态会话恢复时 meta 为 {@code null}（符合预期：meta 只在登录流程生效）。
+ * <p>从认证持久化 JSON 恢复用户与单一成员身份，拒绝无效身份结构。</p>
+ *
+ * <p>仅保留业务身份和当前权限；登录提示 meta 不参与会话恢复。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 @Slf4j
 final class InUserDeserializer extends JsonDeserializer<InUser> {
+    /** {@inheritDoc} */
     @Override
     public InUser deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();
@@ -55,6 +57,31 @@ final class InUserDeserializer extends JsonDeserializer<InUser> {
                 root, InUserFieldNames.TENANT_DEPT_IDS, LONG_LIST_MAP, mapper);
 
         return InUser.stateless(id, tenantId, clientId, tokenAuthType, userType, username, authorities,
-                deptList, tenantDeptsList);
+                deptList, tenantDeptsList).toBuilder()
+                .authorizationContext(readIdentity(parser, root)).build();
+    }
+    private AuthorizationContext readIdentity(JsonParser parser, JsonNode root) throws JsonParseException {
+        JsonNode node = root.get(InUserFieldNames.AUTHORIZATION_CONTEXT);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        try {
+            if (!node.isObject()) {
+                throw new IllegalArgumentException();
+            }
+            return new AuthorizationContext(AuthorizationDomain.valueOf(requiredText(node, InUserFieldNames.IDENTITY_DOMAIN)),
+                    node.hasNonNull(InUserFieldNames.TENANT_ID) ? requiredText(node, InUserFieldNames.TENANT_ID) : null,
+                    requiredText(node, InUserFieldNames.IDENTITY_ACCOUNT_ID), requiredText(node, InUserFieldNames.IDENTITY_MEMBER_ID));
+        } catch (IllegalArgumentException exception) {
+            throw new JsonParseException(parser, "IAM 会话身份结构无效");
+        }
+    }
+
+    private String requiredText(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        if (value == null || !value.isTextual() || value.asText().isBlank()) {
+            throw new IllegalArgumentException();
+        }
+        return value.asText();
     }
 }

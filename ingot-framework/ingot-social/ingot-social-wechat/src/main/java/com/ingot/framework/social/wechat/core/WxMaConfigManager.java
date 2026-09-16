@@ -16,7 +16,7 @@ import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.StrUtil;
-import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.social.common.provider.SocialDetailsProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +123,7 @@ public class WxMaConfigManager {
         } else {
             log.warn("WxMaConfigManager - 已达到最大重试次数{}，停止主动重试", MAX_RETRY_TIMES);
             log.info("WxMaConfigManager - 配置将在以下情况下自动同步：");
-            log.info("  1. PMS服务启动时会广播同步消息");
+            log.info("  1. IAM服务启动时会广播同步消息");
             log.info("  2. 配置变更时会收到通知消息");
             log.info("  3. 手动调用刷新API: POST /social/wechat/config/refresh/local");
             stopRetryScheduler();

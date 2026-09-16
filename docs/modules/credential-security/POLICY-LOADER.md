@@ -302,7 +302,7 @@ ingot:
         mode: remote
 ```
 
-Member/PMS Service 可选择 Local 或 Remote：
+Member/IAM Service 可选择 Local 或 Remote：
 
 ```yaml
 # member-service/application.yml

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 登录记录 DTO（Auth 服务通知 Member 记录 C 端登录事件）。
  *
- * <p>与 PMS 端 {@code LoginRecordDTO} 语义一致，但归属 member-api 自持，避免 member-api 依赖 pms-api。</p>
+ * <p>与 IAM 端 {@code LoginRecordDTO} 语义一致，但归属 member-api 自持，避免 member-api 依赖 iam-api。</p>
  *
  * @author jy
  * @since 1.0.0

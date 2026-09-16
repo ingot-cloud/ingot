@@ -20,9 +20,9 @@ dependencies {
     implementation project(ingot.framework_tss_spring)
 
     implementation project(ingot.security_api)
-    // 会话执行面在 Auth，管理面查询与下线经 Inner RPC；用户/租户名称经 PMS 补全
+    // 会话执行面在 Auth，管理面查询与下线经 Inner RPC；用户/租户名称经 IAM 补全
     implementation project(ingot.auth_api)
-    implementation project(ingot.pms_api)
+    implementation project(ingot.iam_api)
     implementation project(ingot.framework_security_recording)
     implementation project(ingot.framework_security_event_store_mysql)
     implementation project(ingot.framework_security_event_transport_feign)

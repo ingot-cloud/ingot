@@ -7,8 +7,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
-import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
-import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
+import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.commons.constants.SocialConstants;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.support.R;
@@ -47,11 +47,11 @@ public class BizSocialUtil {
     /**
      * 获取微信小程序OpenId
      *
-     * @param service {@link RemotePmsSocialDetailsService}
+     * @param service {@link RemoteIamSocialDetailsService}
      * @param code    小程序登录码
      * @return OpenId
      */
-    public static String getMiniProgramOpenId(RemotePmsSocialDetailsService service, SocialTypeEnum type, String appId, String code) {
+    public static String getMiniProgramOpenId(RemoteIamSocialDetailsService service, SocialTypeEnum type, String appId, String code) {
         R<List<SysSocialDetails>> response = service.getSocialDetailsByType(type.getValue());
         if (!response.isSuccess()) {
             log.debug("获取微信小程序信息失败");

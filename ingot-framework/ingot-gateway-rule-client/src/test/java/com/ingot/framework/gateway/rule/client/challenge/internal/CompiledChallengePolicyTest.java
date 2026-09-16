@@ -66,7 +66,7 @@ class CompiledChallengePolicyTest {
                 .challengeType(ChallengeCaptchaType.VALUE_SLIDER)
                 .trigger(ChallengeTrigger.ON_RATE_LIMIT)
                 .scope("e2e-anon")
-                .patternList(List.of(EndpointPattern.of("/pms/**", "ANY")))
+                .patternList(List.of(EndpointPattern.of("/iam/**", "ANY")))
                 .priority(10)
                 .build();
         CompiledChallengePolicy compiled = CompiledChallengePolicy.compile(List.of(login, anon), code -> null);
@@ -78,8 +78,8 @@ class CompiledChallengePolicyTest {
                 .isNotNull()
                 .extracting(ChallengePolicy::getCode)
                 .isEqualTo("login-always");
-        assertThat(compiled.matchByScope("/pms/user", HttpMethod.POST, "login")).isNull();
-        assertThat(compiled.matchByScope("/pms/user", HttpMethod.POST, "e2e-anon"))
+        assertThat(compiled.matchByScope("/iam/user", HttpMethod.POST, "login")).isNull();
+        assertThat(compiled.matchByScope("/iam/user", HttpMethod.POST, "e2e-anon"))
                 .isNotNull()
                 .extracting(ChallengePolicy::getScope)
                 .isEqualTo("e2e-anon");

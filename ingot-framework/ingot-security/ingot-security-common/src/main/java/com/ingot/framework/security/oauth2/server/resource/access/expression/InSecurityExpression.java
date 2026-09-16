@@ -110,7 +110,7 @@ public class InSecurityExpression {
     }
 
     /**
-     * Ant 风格权限匹配，与 PMS 端 {@code PermissionMatcher} 语义保持一致：
+     * Ant 风格权限匹配，与 IAM 端 {@code PermissionMatcher} 语义保持一致：
      * <ul>
      *     <li>精确码只匹配自身（持有父级权限不再隐式包含子级）；</li>
      *     <li>单段通配 {@code ns:*} 匹配命名空间 {@code ns:} 前缀下的全部权限；</li>

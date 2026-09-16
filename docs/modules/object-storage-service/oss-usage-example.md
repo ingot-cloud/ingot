@@ -66,7 +66,7 @@ ingot:
 ### 1. 文件上传服务
 
 ```java
-package com.ingot.cloud.pms.service.impl;
+package com.ingot.cloud.iam.service.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -147,9 +147,9 @@ public class FileUploadService {
 ### 2. Controller 示例
 
 ```java
-package com.ingot.cloud.pms.web.v1.admin;
+package com.ingot.cloud.iam.web.v1.admin;
 
-import com.ingot.cloud.pms.service.impl.FileUploadService;
+import com.ingot.cloud.iam.service.impl.FileUploadService;
 import com.ingot.framework.core.model.common.ApiResult;
 import com.ingot.framework.commons.oss.OSSResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -197,7 +197,7 @@ public class FileController {
 ### 1. 实体类定义
 
 ```java
-package com.ingot.cloud.pms.api.model.domain;
+package com.ingot.cloud.iam.api.model.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ingot.framework.data.mybatis.model.BaseModel;
@@ -240,7 +240,7 @@ public class SysUser extends BaseModel<SysUser> {
 ### 2. DTO 定义
 
 ```java
-package com.ingot.cloud.pms.api.model.dto;
+package com.ingot.cloud.iam.api.model.dto;
 
 import com.ingot.framework.oss.common.OssUrl;
 import lombok.Data;
@@ -310,7 +310,7 @@ ingot:
 
 ```bash
 ./gradlew clean build
-./gradlew :ingot-service:ingot-pms:ingot-pms-provider:bootRun
+./gradlew :ingot-service:ingot-iam:ingot-iam-provider:bootRun
 ```
 
 **业务代码无需任何修改！**

@@ -21,9 +21,10 @@ variables:
   # auth
   AUTH_MODULE_NAME: ingot-auth
   AUTH_VERSION: 0.1.0
-  # pms
-  PMS_MODULE_NAME: ingot-pms
-  PMS_VERSION: 0.1.0
+  # iam
+  IAM_MODULE_NAME: ingot-iam
+  IAM_VERSION: 0.1.0
+  IAM_IMAGE_NAME: docker-registry.ingotcloud.top/ingot/iam
   # gateway
   GATEWAY_MODULE_NAME: ingot-gateway
   GATEWAY_VERSION: 0.1.0
@@ -59,17 +60,22 @@ auth-assemble:
   when: manual
   tags: [ingot]
 
-pms-assemble:
+iam-assemble:
   stage: assemble
-  image: gradle:7.2-jdk8
+  cache: []
+  artifacts:
+    paths:
+      - output/ingot-iam-provider/
+    expire_in: 1 day
+  image: gradle:8.12.1-jdk21
   script:
     - gradle -PINGOT_NEXUS_URL=${INGOT_NEXUS_URL}
       -PINGOT_NEXUS_USERNAME=${INGOT_NEXUS_USERNAME}
       -PINGOT_NEXUS_PASSWORD=${INGOT_NEXUS_PASSWORD}
       -PJY_DOCKER_REGISTRY_USERNAME=${JY_DOCKER_REGISTRY_USERNAME}
       -PJY_DOCKER_REGISTRY_PASSWORD=${JY_DOCKER_REGISTRY_PASSWORD}
-      :ingot-service:ingot-pms:ingot-pms-provider:ingotAssemble
-    - gradle :ingot-service:ingot-pms:ingot-pms-provider:shiftDockerfileIngotAuth
+      :ingot-service:ingot-iam:ingot-iam-provider:ingotAssemble
+    - gradle :ingot-service:ingot-iam:ingot-iam-provider:shiftDockerfileProd
   when: manual
   tags: [ingot]
 
@@ -98,12 +104,20 @@ auth-docker-build:
   only:
     - main
 
-pms-docker-build:
+iam-docker-build:
   stage: docker-build
-  extends: .docker-build
+  cache: []
+  needs:
+    - job: iam-assemble
+      artifacts: true
   variables:
-    MODULE_NAME: ${PMS_MODULE_NAME}
-    INNER_VERSION: ${PMS_VERSION}
+    MODULE_NAME: ${IAM_MODULE_NAME}
+    INNER_VERSION: ${IAM_VERSION}
+  script:
+    - cd ./output/ingot-iam-provider
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin docker-registry.ingotcloud.top
+    - docker build -t ${IAM_IMAGE_NAME}:${INNER_VERSION} .
+    - docker push ${IAM_IMAGE_NAME}:${INNER_VERSION}
   tags: [ingot]
   when: manual
   only:
@@ -152,15 +166,18 @@ auth-docker-run:
   only:
     - main
 
-pms-docker-run:
+iam-docker-run:
   stage: deploy
+  cache: []
+  needs:
+    - job: iam-docker-build
   variables:
-    MODULE_NAME: ${AUTH_MODULE_NAME}
-    INNER_VERSION: ${AUTH_VERSION}
+    MODULE_NAME: ${IAM_MODULE_NAME}
+    INNER_VERSION: ${IAM_VERSION}
     SERVICE_NAME: ${MODULE_NAME}-${INNER_VERSION}
-    IMAGE_NAME: docker-registry.wangchao.im/ingot/${MODULE_NAME}:${INNER_VERSION}
+    IMAGE_NAME: ${IAM_IMAGE_NAME}:${INNER_VERSION}
   script:
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" docker-registry.wangchao.im
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin docker-registry.ingotcloud.top
     - docker ps -q --filter name="${SERVICE_NAME}" | xargs -r docker rm -f
     - docker images -q --filter reference="${IMAGE_NAME}" | xargs -r docker rmi -f
     - docker pull ${IMAGE_NAME}
@@ -170,6 +187,7 @@ pms-docker-run:
       --add-host ingot-db-mysql:${MYSQL_HOST}
       --add-host ingot-auth-server:${SERVICE_AUTH_HOST}
       --add-host ingot-gateway:${SERVICE_GATEWAY_HOST}
+      -e IAM_DATABASE=${IAM_DATABASE:?Set IAM_DATABASE to the verified IAM target database}
       -e NACOS_HOST=${NACOS_HOST}
       -e NACOS_PORT=${NACOS_PORT}
       -e REDIS_HOST=${REDIS_HOST}

@@ -38,9 +38,10 @@ public class OAuth2UserDetailsSocialAuthenticationConverter extends OAuth2UserDe
         }
 
         String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
+        String domain = parameters.getFirst(InOAuth2ParameterNames.DOMAIN);
         String principal = UsernameUri.of(
                 SocialUtil.uniqueCode(socialType, code), userTypeValue,
-                getGrantType().getValue(), tenant, UserIdentityTypeEnum.SOCIAL.getValue()).getValue();
+                getGrantType().getValue(), tenant, domain, UserIdentityTypeEnum.SOCIAL.getValue()).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         null, getGrantType(), clientPrincipal);

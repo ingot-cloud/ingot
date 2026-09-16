@@ -8,10 +8,10 @@ import com.ingot.framework.commons.model.common.TenantMainDTO;
 import lombok.Data;
 
 /**
- * <p>Description  : UserDetailsResponse.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/11/5.</p>
- * <p>Time         : 3:25 下午.</p>
+ * <p>返回内部认证所需的账号安全状态与经验证的单一 IAM 成员身份；凭证不用于业务响应。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 @Data
 public class UserDetailsResponse implements Serializable {
@@ -27,6 +27,11 @@ public class UserDetailsResponse implements Serializable {
      * 默认登录tenant
      */
     private Long tenant;
+    /**
+     * IAM 认证后选定的唯一成员身份；由身份服务验证归属后填充，不能由客户端回传。
+     * 非 IAM 用户为空；不得用旧 tenant 或角色推断平台成员。
+     */
+    private com.ingot.framework.commons.model.iam.AuthorizationContext authorizationContext;
     /**
      * 用户名
      */
@@ -51,7 +56,7 @@ public class UserDetailsResponse implements Serializable {
     private Boolean credentialsNonExpired;
     /**
      * 认证上下文元数据（可为 null）
-     * <p>由 PMS/Member 填充、随响应经 Feign/Jackson 传到 Auth，用于登录流程的精细化决策，
+     * <p>由 IAM/Member 填充、随响应经 Feign/Jackson 传到 Auth，用于登录流程的精细化决策，
      * 不序列化进 JWT。</p>
      * <p>已定义的 key 参见
      * {@code com.ingot.framework.security.core.userdetails.InUserMetaKeys}：</p>

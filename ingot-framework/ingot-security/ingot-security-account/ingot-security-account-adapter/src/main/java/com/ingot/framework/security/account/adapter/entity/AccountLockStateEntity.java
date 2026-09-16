@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 锁定状态实体（基础类，PMS和Member可继承）
+ * 锁定状态实体（基础类，IAM和Member可继承）
  *
  * @author jymot
  * @since 2026-02-13

@@ -6,9 +6,9 @@
 --
 -- 字段说明：
 --   user_type 与 UserTypeEnum.value 对应：
---     0 = ADMIN（系统用户 / PMS）
+--     0 = ADMIN（系统用户 / IAM）
 --     1 = APP  （C端用户 / Member）
---   (user_id, user_type) 联合唯一，支持 PMS 和 Member 同 ID 的用户共存。
+--   (user_id, user_type) 联合唯一，支持 IAM 和 Member 同 ID 的用户共存。
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS account_lock_state (

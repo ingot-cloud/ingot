@@ -21,7 +21,7 @@ import com.ingot.framework.security.credential.service.InitialPasswordService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 面向 PMS / Member 等“账号体系服务”的登录认证上下文填充工具。
+ * 面向 IAM / Member 等“账号体系服务”的登录认证上下文填充工具。
  * <p>
  * 仅在用户名/密码登录场景（{@code /inner/user/details}）调用一次，负责把账号的
  * “硬过期决策 + 软上下文 meta” 同步到 {@link UserDetailsResponse}，供 Auth 侧的
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * // PMS / Member IdentityResolver 登录场景
+ * // IAM / Member IdentityResolver 登录场景
  * UserDetailsResponse response = identityMap(user);
  * authContextSupport.fill(response, userId, userType);
  * return response;

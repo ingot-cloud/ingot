@@ -69,4 +69,17 @@ public final class IamPages {
         require(page, pageSize);
         return new PageResponse<>(items, total, page, pageSize);
     }
+
+    /**
+     * 组装导出等完整结果信封，不受单页上限约束。
+     *
+     * @param items 已按当前权限投影的全部记录
+     * @param <T> 记录类型
+     * @return 单页完整结果
+     */
+    public static <T> PageResponse<ResourceDetail<T>> complete(List<ResourceDetail<T>> items) {
+        List<ResourceDetail<T>> snapshot = items == null ? List.of() : items;
+        int pageSize = Math.max(snapshot.size(), 1);
+        return new PageResponse<>(snapshot, snapshot.size(), DEFAULT_PAGE, pageSize);
+    }
 }

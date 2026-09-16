@@ -4,7 +4,7 @@ package com.ingot.framework.security.core.userdetails;
  * {@link InUser#getMeta()} 所用 key 的常量定义。
  * <p>
  * meta 仅用于登录流程的精细化决策，不参与 JWT 序列化；
- * 由 PMS/Member 在 {@code UserDetailsResponse.meta} 中填充，
+ * 由 IAM/Member 在 {@code UserDetailsResponse.meta} 中填充，
  * 经 {@code OAuth2UserDetailsService.parse()} 透传到 {@link InUser#getMeta()}，
  * 供 {@code InUserDetailsChecker} / {@code DefaultUserCredentialChecker} 读取使用。
  * </p>

@@ -64,8 +64,8 @@ import org.springframework.context.annotation.Configuration;
  *     <li>{@link EndpointPattern#getMethod()} 暂不参与 Sentinel 编译 —
  *         Sentinel Gateway 的 {@link ApiPathPredicateItem} 不支持 HTTP method 过滤；
  *         字段保留供将来扩展（自定义 ApiPredicate 或 Filter 链）。</li>
- *     <li>Ant 路径（如 {@code /pms/**}）由 {@link SentinelPathPredicateCompiler} 整 pattern
- *         交给 Sentinel PREFIX / {@code AntPathMatcher}，勿截断为 {@code /pms}。</li>
+ *     <li>Ant 路径（如 {@code /iam/**}）由 {@link SentinelPathPredicateCompiler} 整 pattern
+ *         交给 Sentinel PREFIX / {@code AntPathMatcher}，勿截断为 {@code /iam}。</li>
  *     <li>规则 priority 仅用于编译时的稳定排序，不影响 Sentinel 运行期行为
  *         （Sentinel 同 path 多 rule 各自独立计数）。</li>
  * </ul>

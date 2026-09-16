@@ -61,7 +61,7 @@ ingot:
 ### 1. 简单定时任务
 
 ```java
-package com.ingot.cloud.pms.task;
+package com.ingot.cloud.iam.task;
 
 import com.ingot.framework.tss.common.annotation.ScheduledTask;
 import com.ingot.framework.tss.common.context.TaskContext;
@@ -271,7 +271,7 @@ public class ComplexTask {
 ### 1. Controller 接口
 
 ```java
-package com.ingot.cloud.pms.controller;
+package com.ingot.cloud.iam.controller;
 
 import com.ingot.framework.core.model.common.ApiResult;
 import com.ingot.framework.tss.common.management.TaskManagement;

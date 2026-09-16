@@ -6,8 +6,8 @@ import javax.sql.DataSource;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
-import com.ingot.cloud.pms.api.rpc.RemotePmsAuthorizationService;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.rpc.RemoteIamAuthorizationService;
 import com.ingot.framework.cache.config.LayeredCacheBuilder;
 import com.ingot.framework.cache.config.LayeredCacheSettings;
 import com.ingot.framework.cache.registry.LayeredCacheRegistry;
@@ -51,19 +51,19 @@ public class InDataScopeConfig {
     };
 
     /**
-     * 其它服务默认走 PMS 内部 RPC 加载快照；PMS 进程内由本地 {@code @Primary} 覆盖。
+     * 其它服务默认走 IAM 内部 RPC 加载快照；IAM 进程内由本地 {@code @Primary} 覆盖。
      *
-     * @param remotePmsAuthorizationService Feign 客户端
+     * @param remoteIamAuthorizationService Feign 客户端
      * @return 远端加载器
      */
     @Bean
     @ConditionalOnClass(Feign.class)
-    @ConditionalOnBean(RemotePmsAuthorizationService.class)
+    @ConditionalOnBean(RemoteIamAuthorizationService.class)
     @ConditionalOnMissingBean(AuthorizationSnapshotLoader.class)
     public AuthorizationSnapshotLoader remoteAuthorizationSnapshotLoader(
-            RemotePmsAuthorizationService remotePmsAuthorizationService) {
+            RemoteIamAuthorizationService remoteIamAuthorizationService) {
         log.info("[AuthorizationSnapshot] register remote loader");
-        return new RemoteAuthorizationSnapshotLoader(remotePmsAuthorizationService);
+        return new RemoteAuthorizationSnapshotLoader(remoteIamAuthorizationService);
     }
 
     /**

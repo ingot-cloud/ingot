@@ -35,7 +35,7 @@ The project is designed for teams building business systems on the Spring ecosys
 | `ingot-gateway` | External API gateway and gateway-level security enforcement |
 | `ingot-auth` | OAuth 2.0/OIDC authorization and token services |
 | `ingot-bff` | Backend-for-frontend authentication and session flows |
-| `ingot-pms-provider` | Permission, role, application, organization, and tenant management |
+| `ingot-iam-provider` | Permission, role, application, organization, and tenant management |
 | `ingot-member-provider` | Member and user-domain capabilities |
 | `ingot-security-provider` | Central security policy and security event capabilities |
 

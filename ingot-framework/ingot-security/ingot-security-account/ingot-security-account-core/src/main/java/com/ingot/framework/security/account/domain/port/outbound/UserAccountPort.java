@@ -8,7 +8,7 @@ import com.ingot.framework.commons.model.security.UserTypeEnum;
 
 /**
  * 用户账号数据访问端口（出站端口）
- * PMS 和 Member 各自实现此接口
+ * IAM 和 Member 各自实现此接口
  *
  * @author jymot
  * @since 2026-02-13

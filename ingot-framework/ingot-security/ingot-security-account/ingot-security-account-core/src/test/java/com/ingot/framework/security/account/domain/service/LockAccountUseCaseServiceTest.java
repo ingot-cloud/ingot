@@ -64,7 +64,7 @@ class LockAccountUseCaseServiceTest {
                 .reasonDetail("manual")
                 .operatorId(9L)
                 .operatorName("admin")
-                .source(EventSource.PMS)
+                .source(EventSource.IAM)
                 .build());
 
         verify(lockStatePort, never()).updateLockStatus(
@@ -85,7 +85,7 @@ class LockAccountUseCaseServiceTest {
                 .reasonDetail("manual")
                 .operatorId(9L)
                 .operatorName("admin")
-                .source(EventSource.PMS)
+                .source(EventSource.IAM)
                 .build());
 
         ArgumentCaptor<AccountSecurityEvent> captor = ArgumentCaptor.forClass(AccountSecurityEvent.class);

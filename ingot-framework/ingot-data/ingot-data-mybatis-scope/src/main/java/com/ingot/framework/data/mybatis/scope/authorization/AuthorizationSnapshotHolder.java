@@ -1,6 +1,6 @@
 package com.ingot.framework.data.mybatis.scope.authorization;
 
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
 
 /**
  * <p>请求期内的授权快照上下文，使用普通 {@link ThreadLocal}，异步不得继承。</p>

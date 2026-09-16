@@ -59,7 +59,7 @@ class UnlockAccountUseCaseServiceTest {
                 .reason("noop")
                 .operatorId(9L)
                 .operatorName("admin")
-                .source(EventSource.PMS)
+                .source(EventSource.IAM)
                 .build());
 
         verify(lockStatePort, never()).updateLockStatus(
@@ -78,7 +78,7 @@ class UnlockAccountUseCaseServiceTest {
                 .reason("manual unlock")
                 .operatorId(9L)
                 .operatorName("admin")
-                .source(EventSource.PMS)
+                .source(EventSource.IAM)
                 .build());
 
         ArgumentCaptor<AccountSecurityEvent> captor = ArgumentCaptor.forClass(AccountSecurityEvent.class);

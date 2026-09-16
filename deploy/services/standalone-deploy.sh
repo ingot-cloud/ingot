@@ -57,7 +57,7 @@ Docker Compose 单机部署脚本
     ingot-auth      # Auth 服务
     ingot-gateway   # Gateway 服务
     ingot-member    # Member 服务
-    ingot-pms       # PMS 服务
+    ingot-iam       # IAM 服务
 
 示例：
     # ========== 网络管理 ==========
@@ -193,7 +193,7 @@ deploy_services() {
         echo "  - Gateway版本: ${GATEWAY_VERSION:-0.1.0}"
         echo "  - Gateway端口: ${GATEWAY_PORT:-7980}"
         echo "  - Auth版本: ${AUTH_VERSION:-0.1.0}"
-        echo "  - PMS版本: ${PMS_VERSION:-0.1.0}"
+        echo "  - IAM版本: ${IAM_VERSION:-0.1.0}"
         echo "  - Member版本: ${MEMBER_VERSION:-0.1.0}"
         echo ""
     fi
@@ -340,7 +340,7 @@ show_logs() {
         echo "  - ingot-auth"
         echo "  - ingot-gateway"
         echo "  - ingot-member"
-        echo "  - ingot-pms"
+        echo "  - ingot-iam"
         exit 1
     fi
 

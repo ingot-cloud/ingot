@@ -6,12 +6,12 @@
 
 ### 场景 A：单服务独占（不推荐）
 - 服务器：8C16G
-- 部署：单个 PMS 服务
+- 部署：单个 IAM 服务
 - 特点：资源充足，可配置较高
 
 ### 场景 B：微服务多实例共存（实际场景）⭐
 - 服务器：8C16G
-- 部署：Gateway + Auth + PMS + Member + MySQL + Redis
+- 部署：Gateway + Auth + IAM + Member + MySQL + Redis
 - 特点：资源需合理分配，避免争抢
 
 ---
@@ -34,7 +34,7 @@
 - 系统预留：2G
 - Gateway：2.5G（JVM 2G + 其他 0.5G）
 - Auth：   2.5G
-- PMS：    2.5G
+- IAM：    2.5G
 - Member： 2.5G
 - MySQL：  1G
 - Redis：  512M
@@ -60,7 +60,7 @@ MySQL max_connections = 500
 
 连接分配：
 - Auth:    50
-- PMS:     50
+- IAM:     50
 - Member:  50
 - 其他:    50
 -----------
@@ -83,7 +83,7 @@ MySQL max_connections = 500
 线程分配（每服务）：
 - Gateway: io=4, worker=200
 - Auth:    io=4, worker=150
-- PMS:     io=4, worker=120
+- IAM:     io=4, worker=120
 - Member:  io=4, worker=120
 
 总计：worker ≈ 590（CPU 可超额分配）
@@ -125,7 +125,7 @@ MySQL max_connections = 500
 
 #### 场景 A：单服务
 ```yaml
-pms:
+iam:
   mem_limit: 8g        # 可用更多内存
   cpus: '4.0'          # 可用更多 CPU
 ```
@@ -142,7 +142,7 @@ auth:
   mem_reservation: 2g
   cpus: '2.0'
 
-pms:
+iam:
   mem_limit: 2560m
   mem_reservation: 2g
   cpus: '1.5'
@@ -191,7 +191,7 @@ member:
 ### 场景 A：单服务独占（不现实）
 ```
 需要 1 台服务器 × 4 个服务 = 4 台
-- 服务器 1：PMS
+- 服务器 1：IAM
 - 服务器 2：Auth
 - 服务器 3：Member
 - 服务器 4：Gateway
@@ -202,7 +202,7 @@ member:
 ### 场景 B：微服务多实例共存（推荐）⭐
 ```
 需要 2 台应用服务器 + 1 台数据库服务器
-- 应用服务器 1/2：Gateway + Auth + PMS + Member（各 2G）
+- 应用服务器 1/2：Gateway + Auth + IAM + Member（各 2G）
 - 数据库服务器：MySQL + Redis
 
 成本：2 × 8C16G + 1 × 4C8G = 20C40G
@@ -318,13 +318,13 @@ docker stats --format "table {{.Name}}\t{{.CPUPerc}}"
 ### 临时调整资源
 ```bash
 # 增加内存限制
-docker update --memory=3g ingot-pms
+docker update --memory=3g ingot-iam
 
 # 增加 CPU 限制
-docker update --cpus=2.0 ingot-pms
+docker update --cpus=2.0 ingot-iam
 
 # 重启服务应用新的环境变量
-docker restart ingot-pms
+docker restart ingot-iam
 ```
 
 ### 监控数据库连接

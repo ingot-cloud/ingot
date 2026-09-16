@@ -1,0 +1,24 @@
+{
+  "code": "tenant-member-reader",
+  "name": "成员只读",
+  "description": "租户定制共享角色",
+  "groupName": "成员",
+  "kind": "TENANT_CUSTOM",
+  "baseRevisionId": "shared-revision",
+  "definition": {
+    "grants": [],
+    "deltas": [
+      {
+        "actionId": "member-edit",
+        "operation": "REMOVE",
+        "scopes": []
+      }
+    ],
+    "parameterDefinitions": [],
+    "metadataOverrides": {
+      "name": "只读成员角色",
+      "description": null,
+      "groupName": null
+    }
+  }
+}

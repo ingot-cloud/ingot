@@ -2,14 +2,14 @@
 
 ## 模块概述
 
-字典模块是 Ingot Cloud 的统一枚举/数据字典基础设施。它由 PMS 内的领域模型 `PlatformDict` 与 `ingot-framework` 中的 `ingot-dict-client`、`ingot-event-bus` 三部分组成，向业务代码提供"无感"的字典访问、多级缓存与跨节点缓存一致性。
+字典模块是 Ingot Cloud 的统一枚举/数据字典基础设施。它由 IAM 内的领域模型 `PlatformDict` 与 `ingot-framework` 中的 `ingot-dict-client`、`ingot-event-bus` 三部分组成，向业务代码提供"无感"的字典访问、多级缓存与跨节点缓存一致性。
 
 ### 核心特性
 
 - ✅ **企业级字段方案** — 单表承载字典类型与字典项，原生支持平台 / 租户 / 应用三种作用域
 - ✅ **统一访问入口** — 业务方仅依赖 `DictService` 接口；本地与 RPC 实现由自动配置二选一
 - ✅ **三级缓存** — Caffeine（L1，进程内） → Redis（L2，集群共享） → MySQL（L3，源数据）
-- ✅ **跨节点失效广播** — PMS 写操作事务提交后通过 `ingot-event-bus` 广播失效事件，所有实例自动同步清除 L1+L2
+- ✅ **跨节点失效广播** — IAM 写操作事务提交后通过 `ingot-event-bus` 广播失效事件，所有实例自动同步清除 L1+L2
 - ✅ **可插拔事件总线** — 默认 Redis Pub/Sub 实现；`InvalidationBus` SPI 可替换为 Kafka 等任意 MQ
 - ✅ **可扩展属性** — `extra` JSON 字段支持图标、颜色、i18n 等业务扩展
 - ✅ **管理端 API + 内部 RPC** — 后台管理走 `/v1/platform/base/dict/**`；微服务间调用走 `/inner/dict/**` Feign 接口
@@ -39,7 +39,7 @@ public void demo() {
 }
 ```
 
-**就是这么简单。** 无需关心是否为 PMS 进程内、是否需要 RPC、是否启用缓存——`DictClientAutoConfiguration` 会自动选择合适的实现并叠加 L1+L2 缓存。
+**就是这么简单。** 无需关心是否为 IAM 进程内、是否需要 RPC、是否启用缓存——`DictClientAutoConfiguration` 会自动选择合适的实现并叠加 L1+L2 缓存。
 
 ---
 
@@ -59,7 +59,7 @@ public void demo() {
 ingot-framework/
 ├── ingot-dict-client                  字典统一访问入口（业务方依赖）
 │   ├── DictService                    业务接口（items / batchItems / label / evict ...）
-│   ├── model/DictItem                 稳定输出契约（与 PMS 实体解耦）
+│   ├── model/DictItem                 稳定输出契约（与 IAM 实体解耦）
 │   ├── model/DictQuery                作用域查询条件（PLATFORM / TENANT / APP）
 │   ├── internal/CaffeineDictService   L1 进程内缓存装饰器
 │   ├── internal/RedisDictService      L2 Redis 共享缓存装饰器
@@ -76,15 +76,15 @@ ingot-framework/
     ├── Subscription                   订阅句柄
     └── redis/RedisInvalidationBus     默认 Redis Pub/Sub 实现
 
-ingot-service/ingot-pms/
-├── ingot-pms-api/.../domain/PlatformDict           领域实体
-├── ingot-pms-api/.../rpc/RemotePmsDictService      Feign 接口
-├── ingot-pms-provider/.../web/v1/.../PlatformDictAPI   管理端 REST
-├── ingot-pms-provider/.../web/inner/InnerDictAPI       内部 RPC
-├── ingot-pms-provider/.../service/dict/LocalDictService            本地实现（PMS 自身）
-├── ingot-pms-provider/.../service/dict/LocalDictConfig             注册 dictDelegate
-├── ingot-pms-provider/.../service/dict/DictChangedSpringEvent      本地变更事件
-└── ingot-pms-provider/.../service/dict/DictInvalidationPublisher   事务提交后广播失效
+ingot-service/ingot-iam/
+├── ingot-iam-api/.../domain/PlatformDict           领域实体
+├── ingot-iam-api/.../rpc/RemoteIamDictService      Feign 接口
+├── ingot-iam-provider/.../web/v1/.../PlatformDictAPI   管理端 REST
+├── ingot-iam-provider/.../web/inner/InnerDictAPI       内部 RPC
+├── ingot-iam-provider/.../service/dict/LocalDictService            本地实现（IAM 自身）
+├── ingot-iam-provider/.../service/dict/LocalDictConfig             注册 dictDelegate
+├── ingot-iam-provider/.../service/dict/DictChangedSpringEvent      本地变更事件
+└── ingot-iam-provider/.../service/dict/DictInvalidationPublisher   事务提交后广播失效
 ```
 
 ---
@@ -106,11 +106,11 @@ RedisDictService（L2，集群共享 30min）
    │ 未命中 ↓
    ▼
 delegate
-   ├── PMS 进程：LocalDictService → BizPlatformDictService → MySQL
-   └── 其它服务：RemoteDictService → Feign → InnerDictAPI（PMS）→ MySQL
+   ├── IAM 进程：LocalDictService → BizPlatformDictService → MySQL
+   └── 其它服务：RemoteDictService → Feign → InnerDictAPI（IAM）→ MySQL
 ```
 
-### PMS 写路径
+### IAM 写路径
 
 ```
 PlatformDictServiceImpl.create / update / delete / changeStatus / batchSort
@@ -143,7 +143,7 @@ DictService.evict(dictCode)  ←  L1 + L2 自顶向下逐层清理
 |-----|---------|------|
 | L1 命中 | < 1 ms | Caffeine 进程内 |
 | L2 命中 | 2–5 ms | Redis GET + JSON 反序列化 |
-| 全部回源（PMS 本地） | 10–30 ms | DB 查询 + 装配 |
+| 全部回源（IAM 本地） | 10–30 ms | DB 查询 + 装配 |
 | 全部回源（其它服务 RPC） | 20–50 ms | Feign + DB 查询 |
 | 跨节点失效广播延迟 | < 50 ms | Redis Pub/Sub 同集群 |
 

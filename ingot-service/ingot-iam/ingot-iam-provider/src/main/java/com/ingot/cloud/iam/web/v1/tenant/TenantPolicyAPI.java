@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.policy.JdbcPolicyService;
+import com.ingot.cloud.iam.policy.PolicyService;
 import com.ingot.framework.commons.model.iam.DirectoryPolicyDraft;
 import com.ingot.framework.commons.model.iam.DirectoryPolicyInput;
 import com.ingot.framework.commons.model.iam.FieldPolicyDraft;
@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/tenant/policies")
 @RequiredArgsConstructor
 public class TenantPolicyAPI implements RShortcuts {
-    private final JdbcPolicyService policies;
+    private final PolicyService policies;
 
     /**
      * 读取通讯录策略。

@@ -4,10 +4,11 @@ import java.util.List;
 
 import com.ingot.cloud.security.model.domain.AccountLockoutPolicyConfig;
 import com.ingot.cloud.security.service.account.AccountLockoutPolicyAdminService;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +43,7 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
      */
     @GetMapping
     @Operation(summary = "查询账号锁定策略列表")
-    @AdminOrHasAnyAuthority({"platform:security:account:lockout:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOCKOUT_POLICY_READ})
     public R<List<AccountLockoutPolicyConfig>> list() {
         return ok(adminService.list());
     }
@@ -55,7 +56,7 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
      */
     @GetMapping("/{userType}")
     @Operation(summary = "按用户类型查询账号锁定策略")
-    @AdminOrHasAnyAuthority({"platform:security:account:lockout:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOCKOUT_POLICY_READ})
     public R<AccountLockoutPolicyConfig> getByUserType(
             @Parameter(description = "用户类型：0=B端管理员，1=C端用户")
             @PathVariable String userType) {
@@ -70,7 +71,7 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
      */
     @PutMapping
     @Operation(summary = "更新账号锁定策略")
-    @AdminOrHasAnyAuthority({"platform:security:account:lockout:update"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOCKOUT_POLICY_UPDATE})
     public R<AccountLockoutPolicyConfig> upsert(@RequestBody AccountLockoutPolicyConfig policy) {
         return ok(adminService.upsert(policy));
     }

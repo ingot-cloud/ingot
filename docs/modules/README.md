@@ -6,7 +6,7 @@
 
 | 模块 | 目录 | 说明 |
 |------|------|------|
-| PMS / 权限 | [pms/](./pms/) | 功能说明、数据权限、租户 |
+| IAM / 权限 | [iam/](./iam/) | 功能说明、数据权限、租户 |
 | 认证授权 | [authorization-server/](./authorization-server/) | OAuth2、JWK、Token、BFF |
 | 凭证安全 | [credential-security/](./credential-security/) | 密码策略、策略加载器 |
 | 字典 | [dict/](./dict/) | 三级缓存、InvalidationBus |

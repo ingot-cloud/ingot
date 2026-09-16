@@ -1,7 +1,7 @@
 package com.ingot.cloud.iam.authorization.snapshot;
 
 import com.ingot.cloud.iam.evaluation.AuthorizationCacheConfiguration;
-import com.ingot.cloud.iam.evaluation.JdbcAuthorizationEvaluator;
+import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
 import com.ingot.framework.cache.spi.LayeredCache;
 import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationInvalidationEvent;
 import com.ingot.framework.data.mybatis.scope.authorization.AuthorizationSnapshotAccess;
@@ -26,7 +26,7 @@ public class AuthorizationInvalidationPublisher {
 
     private final ObjectProvider<AuthorizationSnapshotAccess> snapshotAccessProvider;
     private final ObjectProvider<InvalidationBus> invalidationBusProvider;
-    private final ObjectProvider<LayeredCache<String, JdbcAuthorizationEvaluator.AuthorizationView>> viewCache;
+    private final ObjectProvider<LayeredCache<String, AuthorizationEvaluator.AuthorizationView>> viewCache;
 
     /**
      * 绑定旧快照、失效总线与 IAM 授权视图缓存。
@@ -39,7 +39,7 @@ public class AuthorizationInvalidationPublisher {
             ObjectProvider<AuthorizationSnapshotAccess> snapshotAccessProvider,
             ObjectProvider<InvalidationBus> invalidationBusProvider,
             @Qualifier(AuthorizationCacheConfiguration.CACHE_BEAN_NAME)
-            ObjectProvider<LayeredCache<String, JdbcAuthorizationEvaluator.AuthorizationView>> viewCache) {
+            ObjectProvider<LayeredCache<String, AuthorizationEvaluator.AuthorizationView>> viewCache) {
         this.snapshotAccessProvider = snapshotAccessProvider;
         this.invalidationBusProvider = invalidationBusProvider;
         this.viewCache = viewCache;
@@ -66,7 +66,7 @@ public class AuthorizationInvalidationPublisher {
                 log.warn("[AuthorizationSnapshot] origin local cache evict failed", ex);
             }
         }
-        LayeredCache<String, JdbcAuthorizationEvaluator.AuthorizationView> cache = viewCache.getIfAvailable();
+        LayeredCache<String, AuthorizationEvaluator.AuthorizationView> cache = viewCache.getIfAvailable();
         if (cache != null) {
             try {
                 cache.evictAll();

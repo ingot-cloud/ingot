@@ -65,6 +65,13 @@ public interface InOAuth2ParameterNames {
     String TENANT = "org";
 
     /**
+     * 认证入口声明的管理域，取值 {@code PLATFORM}/{@code TENANT}，在请求中使用。
+     * <p>平台身份与租户成员资格选择阶段都不携带 {@link #TENANT}，因此域不能由 tenant 是否为空推断。
+     * 参数缺省时由身份提供方按既有行为兼容处理。</p>
+     */
+    String DOMAIN = "domain";
+
+    /**
      * 传递sessionId字段
      */
     String SESSION_ID = "s_token";

@@ -47,12 +47,12 @@ class ChallengeFilterTest {
     @Test
     void consume_usesRequestScope_setsPassTokenOk() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/pms/user")
+                MockServerHttpRequest.post("/iam/user")
                         .header(VCConstants.HEADER_PASS_TOKEN, "tok")
                         .header(VCConstants.HEADER_SCOPE, "e2e-anon")
                         .build());
-        when(challengeService.match(eq("/pms/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
-        when(challengeService.matchByScope(eq("/pms/user"), any(), eq("e2e-anon"))).thenReturn(anonPolicy());
+        when(challengeService.match(eq("/iam/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
+        when(challengeService.matchByScope(eq("/iam/user"), any(), eq("e2e-anon"))).thenReturn(anonPolicy());
         when(passTokenStore.consume("e2e-anon", "tok")).thenReturn(Mono.just(true));
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
@@ -67,12 +67,12 @@ class ChallengeFilterTest {
     @Test
     void consume_loginTokenOnUnrelatedPath_doesNotConsume() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/pms/user")
+                MockServerHttpRequest.post("/iam/user")
                         .header(VCConstants.HEADER_PASS_TOKEN, "tok")
                         .header(VCConstants.HEADER_SCOPE, "login")
                         .build());
-        when(challengeService.match(eq("/pms/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
-        when(challengeService.matchByScope(eq("/pms/user"), any(), eq("login"))).thenReturn(null);
+        when(challengeService.match(eq("/iam/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
+        when(challengeService.matchByScope(eq("/iam/user"), any(), eq("login"))).thenReturn(null);
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
@@ -107,11 +107,11 @@ class ChallengeFilterTest {
     @Test
     void consume_queryOnly_isIgnoredAsNoToken() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/pms/user")
+                MockServerHttpRequest.post("/iam/user")
                         .queryParam("_vc_pass_token", "tok")
                         .queryParam("_vc_scope", "e2e-anon")
                         .build());
-        when(challengeService.match(eq("/pms/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
+        when(challengeService.match(eq("/iam/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
@@ -125,10 +125,10 @@ class ChallengeFilterTest {
     @Test
     void consume_missingScopeWithoutAlways_doesNotSkipSentinel() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/pms/user")
+                MockServerHttpRequest.post("/iam/user")
                         .header(VCConstants.HEADER_PASS_TOKEN, "tok")
                         .build());
-        when(challengeService.match(eq("/pms/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
+        when(challengeService.match(eq("/iam/user"), any(), eq(ChallengeTrigger.ALWAYS))).thenReturn(null);
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 

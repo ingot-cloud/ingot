@@ -2,18 +2,16 @@ package com.ingot.cloud.iam.adapter;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.ingot.cloud.iam.api.model.domain.SysUser;
-import com.ingot.cloud.iam.mapper.SysUserMapper;
-import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
+import com.ingot.cloud.iam.identity.AccountCredentialRepository;
+import com.ingot.cloud.iam.persistence.AccountWriteRepository;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * <p>将凭证端口适配到当前持久化实现，更新受版本条件约束。</p>
+ * <p>将凭证端口接到新模型 {@code iam_account}，更新受版本条件约束，不回退旧用户表。</p>
  *
  * @author jymot
  * @since 2026-02-13
@@ -21,14 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 public class IamUserCredentialPortAdapter implements UserCredentialPort {
-
-    private final SysUserMapper sysUserMapper;
+    private final AccountCredentialRepository accounts;
+    private final AccountWriteRepository accountWrites;
 
     /** {@inheritDoc} */
     @Override
     public String getPasswordHash(Long userId, UserTypeEnum userType) {
-        SysUser sysUser = sysUserMapper.selectById(userId);
-        return sysUser != null ? sysUser.getPassword() : null;
+        return accounts.findById(userId).map(AccountCredentialRepository.AccountCredentials::passwordHash)
+                .orElse(null);
     }
 
     /** {@inheritDoc} */
@@ -37,21 +35,14 @@ public class IamUserCredentialPortAdapter implements UserCredentialPort {
     public boolean updatePassword(Long userId, UserTypeEnum userType,
                                   String newPasswordHash, LocalDateTime changedAt,
                                   Long expectedVersion, boolean mustChangePwd) {
-        LambdaUpdateWrapper<SysUser> update = Wrappers.lambdaUpdate();
-        update.eq(SysUser::getId, userId)
-                .eq(SysUser::getVersion, expectedVersion)
-                .set(SysUser::getPassword, newPasswordHash)
-                .set(SysUser::getPasswordChangedAt, changedAt)
-                .set(SysUser::getMustChangePwd, mustChangePwd);
-
-        int updated = sysUserMapper.update(null, update);
-        return updated > 0;
+        return accountWrites.updatePassword(userId, newPasswordHash, changedAt, expectedVersion, mustChangePwd) > 0;
     }
 
     /** {@inheritDoc} */
     @Override
     public LocalDateTime getPasswordChangedAt(Long userId, UserTypeEnum userType) {
-        SysUser sysUser = sysUserMapper.selectById(userId);
-        return sysUser != null ? sysUser.getPasswordChangedAt() : null;
+        return accounts.findById(userId)
+                .map(AccountCredentialRepository.AccountCredentials::passwordChangedAt)
+                .orElse(null);
     }
 }

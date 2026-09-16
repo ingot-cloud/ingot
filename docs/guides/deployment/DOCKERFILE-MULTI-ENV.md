@@ -11,7 +11,7 @@
 | ingot-gateway | 7980 | `ingot-service/ingot-gateway/src/main/docker/{env}/` |
 | ingot-auth | 5100 | `ingot-service/ingot-auth/src/main/docker/{env}/` |
 | ingot-member-provider | 5300 | `ingot-service/ingot-member/ingot-member-provider/src/main/docker/{env}/` |
-| ingot-pms-provider | 5200 | `ingot-service/ingot-pms/ingot-pms-provider/src/main/docker/{env}/` |
+| ingot-iam-provider | 5200 | `ingot-service/ingot-iam/ingot-iam-provider/src/main/docker/{env}/` |
 
 ## 📁 目录结构
 
@@ -45,8 +45,8 @@ ingot-service/
 │           └── prod/
 │               └── Dockerfile
 │
-└── ingot-pms/
-    └── ingot-pms-provider/
+└── ingot-iam/
+    └── ingot-iam-provider/
         └── src/main/docker/
             ├── dev/
             │   └── Dockerfile
@@ -175,7 +175,7 @@ USER spring:spring
 ./gradlew :ingot-service:ingot-gateway:dockerBuildDev
 ./gradlew :ingot-service:ingot-auth:dockerBuildDev
 ./gradlew :ingot-service:ingot-member:ingot-member-provider:dockerBuildDev
-./gradlew :ingot-service:ingot-pms:ingot-pms-provider:dockerBuildDev
+./gradlew :ingot-service:ingot-iam:ingot-iam-provider:dockerBuildDev
 
 # 测试环境
 ./gradlew :ingot-service:ingot-gateway:dockerBuildTest

@@ -14,13 +14,13 @@ CREATE TABLE iam_plan(id BIGINT PRIMARY KEY, name VARCHAR(128), enabled BOOLEAN 
 CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT, PRIMARY KEY(plan_id, application_id));
 CREATE TABLE iam_tenant_app_entitlement(id BIGINT PRIMARY KEY, tenant_id BIGINT REFERENCES iam_tenant(id), application_id BIGINT REFERENCES iam_application(id), enabled BOOLEAN, source VARCHAR(16), valid_from TIMESTAMP);
 CREATE TABLE iam_app_audience(tenant_id BIGINT, application_id BIGINT, audience_kind VARCHAR(16));
-CREATE TABLE iam_default_policy_revision(id BIGINT PRIMARY KEY, kind VARCHAR(16), revision BIGINT DEFAULT 1);
+CREATE TABLE iam_default_policy_revision(id BIGINT PRIMARY KEY, kind VARCHAR(16), revision BIGINT DEFAULT 1, definition VARCHAR(1024) DEFAULT '{}');
 CREATE TABLE iam_directory_policy(tenant_id BIGINT REFERENCES iam_tenant(id), default_revision_id BIGINT REFERENCES iam_default_policy_revision(id));
 CREATE TABLE iam_field_policy(tenant_id BIGINT REFERENCES iam_tenant(id), default_revision_id BIGINT REFERENCES iam_default_policy_revision(id));
-CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY, event_id VARCHAR(64), actor_account_id BIGINT, actor_member_id BIGINT, domain VARCHAR(16), target_type VARCHAR(64), target_id VARCHAR(128), change_type VARCHAR(64), safe_before VARCHAR(2048), safe_after VARCHAR(2048), revisions VARCHAR(2048), occurred_at TIMESTAMP);
+CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY, event_id VARCHAR(64), actor_account_id BIGINT, actor_member_id BIGINT, domain VARCHAR(16), target_type VARCHAR(64), target_id VARCHAR(128), change_type VARCHAR(64), safe_before VARCHAR(2048), safe_after VARCHAR(2048), revisions VARCHAR(2048), delegation_id BIGINT, assignment_id BIGINT, trace_id VARCHAR(128), occurred_at TIMESTAMP);
 INSERT INTO iam_account(id) VALUES (1),(2);
 INSERT INTO iam_platform_member(id,account_id,status) VALUES (1001,1,'ACTIVE');
 INSERT INTO iam_role_definition(id,domain,kind,code,name) VALUES (1,'TENANT','SYSTEM','tenant-admin','租户治理'),(2,'TENANT','SHARED','viewer','Viewer'),(3,'PLATFORM','SYSTEM','platform-admin','平台治理');
 INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES (11,1,'SYSTEM',1),(12,2,'SHARED',1),(13,3,'SYSTEM',1);
 INSERT INTO iam_application(id,domain,code,name,baseline) VALUES (1,'TENANT','iam-tenant','Tenant',TRUE),(2,'PLATFORM','iam-platform','Platform',FALSE);
-INSERT INTO iam_default_policy_revision(id,kind,revision) VALUES (21,'DIRECTORY',1),(22,'FIELD',1);
+INSERT INTO iam_default_policy_revision(id,kind,revision,definition) VALUES (21,'DIRECTORY',1,'{"scope":"ALL"}'),(22,'FIELD',1,'{"fields":{"phone":{"visibility":"MASKED","editable":false},"email":{"visibility":"MASKED","editable":false}}}');

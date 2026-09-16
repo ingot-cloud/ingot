@@ -1,0 +1,41 @@
+{
+  "administratorMemberId": "member-admin",
+  "allowedRoleRevisionRefs": [
+    {
+      "kind": "SHARED",
+      "id": "shared-revision"
+    }
+  ],
+  "recipientSelection": {
+    "members": [],
+    "departments": [
+      {
+        "id": "department-rd",
+        "includeDescendants": true
+      }
+    ]
+  },
+  "actionScopeCeilings": [
+    {
+      "actionId": "member-read",
+      "scopes": [
+        {
+          "kind": "MANAGED_DEPARTMENTS",
+          "parameterKey": "managedDepartments",
+          "includeDescendants": true
+        }
+      ],
+      "scopeBindings": {
+        "managedDepartments": {
+          "kind": "DEPARTMENTS",
+          "ids": [
+            "department-rd"
+          ]
+        }
+      }
+    }
+  ],
+  "validFrom": "2026-09-13T00:00:00Z",
+  "validUntil": "2026-09-20T00:00:00Z",
+  "maxAssignmentDuration": "PT24H"
+}

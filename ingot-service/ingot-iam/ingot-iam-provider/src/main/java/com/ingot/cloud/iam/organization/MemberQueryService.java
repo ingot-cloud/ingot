@@ -1,16 +1,23 @@
 package com.ingot.cloud.iam.organization;
 
-import java.util.HashMap;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.sql.DataSource;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
+import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
-import com.ingot.cloud.iam.evaluation.ResourceScopeFilter;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
+import com.ingot.cloud.iam.persistence.MemberQueryRepository;
+import com.ingot.cloud.iam.persistence.entity.IamPlatformMemberEntity;
+import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.policy.FieldAccessEvaluator;
+import com.ingot.cloud.iam.policy.FieldPolicySnapshot;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
@@ -30,12 +37,10 @@ import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
-import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PolicyScenario;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -50,29 +55,33 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MemberQueryService {
     private final IamAccess access;
     private final ResourceAccess scopes;
+    private final ObjectCapabilities capabilities;
     private final FieldAccessEvaluator fields;
     private final IamAuditWriter audits;
-    private final NamedParameterJdbcTemplate jdbc;
+    private final MemberQueryRepository members;
     private final TransactionTemplate transaction;
 
     /**
      * 绑定身份、范围、字段策略与成员表。
+     * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
      *
      * @param access 当前身份
      * @param scopes 对象范围
+     * @param capabilities 对象展示能力
      * @param fields 字段访问
      * @param audits 同事务审计
-     * @param dataSource IAM 目标库
+     * @param members 成员持久化
      * @param transactionManager 同一数据源事务
      */
-    public MemberQueryService(IamAccess access, ResourceAccess scopes, FieldAccessEvaluator fields,
-                              IamAuditWriter audits, DataSource dataSource,
+    public MemberQueryService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
+                              FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members,
                               PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
+        this.capabilities = capabilities;
         this.fields = fields;
         this.audits = audits;
-        this.jdbc = new NamedParameterJdbcTemplate(dataSource);
+        this.members = members;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -125,49 +134,86 @@ public class MemberQueryService {
                                                                     String email) {
         IamPages.require(page, pageSize);
         AuthorizationDomain domain = actor.context().domain();
-        ResourceScopeFilter.Predicate scope = scopes.memberRead(actor.context(), action, "id");
-        Map<String, Object> parameters = new HashMap<>(scope.parameters());
-        parameters.put("limit", pageSize);
-        parameters.put("offset", IamPages.offset(page, pageSize));
+        ObjectScope scope = scopes.memberRead(actor.context(), action);
+        ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         if (domain == AuthorizationDomain.PLATFORM) {
-            Long total = jdbc.queryForObject(
-                    "SELECT COUNT(*) FROM iam_platform_member WHERE status<>'REMOVED' AND " + scope.sql(),
-                    scope.parameters(), Long.class);
-            List<ResourceDetail<MemberRecord>> items = jdbc.query("""
-                    SELECT id,display_name,avatar,status,version FROM iam_platform_member
-                     WHERE status<>'REMOVED' AND %s ORDER BY id LIMIT :limit OFFSET :offset
-                    """.formatted(scope.sql()), parameters,
-                    (row, index) -> IamDetails.of(platformMember(row), row.getString("version")));
-            return IamPages.details(items, total == null ? 0 : total, page, pageSize);
+            Page<IamPlatformMemberEntity> result = members.pagePlatform(scope, page, pageSize);
+            List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
+                    .map(row -> IamDetails.of(platformMember(row),
+                            capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
+                    .toList();
+            return IamPages.details(items, result.getTotal(), page, pageSize);
         }
         long tenantId = IamIds.require(actor.context().tenantId());
         long viewerId = IamIds.require(actor.context().memberId());
-        fields.requireOriginalLookup(tenantId, viewerId, MemberFieldKey.VALUE_PHONE, phone);
-        fields.requireOriginalLookup(tenantId, viewerId, MemberFieldKey.VALUE_EMAIL, email);
-        parameters.put("tenantId", tenantId);
-        Map<String, Object> countParameters = new HashMap<>(scope.parameters());
-        countParameters.put("tenantId", tenantId);
-        String filters = "";
-        if (phone != null && !phone.isBlank()) {
-            parameters.put("phone", phone);
-            countParameters.put("phone", phone);
-            filters += " AND phone=:phone";
+        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_PHONE, phone, scope);
+        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_EMAIL, email, scope);
+        Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email, page, pageSize);
+        Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
+                result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
+        List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
+                .map(row -> detail(snapshot, caps, viewerId,
+                        tenantMember(row, departments.getOrDefault(row.getId(), List.of())),
+                        version(row.getVersion())))
+                .toList();
+        return IamPages.details(items, result.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 按导出快照 ID 重验范围与字段策略，返回当前仍可见的完整投影。
+     *
+     * @param actor 当前身份
+     * @param action 导出操作
+     * @param memberIds 快照成员 ID
+     * @return 完整投影结果
+     */
+    public PageResponse<ResourceDetail<MemberRecord>> listProjectedByIds(ActiveIdentity actor, IamAction action,
+                                                                         List<String> memberIds) {
+        if (actor.context().domain() != AuthorizationDomain.TENANT) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
-        if (email != null && !email.isBlank()) {
-            parameters.put("email", email);
-            countParameters.put("email", email);
-            filters += " AND email=:email";
+        ObjectScope scope = scopes.memberRead(actor.context(), action);
+        if (scope.coversNone() || memberIds == null || memberIds.isEmpty()) {
+            return IamPages.complete(List.of());
         }
-        Long total = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM iam_tenant_member WHERE tenant_id=:tenantId AND status<>'REMOVED' AND "
-                        + scope.sql() + filters, countParameters, Long.class);
-        List<ResourceDetail<MemberRecord>> items = jdbc.query("""
-                SELECT id,display_name,avatar,phone,email,status,version FROM iam_tenant_member
-                 WHERE tenant_id=:tenantId AND status<>'REMOVED' AND %s%s
-                 ORDER BY id LIMIT :limit OFFSET :offset
-                """.formatted(scope.sql(), filters), parameters,
-                (row, index) -> detail(tenantId, viewerId, tenantMember(tenantId, row), row.getString("version")));
-        return IamPages.details(items, total == null ? 0 : total, page, pageSize);
+        LinkedHashSet<String> order = new LinkedHashSet<>();
+        List<BigInteger> ids = new ArrayList<>();
+        for (String memberId : memberIds) {
+            if (memberId == null || memberId.isBlank() || !order.add(memberId)) {
+                continue;
+            }
+            try {
+                ids.add(BigInteger.valueOf(IamIds.require(memberId)));
+            } catch (BizException ignored) {
+                // 损坏的快照 ID 不能扩大当前可见集合。
+            }
+        }
+        if (ids.isEmpty()) {
+            return IamPages.complete(List.of());
+        }
+        long tenantId = IamIds.require(actor.context().tenantId());
+        long viewerId = IamIds.require(actor.context().memberId());
+        List<IamTenantMemberEntity> rows = members.listTenantByIds(tenantId, scope, ids);
+        Map<String, IamTenantMemberEntity> byId = new LinkedHashMap<>();
+        for (IamTenantMemberEntity row : rows) {
+            byId.put(row.getId().toString(), row);
+        }
+        Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
+                rows.stream().map(IamTenantMemberEntity::getId).toList());
+        FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
+        List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
+        for (String memberId : order) {
+            IamTenantMemberEntity row = byId.get(memberId);
+            if (row == null) {
+                continue;
+            }
+            items.add(detail(snapshot, caps, viewerId,
+                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())),
+                    version(row.getVersion())));
+        }
+        return IamPages.complete(items);
     }
 
     /**
@@ -201,20 +247,19 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         Set<String> departmentIds = new LinkedHashSet<>();
+        Map<String, Boolean> departmentBindings = new LinkedHashMap<>();
         if (input.departments() != null) {
             for (MemberDepartmentBinding binding : input.departments()) {
                 departmentIds.add(binding.id());
+                departmentBindings.put(binding.id(), binding.primary());
             }
         }
-        scopes.requireCreate(actor.context(),
-                domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_CREATE
-                        : IamAction.TENANT_MEMBER_CREATE, departmentIds);
         long accountId = IamIds.require(input.accountId());
         return transaction.execute(status -> {
-            Long accounts = jdbc.queryForObject(
-                    "SELECT COUNT(*) FROM iam_account WHERE id=:id AND enabled=TRUE AND deleted_at IS NULL",
-                    Map.of("id", accountId), Long.class);
-            if (accounts == null || accounts != 1) {
+            scopes.requireCreate(actor.context(),
+                    domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_CREATE
+                            : IamAction.TENANT_MEMBER_CREATE, departmentIds);
+            if (!members.activeAccount(accountId)) {
                 throw new BizException(IamReasonCode.IDENTITY_INVALID);
             }
             long id = access.nextId();
@@ -222,19 +267,11 @@ public class MemberQueryService {
                     ? "成员" : input.displayName().trim();
             try {
                 if (domain == AuthorizationDomain.PLATFORM) {
-                    jdbc.update("""
-                            INSERT INTO iam_platform_member(id,account_id,display_name,status)
-                            VALUES (:id,:accountId,:displayName,:status)
-                            """, Map.of("id", id, "accountId", accountId, "displayName", displayName,
-                            "status", MemberStatus.ACTIVE.name()));
+                    members.insertPlatform(id, accountId, displayName);
                 } else {
                     long tenantId = IamIds.require(actor.context().tenantId());
-                    jdbc.update("""
-                            INSERT INTO iam_tenant_member(id,tenant_id,account_id,display_name,status)
-                            VALUES (:id,:tenantId,:accountId,:displayName,:status)
-                            """, Map.of("id", id, "tenantId", tenantId, "accountId", accountId,
-                            "displayName", displayName, "status", MemberStatus.ACTIVE.name()));
-                    replaceDepartments(tenantId, id, input.departments());
+                    members.insertTenant(id, tenantId, accountId, displayName);
+                    replaceDepartments(tenantId, id, departmentBindings);
                 }
             } catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -257,26 +294,18 @@ public class MemberQueryService {
         ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_MEMBER_UPDATE : IamAction.TENANT_MEMBER_UPDATE);
         long id = IamIds.require(memberId);
-        scopes.requireVisibleMember(actor.context(),
-                domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_UPDATE
-                        : IamAction.TENANT_MEMBER_UPDATE, id);
         if (domain == AuthorizationDomain.PLATFORM && (input.phone() != null || input.email() != null)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return transaction.execute(status -> {
+            BigInteger version = lock(domain, actor, id);
+            scopes.requireVisibleMember(actor.context(),
+                    domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_UPDATE
+                            : IamAction.TENANT_MEMBER_UPDATE, id);
             ResourceDetail<MemberRecord> current = load(domain, actor, id);
-            IamIds.requireVersion(input.expectedVersion(), current.version());
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("id", id);
-            parameters.put("displayName", input.displayName());
-            parameters.put("avatar", input.avatar());
+            IamIds.requireVersion(input.expectedVersion(), version.toString());
             if (domain == AuthorizationDomain.PLATFORM) {
-                jdbc.update("""
-                        UPDATE iam_platform_member
-                           SET display_name=COALESCE(:displayName,display_name),
-                               avatar=COALESCE(:avatar,avatar),version=version+1
-                         WHERE id=:id AND status<>'REMOVED'
-                        """, parameters);
+                requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), version));
             } else {
                 long tenantId = IamIds.require(actor.context().tenantId());
                 long viewerId = IamIds.require(actor.context().memberId());
@@ -284,20 +313,8 @@ public class MemberQueryService {
                 fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_AVATAR, input.avatar());
                 fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_PHONE, input.phone());
                 fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_EMAIL, input.email());
-                parameters.put("tenantId", tenantId);
-                parameters.put("phone", input.phone());
-                parameters.put("email", input.email());
-                parameters.put("phoneSet", input.phone() != null);
-                parameters.put("emailSet", input.email() != null);
-                jdbc.update("""
-                        UPDATE iam_tenant_member
-                           SET display_name=COALESCE(:displayName,display_name),
-                               avatar=COALESCE(:avatar,avatar),
-                               phone=CASE WHEN :phoneSet THEN :phone ELSE phone END,
-                               email=CASE WHEN :emailSet THEN :email ELSE email END,
-                               version=version+1
-                         WHERE tenant_id=:tenantId AND id=:id AND status<>'REMOVED'
-                        """, parameters);
+                requireApplied(members.updateTenant(tenantId, id, input.displayName(), input.avatar(), input.phone(),
+                        input.email(), version));
             }
             ResourceDetail<MemberRecord> next = load(domain, actor, id);
             audits.write(actor.context(), access.nextId(), "member", memberId, AuditChangeType.UPDATE,
@@ -308,76 +325,81 @@ public class MemberQueryService {
         });
     }
 
+    /**
+     * 在事务内锁定成员行，后续可见性、字段策略与条件更新都基于这一份状态。
+     */
+    private BigInteger lock(AuthorizationDomain domain, ActiveIdentity actor, long memberId) {
+        BigInteger version = domain == AuthorizationDomain.PLATFORM
+                ? version(members.lockPlatform(memberId))
+                : version(members.lockTenant(IamIds.require(actor.context().tenantId()), memberId));
+        if (version == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        return version;
+    }
+
+    private static BigInteger version(IamPlatformMemberEntity row) {
+        return row == null ? null : row.getVersion() == null ? BigInteger.ZERO : row.getVersion();
+    }
+
+    private static BigInteger version(IamTenantMemberEntity row) {
+        return row == null ? null : row.getVersion() == null ? BigInteger.ZERO : row.getVersion();
+    }
+
+    private static void requireApplied(int rows) {
+        if (rows != 1) {
+            throw new BizException(IamReasonCode.REVISION_CONFLICT);
+        }
+    }
+
     private ResourceDetail<MemberRecord> load(AuthorizationDomain domain, ActiveIdentity actor, long memberId) {
         if (domain == AuthorizationDomain.PLATFORM) {
-            List<ResourceDetail<MemberRecord>> rows = jdbc.query("""
-                    SELECT id,display_name,avatar,status,version FROM iam_platform_member
-                     WHERE id=:id AND status<>'REMOVED'
-                    """, Map.of("id", memberId),
-                    (row, index) -> IamDetails.of(platformMember(row), row.getString("version")));
-            if (rows.size() != 1) {
+            IamPlatformMemberEntity row = members.findPlatform(memberId);
+            if (row == null) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
-            return rows.getFirst();
+            return IamDetails.of(platformMember(row),
+                    capabilities.platformMember(capabilities.snapshot(actor.context()), row.getId().toString()),
+                    version(row.getVersion()));
         }
         long tenantId = IamIds.require(actor.context().tenantId());
         long viewerId = IamIds.require(actor.context().memberId());
-        List<ResourceDetail<MemberRecord>> rows = jdbc.query("""
-                SELECT id,display_name,avatar,phone,email,status,version FROM iam_tenant_member
-                 WHERE tenant_id=:tenantId AND id=:id AND status<>'REMOVED'
-                """, Map.of("tenantId", tenantId, "id", memberId),
-                (row, index) -> detail(tenantId, viewerId, tenantMember(tenantId, row), row.getString("version")));
-        if (rows.size() != 1) {
+        IamTenantMemberEntity row = members.findTenant(tenantId, memberId);
+        if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return rows.getFirst();
+        List<MemberDepartmentView> departments = members.departmentViews(tenantId, List.of(row.getId()))
+                .getOrDefault(row.getId(), List.of());
+        return detail(fields.snapshot(tenantId, PolicyScenario.MANAGEMENT), capabilities.snapshot(actor.context()),
+                viewerId, tenantMember(row, departments), version(row.getVersion()));
     }
 
-    private ResourceDetail<MemberRecord> detail(long tenantId, long viewerId, MemberRecord raw, String version) {
-        Map<String, FieldAccess> access = fields.memberAccess(tenantId, viewerId, IamIds.require(raw.id()),
-                PolicyScenario.MANAGEMENT);
-        return IamDetails.of(fields.project(raw, access), access, Map.of(), version);
+    private ResourceDetail<MemberRecord> detail(FieldPolicySnapshot snapshot, ObjectCapabilities.Snapshot caps,
+                                                long viewerId, MemberRecord raw, String version) {
+        Map<String, FieldAccess> access = fields.memberAccess(snapshot, viewerId, IamIds.require(raw.id()));
+        return IamDetails.of(fields.project(raw, access), access, capabilities.tenantMember(caps, raw), version);
     }
 
-    private MemberRecord platformMember(java.sql.ResultSet row) throws java.sql.SQLException {
-        return new MemberRecord(row.getString("id"), row.getString("display_name"), row.getString("avatar"),
-                null, null, MemberStatus.valueOf(row.getString("status")), List.of());
+    private static MemberRecord platformMember(IamPlatformMemberEntity row) {
+        return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), null, null,
+                row.getStatus(), List.of());
     }
 
-    private MemberRecord tenantMember(long tenantId, java.sql.ResultSet row) throws java.sql.SQLException {
-        List<MemberDepartmentView> departments = jdbc.query("""
-                SELECT d.id,d.name,md.is_primary
-                  FROM iam_member_department md JOIN iam_department d
-                    ON d.id=md.department_id AND d.tenant_id=md.tenant_id
-                 WHERE md.tenant_id=:tenantId AND md.member_id=:memberId
-                 ORDER BY md.is_primary DESC,d.id
-                """, Map.of("tenantId", tenantId, "memberId", row.getLong("id")),
-                (item, index) -> new MemberDepartmentView(item.getString("id"), item.getString("name"),
-                        item.getBoolean("is_primary")));
-        return new MemberRecord(row.getString("id"), row.getString("display_name"), row.getString("avatar"),
-                row.getString("phone"), row.getString("email"), MemberStatus.valueOf(row.getString("status")),
-                departments);
+    private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
+        return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(), row.getPhone(),
+                row.getEmail(), row.getStatus(), departments);
     }
 
-    private void replaceDepartments(long tenantId, long memberId, List<MemberDepartmentBinding> departments) {
-        jdbc.update("DELETE FROM iam_member_department WHERE tenant_id=:tenantId AND member_id=:memberId",
-                Map.of("tenantId", tenantId, "memberId", memberId));
-        if (departments == null) {
-            return;
-        }
-        for (MemberDepartmentBinding binding : departments) {
-            long departmentId = IamIds.require(binding.id());
-            Long count = jdbc.queryForObject(
-                    "SELECT COUNT(*) FROM iam_department WHERE tenant_id=:tenantId AND id=:id",
-                    Map.of("tenantId", tenantId, "id", departmentId), Long.class);
-            if (count == null || count != 1) {
+    private void replaceDepartments(long tenantId, long memberId, Map<String, Boolean> departments) {
+        for (String departmentId : departments.keySet()) {
+            if (!members.lockDepartment(tenantId, IamIds.require(departmentId))) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
-            jdbc.update("""
-                    INSERT INTO iam_member_department(tenant_id,member_id,department_id,is_primary)
-                    VALUES (:tenantId,:memberId,:departmentId,:primary)
-                    """, Map.of("tenantId", tenantId, "memberId", memberId, "departmentId", departmentId,
-                    "primary", binding.primary()));
         }
+        members.replaceDepartments(tenantId, memberId, departments);
+    }
+
+    private static String version(BigInteger version) {
+        return version == null ? "0" : version.toString();
     }
 }

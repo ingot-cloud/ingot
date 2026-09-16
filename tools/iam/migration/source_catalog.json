@@ -1,0 +1,439 @@
+{
+  "description": "仓库源结构核对目录；不代表实际数据库完整性",
+  "tables": {
+    "account_lock_state": {
+      "columns": [
+        "id",
+        "user_id",
+        "user_type",
+        "locked",
+        "lock_type",
+        "lock_reason_code",
+        "lock_reason_detail",
+        "locked_at",
+        "locked_until",
+        "operator_id",
+        "operator_name",
+        "failed_login_count",
+        "last_failed_at",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "保留账号锁定事实，不能只迁 sys_user.locked"
+    },
+    "biz_leaf_alloc": {
+      "columns": [
+        "biz_tag",
+        "max_id",
+        "step",
+        "description",
+        "update_time"
+      ],
+      "disposition": "辅助发号领域；验证业务键和高水位不倒退"
+    },
+    "password_expiration": {
+      "columns": [
+        "id",
+        "user_id",
+        "last_changed_at",
+        "expires_at",
+        "force_change",
+        "grace_login_remaining",
+        "next_warning_at",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "保留账号密码到期、强制改密及宽限状态"
+    },
+    "password_history": {
+      "columns": [
+        "id",
+        "user_id",
+        "password_hash",
+        "sequence_number",
+        "version",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "保留账号密码历史；摘要不进入报告"
+    },
+    "platform_app": {
+      "columns": [
+        "id",
+        "code",
+        "app_type",
+        "menu_id",
+        "permission_id",
+        "name",
+        "icon",
+        "intro",
+        "sort",
+        "status",
+        "default_access_mode",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Application；旧默认开放转换为显式开通事实"
+    },
+    "platform_dict": {
+      "columns": [
+        "id",
+        "pid",
+        "code",
+        "name",
+        "value",
+        "label",
+        "type",
+        "scope_type",
+        "tenant_id",
+        "app_id",
+        "org_type",
+        "sort",
+        "system_flag",
+        "status",
+        "remark",
+        "extra",
+        "created_by",
+        "updated_by",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "保留字典事实及其平台/租户/应用归属"
+    },
+    "platform_menu": {
+      "columns": [
+        "id",
+        "pid",
+        "app_id",
+        "name",
+        "menu_type",
+        "path",
+        "access_mode",
+        "permission_match_mode",
+        "view_path",
+        "route_name",
+        "redirect",
+        "icon",
+        "sort",
+        "is_cache",
+        "hidden",
+        "hide_breadcrumb",
+        "props",
+        "org_type",
+        "link_type",
+        "link_url",
+        "status",
+        "remark",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Menu；导航不推导操作权限"
+    },
+    "platform_menu_permission": {
+      "columns": [
+        "id",
+        "menu_id",
+        "permission_id"
+      ],
+      "disposition": "Menu 与 Action 关联；保留 ANY/ALL 语义"
+    },
+    "platform_permission": {
+      "columns": [
+        "id",
+        "app_id",
+        "pid",
+        "name",
+        "code",
+        "node_type",
+        "resource_id",
+        "org_type",
+        "status",
+        "remark",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Action 及展示分组；显式映射旧权限码"
+    },
+    "platform_resource": {
+      "columns": [
+        "id",
+        "app_id",
+        "code",
+        "name",
+        "status",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Resource；补齐范围与字段能力及执行适配器"
+    },
+    "platform_role": {
+      "columns": [
+        "id",
+        "pid",
+        "name",
+        "code",
+        "subject",
+        "type",
+        "org_type",
+        "filter_dept",
+        "status",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "RoleDefinition / RoleRevision；治理权必须明确处置"
+    },
+    "platform_role_data_rule": {
+      "columns": [
+        "id",
+        "role_id",
+        "permission_id",
+        "resource_id",
+        "scope_type",
+        "scopes",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "角色版本逐操作范围；孤立规则阻塞"
+    },
+    "platform_role_permission": {
+      "columns": [
+        "id",
+        "role_id",
+        "permission_id"
+      ],
+      "disposition": "版本 RoleGrant；与范围共同映射"
+    },
+    "security_event": {
+      "columns": [
+        "id",
+        "event_id",
+        "event_type",
+        "event_category",
+        "priority",
+        "occurred_at",
+        "received_at",
+        "tenant_id",
+        "user_id",
+        "user_type",
+        "account",
+        "client_id",
+        "app_id",
+        "session_id",
+        "device_id",
+        "client_ip",
+        "request_uri",
+        "user_agent",
+        "result",
+        "reason_code",
+        "reason_detail",
+        "source_module",
+        "source",
+        "operator_id",
+        "operator_name",
+        "trace_id",
+        "extension"
+      ],
+      "disposition": "保留历史事实与旧来源标识，不虚构新授权事件"
+    },
+    "sys_social_details": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "app_id",
+        "app_secret",
+        "redirect_url",
+        "name",
+        "type",
+        "status",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "保留社会化配置；验证密钥依赖及租户绑定"
+    },
+    "sys_tenant": {
+      "columns": [
+        "id",
+        "name",
+        "code",
+        "org_type",
+        "avatar",
+        "status",
+        "plan_id",
+        "end_at",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Tenant；所有者映射不明确则阻塞"
+    },
+    "sys_tenant_plan": {
+      "columns": [
+        "id",
+        "name",
+        "type",
+        "duration",
+        "unit",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "保留套餐及明确应用映射"
+    },
+    "sys_tenant_plan_record": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "plan_id",
+        "type",
+        "duration",
+        "unit",
+        "created_at"
+      ],
+      "disposition": "保留套餐应用历史与开通来源"
+    },
+    "sys_user": {
+      "columns": [
+        "id",
+        "username",
+        "password",
+        "must_change_pwd",
+        "password_changed_at",
+        "nickname",
+        "phone",
+        "email",
+        "avatar",
+        "enabled",
+        "locked",
+        "last_login_at",
+        "last_login_ip",
+        "version",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Account；保留 ID、凭证及状态，组织资料分离"
+    },
+    "sys_user_social": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "user_id",
+        "type",
+        "unique_id",
+        "bind_at"
+      ],
+      "disposition": "保留社会化身份关联并验证配置"
+    },
+    "sys_user_tenant": {
+      "columns": [
+        "id",
+        "user_id",
+        "tenant_id",
+        "main",
+        "name",
+        "avatar",
+        "created_at"
+      ],
+      "disposition": "TenantMember；成员 ID 映射及 account+tenant 唯一性；平台身份按已确认 D01 使用显式映射"
+    },
+    "tenant_app_config": {
+      "columns": [
+        "id",
+        "app_id",
+        "tenant_id",
+        "enabled",
+        "source",
+        "valid_from",
+        "valid_until",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "TenantAppEntitlement；保留禁用、期限和来源"
+    },
+    "tenant_dept": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "pid",
+        "name",
+        "sort",
+        "main_flag",
+        "status",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "Department；禁止跨租户、循环和孤儿"
+    },
+    "tenant_role_data_rule_private": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "role_id",
+        "platform_role",
+        "permission_id",
+        "resource_id",
+        "scope_type",
+        "scopes",
+        "created_at",
+        "updated_at"
+      ],
+      "disposition": "本地角色范围或共享差异；无法等价转换则阻塞"
+    },
+    "tenant_role_permission_private": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "role_id",
+        "platform_role",
+        "permission_id"
+      ],
+      "disposition": "自定义 RoleGrant 或共享 ADD 差异；消除基础重合"
+    },
+    "tenant_role_private": {
+      "columns": [
+        "id",
+        "pid",
+        "tenant_id",
+        "name",
+        "code",
+        "type",
+        "filter_dept",
+        "status",
+        "sort",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "disposition": "本地 RoleDefinition / RoleRevision"
+    },
+    "tenant_role_user_private": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "role_id",
+        "platform_role",
+        "user_id",
+        "dept_id",
+        "dept_id_uk"
+      ],
+      "disposition": "RoleAssignment；部门转换为命名参数，不按名称自动授予"
+    },
+    "tenant_user_dept_private": {
+      "columns": [
+        "id",
+        "tenant_id",
+        "user_id",
+        "dept_id"
+      ],
+      "disposition": "MemberDepartment；保留多部门与主部门，验证关系归属"
+    }
+  }
+}

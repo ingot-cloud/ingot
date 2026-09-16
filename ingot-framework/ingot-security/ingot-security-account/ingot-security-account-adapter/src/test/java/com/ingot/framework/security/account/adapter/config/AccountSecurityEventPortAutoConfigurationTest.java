@@ -54,7 +54,7 @@ class AccountSecurityEventPortAutoConfigurationTest {
                     "ingot.security.event.enabled=true",
                     "ingot.security.event.target=local",
                     "ingot.security.event.primary-store=mysql",
-                    "ingot.security.event.sourceModule=PMS");
+                    "ingot.security.event.sourceModule=IAM");
 
     @Test
     @DisplayName("enabled=true 时使用 CompositeSecurityEventPort")

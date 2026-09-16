@@ -1,9 +1,11 @@
 package com.ingot.cloud.iam.web.v1;
 
-import com.ingot.cloud.iam.policy.JdbcPolicyService;
+import com.ingot.cloud.iam.policy.PolicyService;
 import com.ingot.cloud.iam.support.IamPages;
+import com.ingot.cloud.iam.support.IamPurposes;
 import com.ingot.framework.commons.model.iam.DepartmentRecord;
 import com.ingot.framework.commons.model.iam.MemberRecord;
+import com.ingot.framework.commons.model.iam.SelectionPurpose;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.support.R;
@@ -28,21 +30,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/directory")
 @RequiredArgsConstructor
 public class DirectoryAPI implements RShortcuts {
-    private final JdbcPolicyService policies;
+    private final PolicyService policies;
 
     /**
      * 分页列出可见通讯录成员。
      *
+     * @param purpose 必须为 {@link SelectionPurpose#DIRECTORY}
      * @param page 页码
      * @param pageSize 页大小
+     * @param phone 手机号精确筛选，可空；未完整可见时拒绝
+     * @param email 邮箱精确筛选，可空；未完整可见时拒绝
      * @return 成员页
      */
     @Operation(summary = "普通通讯录成员")
     @GetMapping("/members")
     public R<PageResponse<ResourceDetail<MemberRecord>>> members(
+            @RequestParam SelectionPurpose purpose,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(policies.listDirectoryMembers(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email) {
+        IamPurposes.require(purpose, SelectionPurpose.DIRECTORY);
+        return ok(policies.listDirectoryMembers(page, pageSize, phone, email));
     }
 
     /**
@@ -60,6 +69,7 @@ public class DirectoryAPI implements RShortcuts {
     /**
      * 列出可见部门树。
      *
+     * @param purpose 必须为 {@link SelectionPurpose#DIRECTORY}
      * @param page 页码
      * @param pageSize 页大小
      * @return 部门页
@@ -67,8 +77,10 @@ public class DirectoryAPI implements RShortcuts {
     @Operation(summary = "普通通讯录部门树")
     @GetMapping("/departments")
     public R<PageResponse<ResourceDetail<DepartmentRecord>>> departments(
+            @RequestParam SelectionPurpose purpose,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        IamPurposes.require(purpose, SelectionPurpose.DIRECTORY);
         return ok(policies.listDirectoryDepartments(page, pageSize));
     }
 }

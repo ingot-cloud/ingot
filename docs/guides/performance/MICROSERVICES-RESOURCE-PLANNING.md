@@ -17,7 +17,7 @@
 │  ├─────────────────────────────────────┤   │
 │  │  Auth (认证服务)          2.5G      │   │
 │  ├─────────────────────────────────────┤   │
-│  │  PMS (权限管理服务)       2.5G      │   │
+│  │  IAM (权限管理服务)       2.5G      │   │
 │  ├─────────────────────────────────────┤   │
 │  │  Member (用户服务)        2.5G      │   │
 │  ├─────────────────────────────────────┤   │
@@ -38,7 +38,7 @@
 | **系统预留** | 2G | 12.5% | OS + Docker + 缓冲 |
 | **Gateway** | 2.5G | 15.6% | 流量入口，高并发 |
 | **Auth** | 2.5G | 15.6% | 认证频繁，Token 生成 |
-| **PMS** | 2.5G | 15.6% | 业务服务 |
+| **IAM** | 2.5G | 15.6% | 业务服务 |
 | **Member** | 2.5G | 15.6% | 业务服务 |
 | **MySQL** | 1G | 6.25% | 如在同机 |
 | **Redis** | 512M | 3.1% | 如在同机 |
@@ -51,7 +51,7 @@
 |------|----------|------|
 | **Gateway** | 2 核 | 流量入口 |
 | **Auth** | 2 核 | 计算密集（加密） |
-| **PMS** | 1.5 核 | 业务服务 |
+| **IAM** | 1.5 核 | 业务服务 |
 | **Member** | 1.5 核 | 业务服务 |
 | **其他** | 1 核 | 弹性分配 |
 
@@ -157,7 +157,7 @@ server:
 
 ---
 
-### 3. PMS/Member（业务服务）
+### 3. IAM/Member（业务服务）
 
 #### JVM 配置
 ```dockerfile
@@ -180,7 +180,7 @@ ENV JAVA_OPTS="-server \
 
 #### Docker Compose 配置
 ```yaml
-pms:
+iam:
   mem_limit: 2560m
   mem_reservation: 2g
   cpus: '1.5'
@@ -232,7 +232,7 @@ spring:
 | 服务 | 实例数 | 每实例连接 | 总连接 |
 |------|--------|-----------|--------|
 | Auth | 1 | 50 | 50 |
-| PMS | 1 | 50 | 50 |
+| IAM | 1 | 50 | 50 |
 | Member | 1 | 50 | 50 |
 | 其他服务 | 3 | 30 | 90 |
 | **总计** | - | - | **240** |
@@ -248,7 +248,7 @@ spring:
 |------|-----------|------|
 | Gateway | 2000-3000 | 主要是路由转发 |
 | Auth | 300-500 | 认证计算密集 |
-| PMS | 300-500 | 业务逻辑 |
+| IAM | 300-500 | 业务逻辑 |
 | Member | 300-500 | 业务逻辑 |
 
 **总体能力**：
@@ -265,8 +265,8 @@ spring:
 所需服务器：2 台（主备 + 负载均衡）
 
 部署方案：
-- 服务器 1：Gateway + Auth + PMS + Member
-- 服务器 2：Gateway + Auth + PMS + Member
+- 服务器 1：Gateway + Auth + IAM + Member
+- 服务器 2：Gateway + Auth + IAM + Member
 - 负载均衡：Nginx 或 硬件 LB
 ```
 
@@ -342,10 +342,10 @@ services:
       timeout: 10s
       retries: 3
   
-  # ========== PMS 服务 ==========
-  pms:
-    image: ingot-pms:latest
-    container_name: ingot-pms
+  # ========== IAM 服务 ==========
+  iam:
+    image: ingot-iam:latest
+    container_name: ingot-iam
     restart: always
     ports:
       - "5200:5200"
@@ -365,7 +365,7 @@ services:
           cpus: '0.5'
           memory: 2G
     volumes:
-      - /data/logs/pms:/app/logs
+      - /data/logs/iam:/app/logs
       - /data/ingot-data:/ingot-data
     depends_on:
       - mysql
@@ -478,7 +478,7 @@ volumes:
 docker stats
 
 # 查看特定服务
-docker stats ingot-gateway ingot-auth ingot-pms ingot-member
+docker stats ingot-gateway ingot-auth ingot-iam ingot-member
 ```
 
 **健康状态**：
@@ -493,10 +493,10 @@ docker stats ingot-gateway ingot-auth ingot-pms ingot-member
 
 ```bash
 # 临时增加内存限制
-docker update --memory=3g --memory-swap=3g ingot-pms
+docker update --memory=3g --memory-swap=3g ingot-iam
 
 # 临时增加 CPU 限制
-docker update --cpus=2.0 ingot-pms
+docker update --cpus=2.0 ingot-iam
 ```
 
 ---
@@ -506,13 +506,13 @@ docker update --cpus=2.0 ingot-pms
 ### 方案 1：小规模（< 500 用户）
 **1 台服务器（8C16G）**
 ```
-Gateway + Auth + PMS + Member + MySQL + Redis
+Gateway + Auth + IAM + Member + MySQL + Redis
 ```
 
 ### 方案 2：中等规模（500-1500 用户）✅ **推荐**
 **2 台应用服务器（8C16G）+ 1 台数据库服务器**
 ```
-应用服务器 1/2：Gateway + Auth + PMS + Member
+应用服务器 1/2：Gateway + Auth + IAM + Member
 数据库服务器：MySQL + Redis
 负载均衡：Nginx
 ```
@@ -521,7 +521,7 @@ Gateway + Auth + PMS + Member + MySQL + Redis
 **服务分离部署**
 ```
 网关服务器 × 2：Gateway
-业务服务器 × 2：Auth + PMS + Member
+业务服务器 × 2：Auth + IAM + Member
 数据库服务器 × 1：MySQL（主从）
 缓存服务器 × 1：Redis（哨兵/集群）
 ```
@@ -535,7 +535,7 @@ Gateway + Auth + PMS + Member + MySQL + Redis
 ❌ **错误做法**：
 ```yaml
 # 所有服务都配置 -Xmx6g，会导致 OOM
-pms:
+iam:
   environment:
     - JAVA_OPTS=-Xmx6g
 member:
@@ -546,7 +546,7 @@ member:
 ✅ **正确做法**：
 ```yaml
 # 根据服务器总内存合理分配
-pms:
+iam:
   environment:
     - JAVA_OPTS=-Xmx2g
   deploy:
@@ -573,7 +573,7 @@ SHOW STATUS LIKE 'Threads_connected';
 |------|------|------|
 | Gateway | 8080 | 对外统一入口 |
 | Auth | 5100 | 内部服务 |
-| PMS | 5200 | 内部服务 |
+| IAM | 5200 | 内部服务 |
 | Member | 5300 | 内部服务 |
 | MySQL | 3306 | 数据库 |
 | Redis | 6379 | 缓存 |
@@ -585,7 +585,7 @@ SHOW STATUS LIKE 'Threads_connected';
 /data/logs/
 ├── gateway/
 ├── auth/
-├── pms/
+├── iam/
 └── member/
 
 # 定期清理日志

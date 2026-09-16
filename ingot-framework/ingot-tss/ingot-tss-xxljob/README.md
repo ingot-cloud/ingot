@@ -97,7 +97,7 @@ public class OrderTask {
 **在 XXL-Job Admin 中配置：**
 
 **任务1：订单清理**
-- 执行器：选择你的应用名称（如：pms-service）
+- 执行器：选择你的应用名称（如：iam-service）
 - **JobHandler：`order-cleanup-task`**（与代码中的 name 一致）
 - **任务参数：**（可选，如果需要传参数）
 - Cron：`0 0 2 * * ?`（每天凌晨2点）

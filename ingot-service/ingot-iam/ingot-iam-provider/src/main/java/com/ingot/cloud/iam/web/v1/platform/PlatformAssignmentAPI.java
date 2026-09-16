@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.cloud.iam.assignment.JdbcAssignmentService;
+import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AssignmentBatchInput;
 import com.ingot.framework.commons.model.iam.AssignmentPreviewResult;
@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/platform/assignments")
 @RequiredArgsConstructor
 public class PlatformAssignmentAPI implements RShortcuts {
-    private final JdbcAssignmentService assignments;
+    private final AssignmentService assignments;
 
     /**
      * 分页列出平台授权。

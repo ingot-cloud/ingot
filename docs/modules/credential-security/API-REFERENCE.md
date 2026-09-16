@@ -6,7 +6,7 @@ Ingot Cloud 凭证安全模块提供三类 API：
 
 | API 类型 | 使用场景 | 调用方式 |
 |---------|---------|---------|
-| **RPC 接口** | 服务间调用（Member/PMS → Credential Service） | Feign Client |
+| **RPC 接口** | 服务间调用（Member/IAM → Credential Service） | Feign Client |
 | **REST 接口** | 管理后台（策略配置、审计查询） | HTTP REST |
 | **Framework API** | Auth Service 本地集成 | 直接调用 |
 
@@ -117,7 +117,7 @@ R<Boolean> isPasswordReused(
 | 参数 | 类型 | 必填 | 说明 |
 |-----|------|-----|------|
 | userId | Long | ✅ | 用户ID |
-| userType | String | ✅ | 用户类型：PMS / MEMBER |
+| userType | String | ✅ | 用户类型：IAM / MEMBER |
 | password | String | ✅ | 原始密码（明文） |
 
 **返回值：**
@@ -170,7 +170,7 @@ R<ExpirationStatus> checkPasswordExpiration(
 | 参数 | 类型 | 必填 | 说明 |
 |-----|------|-----|------|
 | userId | Long | ✅ | 用户ID |
-| userType | String | ✅ | 用户类型：PMS / MEMBER |
+| userType | String | ✅ | 用户类型：IAM / MEMBER |
 
 **返回值：**
 
@@ -195,7 +195,7 @@ public Authentication authenticate(String username, String password) {
     
     // 2. 检查密码过期
     R<ExpirationStatus> expirationResult = credentialService
-        .checkPasswordExpiration(userId, "PMS");
+        .checkPasswordExpiration(userId, "IAM");
     
     ExpirationStatus status = expirationResult.getData();
     
@@ -234,7 +234,7 @@ R<Void> recordAudit(CredentialAuditDTO audit);
 ```java
 public class CredentialAuditDTO {
     private Long userId;           // 用户ID
-    private String userType;       // 用户类型：PMS / MEMBER
+    private String userType;       // 用户类型：IAM / MEMBER
     private String action;         // 操作：PASSWORD_CHANGE, PASSWORD_RESET, PASSWORD_VALIDATE
     private Long operatorId;       // 操作人ID（管理员重置时）
     private String operatorType;   // 操作人类型

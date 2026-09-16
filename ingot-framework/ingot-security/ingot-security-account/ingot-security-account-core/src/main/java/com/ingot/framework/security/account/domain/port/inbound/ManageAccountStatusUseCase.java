@@ -64,7 +64,7 @@ public interface ManageAccountStatusUseCase {
         String operatorName;
 
         /**
-         * 操作来源（PMS 管理端 / MEMBER 会员端 等）
+         * 操作来源（IAM 管理端 / MEMBER 会员端 等）
          */
         EventSource source;
     }

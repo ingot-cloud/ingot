@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingot.cloud.pms.api.rpc.RemotePmsDictService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamDictService;
 import com.ingot.framework.cache.config.LayeredCacheBuilder;
 import com.ingot.framework.cache.config.LayeredCacheSettings;
 import com.ingot.framework.cache.registry.LayeredCacheRegistry;
@@ -37,8 +37,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  *
  * <p>装配顺序：</p>
  * <ol>
- *     <li>L0 delegate：PMS 进程内由 {@code LocalDictConfig} 提供 {@code dictDelegate}；
- *         其它微服务由本类基于 {@link RemotePmsDictService} 注册 {@link RemoteDictService}。</li>
+ *     <li>L0 delegate：IAM 进程内由 {@code LocalDictConfig} 提供 {@code dictDelegate}；
+ *         其它微服务由本类基于 {@link RemoteIamDictService} 注册 {@link RemoteDictService}。</li>
  *     <li>分层缓存：{@code mode=NONE} 时直接暴露 delegate；否则用 {@link LayeredCacheBuilder}
  *         按既有 {@code cache-*} / {@code redis-*} 键叠加 L1/L2，不启用 LKG 与地板。</li>
  *     <li>跨节点失效：{@code InvalidationBus} 存在且 {@code invalidation-enabled=true} 时注册
@@ -66,11 +66,11 @@ public class DictClientAutoConfiguration {
 
     @Bean(name = DICT_DELEGATE_SERVICE_NAME)
     @ConditionalOnClass(Feign.class)
-    @ConditionalOnBean(RemotePmsDictService.class)
+    @ConditionalOnBean(RemoteIamDictService.class)
     @ConditionalOnMissingBean(name = DICT_DELEGATE_SERVICE_NAME)
-    public DictService dictDelegate(RemotePmsDictService remotePmsDictService) {
+    public DictService dictDelegate(RemoteIamDictService remoteIamDictService) {
         log.info("[DictClient] register remote delegate (RemoteDictService)");
-        return new RemoteDictService(remotePmsDictService);
+        return new RemoteDictService(remoteIamDictService);
     }
 
     @Bean(CACHE_BEAN_NAME)

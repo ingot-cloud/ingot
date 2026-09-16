@@ -36,7 +36,7 @@
 
 ### `DictItem`
 
-业务输出契约，与 PMS 实体解耦：
+业务输出契约，与 IAM 实体解耦：
 
 | 字段 | 类型 | 说明 |
 |-----|------|-----|
@@ -83,7 +83,7 @@ public enum DictScope { PLATFORM, TENANT, APP }
 
 ## 管理端 REST API
 
-包路径 `com.ingot.cloud.pms.web.v1.platform.config.PlatformDictAPI`。
+包路径 `com.ingot.cloud.iam.web.v1.platform.config.PlatformDictAPI`。
 
 ### 字典树
 
@@ -196,7 +196,7 @@ DELETE /v1/platform/base/dict/{id}
 
 ## 内部 RPC（Feign）
 
-包路径 `com.ingot.cloud.pms.api.rpc.RemotePmsDictService`。供其它微服务通过 `@FeignClient(value = "ingot-pms")` 调用，路由到 PMS 的 `/inner/dict/**`。
+包路径 `com.ingot.cloud.iam.api.rpc.RemoteIamDictService`。供其它微服务通过 `@FeignClient(value = "ingot-iam")` 调用，路由到 IAM 的 `/inner/dict/**`。
 
 ### 字典项查询
 
@@ -254,7 +254,7 @@ JSON 报文示例：
 
 ```json
 {
-  "origin": "ingot-pms:7e3f8c-...",
+  "origin": "ingot-iam:7e3f8c-...",
   "timestamp": 1714050000000,
   "dictCode": "user_status",
   "all": false
@@ -476,12 +476,12 @@ ORDER BY sort ASC;
 | `InvalidationBus` | `ingot-framework/ingot-event-bus/src/main/java/com/ingot/framework/eventbus/InvalidationBus.java` |
 | `RedisInvalidationBus` | `ingot-framework/ingot-event-bus/src/main/java/com/ingot/framework/eventbus/redis/RedisInvalidationBus.java` |
 | `EventBusAutoConfiguration` | `ingot-framework/ingot-event-bus/src/main/java/com/ingot/framework/eventbus/config/EventBusAutoConfiguration.java` |
-| `PlatformDict` | `ingot-service/ingot-pms/ingot-pms-api/src/main/java/com/ingot/cloud/pms/api/model/domain/PlatformDict.java` |
-| `RemotePmsDictService` | `ingot-service/ingot-pms/ingot-pms-api/src/main/java/com/ingot/cloud/pms/api/rpc/RemotePmsDictService.java` |
-| `PlatformDictAPI` | `ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/web/v1/platform/base/PlatformDictAPI.java` |
-| `InnerDictAPI` | `ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/web/inner/InnerDictAPI.java` |
-| `LocalDictService` / `LocalDictConfig` | `ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/service/dict/` |
-| `DictInvalidationPublisher` | `ingot-service/ingot-pms/ingot-pms-provider/src/main/java/com/ingot/cloud/pms/service/dict/DictInvalidationPublisher.java` |
+| `PlatformDict` | `ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/model/domain/PlatformDict.java` |
+| `RemoteIamDictService` | `ingot-service/ingot-iam/ingot-iam-api/src/main/java/com/ingot/cloud/iam/api/rpc/RemoteIamDictService.java` |
+| `PlatformDictAPI` | `ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/web/v1/platform/base/PlatformDictAPI.java` |
+| `InnerDictAPI` | `ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/web/inner/InnerDictAPI.java` |
+| `LocalDictService` / `LocalDictConfig` | `ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/service/dict/` |
+| `DictInvalidationPublisher` | `ingot-service/ingot-iam/ingot-iam-provider/src/main/java/com/ingot/cloud/iam/service/dict/DictInvalidationPublisher.java` |
 
 ---
 

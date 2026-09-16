@@ -46,7 +46,7 @@ public class SecurityEventReportDTO implements Serializable {
     private String reasonCode;
     private String reasonDetail;
 
-    /** 上报模块：ingot-pms / ingot-member / ingot-gateway 等 */
+    /** 上报模块：ingot-iam / ingot-member / ingot-gateway 等 */
     private String sourceModule;
     private String source;
 

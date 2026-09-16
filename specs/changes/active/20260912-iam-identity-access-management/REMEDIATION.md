@@ -66,6 +66,54 @@
 | C18 | 审计摘要/关联不完整，循环查询及内存分页 | 审计完整可追踪但脱敏；规则批量加载、SQL 分页/count，验证查询量和索引 | T09/T12/T16 / A17、A20 |
 | C19 | 新账号登录仍填 tenantAllows，平台选择流程未区分 | PLATFORM tenantId=null，不返回租户列表；共享 DTO allows=[]；平台直接 bootstrap，租户/Member 原认证规则不受误改 | T05/T13 / A28、F08、F09 |
 
+## 3.1 已实施条目（2026-09-15）
+
+下列条目已按第 3 节的修正目标落地，落点与验证记录见 `IMPLEMENTATION.md` 同日两节。标注「待人工」的部分仍需真实环境证据，不得据此勾选 A 系列。
+
+| 编号 | 落点 | 自动化证据 | 仍缺 |
+|---|---|---|---|
+| C10 | `web/IamErrorHandler` 按 `IamReasonCode` 局部映射 HTTP 状态；`IamErrorHandlerTest` 覆盖全部 IAM 码与外来码保持 500 | IAM provider 全量测试 | 真实 HTTP 状态核验（A24） |
+| C17 | 删除同表实体/Mapper，复用 `LockStatePort`；框架 DDL 归属写入 `databases/iam/README.md` | IAM provider 全量测试 | 失败计数/自动解锁不退化的运行时证据（A22） |
+| C19 | `UserDetailsRequest` 显式 `AuthorizationDomain`；平台分支 `tenantAllows` 为空 | IAM provider 全量测试 | 平台/租户/Member 分支隔离的真实登录（A28、F08、F09） |
+| C16 | `tools/iam/generate_bootstrap.py` → `databases/iam/006_bootstrap.sql`；`ingot.iam.bootstrap.enabled` 默认关闭的启动器走 `RegisterUserUseCase` + `InitialPasswordService` | `test_bootstrap_seed.py` 9 项、`PlatformBootstrapServiceTest` 6 项 | 待人工：A21.1／A21.2 真实进程冷启动与首登改密 |
+| C06 | 快照 `expiresAt` 取热窗口与最近授权/委派/开通边界的较早者；命中即校验期限，过期先 evict 再重载；`IamActionOperation` 判定改写操作，写路径不吃热缓存 | `AuthorizationEvaluatorTest` 期限截断、过期不放行、写操作绕缓存共 7 项 | 到期精确截断、广播失败与远端故障的真实多实例证据（A15、A16） |
+| C12 | `IamMembershipSql` 递归 CTE 统一「显式成员 + 部门任职 + `includeDescendants` 下级」；组分配、人群开通、组成员数三处共用 | `AuthorizationEvaluatorTest` 组/人群展开 5 项、`GroupRepositoryTest` 5 项、MySQL 8.4 手工核对同结果 | 任职调整后授权随之变化的真实运行证据（A08、A11） |
+| C02、C03 | 求值 SQL 持续校验委派状态/期限/版本白名单/接收人；`Admission.governed` 标识非委派来源；`AssignmentService` 要求受限方绑定本人单一委派、逐操作核对范围上限；`GroupService` 用同一 `DelegationRecipientRepository` 复核组变更 | `AuthorizationEvaluatorTest` 持续校验 5 项、`AssignmentServiceTest` 10 项、`GroupServiceTest` 6 项 | 待人工：A11／A12 的真实 HTTP、并发与撤销传播证据 |
+| C01、C11 | 新增 `RoleGrantValidator` 按操作启停、应用域、资源范围能力与参数绑定失败关闭校验，发布/预览/升级共用；角色形态在首个版本固定（无基础即完整自定义，有基础只存差异）；`RoleService.upgrade` 逐条锁定授权，限定本租户与当前角色、活跃状态、参数已绑定，受限来源复用 `DelegationAdmission` 重验后条件更新 | `RoleServiceTest` 16 项、当时 IAM provider 全量 166 项 | 待人工：A05／A16／A25 的真实并发升级与原子回滚证据 |
+| C07 | 成员资料/资格/任职与组织设置的 UPDATE 带 `version` 条件并检查受影响行数；`MemberQueryService.patch` 与 `MemberLifecycle` 在同一事务内先锁行再校验范围与版本；并发冲突报 `REVISION_CONFLICT` 不报告成功 | `MemberLifecycleTest` 增失效与无操作不失效、IAM provider 全量 172 项 | 待人工：A09／A10／A16 的真实并发 HTTP 证据 |
+| C08 | `TenantQueryService.transferOwner` 锁组织及新旧所有者，撤销旧所有者 `INITIALIZATION`+`SYSTEM` 治理授权并赋予新所有者；已有同版本有效分配则复用；独立授权保留；同事务审计 `OWNER_TRANSFER` 并 `markAll` | `TenantQueryServiceTest` 5 项、IAM provider 全量 172 项 | 待人工：A26 真实转交、并发移出新所有者与失效证据 |
+| C04 | `DirectoryVisibilityEvaluator`：固定默认版本（空 JSON=ALL）；匹配 ALLOW 并集替代默认；全部 DENY 后恢复本人；列表/搜索/详情/count SQL 过滤；部门树祖先 `navigationOnly` | `DirectoryVisibilityEvaluatorTest` 4 项、`DefaultPolicyDefinitionsTest` 3 项、IAM provider 全量 181 项 | 待人工：A13／A20 真实 HTTP 与 SQL 计划证据 |
+| C05 | 字段基线读固定版本 `fields`，平台上限读最新版本 `ceiling`（缺省不额外收紧）；原值筛选按查询范围内可能匹配目标披露，不能只看本人 | `FieldAccessEvaluatorTest` 增本人 FULL 不能搜他人、上限收紧 FULL 规则、IAM provider 全量 181 项 | 待人工：A14 真实检索/导出披露证据 |
+| C14 | `ObjectCapabilities` 按对象批量计算成员/部门展示能力；字段草稿预览与提交同引擎；诊断校验应用/操作归属、开通人群与 target 范围，来源披露受操作者权限限制 | `ObjectCapabilitiesTest`、`DiagnoseAuditServiceTest` 3 项、`FieldAccessEvaluatorTest` 增草稿快照、IAM provider 全量 190 项 | 待人工：A17／A24 真实 HTTP 对象能力与诊断披露 |
+| C15 | bootstrap 先域/启停/开通/人群，再按 OPEN/ACTION 过滤页面；目录只保留有可见子页的祖先 | `SessionMenuAssemblerTest` 4 项、IAM provider 全量 190 项 | 待人工：A19／F01 真实 bootstrap 菜单与一级目录 |
+| C13 | `iam_member_export` 共享任务；快照遍历全部授权页只存成员 ID；下载重验 ACTION/范围/字段并与快照求交；失败/过期不报成功；24h 清理；GET `/export/{id}/status` 返回 `ExportTask` | `MemberExportServiceTest` 5 项、IAM provider 全量 192 项 | 待人工：A10／A27 真实超过 200 条、多实例下载与过期证据 |
+| C18 | 审计写入并列出 `delegation_id`/`assignment_id`/`trace_id`；操作者显示名批量投影；规则选择器批量加载 | `DiagnoseAuditServiceTest` 增 2 项、IAM provider 全量 196 项 | 待人工：A17／A20 真实审计披露与 SQL 计划证据 |
+| C09 | 平台 accounts、`/v1/me` 资料改密、字典/发号/社交新路径；RPC/凭证端口只读写 `iam_account`/`iam_tenant`；登录 JWT 填 ACTION；Security 去掉超管短路 | `AccountServiceTest` 4 项、`CurrentAccountServiceTest` 2 项、`IamUserCredentialPortAdapterTest`、`test_bootstrap_seed.py` 9 项、IAM provider 全量 203 项 | 待人工：A18／A19／A23 真实镜像、RPC 与 HTTP |
+| C17（清理） | 删除已替代 HTTP、旧 PMS 授权引擎、`GrantPresenceAuthorizer` 与 `sys_user`/`sys_tenant` 双读；进程内快照走 `AuthorizationEvaluator` | IAM provider 全量 187 项 | 待人工：A22／A23 真实进程、RPC 与框架接入 |
+| T13 | 重发 96/161 OpenAPI；purpose/筛选/导出状态写入 schema；`/v1` 控制器映射对账；IAM 局部错误映射单测 | `test_contract.py` 7 项、IAM provider 全量 192 项 | 待人工：A23／A24／A28 真实 HTTP 与登录 |
+
+C12 只改读取口径，不落任何派生成员表：组与人群的成员始终由部门任职实时展开，成员换部门后无需重写组即生效。为避免展开代价随授权条数放大，单次求值内对同一 ACTION 与同一应用的开通判定只查一次。
+
+C01/C11 的两处口径按用户确认固化：角色形态在创建时定型，完整自定义角色不再升级到共享基础；委派准入抽成 `DelegationAdmission`，授权写入与角色升级走同一套持有者、期限、版本白名单、接收人与范围上限校验，避免 `RoleService` 反向依赖 `AssignmentService`。
+
+C02/C03 的准入口径按用户确认固化：声明的委派必须由操作者本人持有；受限方一次提交只能来自同一条委派；委派缺少角色版本内某个操作的范围上限时按失败关闭拒绝；范围包含按字面比较，写入路径不展开部门树。
+
+C07/C08 的口径按限额中断前的推荐项落地：治理授权判定为 `source=INITIALIZATION` 且 `revision_kind=SYSTEM` 且主体为旧所有者；新所有者已有同一版本的 ACTIVE 分配则复用，不插第二条；提交后失效覆盖所有者转交以及成员暂停/恢复/移出/调部门；资料 patch 在事务内行锁后带 version 条件更新并检查行数。
+
+C04/C05 的口径：通讯录固定默认版本空 JSON 视为全组织；字段 `ceiling` 缺省表示平台不额外收紧（基线仍脱敏手机邮箱，租户规则可授予 FULL）；原值筛选必须对查询范围内可能匹配的目标完整可见，不能用查看者本人字段权限代替。
+
+C14/C15 的口径：成员/部门列表批量返回写操作展示能力，其它资源列表本条不铺开；字段草稿预览按通讯录场景投影样例成员；诊断必须核对应用与操作归属及可选 target 对象范围，不能只看 `actionCodes`；OPEN 菜单仍受应用域、启停、开通与人群约束，无可见子页的目录不出现在 bootstrap。
+
+C13 的口径：导出任务落共享库而不是本机临时文件；快照只保存成员 ID，下载时按当前身份重投影，不能用过期文件绕过字段或范围；进行中返回 503 可重试，失败与过期按对象不存在处理。客户端通过 GET 状态轮询同一共享行，不得从下载 503/404 反推成功。完整结果走导出下载信封，不放宽普通列表 200 上限。
+
+C18 的口径：审计关联在写入时填委派/授权 ID 与 MDC 追踪，列表不再写死空值；操作者显示名受成员读范围和字段策略约束。规则选择器一次批量加载，审计列表继续 SQL 分页/count。
+
+C16 的两条硬约束在实现中固化：种子不含任何账号与凭证，初始口令只由框架用例生成并在启动日志出现一次；种子按自然键存在即跳过，重复执行不覆盖人工或业务修改。`seed-manual-verification.sql` 不再重建目录，避免与正式冷启动形成两份来源。
+
+C09 的口径：新入口读写 `iam_account`，不返回组织关系；`MEMBER_CREATE` lookup 只给 id 与登录名；创建返回版本信封，明文初始密码只在重置密码；锁定/改密/启停复用框架用例，凭证端口不再写 `sys_user`；登录 JWT 在已建立成员上下文后填入 ACTION，选择阶段不授予；Security 管理面去掉超管短路。旧账号/字典/发号/社交 HTTP 已随 T18 删除。
+
+C17 清理口径：写入门闩与进程内快照一律走 `@Primary` 的 `AuthorizationEvaluator`；社交绑定 `user_id` 指向 `iam_account`，不再回读 `sys_user`；字典/发号/社交 *服务*、内部 RPC、OSS、`SysUser`/`SysTenant` Feign 外形及迁移分析器保留。旧目录表的 MyBatis 域服务若无 HTTP 入口则不在本条继续清表。
+
 ## 4. 完成与证据规则
 
 - 每项同时核对真实入口、调用链、SQL/框架归属及失败行为；不以“132 控制器已接入”替代验收。

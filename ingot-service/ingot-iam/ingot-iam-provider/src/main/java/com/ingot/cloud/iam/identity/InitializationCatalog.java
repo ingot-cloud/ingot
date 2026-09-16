@@ -85,7 +85,7 @@ public class InitializationCatalog {
     }
 
     private long uniqueTenantSystemRevision() {
-        List<Long> roles = catalog.tenantSystemRoles();
+        List<Long> roles = catalog.systemRoles(AuthorizationDomain.TENANT);
         if (roles.size() != 1) {
             throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
         }

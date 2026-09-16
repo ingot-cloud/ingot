@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -65,6 +66,14 @@ public class RedisOnlineTokenService implements OnlineTokenService {
 
         String sid = registration.sid();
         OnlineToken previous = getBySid(sid).orElse(null);
+        if (previous != null
+                && (previous.getAuthorizationContext() != null || user.getAuthorizationContext() != null)
+                && (!Objects.equals(previous.getAuthorizationContext(), user.getAuthorizationContext())
+                    || !Objects.equals(previous.getUserId(), user.getId())
+                    || !Objects.equals(previous.getTenantId(), user.getTenantId())
+                    || !Objects.equals(previous.getClientId(), user.getClientId()))) {
+            throw new IllegalArgumentException("IAM 身份切换必须建立新的认证会话");
+        }
         OnlineToken session = buildSession(user, registration, previous);
         Long tenantId = session.getTenantId();
         String clientId = session.getClientId();
@@ -104,19 +113,20 @@ public class RedisOnlineTokenService implements OnlineTokenService {
 
     @Override
     public List<String> listSids(Long tenantId, Long userId) {
-        if (tenantId == null || userId == null) {
+        if (userId == null) {
             return Collections.emptyList();
         }
+        Long indexTenant = RedisKeyConstants.OnlineToken.indexTenantId(tenantId);
         List<String> sids = new ArrayList<>();
-        for (String clientId : listClientIds(tenantId)) {
-            sids.addAll(listSids(tenantId, clientId, userId));
+        for (String clientId : listClientIds(indexTenant)) {
+            sids.addAll(listSids(indexTenant, clientId, userId));
         }
         return sids;
     }
 
     @Override
     public List<String> listSidsByIp(Long tenantId, String ip) {
-        if (tenantId == null || StrUtil.isEmpty(ip)) {
+        if (StrUtil.isEmpty(ip)) {
             return Collections.emptyList();
         }
         return onlineSids(RedisKeyConstants.OnlineToken.ipSetKey(tenantId, ip));
@@ -134,7 +144,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
 
     @Override
     public List<OnlineToken> listUserSessions(Long tenantId, String clientId, Collection<Long> userIds) {
-        if (tenantId == null || StrUtil.isEmpty(clientId) || userIds == null || userIds.isEmpty()) {
+        if (StrUtil.isEmpty(clientId) || userIds == null || userIds.isEmpty()) {
             return Collections.emptyList();
         }
         List<Long> distinct = userIds.stream().filter(id -> id != null).distinct().toList();
@@ -311,12 +321,13 @@ public class RedisOnlineTokenService implements OnlineTokenService {
                 .jti(registration.jti())
                 .userId(user.getId())
                 .tenantId(user.getTenantId())
+                .authorizationContext(user.getAuthorizationContext())
                 .principalName(user.getUsername())
                 .clientId(user.getClientId())
                 .authType(user.getTokenAuthType())
                 .userType(user.getUserType())
                 .authorities(new HashSet<>(InAuthorityUtils.authorityListToSet(
-                        user.getAuthorities(), user.getTenantId())))
+                        user.getAuthorities(), RedisKeyConstants.OnlineToken.indexTenantId(user.getTenantId()))))
                 .deptIds(user.getDeptIds() == null ? List.of() : List.copyOf(user.getDeptIds()))
                 .expiresAt(registration.sessionExpiresAt())
                 .lastAccessAt(now);
@@ -494,7 +505,7 @@ public class RedisOnlineTokenService implements OnlineTokenService {
     }
 
     private boolean isValidUserScope(Long tenantId, String clientId, Long userId) {
-        return tenantId != null && userId != null && StrUtil.isNotEmpty(clientId);
+        return userId != null && StrUtil.isNotEmpty(clientId);
     }
 
     private long remainingSeconds(Instant expiresAt) {

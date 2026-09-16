@@ -17,7 +17,7 @@ BFF（Backend for Frontend）为内部前端系统提供安全的会话管理，
                                      ▼
                               ┌──────────────┐
                               │  下游微服务    │
-                              │ (PMS/Member)  │
+                              │ (IAM/Member)  │
                               └──────────────┘
 ```
 
@@ -217,16 +217,16 @@ Cookie: IN_SESSION=xxx
 **前端请求（任意业务接口）：**
 
 ```http
-GET /api/pms/user/list
+GET /api/iam/user/list
 Cookie: IN_SESSION=xxx
 ```
 
 **网关 SessionTokenRelayFilter 处理流程：**
 
 ```
-前端                  网关 (SessionTokenRelayFilter)              Redis               下游微服务 (PMS)
+前端                  网关 (SessionTokenRelayFilter)              Redis               下游微服务 (IAM)
  │                    │                                           │                    │
- │ GET /api/pms/...   │                                           │                    │
+ │ GET /api/iam/...   │                                           │                    │
  │ Cookie: IN_SESSION │                                           │                    │
  │ ──────────────►    │                                           │                    │
  │                    │ 1. 检查 Authorization 头                    │                    │
@@ -258,7 +258,7 @@ Cookie: IN_SESSION=xxx
  │    业务响应         │                                           │                    │
 ```
 
-**关键点：** 下游微服务（PMS、Member 等）的 JWT 校验和权限逻辑**完全不需要改动**，它们看到的就是标准的 `Authorization: Bearer JWT` 请求。
+**关键点：** 下游微服务（IAM、Member 等）的 JWT 校验和权限逻辑**完全不需要改动**，它们看到的就是标准的 `Authorization: Bearer JWT` 请求。
 
 ### 第四步：登出
 

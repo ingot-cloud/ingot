@@ -2,7 +2,7 @@ package com.ingot.framework.data.mybatis.scope.authorization;
 
 import java.time.Instant;
 
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
 import com.ingot.framework.cache.spi.LayeredCache;
 import com.ingot.framework.cache.spi.RemoteUnavailableException;
 import com.ingot.framework.data.mybatis.scope.error.AuthorizationSnapshotException;

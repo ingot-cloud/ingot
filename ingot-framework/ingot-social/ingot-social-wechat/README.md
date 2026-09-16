@@ -36,7 +36,7 @@ dependencies {
 ingot:
   event-bus:
     redis:
-      topic-prefix: in:bus   # 与 PMS、AUTH 等保持一致
+      topic-prefix: in:bus   # 与 IAM、AUTH 等保持一致
 
 # 已废弃，勿再依赖：
 # ingot.social.redis.topic
@@ -97,7 +97,7 @@ public void onConfigChanged(SocialConfigChangedEvent event) {
 }
 ```
 
-## 在 PMS 中维护配置
+## 在 IAM 中维护配置
 
 `SysSocialDetailsServiceImpl` 在保存 / 更新 / 删除成功后会调用 **`SocialConfigMessagePublisher`**，默认实现会向 **`InvalidationBus`** 发布 `SocialInvalidationEvent`，各.consumer 再收到 `SocialConfigChangedEvent` 刷新内存配置。
 

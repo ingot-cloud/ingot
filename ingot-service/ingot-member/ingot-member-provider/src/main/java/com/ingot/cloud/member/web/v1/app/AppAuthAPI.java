@@ -1,7 +1,7 @@
 package com.ingot.cloud.member.web.v1.app;
 
 import com.ingot.cloud.member.service.biz.LoginService;
-import com.ingot.cloud.pms.api.model.dto.auth.MiniProgramRegisterDTO;
+import com.ingot.cloud.iam.api.model.dto.auth.MiniProgramRegisterDTO;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;

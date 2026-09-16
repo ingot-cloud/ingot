@@ -277,12 +277,12 @@ class FileSpoolRecordQueueTest {
     @DisplayName("同一 parent 不同 application name 互不覆盖")
     void isolatesByApplicationName() throws Exception {
         SecurityEventProperties properties = properties(tempDir, "1MB", "512KB");
-        try (FileSpoolRecordQueue pms = new FileSpoolRecordQueue(properties, mapper(), "in-service-pms");
+        try (FileSpoolRecordQueue iam = new FileSpoolRecordQueue(properties, mapper(), "in-service-iam");
                 FileSpoolRecordQueue auth = new FileSpoolRecordQueue(properties, mapper(), "in-service-auth")) {
-            pms.enqueue(sampleRecord("81234567890123456789012345678901"));
-            assertThat(Files.exists(tempDir.resolve("in-service-pms").resolve("state.json"))).isTrue();
+            iam.enqueue(sampleRecord("81234567890123456789012345678901"));
+            assertThat(Files.exists(tempDir.resolve("in-service-iam").resolve("state.json"))).isTrue();
             assertThat(Files.exists(tempDir.resolve("in-service-auth").resolve("state.json"))).isTrue();
-            assertThat(pms.rootDir()).isEqualTo(tempDir.resolve("in-service-pms").toAbsolutePath().normalize());
+            assertThat(iam.rootDir()).isEqualTo(tempDir.resolve("in-service-iam").toAbsolutePath().normalize());
             assertThat(auth.rootDir()).isEqualTo(tempDir.resolve("in-service-auth").toAbsolutePath().normalize());
         }
     }

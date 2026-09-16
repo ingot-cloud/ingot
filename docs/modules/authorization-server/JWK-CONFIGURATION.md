@@ -157,7 +157,7 @@ spring:
 4. **启动资源服务器**
    ```bash
    # 资源服务器不需要 master key（只读公钥）
-   java -jar ingot-pms-provider.jar
+   java -jar ingot-iam-provider.jar
    ```
 
 ## 端点说明

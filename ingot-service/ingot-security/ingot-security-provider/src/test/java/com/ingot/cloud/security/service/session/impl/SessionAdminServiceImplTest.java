@@ -10,10 +10,10 @@ import com.ingot.cloud.auth.api.model.dto.InnerUserSessionRevokeDTO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionPageVO;
 import com.ingot.cloud.auth.api.model.vo.InnerSessionVO;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
-import com.ingot.cloud.pms.api.model.domain.SysTenant;
-import com.ingot.cloud.pms.api.model.dto.user.InnerUserDTO;
-import com.ingot.cloud.pms.api.rpc.RemotePmsTenantDetailsService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsUserDetailsService;
+import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.model.dto.user.InnerUserDTO;
+import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamUserDetailsService;
 import com.ingot.cloud.security.api.model.dto.session.PlatformSessionQueryDTO;
 import com.ingot.cloud.security.api.model.dto.session.PlatformUserSessionRevokeDTO;
 import com.ingot.cloud.security.api.model.vo.session.PlatformSessionVO;
@@ -59,12 +59,12 @@ class SessionAdminServiceImplTest {
     private static final String SID = "session-1";
 
     private final RemoteAuthSessionService remoteAuthSessionService = mock(RemoteAuthSessionService.class);
-    private final RemotePmsUserDetailsService remotePmsUserDetailsService = mock(RemotePmsUserDetailsService.class);
-    private final RemotePmsTenantDetailsService remotePmsTenantDetailsService =
-            mock(RemotePmsTenantDetailsService.class);
+    private final RemoteIamUserDetailsService remoteIamUserDetailsService = mock(RemoteIamUserDetailsService.class);
+    private final RemoteIamTenantDetailsService remoteIamTenantDetailsService =
+            mock(RemoteIamTenantDetailsService.class);
 
     private final SessionAdminServiceImpl service = new SessionAdminServiceImpl(
-            remoteAuthSessionService, remotePmsUserDetailsService, remotePmsTenantDetailsService,
+            remoteAuthSessionService, remoteIamUserDetailsService, remoteIamTenantDetailsService,
             new PlatformSessionConvertImpl(), new DefaultAssertionChecker(messageSource()));
 
     @AfterEach
@@ -120,29 +120,29 @@ class SessionAdminServiceImplTest {
     }
 
     @Test
-    void page_pmsUnavailable_keepsSessionFactsWithoutNames() {
+    void page_iamUnavailable_keepsSessionFactsWithoutNames() {
         givenInnerPage(1L, List.of(session(SID, UserTypeEnum.ADMIN)));
-        when(remotePmsTenantDetailsService.getTenantById(anyLong())).thenThrow(new IllegalStateException("PMS down"));
-        when(remotePmsUserDetailsService.getAllUserInfo(anyList())).thenThrow(new IllegalStateException("PMS down"));
+        when(remoteIamTenantDetailsService.getTenantById(anyLong())).thenThrow(new IllegalStateException("IAM down"));
+        when(remoteIamUserDetailsService.getAllUserInfo(anyList())).thenThrow(new IllegalStateException("IAM down"));
 
         PlatformSessionVO record = service.page(query()).getRecords().get(0);
 
         assertEquals(SID, record.getSid());
-        // PMS 不可用只丢名称，登录账号名回落会话内的 principalName，管理员仍能按 sid 下线
+        // IAM 不可用只丢名称，登录账号名回落会话内的 principalName，管理员仍能按 sid 下线
         assertEquals("principal", record.getUsername());
         assertNull(record.getNickname());
         assertNull(record.getTenantName());
     }
 
     @Test
-    void page_appUserSession_skipsPmsUserLookup() {
+    void page_appUserSession_skipsIamUserLookup() {
         givenInnerPage(1L, List.of(session(SID, UserTypeEnum.APP)));
         givenTenant("平台租户");
 
         PlatformSessionVO record = service.page(query()).getRecords().get(0);
 
         assertNull(record.getNickname());
-        verify(remotePmsUserDetailsService, never()).getAllUserInfo(anyList());
+        verify(remoteIamUserDetailsService, never()).getAllUserInfo(anyList());
     }
 
     @Test
@@ -227,7 +227,7 @@ class SessionAdminServiceImplTest {
         SysTenant tenant = new SysTenant();
         tenant.setId(TENANT_ID);
         tenant.setName(name);
-        when(remotePmsTenantDetailsService.getTenantById(TENANT_ID)).thenReturn(R.ok(tenant));
+        when(remoteIamTenantDetailsService.getTenantById(TENANT_ID)).thenReturn(R.ok(tenant));
     }
 
     private void givenAdminUser(String username, String nickname) {
@@ -235,7 +235,7 @@ class SessionAdminServiceImplTest {
         user.setId(USER_ID);
         user.setUsername(username);
         user.setNickname(nickname);
-        when(remotePmsUserDetailsService.getAllUserInfo(anyList())).thenReturn(R.ok(List.of(user)));
+        when(remoteIamUserDetailsService.getAllUserInfo(anyList())).thenReturn(R.ok(List.of(user)));
     }
 
     private static PlatformSessionQueryDTO query() {

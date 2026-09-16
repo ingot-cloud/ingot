@@ -1,6 +1,6 @@
 # IAM 接口与前端契约
 
-> 目标契约，主 change 保持 implementing。2026-09-15 复评确认必要保留能力、登录及运行时语义仍有缺口；当前77路径/132操作快照不是完整交付。T01/T03/T13重新核对，代码和生成JSON尚未随本轮文档修订。不直接透传ORM实体。
+> 目标契约，主 change 保持 implementing。2026-09-16 T13 已重发管理面与保留能力 OpenAPI（96 路径 / 161 操作），查询参数、purpose 与导出任务状态与 `/v1` 控制器对账；`x-runtime-implemented` 只表示控制器已接入。真实 HTTP 状态与登录联调仍待 A23/A24/A28。不直接透传 ORM 实体。
 
 ## 1. 通用约定
 
@@ -18,9 +18,23 @@
 
 前端平台入口无需组织选择，完成原认证要求后直接bootstrap。有效平台身份即使没有租户成员关系也可以登录。租户身份仅在独立租户认证流程中验证，平台组织管理列表不能用作登录候选或授权依据；同账号拥有多个身份不改变此规则。Member(APP)原有选择与认证行为不变。完整交互见FRONTEND第0节。
 
+#### 1.1.1 登录域参数（2026-09-15 确认的协议扩展）
+
+平台身份与「租户成员资格选择阶段」都不携带 tenantId，不能再用 `tenant` 是否为空推断管理域，否则租户用户的首次登录会被判成平台登录。认证入口新增可选请求参数 `domain`，取值 `PLATFORM`/`TENANT`，由前端按登录入口显式传入并透传到内部身份查询（共享 `UserDetailsRequest.domain`）。这是既有协议的向后兼容扩展：不改动凭证校验、挑战、加密、会话与 Member 登录规则，不新增认证路由。
+
+| domain | tenant | 语义与响应 |
+|---|---|---|
+| PLATFORM | 必须为空 | 建立 PLATFORM 上下文与平台 memberId；allows=[]，deptIds=[]；tenant 非空视为非法请求 |
+| TENANT | 非空 | 校验目标租户成员资格，建立 TENANT 上下文；allows 为该账号有效租户集合，deptIds 为当前任职 |
+| TENANT | 为空 | 成员资格选择阶段：只返回账号安全字段与 allows 供选择，不建立 AuthorizationContext、不返回 scopes/deptIds；客户端据 allows 携带 tenant 重新认证 |
+| 缺省 | 为空 | 兼容未升级客户端：ADMIN 用户类型按 PLATFORM 处理，Member(APP) 保持原行为 |
+| 缺省 | 非空 | 兼容未升级客户端：按 TENANT 处理 |
+
+选择阶段的成功认证不代表已获得业务身份：没有 AuthorizationContext 的会话不能调用 IAM 管理接口，必须完成携带 tenant 的租户认证。allows 只用于该阶段的候选展示，不构成任何 ACTION 授权。
+
 ### 1.2 必要保留功能与接口清单
 
-以下目标来自既有功能映射，必须进入完整交付清单及真实HTTP验证；没有DTO/运行时证据的接口仍为待实现。安全用例复用原模块，不创建IAM副本。
+以下目标来自既有功能映射，必须进入完整交付清单及真实HTTP验证。T13 已把账号、本人资料、字典/发号/社交包装入口写入 OpenAPI；请求体仍为既有领域类型处标注为 `RJson`/`RVoid`，不臆造 IAM DTO。安全用例复用原模块，不创建IAM副本。真实 HTTP 证据仍待 A24。
 
 | 目标 | 必须保留的子能力 |
 |---|---|
@@ -32,7 +46,7 @@
 | 既有上传、内部字典/发号/社会化/账号/组织接口 | 保留业务能力，内部RPC验证调用身份及目标边界；读取新账号/组织事实 |
 | Security原有管理路由 | 保留原服务/用例，仅替换必要平台ACTION与对象授权，避免IAM复制安全业务 |
 
-完整请求字段、过滤排序白名单、purpose、ACTION和响应应在T01/T13核对既有领域契约后落入OpenAPI；不得凭本表臆造密码协议或删去未列出的原子功能。历史migration/reports退出本次交付。
+完整请求字段、过滤排序白名单、purpose、ACTION和响应以 `contracts/openapi.json` 为准。管理面列表使用 `page`（从 1，默认 20）与 `pageSize`（默认 20，最大 200）。字典/发号/社交列表沿用 MyBatis `current`/`size`，字典另有 `view=tree|page|items` 与 `code`。不得凭本表臆造密码协议或删去未列出的原子功能。历史migration/reports退出本次交付。
 
 ## 2. 主要 DTO
 
@@ -72,7 +86,16 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 |---|---|
 | /v1/me/bootstrap | GET 当前身份、应用、菜单、操作及版本 |
 | /v1/me/capabilities | GET 刷新当前操作、版本、expiresAt |
-| /v1/platform/members | GET/POST 平台成员列表、创建平台成员资格；关联全局账号，不自动授予角色 |
+| /v1/me/profile | GET/PATCH 当前认证账号联系资料；AUTHENTICATED_SELF，禁止提交其他账号 ID |
+| /v1/me/password | PUT 当前账号改密；`CurrentPasswordInput`；请求体加密；不臆造密码策略 |
+| /v1/platform/accounts | GET 列表（page/pageSize）；POST 创建，返回 `{id,version}` 不回明文口令 |
+| /v1/platform/accounts/lookup | POST `AccountLookupInput`，必填 `purpose`：`MEMBER_CREATE` 只返回 id 与登录名，`ACCOUNT_MANAGE` 仍不返回组织关系 |
+| /v1/platform/accounts/{id} | GET/PATCH 资料；DELETE 仍有成员资格时 ObjectInUse |
+| /v1/platform/accounts/{id}/enable、disable、lock、unlock、reset-password | POST；锁定改密启停复用安全用例；仅重置返回一次性 `AccountSecret` |
+| /v1/platform/dictionaries | GET `view=tree|page|items`、`code`、MyBatis `current`/`size`；POST/PUT/PATCH/DELETE 及 `/sort` 走既有字典实体 |
+| /v1/platform/id-allocations | GET MyBatis 分页；POST/PUT/DELETE 既有发号实体 |
+| /v1/platform/social-configs | GET MyBatis 分页；POST/PUT/DELETE 既有社会化配置实体 |
+| /v1/platform/members | GET/POST 平台成员列表、创建平台成员资格；关联全局账号，不自动授予角色；列表无 phone/email 筛选 |
 | /v1/platform/members/{id} | GET/PATCH 平台成员资料；不编辑全局凭证或租户资料 |
 | /v1/platform/members/{id}/status | PATCH 暂停/恢复平台成员资格，不改变租户成员状态 |
 | /v1/platform/members/{id}/remove | POST 移出平台，不删除账号或租户成员 |
@@ -88,13 +111,13 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/applications/{id}/actions | GET/POST 操作；/{actionId} PUT/PATCH/DELETE |
 | /v1/platform/applications/{id}/menus | GET/POST 导航；/{menuId} PUT/DELETE |
 | /v1/platform/plans | GET/POST；/{id} GET/PUT；应用到租户须预览并显式提交 |
-| /v1/tenant/members | GET/POST 成员列表、创建成员关系 |
+| /v1/tenant/members | GET/POST 成员列表、创建成员关系；列表可选精确 `phone`/`email` |
 | /v1/tenant/members/{id} | GET/PATCH 组织资料，禁止全局凭证字段 |
 | /v1/tenant/members/{id}/departments | PUT 调整关系，校验两端 |
 | /v1/tenant/members/{id}/status | PATCH 暂停/恢复成员资格 |
 | /v1/tenant/members/{id}/remove | POST 移出组织，不删除账号 |
-| /v1/tenant/members/export | POST 受独立操作、范围和字段限制的导出；GET /{id} 下载时再次校验 |
-| /v1/tenant/departments | GET 树/候选；POST；/{id} GET/PUT/DELETE |
+| /v1/tenant/members/export | POST 登记共享任务，返回 `CreatedResource`；GET `/{id}/status` 返回 `ExportTask`（不含成员快照）；GET `/{id}` 下载完整投影 |
+| /v1/tenant/departments | GET 必填 `purpose=MANAGED_DEPARTMENT` 及分页；POST；/{id} GET/PUT/DELETE |
 | /v1/tenant/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
 | /v1/tenant/settings | GET/PUT 组织设置；所有者转交使用独立 /owner-transfer POST |
 | /v1/tenant/applications | GET 已开通应用；/{id}/audience GET/PUT 可用人群 |
@@ -102,7 +125,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 平台账号管理与现有安全、字典、发号等保留能力同步迁到 IAM 命名，不改变其领域语义；新授权动作必须列入资源目录。账户创建/邀请按账号与成员分离处理，既有账号不能被直接重新设置凭证，返回信息不得枚举其他组织身份。
 
-所有候选选择接口须声明 purpose（由服务端枚举白名单定义），例如 ASSIGN_RECIPIENT、MANAGED_DEPARTMENT、DIRECTORY；不能通过更换 purpose 获得无权的全集。资源目录给出支持的操作及范围，不允许客户端提交未知 purpose。
+所有候选选择接口须声明 purpose（由服务端枚举白名单定义），例如 ASSIGN_RECIPIENT、MANAGED_DEPARTMENT、DIRECTORY；不能通过更换 purpose 获得无权的全集。当前 HTTP 强制校验：通讯录 GET `purpose=DIRECTORY`，租户部门树 GET `purpose=MANAGED_DEPARTMENT`；错配或缺失为 `InvalidArgument`。`ASSIGN_RECIPIENT` 仍由分配请求体 `Selection` 承载，尚未作为独立 GET 候选 query。账号 lookup 的 purpose 使用 `AccountLookupPurpose`，与选择器用途分开。资源目录给出支持的操作及范围，不允许客户端提交未知 purpose。
 
 平台 Selection 的 departments 必须为空，ScopeBindings 不接受 DEPARTMENTS；平台角色不接受 MEMBER_DEPARTMENTS/MANAGED_DEPARTMENTS。平台与租户的成员/组均从当前可信身份域解析。客户端提交的引用只有类型和 ID，不授予切换域的能力。同一账号同时出现在平台和租户时，两者使用各自的 memberId。
 
@@ -130,8 +153,8 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/policies/preview | POST {policyDraft, viewerMemberId, target?}；无副作用 |
 | /v1/{domain}/authorization/diagnose | POST {memberId/accountId, applicationId, actionId, targetId?} |
 | /v1/{domain}/authorization/audits | GET 分页事件；导出需独立权限 |
-| /v1/directory/members | GET 搜索/分页；/{id} GET；均执行普通通讯录规则 |
-| /v1/directory/departments | GET 可见树及必要祖先骨架 |
+| /v1/directory/members | GET 必填 `purpose=DIRECTORY`，分页及可选精确 `phone`/`email`；/{id} GET；均执行普通通讯录规则 |
+| /v1/directory/departments | GET 必填 `purpose=DIRECTORY` 及分页；可见树及必要祖先骨架 |
 
 {domain} 是路由定义占位，只允许 platform 或 tenant，不接受任意运行时字符串转换权限域。共享角色版本发布复用角色预览/版本规则；系统治理角色不向租户开放 mutation。
 
@@ -149,7 +172,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 旧入口的逐项目标与处置见 [endpoint-mapping.json](./endpoint-mapping.json)。其中 RETIRED 表示新系统不保留该旧入口；SERVICE 和 AUTHENTICATED_SELF 仍须各自身份校验，不是匿名或超管 bypass。该表是执行接入清单，不用于自动向迁移账号授予新操作。补充保留能力的目标路由包括平台 accounts/dictionaries/id-allocations/social-configs、当前账号 me/password/me/profile；具体方法按映射清单核对。历史 migration/reports 已退出本次交付。
 
-当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，包含管理命令、bootstrap、资源详情、预览/升级/诊断/审计响应及 R 信封实例；部分目标路径已列入 openapi.json，但未覆盖账号安全/辅助等完整保留能力，本轮修订尚未同步到生成JSON。
+当前公共 DTO 的已验证 schemas 和示例见 [contracts](./contracts/README.md)。这是 components 快照，包含管理命令、bootstrap、账号/本人资料、导出任务、资源详情、预览/升级/诊断/审计响应及 R 信封实例。openapi.json 覆盖第 3、4 节及 §1.2 保留入口；字典/发号/社交请求体保持既有领域类型，不以 IAM DTO 重写。OSS 与内部 RPC 仍不计入管理面清单。该文档不是线上已发布接口证明。
 
 ### 已落地的响应细节
 
@@ -177,7 +200,9 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - TenantCreateInput 为 `{name,ownerAccountId,ownerDisplayName?,rootDepartmentName?,avatar?,planId?}`。客户端不能提交治理版本、默认策略或任意应用清单；服务器从基础目录或指定套餐解析开通。预览返回 TenantPreviewResult，不含可回写的版本 ID。TenantUpdateInput / TenantSettingsInput 分别更新平台可见实体与租户设置。
 - ApplicationDraft 可标记 baseline，仅租户域允许。组织初始化缺省开通 baseline 应用；指定 planId 时改为该套餐内租户域启用应用。EntitlementReplaceInput 为 `{expectedVersion,entitlements[{applicationId,status,validFrom?,validUntil?}]}`。组与委派影响预览返回 ReferenceImpactPreview。
 
-管理面目标路径见 `contracts/openapi.json` 与 `contracts/routes.json`，覆盖 API 第 3、4 节列出的身份、目录、角色、授权、策略、诊断和审计接口，以及成员导出下载。控制器接入后对应操作 `x-runtime-implemented=true`。内部 RPC 与账号安全保留入口仍按 endpoint-mapping 接入，不计入此前管理面清单。该文档不是线上已发布接口证明。
+管理面与保留能力目标路径见 `contracts/openapi.json` 与 `contracts/routes.json`（96 路径 / 161 操作）。控制器接入后对应操作 `x-runtime-implemented=true`。OSS `/v1/oss/upload` 与 `/inner/*` 不进入该 OpenAPI。该文档不是线上已发布接口证明。
+
+导出任务 `ExportTask` 为 `{id,status,version,expiresAt,failureCode?}`，`status` 为 `PENDING`/`RUNNING`/`SUCCEEDED`/`FAILED`/`EXPIRED`。多实例读同一共享行；`PENDING`/`RUNNING` 可轮询；`FAILED` 才带 `failureCode`；过期后状态查询与下载均视为对象不可访问。下载语义不变：进行中 `AUTHORIZATION_UNAVAILABLE`（503），失败或过期 `OBJECT_NOT_FOUND`（404），成功返回完整 `PageResponse`（不受列表 200 上限）。
 
 ## 6. 本轮修正的运行时契约门禁
 
@@ -187,4 +212,4 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - 预览草稿进入真实引擎且受操作者披露边界限制；诊断验证application/action关联与targetId对象范围，不能仅凭actionCodes包含返回目标允许；未知/受限影响不用0伪造。
 - 导出交付覆盖全部获授权记录，不能以第一页200条代表导出；T13应给出任务状态、失败、下载、过期及多实例语义的实际接口，不把本地临时文件当作完整契约。
 - bootstrap菜单先检查域、应用状态/开通/人群，再判定菜单条件，OPEN不绕过这些边界。授权version应反映相关事实，expiresAt不跨越最近有效期边界。
-- 本轮没有重新生成schemas/routes/openapi/examples；x-runtime-implemented仅说明当时控制器存在，不证明安全语义或本轮修订已验证。完整快照须随实现和HTTP验证重新发布。
+- 2026-09-16 已重新生成 schemas/routes/openapi；查询参数、purpose 与导出状态写入 schema。x-runtime-implemented 仍只说明控制器存在，不证明安全语义或 A24 真实 HTTP。examples 未新增口令夹具，避免臆造密码协议。

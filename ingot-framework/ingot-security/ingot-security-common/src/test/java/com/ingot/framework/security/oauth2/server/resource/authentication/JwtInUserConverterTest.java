@@ -63,6 +63,25 @@ class JwtInUserConverterTest {
     }
 
     @Test
+    void restoresOnlySessionBoundIamIdentity() {
+        OnlineToken session = session();
+        var identity = new com.ingot.framework.commons.model.iam.AuthorizationContext(
+                com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT, "1", "9", "901");
+        session.setAuthorizationContext(identity);
+        when(onlineTokenService.getBySid(SID)).thenReturn(Optional.of(session));
+        assertEquals(identity, converter(Duration.ZERO).convert(jwt(SID)).getAuthorizationContext());
+    }
+
+    @Test
+    void tokenAndSessionIdentityMismatchRejects() {
+        OnlineToken session = session();
+        session.setAuthorizationContext(new com.ingot.framework.commons.model.iam.AuthorizationContext(
+                com.ingot.framework.commons.model.iam.AuthorizationDomain.TENANT, "2", "9", "902"));
+        when(onlineTokenService.getBySid(SID)).thenReturn(Optional.of(session));
+        assertThrows(OAuth2AuthenticationException.class, () -> converter(Duration.ZERO).convert(jwt(SID)));
+    }
+
+    @Test
     void missingSidClaim_rejects() {
         JwtInUserConverter converter = converter(Duration.ofSeconds(30));
 

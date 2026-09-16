@@ -6,7 +6,6 @@ import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.iam.api.model.domain.SysUser;
 import com.ingot.cloud.iam.api.model.domain.SysUserSocial;
 import com.ingot.cloud.iam.service.domain.SysSocialDetailsService;
-import com.ingot.cloud.iam.service.domain.SysUserService;
 import com.ingot.cloud.iam.service.domain.SysUserSocialService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
@@ -18,16 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * <p>Description  : MiniProgramUserSocialResolver.</p>
- * <p>Author       : jy.</p>
- * <p>Date         : 2025/12/3.</p>
- * <p>Time         : 15:59.</p>
+ * <p>按社交绑定表解析小程序账号，{@code user_id} 指向 {@code iam_account}，不回读 {@code sys_user}。</p>
+ *
+ * @author jy
+ * @since 1.0.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser> {
-    private final SysUserService sysUserService;
     private final SysUserSocialService sysUserSocialService;
     private final SysSocialDetailsService sysSocialDetailsService;
     private final SocialWechatProperties socialWechatProperties;
@@ -48,6 +46,12 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
                 code);
     }
 
+    /**
+     * 按绑定表 {@code user_id} 构造仅含账号 ID 的 {@link SysUser}，不查询 {@code sys_user}。
+     *
+     * @param uniqueID 小程序 openId
+     * @return 命中绑定时的账号外形；未绑定返回 {@code null}
+     */
     @Override
     public SysUser getUserInfo(String uniqueID) {
         SysUserSocial userSocial = sysUserSocialService.getOne(Wrappers.<SysUserSocial>lambdaQuery()
@@ -58,7 +62,9 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
             return null;
         }
 
-        return sysUserService.getById(userSocial.getUserId());
+        SysUser account = new SysUser();
+        account.setId(userSocial.getUserId());
+        return account;
     }
 
     @Override

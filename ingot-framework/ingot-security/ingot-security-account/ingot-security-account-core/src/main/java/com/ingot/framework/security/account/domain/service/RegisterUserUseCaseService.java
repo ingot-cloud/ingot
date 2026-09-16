@@ -143,7 +143,7 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
      * <ol>
      *   <li>命令显式传入的 {@code eventSource} 优先使用</li>
      *   <li>自助注册统一落 {@link EventSource#SYSTEM}</li>
-     *   <li>管理员创建按 {@code userType} 派生：{@code ADMIN → PMS}、{@code APP → MEMBER}，
+     *   <li>管理员创建按 {@code userType} 派生：{@code ADMIN → IAM}、{@code APP → MEMBER}，
      *       其余未识别类型降级为 {@link EventSource#SYSTEM}</li>
      * </ol>
      */
@@ -158,7 +158,7 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
             return EventSource.SYSTEM;
         }
         return switch (command.getUserType()) {
-            case ADMIN -> EventSource.PMS;
+            case ADMIN -> EventSource.IAM;
             case APP -> EventSource.MEMBER;
         };
     }

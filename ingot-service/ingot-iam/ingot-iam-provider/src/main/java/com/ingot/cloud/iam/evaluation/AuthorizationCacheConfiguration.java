@@ -37,7 +37,7 @@ public class AuthorizationCacheConfiguration {
     public static final String SOURCE_HOLDER_BEAN_NAME = "iamAuthorizationSourceHolder";
     private static final String CACHE_NAME = "iam-authorization";
     private static final String ALL_DOMAIN = "all";
-    private static final TypeReference<JdbcAuthorizationEvaluator.AuthorizationView> VIEW_TYPE = new TypeReference<>() {
+    private static final TypeReference<AuthorizationEvaluator.AuthorizationView> VIEW_TYPE = new TypeReference<>() {
     };
 
     /**
@@ -62,10 +62,10 @@ public class AuthorizationCacheConfiguration {
      * @return 分层缓存
      */
     @Bean(CACHE_BEAN_NAME)
-    @ConditionalOnBean(JdbcAuthorizationEvaluator.class)
-    public LayeredCache<String, JdbcAuthorizationEvaluator.AuthorizationView> iamAuthorizationViewCache(
+    @ConditionalOnBean(AuthorizationEvaluator.class)
+    public LayeredCache<String, AuthorizationEvaluator.AuthorizationView> iamAuthorizationViewCache(
             IamAuthorizationCacheProperties properties,
-            JdbcAuthorizationEvaluator evaluator,
+            AuthorizationEvaluator evaluator,
             ObjectProvider<StringRedisTemplate> redisProvider,
             ObjectProvider<ObjectMapper> objectMapperProvider,
             ObjectProvider<LayeredCacheRegistry> registryProvider,
@@ -79,7 +79,7 @@ public class AuthorizationCacheConfiguration {
                 .resilienceEnabled(false)
                 .localFloorEnabled(false)
                 .build();
-        return LayeredCacheBuilder.<String, JdbcAuthorizationEvaluator.AuthorizationView>named(CACHE_NAME)
+        return LayeredCacheBuilder.<String, AuthorizationEvaluator.AuthorizationView>named(CACHE_NAME)
                 .loader(evaluator::evaluateRaw)
                 .settings(settings)
                 .cacheable(view -> view != null)
@@ -98,10 +98,10 @@ public class AuthorizationCacheConfiguration {
      * @return 协调器
      */
     @Bean
-    @ConditionalOnBean({InvalidationBus.class, JdbcAuthorizationEvaluator.class})
+    @ConditionalOnBean({InvalidationBus.class, AuthorizationEvaluator.class})
     public LayeredCacheCoordinator<AuthorizationInvalidationEvent, String> iamAuthorizationCacheCoordinator(
             InvalidationBus bus,
-            @Qualifier(CACHE_BEAN_NAME) LayeredCache<String, JdbcAuthorizationEvaluator.AuthorizationView> cache) {
+            @Qualifier(CACHE_BEAN_NAME) LayeredCache<String, AuthorizationEvaluator.AuthorizationView> cache) {
         LayeredCacheCoordinator<AuthorizationInvalidationEvent, String> coordinator =
                 new LayeredCacheCoordinator<>(bus, AuthorizationInvalidationEvent.class,
                         event -> ALL_DOMAIN, ALL_DOMAIN);

@@ -76,7 +76,7 @@ class MySqlSecurityEventQueryRepositoryTest {
         entity.setPriority(RecordPriority.BEST_EFFORT.name());
         entity.setOccurredAt(receivedAt);
         entity.setReceivedAt(receivedAt);
-        entity.setSourceModule("ingot-pms");
+        entity.setSourceModule("ingot-iam");
         return entity;
     }
 }

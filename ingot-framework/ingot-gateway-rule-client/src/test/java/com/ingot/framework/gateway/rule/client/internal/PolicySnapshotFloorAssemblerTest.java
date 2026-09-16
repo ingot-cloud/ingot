@@ -38,10 +38,10 @@ class PolicySnapshotFloorAssemblerTest {
                 .code(groupCode)
                 .name("业务 API")
                 .enabled(true)
-                .patternList(List.of(EndpointPattern.of("/pms/**", "ANY")))
+                .patternList(List.of(EndpointPattern.of("/iam/**", "ANY")))
                 .build()));
         p.getPolicy().setRules(List.of(RateLimitRule.builder()
-                .code("pms-ip")
+                .code("iam-ip")
                 .groupCode(groupCode)
                 .dimension(RateLimitDimension.IP)
                 .qps(200)

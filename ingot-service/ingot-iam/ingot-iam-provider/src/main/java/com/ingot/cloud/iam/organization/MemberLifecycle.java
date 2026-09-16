@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.identity.ActiveIdentityService;
 import com.ingot.cloud.iam.persistence.MemberLifecycleRepository;
 import com.ingot.cloud.iam.support.IamAuditWriter;
@@ -26,8 +27,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * <p>原子变更独立成员资格或租户任职关系，保护所有者并同步保存脱敏审计。</p>
  *
- * <p>只修改当前成员，不删除账号、不修改其他域成员。HTTP 必须注入真实 {@link MemberMutationGuard}，
- * 不能使用空实现；受保护入口由 {@link MemberCommandService} 编排。</p>
+ * <p>只修改当前成员，不删除账号、不修改其他域成员。资格或任职提交后失效授权热缓存。
+ * HTTP 必须注入真实 {@link MemberMutationGuard}，不能使用空实现；受保护入口由
+ * {@link MemberCommandService} 编排。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -41,20 +43,24 @@ public class MemberLifecycle {
     private final ActiveIdentityService identities;
     private final MemberLifecycleRepository members;
     private final IamAuditWriter audits;
+    private final AuthorizationChangeNotifier changes;
 
     /**
-     * 绑定同一数据源事务、身份校验与成员仓库。
+     * 绑定同一数据源事务、身份校验、成员仓库与授权失效。
      * @param transactionManager 管理 IAM 数据源的事务管理器；Lombok 无法表达 TransactionTemplate 装配
      * @param identities 实时身份服务
      * @param members 成员行锁与写入
      * @param audits 同事务审计
+     * @param changes 授权热缓存失效
      */
     public MemberLifecycle(PlatformTransactionManager transactionManager, ActiveIdentityService identities,
-                           MemberLifecycleRepository members, IamAuditWriter audits) {
+                           MemberLifecycleRepository members, IamAuditWriter audits,
+                           AuthorizationChangeNotifier changes) {
         this.transaction = new TransactionTemplate(transactionManager);
         this.identities = identities;
         this.members = members;
         this.audits = audits;
+        this.changes = changes;
     }
 
     /**
@@ -136,10 +142,11 @@ public class MemberLifecycle {
                 return before.version().toString();
             }
             members.replaceDepartments(tenantId, targetId, nextRelations);
-            members.incrementVersion(actor.domain(), tenantId, targetId, before.version());
+            requireApplied(members.incrementVersion(actor.domain(), tenantId, targetId, before.version()));
             String version = nextVersion(before);
             audit(actor, memberId, auditId, AuditChangeType.UPDATE,
                     Map.of(AuditField.SCOPE, oldRelations), Map.of(AuditField.SCOPE, nextRelations), version);
+            changes.markAll();
             return version;
         });
     }
@@ -165,11 +172,12 @@ public class MemberLifecycle {
             if (before.status() == next) {
                 return before.version().toString();
             }
-            members.updateStatus(actor.domain(), tenantId, targetId, next, before.version());
+            requireApplied(members.updateStatus(actor.domain(), tenantId, targetId, next, before.version()));
             String version = nextVersion(before);
             audit(actor, memberId, auditId, next == MemberStatus.REMOVED ? AuditChangeType.REMOVE
                             : next == MemberStatus.ACTIVE ? AuditChangeType.ENABLE : AuditChangeType.DISABLE,
                     Map.of(AuditField.STATUS, before.status()), Map.of(AuditField.STATUS, next), version);
+            changes.markAll();
             return version;
         });
     }
@@ -216,6 +224,12 @@ public class MemberLifecycle {
     private void requirePresent(MemberLifecycleRepository.LockedMember state) {
         if (state.status() == MemberStatus.REMOVED) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    private static void requireApplied(int rows) {
+        if (rows != 1) {
+            throw new BizException(IamReasonCode.REVISION_CONFLICT);
         }
     }
 

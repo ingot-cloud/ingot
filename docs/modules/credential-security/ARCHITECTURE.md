@@ -13,7 +13,7 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         业务层 (Business Layer)                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │ Auth Service │  │ PMS Service  │  │Member Service│               │
+│  │ Auth Service │  │ IAM Service  │  │Member Service│               │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
 │         │                 │                 │                       │
 │         │ 本地集成         │ RPC调用          │ RPC调用                │
@@ -40,7 +40,7 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │                      数据层 (Data Layer)                            │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
-│  │ PMS Database     │  │ Member Database  │  │ Credential DB    │ │
+│  │ IAM Database     │  │ Member Database  │  │ Credential DB    │ │
 │  │ - password_hist  │  │ - password_hist  │  │ - policy_config  │ │
 │  │ - password_exp   │  │ - password_exp   │  │ - audit_log      │ │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘ │
@@ -55,7 +55,7 @@
 ```
 用户提交密码
     ↓
-Member/PMS Service
+Member/IAM Service
     ↓
 RPC 调用 validatePasswordStrength()
     ↓
@@ -213,7 +213,7 @@ Member Service
     ├── 管理自己的密码历史表
     └── RPC 调用 Credential Security Service
 
-PMS Service
+IAM Service
     ├── 依赖: ingot-security-credential
     ├── 依赖: ingot-credential-api
     ├── 管理自己的密码历史表

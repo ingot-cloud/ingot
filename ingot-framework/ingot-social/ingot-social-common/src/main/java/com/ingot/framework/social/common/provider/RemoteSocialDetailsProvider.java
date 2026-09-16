@@ -4,15 +4,15 @@ import java.util.Collections;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
-import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
-import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
+import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.model.support.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <p>Description  : 远程社交详情提供者（通过RPC调用PMS服务）.</p>
+ * <p>Description  : 远程社交详情提供者（通过RPC调用IAM服务）.</p>
  * <p>Author       : jy.</p>
  * <p>Date         : 2025/12/7.</p>
  * <p>Time         : 18:05.</p>
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RemoteSocialDetailsProvider implements SocialDetailsProvider {
 
-    private final RemotePmsSocialDetailsService remotePmsSocialDetailsService;
+    private final RemoteIamSocialDetailsService remoteIamSocialDetailsService;
 
     /**
      * 提供者是否可用（用于健康检查）
@@ -33,7 +33,7 @@ public class RemoteSocialDetailsProvider implements SocialDetailsProvider {
         try {
             log.debug("RemoteSocialDetailsProvider - 通过RPC获取社交详情: type={}", socialType);
 
-            R<List<SysSocialDetails>> result = remotePmsSocialDetailsService
+            R<List<SysSocialDetails>> result = remoteIamSocialDetailsService
                     .getSocialDetailsByType(socialType.getValue());
 
             if (result.isSuccess()) {
@@ -66,7 +66,7 @@ public class RemoteSocialDetailsProvider implements SocialDetailsProvider {
         try {
             log.debug("RemoteSocialDetailsProvider - 通过RPC获取社交详情: appId={}", appId);
 
-            R<SysSocialDetails> result = remotePmsSocialDetailsService.getDetailsByAppId(appId);
+            R<SysSocialDetails> result = remoteIamSocialDetailsService.getDetailsByAppId(appId);
 
             if (result.isSuccess()) {
                 SysSocialDetails details = result.getData();

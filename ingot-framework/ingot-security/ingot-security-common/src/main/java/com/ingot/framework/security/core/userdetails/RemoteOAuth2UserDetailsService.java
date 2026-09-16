@@ -53,6 +53,7 @@ public class RemoteOAuth2UserDetailsService implements OAuth2UserDetailsService 
         params.setUsername(uri.getPrincipal());
         params.setGrantType(grantType);
         params.setUserType(userType);
+        params.setDomain(uri.getDomain());
         if (tenant > 0) {
             params.setTenant(tenant);
         }

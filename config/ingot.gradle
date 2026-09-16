@@ -45,7 +45,7 @@ ingot.framework_gateway_rule_client = ":ingot-framework:ingot-gateway-rule-clien
 
 // service api
 ingot.auth_api = ":ingot-service:ingot-auth:ingot-auth-api"
-ingot.pms_api = ":ingot-service:ingot-pms:ingot-pms-api"
+ingot.iam_api = ":ingot-service:ingot-iam:ingot-iam-api"
 ingot.member_api = ":ingot-service:ingot-member:ingot-member-api"
 ingot.security_api = ":ingot-service:ingot-security:ingot-security-api"
 

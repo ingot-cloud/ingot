@@ -83,7 +83,7 @@ class AuthContextRelayFilterTest {
         String payload = Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(claimsJson.getBytes(StandardCharsets.UTF_8));
         return MockServerWebExchange.from(
-                MockServerHttpRequest.get("/pms/user")
+                MockServerHttpRequest.get("/iam/user")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer hdr." + payload + ".sig")
                         .build());
     }

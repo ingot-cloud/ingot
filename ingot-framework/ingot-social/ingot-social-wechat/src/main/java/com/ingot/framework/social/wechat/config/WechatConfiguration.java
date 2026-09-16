@@ -3,7 +3,7 @@ package com.ingot.framework.social.wechat.config;
 import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.api.impl.WxMaServiceImpl;
-import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.social.common.config.SocialCommonConfiguration;
 import com.ingot.framework.social.common.provider.RemoteSocialDetailsProvider;
 import com.ingot.framework.social.common.provider.SocialDetailsProvider;
@@ -38,15 +38,15 @@ public class WechatConfiguration {
     // ==================== 社交详情提供者 ====================
 
     /**
-     * 远程社交详情提供者（用于非PMS服务）
+     * 远程社交详情提供者（用于非IAM服务）
      * 条件：不存在其他 SocialDetailsProvider Bean
-     * 注意：PMS服务会在自己的配置中注册 LocalSocialDetailsProvider
+     * 注意：IAM服务会在自己的配置中注册 LocalSocialDetailsProvider
      */
     @Bean
     @ConditionalOnMissingBean(SocialDetailsProvider.class)
-    public SocialDetailsProvider remoteSocialDetailsProvider(RemotePmsSocialDetailsService remotePmsSocialDetailsService) {
-        log.info("WechatConfiguration - 使用远程社交详情提供者（通过RPC调用PMS）");
-        return new RemoteSocialDetailsProvider(remotePmsSocialDetailsService);
+    public SocialDetailsProvider remoteSocialDetailsProvider(RemoteIamSocialDetailsService remoteIamSocialDetailsService) {
+        log.info("WechatConfiguration - 使用远程社交详情提供者（通过RPC调用IAM）");
+        return new RemoteSocialDetailsProvider(remoteIamSocialDetailsService);
     }
 
     // ==================== 核心服务 ====================

@@ -20,7 +20,7 @@
 
 ### 步骤 1：添加依赖
 
-在需要联邦式数据管理的服务中（如 Member Service 或 PMS Service）：
+在需要联邦式数据管理的服务中（如 Member Service 或 IAM Service）：
 
 ```gradle
 dependencies {
@@ -42,7 +42,7 @@ dependencies {
 # Member Service
 mysql -u root -p ingot_member < databases/migrations/add_password_history.sql
 
-# PMS Service
+# IAM Service
 mysql -u root -p ingot_core < databases/migrations/add_password_history.sql
 ```
 
@@ -327,7 +327,7 @@ mysql -u root -p ingot_member < databases/migrations/add_password_history.sql
 
 ---
 
-### 场景 2：PMS Service（权限管理系统）
+### 场景 2：IAM Service（权限管理系统）
 
 ```gradle
 // build.gradle
@@ -380,7 +380,7 @@ ingot:
 └─────────────────────────────────────────────────────────┘
                       ↓ RPC 调用
 ┌──────────────────────────┬──────────────────────────────┐
-│    Member Service        │      PMS Service             │
+│    Member Service        │      IAM Service             │
 │  (会员数据 - 分散存储)    │   (管理员数据 - 分散存储)     │
 │  ┌──────────────────┐    │    ┌──────────────────┐      │
 │  │ password_history │    │    │ password_history │      │

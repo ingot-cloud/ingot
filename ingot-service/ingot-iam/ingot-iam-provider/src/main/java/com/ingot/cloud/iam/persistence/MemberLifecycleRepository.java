@@ -91,53 +91,57 @@ public class MemberLifecycleRepository {
     }
 
     /**
-     * 更新当前域成员资格并递增版本。
+     * 按持锁读到的版本条件更新当前域成员资格并递增版本。
      * @param domain 当前授权域
      * @param tenantId 租户域必填，平台域忽略
      * @param memberId 成员 ID
      * @param status 新资格
      * @param version 持锁读到的版本
+     * @return 受影响行数；为 0 表示版本已被并发改写
      */
-    public void updateStatus(AuthorizationDomain domain, Long tenantId, long memberId, MemberStatus status,
-                             BigInteger version) {
+    public int updateStatus(AuthorizationDomain domain, Long tenantId, long memberId, MemberStatus status,
+                            BigInteger version) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         BigInteger next = version.add(BigInteger.ONE);
         if (domain == AuthorizationDomain.PLATFORM) {
-            platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
+            return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                     .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
+                    .eq(IamPlatformMemberEntity::getVersion, version)
                     .set(IamPlatformMemberEntity::getStatus, status)
                     .set(IamPlatformMemberEntity::getVersion, next)
                     .set(IamPlatformMemberEntity::getUpdatedAt, now));
-            return;
         }
-        tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
+        return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantMemberEntity::getId, BigInteger.valueOf(memberId))
+                .eq(IamTenantMemberEntity::getVersion, version)
                 .set(IamTenantMemberEntity::getStatus, status)
                 .set(IamTenantMemberEntity::getVersion, next)
                 .set(IamTenantMemberEntity::getUpdatedAt, now));
     }
 
     /**
-     * 仅递增当前域成员版本。
+     * 按持锁读到的版本条件仅递增当前域成员版本。
      * @param domain 当前授权域
      * @param tenantId 租户域必填，平台域忽略
      * @param memberId 成员 ID
      * @param version 持锁读到的版本
+     * @return 受影响行数；为 0 表示版本已被并发改写
      */
-    public void incrementVersion(AuthorizationDomain domain, Long tenantId, long memberId, BigInteger version) {
+    public int incrementVersion(AuthorizationDomain domain, Long tenantId, long memberId, BigInteger version) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         BigInteger next = version.add(BigInteger.ONE);
         if (domain == AuthorizationDomain.PLATFORM) {
-            platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
+            return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                     .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
+                    .eq(IamPlatformMemberEntity::getVersion, version)
                     .set(IamPlatformMemberEntity::getVersion, next)
                     .set(IamPlatformMemberEntity::getUpdatedAt, now));
-            return;
         }
-        tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
+        return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantMemberEntity::getId, BigInteger.valueOf(memberId))
+                .eq(IamTenantMemberEntity::getVersion, version)
                 .set(IamTenantMemberEntity::getVersion, next)
                 .set(IamTenantMemberEntity::getUpdatedAt, now));
     }

@@ -1,6 +1,6 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
-import com.ingot.cloud.iam.role.JdbcRoleService;
+import com.ingot.cloud.iam.role.RoleService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatusInput;
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/tenant/roles")
 @RequiredArgsConstructor
 public class TenantRoleCommandAPI implements RShortcuts {
-    private final JdbcRoleService roles;
+    private final RoleService roles;
 
     /**
      * 分页列出租户可见角色。

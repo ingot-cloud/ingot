@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * <p>安全事件唯一运行时配置，前缀 {@code ingot.security.event}。</p>
  *
- * <p>{@code delivery} / {@code mysql} 由 PMS、Member、Security 从共享
+ * <p>{@code delivery} / {@code mysql} 由 IAM、Member、Security 从共享
  * {@code in-security-policy.yml} 读取；{@code enabled}、{@code target}、
  * {@code source-module}、{@code categories}、{@code retention} 仍配在各服务
  * {@code in-service-*.yml}。Auth / Gateway 不 import 该共享文件，继续用服务 yml
@@ -63,7 +63,7 @@ public class SecurityEventProperties {
 
     /**
      * 上报方模块标识，写入 {@code security_event.source_module}。
-     * <p>示例：{@code PMS}、{@code MEMBER}、{@code GATEWAY}、{@code SECURITY}。</p>
+     * <p>示例：{@code IAM}、{@code MEMBER}、{@code GATEWAY}、{@code SECURITY}。</p>
      */
     private String sourceModule = "unknown";
 

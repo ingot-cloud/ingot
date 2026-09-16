@@ -1,7 +1,7 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
-    api project(ingot.pms_api)
+    api project(ingot.iam_api)
     api project(ingot.framework_event_bus)
 
     implementation project(ingot.framework_core)

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * UserCredentialPort 空实现
  * <p>
  * 当不需要独立凭证管理时，使用此空实现作为默认值。
- * 各业务服务（PMS/Member）应提供自己的实现来替换此类。
+ * 各业务服务（IAM/Member）应提供自己的实现来替换此类。
  * </p>
  *
  * @author jymot

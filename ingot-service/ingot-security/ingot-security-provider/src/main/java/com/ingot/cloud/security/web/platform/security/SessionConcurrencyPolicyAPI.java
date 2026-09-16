@@ -4,9 +4,10 @@ import java.util.List;
 
 import com.ingot.cloud.security.model.domain.SessionConcurrencyPolicy;
 import com.ingot.cloud.security.service.session.SessionConcurrencyPolicyAdminService;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.security.access.HasAnyAuthority;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -38,35 +39,35 @@ public class SessionConcurrencyPolicyAPI implements RShortcuts {
 
     @GetMapping
     @Operation(summary = "查询并发会话策略列表")
-    @AdminOrHasAnyAuthority({"platform:security:session:policy:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_READ})
     public R<List<SessionConcurrencyPolicy>> list() {
         return ok(adminService.list());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "查询并发会话策略详情")
-    @AdminOrHasAnyAuthority({"platform:security:session:policy:query"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_READ})
     public R<SessionConcurrencyPolicy> getById(@PathVariable Long id) {
         return ok(adminService.getById(id));
     }
 
     @PostMapping
     @Operation(summary = "新增并发会话策略")
-    @AdminOrHasAnyAuthority({"platform:security:session:policy:update"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_UPDATE})
     public R<SessionConcurrencyPolicy> create(@RequestBody SessionConcurrencyPolicy policy) {
         return ok(adminService.create(policy));
     }
 
     @PutMapping
     @Operation(summary = "更新并发会话策略")
-    @AdminOrHasAnyAuthority({"platform:security:session:policy:update"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_UPDATE})
     public R<SessionConcurrencyPolicy> update(@RequestBody SessionConcurrencyPolicy policy) {
         return ok(adminService.update(policy));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除并发会话策略")
-    @AdminOrHasAnyAuthority({"platform:security:session:policy:update"})
+    @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_POLICY_UPDATE})
     public R<Void> delete(@PathVariable Long id) {
         adminService.delete(id);
         return ok();

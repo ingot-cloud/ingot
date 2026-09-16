@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * <p>账号锁定策略 Inner Feign，供 PMS / Member 在 {@code mode=remote} 时拉取全量策略。</p>
+ * <p>账号锁定策略 Inner Feign，供 IAM / Member 在 {@code mode=remote} 时拉取全量策略。</p>
  *
  * @author jy
  * @since 1.0.0

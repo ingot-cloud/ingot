@@ -1,9 +1,9 @@
 package com.ingot.framework.data.mybatis.scope.authorization;
 
-import com.ingot.cloud.pms.api.model.dto.authorization.AuthorizationSnapshotDTO;
+import com.ingot.cloud.iam.api.model.dto.authorization.AuthorizationSnapshotDTO;
 
 /**
- * <p>按租户与用户加载有效授权快照。PMS 进程内走本地解析，其它服务走内部 RPC。</p>
+ * <p>按租户与用户加载有效授权快照。IAM 进程内走本地解析，其它服务走内部 RPC。</p>
  *
  * @author jy
  * @since 1.0.0

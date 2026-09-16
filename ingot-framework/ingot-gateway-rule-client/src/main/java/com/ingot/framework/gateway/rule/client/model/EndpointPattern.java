@@ -12,7 +12,7 @@ import lombok.Setter;
 /**
  * API 路径模式：网关对外 path + HTTP method 二元组。
  *
- * <p>{@code path} 支持 Ant 风格（如 {@code /pms/**}、{@code /auth/*}）。
+ * <p>{@code path} 支持 Ant 风格（如 {@code /iam/**}、{@code /auth/*}）。
  * {@code method} 为 {@link #ANY_METHOD}、大写 HTTP 动词或 null 表示不限方法。</p>
  *
  * <p><b>注意</b>：Sentinel Gateway 编译阶段暂不使用 method 过滤，字段保留供

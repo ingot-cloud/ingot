@@ -28,4 +28,12 @@ public interface IamApplicationMapper extends BaseMapper<IamApplicationEntity> {
      */
     @Select("SELECT id FROM iam_application WHERE id=#{id} AND domain=#{domain} AND enabled=TRUE FOR UPDATE")
     BigInteger lockEnabled(@Param("id") BigInteger id, @Param("domain") AuthorizationDomain domain);
+
+    /**
+     * 锁定应用目录行，调用方须处于事务中。
+     * @param id 应用 ID
+     * @return 命中行；不存在时为空
+     */
+    @Select("SELECT id,code,domain,name,baseline,enabled,version FROM iam_application WHERE id=#{id} FOR UPDATE")
+    IamApplicationEntity lockRow(@Param("id") BigInteger id);
 }

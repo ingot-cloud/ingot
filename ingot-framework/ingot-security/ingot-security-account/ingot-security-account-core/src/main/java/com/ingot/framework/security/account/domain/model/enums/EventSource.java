@@ -19,9 +19,9 @@ public enum EventSource {
     AUTH("AUTH"),
 
     /**
-     * PMS 管理服务（管理员手动操作）
+     * IAM 管理服务（管理员手动操作）
      */
-    PMS("PMS"),
+    IAM("IAM"),
 
     /**
      * 会员服务

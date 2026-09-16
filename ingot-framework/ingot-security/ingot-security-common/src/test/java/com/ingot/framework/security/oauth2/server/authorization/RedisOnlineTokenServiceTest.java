@@ -65,6 +65,17 @@ class RedisOnlineTokenServiceTest {
     }
 
     @Test
+    void save_indexesPlatformSessionUnderZeroTenant() {
+        InUser platform = InUser.stateless(USER_ID, null, CLIENT_ID, TokenAuthTypeEnum.STANDARD.getValue(),
+                UserTypeEnum.ADMIN.getValue(), "admin", List.of(), List.of(), null);
+        service.save(platform, registration(NEW_JTI));
+
+        verify(setOps).add(RedisKeyConstants.OnlineToken.userSetKey(null, CLIENT_ID, USER_ID), SID);
+        verify(zSetOps).add(eq(RedisKeyConstants.OnlineToken.onlineUserKey(
+                RedisKeyConstants.OnlineToken.PLATFORM_INDEX_TENANT_ID, CLIENT_ID)), eq(USER_ID), anyDouble());
+    }
+
+    @Test
     void save_writesSessionAndUserSetWithoutJtiOrUniqueIndex() {
         service.save(user(), registration(NEW_JTI));
 

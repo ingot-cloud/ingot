@@ -30,7 +30,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
  * {@link RedisMessageListenerContainer} 已注册。
  * 若仅写 {@code @AutoConfigureAfter(RedisAutoConfiguration.class)}，在拓扑排序下仍可能
  * 早于上述 Configuration 执行，导致 {@code @ConditionalOnBean(RedisMessageListenerContainer)}
- * 判定失败、总线永不装配，进而跨节点字典失效广播整条链路静默失效（表现为只有写端 PMS
+ * 判定失败、总线永不装配，进而跨节点字典失效广播整条链路静默失效（表现为只有写端 IAM
  * 本地缓存被清，其它微服务 L1 永远不过期）。
  * </p>
  *

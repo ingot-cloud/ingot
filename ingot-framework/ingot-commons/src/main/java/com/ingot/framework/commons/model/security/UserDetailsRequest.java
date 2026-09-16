@@ -3,6 +3,7 @@ package com.ingot.framework.commons.model.security;
 import java.io.Serializable;
 
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import lombok.Data;
 
 /**
@@ -33,6 +34,13 @@ public class UserDetailsRequest implements Serializable {
      * 登录的tenant，可以为空
      */
     private Long tenant;
+    /**
+     * 认证入口声明的管理域，可以为空。
+     * <p>{@code PLATFORM} 为平台身份且 {@code tenant} 必须为空；{@code TENANT} 携带 {@code tenant}
+     * 时选择该组织成员，不携带时为成员资格选择阶段。为空时按既有行为兼容处理，
+     * 由身份提供方而非本 DTO 决定推断规则。</p>
+     */
+    private AuthorizationDomain domain;
     /**
      * 社交类型, {@code grantType} 为 com.ingot.framework.security.oauth2.core.IngotAuthorizationGrantType#SOCIAL 时，不为空
      */

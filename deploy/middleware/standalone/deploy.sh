@@ -357,7 +357,7 @@ show_logs() {
         echo "  - ingot-auth"
         echo "  - ingot-gateway"
         echo "  - ingot-member"
-        echo "  - ingot-pms"
+        echo "  - ingot-iam"
         exit 1
     fi
 

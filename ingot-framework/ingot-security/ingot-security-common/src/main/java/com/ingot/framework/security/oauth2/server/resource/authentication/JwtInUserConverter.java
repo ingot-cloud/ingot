@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,20 +67,31 @@ public class JwtInUserConverter implements Converter<Jwt, InUser> {
                     getAuthorities(source), List.of(), MapUtil.empty());
         }
 
+        if (session.getAuthorizationContext() != null
+                && (!Objects.equals(id, session.getUserId())
+                    || !Objects.equals(tenantId, session.getTenantId())
+                    || !Objects.equals(clientId, session.getClientId()))) {
+            throw invalidToken("The session identity does not match the token.");
+        }
+
         log.debug("[JwtInUserConverter] JWT 已还原为 InUser: sid={}, userId={}, authType={}, userType={}",
                 sid, id, session.getAuthType(), session.getUserType());
 
-        return InUser.stateless(
-                id,
-                tenantId,
-                clientId,
-                session.getAuthType(),
-                session.getUserType(),
-                username,
-                mergeAuthorities(source, session),
-                session.getDeptIds(),
-                MapUtil.empty()
-        );
+        try {
+            return InUser.stateless(
+                    id,
+                    tenantId,
+                    clientId,
+                    session.getAuthType(),
+                    session.getUserType(),
+                    username,
+                    mergeAuthorities(source, session),
+                    session.getDeptIds(),
+                    MapUtil.empty()
+            ).toBuilder().authorizationContext(session.getAuthorizationContext()).build();
+        } catch (IllegalArgumentException exception) {
+            throw invalidToken("The session identity does not match the token.");
+        }
     }
 
     /**

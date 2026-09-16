@@ -60,7 +60,7 @@ class MySqlSecurityEventStoreTest {
                 .eventCategory("ACCOUNT")
                 .priority(RecordPriority.DURABLE)
                 .occurredAt(Instant.parse("2026-08-05T00:00:00Z"))
-                .sourceModule("ingot-pms")
+                .sourceModule("ingot-iam")
                 .build();
 
         when(mapper.insertBatch(any())).thenReturn(1);
@@ -92,7 +92,7 @@ class MySqlSecurityEventStoreTest {
                 .eventCategory("ACCOUNT")
                 .priority(RecordPriority.DURABLE)
                 .occurredAt(Instant.parse("2026-08-05T00:00:00Z"))
-                .sourceModule("ingot-pms")
+                .sourceModule("ingot-iam")
                 .build();
 
         when(mapper.insertBatch(any())).thenReturn(1);

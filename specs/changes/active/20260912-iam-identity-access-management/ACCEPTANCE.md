@@ -41,6 +41,7 @@
 | A26 | 所有者转交至普通成员、并发移出新所有者、原所有者独立授权 | 治理来源随所有权转交，旧来源撤销，独立授权保留；竞态拒绝，审计和失效完整 |
 | A27 | 超过200条成员导出、其他实例下载、任务失败及执行前撤权 | 完整结果、多实例可取、失败不报成功；身份/范围/字段重验，无旧权限文件绕过 |
 | A28 | 平台用户无租户、同账号多租户、租户分支、Member分支 | 平台PLATFORM/tenantId=null，不返回租户列表（共享DTO allows=[]）；无租户照常登录；TENANT与Member既有认证要求保留 |
+| A28a | domain=PLATFORM带tenant、domain=TENANT不带tenant、domain=TENANT带tenant、domain缺省 | 平台带tenant拒绝；TENANT不带tenant只返回allows候选且无AuthorizationContext、该会话调管理接口被拒；TENANT带tenant建立成员上下文；缺省沿用兼容行为且Member不变 |
 
 ## 迁移（历史，2026-09-15 已退出范围）
 

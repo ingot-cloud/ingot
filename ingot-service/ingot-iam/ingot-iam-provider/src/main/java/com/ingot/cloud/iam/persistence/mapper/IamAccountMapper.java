@@ -26,4 +26,13 @@ public interface IamAccountMapper extends BaseMapper<IamAccountEntity> {
      */
     @Select("SELECT id FROM iam_account WHERE id=#{id} AND enabled=TRUE AND deleted_at IS NULL FOR UPDATE")
     BigInteger lockActive(@Param("id") BigInteger id);
+
+    /**
+     * 锁定未删除账号，调用方须处于事务中。
+     *
+     * @param id 已验证的全局账号 ID
+     * @return 命中的账号，不存在时为空
+     */
+    @Select("SELECT * FROM iam_account WHERE id=#{id} AND deleted_at IS NULL FOR UPDATE")
+    IamAccountEntity lock(@Param("id") BigInteger id);
 }

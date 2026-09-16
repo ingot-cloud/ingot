@@ -1,17 +1,17 @@
 package com.ingot.framework.commons.constants;
 
 /**
- * <p>Description  : ServiceNameConstants.服务名称</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2019/4/29.</p>
- * <p>Time         : 11:50 AM.</p>
+ * <p>集中声明内部服务发现名称，供 RPC 客户端绑定目标服务。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 public interface ServiceNameConstants {
 
     /**
-     * 权限管理系统
+     * IAM 身份与访问管理服务
      */
-    String PMS_SERVICE = "in-service-pms";
+    String IAM_SERVICE = "in-service-iam";
 
     /**
      * 会员系统

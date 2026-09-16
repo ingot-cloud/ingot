@@ -63,6 +63,14 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
             Long tenant = NumberUtil.parseLong(
                     String.valueOf(preAuthToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT)),
                     user.getTenantId());
+            if (user.getAuthorizationContext() != null) {
+                if (!java.util.Objects.equals(user.getTenantId(), tenant)) {
+                    throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT,
+                            "IAM identity selection requires a new authenticated member context.", null));
+                }
+                customizeWithUser(context, user);
+                return;
+            }
             // 切租户：从未知租户登录时缓存的 tenantDeptIds 中切片当前租户的部门列表，
             // 若 map 不存在或没有命中则回退到原 user.deptIds（已知租户场景）
             List<Long> pickedDeptIds = Optional.ofNullable(user.getTenantDeptIds())

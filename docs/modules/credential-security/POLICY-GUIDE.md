@@ -48,7 +48,7 @@ Ingot Cloud 凭证安全模块提供了灵活的策略配置体系，支持三�
 #### 全局默认策略
 
 ```sql
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (NULL, 'STRENGTH', '{
   "minLength": 8,
@@ -73,7 +73,7 @@ INSERT INTO credential_policy_config
 
 ```sql
 -- 租户ID为1的企业，要求更高的密码强度
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (1, 'STRENGTH', '{
   "minLength": 12,
@@ -230,7 +230,7 @@ if (forbidUserAttributes) {
 #### 全局默认策略（90天过期）
 
 ```sql
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (NULL, 'EXPIRATION', '{
   "enabled": true,
@@ -245,7 +245,7 @@ INSERT INTO credential_policy_config
 
 ```sql
 -- 金融行业租户，要求60天更换密码
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (2, 'EXPIRATION', '{
   "enabled": true,
@@ -260,7 +260,7 @@ INSERT INTO credential_policy_config
 #### 禁用过期策略（开发环境）
 
 ```sql
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (NULL, 'EXPIRATION', '{
   "enabled": false
@@ -349,7 +349,7 @@ ingot:
     ├─ graceLoginCount--
     ├─ 返回强制修改标记
     └─ 前端跳转到修改密码页面
-    
+
 如果 graceLoginCount <= 0
     └─ 拒绝登录，提示必须重置密码
 ```
@@ -362,13 +362,13 @@ ingot:
 public R<?> resetPassword(@PathVariable Long userId) {
     // 1. 生成随机密码
     String tempPassword = RandomUtil.randomString(8);
-    
+
     // 2. 更新密码
     userService.updatePassword(userId, tempPassword);
-    
+
     // 3. 标记强制修改
     passwordExpirationService.setForceChange(userId, true);
-    
+
     // 4. 返回临时密码
     return R.ok(new ResetPwdVO(tempPassword));
 }
@@ -380,7 +380,7 @@ public R<?> login(@RequestBody LoginDTO dto) {
     if (passwordExpirationService.needForceChange(userId)) {
         return R.fail("FORCE_CHANGE_PASSWORD", "必须修改初始密码后才能使用");
     }
-    
+
     return R.ok(token);
 }
 ```
@@ -404,7 +404,7 @@ public R<?> login(@RequestBody LoginDTO dto) {
 #### 全局默认策略（记录最近5次）
 
 ```sql
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (NULL, 'HISTORY', '{
   "enabled": true,
@@ -416,7 +416,7 @@ INSERT INTO credential_policy_config
 #### 高安全要求（记录最近10次）
 
 ```sql
-INSERT INTO credential_policy_config 
+INSERT INTO credential_policy_config
 (tenant_id, policy_type, policy_config, priority, enabled) VALUES
 (3, 'HISTORY', '{
   "enabled": true,
@@ -460,9 +460,9 @@ ingot:
 ```java
 @Service
 public class PasswordHistoryService {
-    
+
     private static final int MAX_HISTORY_COUNT = 5;
-    
+
     /**
      * 添加密码历史（自动维护环形缓冲）
      */
@@ -474,24 +474,24 @@ public class PasswordHistoryService {
         history.setPasswordHash(passwordHash);
         history.setCreatedAt(LocalDateTime.now());
         passwordHistoryMapper.insert(history);
-        
+
         // 2. 查询该用户的历史记录数
         long count = passwordHistoryMapper.countByUserId(userId);
-        
+
         // 3. 如果超过限制，删除最旧的记录
         if (count > MAX_HISTORY_COUNT) {
             long deleteCount = count - MAX_HISTORY_COUNT;
             passwordHistoryMapper.deleteOldest(userId, deleteCount);
         }
     }
-    
+
     /**
      * 检查密码是否在历史中使用过
      */
     public boolean isPasswordReused(Long userId, String rawPassword) {
         List<PasswordHistory> histories = passwordHistoryMapper
             .selectByUserId(userId, MAX_HISTORY_COUNT);
-        
+
         return histories.stream()
             .anyMatch(h -> passwordEncoder.matches(rawPassword, h.getPasswordHash()));
     }
@@ -508,25 +508,25 @@ public class PasswordHistoryService {
 **SQL 优化：**
 ```sql
 -- 高效的删除最旧记录（使用子查询）
-DELETE FROM pms_password_history 
-WHERE user_id = ? 
+DELETE FROM iam_password_history
+WHERE user_id = ?
 AND id NOT IN (
     SELECT id FROM (
-        SELECT id FROM pms_password_history 
-        WHERE user_id = ? 
-        ORDER BY created_at DESC 
+        SELECT id FROM iam_password_history
+        WHERE user_id = ?
+        ORDER BY created_at DESC
         LIMIT 5
     ) tmp
 );
 
 -- 或者使用更直接的方式（如果支持）
-DELETE FROM pms_password_history 
-WHERE user_id = ? 
+DELETE FROM iam_password_history
+WHERE user_id = ?
 AND created_at < (
-    SELECT created_at 
-    FROM pms_password_history 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC 
+    SELECT created_at
+    FROM iam_password_history
+    WHERE user_id = ?
+    ORDER BY created_at DESC
     LIMIT 5, 1
 );
 ```
@@ -578,25 +578,25 @@ INSERT INTO credential_policy_config VALUES
 ```java
 @Service
 public class PolicyConfigService {
-    
+
     @Cacheable(value = "credential:policy", key = "#tenantId + ':' + #policyType")
     public PolicyConfig getPolicy(Long tenantId, String policyType) {
         // 1. 优先查询租户级策略
         PolicyConfig tenantPolicy = policyRepository
             .findByTenantIdAndType(tenantId, policyType);
-        
+
         if (tenantPolicy != null && tenantPolicy.isEnabled()) {
             return tenantPolicy;
         }
-        
+
         // 2. 回退到全局默认策略
         PolicyConfig defaultPolicy = policyRepository
             .findByTenantIdAndType(null, policyType);
-        
+
         if (defaultPolicy != null && defaultPolicy.isEnabled()) {
             return defaultPolicy;
         }
-        
+
         // 3. 使用系统内置策略
         return getBuiltInPolicy(policyType);
     }
@@ -611,7 +611,7 @@ public class PolicyConfigService {
 @RestController
 @RequestMapping("/v1/credential/policy")
 public class PolicyAPI {
-    
+
     /**
      * 更新策略配置
      */
@@ -649,15 +649,15 @@ curl -X PUT http://localhost:9090/v1/credential/policy/STRENGTH \
 ```java
 @Service
 public class PolicyConfigService {
-    
+
     @CacheEvict(value = "credential:policy", allEntries = true)
     public void updatePolicy(Long tenantId, String policyType, PolicyConfig config) {
         // 1. 更新数据库
         policyRepository.save(config);
-        
+
         // 2. 发布事件通知其他节点
         eventPublisher.publishEvent(new PolicyUpdatedEvent(tenantId, policyType));
-        
+
         // 3. 缓存自动失效（@CacheEvict）
     }
 }
@@ -665,12 +665,12 @@ public class PolicyConfigService {
 // 监听策略更新事件（集群环境）
 @Component
 public class PolicyUpdateListener {
-    
+
     @EventListener
     public void onPolicyUpdated(PolicyUpdatedEvent event) {
-        log.info("策略已更新: tenantId={}, policyType={}", 
+        log.info("策略已更新: tenantId={}, policyType={}",
             event.getTenantId(), event.getPolicyType());
-        
+
         // 通知前端刷新配置
         webSocketService.notifyPolicyUpdate(event);
     }
@@ -813,15 +813,15 @@ ingot:
 
 ```sql
 -- 1. 先更新配置（不启用）
-UPDATE credential_policy_config 
-SET policy_config = '{"minLength": 10, ...}', 
+UPDATE credential_policy_config
+SET policy_config = '{"minLength": 10, ...}',
     enabled = false
 WHERE policy_type = 'STRENGTH';
 
 -- 2. 通知用户即将调整策略（提前7天）
 
 -- 3. 启用新策略
-UPDATE credential_policy_config 
+UPDATE credential_policy_config
 SET enabled = true
 WHERE policy_type = 'STRENGTH';
 
@@ -838,7 +838,7 @@ public void checkPasswordExpiration() {
     // 统计即将过期的密码数量
     long expiringSoon = passwordExpirationService
         .countExpiringWithinDays(7);
-    
+
     if (expiringSoon > 100) {
         alertService.sendAlert(
             "大量密码即将过期",
@@ -852,7 +852,7 @@ public void checkPasswordExpiration() {
 public void checkWeakPasswords() {
     // 扫描并标记弱密码用户
     List<User> weakPasswordUsers = userService.findWeakPasswordUsers();
-    
+
     if (weakPasswordUsers.size() > 0) {
         // 发送邮件提醒用户修改密码
         notificationService.sendWeakPasswordWarning(weakPasswordUsers);

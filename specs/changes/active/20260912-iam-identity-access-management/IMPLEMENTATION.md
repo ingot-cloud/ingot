@@ -211,3 +211,186 @@ IAM commons 枚举已对齐 `CommonStatusEnum`：`@Getter`/`@RequiredArgsConstru
 前轮静态评估确认角色升级归属、委派持续约束、通讯录/字段规则、期限缓存、并发写、所有者转交、旧能力迁入、HTTP 错误、角色形态、组展开、导出、诊断/预览/对象能力和菜单过滤等缺口。REMEDIATION 记录修正目标，TASKS 和 ACCEPTANCE 重新建立门禁；原 T01/T03 的局部结构通过不再表示扩展后的完整契约完成。MP 历史机械迁移检查不证明功能正确或框架职责合理。
 
 本轮未改 Java/SQL/配置、前端、生成的契约 JSON、current 或 Git 提交；未执行运行时测试。
+
+## 2026-09-15 基础隔离层修正（C17、C10、C19）
+
+按依赖顺序先做与其他条目无耦合的基础层，为后续授权语义修正让出干净的地基。
+
+C17 锁定态：删除 IAM 侧同表 `IamAccountLockState` 实体与 Mapper，改为消费安全框架的 `LockStatePort`，失败计数、自动解锁与密码事件仍由框架用例负责，IAM 不再复制实现。`databases/iam/005_auxiliary.sql` 同步移出 `account_lock_state`，并在 `databases/iam/README.md` 明确 `account_lock_state`、`password_history`、`password_expiration` 的权威 DDL 与持久化归属都在框架，表可以与 IAM 同库部署但代码所有权不转移。
+
+C10 错误映射：新增 `web/IamErrorHandler`，把 IAM 内部 `BizException` 按 `IamReasonCode` 映射到 400/401/403/404/409/503，只作用于 IAM 控制器包，不改其他服务经全局处理器的错误协议。
+
+C19 平台登录：`UserDetailsRequest` 增加显式 `AuthorizationDomain`，不再用 `tenant == null` 隐式判定域。Auth 按登录入口填域，IAM 按域分流身份解析；平台分支 `tenantAllows` 返回空数组且不返回可选租户，租户与 Member 分支的原认证规则不变。
+
+## 2026-09-15 C16 正式冷启动
+
+冷启动按“无凭证目录走 SQL、账号走框架用例”两段落地，两段都可重复执行。
+
+目录段：新增 `tools/iam/generate_bootstrap.py`，从 change 的 `contracts/routes.json` 生成 `databases/iam/006_bootstrap.sql`，菜单树按 `FRONTEND.md` 的导航映射表产出。种子含 2 个治理应用、30 个资源、107 个精确 ACTION、24 个菜单及菜单-操作关联、每域一个 SYSTEM 治理角色及其固定版本与 107 条授权、2 个默认策略版本、发号标签 `iam` 的高水位 1000000。幂等实现为 `INSERT ... SELECT ... WHERE NOT EXISTS`，父行一律按自然键解析而非固定标识，因此库里已存在同 code 的应用时子行会挂到既有标识上而不是撞外键；保留标识全部小于发号起点。种子不含任何账号或凭证。
+
+账号段：`ingot.iam.bootstrap.enabled` 默认关闭，`IamBootstrapConfiguration` 只在开启时装配 `PlatformBootstrapService` 与 `ApplicationRunner`，关闭时不实例化任何冷启动 Bean。启动器复用安全框架的 `RegisterUserUseCase`（来源 `ADMIN_CREATE`）与 `InitialPasswordService`，口令策略、首登强制改密、有效期与密码历史都沿用框架语义，源码与 SQL 中没有硬编码口令，初始口令只在启动日志 WARN 打印一次。登录名与显示名由 `ingot.iam.bootstrap.username`（默认 `platform`）、`.display-name`（默认「平台治理」）配置，phone/email 可选。已存在平台成员时整体跳过；治理角色缺失或不唯一时明确失败，不猜测目标版本。
+
+配套改动：`AccountWriteRepository` 增加 `insert`，`IamUserAccountPortAdapter.save()` 改写 `iam_account` 而不是 `sys_user`（属 C09/A23 前置，经用户确认本轮一并做）；`InitializationCatalogRepository.tenantSystemRoles()` 泛化为 `systemRoles(AuthorizationDomain)` 以便平台域复用同一唯一性判定。
+
+验证：`python3 databases/iam/test_bootstrap_seed.py` 9 项通过（完整性、幂等且保留人工改动、组织初始化前置条件、治理授权只覆盖本域、保留标识边界、菜单可达性与注册键、既有应用标识挂接、人工种子叠加）；`test_identity_schema.py` 仍只加载 001–005 结构文件，把种子排除在外。`PlatformBootstrapServiceTest` 6 项通过，IAM provider 全量 111 项通过。`databases/iam/seed-manual-verification.sql` 收敛为只补两个可登录账号、一个平台成员和一条按自然键解析的治理授权，目录与治理角色不再有第二份来源。
+
+未做：A21 需要真实进程与登录证据，已在 `MANUAL-VERIFICATION.md` 补 A21.1／A21.2 两项待人工执行；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C06 快照期限与写路径缓存边界
+
+按 DESIGN 第 185 条落地，`expiresAt` 不再是固定的现在加 30 秒。
+
+期限来源：授权求值 SQL 增投影 `ra.valid_until` 与来源委派的 `valid_until`，开通查询从只数行改为同时返回命中数与最近开通截止（存在不限期开通时截止为空，避免 `MIN` 把不限期当成边界）。求值器把真正贡献了操作的分配、其来源委派与命中开通的截止收敛成最近边界，`expiresAt` 取热窗口 30 秒与该边界的较早者。数据库会话为 UTC，边界按 UTC 解释。
+
+读取校验：`evaluate` 每次命中都检查 `expiresAt`，过期先 `evict` 再重载，L2 回填 L1 不为过期视图续命。`SessionService` 的 bootstrap/capabilities 与诊断响应直接透出截断后的 `expiresAt`，前端按真实边界刷新。
+
+写路径：commons 新增 `IamActionOperation`，把 ACTION 码末段的操作语义（read/preview/diagnose/export 只读，create/update/delete/status/publish/remove/upgrade/owner-transfer/departments 改写）显式登记，`IamAction` 在类加载时派生该语义，出现未登记词汇即启动失败。求值器对改写操作直接查库求值，不接受任何热缓存快照放行；准入与范围由同一份快照给出，避免混合版本。
+
+验证：`AuthorizationEvaluatorTest` 新增 7 项（无边界用满热窗口、分配/委派/开通三类边界各自截断、不限期开通不被 `MIN` 误判、过期命中不放行且重载、写操作绕过陈旧快照而读操作仍可命中），IAM provider 全量 118 项通过。夹具用 `INIT=SET TIME ZONE 'UTC'` 让 H2 会话与生产一致，不依赖运行机器时区。
+
+未做：A15/A16 的多实例广播失败、远端故障与预览后配置变化仍需真实环境证据；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C12 组与人群按部门任职展开
+
+原实现只认显式成员行：组分配要求 `iam_tenant_group_member` 有本人，人群开通的部门规则按精确部门匹配且忽略 `include_descendants`，组成员数直接数显式成员表。结果是「按部门授予」的组和人群对下级部门成员不生效，成员换部门也不会改变授权。
+
+统一口径：新增 `IamMembershipSql`，把成员可达部门（本人任职部门沿 `parent_id` 向上闭包，并区分是否为直接任职）与由此推导的组集合固化成一段递归 CTE，供组分配与人群开通共用。部门规则只在直接任职或 `include_descendants` 为真时命中，因此「仅本部门」与「连带下级」两种配置语义不同。组成员数改用另一段递归 CTE 沿部门树向下展开，与显式成员并集后去重。三处落点：`IamRoleAssignmentMapper.listTenantGroup`、`IamTenantAppEntitlementMapper.entitlementForMember`、`IamTenantGroupMemberMapper.countMembership`（经 `GroupRepository.countTenantMembership` 供 `GroupService.detail`）。
+
+不落派生表：成员归属始终实时展开，成员换部门后组与人群随之变化，无需重写组或重新开通。为避免展开代价随授权条数放大，单次求值内同一 ACTION 的目录行与同一应用的开通判定各只查一次。
+
+验证：`AuthorizationEvaluatorTest` 新增 5 项（祖先部门规则仅在连带下级时命中、成员换部门后组分配随之失效、人群部门规则同样区分连带下级、人群按组命中时组本身也可由部门推导、跨租户不串），`GroupRepositoryTest` 新增 5 项（仅显式成员、连带下级开关、两种来源去重、任职变化不重写组即生效、跨租户不计）。IAM provider 全量 129 项通过。MySQL 8.4 容器内用同一组 DDL 手工核对两段 CTE，结果与 H2 一致（不连带 0 组、连带 1 组、展开去重后成员数 2），排除方言差异。
+
+未做：A08/A11 的运行时证据仍待人工；委派接收人群的同口径展开与运行时持续校验属 C02/C03，随该条目一并处理；`GrantPresenceAuthorizer` 仍是只认直接分配的写入门闩，按设计不参与完整求值，随 T18 清理。未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C02/C03 治理权与受限委派分离准入
+
+原实现只在写入时看一眼委派：分配落库后，即使委派被移出角色版本白名单、接收人名单不再包含该成员，求值仍继续放行；受限管理员与完整治理者走同一条准入，凭空创建授权也能通过。
+
+运行时持续校验：`IamMembershipSql` 增加 `AND_REVISION_STILL_ALLOWED`、`AND_TENANT_RECIPIENT_REACHED` 与 `AND_PLATFORM_RECIPIENT_REACHED` 三段条件，直接并入 `IamRoleAssignmentMapper` 的四条求值查询（平台/租户 × 直接/按组）。委派派生的分配每次求值都要同时满足委派处于 ACTIVE、在有效期内、当前角色版本仍在白名单、接收成员仍被名单或接收部门覆盖；任一维度失配即当次不产出操作，不依赖任何撤销后台任务。接收部门与 C12 同口径：本人直接任职总是命中，祖先部门只在该规则连带下级时命中，先前忽略 `include_descendants` 的写法一并修正。
+
+治理资格：`IamActionAuthorizer.admit` 返回 `Admission(governed)`，`governed` 只在该 ACTION 能由非委派分配单独支撑时为真。求值器为此在快照里多留一份 `governedCodes`（`delegation_grant_id` 为空的分配才计入），`GrantPresenceAuthorizer` 的兜底计数同样支持 `governedOnly`。`IamAccess.admit` 把结论以 `IamAdmission` 交给服务层，`require` 保持原语义不变。
+
+写入准入（按用户口径确定）：受限方（`governed` 为假）必须为每条分配声明来源委派，且一次提交只能使用同一条委派；无论是否具备完整治理资格，声明的委派都必须由当前操作者本人持有；委派若未给出角色版本内某个操作的范围上限，按失败关闭拒绝，避免落一条运行时形同废纸的授权；范围包含按字面比较（`ScopeBinder.covers`），显式部门/对象 ID 必须逐个出现在同一条上限条款内，连带下级只能由同样连带下级的上限覆盖，写入路径不展开部门树。
+
+组编辑连带：`GroupService` 按待保存内容展开组的有效成员（显式成员并入部门任职，连带下级沿部门树展开），逐条核对组上每条委派派生授权的全部成员仍在该委派接收范围内，不成立即 `POLICY_CONFLICT`，预览给出同样结论。接收人判定抽到 `DelegationRecipientRepository`，与授权写入共用一份口径。
+
+验证：`AuthorizationEvaluatorTest` 新增 5 项（版本离开白名单、成员离开接收名单、扩组不惠及名单外成员、接收部门区分连带下级、委派来源不计入治理资格），新增 `AssignmentServiceTest` 10 项（治理者免委派、受限方缺来源被拒、借用他人委派被拒、批次拼接两条委派被拒、上限内接受、超上限被拒、缺上限被拒、接收人外被拒、接收部门连带下级、预览与写入同结论且不写库），新增 `GroupServiceTest` 6 项（收缩成立、连带下级破坏派生授权、加入名单外成员被拒、空选择不承载派生授权、预览解释冲突、无派生授权时不受限）。IAM provider 全量 150 项通过。
+
+未做：A11/A12 的真实 HTTP 与并发证据仍待人工；委派本身的创建/撤销面（`DelegationService`）不在本条目范围；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C01/C11 角色形态定型与升级重验
+
+原实现两处放行过宽：`TENANT_CUSTOM` 一律要求共享基础，纯自有授权的角色无法表达；`RoleService.upgrade` 按调用方给的 `assignmentId` 直接改版本，既不校验该授权是否属于本租户与当前角色，也不重验新版本下的范围参数与来源委派，且发布/预览完全不看操作是否存在、是否与角色同域、资源是否支持该数据范围。
+
+角色形态（按用户口径固定在创建时）：首个版本没有共享基础即为完整自定义，只存 `grants`、不接受 `deltas`，且此后不能再升级到共享基础；首个版本带基础的角色只存 `deltas`，后续发布沿用当前基础。形态由 `currentBase` 从最新版本读出，`publishRevision` 与预览都据此校验提交形状，形状不符按 `INVALID_ARGUMENT` 拒绝。
+
+强校验（失败关闭）：新增 `RoleGrantValidator`，对合成后的每条授权核对操作存在且启用、所属应用与资源启用、应用授权域与角色管理域一致、范围种类在资源 `scope_capabilities` 内；`MANAGED_DEPARTMENTS`／`OBJECT_SET` 必须声明 `parameterKey`，且该参数在本版本 `parameters` 中已声明且绑定种类匹配。发布、预览、升级共用同一校验，预览按原样返回各自的 reason code 而不再统一压成 `POLICY_CONFLICT`。
+
+升级（C01）：`upgrade` 只受理有基础的角色，逐条 `SELECT ... FOR UPDATE` 锁定选中授权，核对其属于当前租户、指向本角色的某个版本、处于 ACTIVE；再按新版本参数核对范围绑定无未绑定项；来源委派的授权走 `DelegationAdmission` 重验（持有者、期限、版本白名单、接收人、逐操作范围上限），最后带 `version` 条件更新，任一条不成立整批回滚。委派校验从 `AssignmentService` 私有方法抽成 `DelegationAdmission`，两侧共用，避免 `RoleService` 反向依赖授权服务。
+
+验证：新增 `RoleServiceTest` 16 项（完整自定义只存 grants、带基础只存 deltas、两种形状交叉提交被拒、共享基础必须是 SHARED 版本、跨域操作被拒、停用与不存在的操作被拒、超出资源能力的范围被拒、管理范围缺参数声明被拒、再次发布沿用原形态、预览按真实 reason code 报错且不写库、升级只动选中授权、越租户/越角色/非活跃被拒、委派不允许新版本被拒而允许时通过、新版本需要未绑定参数被拒、完整自定义角色不可升级）。IAM provider 全量 166 项通过。另对 `revisionBelongsToRole` 做了一次变异核对，确认越角色升级的用例确实由该条件拦下而非偶然通过。
+
+未做：A05／A16／A25 的真实并发升级与原子回滚证据仍待人工；角色删除/停用面与共享角色的跨租户可见性不在本条目范围；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C07/C08 成员并发写与所有者治理转交
+
+限额中断时 C07 半成品会编不过：`MemberLifecycle.replaceDepartments` 已调用 `requireApplied` / `changes.markAll()`，但类上既无 helper 也无失效依赖。本轮收束并补完 C08。
+
+C07：成员资料 `UPDATE` 带读取时的 `version` 并检查受影响行数；`patch` 在事务内 `FOR UPDATE` 后再做范围/字段/版本校验。资格变更与任职替换同样条件更新；暂停/恢复/移出/调部门在提交后 `markAll()`，无实际变化的写路径不失效。组织设置更新同样带版本条件，冲突报 `REVISION_CONFLICT`，不报告成功。
+
+C08：`transferOwner` 先锁组织行，再按 ID 顺序锁旧/新所有者。新所有者必须为当前租户 ACTIVE 成员，否则 `OBJECT_NOT_FOUND`。旧所有者名下 `source=INITIALIZATION` 且 `revision_kind=SYSTEM` 的 ACTIVE 成员分配视为治理来源：逐条锁定后条件撤销，再写给新所有者一条同样来源的分配；新所有者已持有同一 `revision_id` 的 ACTIVE 分配则复用。`MANUAL` 等独立授权不随转交删除。无治理分配可转时 `POLICY_CONFLICT` 失败关闭。转交审计为 `OWNER_TRANSFER`，分配侧分别记撤销与创建，最后失效热缓存。分配行锁补上 `source` 列，否则锁定后无法核验来源。
+
+验证：`MemberLifecycleTest` 增 1 项（资格/任职提交后失效、无操作与保护所有者不失效）；新增 `TenantQueryServiceTest` 5 项（治理授权随转交、独立授权保留、复用已有分配、停用新所有者与陈旧版本拒绝、缺失治理分配失败关闭、转给自己无写入）。IAM provider 全量 172 项通过。
+
+未做：A09／A10／A16／A26 的真实 HTTP 与并发证据仍待人工；通讯录/字段规则属 C04/C05，不在本条目；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C04/C05 通讯录可见范围与字段默认/上限
+
+C04 原实现把未覆盖的通讯录默认当成 SELF，匹配 ALLOW 往默认集合上追加，并按书写顺序立刻扣 DENY，本人也可以被禁止隐藏；成员列表在内存分页，部门树不过滤。现改为：无本地覆盖时读取固定默认版本 JSON（空对象即全组织）；任一匹配 ALLOW 的目标并集替代默认；再扣除全部匹配 DENY；最后把查看者本人加回。列表/搜索/详情/count 共用 `DirectoryVisibility` SQL 谓词（全域走 `NOT IN` 禁止集，不先把全员 ID 拉进内存）；部门树只保留有可见成员的节点，祖先标 `navigationOnly`。预览与操作者可见范围求交，并据此设置 `restricted`，不再用可见人数当影响摘要。
+
+C05 原实现字段基线写死在求值器里，原值筛选只检查查看者自己的字段权限。现消费 `iam_default_policy_revision.definition`：`fields` 为租户引用的固定默认（手机邮箱脱敏），`ceiling` 为最新平台版本的最终上限（缺省不额外收紧，租户规则仍可授予 FULL）。匹配规则按 HIDDEN>MASKED>FULL 合并后再与上限取更严。原值筛选对查询范围内可能匹配的目标做披露校验：仅本人 FULL 或存在子集限制时拒绝，避免用隐藏原值过滤/计数推断。
+
+验证：`DefaultPolicyDefinitionsTest` 3 项、`DirectoryVisibilityEvaluatorTest` 4 项（默认全组织、ALLOW 替代、DENY 与顺序无关并恢复本人、祖先骨架）、`FieldAccessEvaluatorTest` 增本人 FULL 不能原值搜他人、平台上限收紧 FULL 规则。IAM provider 全量 181 项通过。
+
+未做：A13／A14／A20 的真实 HTTP、SQL 计划与披露边界证据仍待人工；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C14/C15 对象能力、草稿预览与菜单边界
+
+C14 原实现列表/详情 `capabilities` 恒为空映射，字段草稿预览仍读已保存策略，诊断只看目标身份的 `actionCodes` 是否包含操作码，忽略 `applicationId`/`targetId`。现新增 `ObjectCapabilities`：同一授权视图上按对象批量计算展示能力（租户成员：update/status/remove/departments；平台成员：update/status/remove；部门：update/delete），缺操作报 `ACTION_DENIED`，有操作但对象越界报 `DATA_SCOPE_DENIED`，提交仍重新鉴权。字段预览走 `FieldAccessEvaluator.snapshot(draft)`，与提交后同一合并规则；未知影响人数继续省略，不用 `0` 伪造。诊断先校验操作者可见目标成员、应用域与操作归属，再核开通/人群与对象范围；无权看来源时 `sources` 为空。
+
+C15 原实现 `OPEN` 菜单不看应用边界，启用菜单跨域直接进入 bootstrap。现 bootstrap 应用列表先按域、启停、租户开通与人群过滤；菜单再按 OPEN/ACTION 判定页面，目录只作为有可见子页的祖先出现，空父目录不展示。
+
+验证：`SessionMenuAssemblerTest` 4 项、`ObjectCapabilitiesTest` 1 项、`DiagnoseAuditServiceTest` 3 项、`FieldAccessEvaluatorTest` 增草稿快照不写库。IAM provider 全量 190 项通过。
+
+未做：A17／A19／A24、F01 的真实 HTTP、bootstrap 菜单与对象能力联调证据仍待人工；角色/组/应用等其它列表的对象能力未在本条铺开；未改 `specs/current/`，未 commit。
+
+## 2026-09-15 C13/C18 完整导出与审计关联
+
+C13 原实现导出只拉第一页 200 条，任务写本机临时目录，下载忽略快照再查实时列表。现改为共享表 `iam_member_export`：登记 `PENDING` 并同事务审计，提交后再异步遍历全部授权页写入成员 ID 快照；`RUNNING` 条件更新避免多实例重复执行。下载重验导出 ACTION、对象范围与当前字段策略，只返回快照与当前可见集合的交集；`PENDING`/`RUNNING` 报 `AUTHORIZATION_UNAVAILABLE` 可重试，失败/过期/错租户报 `OBJECT_NOT_FOUND`，不把失败当成功。任务 24 小时过期并清除快照。GET 仍返回完整 `PageResponse`（不受列表 200 上限），任务状态枚举留给 T13 契约。
+
+C18 审计写入补 `delegation_id`/`assignment_id`/`trace_id`（追踪取 MDC `traceId`）；分配与委派写路径填关联，列表 SQL 分页选出这些列。操作者显示名批量加载后按字段策略投影，无成员读权限或越界则省略。通讯录/字段规则的选择器改为一次批量查询，不再按规则循环打库。
+
+验证：`MemberExportServiceTest` 4 项（跨页完整下载、进行中 503、失败与过期 404）、`DiagnoseAuditServiceTest` 增关联字段与显示名披露 2 项、`IamEnumPersistenceContractTest` 纳入 `ExportTaskStatus`。IAM provider 全量 196 项通过。
+
+未做：A10／A17／A20／A27 的真实 HTTP、多实例与 SQL 计划证据仍待人工；导出任务状态尚未作为独立 HTTP 契约发布（T13）；未改 `specs/current/`，未 commit。
+
+## 2026-09-16 C09 保留功能接入
+
+C09 原实现平台账号、本人资料、字典/发号/社交仍只有旧控制器；Auth/Member 内部 RPC 回退 `SysUser`/`SysTenant`；Security 管理面用 `@AdminOrHasAnyAuthority` 超管短路；登录 JWT `scopes` 只有强制改密标记。现按 API §1.2 接通新入口，权威安全用例仍归框架：
+
+- 平台 `/v1/platform/accounts` 读写 `iam_account`：列表/详情/lookup/创建/资料/删除/启停/锁定解锁/重置密码。创建复用 `RegisterUserUseCase` + `InitialPasswordService`，返回 `{id,version}` 不回明文口令；重置密码才一次性返回 `AccountSecret`。`MEMBER_CREATE` lookup 只返回 id 与登录名。删除时仍有成员资格报 `OBJECT_IN_USE`。对象范围走 `ResourceAccess.objects` / `ObjectScopeSql.restrictAccounts`。
+- `/v1/me/profile`、`PUT /v1/me/password`（`@InCryptoHybridContext`）只操作当前认证账号；普通改密缺旧密码失败关闭，强制改密走框架用例。
+- `/v1/platform/dictionaries`（`view=tree|page|items`）、`id-allocations`、`social-configs` 包一层 `IamAccess.require` 精确 ACTION，不改字典/发号/社交存储。
+- `IamUserAccountPortAdapter` / `IamUserCredentialPortAdapter`、`InnerUserDetailsAPI`、`UsernameIdentityResolver`、`TenantDetailsServiceImpl` 只读 `iam_account`/`iam_tenant`，Feign 仍把组织映射到既有 `SysTenant` DTO。社交绑定仅当 `user_id` 能命中新账号。
+- 已建立成员上下文的登录把 evaluator `actionCodes` 写入 JWT `scopes`；成员选择阶段仍不授予 ACTION。`InnerAuthorizationAPI` 用同一求值器，平台 `tenantId` 对外为 `0`。
+- Security 平台策略/会话入口改为 `@HasAnyAuthority({IamAction.VALUE_*})`，不再用超管短路。
+- Bootstrap 增补账号、字典、发号、社交与安全策略资源：2 应用、40 资源、145 ACTION、145 治理授权。`IamActionOperation` 登记 lookup/enable/disable/lock/unlock/reset-password/revoke。
+
+旧 `SystemUserAPI`、平台字典/发号/社交控制器仍保留，随 T18 清理。未勾选 T04/T05/T10/T13。
+
+验证：`AccountServiceTest` 4 项、`CurrentAccountServiceTest` 2 项、`IamUserCredentialPortAdapterTest` 1 项、`AccountIdentityServiceTest` 覆盖 JWT ACTION 与选择阶段空 scopes、`test_bootstrap_seed.py` 9 项、`IamEnumPersistenceContractTest` 纳入 `IamActionOperation`/`AccountLookupPurpose`。IAM provider 全量 203 项通过；`ingot-security-provider` 编译通过。
+
+未做：A18／A19／A23 的真实镜像、RPC 与 HTTP 证据仍待人工；T13 契约重发未开始；未改 `specs/current/`，未 commit。
+
+## 2026-09-16 T18 旧实现清理（C17 余项）
+
+C17 在锁定态复用之后，旧 HTTP、PMS 授权引擎与 `sys_user` 双读仍与新入口并存。现按替换完成的调用链删除被替代实现：
+
+- 删除已映射或 RETIRED 的旧控制器：`SystemUserAPI`/`SystemDeptAPI`/`SystemRoleAPI`、`Org*`、`AdminTenantAPI`、`AuthUserAPI`、`TestAPI`、旧 `config`/`dev` 目录与应用/菜单/权限/角色/字典/发号/社交/审计入口。
+- 删除 `GrantPresenceAuthorizer` 及直接分配计数 SQL；写入门闩只保留 `@Primary` 的 `AuthorizationEvaluator`。`GrantPresenceMemberGuard` 仍作为求值器上的成员写守卫。
+- `LocalAuthorizationSnapshotLoader` 与 `InnerAuthorizationAPI` 共用求值器快照，不再组装旧权限码/资源规则。删除 `AuthorizationSnapshotAssembler`、`EffectiveAuthorizationService`、`GrantCeilingService`、`ApplicationAuthorizationResolver` 及旧 `Biz*User/Role/Dept/Org/Auth` 编排。
+- 社交解析不再 `sysUserService.getById`；`sys_user_social.user_id` 指向 `iam_account`。删除无调用方的 `SysUserService`/`SysTenantService` 与旧只读审计 `AuthorizationDataAuditService`。
+- 保留内部 RPC、字典/发号/社交 *服务*、OSS、`SysUser`/`SysTenant` Feign 外形、`PermissionMatcher` 与迁移分析器，以及无 HTTP 的旧目录 MyBatis 域服务（不在本条清表）。
+
+验证：IAM provider 全量 187 项通过（随旧引擎测试删除，较 C09 的 203 项减少）。未勾选 T18。
+
+未做：A22／A23 真实进程与 RPC 证据仍待人工；旧目录表 Mapper/域服务未整包删除；T13 契约重发未开始；未改 `specs/current/`，未 commit。
+
+## 2026-09-16 T13 契约重发
+
+T13 在 C10 局部错误映射已经落地的前提下，把管理面与保留能力契约与控制器对齐，不改全局 `BizException`，不臆造密码协议：
+
+- 导出增加 GET `/v1/tenant/members/export/{id}/status`，返回 `ExportTask`（`PENDING`/`RUNNING`/`SUCCEEDED`/`FAILED`/`EXPIRED`）；`FAILED` 才带 `failureCode`。下载语义不变：进行中 503，失败或过期 404。
+- 通讯录与租户部门树强制 `purpose`（`DIRECTORY` / `MANAGED_DEPARTMENT`）；错配 `InvalidArgument`。租户成员与通讯录列表可选精确 `phone`/`email`；管理面分页 `page`/`pageSize`（默认 20，最大 200）。字典保留 `view`/`code` 与 MyBatis `current`/`size`。
+- 账号、`/v1/me/profile`、`/v1/me/password`、字典/发号/社交包装入口写入 `routes.json`/`openapi.json`。字典等既有领域请求体不以 IAM DTO 重写（`RJson`/`RVoid`）。OSS 与 inner RPC 不进管理面 OpenAPI。
+- `IamAuthorizationContractTest` 导出账号/导出任务信封；`test_contract.py` 校验 purpose、筛选、导出状态，并解析 `/v1` `@RequestMapping` 与 routes 对账（排除 OSS）。
+
+验证：commons `IamAuthorizationContractTest`/`IamEnumPersistenceContractTest`（含 `SelectionPurpose`）、`python3 tools/iam/test_contract.py` 7 项、`IamPurposesTest` 2 项、`IamErrorHandlerTest` 2 项、`MemberExportServiceTest` 5 项。IAM provider 全量 192 项通过。快照 96 路径 / 161 操作。未勾选 T13。
+
+未做：A23／A24／A28 真实 HTTP、镜像与登录联调仍待人工；未改 `specs/current/`，未 commit。
+
+## 2026-09-16 T16 后端综合验收（首轮，未完成）
+
+T16 要求执行 A01–A28：真实 MySQL 并发/约束、HTTP、镜像/RPC、多实例缓存与导出。本轮只做 Agent 能独立完成的隔离回归与静态归属核查，**不勾选 T16 或任何 A 项**。
+
+自动化证据：
+
+- 隔离 MySQL 8.4：`test_identity_schema.py` 20 项、`test_bootstrap_seed.py` 9 项（2 应用 / 40 资源 / 145 ACTION，种子不含账号，重复执行不覆盖人工改名）。容器 `--network=none --pull=never`，测后销毁。
+- IAM provider H2 全量 192 项；契约 `test_contract.py` 7 项（96/161）。
+- A22 静态：生产代码无 `IamAccountLockState`；锁定读写走框架 `LockStatePort` / `AccountLockStateMapper`；`LockAccountUseCaseServiceTest` 与 `UnlockAccountUseCaseServiceTest` 通过。失败计数/自动解锁的真实进程证据仍缺。
+- A18 静态：服务名 `in-service-iam`，镜像 `ingot/iam`，`InIamApplication`；部署模板无 `ingot-pms`。未做 docker build、Nacos 注册或经 Gateway 的 HTTP。
+- A23 静态：无 `SysUserService` 双读；社交解析只从绑定表填 `SysUser.id`。Auth/Member/Security 真链仍缺。
+
+A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程、A18 镜像/Gateway、A21.1 首启改密、A01–A17/A24–A28 真实 HTTP，以及 A15/A20/A27 多实例与执行计划。
+
+未做：未启动业务进程，未改 `specs/current/`，未 commit，未勾选 T16。

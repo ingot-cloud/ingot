@@ -105,9 +105,9 @@ public interface RegisterUserUseCase {
 
         /**
          * 账号创建事件来源（可选）
-         * <p>管理员创建场景通常传 {@link EventSource#PMS} / {@link EventSource#MEMBER}
+         * <p>管理员创建场景通常传 {@link EventSource#IAM} / {@link EventSource#MEMBER}
          * 等具体业务侧来源；为 {@code null} 时用例将按 {@code userType} 自动派生
-         * （{@code ADMIN} → {@link EventSource#PMS}、{@code APP} → {@link EventSource#MEMBER}），
+         * （{@code ADMIN} → {@link EventSource#IAM}、{@code APP} → {@link EventSource#MEMBER}），
          * 自助注册场景一律落为 {@link EventSource#SYSTEM}。</p>
          */
         EventSource eventSource;

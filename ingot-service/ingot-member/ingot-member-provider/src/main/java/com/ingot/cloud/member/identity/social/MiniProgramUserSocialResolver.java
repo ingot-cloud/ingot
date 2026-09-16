@@ -5,7 +5,7 @@ import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.domain.MemberUserSocial;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserSocialService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsSocialDetailsService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.core.identity.social.UserSocialResolver;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberUser> {
     private final MemberUserService userService;
     private final MemberUserSocialService userSocialService;
-    private final RemotePmsSocialDetailsService remotePmsSocialDetailsService;
+    private final RemoteIamSocialDetailsService remoteIamSocialDetailsService;
     private final SocialWechatProperties socialWechatProperties;
 
     @Override
@@ -37,7 +37,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberU
 
     @Override
     public String getUniqueID(String code) {
-        return BizSocialUtil.getMiniProgramOpenId(remotePmsSocialDetailsService,
+        return BizSocialUtil.getMiniProgramOpenId(remoteIamSocialDetailsService,
                 SocialTypeEnum.WECHAT_MINI_PROGRAM, socialWechatProperties.getMiniProgramAppId(), code);
     }
 

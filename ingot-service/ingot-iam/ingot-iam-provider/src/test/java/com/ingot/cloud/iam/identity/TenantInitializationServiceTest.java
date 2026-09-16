@@ -44,6 +44,7 @@ class TenantInitializationServiceTest {
                     if (action != IamAction.PLATFORM_TENANT_CREATE && action != IamAction.PLATFORM_TENANT_PREVIEW) {
                         throw new IllegalStateException(action.getCode());
                     }
+                    return new com.ingot.cloud.iam.authorization.IamActionAuthorizer.Admission(true);
                 },
                 new InitializationCatalog(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource)),
                 new TenantInitializer(new DataSourceTransactionManager(dataSource), identities,

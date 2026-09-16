@@ -29,11 +29,11 @@ channel = <ingot.event-bus.redis.topic-prefix> + ":" + <@EventType>
 
 ### 发布与订阅
 
-1. **发布端**（如 PMS 的 `SysSocialDetailsServiceImpl` 调 `SocialConfigMessagePublisher`）  
-   - 先通过 `SocialConfigMessageHandler.handleInvalidation` 在本进程发布 `SocialConfigChangedEvent`（**必须**：`RedisInvalidationBus` 会过滤 **origin 回环**，本机不能只依赖订阅）。  
+1. **发布端**（如 IAM 的 `SysSocialDetailsServiceImpl` 调 `SocialConfigMessagePublisher`）
+   - 先通过 `SocialConfigMessageHandler.handleInvalidation` 在本进程发布 `SocialConfigChangedEvent`（**必须**：`RedisInvalidationBus` 会过滤 **origin 回环**，本机不能只依赖订阅）。
    - 再 `InvalidationBus.publish(SocialInvalidationEvent)`，其它实例收到后同样转为 `SocialConfigChangedEvent`。
 
-2. **订阅端**  
+2. **订阅端**
    - `SocialInvalidationCoordinator` 在启动时 `bus.subscribe(SocialInvalidationEvent.class, ...)`，与 `DictCacheCoordinator` 类似，仅处理**来自其它节点**的消息。
 
 ### 载荷格式
@@ -45,7 +45,7 @@ channel = <ingot.event-bus.redis.topic-prefix> + ":" + <@EventType>
   "socialType": "WECHAT_MINI_PROGRAM",
   "changeType": "UPDATE",
   "appId": "wx123456",
-  "origin": "ingot-pms:…",
+  "origin": "ingot-iam:…",
   "timestamp": 1715587200000
 }
 ```
@@ -128,7 +128,7 @@ void publish(SocialConfigRedisMessage message);
 ### 消息流转（简图）
 
 ```text
-PMS 写库 → SysSocialDetailsServiceImpl
+IAM 写库 → SysSocialDetailsServiceImpl
     → SocialConfigMessagePublisher
         → 本机 SocialConfigChangedEvent
         → InvalidationBus.publish(SocialInvalidationEvent)
@@ -149,5 +149,5 @@ PMS 写库 → SysSocialDetailsServiceImpl
 
 ---
 
-**作者**：jy  
+**作者**：jy
 **最近更新**：2026-05

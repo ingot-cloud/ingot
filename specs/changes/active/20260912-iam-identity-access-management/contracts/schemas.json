@@ -1,6 +1,188 @@
 {
   "components" : {
     "schemas" : {
+      "AccountCreateInput" : {
+        "required" : [ "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "登录名"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "登录手机号，可空"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "登录邮箱，可空"
+          }
+        },
+        "description" : "创建全局登录账号，不自动授予任何成员资格"
+      },
+      "AccountLockInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取获得的账号版本"
+          },
+          "reasonDetail" : {
+            "type" : "string",
+            "description" : "锁定原因说明"
+          },
+          "lockedUntil" : {
+            "type" : "string",
+            "description" : "到期时间；为空表示永久锁定",
+            "format" : "date-time"
+          }
+        },
+        "description" : "手动锁定全局账号，期限与原因交给安全框架用例处理"
+      },
+      "AccountLookupInput" : {
+        "required" : [ "purpose" ],
+        "type" : "object",
+        "properties" : {
+          "purpose" : {
+            "type" : "string",
+            "description" : "查找用途",
+            "enum" : [ "MEMBER_CREATE", "ACCOUNT_MANAGE" ]
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "登录名精确值，可空"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "手机号精确值，可空"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "邮箱精确值，可空"
+          }
+        },
+        "description" : "按单一字段精确查找全局账号，必须声明用途且不返回组织关系"
+      },
+      "AccountRecord" : {
+        "required" : [ "enabled", "id", "locked", "mustChangePassword", "username" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "全局账号 ID"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "登录名"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "登录手机号，可空"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "登录邮箱，可空"
+          },
+          "enabled" : {
+            "type" : "boolean",
+            "description" : "是否启用"
+          },
+          "locked" : {
+            "type" : "boolean",
+            "description" : "是否锁定"
+          },
+          "mustChangePassword" : {
+            "type" : "boolean",
+            "description" : "是否必须改密"
+          },
+          "lastLoginAt" : {
+            "type" : "string",
+            "description" : "最近登录时间，UTC",
+            "format" : "date-time"
+          }
+        },
+        "description" : "返回全局账号自身状态，不携带凭证哈希或其他组织身份"
+      },
+      "AccountSecret" : {
+        "required" : [ "password" ],
+        "type" : "object",
+        "properties" : {
+          "password" : {
+            "type" : "string",
+            "description" : "新生成的初始密码明文"
+          }
+        },
+        "description" : "一次性返回管理员重置后的明文初始密码，不得再被列表或详情读取"
+      },
+      "AccountSelfProfile" : {
+        "required" : [ "accountId", "member", "mustChangePassword", "username" ],
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "string",
+            "description" : "当前认证账号 ID"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "登录名"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "登录手机号，可空"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "登录邮箱，可空"
+          },
+          "mustChangePassword" : {
+            "type" : "boolean",
+            "description" : "是否必须改密"
+          },
+          "member" : {
+            "$ref" : "#/components/schemas/CurrentProfile"
+          }
+        },
+        "description" : "返回当前认证账号的联系资料，不携带凭证或其他组织身份"
+      },
+      "AccountSelfProfileInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取获得的账号版本"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "登录手机号，可空表示不修改"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "登录邮箱，可空表示不修改"
+          }
+        },
+        "description" : "更新当前认证账号联系资料，禁止提交其他账号 ID 或凭证字段"
+      },
+      "AccountUpdateInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取获得的账号版本"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "登录手机号，可空表示不修改"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "登录邮箱，可空表示不修改"
+          }
+        },
+        "description" : "更新全局账号联系资料，禁止改写凭证、锁定态或组织身份"
+      },
       "ActionDraft" : {
         "required" : [ "code", "name", "resourceId" ],
         "type" : "object",
@@ -671,6 +853,25 @@
         },
         "description" : "刷新当前身份的精确操作集合及其有效期限"
       },
+      "CurrentPasswordInput" : {
+        "required" : [ "confirmPassword", "newPassword" ],
+        "type" : "object",
+        "properties" : {
+          "oldPassword" : {
+            "type" : "string",
+            "description" : "旧密码；强制改密时可空"
+          },
+          "newPassword" : {
+            "type" : "string",
+            "description" : "新密码"
+          },
+          "confirmPassword" : {
+            "type" : "string",
+            "description" : "确认密码"
+          }
+        },
+        "description" : "当前认证账号改密，初始改密可不提供旧密码，禁止提交其他账号 ID"
+      },
       "CurrentProfile" : {
         "required" : [ "displayName", "memberId" ],
         "type" : "object",
@@ -1145,6 +1346,35 @@
           }
         },
         "description" : "整体替换租户显式开通清单并重验版本"
+      },
+      "ExportTask" : {
+        "required" : [ "expiresAt", "id", "status", "version" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "任务 ID"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "生命周期状态",
+            "enum" : [ "PENDING", "RUNNING", "SUCCEEDED", "FAILED", "EXPIRED" ]
+          },
+          "version" : {
+            "type" : "string",
+            "description" : "登记时的组织版本"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "description" : "过期时间，UTC",
+            "format" : "date-time"
+          },
+          "failureCode" : {
+            "type" : "string",
+            "description" : "失败粗码；仅 FAILED 出现"
+          }
+        },
+        "description" : "返回成员导出任务在共享存储中的状态，供多实例轮询，不含成员快照"
       },
       "FieldAccess" : {
         "required" : [ "visibility" ],
@@ -1745,6 +1975,30 @@
           }
         },
         "description" : "在当前组织内原子转交所有者职责"
+      },
+      "PageResponseResourceDetailAccountRecord" : {
+        "required" : [ "items", "page", "pageSize", "total" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResourceDetailAccountRecord"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
       },
       "PageResponseResourceDetailActionRecord" : {
         "required" : [ "items", "page", "pageSize", "total" ],
@@ -2453,6 +2707,40 @@
           }
         }
       },
+      "RAccountSecret" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AccountSecret"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RAccountSelfProfile" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AccountSelfProfile"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RBootstrap" : {
         "type" : "object",
         "properties" : {
@@ -2515,6 +2803,40 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/Decision"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RExportTask" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ExportTask"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RPageResponseResourceDetailAccountRecord" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResponseResourceDetailAccountRecord"
           },
           "success" : {
             "type" : "boolean"
@@ -2895,6 +3217,23 @@
           }
         }
       },
+      "RResourceDetailAccountRecord" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ResourceDetailAccountRecord"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RResourceDetailActionRecord" : {
         "type" : "object",
         "properties" : {
@@ -3184,6 +3523,23 @@
           }
         }
       },
+      "RVoid" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "object"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "ReferenceImpactPreview" : {
         "required" : [ "affectedAssignmentIds", "impactSummary" ],
         "type" : "object",
@@ -3201,6 +3557,30 @@
           }
         },
         "description" : "返回组或委派变更中允许披露的引用影响，隐藏对象不以零计数代替"
+      },
+      "ResourceDetailAccountRecord" : {
+        "required" : [ "capabilities", "fieldAccess", "record", "version" ],
+        "type" : "object",
+        "properties" : {
+          "record" : {
+            "$ref" : "#/components/schemas/AccountRecord"
+          },
+          "fieldAccess" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            }
+          },
+          "capabilities" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ObjectCapability"
+            }
+          },
+          "version" : {
+            "type" : "string"
+          }
+        }
       },
       "ResourceDetailActionRecord" : {
         "required" : [ "capabilities", "fieldAccess", "record", "version" ],

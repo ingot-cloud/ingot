@@ -1,0 +1,15 @@
+{
+  "version": "9007199254740993",
+  "valid": false,
+  "errors": [
+    {
+      "path": "roleRevisionRef",
+      "code": "RoleRevisionUnavailable",
+      "message": "角色版本不可用"
+    }
+  ],
+  "warnings": [],
+  "impactSummary": {
+    "restricted": true
+  }
+}

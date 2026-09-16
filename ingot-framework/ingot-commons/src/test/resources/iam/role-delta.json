@@ -1,0 +1,21 @@
+{
+  "id": "tenant-revision",
+  "roleId": "tenant-role",
+  "revision": "1",
+  "kind": "TENANT_CUSTOM",
+  "baseRevisionId": "shared-revision",
+  "grants": [],
+  "deltas": [
+    {
+      "actionId": "member-edit",
+      "operation": "REMOVE",
+      "scopes": []
+    }
+  ],
+  "parameterDefinitions": [],
+  "metadataOverrides": {
+    "name": "只读成员角色",
+    "description": null,
+    "groupName": null
+  }
+}

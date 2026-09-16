@@ -92,7 +92,7 @@ public interface RedisKeyConstants {
     }
 
     /**
-     * 账号锁定策略分层缓存 Redis Key（PMS / Member 侧 lockout 策略 L2 / LKG）。
+     * 账号锁定策略分层缓存 Redis Key（IAM / Member 侧 lockout 策略 L2 / LKG）。
      * <p>与 {@link AccountLock} 锁定信号命名空间独立。</p>
      */
     interface AccountLockoutPolicy {
@@ -158,6 +158,21 @@ public interface RedisKeyConstants {
         /** 用户会话集合：{@code token:user:set:{tenantId}:{clientId}:{userId}} → Set&lt;sid&gt;。 */
         String USER_SET_PREFIX = "token:user:set:";
 
+        /**
+         * 平台域在线会话索引使用的租户位。认证上下文 tenantId 为空时写入此值，避免 key 出现字面量 null。
+         */
+        long PLATFORM_INDEX_TENANT_ID = 0L;
+
+        /**
+         * 将会话租户规范化为索引位：空租户表示平台域。
+         *
+         * @param tenantId 会话租户；平台身份为空
+         * @return 索引使用的租户位
+         */
+        static Long indexTenantId(Long tenantId) {
+            return tenantId == null ? PLATFORM_INDEX_TENANT_ID : tenantId;
+        }
+
         /** 在线用户排序集：{@code online:user:{tenantId}:{clientId}} → ZSet&lt;userId, expiresAtMs&gt;。 */
         String ONLINE_USER_PREFIX = "online:user:";
 
@@ -177,11 +192,11 @@ public interface RedisKeyConstants {
         }
 
         static String userSetKey(Long tenantId, String clientId, Long userId) {
-            return USER_SET_PREFIX + userScope(tenantId, clientId, userId);
+            return USER_SET_PREFIX + userScope(indexTenantId(tenantId), clientId, userId);
         }
 
         static String onlineUserKey(Long tenantId, String clientId) {
-            return ONLINE_USER_PREFIX + tenantId + SEPARATOR + clientId;
+            return ONLINE_USER_PREFIX + indexTenantId(tenantId) + SEPARATOR + clientId;
         }
 
         /**
@@ -191,7 +206,7 @@ public interface RedisKeyConstants {
          * 无需扫描 key 空间。</p>
          */
         static String onlineUserTenantPrefix(Long tenantId) {
-            return ONLINE_USER_PREFIX + tenantId + SEPARATOR;
+            return ONLINE_USER_PREFIX + indexTenantId(tenantId) + SEPARATOR;
         }
 
         /**
@@ -229,7 +244,7 @@ public interface RedisKeyConstants {
         }
 
         static String ipSetKey(Long tenantId, String ip) {
-            return IP_SET_PREFIX + tenantId + SEPARATOR + ip;
+            return IP_SET_PREFIX + indexTenantId(tenantId) + SEPARATOR + ip;
         }
 
         private static String userScope(Long tenantId, String clientId, Long userId) {

@@ -9,7 +9,7 @@ dependencies {
     implementation project(ingot.framework_security_common)
     implementation project(ingot.framework_cache)
     implementation project(ingot.framework_event_bus)
-    implementation project(ingot.pms_api)
+    implementation project(ingot.iam_api)
     implementation(deps.spring.framework_webmvc)
 
     compileOnly(deps.spring.spring_cloud.openfeign_starter)

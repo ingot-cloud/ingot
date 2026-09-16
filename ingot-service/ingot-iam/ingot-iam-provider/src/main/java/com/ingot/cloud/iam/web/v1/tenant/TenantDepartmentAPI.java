@@ -2,12 +2,14 @@ package com.ingot.cloud.iam.web.v1.tenant;
 
 import com.ingot.cloud.iam.organization.DepartmentService;
 import com.ingot.cloud.iam.support.IamPages;
+import com.ingot.cloud.iam.support.IamPurposes;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.DepartmentDraft;
 import com.ingot.framework.commons.model.iam.DepartmentRecord;
 import com.ingot.framework.commons.model.iam.DepartmentUpdateInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
+import com.ingot.framework.commons.model.iam.SelectionPurpose;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +42,7 @@ public class TenantDepartmentAPI implements RShortcuts {
     /**
      * 列出部门树分页。
      *
+     * @param purpose 必须为 {@link SelectionPurpose#MANAGED_DEPARTMENT}
      * @param page 页码
      * @param pageSize 页大小
      * @return 部门页
@@ -47,8 +50,10 @@ public class TenantDepartmentAPI implements RShortcuts {
     @Operation(summary = "部门树")
     @GetMapping
     public R<PageResponse<ResourceDetail<DepartmentRecord>>> list(
+            @RequestParam SelectionPurpose purpose,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        IamPurposes.require(purpose, SelectionPurpose.MANAGED_DEPARTMENT);
         return ok(departments.list(page, pageSize));
     }
 

@@ -2,7 +2,7 @@ package com.ingot.framework.social.common.provider;
 
 import java.util.List;
 
-import com.ingot.cloud.pms.api.model.domain.SysSocialDetails;
+import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 
 /**

@@ -50,7 +50,7 @@ class FeignSecurityEventTransportTest {
                 .eventCategory("AUTH")
                 .priority(RecordPriority.BEST_EFFORT)
                 .occurredAt(Instant.parse("2026-08-04T10:00:00Z"))
-                .sourceModule("ingot-pms")
+                .sourceModule("ingot-iam")
                 .build();
     }
 }

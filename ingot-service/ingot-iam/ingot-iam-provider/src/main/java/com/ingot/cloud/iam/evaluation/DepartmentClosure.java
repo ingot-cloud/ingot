@@ -1,6 +1,8 @@
 package com.ingot.cloud.iam.evaluation;
 
+import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,60 +11,92 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.persistence.entity.IamDepartmentEntity;
+import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 /**
- * <p>在租户部门树上展开下级，供管理部门与任职范围生成 SQL IN 集合，不在内存中过滤查询结果。</p>
+ * <p>在租户部门树上展开下级，一次加载当前租户树后在内存中 BFS，供范围编译复用。</p>
  *
  * @author jy
  * @since 1.0.0
  */
-public final class DepartmentClosure {
-    private DepartmentClosure() {
+@Repository
+@RequiredArgsConstructor
+public class DepartmentClosure {
+    private final IamDepartmentMapper departments;
+
+    /**
+     * 读取当前租户的父子索引，只选择展开所需列。
+     *
+     * @param tenantId 已授权租户 ID
+     * @return 父部门到直接子部门
+     */
+    public Map<BigInteger, List<BigInteger>> loadChildren(BigInteger tenantId) {
+        Map<BigInteger, List<BigInteger>> children = new HashMap<>();
+        for (IamDepartmentEntity row : departments.selectList(Wrappers.<IamDepartmentEntity>lambdaQuery()
+                .select(IamDepartmentEntity::getId, IamDepartmentEntity::getParentId)
+                .eq(IamDepartmentEntity::getTenantId, tenantId))) {
+            if (row.getParentId() != null) {
+                children.computeIfAbsent(row.getParentId(), key -> new ArrayList<>()).add(row.getId());
+            }
+        }
+        return children;
     }
 
     /**
-     * 展开部门 ID；不包含下级时原样返回。
+     * 展开部门 ID；不包含下级时原样返回，不重复查询部门树。
      *
-     * @param jdbc IAM 目标库
-     * @param tenantId 当前租户
+     * @param tenantId 已授权租户 ID
      * @param roots 起始部门
      * @param includeDescendants 是否并入全部下级
      * @return 去重后的部门 ID
      */
-    public static Set<Long> expand(NamedParameterJdbcTemplate jdbc, long tenantId, Collection<Long> roots,
-                                   boolean includeDescendants) {
-        Set<Long> result = new LinkedHashSet<>();
-        if (roots == null) {
+    public Set<BigInteger> expand(BigInteger tenantId, Collection<BigInteger> roots, boolean includeDescendants) {
+        if (!includeDescendants) {
+            return copy(roots);
+        }
+        return expand(loadChildren(tenantId), roots, true);
+    }
+
+    /**
+     * 使用已加载的父子索引展开部门 ID。
+     *
+     * @param children 当前租户父子索引
+     * @param roots 起始部门
+     * @param includeDescendants 是否并入全部下级
+     * @return 去重后的部门 ID
+     */
+    public Set<BigInteger> expand(Map<BigInteger, List<BigInteger>> children, Collection<BigInteger> roots,
+                                  boolean includeDescendants) {
+        Set<BigInteger> result = copy(roots);
+        if (!includeDescendants || result.isEmpty() || children == null || children.isEmpty()) {
             return result;
         }
-        for (Long root : roots) {
-            if (root != null) {
-                result.add(root);
-            }
-        }
-        if (!includeDescendants || result.isEmpty()) {
-            return result;
-        }
-        Map<Long, List<Long>> children = new HashMap<>();
-        jdbc.query("SELECT id,parent_id FROM iam_department WHERE tenant_id=:tenantId", Map.of("tenantId", tenantId),
-                (row, index) -> {
-                    long id = row.getLong("id");
-                    Long parent = row.getObject("parent_id") == null ? null : row.getLong("parent_id");
-                    if (parent != null) {
-                        children.computeIfAbsent(parent, key -> new java.util.ArrayList<>()).add(id);
-                    }
-                    return id;
-                });
-        ArrayDeque<Long> pending = new ArrayDeque<>(result);
-        Set<Long> visited = new HashSet<>(result);
+        ArrayDeque<BigInteger> pending = new ArrayDeque<>(result);
+        Set<BigInteger> visited = new HashSet<>(result);
         while (!pending.isEmpty()) {
-            Long current = pending.removeFirst();
-            for (Long child : children.getOrDefault(current, List.of())) {
+            BigInteger current = pending.removeFirst();
+            for (BigInteger child : children.getOrDefault(current, List.of())) {
                 if (visited.add(child)) {
                     result.add(child);
                     pending.addLast(child);
                 }
+            }
+        }
+        return result;
+    }
+
+    private static Set<BigInteger> copy(Collection<BigInteger> roots) {
+        Set<BigInteger> result = new LinkedHashSet<>();
+        if (roots == null) {
+            return result;
+        }
+        for (BigInteger root : roots) {
+            if (root != null) {
+                result.add(root);
             }
         }
         return result;

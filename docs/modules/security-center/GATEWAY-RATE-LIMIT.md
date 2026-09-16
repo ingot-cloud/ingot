@@ -157,10 +157,10 @@ ingot:
 
 路径匹配策略（编译 `ApiDefinition` 时，见 `SentinelPathPredicateCompiler`）：
 
-- 含 `*` 或 `?`（Ant 风格，如 `/pms/**`、`/pms/*`）→ Sentinel **PREFIX** → `AntPathMatcher` 全 pattern 匹配（**不要**写成下游路径 `/test/**`，应写网关路径 `/pms/**`）
+- 含 `*` 或 `?`（Ant 风格，如 `/iam/**`、`/iam/*`）→ Sentinel **PREFIX** → `AntPathMatcher` 全 pattern 匹配（**不要**写成下游路径 `/test/**`，应写网关路径 `/iam/**`）
 - 否则 → **EXACT** 精确匹配
 
-> 注意：Sentinel SCG 适配器的 PREFIX 策略并非「去掉 `/**` 后的字符串前缀」；旧实现若把 `/pms/**` 截成 `/pms` 会导致永不匹配。
+> 注意：Sentinel SCG 适配器的 PREFIX 策略并非「去掉 `/**` 后的字符串前缀」；旧实现若把 `/iam/**` 截成 `/iam` 会导致永不匹配。
 
 ### 3.5 黑白名单模型
 

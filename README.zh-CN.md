@@ -35,7 +35,7 @@ Ingot 是一个面向 SaaS 与多租户应用的企业级微服务平台。项�
 | `ingot-gateway` | 对外 API 网关与网关层安全策略执行 |
 | `ingot-auth` | OAuth 2.0/OIDC 授权与令牌服务 |
 | `ingot-bff` | 面向前端的认证与会话流程 |
-| `ingot-pms-provider` | 权限、角色、应用、组织和租户管理 |
+| `ingot-iam-provider` | 权限、角色、应用、组织和租户管理 |
 | `ingot-member-provider` | 会员与用户领域能力 |
 | `ingot-security-provider` | 集中的安全策略与安全事件能力 |
 

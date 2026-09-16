@@ -48,7 +48,7 @@ ingot:
       # 元素取值：local | center；与主 target 去重后额外投递一份，shadow 失败不影响主链路 ack。
       shadow-targets: []
       # 上报方模块标识，写入 security_event.source_module。
-      # PMS 填 PMS，Member 填 MEMBER。
+      # IAM 填 IAM，Member 填 MEMBER。
       source-module: MEMBER
       # 按事件大类过滤是否上报（enabled=true 时生效）；false 则该类别事件在 Publisher 层被丢弃。
       categories:
@@ -58,7 +58,7 @@ ingot:
         account: true
         # CREDENTIAL：改密/重置/强制改密等凭证类事件
         credential: true
-        # ACCESS：网关封禁/限流违规等访问防护类；PMS/Member 通常不产生，可保持 true
+        # ACCESS：网关封禁/限流违规等访问防护类；IAM/Member 通常不产生，可保持 true
         access: true
       # canonical security_event 过期物理删除（PurgeCanonicalSecurityEventTask，cron 0 30 3 * * ?）。
       # delivery / mysql 在 in-security-policy.yml（本服务已 import）。

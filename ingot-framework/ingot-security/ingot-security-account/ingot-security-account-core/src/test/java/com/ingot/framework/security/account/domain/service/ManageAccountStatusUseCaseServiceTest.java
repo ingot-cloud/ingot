@@ -111,7 +111,7 @@ class ManageAccountStatusUseCaseServiceTest {
                 .reason("test")
                 .operatorId(9L)
                 .operatorName("admin")
-                .source(EventSource.PMS)
+                .source(EventSource.IAM)
                 .build();
     }
 }

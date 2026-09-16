@@ -49,8 +49,9 @@ public abstract class OAuth2UserDetailsAuthenticationConverter implements Authen
         }
 
         String tenant = parameters.getFirst(InOAuth2ParameterNames.TENANT);
+        String domain = parameters.getFirst(InOAuth2ParameterNames.DOMAIN);
         String principal = UsernameUri.of(username, userTypeValue,
-                getGrantType().getValue(), tenant, UserIdentityTypeEnum.USERNAME.getValue()).getValue();
+                getGrantType().getValue(), tenant, domain, UserIdentityTypeEnum.USERNAME.getValue()).getValue();
         return OAuth2UserDetailsAuthenticationToken
                 .unauthenticated(principal,
                         password, getGrantType(), clientPrincipal);

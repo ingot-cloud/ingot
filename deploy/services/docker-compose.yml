@@ -141,26 +141,27 @@ services:
       retries: 3
       start_period: 90s
 
-  # ========== PMS 服务 ==========
-  ingot-pms:
-    image: ${REGISTRY_URL}/ingot/pms:${PMS_VERSION}
+  # ========== IAM 服务 ==========
+  ingot-iam:
+    image: ${REGISTRY_URL}/ingot/iam:${IAM_VERSION}
     networks:
       - extnet
     env_file:
-      - services-env/pms.env       # 服务专用环境变量
+      - services-env/iam.env       # 服务专用环境变量
       - services-env/common.env    # 公共环境变量
     environment:
+      - IAM_DATABASE=${IAM_DATABASE:?Set IAM_DATABASE to the verified IAM target database}
       - SERVER_PORT=5200
       - MANAGEMENT_PORT=6200
     volumes:
       - ${DOCKER_VOLUME}:/ingot-data
     deploy:
       mode: replicated
-      replicas: ${PMS_REPLICAS:-1}
+      replicas: ${IAM_REPLICAS:-1}
       resources:
         limits:
-          cpus: '${PMS_CPUS:-2}'
-          memory: ${PMS_MEMORY:-3g}
+          cpus: '${IAM_CPUS:-2}'
+          memory: ${IAM_MEMORY:-3g}
         reservations:
           cpus: '1'
           memory: 2g

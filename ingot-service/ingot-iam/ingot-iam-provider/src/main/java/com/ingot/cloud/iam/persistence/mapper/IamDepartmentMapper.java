@@ -27,4 +27,13 @@ public interface IamDepartmentMapper extends BaseMapper<IamDepartmentEntity> {
      */
     @Select("SELECT id FROM iam_department WHERE tenant_id=#{tenantId} AND id=#{id} FOR UPDATE")
     BigInteger lock(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);
+
+    /**
+     * 锁定并读取当前租户部门行，调用方须处于事务中。
+     * @param tenantId 已授权租户 ID
+     * @param id 部门 ID
+     * @return 部门记录，不存在时为空
+     */
+    @Select("SELECT id,tenant_id AS tenantId,parent_id AS parentId,name,sort_order AS sortOrder,version FROM iam_department WHERE tenant_id=#{tenantId} AND id=#{id} FOR UPDATE")
+    IamDepartmentEntity lockRow(@Param("tenantId") BigInteger tenantId, @Param("id") BigInteger id);
 }

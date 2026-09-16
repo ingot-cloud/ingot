@@ -1,0 +1,19 @@
+{
+  "context": {
+    "domain": "PLATFORM",
+    "accountId": "9007199254740993",
+    "memberId": "platform-member-1",
+    "tenantId": null
+  },
+  "profile": {
+    "memberId": "platform-member-1",
+    "displayName": "平台成员"
+  },
+  "applications": [],
+  "menus": [],
+  "actionCodes": [
+    "iam:platform:member:read"
+  ],
+  "version": "9007199254740993",
+  "expiresAt": "2026-09-14T00:00:00Z"
+}

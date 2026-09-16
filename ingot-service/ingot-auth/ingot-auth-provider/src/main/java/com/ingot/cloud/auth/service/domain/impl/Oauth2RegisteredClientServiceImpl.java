@@ -17,7 +17,7 @@ import com.ingot.cloud.auth.model.dto.OAuth2RegisteredClientDTO;
 import com.ingot.cloud.auth.model.vo.AppSecretVO;
 import com.ingot.cloud.auth.model.vo.OAuth2RegisteredClientVO;
 import com.ingot.cloud.auth.service.domain.Oauth2RegisteredClientService;
-import com.ingot.cloud.pms.api.rpc.RemotePmsIdService;
+import com.ingot.cloud.iam.api.rpc.RemoteIamIdService;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
@@ -55,7 +55,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
     private final AssertionChecker assertI18nService;
     private final PasswordEncoder passwordEncoder;
     private final ClientConvert clientConvert;
-    private final RemotePmsIdService remotePmsIdService;
+    private final RemoteIamIdService remoteIamIdService;
 
     @Override
     @Cacheable(value = CacheConstants.CLIENT_DETAILS, key = CacheKey.ClientListKey, unless = "#result.isEmpty()")
@@ -103,7 +103,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         Oauth2RegisteredClient client = clientConvert.to(params);
         // id 和 clientId 保持一致
-        String id = remotePmsIdService.genAppId()
+        String id = remoteIamIdService.genAppId()
                 .ifError(OAuth2ErrorUtils::checkResponse)
                 .getData();
         String secret = StrUtil.uuid().replaceAll("-", "");

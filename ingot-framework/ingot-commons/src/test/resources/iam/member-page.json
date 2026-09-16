@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "record": {
+        "id": "9007199254740993",
+        "displayName": "示例成员",
+        "phone": "138****0000",
+        "status": "ACTIVE",
+        "departments": []
+      },
+      "fieldAccess": {
+        "phone": {
+          "visibility": "MASKED",
+          "editable": false
+        },
+        "email": {
+          "visibility": "HIDDEN",
+          "editable": false
+        }
+      },
+      "capabilities": {},
+      "version": "9007199254740993"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20
+}

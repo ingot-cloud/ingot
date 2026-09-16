@@ -38,10 +38,15 @@ public class InitializationCatalogRepository {
                 .isNull(IamAccountEntity::getDeletedAt)) == 1;
     }
 
-    /** @return 租户域启用的系统角色 ID，调用方检查唯一性 */
-    public List<Long> tenantSystemRoles() {
+    /**
+     * 读取指定域启用的系统治理角色，冷启动种子保证每域恰好一个。
+     *
+     * @param domain 管理域
+     * @return 系统角色 ID，调用方检查唯一性
+     */
+    public List<Long> systemRoles(AuthorizationDomain domain) {
         return roles.selectList(Wrappers.<IamRoleDefinitionEntity>lambdaQuery().select(IamRoleDefinitionEntity::getId)
-                .eq(IamRoleDefinitionEntity::getDomain, AuthorizationDomain.TENANT)
+                .eq(IamRoleDefinitionEntity::getDomain, domain)
                 .eq(IamRoleDefinitionEntity::getKind, RoleKind.SYSTEM)
                 .isNull(IamRoleDefinitionEntity::getTenantId).eq(IamRoleDefinitionEntity::getEnabled, true))
                 .stream().map(row -> row.getId().longValueExact()).toList();
