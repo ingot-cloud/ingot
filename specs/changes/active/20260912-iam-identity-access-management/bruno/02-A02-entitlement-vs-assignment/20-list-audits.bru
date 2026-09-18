@@ -1,0 +1,26 @@
+meta {
+  name: 租户审计
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/authorization/audits?page=1&pageSize=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+tests {
+  test("存在审计记录", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect((res.getBody().data.items || []).length).to.be.greaterThan(0);
+  });
+}

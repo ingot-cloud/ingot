@@ -61,6 +61,7 @@ public interface RemoteAuthTokenService {
             @RequestParam(OAuth2ParameterNames.REDIRECT_URI) String redirectUri,
             @RequestParam(OAuth2ParameterNames.SCOPE) String scope,
             @RequestParam(OAuth2ParameterNames.STATE) String state,
+            @RequestParam(value = InOAuth2ParameterNames.DOMAIN, required = false) String domain,
             Map<String, ?> formData);
 
     /**
@@ -81,7 +82,8 @@ public interface RemoteAuthTokenService {
     R<Map<String, Object>> authorize(
             @RequestHeader(value = HttpHeaders.COOKIE, required = false) String cookie,
             @RequestParam(InOAuth2ParameterNames.PRE_GRANT_TYPE) String preGrantType,
-            @RequestParam(InOAuth2ParameterNames.TENANT) String tenantId,
+            @RequestParam(value = InOAuth2ParameterNames.TENANT, required = false) String tenantId,
+            @RequestParam(value = InOAuth2ParameterNames.DOMAIN, required = false) String domain,
             @RequestParam(OAuth2ParameterNames.CLIENT_ID) String clientId,
             @RequestParam(PkceParameterNames.CODE_CHALLENGE) String codeChallenge,
             @RequestParam(OAuth2ParameterNames.RESPONSE_TYPE) String responseType,

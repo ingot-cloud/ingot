@@ -1,0 +1,33 @@
+meta {
+  name: 旧所有者再改设置 expect-fail
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{gateway}}/iam/v1/tenant/settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{settingsVersionStale}}",
+    "name": "不应成功",
+    "avatar": null
+  }
+}
+
+tests {
+  test("旧所有者失去治理", function () {
+    expect(res.getStatus()).to.not.equal(200);
+  });
+}

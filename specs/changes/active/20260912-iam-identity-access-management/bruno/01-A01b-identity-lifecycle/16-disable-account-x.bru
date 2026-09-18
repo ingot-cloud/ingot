@@ -1,0 +1,27 @@
+meta {
+  name: 禁用全局账号 X
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/accounts/{{accountXId}}/disable
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{accountXVersion}}"
+  }
+}
+
+tests {
+  test("账号已禁用", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

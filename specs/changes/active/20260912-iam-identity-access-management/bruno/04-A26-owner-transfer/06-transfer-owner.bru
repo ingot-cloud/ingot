@@ -1,0 +1,33 @@
+meta {
+  name: 转交给 Z
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/settings/owner-transfer
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{settingsVersion}}",
+    "newOwnerMemberId": "{{memberZId}}"
+  }
+}
+
+tests {
+  test("转交成功", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().code).to.equal("S0200");
+  });
+}

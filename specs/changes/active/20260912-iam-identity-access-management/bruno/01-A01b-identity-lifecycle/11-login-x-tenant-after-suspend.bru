@@ -1,0 +1,41 @@
+meta {
+  name: X 租户登录（暂停后仍成功）
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountXUsername}}
+  password: {{accountXPassword}}
+  user_type: 0
+  domain: TENANT
+  org: {{tenantA}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.access_token;
+  if (token) {
+    bru.setEnvVar("tokenXTenant", token);
+  }
+  
+}
+
+tests {
+  test("暂停平台不影响租户身份", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().access_token).to.be.a("string");
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: 读取平台成员 X
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/members/{{platformMemberXId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) bru.setEnvVar("platformMemberXVersion", data.version);
+
+}
+
+tests {
+  test("平台成员 ACTIVE", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.record.status).to.equal("ACTIVE");
+  });
+}

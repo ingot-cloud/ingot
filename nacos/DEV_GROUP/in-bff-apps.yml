@@ -1,0 +1,26 @@
+# 仅 Gateway 与 BFF 加载。不要放入 in-common.yml。
+# 本机 DEV 四站点必须用不同 hostname（Cookie 按 host 隔离）。
+# 先写入 /etc/hosts（.local 不会像 .localhost 自动回环）：
+#   127.0.0.1 tenant.local tenant-login.local platform.local platform-login.local
+# 改完后把本文件同步到 Nacos DEV_GROUP，并重启/刷新 Gateway 与 BFF。
+# oauth-redirect-uri 是 Auth 协议回调（网关地址），浏览器不会跳转过去。
+ingot:
+  bff:
+    require-https: false
+    apps:
+      - app-id: platform-admin
+        domain: PLATFORM
+        admin-origin: http://platform.local:5799
+        login-origin: http://platform-login.local:1799
+        oauth-client-id: in-bff-platform
+        oauth-scope: system
+        oauth-redirect-uri: http://localhost:5400/bff/auth/platform/callback
+        default-return-to: /
+      - app-id: tenant-admin
+        domain: TENANT
+        admin-origin: http://tenant.local:5798
+        login-origin: http://tenant-login.local:1798
+        oauth-client-id: in-bff-tenant
+        oauth-scope: system
+        oauth-redirect-uri: http://localhost:5400/bff/auth/tenant/callback
+        default-return-to: /

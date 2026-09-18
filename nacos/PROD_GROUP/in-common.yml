@@ -123,4 +123,3 @@ feign:
     enabled: true
     alphanumeric-ids:
       enabled: true
-

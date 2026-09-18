@@ -2,10 +2,12 @@ package com.ingot.cloud.bff.config;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ingot.framework.commons.model.bff.BffAppRegistration;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,26 +22,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * <p>BFF 请求来源校验过滤器，限制只有授权的内部前端系统可以调用 BFF 接口</p>
- *
- * <p>校验逻辑：检查请求的 {@code Origin} 或 {@code Referer} Header 是否命中
- * {@link BffProperties.SecurityConfig#getAllowedFrontends()} 白名单。
- * 白名单未配置（空或 null）时跳过校验，适用于开发环境。</p>
- *
- * <h3>配置示例：</h3>
- * <pre>{@code
- * ingot:
- *   bff:
- *     security:
- *       allowed-frontends:
- *         - https://admin.ingotcloud.top
- *         - https://login.ingotcloud.top
- * }</pre>
+ * 按注册表 origin 精确校验请求来源。
  *
  * @author jy
  * @since 1.0.0
- *
- * @see BffProperties.SecurityConfig
  */
 @Slf4j
 @Component
@@ -52,17 +38,15 @@ public class BffOriginFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        List<String> allowedFrontends = properties.getSecurity().getAllowedFrontends();
-
-        if (CollUtil.isEmpty(allowedFrontends)) {
+        List<String> allowedOrigins = registeredOrigins();
+        if (CollUtil.isEmpty(allowedOrigins)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String origin = request.getHeader("Origin");
         String referer = request.getHeader("Referer");
-
-        if (isAllowed(origin, allowedFrontends) || isRefererAllowed(referer, allowedFrontends)) {
+        if (isAllowed(origin, allowedOrigins) || isRefererAllowed(referer, allowedOrigins)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -70,15 +54,31 @@ public class BffOriginFilter extends OncePerRequestFilter {
         log.warn("[BffOriginFilter] blocked request from origin={}, referer={}, uri={}",
                 origin, referer, request.getRequestURI());
         response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.getWriter().write("{\"code\":\"S0403\",\"message\":\"Forbidden: origin not allowed\"}");
+        response.getWriter().write("{\"code\":\"BFF_ENTRY_MISMATCH\",\"message\":\"Forbidden: origin not allowed\"}");
+    }
+
+    private List<String> registeredOrigins() {
+        List<String> origins = new ArrayList<>();
+        if (CollUtil.isNotEmpty(properties.getApps())) {
+            for (BffAppRegistration app : properties.getApps()) {
+                addOrigin(origins, app.getAdminOrigin());
+                addOrigin(origins, app.getLoginOrigin());
+            }
+        }
+        return origins;
+    }
+
+    private static void addOrigin(List<String> origins, String origin) {
+        if (StrUtil.isNotBlank(origin)) {
+            origins.add(StrUtil.removeSuffix(origin, "/"));
+        }
     }
 
     private boolean isAllowed(String origin, List<String> allowedOrigins) {
         if (StrUtil.isEmpty(origin)) {
             return false;
         }
-        return allowedOrigins.stream().anyMatch(
-                allowed -> StrUtil.equalsIgnoreCase(origin, allowed));
+        return allowedOrigins.stream().anyMatch(allowed -> StrUtil.equalsIgnoreCase(origin, allowed));
     }
 
     private boolean isRefererAllowed(String referer, List<String> allowedOrigins) {
@@ -87,11 +87,10 @@ public class BffOriginFilter extends OncePerRequestFilter {
         }
         try {
             String refererOrigin = URI.create(referer).resolve("/").toString();
-            // 移除末尾斜杠后比较
             String normalized = StrUtil.removeSuffix(refererOrigin, "/");
             return allowedOrigins.stream().anyMatch(
                     allowed -> StrUtil.equalsIgnoreCase(normalized, StrUtil.removeSuffix(allowed, "/")));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return false;
         }
     }

@@ -1,0 +1,35 @@
+meta {
+  name: 列出定制版本（应为差异）
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/roles/{{customRoleId}}/revisions?page=1&pageSize=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const items = (res.getBody().data && res.getBody().data.items) || [];
+  if (items[0]) bru.setEnvVar("customRevisionId", items[0].record.id);
+
+}
+
+tests {
+  test("定制版本只存 deltas", function () {
+    expect(res.getStatus()).to.equal(200);
+    const rev = res.getBody().data.items[0].record;
+    expect(rev.grants).to.be.an("array").that.is.empty;
+    expect(rev.deltas.length).to.be.greaterThan(0);
+    expect(rev.baseRevisionId).to.equal(bru.getEnvVar("sharedRevisionId"));
+  });
+}

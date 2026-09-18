@@ -1,0 +1,41 @@
+meta {
+  name: Y 加入组织 A
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/members
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "accountId": "{{accountYId}}",
+    "displayName": "A02 业务成员",
+    "departments": [
+      { "id": "{{rootDeptId}}", "primary": true }
+    ]
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("memberYId", data.id);
+
+}
+
+tests {
+  test("成员 Y 已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

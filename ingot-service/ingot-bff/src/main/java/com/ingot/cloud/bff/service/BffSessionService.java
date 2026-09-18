@@ -12,6 +12,7 @@ import com.ingot.cloud.bff.model.enums.FingerprintMode;
 import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.constants.CacheConstants;
+import com.ingot.framework.commons.utils.BffCookiePolicy;
 import com.ingot.framework.commons.utils.FingerprintUtil;
 import com.ingot.framework.commons.utils.WebUtil;
 import jakarta.servlet.http.Cookie;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
  * <p>核心职责：</p>
  * <ul>
  *     <li>Redis 中的 {@link BffSession} 读写（key 格式 {@code in:bff_session:{sessionId}}）</li>
- *     <li>HttpOnly Cookie 下发与清除（手动拼接 Set-Cookie 以支持 SameSite 属性）</li>
+ *     <li>HttpOnly Cookie 下发与清除（属性由 {@link BffCookiePolicy} 按 {@code require-https} 决定）</li>
  *     <li>客户端指纹校验 —— 支持前端设备指纹（推荐）和服务端 IP+UA 两种模式</li>
  * </ul>
  *
@@ -37,7 +38,7 @@ import org.springframework.stereotype.Service;
  * <pre>{@code
  * // 创建 session 并下发 Cookie
  * BffSession session = new BffSession();
- * session.setClientId("ingot-bff");
+ * session.setClientId("in-bff-tenant");
  * String sessionId = bffSessionService.createSession(session, request, response);
  *
  * // 后续请求自动从 Cookie 获取并校验指纹
@@ -48,7 +49,7 @@ import org.springframework.stereotype.Service;
  * @since 1.0.0
  *
  * @see BffSession
- * @see BffProperties.CookieConfig
+ * @see BffCookiePolicy
  * @see BffProperties.SecurityConfig
  */
 @Slf4j
@@ -143,19 +144,78 @@ public class BffSessionService {
         }
     }
 
+    /**
+     * 下发当前 host 的绑定 Cookie。
+     *
+     * @param bindingId      绑定 ID
+     * @param maxAgeSeconds  存活秒数
+     * @param response       用于写 Set-Cookie
+     */
+    public void writeBindingCookie(String bindingId, long maxAgeSeconds, HttpServletResponse response) {
+        writeHostOnlyCookie(bindingCookieName(), bindingId, maxAgeSeconds, response);
+    }
+
+    /**
+     * 清除当前 host 的绑定 Cookie。
+     *
+     * @param response 用于写 Max-Age=0 的 Set-Cookie
+     */
+    public void clearBindingCookie(HttpServletResponse response) {
+        writeHostOnlyCookie(bindingCookieName(), "", 0, response);
+    }
+
+    /**
+     * 读取绑定 Cookie；名称随 {@code require-https} 变化。
+     *
+     * @param request 当前请求
+     * @return 绑定 ID，缺失时 {@code null}
+     */
+    public String getBindingIdFromCookie(HttpServletRequest request) {
+        return cookieValue(request, bindingCookieName());
+    }
+
+    /**
+     * 读取正式会话 Cookie；名称随 {@code require-https} 变化。
+     *
+     * @param request 当前请求
+     * @return sessionId，缺失时 {@code null}
+     */
     public String getSessionIdFromCookie(HttpServletRequest request) {
+        return cookieValue(request, sessionCookieName());
+    }
+
+    private String cookieValue(HttpServletRequest request, String name) {
         if (request.getCookies() == null) {
             return null;
         }
         for (Cookie cookie : request.getCookies()) {
-            if (CacheConstants.BFF_SESSION_COOKIE_NAME.equals(cookie.getName())) {
+            if (name.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
         return null;
     }
 
-    // ---- internal ----
+    private void setCookie(String sessionId, long maxAgeSeconds, HttpServletResponse response) {
+        writeHostOnlyCookie(sessionCookieName(), sessionId, maxAgeSeconds, response);
+    }
+
+    private void removeCookie(HttpServletResponse response) {
+        writeHostOnlyCookie(sessionCookieName(), "", 0, response);
+    }
+
+    private String sessionCookieName() {
+        return BffCookiePolicy.sessionCookieName(properties.isRequireHttps());
+    }
+
+    private String bindingCookieName() {
+        return BffCookiePolicy.bindingCookieName(properties.isRequireHttps());
+    }
+
+    private void writeHostOnlyCookie(String name, String value, long maxAgeSeconds, HttpServletResponse response) {
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                BffCookiePolicy.setCookieHeader(name, value, maxAgeSeconds, properties.isRequireHttps()));
+    }
 
     private void saveSession(String sessionId, BffSession session, long ttlSeconds) {
         try {
@@ -165,48 +225,6 @@ public class BffSessionService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to save BFF session", e);
         }
-    }
-
-    /**
-     * 通过 Set-Cookie 响应头设置 Cookie，支持 SameSite 属性。
-     * Servlet Cookie API 不支持 SameSite，因此手动拼接 Set-Cookie Header。
-     */
-    private void setCookie(String sessionId, long maxAgeSeconds, HttpServletResponse response) {
-        BffProperties.CookieConfig cc = properties.getCookie();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(CacheConstants.BFF_SESSION_COOKIE_NAME).append("=").append(sessionId);
-        sb.append("; Path=/");
-        sb.append("; Max-Age=").append(maxAgeSeconds);
-        sb.append("; HttpOnly");
-
-        if (StrUtil.isNotEmpty(cc.getDomain())) {
-            sb.append("; Domain=").append(cc.getDomain());
-        }
-        if (cc.isSecure()) {
-            sb.append("; Secure");
-        }
-        if (StrUtil.isNotEmpty(cc.getSameSite())) {
-            sb.append("; SameSite=").append(cc.getSameSite());
-        }
-
-        response.addHeader(HttpHeaders.SET_COOKIE, sb.toString());
-    }
-
-    private void removeCookie(HttpServletResponse response) {
-        BffProperties.CookieConfig cc = properties.getCookie();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(CacheConstants.BFF_SESSION_COOKIE_NAME).append("=");
-        sb.append("; Path=/");
-        sb.append("; Max-Age=0");
-        sb.append("; HttpOnly");
-
-        if (StrUtil.isNotEmpty(cc.getDomain())) {
-            sb.append("; Domain=").append(cc.getDomain());
-        }
-
-        response.addHeader(HttpHeaders.SET_COOKIE, sb.toString());
     }
 
     private String resolveFingerprint(HttpServletRequest request) {

@@ -26,11 +26,11 @@ class CompiledChallengePolicyTest {
                 .enabled(true)
                 .challengeType("SMS")
                 .trigger(ChallengeTrigger.ALWAYS)
-                .patternList(List.of(EndpointPattern.of("/bff/auth/login", "POST")))
+                .patternList(List.of(EndpointPattern.of("/bff/auth/platform/login", "POST")))
                 .priority(0)
                 .build();
         CompiledChallengePolicy compiled = CompiledChallengePolicy.compile(List.of(sms), code -> null);
-        assertThat(compiled.match("/bff/auth/login", HttpMethod.POST, ChallengeTrigger.ALWAYS)).isNull();
+        assertThat(compiled.match("/bff/auth/platform/login", HttpMethod.POST, ChallengeTrigger.ALWAYS)).isNull();
         assertThat(compiled.all()).isEmpty();
     }
 
@@ -57,7 +57,7 @@ class CompiledChallengePolicyTest {
                 .challengeType(ChallengeCaptchaType.VALUE_SLIDER)
                 .trigger(ChallengeTrigger.ALWAYS)
                 .scope("login")
-                .patternList(List.of(EndpointPattern.of("/bff/auth/login", "POST")))
+                .patternList(List.of(EndpointPattern.of("/bff/auth/platform/login", "POST")))
                 .priority(0)
                 .build();
         ChallengePolicy anon = ChallengePolicy.builder()
@@ -70,11 +70,11 @@ class CompiledChallengePolicyTest {
                 .priority(10)
                 .build();
         CompiledChallengePolicy compiled = CompiledChallengePolicy.compile(List.of(login, anon), code -> null);
-        assertThat(compiled.match("/bff/auth/login", HttpMethod.POST, ChallengeTrigger.ALWAYS))
+        assertThat(compiled.match("/bff/auth/platform/login", HttpMethod.POST, ChallengeTrigger.ALWAYS))
                 .isNotNull()
                 .extracting(ChallengePolicy::getCode)
                 .isEqualTo("login-always");
-        assertThat(compiled.matchByScope("/bff/auth/login", HttpMethod.POST, "login"))
+        assertThat(compiled.matchByScope("/bff/auth/platform/login", HttpMethod.POST, "login"))
                 .isNotNull()
                 .extracting(ChallengePolicy::getCode)
                 .isEqualTo("login-always");
@@ -83,7 +83,7 @@ class CompiledChallengePolicyTest {
                 .isNotNull()
                 .extracting(ChallengePolicy::getScope)
                 .isEqualTo("e2e-anon");
-        assertThat(compiled.matchByScope("/bff/auth/login", HttpMethod.POST, "e2e-anon")).isNull();
-        assertThat(compiled.matchByScope("/bff/auth/login", HttpMethod.POST, "")).isNull();
+        assertThat(compiled.matchByScope("/bff/auth/platform/login", HttpMethod.POST, "e2e-anon")).isNull();
+        assertThat(compiled.matchByScope("/bff/auth/platform/login", HttpMethod.POST, "")).isNull();
     }
 }

@@ -1,0 +1,37 @@
+meta {
+  name: 所有者 bootstrap
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{gateway}}/iam/v1/me/bootstrap
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.context) {
+    bru.setEnvVar("ownerAccountId", data.context.accountId);
+    bru.setEnvVar("ownerMemberId", data.context.memberId);
+  }
+
+}
+
+tests {
+  test("所有者租户上下文", function () {
+    expect(res.getStatus()).to.equal(200);
+    const ctx = res.getBody().data.context;
+    expect(ctx.domain).to.equal("TENANT");
+    expect(String(ctx.tenantId)).to.equal(String(bru.getEnvVar("tenantA")));
+  });
+}

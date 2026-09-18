@@ -1,0 +1,49 @@
+meta {
+  name: 读取组织开通清单
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/tenants/{{tenantA}}/entitlements?page=1&pageSize=200
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const data = res.getBody().data || {};
+  const items = data.items || [];
+  const fps = items.map(i => ({
+    app: i.record.applicationId,
+    ver: i.version,
+    en: i.record.status === "ENABLED" ? "1" : "0"
+  }));
+  fps.sort((a, b) => {
+    try {
+      const ai = BigInt(a.app);
+      const bi = BigInt(b.app);
+      return ai < bi ? -1 : ai > bi ? 1 : 0;
+    } catch (e) {
+      return String(a.app).localeCompare(String(b.app));
+    }
+  });
+  bru.setEnvVar("entitlementVersion", fps.map(f => f.app + ":" + f.ver + ":" + f.en).join("|") || "0");
+  bru.setEnvVar("entitlementItems", JSON.stringify(items.map(i => ({
+    applicationId: i.record.applicationId,
+    status: i.record.status,
+    validFrom: i.record.validFrom || null,
+    validUntil: i.record.validUntil || null
+  }))));
+
+}
+
+tests {
+  test("开通集合版本已保存", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getEnvVar("entitlementVersion")).to.be.a("string");
+  });
+}

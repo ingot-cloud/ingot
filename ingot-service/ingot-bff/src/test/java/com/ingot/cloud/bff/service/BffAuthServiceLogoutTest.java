@@ -4,8 +4,13 @@ import com.ingot.cloud.auth.api.model.dto.InnerSessionRevokeDTO;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
+import com.ingot.cloud.bff.config.BffAppRegistry;
 import com.ingot.cloud.bff.config.BffProperties;
+import com.ingot.cloud.bff.model.AuthBinding;
+import com.ingot.framework.commons.constants.BffConstants;
+import com.ingot.framework.commons.model.bff.BffAppRegistration;
 import com.ingot.framework.commons.model.bff.BffSession;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.security.account.domain.port.outbound.AccountLockSignalPort;
@@ -48,15 +53,30 @@ class BffAuthServiceLogoutTest {
     void setUp() {
         sessionService = mock(BffSessionService.class);
         remoteAuthSessionService = mock(RemoteAuthSessionService.class);
+        LoginTransactionService transactionService = mock(LoginTransactionService.class);
+        BffAppRegistry registry = mock(BffAppRegistry.class);
+        BffAppRegistration app = new BffAppRegistration();
+        app.setAppId("platform-admin");
+        app.setDomain(AuthorizationDomain.PLATFORM);
+        when(registry.requireFromRequest(any())).thenReturn(app);
+        AuthBinding binding = new AuthBinding();
+        binding.setBindingId("bind-1");
+        binding.setAppId("platform-admin");
+        binding.setCsrfToken("csrf-1");
+        when(sessionService.getBindingIdFromCookie(any())).thenReturn("bind-1");
+        when(transactionService.requireBinding("bind-1")).thenReturn(binding);
         service = new BffAuthService(
                 new BffProperties(),
+                registry,
                 sessionService,
+                transactionService,
                 mock(RemoteAuthTokenService.class),
                 remoteAuthSessionService,
                 mock(AccountLockSignalPort.class),
                 new AccountLockBffProperties());
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
+        when(request.getHeader(BffConstants.CSRF_HEADER)).thenReturn("csrf-1");
     }
 
     @Test

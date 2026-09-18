@@ -1,0 +1,22 @@
+# 仅 Gateway 与 BFF 加载。不要放入 in-common.yml。
+# 内网生产不要复用公网域名，应覆盖为本环境四个 HTTPS 主机名。
+ingot:
+  bff:
+    require-https: true
+    apps:
+      - app-id: platform-admin
+        domain: PLATFORM
+        admin-origin: https://platform.ingotcloud.top
+        login-origin: https://platform-login.ingotcloud.top
+        oauth-client-id: in-bff-platform
+        oauth-scope: system
+        oauth-redirect-uri: https://bff.ingotcloud.top/bff/auth/platform/callback
+        default-return-to: /
+      - app-id: tenant-admin
+        domain: TENANT
+        admin-origin: https://admin.ingotcloud.top
+        login-origin: https://login.ingotcloud.top
+        oauth-client-id: in-bff-tenant
+        oauth-scope: system
+        oauth-redirect-uri: https://bff.ingotcloud.top/bff/auth/tenant/callback
+        default-return-to: /

@@ -3,6 +3,7 @@ package com.ingot.framework.security.authentication;
 import java.util.function.Supplier;
 
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordEncoderConfiguration;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.context.ClientContextHolder;
 import com.ingot.framework.security.core.userdetails.InUser;
@@ -19,7 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
 import org.springframework.util.function.SingletonSupplier;
@@ -40,7 +40,7 @@ public class InDaoAuthenticationProvider extends AbstractUserDetailsAuthenticati
     private static final String USER_NOT_FOUND_PASSWORD = "userNotFoundPassword";
 
     private Supplier<PasswordEncoder> passwordEncoder = SingletonSupplier
-            .of(PasswordEncoderFactories::createDelegatingPasswordEncoder);
+            .of(PasswordEncoderConfiguration::createDelegatingPasswordEncoder);
 
     /**
      * The password used to perform {@link PasswordEncoder#matches(CharSequence, String)}
@@ -145,7 +145,7 @@ public class InDaoAuthenticationProvider extends AbstractUserDetailsAuthenticati
     /**
      * Sets the PasswordEncoder instance to be used to encode and validate passwords. If
      * not set, the password will be compared using
-     * {@link PasswordEncoderFactories#createDelegatingPasswordEncoder()}
+     * {@link PasswordEncoderConfiguration#createDelegatingPasswordEncoder()}
      *
      * @param passwordEncoder must be an instance of one of the {@code PasswordEncoder}
      *                        types.

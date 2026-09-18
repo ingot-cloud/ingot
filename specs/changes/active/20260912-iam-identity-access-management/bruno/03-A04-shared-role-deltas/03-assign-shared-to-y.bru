@@ -1,0 +1,46 @@
+meta {
+  name: 直接分配共享角色给 Y
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/assignments
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "items": [
+      {
+        "subject": { "type": "MEMBER", "id": "{{memberYId}}" },
+        "roleRevisionRef": { "kind": "SHARED", "id": "{{sharedRevisionId}}" },
+        "scopeBindings": {},
+        "validFrom": null,
+        "validUntil": null,
+        "delegationGrantId": null
+      }
+    ]
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("assignmentSharedYId", data.id);
+
+}
+
+tests {
+  test("共享分配已写入", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,59 @@
+meta {
+  name: 创建成员读写共享角色
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/shared-roles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "code": "{{sharedRoleCode}}",
+    "name": "A04 成员读写",
+    "description": "read+update ALL",
+    "groupName": "验收",
+    "kind": "SHARED",
+    "baseRevisionId": null,
+    "definition": {
+      "grants": [
+        {
+          "actionId": "{{memberReadActionId}}",
+          "scopes": [{ "kind": "ALL", "parameterKey": null, "includeDescendants": null }]
+        },
+        {
+          "actionId": "{{memberUpdateActionId}}",
+          "scopes": [{ "kind": "ALL", "parameterKey": null, "includeDescendants": null }]
+        }
+      ],
+      "deltas": [],
+      "parameterDefinitions": [],
+      "metadataOverrides": null
+    }
+  }
+}
+
+script:pre-request {
+  const stamp = bru.getEnvVar("runStamp");
+  if (!bru.getEnvVar("sharedRoleCode")) bru.setEnvVar("sharedRoleCode", "a04-shared-" + stamp);
+
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("sharedRoleId", data.id);
+
+}
+
+tests {
+  test("共享角色已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,56 @@
+meta {
+  name: 租户定制 REMOVE update
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/roles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "code": "{{customRoleCode}}",
+    "name": "A04 只读定制",
+    "description": "REMOVE member:update",
+    "groupName": "验收",
+    "kind": "TENANT_CUSTOM",
+    "baseRevisionId": "{{sharedRevisionId}}",
+    "definition": {
+      "grants": [],
+      "deltas": [
+        { "actionId": "{{memberUpdateActionId}}", "operation": "REMOVE", "scopes": [] }
+      ],
+      "parameterDefinitions": [],
+      "metadataOverrides": { "name": "只读定制", "description": null, "groupName": null }
+    }
+  }
+}
+
+script:pre-request {
+  const stamp = bru.getEnvVar("runStamp");
+  if (!bru.getEnvVar("customRoleCode")) bru.setEnvVar("customRoleCode", "a04-custom-" + stamp);
+
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("customRoleId", data.id);
+
+}
+
+tests {
+  test("定制角色已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

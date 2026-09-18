@@ -1,0 +1,39 @@
+meta {
+  name: X 平台登录（暂停前）
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountXUsername}}
+  password: {{accountXPassword}}
+  user_type: 0
+  domain: PLATFORM
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.access_token;
+  if (token) {
+    bru.setEnvVar("tokenXPlatform", token);
+  }
+  
+}
+
+tests {
+  test("暂停前平台可登录", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,37 @@
+meta {
+  name: 读取组织设置
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) {
+    bru.setEnvVar("settingsVersion", data.version);
+    if (data.record && data.record.ownerMemberId) {
+      bru.setEnvVar("ownerMemberId", data.record.ownerMemberId);
+    }
+  }
+
+}
+
+tests {
+  test("读到组织版本", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.version).to.be.a("string");
+  });
+}

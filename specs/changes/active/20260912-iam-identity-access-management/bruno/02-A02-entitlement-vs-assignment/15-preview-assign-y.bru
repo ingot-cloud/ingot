@@ -1,0 +1,41 @@
+meta {
+  name: 预览分配给 Y
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/assignments/preview
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "items": [
+      {
+        "subject": { "type": "MEMBER", "id": "{{memberYId}}" },
+        "roleRevisionRef": { "kind": "SHARED", "id": "{{bizRevisionId}}" },
+        "scopeBindings": {},
+        "validFrom": null,
+        "validUntil": null,
+        "delegationGrantId": null
+      }
+    ]
+  }
+}
+
+tests {
+  test("分配预览 valid", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.valid).to.equal(true);
+  });
+}

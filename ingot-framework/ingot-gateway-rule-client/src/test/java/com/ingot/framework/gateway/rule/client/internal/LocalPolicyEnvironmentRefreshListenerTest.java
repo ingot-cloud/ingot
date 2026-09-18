@@ -80,7 +80,7 @@ class LocalPolicyEnvironmentRefreshListenerTest {
                 .enabled(true)
                 .patternList(java.util.List.of(
                         com.ingot.framework.gateway.rule.client.model.EndpointPattern.of(
-                                "/bff/auth/login", "POST")))
+                                "/bff/auth/platform/login", "POST")))
                 .build();
         var policy = com.ingot.framework.gateway.rule.client.challenge.model.ChallengePolicy.builder()
                 .code("login-always-floor")
@@ -96,13 +96,13 @@ class LocalPolicyEnvironmentRefreshListenerTest {
 
         var service = new com.ingot.framework.gateway.rule.client.challenge.internal.LocalChallengePolicyService(
                 properties);
-        assertThat(service.match("/bff/auth/login", org.springframework.http.HttpMethod.POST,
+        assertThat(service.match("/bff/auth/platform/login", org.springframework.http.HttpMethod.POST,
                 com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger.ALWAYS)).isNotNull();
 
         properties.getPolicy().getPolicies().getFirst().setEnabled(false);
         service.evictAll();
 
-        assertThat(service.match("/bff/auth/login", org.springframework.http.HttpMethod.POST,
+        assertThat(service.match("/bff/auth/platform/login", org.springframework.http.HttpMethod.POST,
                 com.ingot.framework.gateway.rule.client.challenge.model.ChallengeTrigger.ALWAYS)).isNull();
     }
 }

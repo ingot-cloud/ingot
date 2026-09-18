@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
  *
  * <pre>
  * RequestGlobalFilter (HIGHEST)     剥离内部 Header + 写入 In-Inner-Client-Real-IP
+ *   → BffAppContextFilter (+5)      Host → In-Inner-Bff-App-Id / In-Inner-Bff-Entry
  *   → SessionTokenRelayFilter (+10) Cookie → Bearer
  *   → AuthContextRelayFilter (+15)  JWT → userId attribute
  *   → IdentityResolveFilter (+20)   聚合 ClientIdentity + 回填 In-Inner-User-Id（Sentinel）
@@ -21,6 +22,7 @@ import lombok.experimental.UtilityClass;
 public class GatewayFilterOrders {
 
     public static final int REQUEST_GLOBAL = Ordered.HIGHEST_PRECEDENCE;
+    public static final int BFF_APP_CONTEXT = Ordered.HIGHEST_PRECEDENCE + 5;
     public static final int SESSION_RELAY = Ordered.HIGHEST_PRECEDENCE + 10;
     public static final int AUTH_CONTEXT = Ordered.HIGHEST_PRECEDENCE + 15;
     public static final int IDENTITY = Ordered.HIGHEST_PRECEDENCE + 20;

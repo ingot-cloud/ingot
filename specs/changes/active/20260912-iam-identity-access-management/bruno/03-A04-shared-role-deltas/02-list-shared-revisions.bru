@@ -1,0 +1,27 @@
+meta {
+  name: 读取共享角色版本
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/shared-roles/{{sharedRoleId}}/revisions?page=1&pageSize=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const items = (res.getBody().data && res.getBody().data.items) || [];
+  if (items[0]) bru.setEnvVar("sharedRevisionId", items[0].record.id);
+
+}
+
+tests {
+  test("共享版本 ID", function () {
+    expect(bru.getEnvVar("sharedRevisionId")).to.be.a("string");
+  });
+}

@@ -1,0 +1,30 @@
+meta {
+  name: X 任意身份登录（禁用后 expect-fail）
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountXUsername}}
+  password: {{accountXPassword}}
+  user_type: 0
+  domain: PLATFORM
+}
+
+tests {
+  test("禁用后无法认证", function () {
+    expect(res.getStatus()).to.not.equal(200);
+  });
+}

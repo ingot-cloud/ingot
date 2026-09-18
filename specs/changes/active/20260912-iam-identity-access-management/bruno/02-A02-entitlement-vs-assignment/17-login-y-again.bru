@@ -1,0 +1,44 @@
+meta {
+  name: Y 重新登录
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountYUsername}}
+  password: {{accountYPassword}}
+  user_type: 0
+  domain: TENANT
+  org: {{tenantA}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.data.accessToken;
+  if (token) {
+    bru.setEnvVar("tokenY", token);
+  }
+  
+}
+
+tests {
+  test("Y 重新拿 token", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  分配后重新登录，避免沿用旧授权快照。
+}

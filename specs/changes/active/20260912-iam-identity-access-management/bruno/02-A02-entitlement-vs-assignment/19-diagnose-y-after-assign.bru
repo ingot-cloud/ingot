@@ -1,0 +1,36 @@
+meta {
+  name: 诊断 Y（授权后允许）
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/authorization/diagnose
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "memberId": "{{memberYId}}",
+    "accountId": null,
+    "applicationId": "{{bizAppId}}",
+    "actionId": "{{bizActionId}}",
+    "targetId": null
+  }
+}
+
+tests {
+  test("授权后 allowed=true", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.allowed).to.equal(true);
+  });
+}

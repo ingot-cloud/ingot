@@ -86,13 +86,13 @@ class ChallengeFilterTest {
     @Test
     void consume_loginPath_consumesLoginScope() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/bff/auth/login")
+                MockServerHttpRequest.post("/bff/auth/platform/login")
                         .header(VCConstants.HEADER_PASS_TOKEN, "tok")
                         .header(VCConstants.HEADER_SCOPE, "login")
                         .build());
-        when(challengeService.match(eq("/bff/auth/login"), any(), eq(ChallengeTrigger.ALWAYS)))
+        when(challengeService.match(eq("/bff/auth/platform/login"), any(), eq(ChallengeTrigger.ALWAYS)))
                 .thenReturn(alwaysLogin());
-        when(challengeService.matchByScope(eq("/bff/auth/login"), any(), eq("login"))).thenReturn(alwaysLogin());
+        when(challengeService.matchByScope(eq("/bff/auth/platform/login"), any(), eq("login"))).thenReturn(alwaysLogin());
         when(passTokenStore.consume("login", "tok")).thenReturn(Mono.just(true));
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
@@ -142,10 +142,10 @@ class ChallengeFilterTest {
     @Test
     void consume_missingScopeWithAlways_returns412() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/bff/auth/login")
+                MockServerHttpRequest.post("/bff/auth/platform/login")
                         .header(VCConstants.HEADER_PASS_TOKEN, "tok")
                         .build());
-        when(challengeService.match(eq("/bff/auth/login"), any(), eq(ChallengeTrigger.ALWAYS)))
+        when(challengeService.match(eq("/bff/auth/platform/login"), any(), eq(ChallengeTrigger.ALWAYS)))
                 .thenReturn(alwaysLogin());
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
@@ -172,7 +172,7 @@ class ChallengeFilterTest {
     @Test
     void whitelist_skipsChallenge() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.post("/bff/auth/login").build());
+                MockServerHttpRequest.post("/bff/auth/platform/login").build());
         exchange.getAttributes().put(BlacklistFilter.ATTR_WHITELISTED, Boolean.TRUE);
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());

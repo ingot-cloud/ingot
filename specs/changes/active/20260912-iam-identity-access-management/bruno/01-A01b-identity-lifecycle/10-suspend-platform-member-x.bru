@@ -1,0 +1,35 @@
+meta {
+  name: 暂停平台成员 X
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{gateway}}/iam/v1/platform/members/{{platformMemberXId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "status": "SUSPENDED",
+    "expectedVersion": "{{platformMemberXVersion}}"
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.version) bru.setEnvVar("platformMemberXVersion", data.version);
+
+}
+
+tests {
+  test("平台成员已暂停", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().code).to.equal("S0200");
+  });
+}

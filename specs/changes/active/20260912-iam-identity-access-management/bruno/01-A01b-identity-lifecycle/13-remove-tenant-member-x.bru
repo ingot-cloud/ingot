@@ -1,0 +1,31 @@
+meta {
+  name: 移出租户成员 X
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/members/{{tenantMemberXId}}/remove
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{tenantMemberXVersion}}"
+  }
+}
+
+tests {
+  test("租户成员已移出", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -9,10 +9,11 @@ import com.ingot.framework.commons.constants.BffConstants;
 import com.ingot.framework.commons.constants.CacheConstants;
 import com.ingot.framework.commons.constants.HeaderConstants;
 import com.ingot.framework.commons.constants.SecurityConstants;
-import com.ingot.cloud.gateway.filter.GatewayFilterOrders;
+import com.ingot.cloud.gateway.config.GatewayBffProperties;
 import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
+import com.ingot.framework.commons.utils.BffCookiePolicy;
 import com.ingot.framework.commons.utils.CookieUtil;
 import com.ingot.framework.commons.utils.FingerprintUtil;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ import reactor.core.publisher.Mono;
  * <ol>
  *     <li>白名单路径（BFF 登录/选租户）→ 直接放行</li>
  *     <li>请求已携带 {@code Authorization: Bearer} → 直接放行（兼容标准 OAuth2 客户端）</li>
- *     <li>无 Bearer → 读取 Cookie {@code IN_SESSION} → 查 Redis
+ *     <li>无 Bearer → 读取当前环境正式会话 Cookie（{@link BffCookiePolicy}）→ 查 Redis
  *         → 反序列化为 {@link BffSession} → <strong>校验客户端指纹</strong>
  *         → 注入 {@code Authorization: Bearer JWT} → 转发下游</li>
  * </ol>
@@ -61,12 +62,19 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SessionTokenRelayFilter implements GlobalFilter, Ordered {
     private static final List<String> WHITELIST_PATHS = List.of(
-            BffConstants.BFF_URL,
-            BffConstants.BFF_ORG_SELECT
+            BffConstants.CSRF,
+            BffConstants.PLATFORM_TRANSACTIONS,
+            BffConstants.TENANT_TRANSACTIONS,
+            BffConstants.PLATFORM_LOGIN,
+            BffConstants.TENANT_LOGIN,
+            BffConstants.TENANT_SELECT,
+            BffConstants.PLATFORM_COMPLETE,
+            BffConstants.TENANT_COMPLETE
     );
 
     private final ReactiveStringRedisTemplate reactiveRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final GatewayBffProperties bffProperties;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -82,7 +90,8 @@ public class SessionTokenRelayFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        String sessionId = CookieUtil.getCookieFirstValue(request, CacheConstants.BFF_SESSION_COOKIE_NAME);
+        String sessionId = CookieUtil.getCookieFirstValue(request,
+                BffCookiePolicy.sessionCookieName(bffProperties.isRequireHttps()));
         if (StrUtil.isEmpty(sessionId)) {
             return chain.filter(exchange);
         }
@@ -110,19 +119,33 @@ public class SessionTokenRelayFilter implements GlobalFilter, Ordered {
                         log.debug("[SessionTokenRelay] no accessToken in session={}", sessionId);
                         return unauthorizedResponse(exchange);
                     }
-
-                    // 默认使用请求中的Tenant，如果不存在那么传递Session保存的
-                    String tenant = request.getHeaders().getFirst(HeaderConstants.TENANT);
-                    if (StrUtil.isEmpty(tenant)) {
-                        tenant = session.getTenantId();
+                    String injectedAppId = request.getHeaders().getFirst(HeaderConstants.INNER_BFF_APP_ID);
+                    if (StrUtil.isNotEmpty(session.getAppId()) && StrUtil.isNotEmpty(injectedAppId)
+                            && !StrUtil.equals(session.getAppId(), injectedAppId)) {
+                        log.warn("[SessionTokenRelay] app mismatch session={} expected={} actual={}",
+                                sessionId, session.getAppId(), injectedAppId);
+                        return unauthorizedResponse(exchange);
                     }
-
-                    ServerHttpRequest mutated = request.mutate()
+                    String requestTenant = request.getHeaders().getFirst(HeaderConstants.TENANT);
+                    ServerHttpRequest.Builder builder = request.mutate()
                             .header(HttpHeaders.AUTHORIZATION,
-                                    SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE + session.getAccessToken())
-                            .header(HeaderConstants.TENANT, tenant)
-                            .build();
-                    return chain.filter(exchange.mutate().request(mutated).build());
+                                    SecurityConstants.OAUTH2_BEARER_TYPE_WITH_SPACE + session.getAccessToken());
+                    if ("PLATFORM".equals(session.getDomain())) {
+                        if (StrUtil.isNotEmpty(requestTenant)) {
+                            return unauthorizedResponse(exchange);
+                        }
+                    } else {
+                        if (StrUtil.isNotEmpty(requestTenant)
+                                && StrUtil.isNotEmpty(session.getTenantId())
+                                && !StrUtil.equals(requestTenant, session.getTenantId())) {
+                            return unauthorizedResponse(exchange);
+                        }
+                        String tenant = StrUtil.isNotEmpty(requestTenant) ? requestTenant : session.getTenantId();
+                        if (StrUtil.isNotEmpty(tenant)) {
+                            builder.header(HeaderConstants.TENANT, tenant);
+                        }
+                    }
+                    return chain.filter(exchange.mutate().request(builder.build()).build());
                 });
     }
 
@@ -132,7 +155,7 @@ public class SessionTokenRelayFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isWhitelisted(String path) {
-        return WHITELIST_PATHS.stream().anyMatch(path::startsWith);
+        return WHITELIST_PATHS.stream().anyMatch(prefix -> path.equals(prefix) || path.startsWith(prefix + "/"));
     }
 
     private BffSession deserialize(String json) {

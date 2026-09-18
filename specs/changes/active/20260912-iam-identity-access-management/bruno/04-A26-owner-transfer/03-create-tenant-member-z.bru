@@ -1,0 +1,41 @@
+meta {
+  name: Z 加入组织 A
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/members
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "accountId": "{{accountZId}}",
+    "displayName": "A26 新所有者",
+    "departments": [
+      { "id": "{{rootDeptId}}", "primary": true }
+    ]
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("memberZId", data.id);
+
+}
+
+tests {
+  test("成员 Z 已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,39 @@
+meta {
+  name: 创建账号 Y
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/accounts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "username": "{{accountYUsername}}",
+    "phone": null,
+    "email": null
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) {
+    bru.setEnvVar("accountYId", data.id);
+    bru.setEnvVar("accountYVersion", data.version);
+  }
+
+}
+
+tests {
+  test("账号 Y 已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.id).to.be.a("string");
+  });
+}

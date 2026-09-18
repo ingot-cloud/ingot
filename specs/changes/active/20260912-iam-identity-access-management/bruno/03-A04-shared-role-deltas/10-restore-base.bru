@@ -1,0 +1,41 @@
+meta {
+  name: 发布空 deltas 恢复基础
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/roles/{{customRoleId}}/revisions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{customRoleVersion}}",
+    "definition": {
+      "grants": [],
+      "deltas": [],
+      "parameterDefinitions": [],
+      "metadataOverrides": null
+    }
+  }
+}
+
+tests {
+  test("恢复基础版本已发布", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  空 deltas 表示不再覆盖共享基础。既有授权仍引用旧 revision，不会自动升级。
+}

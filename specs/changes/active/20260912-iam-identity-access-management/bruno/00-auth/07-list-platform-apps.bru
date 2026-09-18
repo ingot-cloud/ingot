@@ -1,0 +1,29 @@
+meta {
+  name: 列出平台应用目录
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/applications?page=1&pageSize=200
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const items = (res.getBody().data && res.getBody().data.items) || [];
+  const tenantApp = items.find(i => i.record.code === "iam-tenant");
+  if (tenantApp) bru.setEnvVar("iamTenantAppId", tenantApp.record.id);
+
+}
+
+tests {
+  test("找到 iam-tenant", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getEnvVar("iamTenantAppId")).to.be.a("string");
+  });
+}

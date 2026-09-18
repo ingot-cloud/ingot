@@ -93,6 +93,16 @@ public interface HeaderConstants {
     String INNER_CLIENT_ID = "In-Inner-Client-Id";
 
     /**
+     * 网关按 Host 注入的 BFF 应用 ID（内部头，入口剥离伪造值）。
+     */
+    String INNER_BFF_APP_ID = "In-Inner-Bff-App-Id";
+
+    /**
+     * 网关按 Host 注入的 BFF 入口类型：{@code admin} 或 {@code login}。
+     */
+    String INNER_BFF_ENTRY = "In-Inner-Bff-Entry";
+
+    /**
      * 应用层：解析请求来源 IP（网关标准化头优先，含历史兼容头）。
      */
     String[] REQUEST_SOURCE_IP_HEADERS = {
@@ -114,6 +124,8 @@ public interface HeaderConstants {
             INNER_CLIENT_REAL_IP,
             INNER_USER_ID,
             INNER_CLIENT_ID,
+            INNER_BFF_APP_ID,
+            INNER_BFF_ENTRY,
     };
 
     /**

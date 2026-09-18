@@ -1,0 +1,57 @@
+meta {
+  name: 创建业务共享角色
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/shared-roles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "code": "{{bizRoleCode}}",
+    "name": "A02 业务读取",
+    "description": "只含业务操作",
+    "groupName": "验收",
+    "kind": "SHARED",
+    "baseRevisionId": null,
+    "definition": {
+      "grants": [
+        {
+          "actionId": "{{bizActionId}}",
+          "scopes": [
+            { "kind": "ALL", "parameterKey": null, "includeDescendants": null }
+          ]
+        }
+      ],
+      "deltas": [],
+      "parameterDefinitions": [],
+      "metadataOverrides": null
+    }
+  }
+}
+
+script:pre-request {
+  const stamp = bru.getEnvVar("runStamp");
+  if (!bru.getEnvVar("bizRoleCode")) bru.setEnvVar("bizRoleCode", "a02-shared-" + stamp);
+
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("bizRoleId", data.id);
+
+}
+
+tests {
+  test("共享角色已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,49 @@
+meta {
+  name: 组织A所有者登录
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{ownerUsername}}
+  password: {{ownerPassword}}
+  user_type: 0
+  domain: TENANT
+  org: {{tenantA}}
+}
+
+script:pre-request {
+  const tenant = bru.getEnvVar("tenantA") || "";
+  if (!tenant || tenant.indexOf("请") >= 0) {
+    throw new Error("请先在环境 local 中把 tenantA 改成组织 A 的 ID");
+  }
+  
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.data.accessToken;
+  if (token) {
+    bru.setEnvVar("tokenOwnerA", token);
+  }
+  
+}
+
+tests {
+  test("所有者登录成功", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().access_token).to.be.a("string");
+  });
+}

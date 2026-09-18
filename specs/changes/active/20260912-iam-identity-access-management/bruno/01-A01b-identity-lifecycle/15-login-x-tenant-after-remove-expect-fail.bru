@@ -1,0 +1,31 @@
+meta {
+  name: X 租户登录（移出后 expect-fail）
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountXUsername}}
+  password: {{accountXPassword}}
+  user_type: 0
+  domain: TENANT
+  org: {{tenantA}}
+}
+
+tests {
+  test("移出后租户不可登录", function () {
+    expect(res.getStatus()).to.not.equal(200);
+  });
+}

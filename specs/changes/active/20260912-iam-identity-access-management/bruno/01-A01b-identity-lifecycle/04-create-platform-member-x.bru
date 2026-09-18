@@ -1,0 +1,36 @@
+meta {
+  name: X 加入平台成员
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/members
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "accountId": "{{accountXId}}",
+    "displayName": "A01b 平台成员",
+    "departments": []
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("platformMemberXId", data.id);
+
+}
+
+tests {
+  test("平台成员已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.id).to.be.a("string");
+  });
+}

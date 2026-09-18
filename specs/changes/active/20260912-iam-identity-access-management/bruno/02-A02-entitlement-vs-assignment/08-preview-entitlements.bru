@@ -1,0 +1,49 @@
+meta {
+  name: 预览开通（无写入）
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/tenants/{{tenantA}}/entitlements/preview
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{entitlementVersion}}",
+    "entitlements": []
+  }
+}
+
+script:pre-request {
+  const items = JSON.parse(bru.getEnvVar("entitlementItems") || "[]");
+  const appId = bru.getEnvVar("bizAppId");
+  if (!items.some(i => String(i.applicationId) === String(appId))) {
+    items.push({ applicationId: appId, status: "ENABLED", validFrom: null, validUntil: null });
+  }
+  const payload = {
+    expectedVersion: bru.getEnvVar("entitlementVersion"),
+    entitlements: items
+  };
+  req.setBody(payload);
+  
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.version) bru.setEnvVar("entitlementVersion", data.version);
+  
+}
+
+tests {
+  test("预览 valid", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.valid).to.equal(true);
+  });
+}

@@ -8,7 +8,9 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.utils.ErrorUtil;
+import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,24 +62,42 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     }
 
     private Authentication requiredCheck(HttpServletRequest request, OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
-        // tenant (REQUIRED)
+        if (isPlatformContext(token)) {
+            String tenant = request.getParameter(InOAuth2ParameterNames.TENANT);
+            if (StrUtil.isNotEmpty(tenant)) {
+                throwError(InOAuth2ParameterNames.TENANT);
+            }
+            MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
+            Map<String, Object> additional = copyValidatedAdditionalParameters(token, parameters);
+            return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
+                    token.getPrincipal(), token.getAllowList(), additional, token.getTimeToLive());
+        }
+
         String tenant = request.getParameter(InOAuth2ParameterNames.TENANT);
         if (StrUtil.isEmpty(tenant)) {
             throwError(InOAuth2ParameterNames.TENANT);
         }
-
-        // tenant必须在allow list中
         if (token.getAllowList().stream().noneMatch(item -> StrUtil.equals(item.getId(), tenant))) {
             throwError(InOAuth2ParameterNames.TENANT);
         }
 
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
-        Map<String, Object> newAdditionalParameters = getAdditionalParameters(token, parameters, tenant);
+        Map<String, Object> newAdditionalParameters = copyValidatedAdditionalParameters(token, parameters);
+        newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
                 token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
     }
 
-    private static Map<String, Object> getAdditionalParameters(OAuth2PreAuthorizationCodeRequestAuthenticationToken token, MultiValueMap<String, String> parameters, String tenant) {
+    private static boolean isPlatformContext(OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {
+        if (token.getPrincipal() instanceof InUser user && user.getAuthorizationContext() != null) {
+            return user.getAuthorizationContext().domain() == AuthorizationDomain.PLATFORM;
+        }
+        return false;
+    }
+
+    private static Map<String, Object> copyValidatedAdditionalParameters(
+            OAuth2PreAuthorizationCodeRequestAuthenticationToken token,
+            MultiValueMap<String, String> parameters) {
         Map<String, Object> additionalParameters = token.getAdditionalParameters();
         additionalParameters.forEach((key, value) -> {
             List<String> requestValues = parameters.get(key);
@@ -93,7 +113,6 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         });
 
         Map<String, Object> newAdditionalParameters = new HashMap<>(additionalParameters);
-        newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
         return newAdditionalParameters;
     }
 

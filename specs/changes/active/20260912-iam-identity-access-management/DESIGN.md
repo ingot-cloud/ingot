@@ -177,7 +177,7 @@ Bean 默认使用 private final 与 @RequiredArgsConstructor。限定注入、�
 ## 9. 当前修订的实施约束
 
 1. 成熟框架只做本次必要的边界适配。账号锁定读写复用安全框架端口与用例；IAM 的 UserAccountPort 适配仅负责新 Account 数据，不反向写入 LockStatePort 造成递归或第二次状态转换。IAM 新增的重复锁定态实体/Mapper 及直接 upsert 分支退出。失败传播沿用既有框架契约，不能将查询故障伪装成无账号或吞掉锁定失败。
-2. 平台认证不返回允许访问租户，兼容共享 DTO 时 allows=[]；不改变 Auth 协议、挑战、加密、凭证检查和 Member 登录逻辑。租户切换须重建身份，不从平台管理租户列表取得业务授权。管理域由认证入口显式声明的 `domain` 传入，IAM 不再以 `tenant` 是否为空推断域；`TENANT` 且 tenant 为空是成员资格选择阶段，只返回候选而不建立 AuthorizationContext。域标识随既有 principal URI 与 `UserDetailsRequest` 传递，缺省时保持既有兼容行为，不新增认证路由或改动凭证流程。
+2. 平台认证不返回允许访问租户，兼容共享 DTO 时 allows=[]；复用 Auth 授权码/PKCE、挑战、加密、凭证检查和 Member 登录逻辑。租户切换须重建身份，不从平台管理租户列表取得业务授权。管理域由认证入口显式声明的 `domain` 传入，IAM 不再以 `tenant` 是否为空推断域；`TENANT` 且 tenant 为空是成员资格选择阶段，只返回候选而不建立 AuthorizationContext。域标识随既有 principal URI 与 `UserDetailsRequest` 传递，缺省仅用于其他既有 Auth 客户端兼容；管理台新增固定域 BFF 路由、事务和会话交接，见第10节，不改凭证校验规则。
 3. 完整角色以 baseRevisionId 是否为空区分独立自定义与共享定制。发布和升级验证操作域、资源能力和参数；升级选中授权必须属于当前租户及被升级角色，逐条锁定/版本校验并重验委派和范围，任一失败全部回滚。
 4. 治理授权与受限委派分开准入：无完整治理资格时必须绑定属于当前操作者的单一有效委派，不得省略来源绕过。运行时持续检查角色白名单、接收人、逐操作范围及期限；组/部门变化也须受同一约束。
 5. 所有者治理授权必须与 ownerMemberId 同步。转交原子移动由所有者身份产生的治理授权，撤销旧所有者对应来源并赋予新所有者；其他独立合法授权不自动删除。锁定组织及相关成员，保护治理入口并在提交后失效。
@@ -186,3 +186,11 @@ Bean 默认使用 private final 与 @RequiredArgsConstructor。限定注入、�
 8. IAM HTTP 错误按 API 映射；使用 IAM 范围异常处理或明确类型映射，不能为 IAM 改写所有服务 BizException 的既有返回行为。Security 只更换必要的功能/对象授权接入，保留原业务用例与协议。
 9. 预览、对象能力和诊断复用真实求值，草稿参与预览，来源披露受操作者范围限制。导出完整遍历授权数据，异步及下载重新校验身份和权限，支持多实例与状态/失败处理。
 10. 具体缺陷、保留功能、清理范围和可复现验收以 REMEDIATION 为任务级清单；声明一个 DTO、Mapper 或控制器不构成该项完成证据。
+
+## 10. 双入口 BFF 与四站点会话（2026-09-16 增量，implementing）
+
+完整设计、接口和安全边界统一维护在 [BFF-LOGIN](./BFF-LOGIN.md)，取代此前“仅由前端传 domain、不改会话”的管理台限制。两组入口共享服务编排；LoginTransaction 与正式 BffSession 分离；Auth 扩展平台无 tenant 授权并核对绑定域；Gateway 只转发匹配应用和身份的正式会话。平台和租户分别使用独立 OAuth client 与 Auth sid。
+
+一个 admin 源码两份部署，两个独立登录应用，四个同主域 HTTPS 子域。Gateway 按 Host 注入 appId；BFF 用该 appId 读 Nacos 注册表构造 loginUrl/completionUrl，Origin 只做一致性校验。登录结果通过短期 ticket 回到目标管理台原子完成，Cookie 不设置父域 Domain。临时事务与正式会话 Redis/Cookie 命名空间分离；绑定 Cookie 不得触发 JWT 中继。
+
+实施使用既有安全/加密/挑战能力；新增共享枚举、公开注释及 Bean 注入遵循仓库门禁。后端按 B01–B05 实施。原已完成的底层 domain 及人工 Auth 测试保留，不视为 BFF 完成证据。

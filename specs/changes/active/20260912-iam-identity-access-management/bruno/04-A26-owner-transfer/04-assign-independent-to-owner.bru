@@ -1,0 +1,50 @@
+meta {
+  name: 给当前所有者一条独立授权
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/assignments
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "items": [
+      {
+        "subject": { "type": "MEMBER", "id": "{{ownerMemberId}}" },
+        "roleRevisionRef": { "kind": "SHARED", "id": "{{sharedRevisionId}}" },
+        "scopeBindings": {},
+        "validFrom": null,
+        "validUntil": null,
+        "delegationGrantId": null
+      }
+    ]
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("ownerIndependentAssignmentId", data.id);
+
+}
+
+tests {
+  test("独立授权已写入", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  依赖 03-A04 的 sharedRevisionId。若跳过 A04，先跑 03-A04 的 01–02。
+}

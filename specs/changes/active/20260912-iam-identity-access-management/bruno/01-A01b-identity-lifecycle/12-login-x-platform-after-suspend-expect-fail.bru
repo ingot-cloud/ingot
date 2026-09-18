@@ -1,0 +1,30 @@
+meta {
+  name: X 平台登录（暂停后 expect-fail）
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountXUsername}}
+  password: {{accountXPassword}}
+  user_type: 0
+  domain: PLATFORM
+}
+
+tests {
+  test("暂停后平台身份不可用", function () {
+    expect(res.getStatus()).to.not.equal(200);
+  });
+}

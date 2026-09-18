@@ -1,0 +1,36 @@
+meta {
+  name: 诊断 Y（授权前拒绝）
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/authorization/diagnose
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "memberId": "{{memberYId}}",
+    "accountId": null,
+    "applicationId": "{{bizAppId}}",
+    "actionId": "{{bizActionId}}",
+    "targetId": null
+  }
+}
+
+tests {
+  test("授权前 allowed=false", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.allowed).to.equal(false);
+  });
+}

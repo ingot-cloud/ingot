@@ -10,7 +10,7 @@ import lombok.Data;
  *
  * <p>Redis key 格式为 {@code in:bff_session:{sessionId}}（通过
  * {@link com.ingot.framework.commons.constants.CacheConstants#bffSessionKey(String)} 构建）。
- * 登录阶段暂存 PKCE 参数，选租户完成后存储真正的 accessToken/refreshToken。
+ * 正式会话存储 accessToken；登录事务不得占用本对象暂存 PKCE。
  * {@code fingerprint} 字段用于绑定客户端 IP+UA，防止 Cookie 被盗用后重放。</p>
  *
  * <p>此类放在 commons 层而非 BFF 服务内部，因为网关的 SessionTokenRelayFilter
@@ -32,6 +32,8 @@ public class BffSession implements Serializable {
     private String tenantId;
     private Long userId;
     private String clientId;
+    private String appId;
+    private String domain;
     private long createdAt;
 
     /**

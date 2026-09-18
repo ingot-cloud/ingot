@@ -1,0 +1,25 @@
+meta {
+  name: 刷新定制角色版本
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/roles/{{customRoleId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) bru.setEnvVar("customRoleVersion", data.version);
+
+}

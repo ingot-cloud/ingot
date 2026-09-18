@@ -19,5 +19,6 @@ spring:
   config:
     import:
       - optional:nacos:in-common.yml
+      - optional:nacos:in-bff-apps.yml
       - optional:nacos:in-security-gateway.yml
       - optional:nacos:${spring.application.name}.yml

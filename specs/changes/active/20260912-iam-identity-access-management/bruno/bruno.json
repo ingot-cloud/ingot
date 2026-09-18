@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "IAM T16 第二批",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

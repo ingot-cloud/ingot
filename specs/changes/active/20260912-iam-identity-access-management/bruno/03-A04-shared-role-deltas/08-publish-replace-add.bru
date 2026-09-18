@@ -1,0 +1,55 @@
+meta {
+  name: 发布 REPLACE_SCOPE + ADD
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/roles/{{customRoleId}}/revisions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{customRoleVersion}}",
+    "definition": {
+      "grants": [],
+      "deltas": [
+        { "actionId": "{{memberUpdateActionId}}", "operation": "REMOVE", "scopes": [] },
+        {
+          "actionId": "{{memberReadActionId}}",
+          "operation": "REPLACE_SCOPE",
+          "scopes": [{ "kind": "SELF", "parameterKey": null, "includeDescendants": null }]
+        },
+        {
+          "actionId": "{{memberExportActionId}}",
+          "operation": "ADD",
+          "scopes": [{ "kind": "ALL", "parameterKey": null, "includeDescendants": null }]
+        }
+      ],
+      "parameterDefinitions": [],
+      "metadataOverrides": { "name": "差异合成", "description": null, "groupName": null }
+    }
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("customRevisionId", data.id);
+
+}
+
+tests {
+  test("新差异版本已发布", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

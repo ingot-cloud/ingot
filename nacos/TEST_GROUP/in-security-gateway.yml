@@ -12,8 +12,10 @@ ingot:
             name: 登录授权层
             enabled: true
             pattern-list:
-              - path: /bff/auth/login  # 网关对外路径（Ant 风格）；非下游 /test/**
-                method: POST           # 当前 Sentinel 编译忽略 method，保留供扩展
+              - path: /bff/auth/platform/login
+                method: POST
+              - path: /bff/auth/tenant/login
+                method: POST
           - code: api-business-floor
             name: 公共业务层
             enabled: true
@@ -73,7 +75,9 @@ ingot:
             name: 登录认证入口
             enabled: true
             pattern-list:
-              - path: /bff/auth/login
+              - path: /bff/auth/platform/login
+                method: POST
+              - path: /bff/auth/tenant/login
                 method: POST
         policies:
           - code: login-always-floor

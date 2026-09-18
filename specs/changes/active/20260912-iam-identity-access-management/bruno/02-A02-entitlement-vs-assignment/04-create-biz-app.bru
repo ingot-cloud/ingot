@@ -1,0 +1,46 @@
+meta {
+  name: 创建非基础业务应用
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{gateway}}/iam/v1/platform/applications
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+body:json {
+  {
+    "code": "{{bizAppCode}}",
+    "domain": "TENANT",
+    "name": "A02 业务应用",
+    "description": "开通不等于授权",
+    "icon": null,
+    "sortOrder": 90,
+    "baseline": false
+  }
+}
+
+script:pre-request {
+  const stamp = bru.getEnvVar("runStamp");
+  if (!bru.getEnvVar("bizAppCode")) bru.setEnvVar("bizAppCode", "a02-biz-" + stamp);
+
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("bizAppId", data.id);
+
+}
+
+tests {
+  test("业务应用已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.id).to.be.a("string");
+  });
+}

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.oauth2.server.authorization.authentication;
 
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordEncoderConfiguration;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.credential.DefaultUserCredentialChecker;
 import com.ingot.framework.security.core.credential.UserCredentialChecker;
@@ -23,7 +24,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
@@ -64,7 +64,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     private UserCredentialChecker credentialChecker = new DefaultUserCredentialChecker();
 
     public OAuth2UserDetailsAuthenticationProvider() {
-        setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+        setPasswordEncoder(PasswordEncoderConfiguration.createDelegatingPasswordEncoder());
     }
 
     @Override
@@ -186,7 +186,7 @@ public class OAuth2UserDetailsAuthenticationProvider extends AbstractUserDetails
     /**
      * Sets the PasswordEncoder instance to be used to encode and validate passwords. If
      * not set, the password will be compared using
-     * {@link PasswordEncoderFactories#createDelegatingPasswordEncoder()}
+     * {@link PasswordEncoderConfiguration#createDelegatingPasswordEncoder()}
      *
      * @param passwordEncoder must be an instance of one of the {@code PasswordEncoder}
      *                        types.

@@ -1,0 +1,28 @@
+meta {
+  name: 读取业务角色版本
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/shared-roles/{{bizRoleId}}/revisions?page=1&pageSize=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const items = (res.getBody().data && res.getBody().data.items) || [];
+  if (items[0]) bru.setEnvVar("bizRevisionId", items[0].record.id);
+
+}
+
+tests {
+  test("版本 ID 已保存", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getEnvVar("bizRevisionId")).to.be.a("string");
+  });
+}

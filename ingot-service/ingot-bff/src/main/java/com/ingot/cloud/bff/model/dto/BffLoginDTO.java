@@ -10,6 +10,7 @@ import lombok.Data;
  */
 @Data
 public class BffLoginDTO {
+    private String transactionId;
     private String username;
     private String password;
 }

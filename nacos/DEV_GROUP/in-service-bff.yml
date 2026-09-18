@@ -12,28 +12,16 @@ ingot:
         # BFF 拦截时是否仍调 Auth 以产生 LOGIN_FAILURE；默认关闭。
         emit-login-failure-on-bff-block: false
   bff:
-    client-id: ingot-bff
-    scope: system
     # 管理用户:0, C端用户:1
     user-type: "0"
     session-ttl: 7200
-    redirect-uri: http://localhost:5400/bff/auth/callback
-    cookie:
-      # 开发环境不设置 domain（localhost 可用），生产环境设置顶级域名如 .ingotcloud.top
-      domain: ${BFF_COOKIE_DOMAIN:}
-      # 开发环境 false，生产必须 true
-      secure: ${BFF_COOKIE_SECURE:false}
-      same-site: ${BFF_COOKIE_SAME_SITE:Lax}
+    transaction-ttl: 600
+    ticket-ttl: 60
     security:
       # 客户端指纹校验，防止 Cookie 盗用
       fingerprint-enabled: ${BFF_FINGERPRINT_ENABLED:true}
       # 指纹模式: device（前端设备指纹，推荐）/ ip_ua（服务端 IP+UA，降级方案）
       fingerprint-mode: ${BFF_FINGERPRINT_MODE:device}
-      # 信任的前端应用域名列表
-      allowed-frontends:
-        - http://localhost:1798
-        - http://localhost:5798
-      default-redirect-uri: http://localhost:5798
 
 # SpringDoc/Swagger配置（开发环境开启）
 springdoc:

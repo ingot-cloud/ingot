@@ -1,0 +1,32 @@
+meta {
+  name: Z 读取设置（所有者已变）
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenZ}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) bru.setEnvVar("settingsVersion", data.version);
+
+}
+
+tests {
+  test("新所有者是 Z", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(String(res.getBody().data.record.ownerMemberId)).to.equal(String(bru.getEnvVar("memberZId")));
+  });
+}

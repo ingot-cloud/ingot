@@ -133,11 +133,13 @@ public class PolicySnapshotFloorAssembler {
         group.setCode("login-auth-floor");
         group.setName("登录入口（地板）");
         group.setEnabled(true);
-        EndpointPatternVO pattern = new EndpointPatternVO();
-        // 登录主入口是 BFF；Auth 的 /auth/token/** 已随 TokenEndpoint 摘除，护住它没有意义
-        pattern.setPath("/bff/auth/login/**");
-        pattern.setMethod("ANY");
-        group.setPatternList(List.of(pattern));
+        EndpointPatternVO platform = new EndpointPatternVO();
+        platform.setPath("/bff/auth/platform/login");
+        platform.setMethod("POST");
+        EndpointPatternVO tenant = new EndpointPatternVO();
+        tenant.setPath("/bff/auth/tenant/login");
+        tenant.setMethod("POST");
+        group.setPatternList(List.of(platform, tenant));
         return group;
     }
 

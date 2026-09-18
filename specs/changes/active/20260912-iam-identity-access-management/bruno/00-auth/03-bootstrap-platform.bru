@@ -1,0 +1,33 @@
+meta {
+  name: 平台 bootstrap
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{gateway}}/iam/v1/me/bootstrap
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.context) {
+    bru.setEnvVar("platformAccountId", data.context.accountId);
+    bru.setEnvVar("platformMemberId", data.context.memberId);
+  }
+
+}
+
+tests {
+  test("平台身份无租户", function () {
+    expect(res.getStatus()).to.equal(200);
+    const ctx = res.getBody().data.context;
+    expect(ctx.domain).to.equal("PLATFORM");
+    expect(ctx.tenantId == null || ctx.tenantId === "").to.equal(true);
+  });
+}

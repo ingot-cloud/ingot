@@ -1,0 +1,28 @@
+meta {
+  name: 读取账号 X 版本
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/accounts/{{accountXId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) bru.setEnvVar("accountXVersion", data.version);
+
+}
+
+tests {
+  test("账号仍启用", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.record.enabled).to.equal(true);
+  });
+}

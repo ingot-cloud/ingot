@@ -1,0 +1,32 @@
+meta {
+  name: 读取租户成员 X
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/members/{{tenantMemberXId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) bru.setEnvVar("tenantMemberXVersion", data.version);
+
+}
+
+tests {
+  test("租户成员 ACTIVE", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.record.status).to.equal("ACTIVE");
+  });
+}

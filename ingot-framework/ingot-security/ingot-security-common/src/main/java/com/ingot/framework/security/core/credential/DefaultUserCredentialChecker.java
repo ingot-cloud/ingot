@@ -1,5 +1,6 @@
 package com.ingot.framework.security.core.credential;
 
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordEncoderConfiguration;
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.core.userdetails.InUserMetaKeys;
@@ -10,7 +11,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
 
@@ -51,7 +51,7 @@ public class DefaultUserCredentialChecker implements UserCredentialChecker {
     private PasswordEncoder passwordEncoder;
 
     public DefaultUserCredentialChecker() {
-        setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+        setPasswordEncoder(PasswordEncoderConfiguration.createDelegatingPasswordEncoder());
         setMessageSource(new InSecurityMessageSource());
     }
 

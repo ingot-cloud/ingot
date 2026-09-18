@@ -1,0 +1,27 @@
+meta {
+  name: Y bootstrap（授权后有业务操作）
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{gateway}}/iam/v1/me/bootstrap
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenY}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+tests {
+  test("授权后出现业务操作码", function () {
+    expect(res.getStatus()).to.equal(200);
+    const codes = res.getBody().data.actionCodes || [];
+    expect(codes).to.include(bru.getEnvVar("bizActionCode"));
+  });
+}

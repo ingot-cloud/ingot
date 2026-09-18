@@ -394,3 +394,9 @@ T16 要求执行 A01–A28：真实 MySQL 并发/约束、HTTP、镜像/RPC、�
 A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程、A18 镜像/Gateway、A21.1 首启改密、A01–A17/A24–A28 真实 HTTP，以及 A15/A20/A27 多实例与执行计划。
 
 未做：未启动业务进程，未改 `specs/current/`，未 commit，未勾选 T16。
+
+## 2026-09-16 人工 HTTP 第一批与 Bruno 第二批
+
+第一批已由你确认通过，清单已勾选：0.1、0.2、A18.2、A28/A28a、A03.1/A03.2、A01/A01a、A09.1/A09.2。登录走 Auth `5100`，管理面走 Gateway `7980/iam`。配套修正：`JwtTenantValidator` 平台身份不强制 JWT `org`；`DelegatingPasswordEncoder.setDefaultPasswordEncoderForMatches(BCryptPasswordEncoder)` 兼容无 `{bcrypt}` 前缀的种子哈希。
+
+第二批已由你确认通过，清单已勾选 A01b、A02、A04、A26。证据为 Bruno 集合 `bruno/01-A01b-identity-lifecycle/`、`02-A02-entitlement-vs-assignment/`、`03-A04-shared-role-deltas/`、`04-A26-owner-transfer/`。A26 并发双客户端移出新所有者未另做，陈旧 version 409 已覆盖。组织 A 所有者已转为 Z。未勾选 T16，未改 `specs/current/`，未 commit。

@@ -1,0 +1,47 @@
+meta {
+  name: 预览 REPLACE_SCOPE + ADD
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/roles/{{customRoleId}}/preview
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "grants": [],
+    "deltas": [
+      { "actionId": "{{memberUpdateActionId}}", "operation": "REMOVE", "scopes": [] },
+      {
+        "actionId": "{{memberReadActionId}}",
+        "operation": "REPLACE_SCOPE",
+        "scopes": [{ "kind": "SELF", "parameterKey": null, "includeDescendants": null }]
+      },
+      {
+        "actionId": "{{memberExportActionId}}",
+        "operation": "ADD",
+        "scopes": [{ "kind": "ALL", "parameterKey": null, "includeDescendants": null }]
+      }
+    ],
+    "parameterDefinitions": [],
+    "metadataOverrides": { "name": "差异合成", "description": null, "groupName": null }
+  }
+}
+
+tests {
+  test("差异预览 valid", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.valid).to.equal(true);
+  });
+}

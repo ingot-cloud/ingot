@@ -1,0 +1,40 @@
+meta {
+  name: Y 租户登录
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{accountYUsername}}
+  password: {{accountYPassword}}
+  user_type: 0
+  domain: TENANT
+  org: {{tenantA}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.data.accessToken;
+  if (token) {
+    bru.setEnvVar("tokenY", token);
+  }
+  
+}
+
+tests {
+  test("Y 可登录", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

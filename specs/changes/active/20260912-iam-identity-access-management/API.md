@@ -14,19 +14,19 @@
 
 ### 1.1 平台登录与租户选择
 
-沿用Auth既有协议，只调整IAM身份投影。平台登录上下文为PLATFORM、tenantId=null、平台memberId；不返回允许访问的租户集合。共享UserDetailsResponse等模型保留allows时，平台分支固定[]，不调用租户成员列表填充该响应；Bootstrap不新增租户列表。不得把tenantId=0作为平台业务身份。
+Auth 复用既有授权码/PKCE，管理台新增双入口 BFF 编排与会话交接，完整待实施契约见 [BFF-LOGIN](./BFF-LOGIN.md)。平台登录上下文为PLATFORM、tenantId=null、平台memberId；不返回允许访问的租户集合。共享UserDetailsResponse等模型保留allows时，平台分支固定[]，不调用租户成员列表填充该响应；Bootstrap不新增租户列表。不得把tenantId=0作为平台业务身份。
 
-前端平台入口无需组织选择，完成原认证要求后直接bootstrap。有效平台身份即使没有租户成员关系也可以登录。租户身份仅在独立租户认证流程中验证，平台组织管理列表不能用作登录候选或授权依据；同账号拥有多个身份不改变此规则。Member(APP)原有选择与认证行为不变。完整交互见FRONTEND第0节。
+前端平台入口无需组织选择，完成认证并在目标管理台完成 BFF 会话交接后 bootstrap。有效平台身份即使没有租户成员关系也可以登录。租户身份仅在独立租户认证流程中验证，平台组织管理列表不能用作登录候选或授权依据；同账号拥有多个身份不改变此规则。Member(APP)原有选择与认证行为不变。完整交互见FRONTEND第0节。
 
 #### 1.1.1 登录域参数（2026-09-15 确认的协议扩展）
 
-平台身份与「租户成员资格选择阶段」都不携带 tenantId，不能再用 `tenant` 是否为空推断管理域，否则租户用户的首次登录会被判成平台登录。认证入口新增可选请求参数 `domain`，取值 `PLATFORM`/`TENANT`，由前端按登录入口显式传入并透传到内部身份查询（共享 `UserDetailsRequest.domain`）。这是既有协议的向后兼容扩展：不改动凭证校验、挑战、加密、会话与 Member 登录规则，不新增认证路由。
+平台身份与租户成员资格选择阶段都不携带 tenantId，不能据此推断域。管理台浏览器仅调用两组 BFF 入口，不提交 domain；BFF 路径固定 PLATFORM/TENANT 并贯穿 Auth RPC、预授权参数绑定及 UserDetailsRequest.domain。下表描述内部 Auth/IAM 语义，缺省仅保留其他既有客户端兼容，不用于新的管理台 BFF。平台完成授权不带 tenant；租户单候选由 BFF 自动继续 authorize 但仍须重验成员；多候选选定后同样重验。选择阶段（TENANT 且 tenant 为空）仍是 Auth/IAM 语义，不建立 AuthorizationContext。浏览器不向 BFF 提交重定向 URL；回跳由 appId 对应 Nacos 注册表构造。凭证/挑战/加密规则及 Member 语义不变，BFF 会话与跳转按 [BFF-LOGIN](./BFF-LOGIN.md)。
 
 | domain | tenant | 语义与响应 |
 |---|---|---|
 | PLATFORM | 必须为空 | 建立 PLATFORM 上下文与平台 memberId；allows=[]，deptIds=[]；tenant 非空视为非法请求 |
 | TENANT | 非空 | 校验目标租户成员资格，建立 TENANT 上下文；allows 为该账号有效租户集合，deptIds 为当前任职 |
-| TENANT | 为空 | 成员资格选择阶段：只返回账号安全字段与 allows 供选择，不建立 AuthorizationContext、不返回 scopes/deptIds；客户端据 allows 携带 tenant 重新认证 |
+| TENANT | 为空 | 成员资格选择阶段：只返回账号安全字段与 allows 供选择，不建立 AuthorizationContext、不返回 scopes/deptIds；BFF 据合法选择携带 tenant 完成认证 |
 | 缺省 | 为空 | 兼容未升级客户端：ADMIN 用户类型按 PLATFORM 处理，Member(APP) 保持原行为 |
 | 缺省 | 非空 | 兼容未升级客户端：按 TENANT 处理 |
 

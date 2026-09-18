@@ -1,0 +1,33 @@
+meta {
+  name: 旧 version 再转交 expect-fail
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/settings/owner-transfer
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenZ}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "expectedVersion": "{{settingsVersionStale}}",
+    "newOwnerMemberId": "{{oldOwnerMemberId}}"
+  }
+}
+
+tests {
+  test("陈旧版本 409 RevisionConflict", function () {
+    expect(res.getStatus()).to.equal(409);
+    expect(res.getBody().code).to.equal("RevisionConflict");
+  });
+}

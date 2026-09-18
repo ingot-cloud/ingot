@@ -14,6 +14,7 @@ dependencies {
     implementation(deps.spring.spring_boot.data_redis_starter)
 
     compileOnly(deps.jakarta_servlet_api)
+    testImplementation(deps.jakarta_servlet_api)
 
     testImplementation(deps.spring.spring_boot.test)
     testCompileOnly(deps.lombok)

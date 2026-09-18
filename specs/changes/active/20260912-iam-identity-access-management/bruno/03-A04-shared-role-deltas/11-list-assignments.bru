@@ -1,0 +1,30 @@
+meta {
+  name: 确认共享分配仍在
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/assignments?page=1&pageSize=200
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+tests {
+  test("共享分配未被定制发布改掉", function () {
+    expect(res.getStatus()).to.equal(200);
+    const items = res.getBody().data.items || [];
+    const hit = items.some(i => String(i.record.id) === String(bru.getEnvVar("assignmentSharedYId"))
+      || (i.record.assignment && i.record.assignment.roleRevisionRef
+        && i.record.assignment.roleRevisionRef.id === bru.getEnvVar("sharedRevisionId")));
+    expect(hit).to.equal(true);
+  });
+}

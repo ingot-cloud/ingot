@@ -1,0 +1,35 @@
+meta {
+  name: 转交前读取设置
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{gateway}}/iam/v1/tenant/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data) {
+    bru.setEnvVar("settingsVersion", data.version);
+    bru.setEnvVar("settingsVersionStale", data.version);
+    bru.setEnvVar("oldOwnerMemberId", data.record.ownerMemberId);
+  }
+
+}
+
+tests {
+  test("记下转交前版本", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

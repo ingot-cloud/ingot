@@ -1,0 +1,33 @@
+meta {
+  name: 列出 iam-tenant 操作
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{gateway}}/iam/v1/platform/applications/{{iamTenantAppId}}/actions?page=1&pageSize=200
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenPlatform}}
+}
+
+script:post-response {
+  const items = (res.getBody().data && res.getBody().data.items) || [];
+  const byCode = {};
+  for (const i of items) byCode[i.record.code] = i.record.id;
+  if (byCode["iam-tenant:member:read"]) bru.setEnvVar("memberReadActionId", byCode["iam-tenant:member:read"]);
+  if (byCode["iam-tenant:member:update"]) bru.setEnvVar("memberUpdateActionId", byCode["iam-tenant:member:update"]);
+  if (byCode["iam-tenant:member:export"]) bru.setEnvVar("memberExportActionId", byCode["iam-tenant:member:export"]);
+
+}
+
+tests {
+  test("成员操作 ID 已保存", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(bru.getEnvVar("memberReadActionId")).to.be.a("string");
+    expect(bru.getEnvVar("memberUpdateActionId")).to.be.a("string");
+  });
+}

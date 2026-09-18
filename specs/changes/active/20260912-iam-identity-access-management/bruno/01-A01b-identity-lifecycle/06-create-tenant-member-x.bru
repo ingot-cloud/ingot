@@ -1,0 +1,42 @@
+meta {
+  name: X 加入组织 A
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{gateway}}/iam/v1/tenant/members
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenOwnerA}}
+}
+
+headers {
+  Tenant: {{tenantA}}
+}
+
+body:json {
+  {
+    "accountId": "{{accountXId}}",
+    "displayName": "A01b 租户成员",
+    "departments": [
+      { "id": "{{rootDeptId}}", "primary": true }
+    ]
+  }
+}
+
+script:post-response {
+  const data = res.getBody().data;
+  if (data && data.id) bru.setEnvVar("tenantMemberXId", data.id);
+
+}
+
+tests {
+  test("租户成员已创建", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data.id).to.be.a("string");
+  });
+}

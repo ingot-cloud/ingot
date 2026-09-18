@@ -12,16 +12,15 @@ spring:
       password: ${REDIS_PASSWORD:ingotredis}
   cloud:
     nacos:
+      server-addr: ${NACOS_SERVER_ADDR:localhost:8848,localhost:18848,localhost:28848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        server-addr: ${NACOS_HOST:ingot-nacos}:${NACOS_PORT:8848}
-        namespace: ingot
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:nacos}
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:DEV_GROUP}
       config:
-        server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        namespace: ${spring.cloud.nacos.discovery.namespace}
-        username: ${spring.cloud.nacos.discovery.username}
-        password: ${spring.cloud.nacos.discovery.password}
+        namespace: ${NACOS_NAMESPACE:ingot}
+        group: ${NACOS_GROUP:DEV_GROUP}
   config:
     import:
       - optional:nacos:application-common.yml

@@ -1,0 +1,55 @@
+meta {
+  name: 平台登录
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{auth}}/oauth2/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: {{platformUsername}}
+  password: {{platformPassword}}
+  user_type: 0
+  domain: PLATFORM
+}
+
+script:pre-request {
+  if (!bru.getEnvVar("runStamp")) {
+    bru.setEnvVar("runStamp", Date.now().toString(36));
+  }
+  const stamp = bru.getEnvVar("runStamp");
+  if (!bru.getEnvVar("accountXUsername")) bru.setEnvVar("accountXUsername", "a01b-x-" + stamp);
+  if (!bru.getEnvVar("accountYUsername")) bru.setEnvVar("accountYUsername", "a02-y-" + stamp);
+  if (!bru.getEnvVar("accountZUsername")) bru.setEnvVar("accountZUsername", "a26-z-" + stamp);
+  
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body && body.data.accessToken;
+  if (token) {
+    bru.setEnvVar("tokenPlatform", token);
+  }
+  
+}
+
+tests {
+  test("平台登录成功", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().access_token).to.be.a("string");
+  });
+}
+
+docs {
+  不传 org。保存 tokenPlatform。
+}

@@ -1,527 +1,192 @@
-# BFF 登录流程与调用链
+# BFF 双入口登录链路
 
-## 概述
+本文描述**当前实现**的登录、交接与会话链路，便于对照浏览器、Gateway、BFF、Auth 与 Redis。契约细节以 `specs/changes/active/20260912-iam-identity-access-management/BFF-LOGIN.md` 为准。
 
-BFF（Backend for Frontend）为内部前端系统提供安全的会话管理，封装了完整的 OAuth2 预授权→授权码→Token 流程。前端不接触任何 OAuth2 参数或 JWT，仅通过 HttpOnly Cookie 维持会话，网关自动将 Cookie Session 转换为 Bearer JWT 转发给下游微服务。
-
-## 架构总览
+## 1. 一眼看懂
 
 ```
-┌──────────┐      Cookie       ┌──────────┐   Session→JWT    ┌──────────────┐   Bearer JWT   ┌──────────────┐
-│          │ ◄──────────────── │          │ ───────────────► │              │ ─────────────► │              │
-│  前端 SPA │                   │   网关    │                  │  BFF 服务     │                │  Auth 服务    │
-│          │ ──────────────── ►│ (Gateway) │ ◄─────────────── │ (ingot-bff)  │ ◄───────────── │ (ingot-auth) │
-└──────────┘   只传业务参数      └──────────┘   Feign RPC      └──────────────┘   JSON 响应     └──────────────┘
-                                     │
-                                     │ Bearer JWT
-                                     ▼
-                              ┌──────────────┐
-                              │  下游微服务    │
-                              │ (IAM/Member)  │
-                              └──────────────┘
+管理台 /auth/start
+    │  POST /bff/auth/csrf          → Cookie IN_AUTH_BINDING（本 host）
+    │  POST /bff/auth/{entry}/transactions
+    ▼
+登录站 /oauth2/challenge?tx=…
+    │  POST /bff/auth/csrf          → 登录站自己的 IN_AUTH_BINDING
+    │  GET  /bff/auth/{entry}/transactions/{id}
+    │  POST /bff/auth/{entry}/login （HYBRID + CSRF）
+    │  [租户多候选] POST /bff/auth/tenant/select
+    │  Auth：pre_authorize → authorize → token（PKCE）
+    ▼
+管理台 /auth/complete?ticket=…
+    │  POST /bff/auth/{entry}/complete
+    │  校验 start 时记下的 adminBindingId（不要再轮换 CSRF）
+    ▼
+正式会话 Cookie IN_SESSION（本 host）
+    │  Gateway 读 Session → 注入 Authorization: Bearer
+    ▼
+下游微服务
 ```
 
-**核心原则：**
-- 前端只传业务参数（账号密码、租户选择），不传 OAuth2 参数
-- 前端不接收 JWT，只接收 HttpOnly Session Cookie（`IN_SESSION`）
-- 所有 OAuth2 参数（PKCE、state、redirect_uri）由 BFF 内部生成，无需 client_secret
-- 网关对下游透明注入 `Authorization: Bearer JWT`，下游服务权限逻辑零改动
+浏览器**不传** domain、OAuth 参数、跳转 URL。Gateway 用请求 **Host** 匹配 Nacos `ingot.bff.apps` 的 `admin-origin` / `login-origin`，写入内部头 `In-Inner-Bff-App-Id`、`In-Inner-Bff-Entry`。BFF 只认这组头，不认前端自报的身份。
 
-## 涉及的服务与组件
+## 2. 本机 DEV 四个域名
 
-| 组件 | 服务 | 核心类 | 职责 |
-|------|------|--------|------|
-| BFF API | `ingot-service-bff` | `BffAuthAPI` | REST 接口，接收前端请求 |
-| BFF 编排 | `ingot-service-bff` | `BffAuthService` | OAuth2 流程编排 |
-| BFF Session | `ingot-service-bff` | `BffSessionService` | Session 生命周期管理 |
-| Auth Feign | `ingot-service-bff` | `AuthClient` | 通过 Nacos 服务发现调用 auth |
-| 网关 Filter | `ingot-service-gateway` | `SessionTokenRelayFilter` | Session→JWT 转换 + 指纹校验 |
-| 来源校验 | `ingot-service-bff` | `BffOriginFilter` | Origin/Referer 白名单 |
-| 共享模型 | `ingot-commons` | `BffSession` | Redis 中的会话数据模型 |
-| 共享常量 | `ingot-commons` | `CacheConstants` | Redis key 构建、Cookie 名称 |
-| 指纹工具 | `ingot-commons` | `FingerprintUtil` | 设备指纹 / IP+UA 降级计算 |
+Gateway / BFF 共用 Nacos `DEV_GROUP` 的 `in-bff-apps.yml`（`require-https: false`）。**必须同步到运行中的 Nacos**，改仓库文件不会自动生效。
 
-## 登录流程详解
+| 站点 | 本机 URL | Nacos origin | Vite 端口 |
+|------|----------|--------------|-----------|
+| 租户管理台 | http://tenant.local:5798 | `admin-origin` | 5798 |
+| 租户登录 | http://tenant-login.local:1798 | `login-origin` | 1798 |
+| 平台管理台 | http://platform.local:5799 | `admin-origin` | 5799 |
+| 平台登录 | http://platform-login.local:1799 | `login-origin` | 1799 |
 
-### 第一步：预授权登录（账号密码 → 可选租户列表）
+先写 hosts（`.local` 走 mDNS，**不会**像 `*.localhost` 自动指向本机）：
 
-**前端请求：**
-
-```http
-POST /bff/auth/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "123456",
-  "vcCode": "可选验证码"
-}
+```text
+127.0.0.1 tenant.local tenant-login.local platform.local platform-login.local
 ```
 
-**内部调用链：**
+然后用上表 hostname 打开页面，不要再用 `http://localhost:5798`。Host 对不上注册表时 Gateway 直接 403。
 
-```
-前端                  网关                    BFF                                Auth 服务                Redis
- │                    │                      │                                    │                       │
- │ POST /bff/auth/    │                      │                                    │                       │
- │ login              │                      │                                    │                       │
- │ ──────────────►    │                      │                                    │                       │
- │                    │ 白名单放行             │                                    │                       │
- │                    │ ────────────────►     │                                    │                       │
- │                    │                      │ 1. 生成 PKCE:                       │                       │
- │                    │                      │    code_verifier (随机32字节)        │                       │
- │                    │                      │    code_challenge = SHA256(verifier) │                       │
- │                    │                      │    state (随机8字节)                 │                       │
- │                    │                      │    redirect_uri (从配置读取)         │                       │
- │                    │                      │                                    │                       │
- │                    │                      │ 2. Feign: POST /oauth2/pre_authorize│                       │
- │                    │                      │    (PKCE 公开客户端, 无 Basic Auth)                          │
- │                    │                      │    Query: user_type, pre_grant_type=password,                │
- │                    │                      │           client_id, code_challenge,                         │
- │                    │                      │           response_type=code, redirect_uri,                  │
- │                    │                      │           scope, state                                       │
- │                    │                      │    Body: username, password, _vc_code                        │
- │                    │                      │ ──────────────────────────────────► │                       │
- │                    │                      │                                    │ 验证账号密码            │
- │                    │                      │                                    │ 查询可登录的租户列表     │
- │                    │                      │                                    │ 创建 SecurityContext    │
- │                    │                      │                                    │ ──────────────────►    │
- │                    │                      │                                    │ SET in:security_context│
- │                    │                      │                                    │    :{sessionId}        │
- │                    │                      │                                    │                       │
- │                    │                      │ ◄──────────────────────────────── │                       │
- │                    │                      │    R<{allows: [{id,name,avatar}]}>  │                       │
- │                    │                      │    Set-Cookie: JSESSIONID=xxx       │                       │
- │                    │                      │                                    │                       │
- │                    │                      │ 3. 创建 BFF Session:                │                       │
- │                    │                      │    sessionId = UUID                 │                       │
- │                    │                      │    fingerprint = In-Ca-Sig Header    │                       │
- │                    │                      │    accessToken = code_verifier (暂存)│                      │
- │                    │                      │    refreshToken = state|redirect_uri │                      │
- │                    │                      │ ──────────────────────────────────────────────────────►    │
- │                    │                      │                      SET in:bff_session:{sessionId} 7天TTL  │
- │                    │                      │                                    │                       │
- │                    │ ◄──────────────────  │                                    │                       │
- │ ◄──────────────── │                      │                                    │                       │
- │  R<{allows:[...]}>│                      │                                    │                       │
- │  Set-Cookie:      │                      │                                    │                       │
- │   IN_SESSION=xxx  │                      │                                    │                       │
- │   HttpOnly        │                      │                                    │                       │
- │   SameSite=Lax    │                      │                                    │                       │
-```
+四个 hostname 各自一份 **host-only** Cookie（不写 `Domain`）。不要把前端 `VITE_APP_COOKIE_DOMAIN` 配成 `.local`，否则四个站点会串 Cookie。
 
-**响应示例：**
+OAuth `oauth-redirect-uri` 仍是网关协议回调（如 `http://localhost:5400/bff/auth/tenant/callback`）。BFF 请求带 `pre_grant_type`，Auth **不 302**，只在 JSON 里回授权码。浏览器不会打开这个地址。
 
-```json
-{
-  "code": "S0200",
-  "data": {
-    "allows": [
-      { "id": "1", "name": "IngotCloud", "avatar": "url", "main": true },
-      { "id": "2", "name": "测试组织", "avatar": "url", "main": false }
-    ]
-  }
-}
-```
+Vite `/api` 代理到 Gateway，且 `changeOrigin: false`，这样 Gateway 看到的 Host 仍是 `tenant.local:5798` 这类前端主机名。
 
-响应头包含 `Set-Cookie: IN_SESSION=xxx; Path=/; HttpOnly; SameSite=Lax`。
+## 3. 角色与存储
 
-### 第二步：选择租户（完成授权码+Token换取）
-
-**前端请求：**
-
-```http
-POST /bff/auth/tenant/select
-Content-Type: application/json
-Cookie: IN_SESSION=xxx
-
-{
-  "tenantId": "1"
-}
-```
-
-**内部调用链：**
-
-```
-前端                  网关                    BFF                                Auth 服务                Redis
- │                    │                      │                                    │                       │
- │ POST /bff/auth/    │                      │                                    │                       │
- │ tenant/select      │                      │                                    │                       │
- │ Cookie: IN_SESSION │                      │                                    │                       │
- │ ──────────────►    │                      │                                    │                       │
- │                    │ 白名单放行             │                                    │                       │
- │                    │ ────────────────►     │                                    │                       │
- │                    │                      │                                    │                       │
- │                    │                      │ 1. 从 Cookie 获取 sessionId         │                       │
- │                    │                      │ ◄──────────────────────────────────────────────────────── │
- │                    │                      │    GET in:bff_session:{sessionId}                          │
- │                    │                      │    → 恢复 code_verifier, state, redirect_uri               │
- │                    │                      │    → 校验客户端指纹                                         │
- │                    │                      │                                    │                       │
- │                    │                      │ 2. Feign: GET /oauth2/authorize     │                       │
- │                    │                      │    Cookie: JSESSIONID=xxx (转发auth session)                │
- │                    │                      │    Query: pre_grant_type=session,                           │
- │                    │                      │           org={tenantId}, client_id,                        │
- │                    │                      │           code_challenge, response_type=code,               │
- │                    │                      │           redirect_uri, scope, state                        │
- │                    │                      │ ──────────────────────────────────► │                       │
- │                    │                      │                                    │ 从 SecurityContext     │
- │                    │                      │                                    │ 恢复预授权认证信息      │
- │                    │                      │                                    │ 校验 tenant 在 allow  │
- │                    │                      │                                    │ list 中               │
- │                    │                      │                                    │ 生成授权码 code        │
- │                    │                      │ ◄──────────────────────────────── │                       │
- │                    │                      │    R<{code:"abc", state:"xyz"}>     │                       │
- │                    │                      │    ⚠️ 因为有 pre_grant_type 参数,     │                       │
- │                    │                      │    auth 直接返回 JSON 而非 302 重定向  │                       │
- │                    │                      │                                    │                       │
- │                    │                      │ 3. Feign: POST /oauth2/token        │                       │
- │                    │                      │    (PKCE 公开客户端, 无 Basic Auth)                          │
- │                    │                      │    Body: code=abc,                  │                       │
- │                    │                      │          grant_type=authorization_code,                      │
- │                    │                      │          code_verifier={pkce_verifier},                      │
- │                    │                      │          client_id, redirect_uri    │                       │
- │                    │                      │ ──────────────────────────────────► │                       │
- │                    │                      │                                    │ 校验 code             │
- │                    │                      │                                    │ 校验 PKCE             │
- │                    │                      │                                    │ 签发 JWT              │
- │                    │                      │ ◄──────────────────────────────── │                       │
- │                    │                      │    R<{accessToken, refreshToken, expiresIn}>                 │
- │                    │                      │                                    │                       │
- │                    │                      │ 4. 更新 BFF Session:                │                       │
- │                    │                      │    accessToken = JWT (真正的)        │                       │
- │                    │                      │    refreshToken = refresh_token      │                       │
- │                    │                      │    expiresAt = now + expiresIn       │                       │
- │                    │                      │    tenantId = "1"                   │                       │
- │                    │                      │ ──────────────────────────────────────────────────────►    │
- │                    │                      │                      SET in:bff_session:{sessionId}          │
- │                    │                      │                                    │                       │
- │                    │ ◄──────────────────  │                                    │                       │
- │ ◄──────────────── │                      │                                    │                       │
- │  R<ok>            │   ⚠️ 注意: 不返回     │                                    │                       │
- │                    │   JWT 给前端！         │                                    │                       │
-```
-
-**响应示例：**
-
-```json
-{
-  "code": "S0200"
-}
-```
-
-此时登录完成。JWT 存储在 Redis 的 BFF Session 中，前端不可见。
-
-### 第三步：业务请求（网关自动注入 JWT）
-
-**前端请求（任意业务接口）：**
-
-```http
-GET /api/iam/user/list
-Cookie: IN_SESSION=xxx
-```
-
-**网关 SessionTokenRelayFilter 处理流程：**
-
-```
-前端                  网关 (SessionTokenRelayFilter)              Redis               下游微服务 (IAM)
- │                    │                                           │                    │
- │ GET /api/iam/...   │                                           │                    │
- │ Cookie: IN_SESSION │                                           │                    │
- │ ──────────────►    │                                           │                    │
- │                    │ 1. 检查 Authorization 头                    │                    │
- │                    │    → 无 Bearer token                       │                    │
- │                    │                                           │                    │
- │                    │ 2. 读 Cookie IN_SESSION                    │                    │
- │                    │    → sessionId = xxx                       │                    │
- │                    │                                           │                    │
- │                    │ 3. 查 Redis                                │                    │
- │                    │ ──────────────────────────────────────►    │                    │
- │                    │    GET in:bff_session:{sessionId}          │                    │
- │                    │ ◄──────────────────────────────────────    │                    │
- │                    │    → 反序列化为 BffSession 对象              │                    │
- │                    │                                           │                    │
- │                    │ 4. 指纹校验                                 │                    │
- │                    │    stored = session.fingerprint             │                    │
- │                    │    current = In-Ca-Sig Header (设备指纹)     │                    │
- │                    │    → 不匹配则返回 401                       │                    │
- │                    │                                           │                    │
- │                    │ 5. 注入 JWT                                 │                    │
- │                    │    Authorization: Bearer {session.accessToken}                   │
- │                    │ ──────────────────────────────────────────────────────────────► │
- │                    │                                           │                    │
- │                    │                                           │          JWT 校验    │
- │                    │                                           │          权限检查    │
- │                    │                                           │          业务处理    │
- │                    │ ◄──────────────────────────────────────────────────────────── │
- │ ◄──────────────── │                                           │                    │
- │    业务响应         │                                           │                    │
-```
-
-**关键点：** 下游微服务（IAM、Member 等）的 JWT 校验和权限逻辑**完全不需要改动**，它们看到的就是标准的 `Authorization: Bearer JWT` 请求。
-
-### 第四步：登出
-
-**前端请求：**
-
-```http
-DELETE /bff/auth/logout
-Cookie: IN_SESSION=xxx
-```
-
-**内部调用链：**
-
-```
-前端                  BFF                                Auth 服务                Redis
- │                    │                                    │                       │
- │ DELETE /bff/auth/  │                                    │                       │
- │ logout             │                                    │                       │
- │ ──────────────►    │                                    │                       │
- │                    │ 1. 从 Session 取出 accessToken      │                       │
- │                    │ ◄──────────────────────────────────────────────────────── │
- │                    │    GET in:bff_session:{sessionId}                          │
- │                    │                                    │                       │
- │                    │ 2. Feign: DELETE /token              │                       │
- │                    │    Authorization: Bearer {jwt}      │                       │
- │                    │ ──────────────────────────────────► │                       │
- │                    │                                    │ 删除 OAuth2Authorization│
- │                    │                                    │ 撤销 SecurityContext   │
- │                    │                                    │ 移除 OnlineToken       │
- │                    │                                    │ ──────────────────►    │
- │                    │ ◄──────────────────────────────── │                       │
- │                    │                                    │                       │
- │                    │ 3. 清除 BFF Session                 │                       │
- │                    │ ──────────────────────────────────────────────────────►    │
- │                    │    DEL in:bff_session:{sessionId}                          │
- │                    │                                    │                       │
- │ ◄──────────────── │                                    │                       │
- │  R<ok>            │                                    │                       │
- │  Set-Cookie:      │                                    │                       │
- │   IN_SESSION=;    │                                    │                       │
- │   Max-Age=0       │                                    │                       │
-```
-
-## Redis 数据结构
-
-### BFF Session
-
-- **Key**: `in:bff_session:{sessionId}`（通过 `CacheConstants.bffSessionKey(sessionId)` 构建）
-- **TTL**: 7 天（可配置 `ingot.bff.session-ttl`）
-- **Value**: JSON 序列化的 `BffSession` 对象
-
-```json
-{
-  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "xxxxxx",
-  "expiresAt": 1743580800,
-  "tenantId": "1",
-  "userId": 100,
-  "clientId": "ingot-bff",
-  "createdAt": 1743494400,
-  "fingerprint": "a1b2c3d4e5f6..."
-}
-```
-
-> **注意**: 在登录第一步（预授权）完成后、选租户之前，`accessToken` 暂存 PKCE `code_verifier`，`refreshToken` 暂存 `state|redirect_uri`。选租户成功后这两个字段会被真正的 JWT 和 refresh_token 覆盖。
-
-### Auth SecurityContext
-
-- **Key**: `in:security_context:{sessionId}`
-- **用途**: auth 服务的预授权 session，存储已认证的用户信息和可选租户列表
-- **生命周期**: 由 auth 服务管理，BFF 不直接操作
-
-## 安全机制
-
-### 1. Cookie 安全属性
-
-| 属性 | 说明 | 开发环境 | 生产环境 |
-|------|------|----------|----------|
-| `HttpOnly` | JS 无法读取 Cookie | ✅ 固定开启 | ✅ 固定开启 |
-| `Secure` | 仅 HTTPS 传输 | `false` | `true` |
-| `SameSite` | 跨站请求策略 | `Lax` | `Lax` 或 `Strict` |
-| `Domain` | Cookie 作用域 | 不设置（仅当前域） | `.ingotcloud.top`（子域共享） |
-| `Path` | Cookie 路径 | `/` | `/` |
-
-### 2. 客户端设备指纹校验
-
-采用**前端设备指纹**方案（推荐），取代传统的 IP+UA 方式。前端通过浏览器 API 计算一个稳定的设备标识，每次请求通过 `In-Ca-Sig` Header 传递。
-
-**为什么不用 IP+UA？**
-
-| 问题 | 说明 |
+| 组件 | 职责 |
 |------|------|
-| Docker/K8s 部署 | 容器看到的是内网 IP 或代理 IP，非真实客户端 IP |
-| 反向代理多层嵌套 | X-Forwarded-For 可被伪造或丢失 |
-| 移动端 WiFi↔4G 切换 | IP 频繁变化导致合法用户被踢 |
-| 企业多出口 NAT | 同一用户不同请求走不同出口 IP |
+| 管理台 SPA | `/auth/start` 开事务；`/auth/complete` 用 ticket 换正式会话；之后走 IAM |
+| 登录站 SPA | 凭证、挑战、租户选择；**不能** `complete` / `me` / `logout` |
+| Gateway | Host→appId；剥伪造内部头；正式 `IN_SESSION` → Bearer JWT |
+| BFF | CSRF/绑定、LoginTransaction、编排 Auth RPC、发 Cookie |
+| Auth | 预授权、授权码+PKCE、签发 JWT；BFF 客户端为 `in-bff-tenant` / `in-bff-platform` |
 
-**设备指纹如何工作？**
+Redis（前缀 `in:`）：
 
-```
-前端登录时:
-  1. 采集浏览器特征(UA + 语言 + 分辨率 + 时区 + Canvas + WebGL + ...)
-  2. SHA-256 → 设备指纹值 (如 "a1b2c3d4...")
-  3. 每次请求带上 Header: In-Ca-Sig: a1b2c3d4...
+| Key | 内容 | 默认 TTL |
+|-----|------|----------|
+| `in:bff_auth_binding:{bindingId}` | CSRF + appId | 与事务相同，约 600s |
+| `in:bff_login_tx:{transactionId}` | 登录事务（PKCE、Auth cookie、ticket、两站点 binding） | 600s |
+| ticket 索引 | ticket → transactionId | 60s，且不超过事务剩余 |
+| `in:bff_session:{sessionId}` | 正式会话（accessToken 等） | 小时～天（`session-ttl`） |
+| `in:security_context:{sid}` | Auth 侧 SecurityContext | Auth 既有 |
 
-后端:
-  1. 登录时: session.fingerprint = request.getHeader("In-Ca-Sig")
-  2. 后续: 对比 session.fingerprint == request.getHeader("In-Ca-Sig")
-```
+Cookie（DEV HTTP，`require-https: false`）：
 
-**安全性分析：**
-
-| 威胁 | 防护 | 说明 |
+| 名称 | 谁写 | 谁读 |
 |------|------|------|
-| MITM（中间人） | HTTPS/TLS | 指纹不防 MITM，这是 HTTPS 的职责 |
-| XSS 窃取 Cookie | 设备指纹 | 攻击者的设备特征不同，指纹必然不匹配 |
-| Cookie 泄露（日志/共享电脑） | 设备指纹 | 其他设备上无法计算出相同指纹 |
-| 伪造 In-Ca-Sig Header | HTTPS | 攻击者看不到 Header 值（HTTPS 加密） |
+| `IN_AUTH_BINDING` | BFF `POST /csrf` | 状态修改请求；**Gateway 不做 JWT 中继** |
+| `IN_SESSION` | BFF `complete` | Gateway 中继 + `me` / `logout` |
 
-> **Header 使用 `In-Ca-Sig`（非语义化名称），不暴露用途。**
-> 与网关内部头 `In-Inner-Client-Real-IP`（客户端 IP 标准化）区分：前者由前端携带，后者仅网关写入。
+属性：Path=/、HttpOnly、SameSite=Lax、无 Domain、无 Secure。HTTPS 环境改为 `__Host-IN_*` + Secure。
 
-校验发生在**两个层级**（纵深防御）：
+事务里两个绑定：
 
-| 校验层 | 位置 | 保护范围 |
-|--------|------|----------|
-| **网关** `SessionTokenRelayFilter` | 每次 Session→JWT 转换前 | **所有** 通过 session 访问的请求 |
-| **BFF** `BffSessionService.getSession()` | BFF 自身读取 session 时 | BFF 服务的 API |
+- `adminBindingId`：管理台 **start 那一次** CSRF 绑定。complete 必须仍是这个 Cookie，不能在完成页再 `POST /csrf` 轮换。
+- `loginBindingId`：登录站第一次 `GET transactions/{id}` 时钉死。login / select 必须还是这个浏览器。
 
-两层都优先从 `In-Ca-Sig` 读取设备指纹，Header 不存在时降级为 IP+UA 计算（兼容未改造的前端）。
+## 4. 逐步调用链
 
-**配置项：**
+浏览器路径都带同源 `/api` 前缀。`{entry}` 为 `tenant` 或 `platform`。状态修改请求带 `X-CSRF-Token`，与当前 host 的绑定 Cookie 对应 Redis 记录核对。
 
-```yaml
-ingot:
-  bff:
-    security:
-      fingerprint-enabled: true
-      # device（推荐）: 前端设备指纹 | ip_ua: 服务端 IP+UA（降级方案）
-      fingerprint-mode: device
+### 4.1 管理台开事务
+
+1. 打开 `{adminOrigin}/auth/start`。
+2. `GET /bff/auth/me`：已有有效 `IN_SESSION` 则落地 `defaultReturnTo`（`/`），不再开事务。
+3. 否则 **强制** `POST /bff/auth/csrf`（轮换绑定，丢掉前端缓存的旧 token），再 `POST /bff/auth/{entry}/transactions`。
+4. BFF 校验内部头是 **admin**、路径与 `domain` 一致；记下 `adminBindingId`、PKCE `code_verifier`、OAuth `state`。
+5. 返回 `{transactionId, loginUrl}`。`loginUrl` 仅为 `{loginOrigin}/oauth2/challenge?tx={transactionId}`。
+6. 浏览器顶层跳转到登录站。
+
+### 4.2 登录站认证
+
+1. 无 `tx`：跳回配对管理台 `{adminOrigin}/auth/start`（构建期 `VITE_APP_ADMIN_START_URL`）。
+2. 按当前 `tx` 决定是否 `POST /csrf`：新事务或 CSRF 缓存不属于该事务则重签，并绑定 `transactionId`。同一事务内挑战重试复用。
+3. `GET /bff/auth/{entry}/transactions/{id}`：校验入口为 **login**，写入 `loginBindingId`（已有则必须相同）。
+4. `POST /bff/auth/{entry}/login`（整包 HYBRID）：校验 CSRF + `loginBindingId`。
+5. BFF Feign `preAuthorize`：账号密码、`domain`、PKCE challenge、注册表里的 `oauth-client-id` / `oauth-redirect-uri`。Auth 错误（如「用户名或密码错误」）原样回传 `code`/`message`，不改成 `S0500`。
+6. 平台：无租户候选，直接授权换码。租户：零候选 → `BFF_IDENTITY_UNAVAILABLE`；单候选自动 `authorize`；多候选返回 `SELECT_TENANT`。
+7. 多候选时 `POST /bff/auth/tenant/select`，再 `authorize`。授权时重新校验成员资格。
+8. `authorize` + `token`（`code_verifier`）成功后，Token **先放在事务里**，签发一次性 `ticket`（默认 60s），返回 `READY` 与 `completionUrl`：`{adminOrigin}/auth/complete?ticket=…`。
+
+### 4.3 管理台完成交接
+
+1. 完成页立刻从 URL 去掉 `ticket`（`replaceState`）。
+2. `POST /bff/auth/{entry}/complete`：用 **start 时** 的绑定 Cookie + sessionStorage 里的 CSRF（`ensureCsrf` 有 token 就不再签发）。
+3. BFF 消费 ticket，核对 `adminBindingId`，创建 `BffSession`，写本 host `IN_SESSION`，删除事务与 ticket。
+4. 返回 `returnTo`（恒为注册表 `defaultReturnTo`）。前端可再恢复本 origin `sessionStorage` 里的相对深链。
+5. 管理台 `GET /me` + bootstrap，校验 `appId`/`domain` 与本产物一致。
+
+### 4.4 登录后与退出
+
+- 业务请求：Gateway 读 `IN_SESSION` → Redis → `Authorization: Bearer`。绑定 Cookie 不会触发中继。csrf / transactions / login / select / complete 即使带绑定 Cookie 也不注入 Bearer。
+- `DELETE /bff/auth/logout`：撤销当前应用 Auth sid，清本 host 正式 Cookie 与绑定 Cookie。另一域会话不受影响。
+
+## 5. 时序（租户多候选）
+
+```mermaid
+sequenceDiagram
+    participant Admin as 租户管理台<br/>tenant.local:5798
+    participant Login as 租户登录站<br/>tenant-login.local:1798
+    participant GW as Gateway
+    participant BFF as BFF
+    participant Auth as Auth
+    participant Redis as Redis
+
+    Admin->>GW: POST /bff/auth/csrf
+    GW->>BFF: Host 匹配 tenant-admin / admin
+    BFF->>Redis: 轮换 in:bff_auth_binding
+    Admin->>GW: POST /bff/auth/tenant/transactions
+    BFF->>Redis: 写 LoginTransaction（adminBindingId）
+    BFF-->>Admin: loginUrl + tx
+    Admin->>Login: 顶层跳转 ?tx=
+
+    Login->>GW: POST /bff/auth/csrf
+    BFF->>Redis: 登录站新 binding
+    Login->>GW: GET /bff/auth/tenant/transactions/{id}
+    BFF->>Redis: 钉死 loginBindingId
+    Login->>GW: POST /bff/auth/tenant/login
+    BFF->>Auth: pre_authorize（password + PKCE）
+    Auth-->>BFF: allows[]
+    BFF-->>Login: SELECT_TENANT
+    Login->>GW: POST /bff/auth/tenant/select
+    BFF->>Auth: authorize + token
+    BFF->>Redis: READY + ticket
+    BFF-->>Login: completionUrl
+    Login->>Admin: 顶层跳转 ?ticket=
+
+    Admin->>GW: POST /bff/auth/tenant/complete
+    BFF->>Redis: 校验 adminBindingId，写 BffSession
+    BFF-->>Admin: Set-Cookie IN_SESSION
 ```
 
-### 3. 请求来源校验
+平台链路相同，但 login 成功后直接 READY，没有 select。
 
-`BffOriginFilter` 校验 `Origin` / `Referer` Header 是否在白名单中：
+## 6. 关键校验（对照排错）
 
-```yaml
-ingot:
-  bff:
-    security:
-      allowed-origins:
-        - https://admin.ingotcloud.top
-        - https://console.ingotcloud.top
-```
+| 现象 | 常见原因 |
+|------|----------|
+| Gateway 403 | 浏览器 Host 不在 `in-bff-apps.yml`（仍用 localhost、hosts 未写、Nacos 未刷新） |
+| `BFF_ENTRY_MISMATCH` | 管理台打了 login 接口，或内部头与路径不一致 |
+| `BFF_BINDING_MISMATCH` | CSRF 与 Cookie 脱节；complete 时绑定被轮换；换了浏览器/隐私窗口 |
+| `BFF_TRANSACTION_EXPIRED` / 410 | 事务超过约 10 分钟 |
+| `BFF_TICKET_INVALID` | ticket 用过、过期、或 appId 不符 |
+| `unauthorized_client` | Auth 客户端缺 `pre_authorization_code` / `authorization_code`，或 redirect_uri 与 Nacos 不一致 |
+| Vite “host is not allowed” | 未放行 `.local`（`packages/vite-config` 已 `allowedHosts: true`） |
 
-未配置时跳过校验（适用于开发环境），生产环境**必须配置**。
+事务过期或绑定不匹配时，登录站清本 origin CSRF 缓存，跳回配对 `/auth/start`。不要跨租户/平台互跳。
 
-### 4. PKCE 保护
+## 7. 配置落点
 
-OAuth 2.1 对授权码模式强制要求 PKCE（Proof Key for Code Exchange），预授权流程最终也是走授权码模式，因此 BFF 全程使用 PKCE：
+| 项 | 位置 |
+|----|------|
+| 四站点 origin、`require-https` | Nacos `in-bff-apps.yml`（仅 Gateway、BFF import） |
+| 事务/ticket/session TTL、指纹 | Nacos `in-service-bff.yml` |
+| OAuth 客户端 | `oauth2_registered_client`，种子 `databases/bff_client_init.sql` |
+| 管理台回跳登录前地址 | 登录应用 `VITE_APP_ADMIN_START_URL` |
+| 前端 JS Cookie Domain | `VITE_APP_COOKIE_DOMAIN` 本机留空；生产才写父域 |
+| 网关路由 | `/bff/**` → `ingot-service-bff` |
 
-1. **login** 阶段生成 `code_verifier`（随机 32 字节），计算 `code_challenge = SHA256(verifier)`
-2. `code_challenge` 随 `pre_authorize` 请求发送给 auth
-3. **selectTenant** 阶段用 `code_verifier` 随 token 请求发送
-4. auth 服务校验 `SHA256(code_verifier) == code_challenge`
-
-确保授权码不会被中间人截获后使用。
-
-## 关于 redirect_uri
-
-`redirect_uri` 通过 `BffProperties.redirectUri` 配置，必须与 `oauth2_registered_client` 表中注册的值保持一致。
-
-**为什么不动态推导？**
-在 Docker/K8s 环境中，`request.getServerName()` 返回的是容器内部 IP（如 `172.18.0.5`），而非外部域名；开发环境中也可能拿到局域网 IP（如 `192.168.1.130`）而非 `localhost`，与客户端注册的 `redirect_uris` 不匹配会导致 Auth 服务校验失败。因此采用配置方式，由环境变量按环境覆盖。
-
-**重要：这个地址不需要实际的接收端点。** 原因在于 auth 服务的 `AuthorizationCodeAuthenticationSuccessHandler`：
-
-```java
-// 如果包含 pre_grant_type，代表是预授权过来的
-if (parameters.containsKey(InOAuth2ParameterNames.PRE_GRANT_TYPE)) {
-    sendResponse(request, response, authentication);  // 直接返回 JSON
-    return;
-}
-defaultRedirect(request, response, authentication);   // 标准 302 重定向
-```
-
-BFF 的请求都携带 `pre_grant_type=session`，所以 auth 服务**直接在 HTTP Body 中返回 JSON**（包含授权码），不发生 302 重定向。`redirect_uri` 仅用于 OAuth2 协议校验（authorize 和 token 请求中必须一致，且在客户端注册的 `redirect_uris` 列表中）。
-
-## 配置参考
-
-### BFF 服务（`ingot-service-bff`）
-
-```yaml
-ingot:
-  bff:
-    client-id: ingot-bff
-    # 无需 client-secret（PKCE 公开客户端）
-    redirect-uri: ${BFF_REDIRECT_URI:http://localhost:5400/bff/auth/callback}
-    scope: system
-    user-type: "0"
-    session-ttl: 604800  # 7天
-    cookie:
-      domain: ${BFF_COOKIE_DOMAIN:}           # 生产: .ingotcloud.top
-      secure: ${BFF_COOKIE_SECURE:false}       # 生产: true
-      same-site: ${BFF_COOKIE_SAME_SITE:Lax}
-    security:
-      fingerprint-enabled: ${BFF_FINGERPRINT_ENABLED:true}
-      fingerprint-mode: ${BFF_FINGERPRINT_MODE:device}
-      allowed-origins:                         # 生产必须配置
-        - https://admin.ingotcloud.top
-```
-
-### 网关路由
-
-```yaml
-spring:
-  cloud:
-    gateway:
-      routes:
-        - id: ingot-service-bff
-          uri: lb://ingot-service-bff
-          predicates:
-            - Path=/bff/**
-```
-
-### OAuth2 Client 注册
-
-BFF 专属客户端需要在 `oauth2_registered_client` 表中注册，参见 `databases/bff_client_init.sql`。
-
-| 字段 | 值 | 说明 |
-|------|-----|------|
-| `client_id` | `ingot-bff` | |
-| `client_secret` | `NULL` | PKCE 公开客户端，无需密钥 |
-| `client_authentication_methods` | `none,pre_auth` | `none` 用于 token 端点，`pre_auth` 用于预授权 |
-| `authorization_grant_types` | `pre_authorization_code,authorization_code` | 公开客户端不签发 refresh_token |
-| `redirect_uris` | `http://localhost:5400/bff/auth/callback` | 生产环境需更新 |
-| `require-proof-key` | `true` | 强制 PKCE |
-
-## 前端设备指纹集成
-
-前端需要在每次请求中携带 `In-Ca-Sig` Header，值为设备指纹。详见 `docs/modules/authorization-server/DEVICE-FINGERPRINT.md`。
-
-**快速集成（axios 示例）：**
-
-```javascript
-import { generateFingerprint } from '@/utils/fingerprint';
-
-// 应用启动时生成一次，缓存在内存中
-let cachedFingerprint = null;
-
-axios.interceptors.request.use(async (config) => {
-  if (!cachedFingerprint) {
-    cachedFingerprint = await generateFingerprint();
-  }
-  config.headers['In-Ca-Sig'] = cachedFingerprint;
-  return config;
-});
-```
-
-## 接口速查
-
-| 接口 | 方法 | 说明 | 请求参数 | 响应 |
-|------|------|------|----------|------|
-| `/bff/auth/login` | POST | 账号密码登录 | `{"username","password","vcCode"}` | 可选租户列表 + Set-Cookie |
-| `/bff/auth/tenant/select` | POST | 选择租户完成登录 | `{"tenantId"}` | `R<ok>` |
-| `/bff/auth/logout` | DELETE | 登出 | 无（Cookie 自动携带） | `R<ok>` + 清除 Cookie |
-| `/bff/auth/me` | GET | 当前用户信息 | 无（Cookie 自动携带） | `{tenantId, userId, clientId}` |
+TEST / PROD 仍是 HTTPS 四主机 + `__Host-` Cookie，见各环境 `in-bff-apps.yml`。不要把 `http://IP:端口` 配进已部署环境。
