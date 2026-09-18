@@ -10,4 +10,12 @@ dependencies {
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.spring_cloud.openfeign_starter)
     compileOnly(deps.spring.security_web)
+
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.framework_spring_web)
+    testImplementation(deps.jakarta_servlet_api)
+}
+
+test {
+    useJUnitPlatform()
 }

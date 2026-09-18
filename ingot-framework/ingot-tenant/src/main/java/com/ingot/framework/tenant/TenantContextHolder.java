@@ -4,75 +4,57 @@ import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 /**
- * <p>Description  : TenantContextHolder.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/11/24.</p>
- * <p>Time         : 10:02 下午.</p>
+ * <p>保存当前线程的租户 ID 与是否跳过隔离的标志。</p>
+ *
+ * <p>未设置时 {@link #get()} 返回 {@code null}，表示当前请求不属于任何租户。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 public class TenantContextHolder {
 
     private static final ThreadLocal<Long> THREAD_CONTEXT = new TransmittableThreadLocal<>();
-    private static final ThreadLocal<Boolean> THREAD_CONTEXT_FLAG = new TransmittableThreadLocal<>();
     private static final ThreadLocal<Boolean> THREAD_SKIP_FLAG = new TransmittableThreadLocal<>();
 
     /**
-     * 设置租户ID
+     * 写入当前线程的租户 ID；传入 {@code null} 表示不属于任何租户。
      *
-     * @param id 租户ID
+     * @param id 租户 ID，可为 {@code null}
      */
     public static void set(Long id) {
         THREAD_CONTEXT.set(id);
-        THREAD_CONTEXT_FLAG.set(Boolean.FALSE);
     }
 
     /**
-     * 获取租户ID
+     * 读取当前线程的租户 ID。
      *
-     * @return 租户ID
+     * @return 租户 ID；未设置时为 {@code null}
      */
     public static Long get() {
         return THREAD_CONTEXT.get();
     }
 
     /**
-     * 设置默认组合ID
-     */
-    public static void setDefault(Long id) {
-        THREAD_CONTEXT.set(id);
-        THREAD_CONTEXT_FLAG.set(Boolean.TRUE);
-    }
-
-    /**
-     * 当前租户ID是否为默认租户ID
-     *
-     * @return Boolean
-     */
-    public static Boolean isUseDefault() {
-        return BooleanUtil.isTrue(THREAD_CONTEXT_FLAG.get());
-    }
-
-    /**
-     * 跳过租户处理
+     * 标记当前线程跳过租户隔离。
      */
     public static void skip() {
         THREAD_SKIP_FLAG.set(Boolean.TRUE);
     }
 
     /**
-     * 是否跳过租户处理
+     * 当前线程是否跳过租户隔离。
      *
-     * @return {@link Boolean}
+     * @return 已调用 {@link #skip()} 时为 {@code true}
      */
     public static Boolean isSkip() {
         return BooleanUtil.isTrue(THREAD_SKIP_FLAG.get());
     }
 
     /**
-     * 清空
+     * 清空当前线程的租户 ID 与跳过标志。
      */
     public static void clear() {
         THREAD_CONTEXT.remove();
-        THREAD_CONTEXT_FLAG.remove();
         THREAD_SKIP_FLAG.remove();
     }
 }

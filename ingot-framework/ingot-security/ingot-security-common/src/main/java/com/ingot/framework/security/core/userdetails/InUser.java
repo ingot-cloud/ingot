@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,8 +119,8 @@ public class InUser extends User implements InUserDetails {
         this.clientId = clientId;
         this.userType = userType;
         this.meta = meta;
-        this.deptIds = authorizationContext != null && deptIds != null ? List.copyOf(deptIds) : deptIds;
-        this.tenantDeptIds = authorizationContext != null && tenantDeptIds != null ? Map.copyOf(tenantDeptIds) : tenantDeptIds;
+        this.deptIds = copyDeptIds(deptIds);
+        this.tenantDeptIds = copyTenantDeptIds(tenantDeptIds);
         if (authorizationContext != null) {
             if (id == null || !Objects.equals(id.toString(), authorizationContext.accountId())
                     || !Objects.equals(tenantId == null ? null : tenantId.toString(), authorizationContext.tenantId())
@@ -129,6 +131,20 @@ public class InUser extends User implements InUserDetails {
             }
         }
         this.authorizationContext = authorizationContext;
+    }
+
+    private static List<Long> copyDeptIds(List<Long> deptIds) {
+        return deptIds == null ? null : new ArrayList<>(deptIds);
+    }
+
+    private static Map<Long, List<Long>> copyTenantDeptIds(Map<Long, List<Long>> tenantDeptIds) {
+        if (tenantDeptIds == null) {
+            return null;
+        }
+        Map<Long, List<Long>> copy = new LinkedHashMap<>(tenantDeptIds.size());
+        tenantDeptIds.forEach((tenantId, ids) ->
+                copy.put(tenantId, ids == null ? null : new ArrayList<>(ids)));
+        return copy;
     }
 
     /**

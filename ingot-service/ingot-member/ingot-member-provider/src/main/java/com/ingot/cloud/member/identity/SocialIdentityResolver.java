@@ -8,7 +8,6 @@ import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.security.core.identity.UserIdentityResolver;
 import com.ingot.framework.security.core.identity.social.UserSocialService;
 import com.ingot.framework.tenant.TenantEnv;
-import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 public class SocialIdentityResolver implements UserIdentityResolver {
     private final UserSocialService userSocialService;
     private final BizUserService bizUserService;
-    private final TenantProperties tenantProperties;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -37,7 +35,7 @@ public class SocialIdentityResolver implements UserIdentityResolver {
             String socialCode = request.getSocialCode();
             String uniqueID = userSocialService.getUniqueID(socialType, socialCode);
             return IdentityUtil.map(userSocialService.getUserInfo(socialType, uniqueID),
-                    request.getUserType(), bizUserService, tenantProperties);
+                    request.getUserType(), bizUserService);
         });
     }
 }

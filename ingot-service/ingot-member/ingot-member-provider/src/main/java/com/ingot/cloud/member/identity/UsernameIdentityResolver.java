@@ -9,7 +9,6 @@ import com.ingot.framework.commons.model.security.UserDetailsRequest;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserIdentityTypeEnum;
 import com.ingot.framework.security.core.identity.UserIdentityResolver;
-import com.ingot.framework.tenant.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,6 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
 
     private final BizUserService bizUserService;
     private final AuthContextSupport authContextSupport;
-    private final TenantProperties tenantProperties;
 
     @Override
     public boolean supports(UserIdentityTypeEnum type) {
@@ -44,7 +42,7 @@ public class UsernameIdentityResolver implements UserIdentityResolver {
             user = memberUserService.getOne(Wrappers.<MemberUser>lambdaQuery()
                     .eq(MemberUser::getUsername, username));
         }
-        UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), bizUserService, tenantProperties);
+        UserDetailsResponse response = IdentityUtil.map(user, request.getUserType(), bizUserService);
         // 用户名/密码登录：由账号域共享工具填充认证上下文
         // Member 当前 baseline 未启用锁定 / 密码过期策略，AuthContextSupport 会自动降级
         authContextSupport.fill(response, user.getId(), request.getUserType());

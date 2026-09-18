@@ -13,22 +13,27 @@ import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.model.security.UserDetailsResponse;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
-import com.ingot.framework.tenant.properties.TenantProperties;
 
 /**
- * <p>Description  : IdentityUtil.</p>
- * <p>Author       : jy.</p>
- * <p>Date         : 2025/12/3.</p>
- * <p>Time         : 15:52.</p>
+ * <p>把会员账号映射为认证 {@link UserDetailsResponse}。</p>
+ *
+ * <p>租户字段保留 Convert 映射结果；会员账号本身没有租户时保持 {@code null}，不再填入默认租户 ID。</p>
+ *
+ * @author jy
+ * @since 1.0.0
  */
 public class IdentityUtil {
     /**
-     * 映射用户信息
+     * 将会员账号转为登录所需的用户详情，并按账号状态填充权限。
+     *
+     * @param user          已查询到的会员账号
+     * @param userType      请求中的用户类型
+     * @param bizUserService 用于读取角色权限
+     * @return 认证用户详情；账号不可用或需改密时提前返回
      */
     public static UserDetailsResponse map(MemberUser user,
                                           UserTypeEnum userType,
-                                          BizUserService bizUserService,
-                                          TenantProperties tenantProperties) {
+                                          BizUserService bizUserService) {
         // App用户简单处理，暂时不走复杂逻辑
 
         // 账号维度：来自 member_user.enabled / member_user.locked
@@ -36,7 +41,6 @@ public class IdentityUtil {
         boolean userLocked = Boolean.TRUE.equals(user.getLocked());
 
         UserDetailsResponse result = MemberUserConvert.INSTANCE.toUserDetails(user);
-        result.setTenant(tenantProperties.getDefaultId());
         result.setUserType(userType.getValue());
         result.setEnabled(userEnabled);
         result.setLocked(userLocked);

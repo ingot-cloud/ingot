@@ -32,7 +32,7 @@ public class TenantConfig {
 
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public TenantHttpConfigurer tenantHttpConfigurer(TenantProperties tenantProperties) {
-        return new TenantHttpConfigurer(tenantProperties);
+    public TenantHttpConfigurer tenantHttpConfigurer() {
+        return new TenantHttpConfigurer();
     }
 }
