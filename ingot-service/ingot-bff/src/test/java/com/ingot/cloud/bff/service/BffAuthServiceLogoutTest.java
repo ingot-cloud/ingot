@@ -6,9 +6,11 @@ import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
 import com.ingot.cloud.bff.config.BffAppRegistry;
 import com.ingot.cloud.bff.config.BffProperties;
+import com.ingot.cloud.bff.error.BffAuthException;
 import com.ingot.cloud.bff.model.AuthBinding;
 import com.ingot.framework.commons.constants.BffConstants;
 import com.ingot.framework.commons.model.bff.BffAppRegistration;
+import com.ingot.framework.commons.model.bff.BffErrorCode;
 import com.ingot.framework.commons.model.bff.BffSession;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
@@ -44,6 +46,7 @@ class BffAuthServiceLogoutTest {
     private static final String AUTH_COOKIE = "JSESSIONID=abc";
 
     private BffSessionService sessionService;
+    private LoginTransactionService transactionService;
     private RemoteAuthSessionService remoteAuthSessionService;
     private BffAuthService service;
     private HttpServletRequest request;
@@ -52,8 +55,8 @@ class BffAuthServiceLogoutTest {
     @BeforeEach
     void setUp() {
         sessionService = mock(BffSessionService.class);
+        transactionService = mock(LoginTransactionService.class);
         remoteAuthSessionService = mock(RemoteAuthSessionService.class);
-        LoginTransactionService transactionService = mock(LoginTransactionService.class);
         BffAppRegistry registry = mock(BffAppRegistry.class);
         BffAppRegistration app = new BffAppRegistration();
         app.setAppId("platform-admin");
@@ -122,6 +125,21 @@ class BffAuthServiceLogoutTest {
         R<?> result = service.logout(request, response);
 
         verify(sessionService, times(1)).removeSession(request, response);
+        assertTrue(result.isSuccess());
+    }
+
+    @Test
+    void logout_csrfMismatch_stillClearsLocalSessionAndRevokes() {
+        when(transactionService.requireBinding("bind-1"))
+                .thenThrow(new BffAuthException(BffErrorCode.BINDING_MISMATCH));
+        when(sessionService.getSession(request)).thenReturn(session(SID));
+
+        R<?> result = service.logout(request, response);
+
+        verify(remoteAuthSessionService).revokeBySid(eq(AUTH_COOKIE), eq(SID), any());
+        verify(sessionService).removeSession(request, response);
+        verify(transactionService).deleteBinding("bind-1");
+        verify(sessionService).clearBindingCookie(response);
         assertTrue(result.isSuccess());
     }
 

@@ -48,6 +48,10 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
     // Redis Key前缀
     private static final String AUTHORIZATION_PREFIX = "oauth2:auth:";
     private static final String TOKEN_INDEX_PREFIX = "oauth2:token:";
+    /**
+     * 授权码 / state 索引在缺少自身过期时间时的上限（秒），与 Spring 默认 authorization-code TTL 一致。
+     */
+    private static final long AUTHORIZATION_CODE_INDEX_TTL_SECONDS = 300;
 
     public RedisOAuth2AuthorizationService(
             RedisTemplate<String, Object> redisTemplate,
@@ -177,8 +181,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
             OAuth2Token code = token.getToken();
             String tokenHash = DigestUtil.sha256(code.getTokenValue());
             String tokenKey = TOKEN_INDEX_PREFIX + tokenHash;
-            // 授权码 TTL 较短，通常5分钟
-            long codeTtl = Math.min(ttl, 300);
+            long codeTtl = shortLivedIndexTtl(code, ttl);
             redisTemplate.opsForValue().set(tokenKey, authorizationId, codeTtl, TimeUnit.SECONDS);
             log.debug("[RedisOAuth2AuthorizationService] Saved AuthorizationCode index");
         }
@@ -188,8 +191,10 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
         if (StrUtil.isNotEmpty(state)) {
             String stateHash = DigestUtil.sha256(state);
             String stateKey = TOKEN_INDEX_PREFIX + stateHash;
-            // State 的 TTL 与授权码相同
-            long stateTtl = Math.min(ttl, 300);
+            OAuth2Token codeForState = token == null ? null : token.getToken();
+            long stateTtl = codeForState != null
+                    ? shortLivedIndexTtl(codeForState, ttl)
+                    : Math.min(ttl, AUTHORIZATION_CODE_INDEX_TTL_SECONDS);
             redisTemplate.opsForValue().set(stateKey, authorizationId, stateTtl, TimeUnit.SECONDS);
             log.debug("[RedisOAuth2AuthorizationService] Saved State index");
         }
@@ -361,6 +366,14 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
         // 默认1小时
         return 3600;
+    }
+
+    private long shortLivedIndexTtl(OAuth2Token token, long authorizationTtl) {
+        Instant expiresAt = token.getExpiresAt();
+        if (expiresAt != null) {
+            return Math.max(1, ChronoUnit.SECONDS.between(Instant.now(), expiresAt));
+        }
+        return Math.min(authorizationTtl, AUTHORIZATION_CODE_INDEX_TTL_SECONDS);
     }
 
     /**

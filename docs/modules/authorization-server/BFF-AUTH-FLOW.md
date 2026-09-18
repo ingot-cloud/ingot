@@ -34,24 +34,18 @@ Gateway / BFF 共用 Nacos `DEV_GROUP` 的 `in-bff-apps.yml`（`require-https: f
 
 | 站点 | 本机 URL | Nacos origin | Vite 端口 |
 |------|----------|--------------|-----------|
-| 租户管理台 | http://tenant.local:5798 | `admin-origin` | 5798 |
-| 租户登录 | http://tenant-login.local:1798 | `login-origin` | 1798 |
-| 平台管理台 | http://platform.local:5799 | `admin-origin` | 5799 |
-| 平台登录 | http://platform-login.local:1799 | `login-origin` | 1799 |
+| 租户管理台 | http://tenant.localhost:5798 | `admin-origin` | 5798 |
+| 租户登录 | http://tenant-login.localhost:1798 | `login-origin` | 1798 |
+| 平台管理台 | http://platform.localhost:5799 | `admin-origin` | 5799 |
+| 平台登录 | http://platform-login.localhost:1799 | `login-origin` | 1799 |
 
-先写 hosts（`.local` 走 mDNS，**不会**像 `*.localhost` 自动指向本机）：
+`*.localhost` 按 RFC 6761 直接回环，**不必写 `/etc/hosts`**，也没有 `.local` 的 mDNS 等待。用上表 hostname 打开，不要用光杆 `http://localhost:5798`（四个站点会共享 Cookie）。Host 对不上注册表时 Gateway 直接 403。
 
-```text
-127.0.0.1 tenant.local tenant-login.local platform.local platform-login.local
-```
-
-然后用上表 hostname 打开页面，不要再用 `http://localhost:5798`。Host 对不上注册表时 Gateway 直接 403。
-
-四个 hostname 各自一份 **host-only** Cookie（不写 `Domain`）。不要把前端 `VITE_APP_COOKIE_DOMAIN` 配成 `.local`，否则四个站点会串 Cookie。
+四个 hostname 各自一份 **host-only** Cookie（不写 `Domain`）。不要把前端 `VITE_APP_COOKIE_DOMAIN` 配成 `.localhost`，否则四站点会串 Cookie。
 
 OAuth `oauth-redirect-uri` 仍是网关协议回调（如 `http://localhost:5400/bff/auth/tenant/callback`）。BFF 请求带 `pre_grant_type`，Auth **不 302**，只在 JSON 里回授权码。浏览器不会打开这个地址。
 
-Vite `/api` 代理到 Gateway，且 `changeOrigin: false`，这样 Gateway 看到的 Host 仍是 `tenant.local:5798` 这类前端主机名。
+Vite `/api` 代理到 Gateway，且 `changeOrigin: false`，这样 Gateway 看到的 Host 仍是 `tenant.localhost:5798` 这类前端主机名。
 
 ## 3. 角色与存储
 
@@ -67,7 +61,7 @@ Redis（前缀 `in:`）：
 
 | Key | 内容 | 默认 TTL |
 |-----|------|----------|
-| `in:bff_auth_binding:{bindingId}` | CSRF + appId | 与事务相同，约 600s |
+| `in:bff_auth_binding:{bindingId}` | CSRF + appId | 登录阶段与事务相同，约 600s；complete 后延长到 `session-ttl` |
 | `in:bff_login_tx:{transactionId}` | 登录事务（PKCE、Auth cookie、ticket、两站点 binding） | 600s |
 | ticket 索引 | ticket → transactionId | 60s，且不超过事务剩余 |
 | `in:bff_session:{sessionId}` | 正式会话（accessToken 等） | 小时～天（`session-ttl`） |
@@ -122,14 +116,14 @@ Cookie（DEV HTTP，`require-https: false`）：
 ### 4.4 登录后与退出
 
 - 业务请求：Gateway 读 `IN_SESSION` → Redis → `Authorization: Bearer`。绑定 Cookie 不会触发中继。csrf / transactions / login / select / complete 即使带绑定 Cookie 也不注入 Bearer。
-- `DELETE /bff/auth/logout`：撤销当前应用 Auth sid，清本 host 正式 Cookie 与绑定 Cookie。另一域会话不受影响。
+- `DELETE /bff/auth/logout`：尽量带 CSRF。能读到会话则撤销当前应用 Auth sid；无论 CSRF 是否匹配都清本 host 正式 Cookie 与绑定 Cookie，返回成功。显式退出不保存 returnTo，`/auth/start` 不因残留会话弹回业务页。另一域会话不受影响。
 
 ## 5. 时序（租户多候选）
 
 ```mermaid
 sequenceDiagram
-    participant Admin as 租户管理台<br/>tenant.local:5798
-    participant Login as 租户登录站<br/>tenant-login.local:1798
+    participant Admin as 租户管理台<br/>tenant.localhost:5798
+    participant Login as 租户登录站<br/>tenant-login.localhost:1798
     participant GW as Gateway
     participant BFF as BFF
     participant Auth as Auth
@@ -168,13 +162,13 @@ sequenceDiagram
 
 | 现象 | 常见原因 |
 |------|----------|
-| Gateway 403 | 浏览器 Host 不在 `in-bff-apps.yml`（仍用 localhost、hosts 未写、Nacos 未刷新） |
+| Gateway 403 | 浏览器 Host 不在 `in-bff-apps.yml`（仍用光杆 localhost、Nacos 未刷新） |
 | `BFF_ENTRY_MISMATCH` | 管理台打了 login 接口，或内部头与路径不一致 |
 | `BFF_BINDING_MISMATCH` | CSRF 与 Cookie 脱节；complete 时绑定被轮换；换了浏览器/隐私窗口 |
-| `BFF_TRANSACTION_EXPIRED` / 410 | 事务超过约 10 分钟 |
+| `BFF_TRANSACTION_EXPIRED` / 410 | 事务超过约 10 分钟，或 authorize/token 时 Auth 预授权会话 / state / 授权码已失效 |
 | `BFF_TICKET_INVALID` | ticket 用过、过期、或 appId 不符 |
 | `unauthorized_client` | Auth 客户端缺 `pre_authorization_code` / `authorization_code`，或 redirect_uri 与 Nacos 不一致 |
-| Vite “host is not allowed” | 未放行 `.local`（`packages/vite-config` 已 `allowedHosts: true`） |
+| Vite “host is not allowed” | 未放行 `*.localhost`（`packages/vite-config` 的 `DEV_BFF_ALLOWED_HOSTS`） |
 
 事务过期或绑定不匹配时，登录站清本 origin CSRF 缓存，跳回配对 `/auth/start`。不要跨租户/平台互跳。
 

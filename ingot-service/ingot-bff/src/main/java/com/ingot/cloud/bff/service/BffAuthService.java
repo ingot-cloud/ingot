@@ -252,15 +252,33 @@ public class BffAuthService {
         session.setAuthCookie(transaction.getAuthCookie());
         long ttl = Math.max(60, properties.getSessionTtl());
         sessionService.createSession(session, request, response);
+        transactionService.saveBinding(binding, ttl);
+        sessionService.writeBindingCookie(binding.getBindingId(), ttl, response);
         transactionService.deleteTicket(ticket);
         transactionService.delete(transaction.getTransactionId());
         return Map.of("returnTo", app.getDefaultReturnTo());
     }
 
+    /**
+     * 撤销当前应用会话并清除本 host 的正式 Cookie 与绑定 Cookie。
+     *
+     * <p>CSRF 不匹配时仍清除本机会话，避免前端无法离开；只要还能读到会话就尽量撤销 Auth sid。</p>
+     *
+     * @param request  当前管理台请求
+     * @param response 用于清除 Cookie
+     * @return 空成功 data
+     */
     public R<?> logout(HttpServletRequest request, HttpServletResponse response) {
         BffAppRegistration app = appRegistry.requireFromRequest(request);
         appRegistry.requireAdmin(request, app);
-        requireCsrf(request, app);
+        try {
+            requireCsrf(request, app);
+        } catch (BffAuthException exception) {
+            if (exception.getErrorCode() != BffErrorCode.BINDING_MISMATCH) {
+                throw exception;
+            }
+            log.warn("[BffAuth] logout csrf mismatch, still clearing local session");
+        }
         BffSession session = sessionService.getSession(request);
         if (session != null && StrUtil.isNotEmpty(session.getSid())) {
             InnerSessionRevokeDTO params = InnerSessionRevokeDTO.builder()
@@ -273,6 +291,7 @@ public class BffAuthService {
             }
         }
         sessionService.removeSession(request, response);
+        transactionService.deleteBinding(sessionService.getBindingIdFromCookie(request));
         sessionService.clearBindingCookie(response);
         return R.ok();
     }
@@ -302,11 +321,10 @@ public class BffAuthService {
                     OAuth2AuthorizationResponseType.CODE.getValue(),
                     app.getOauthRedirectUri(), app.getOauthScope(), transaction.getState());
         } catch (Exception exception) {
-            log.error("[BffAuth] authorize failed", exception);
-            throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
+            throw new BffAuthException(authorizeWindowError(exception, "authorize"));
         }
         if (authorizeResult == null || !authorizeResult.isSuccess() || authorizeResult.getData() == null) {
-            throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
+            throw new BffAuthException(authorizeWindowError(null, "authorize"));
         }
         Map<String, String> tokenForm = new HashMap<>();
         tokenForm.put(OAuth2ParameterNames.CODE, String.valueOf(authorizeResult.getData().get(OAuth2ParameterNames.CODE)));
@@ -318,11 +336,10 @@ public class BffAuthService {
         try {
             tokenResult = remoteAuthTokenService.token(tokenForm);
         } catch (Exception exception) {
-            log.error("[BffAuth] token exchange failed", exception);
-            throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
+            throw new BffAuthException(authorizeWindowError(exception, "token"));
         }
         if (tokenResult == null || !tokenResult.isSuccess() || tokenResult.getData() == null) {
-            throw new BffAuthException(BffErrorCode.IDENTITY_UNAVAILABLE);
+            throw new BffAuthException(authorizeWindowError(null, "token"));
         }
         Map<String, Object> tokenData = tokenResult.getData();
         transaction.setAccessToken((String) tokenData.get(InOAuth2ParameterNames.ACCESS_TOKEN));
@@ -440,6 +457,15 @@ public class BffAuthService {
             userType = UserTypeEnum.ADMIN;
         }
         return accountLockSignalPort.isLockedByUsername(userType, username);
+    }
+
+    private BffErrorCode authorizeWindowError(Exception exception, String stage) {
+        if (exception != null) {
+            log.warn("[BffAuth] {} failed, mapping to transaction expired", stage, exception);
+        } else {
+            log.warn("[BffAuth] {} returned unsuccessful result, mapping to transaction expired", stage);
+        }
+        return BffErrorCode.TRANSACTION_EXPIRED;
     }
 
     private R<?> authRpcFailure(Exception exception, String stage) {

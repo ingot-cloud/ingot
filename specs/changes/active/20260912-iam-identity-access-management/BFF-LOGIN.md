@@ -36,12 +36,12 @@ BFF 与 Gateway 共用 `ingot.bff.apps` 与 `ingot.bff.require-https`，写在 *
 
 | 站点 | origin |
 |---|---|
-| 租户管理台 | `http://tenant.local:5798` |
-| 租户登录 | `http://tenant-login.local:1798` |
-| 平台管理台 | `http://platform.local:5799` |
-| 平台登录 | `http://platform-login.local:1799` |
+| 租户管理台 | `http://tenant.localhost:5798` |
+| 租户登录 | `http://tenant-login.localhost:1798` |
+| 平台管理台 | `http://platform.localhost:5799` |
+| 平台登录 | `http://platform-login.localhost:1799` |
 
-`.local` 不会自动回环，本机 `/etc/hosts` 需指向 `127.0.0.1`。不要配 `Domain=.local`，也不要用 `http://localhost:端口` 或 `http://IP:端口` 当作注册 origin。OAuth `oauth-redirect-uri` 仍是网关协议回调（如 `http://localhost:5400/bff/auth/{entry}/callback`），浏览器不访问。端到端步骤见 `docs/modules/authorization-server/BFF-AUTH-FLOW.md`。局域网互访应绑同样主机名（最好 HTTPS）。IP+HTTP 不是受支持的部署形态。
+`*.localhost` 直接回环，不必写 `/etc/hosts`。不要配 `Domain=.localhost`，也不要用光杆 `http://localhost:端口` 或 `http://IP:端口` 当作注册 origin。OAuth `oauth-redirect-uri` 仍是网关协议回调（如 `http://localhost:5400/bff/auth/{entry}/callback`），浏览器不访问。端到端步骤见 `docs/modules/authorization-server/BFF-AUTH-FLOW.md`。局域网互访应绑同样主机名（最好 HTTPS）。IP+HTTP 不是受支持的部署形态。
 
 ### 2.2 Host → appId（权威）
 
@@ -66,7 +66,7 @@ BFF 与 Gateway 共用 `ingot.bff.apps` 与 `ingot.bff.require-https`，写在 *
 
 | 环境 | Nacos group | `require-https` | Origin | 正式 / 绑定 Cookie |
 |---|---|---|---|---|
-| 本机开发 | `DEV_GROUP` | `false` | `http://tenant.local:5798` 等四个 `.local` origin（见 §2.1） | `IN_SESSION` / `IN_AUTH_BINDING`（host-only、无 Secure） |
+| 本机开发 | `DEV_GROUP` | `false` | `http://tenant.localhost:5798` 等四个 `*.localhost` origin（见 §2.1） | `IN_SESSION` / `IN_AUTH_BINDING`（host-only、无 Secure） |
 | 内网测试 | `TEST_GROUP` | `true` | 内网 DNS 四个 HTTPS 主机名，同一主域 | `__Host-IN_SESSION` / `__Host-IN_AUTH_BINDING` + Secure |
 | 内网生产 | 独立 group 或覆盖后的 `PROD_GROUP` | `true` | 内网 HTTPS 主机名（不要复用公网域名） | 同上 |
 | 公网生产 | `PROD_GROUP` | `true` | 现有公网四子域 | 同上 |
@@ -87,7 +87,7 @@ BFF 与 Gateway 共用 `ingot.bff.apps` 与 `ingot.bff.require-https`，写在 *
 | POST /bff/auth/tenant/select | 租户登录站 | `{transactionId, tenantId}` + CSRF 头 | LoginResult，READY |
 | POST /bff/auth/{entry}/complete | 目标管理台 | `{ticket}` + CSRF 头 + 本站设备指纹 | `{returnTo}`（恒为注册 `defaultReturnTo`），设置本 host 正式 `__Host-IN_SESSION` |
 | GET /bff/auth/me | 管理台 | 正式 Cookie | `{appId, domain, tenantId, userId, clientId}`；tenantId 平台为 null |
-| DELETE /bff/auth/logout | 管理台 | 正式 Cookie、CSRF | 空成功 data；撤销当前应用 sid 并清 Cookie |
+| DELETE /bff/auth/logout | 管理台 | 正式 Cookie；CSRF 尽量带上 | 空成功 data。清本 host 正式 Cookie 与绑定 Cookie；能读到会话则尽量撤销当前应用 sid。CSRF 不匹配时仍清 Cookie 并返回成功，前端必须离开管理台 |
 
 `loginUrl` 形状：`{loginOrigin}{loginPath}?tx={transactionId}`。`transactionId` 至少 128 bit 密码学随机、URL-safe。`completionUrl` 形状：`{adminOrigin}{completionPath}?ticket={ticket}`。ticket 至少 128 bit、一次性、默认 60 秒且不超过事务剩余期限。二者都不含 returnTo、domain、admin 以外的 host。
 
@@ -125,7 +125,7 @@ LoginResult 为判别联合：
 
 既有凭证错误、412 挑战、锁定、初始改密保持原契约，不硬改为 `BFF_*`。BFF 对 Auth `preAuthorize` 的 `InFeignException` 原样回传 `code`/`message`（如 `S0400`「用户名或密码错误」），不得改写成 `S0500`。错误不回显账号在另一域的资格。
 
-管理台 401/登出/改密后的再认证：**只**导航到本站 `/auth/start`。禁止 `VITE_APP_LOGIN_URI?redirect_uri=`。已有正式会话再访 `/auth/start`：若会话有效则落地 `defaultReturnTo`（前端可再读 sessionStorage 深链），不新建事务；用户显式「切换账号/组织」才创建新事务。
+管理台 401/登出/改密后的再认证：**只**导航到本站 `/auth/start`。禁止 `VITE_APP_LOGIN_URI?redirect_uri=`。已有正式会话再访 `/auth/start`：若会话有效则落地 `defaultReturnTo`（前端可再读 sessionStorage 深链），不新建事务。用户显式退出：不保存当前页为 returnTo，start 即使仍能 `me()` 也必须新建事务进入登录站，不得弹回刚才的业务页。用户显式「切换账号/组织」同样创建新事务。
 
 ## 4. 登录事务与完成流程
 
@@ -142,7 +142,7 @@ LoginResult 为判别联合：
 
 LoginTransaction 独立存储（Redis 前缀与正式会话不同），包含 appId/domain、两站点浏览器绑定、stage、PKCE/state、Auth cookie、候选、待交接凭据、ticket、到期时间。默认 10 分钟。多标签页各有事务。
 
-TTL 关系：事务 10 分钟；ticket 60 秒且不超过事务剩余；OAuth 授权码遵循 Auth 既有 TTL。任一先到期则待交接 Token 必须撤销，不能只删 Redis。
+TTL 关系：事务 10 分钟，覆盖打开登录页到提交凭证的等待；ticket 60 秒且不超过事务剩余。preAuthorize 之后的 Auth SecurityContext 跟随客户端 access-token TTL（BFF 客户端种子为 7200 秒）。OAuth 授权码与 Redis state 索引跟随客户端 `authorization-code-time-to-live`（BFF 客户端种子为 300 秒，且不得再被硬编码截短到更短）。authorize / token 因预授权会话、state 或授权码失效而失败时，BFF 返回 `BFF_TRANSACTION_EXPIRED`，登录站重启配对 `/auth/start`，不得伪装 `BFF_IDENTITY_UNAVAILABLE`。零候选、仅平台身份走租户入口仍是 `BFF_IDENTITY_UNAVAILABLE`。任一先到期则待交接 Token 必须撤销，不能只删 Redis。complete 成功后把管理台 CSRF 绑定 TTL 延长到 `session-ttl`，以便会话期内退出仍能通过 CSRF。
 
 状态推进及 ticket 消费必须原子；同事务并发认证不重复换码。不同事务成功后可依次替换当前同应用 Cookie，最后成功完成者成为该 host 当前身份。取消/超时不提前撤销原正式会话；成功替换后撤销被替换的同应用 sid。网络丢失不重新消费已用 ticket；客户端先 `GET /me`，无有效会话则重新 `/auth/start`。
 

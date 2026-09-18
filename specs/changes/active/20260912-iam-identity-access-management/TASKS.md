@@ -73,4 +73,4 @@ MP01–MP06 曾记录实体/Mapper、身份/目录/授权/策略访问迁移、�
 | [x] | B05 | returnTo严格校验、CSRF/Origin、no-store/日志脱敏、旧无域入口退出、失败与取消清理 | B02–B04 / L05/L08/L09/L12 |
 | [ ] | B06 | 发布BFF契约与四站配置，单元/集成/真实浏览器验证，接收前端全量IAM证据 | B01–B05 / L01–L12、F01–F09 |
 
-顺序：B01 → B02/B03 → B04/B05 → B06。B06 是 T16/T17 新增依赖；B01–B05 已在本轮落地（应用注册、双入口、事务/CSRF、host-only Cookie、Gateway Host 注入），B06 浏览器与全量 IAM 证据未做，不勾选。
+顺序：B01 → B02/B03 → B04/B05 → B06。B06 是 T16/T17 新增依赖；B01–B05 已在本轮落地（应用注册、双入口、事务/CSRF、host-only Cookie、Gateway Host 注入）。B05 增量：complete 后绑定 TTL 跟随 `session-ttl`；logout CSRF 失败仍清本机会话；authorize/token 窗口失效映射 `BFF_TRANSACTION_EXPIRED`。B06 浏览器与全量 IAM 证据未做，不勾选。
