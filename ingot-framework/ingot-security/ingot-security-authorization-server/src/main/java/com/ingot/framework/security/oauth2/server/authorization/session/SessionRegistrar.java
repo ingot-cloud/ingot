@@ -32,7 +32,7 @@ public class SessionRegistrar {
      * <p>refresh 沿用同一 sid，会话数不增加，因此跳过约束：既省掉一次策略读取，也避免策略来源
      * 短暂故障时把在线用户连带踢下线 —— fail-closed 的代价只应由新登录承担。</p>
      *
-     * @param user         已切片到目标租户的登录用户
+     * @param user         已绑定目标租户或成员上下文的登录用户
      * @param registration 本次签发的会话标识与时效
      * @throws org.springframework.security.oauth2.core.OAuth2AuthenticationException
      *         并发策略要求拒绝本次登录，或策略不可用需 fail-closed

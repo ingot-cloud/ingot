@@ -1,8 +1,10 @@
 package com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration;
 
+import com.ingot.framework.security.core.userdetails.OAuth2UserDetailsServiceManager;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineTokenService;
 import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationConsentService;
 import com.ingot.framework.security.oauth2.server.authorization.RedisOAuth2AuthorizationService;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.AuthenticatedMemberBinder;
 import com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerEnhanceConfigurer;
 import com.ingot.framework.security.oauth2.server.authorization.session.DefaultSessionRevocationService;
 import com.ingot.framework.security.oauth2.server.authorization.session.SessionRegistrar;
@@ -13,6 +15,7 @@ import com.ingot.framework.security.oauth2.server.authorization.token.JwtOAuth2T
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -66,7 +69,7 @@ public class InOAuth2AuthorizationServerConfiguration {
                     // 自定义配置
                     configurer.tokenEndpoint(new OAuth2TokenEndpointCustomizer())
                             .clientAuthentication(new OAuth2ClientAuthenticationCustomizer())
-                            .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer());
+                            .authorizationEndpoint(new OAuth2AuthorizationServerCustomizer(optionalMemberBinder(http)));
                 })
                 .with(enhanceConfigurer, (configurer) -> {
                     // 自定义配置
@@ -111,13 +114,27 @@ public class InOAuth2AuthorizationServerConfiguration {
     }
 
     /**
+     * 租户签发前绑定 IAM 成员上下文。
+     *
+     * @param users 身份加载器；测试或无远程身份服务时可为缺省
+     * @return 成员绑定器
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public AuthenticatedMemberBinder authenticatedMemberBinder(
+            ObjectProvider<OAuth2UserDetailsServiceManager> users) {
+        return new AuthenticatedMemberBinder(users.getIfAvailable());
+    }
+
+    /**
      * JWT Token定制器
      */
     @Bean
     @ConditionalOnMissingBean(OAuth2TokenCustomizer.class)
-    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer(SessionRegistrar sessionRegistrar) {
+    public OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer(SessionRegistrar sessionRegistrar,
+                                                                          AuthenticatedMemberBinder memberBinder) {
         log.info("[InOAuth2AuthorizationServerConfiguration] Creating JwtOAuth2TokenCustomizer");
-        return new JwtOAuth2TokenCustomizer(sessionRegistrar);
+        return new JwtOAuth2TokenCustomizer(sessionRegistrar, memberBinder);
     }
 
     /**
@@ -148,5 +165,13 @@ public class InOAuth2AuthorizationServerConfiguration {
         return new RedisOAuth2AuthorizationConsentService(
                 redisTemplate, registeredClientRepository
         );
+    }
+
+    private static AuthenticatedMemberBinder optionalMemberBinder(HttpSecurity http) {
+        ApplicationContext context = http.getSharedObject(ApplicationContext.class);
+        if (context == null) {
+            return null;
+        }
+        return context.getBeanProvider(AuthenticatedMemberBinder.class).getIfAvailable();
     }
 }

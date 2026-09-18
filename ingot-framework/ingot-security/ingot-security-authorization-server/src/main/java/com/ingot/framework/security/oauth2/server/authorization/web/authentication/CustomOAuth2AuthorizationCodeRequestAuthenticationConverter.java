@@ -9,13 +9,16 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.ErrorUtil;
 import com.ingot.framework.security.core.userdetails.InUser;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.AuthenticatedMemberBinder;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
@@ -34,6 +37,23 @@ import org.springframework.util.MultiValueMap;
 public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter implements AuthenticationConverter {
     private final OAuth2AuthorizationCodeRequestAuthenticationConverter converter =
             new OAuth2AuthorizationCodeRequestAuthenticationConverter();
+    private final AuthenticatedMemberBinder memberBinder;
+
+    /**
+     * 不在转换器内绑定成员，签发阶段再绑定。
+     */
+    public CustomOAuth2AuthorizationCodeRequestAuthenticationConverter() {
+        this(null);
+    }
+
+    /**
+     * 使用成员绑定器在选定租户后替换预授权用户。
+     *
+     * @param memberBinder 选定租户后绑定成员；为空时推迟到签发阶段绑定
+     */
+    public CustomOAuth2AuthorizationCodeRequestAuthenticationConverter(AuthenticatedMemberBinder memberBinder) {
+        this.memberBinder = memberBinder;
+    }
 
     @Override
     public Authentication convert(HttpServletRequest request) {
@@ -84,8 +104,23 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
         Map<String, Object> newAdditionalParameters = copyValidatedAdditionalParameters(token, parameters);
         newAdditionalParameters.put(InOAuth2ParameterNames.TENANT, tenant);
+        Object principal = bindTenantMember(token.getPrincipal(), tenant);
         return OAuth2PreAuthorizationCodeRequestAuthenticationToken.authenticated(
-                token.getPrincipal(), token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
+                principal, token.getAllowList(), newAdditionalParameters, token.getTimeToLive());
+    }
+
+    private Object bindTenantMember(Object principal, String tenant) {
+        if (memberBinder == null || !(principal instanceof InUser user)
+                || user.getAuthorizationContext() != null
+                || UserTypeEnum.getEnum(user.getUserType()) != UserTypeEnum.ADMIN) {
+            return principal;
+        }
+        try {
+            return memberBinder.bindSelectedTenant(user, tenant);
+        } catch (OAuth2AuthenticationException exception) {
+            throwError(InOAuth2ParameterNames.TENANT);
+            throw exception;
+        }
     }
 
     private static boolean isPlatformContext(OAuth2PreAuthorizationCodeRequestAuthenticationToken token) {

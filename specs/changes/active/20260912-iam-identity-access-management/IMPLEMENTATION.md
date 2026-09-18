@@ -400,3 +400,11 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 第一批已由你确认通过，清单已勾选：0.1、0.2、A18.2、A28/A28a、A03.1/A03.2、A01/A01a、A09.1/A09.2。登录走 Auth `5100`，管理面走 Gateway `7980/iam`。配套修正：`JwtTenantValidator` 平台身份不强制 JWT `org`；`DelegatingPasswordEncoder.setDefaultPasswordEncoderForMatches(BCryptPasswordEncoder)` 兼容无 `{bcrypt}` 前缀的种子哈希。
 
 第二批已由你确认通过，清单已勾选 A01b、A02、A04、A26。证据为 Bruno 集合 `bruno/01-A01b-identity-lifecycle/`、`02-A02-entitlement-vs-assignment/`、`03-A04-shared-role-deltas/`、`04-A26-owner-transfer/`。A26 并发双客户端移出新所有者未另做，陈旧 version 409 已覆盖。组织 A 所有者已转为 Z。未勾选 T16，未改 `specs/current/`，未 commit。
+
+## 2026-09-18 租户 authorize 绑定成员上下文
+
+租户 BFF `preAuthorize` 按规格不带 tenant、不建立 `AuthorizationContext`。`authorize` 原先只把选定 `org` 写入 additionalParameters，签发时走旧预授权部门切片，`OnlineToken.authorizationContext` 为空。管理台随后请求 `/iam/v1/me/bootstrap` 被 `AuthorizationSnapshotFilter` 当成旧快照用户，loader 因缺少成员上下文抛 `AuthorizationDenied`，再被包装成 503 `AuthorizationSnapshot.Unavailable`。
+
+现于 `AuthenticatedMemberBinder`：管理用户选定租户时按 `domain=TENANT` 重载身份并校验成员上下文，复制当前 client/tokenAuthType；已绑定身份禁止换租户；C 端用户仍用旧切片。授权码转换器在 allowList 校验后绑定，JWT 定制器签发前再次 `resolveForIssuance`，保证 Redis 会话带成员上下文。
+
+验证：`AuthenticatedMemberBinderTest` 5 项（租户重载成员上下文、平台不重载、禁止换租户、缺少上下文拒绝、C 端仍切片）。未改 `specs/current/`，未 commit。

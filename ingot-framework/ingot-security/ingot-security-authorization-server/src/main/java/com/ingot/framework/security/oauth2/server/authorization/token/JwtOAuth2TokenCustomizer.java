@@ -2,8 +2,6 @@ package com.ingot.framework.security.oauth2.server.authorization.token;
 
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -13,6 +11,7 @@ import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.oauth2.jwt.JwtClaimNamesExtension;
 import com.ingot.framework.security.oauth2.server.authorization.OnlineSessionRegistration;
+import com.ingot.framework.security.oauth2.server.authorization.authentication.AuthenticatedMemberBinder;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2PreAuthorizationCodeRequestAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.authentication.OAuth2UserDetailsAuthenticationToken;
 import com.ingot.framework.security.oauth2.server.authorization.session.SessionRegistrar;
@@ -37,17 +36,20 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
  *
  * <p>JWT 只保留 {@code sid}、{@code id}、{@code tenant}、{@code scope} 等定位性声明；
  * authType、userType、完整权限列表均落在 Redis 会话中，由资源服务器按 sid 回读补全。
+ * 预授权选定租户后通过 {@link AuthenticatedMemberBinder} 写入成员上下文，再注册在线会话。
  * {@code sid} 是撤销与在线态判定的锚点，缺失即视为不可用 Token。</p>
  *
  * @author wangchao
  * @since 1.0.0
  * @see SessionRegistrar
+ * @see AuthenticatedMemberBinder
  */
 @Slf4j
 @RequiredArgsConstructor
 public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
     private final SessionRegistrar sessionRegistrar;
+    private final AuthenticatedMemberBinder memberBinder;
 
     @Override
     public void customize(JwtEncodingContext context) {
@@ -63,25 +65,7 @@ public class JwtOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
             Long tenant = NumberUtil.parseLong(
                     String.valueOf(preAuthToken.getAdditionalParameters().get(InOAuth2ParameterNames.TENANT)),
                     user.getTenantId());
-            if (user.getAuthorizationContext() != null) {
-                if (!java.util.Objects.equals(user.getTenantId(), tenant)) {
-                    throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT,
-                            "IAM identity selection requires a new authenticated member context.", null));
-                }
-                customizeWithUser(context, user);
-                return;
-            }
-            // 切租户：从未知租户登录时缓存的 tenantDeptIds 中切片当前租户的部门列表，
-            // 若 map 不存在或没有命中则回退到原 user.deptIds（已知租户场景）
-            List<Long> pickedDeptIds = Optional.ofNullable(user.getTenantDeptIds())
-                    .map(m -> m.get(tenant))
-                    .orElseGet(user::getDeptIds);
-            customizeWithUser(context,
-                    user.toBuilder()
-                            .tenantId(tenant)
-                            .deptIds(pickedDeptIds)
-                            .tenantDeptIds(null)
-                            .build());
+            customizeWithUser(context, memberBinder.resolveForIssuance(user, tenant));
         }
     }
 
