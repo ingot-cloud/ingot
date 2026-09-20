@@ -408,3 +408,9 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 现于 `AuthenticatedMemberBinder`：管理用户选定租户时按 `domain=TENANT` 重载身份并校验成员上下文，复制当前 client/tokenAuthType；已绑定身份禁止换租户；C 端用户仍用旧切片。授权码转换器在 allowList 校验后绑定，JWT 定制器签发前再次 `resolveForIssuance`，保证 Redis 会话带成员上下文。
 
 验证：`AuthenticatedMemberBinderTest` 5 项（租户重载成员上下文、平台不重载、禁止换租户、缺少上下文拒绝、C 端仍切片）。未改 `specs/current/`，未 commit。
+
+## 2026-09-19 Spec进展校准（仅文档）
+
+核对现有服务、控制器、测试源码及9月15–18日记录；在TASKS补勾限定范围的开发子项，保留T16/T17/B06和未满足完整条件的父任务未完成。历史测试结果不重记为本轮通过。新增TEST-DATA的测试数据 D01–D05及TD01–TD18场景卡（与 2026-09-13 DESIGN D01 区分），明确独立环境、真实接口构建、重复运行/重建、动态场景与前端共用证据。前端补充验收编号为 P24–P26。
+
+前端静态核对发现：角色/授权主体流程、成员写交互、用户组详情、应用人群、通讯录详情、字段策略编辑和辅助路径仍有缺口；由前端原change的IMPLEMENTATION-STATUS、IAM-INTEGRATION及U01–U13维护。后端不因前端列表存在勾选F系列。本轮不修改业务代码、不执行测试或写入数据库。

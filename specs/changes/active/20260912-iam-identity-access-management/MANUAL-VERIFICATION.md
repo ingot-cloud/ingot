@@ -205,3 +205,9 @@ Bruno 集合 [`bruno/`](./bruno/README.md) 按 `00-auth` → `01-A01b` → `02-A
 | `LockAccountUseCaseServiceTest` / `UnlockAccountUseCaseServiceTest` | 框架锁定用例通过；IAM 无 `IamAccountLockState` | A22 代码归属；缺失败计数运行时 |
 | `python3 tools/iam/test_contract.py` | 7 项，96/161 快照可复现 | A19 映射对账；缺逐入口 HTTP |
 | 静态：`ServiceNameConstants.IAM_SERVICE=in-service-iam`，镜像 `ingot/iam`，无 `ingot-pms` 部署名 | 通过 | A18 命名；缺镜像启动与 Gateway |
+
+## 2026-09-19 后续全功能测试数据入口
+
+已勾选历史人工用例保留原证据范围。本轮未执行新的人工验证。后续按 [TEST-DATA](./TEST-DATA.md) 的测试数据 D01–D05准备独立环境，按 TD01–TD18 场景卡及第5节覆盖表执行，不直接在现有调试库重建。测试数据 D01 与本文件历史「DESIGN D01 已确认」不是同一事项。
+
+每次报告附runId/UTC基准、代码与契约版本、账号类别、对象映射、步骤及预期/实际；期限、组变化、撤权、并发、导出失败和BFF重放等需执行动态步骤。数据准备成功只完成准备门禁，不自动勾选本清单或F/L联调。

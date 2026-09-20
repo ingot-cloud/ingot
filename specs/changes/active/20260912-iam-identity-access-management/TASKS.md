@@ -1,6 +1,6 @@
 # Tasks
 
-> 状态：implementing，2026-09-15 按后端复评及用户补充重新整理。仅本轮 Spec 修订已完成，以下修正尚未实施。保留历史测试证据，但不将结构或机械迁移通过当作业务验收。
+> 状态：implementing。2026-09-19 核对：下列 T 项为开发与验收合并的父任务；2026-09-15/16 的多数修正已落地，不能再按“全部未实施”理解。已开发子项见本文“开发完成标记”，验收证据见 IMPLEMENTATION/MANUAL-VERIFICATION。父任务未满足完整退出条件仍不勾选。
 
 ## 范围与执行顺序
 
@@ -36,7 +36,7 @@ T01/T03 原完成仅覆盖当时局部模型及结构快照，现因遗漏功能
 
 对应任务仍未勾选：T05 代码已落地；人工 HTTP 已确认 A01/A01a/A01b/A03/A09.1/A09.2/A18.2/A26/A28/A28a，仍缺 A21。T06 已确认 A02，仍缺 A08。T07 已确认 A04，仍缺 A05/A16/A25。T11 仍缺 A13、A14、A20；T12 仍缺 A17、A19、A24；T10 仍缺 A10、A27；T18 仍缺 A22、A23 进程与 RPC；T13 仍缺 A23/A24 全入口。T16 不勾选。
 
-待实施顺序：A21 空库冷启动 → A18.1 镜像 → 其余 A 项（A08、升级、多实例导出、字段/通讯录、诊断全入口）与 F 系列。
+待验证顺序：测试数据 D01–D05 独立测试数据准备支持 A21 空库冷启动 → A18.1 镜像 → 其余 A 项（A08、升级、多实例导出、字段/通讯录、诊断全入口）与 F/L 系列。数据准备任务不代替对应业务验收。
 
 ## 已退出范围的任务（保留记录，不勾选为完成）
 
@@ -60,7 +60,7 @@ MP01–MP06 曾记录实体/Mapper、身份/目录/授权/策略访问迁移、�
 - [ ] 未验证项不勾选，不以H2或结构测试代替真实HTTP/MySQL/多实例。
 - [ ] 验收后更新current及被替代PMS引用，再归档本change；无提交请求不创建commit。
 
-## 双入口 BFF 增量任务（2026-09-16，review，未实施）
+## 双入口 BFF 增量任务（2026-09-19 校准：B01–B05 已实现，B06 待验收）
 
 本节为双入口 BFF 实施范围；规格已确认（Host→appId、Nacos 回跳、不传 URL）。主 change implementing 的既有 IAM 证据保留，本增量任务独立勾选。
 
@@ -74,3 +74,40 @@ MP01–MP06 曾记录实体/Mapper、身份/目录/授权/策略访问迁移、�
 | [ ] | B06 | 发布BFF契约与四站配置，单元/集成/真实浏览器验证，接收前端全量IAM证据 | B01–B05 / L01–L12、F01–F09 |
 
 顺序：B01 → B02/B03 → B04/B05 → B06。B06 是 T16/T17 新增依赖；B01–B05 已在本轮落地（应用注册、双入口、事务/CSRF、host-only Cookie、Gateway Host 注入）。B05 增量：complete 后绑定 TTL 跟随 `session-ttl`；logout CSRF 失败仍清本机会话；authorize/token 窗口失效映射 `BFF_TRANSACTION_EXPIRED`。B06 浏览器与全量 IAM 证据未做，不勾选。
+
+## 2026-09-19 开发完成标记（不代替父任务验收）
+
+本节按当前源码与 IMPLEMENTATION 的已有记录补标。`[x]` 仅确认本行限定的开发内容。开发状态：已实现=本行源码范围闭合；部分实现=源码存在但范围不足。验证分自动化 / 真实接口 / 端到端；历史日期不视为本轮重跑。T01/T03–T13/T18仍需按各自原退出条件核验全范围。
+
+| 开发 | 子项 / 父任务 | 开发状态 | 自动化 | 真实接口 | 端到端 | 已落地内容与源码定位 | 剩余事项 |
+|---|---|---|---|---|---|---|---|
+| [x] | T04.dev | 已实现 | 历史编译记录 | 未执行镜像HTTP | 未执行 | IAM模块/服务名及新控制器/RPC命名接入 | A18/A23 |
+| [x] | T05.identity | 已实现 | 相关单测存在 | 2026-09-16 A01/A01a/A01b/A28/A28a | 未执行 | ActiveIdentityService、AccountIdentityService、MemberLifecycle | 完整竞态 |
+| [x] | T05.bootstrap | 部分实现 | 006种子测试 | 2026-09-16 A03 | 未执行 | PlatformBootstrapService、TenantInitializer与正式006种子 | A21空库进程首启 |
+| [x] | T05.owner | 已实现 | 转交相关测试 | 2026-09-16 A26（含409） | 未执行 | TenantQueryService.transferOwner与条件更新 | 并发移出新所有者 |
+| [x] | T06.catalog | 已实现 | 相关单测存在 | 2026-09-16 A02 | 未执行 | CatalogService、EntitlementService及组/部门人群展开 | A08、A19 |
+| [x] | T07.role | 已实现 | RoleServiceTest | 2026-09-16 A04 | 未执行 | RoleService、RoleGrantValidator | A05/A16/A25 |
+| [x] | T08.delegation | 已实现 | AssignmentServiceTest/GroupServiceTest | 未执行完整HTTP | 未执行 | AssignmentService、DelegationService、DelegationAdmission、GroupService | A11/A12 |
+| [x] | T09.evaluation | 已实现 | 求值测试记录 | 未执行多实例 | 未执行 | AuthorizationEvaluator、ScopeBinder | A15/A16 |
+| [x] | T10.scope | 部分实现 | 成员生命周期测试 | 部分HTTP | 未执行 | 成员/部门范围、MemberMutationGuard与ObjectCapabilities | A06/A07/A10/A19全入口 |
+| [x] | T10.export | 已实现 | MemberExportServiceTest | 未执行≥200/多实例 | 未执行 | MemberExportService、007_member_export | A27 |
+| [x] | T11.policy | 已实现 | 相关单测记录 | 未执行真实披露 | 未执行 | DirectoryVisibilityEvaluator、FieldAccessEvaluator、PolicyService | A13/A14/A20 |
+| [x] | T12.session | 部分实现 | 菜单/能力/诊断单测 | 未执行 | 未执行 | SessionMenuAssembler、ObjectCapabilities、DiagnoseAuditService | 非成员资源能力铺开；A17/A19/A24 |
+| [x] | T13.contract | 已实现 | 2026-09-16 test_contract.py 7项 | 未执行逐入口HTTP | 未执行 | 账号/me/辅助/purpose/导出状态API与96/161重发 | A23/A24、前端消费 |
+| [x] | T18.reuse | 已实现 | C17静态+锁定用例 | 未执行进程RPC | 未执行 | 复用LockStatePort、移除重复锁定实体及已替代HTTP/旧引擎/双读 | 旧目录域服务未整包删除；A22/A23 |
+| [x] | B03.member-context | 已实现 | 2026-09-18 5项测试 | 未执行BFF浏览器 | 未执行 | AuthenticatedMemberBinder | 不补勾B06 |
+
+## 2026-09-19 独立测试数据任务
+
+设计与场景见 [TEST-DATA](./TEST-DATA.md)。下文 **D01–D05 专指测试数据任务**，与 2026-09-13 已确认的 **DESIGN D01（平台域授权主体）** 不是同一编号。用户本轮仅授权Spec更新；以下工具/数据均未实施，不将新增文档当作测试数据完成。
+
+| 状态 | 编号 | 工作与退出条件 | 依赖 / 覆盖 |
+|---|---|---|---|
+| [ ] | D01 | 建立独立环境配置、prepare/verify/reset、运行清单、环境标识校验及重复运行/漂移处理 | 正式DDL/bootstrap；TD01 |
+| [ ] | D02 | 通过真实账号/组织/目录/角色/分配/策略接口构建多身份、多租户、多部门、多组和版本场景 | 测试数据 D01；TD02–TD11/TD15 |
+| [ ] | D03 | 补250+成员导出、动态期限、并发/撤权/多实例、四站登录及辅助/外部依赖的执行步骤和数据 | 测试数据 D02；TD12–TD18 |
+| [ ] | D04 | 按 TEST-DATA 第5节底稿完成“功能/接口→TD场景→A/F/L→前端页面”打勾，补齐未覆盖的已实现能力 | 测试数据 D02/D03；全部A/F/L及前端逐操作矩阵 |
+| [ ] | D05 | 独立环境实际准备、重复准备、重建与verify；输出脱敏报告、Bruno环境和前端使用说明 | 测试数据 D04；支持T16/T17/B06，不自动证明通过 |
+
+- [x] DOC01：2026-09-19 已校准开发/验证状态并补充测试数据规格；续补场景卡、编号区分与验证分栏。未修改实现、未导入数据、未执行产品验收。
+- [ ] DOC02：测试数据 D01–D05和前端全部业务流程完成后，补真实证据，再按T16/T17/B06及current/archive门禁收尾。

@@ -35,7 +35,7 @@ IAM 按 identity、organization、catalog、authorization、policy、audit 分�
 
 平台域对象和租户域对象必须在引用时验证归属。操作 code 全局唯一，资源 code 在应用内唯一，角色 code 在所属域/组织内唯一。所有映射集合去重并设数据库约束。被引用的资源、操作、版本拒绝物理删除，提供停用行为。租户所有者转交是独立治理操作，不能通过普通成员编辑或停用移除最后所有者。
 
-### 2.1 平台成员与多身份（D01，2026-09-13 已确认）
+### 2.1 平台成员与多身份（DESIGN D01，2026-09-13 已确认）
 
 一个 Account 可同时关联一个 PlatformMember 和多个租户的 TenantMember，不重复创建登录账号。PLATFORM 上下文必须带平台 memberId、accountId，tenantId 为空；TENANT 上下文必须带当前租户 memberId、accountId、tenantId。成员必须属于该账号和当前域，组和委派接收者也在该域内解析。ID 相同或账号相同都不构成跨域授权依据。
 
@@ -194,3 +194,9 @@ Bean 默认使用 private final 与 @RequiredArgsConstructor。限定注入、�
 一个 admin 源码两份部署，两个独立登录应用，四个同主域 HTTPS 子域。Gateway 按 Host 注入 appId；BFF 用该 appId 读 Nacos 注册表构造 loginUrl/completionUrl，Origin 只做一致性校验。登录结果通过短期 ticket 回到目标管理台原子完成，Cookie 不设置父域 Domain。临时事务与正式会话 Redis/Cookie 命名空间分离；绑定 Cookie 不得触发 JWT 中继。
 
 实施使用既有安全/加密/挑战能力；新增共享枚举、公开注释及 Bean 注入遵循仓库门禁。后端按 B01–B05 实施。原已完成的底层 domain 及人工 Auth 测试保留，不视为 BFF 完成证据。
+
+## 11. 独立测试环境与进展记录（2026-09-19）
+
+测试数据工具、运行清单、真实接口构建和TD场景以 [TEST-DATA](./TEST-DATA.md) 为唯一方案；不新增生产测试API，不更改既有JSON/授权契约。前端真实验收使用同一runId与TD编号，数据准备和产品验收分别记录。TASKS **测试数据 D01–D05** 与本节及 §2.1 的 **DESIGN D01（平台成员与多身份，2026-09-13 已确认）** 不是同一编号。
+
+TASKS把已有开发子项与父任务验收分开标记，并分列开发状态与自动化/真实接口/端到端；历史实施记录中的旧双读/旧入口说明不恢复为当前设计。当前完成程度依据代码与对应日期证据，不依据早期“尚未实施”标题或控制器implemented数量。
