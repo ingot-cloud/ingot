@@ -23,6 +23,10 @@ PAGE = [
     {'name': 'page', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'default': 1}},
     {'name': 'pageSize', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 200, 'default': 20}},
 ]
+TENANT_LIST = PAGE + [
+    {'name': 'name', 'required': False, 'schema': {'type': 'string'}},
+    {'name': 'status', 'required': False, 'schema': {'type': 'string', 'enum': ['ENABLED', 'DISABLED']}},
+]
 PHONE_EMAIL = [
     {'name': 'phone', 'required': False, 'schema': {'type': 'string'}},
     {'name': 'email', 'required': False, 'schema': {'type': 'string'}},
@@ -148,7 +152,9 @@ def build():
     routes += group_routes('PLATFORM', '/v1/platform', 'iam-platform')
     routes += [
         route('/v1/platform/tenants', 'get', 'platformListTenants', '组织列表', 'PLATFORM', 'iam-platform:tenant:read', None,
-              'RPageResponseResourceDetailTenantRecord', '平台管理组织实体，不返回租户业务数据', query=PAGE),
+              'RPageResponseResourceDetailTenantRecord',
+              '平台管理组织实体，不返回租户业务数据；可选 name 包含匹配、status=ENABLED|DISABLED',
+              query=TENANT_LIST),
         route('/v1/platform/tenants', 'post', 'platformCreateTenant', '原子创建组织', 'PLATFORM', 'iam-platform:tenant:create',
               'TenantCreateInput', 'RCreatedResource', '先校验创建 ACTION；目录生成计划；同事务初始化', 'tenant-create'),
         route('/v1/platform/tenants/preview', 'post', 'platformPreviewTenant', '预览组织初始化', 'PLATFORM', 'iam-platform:tenant:preview',

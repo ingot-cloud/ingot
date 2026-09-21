@@ -88,12 +88,14 @@ public class TenantQueryService {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 组织名称包含匹配，空白表示不限制
+     * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
      * @return 组织页
      */
-    public PageResponse<ResourceDetail<TenantRecord>> list(int page, int pageSize) {
+    public PageResponse<ResourceDetail<TenantRecord>> list(int page, int pageSize, String name, String status) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_TENANT_READ);
         IamPages.require(page, pageSize);
-        var result = tenants.page(page, pageSize);
+        var result = tenants.page(page, pageSize, name, enabledOf(status));
         List<IamTenantEntity> rows = result.getRecords();
         Map<BigInteger, String> names = tenants.displayNames(rows.stream()
                 .map(IamTenantEntity::getOwnerMemberId).toList());
@@ -333,6 +335,17 @@ public class TenantQueryService {
                 ownerId == null ? null : ownerId.toString(),
                 ownerId == null ? null : names.get(ownerId),
                 Boolean.TRUE.equals(row.getEnabled()) ? ConfigurationStatus.ENABLED : ConfigurationStatus.DISABLED);
+    }
+
+    private static Boolean enabledOf(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return ConfigurationStatus.getEnum(status.trim()) == ConfigurationStatus.ENABLED;
+        } catch (IllegalArgumentException ex) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private static void requireApplied(int rows) {

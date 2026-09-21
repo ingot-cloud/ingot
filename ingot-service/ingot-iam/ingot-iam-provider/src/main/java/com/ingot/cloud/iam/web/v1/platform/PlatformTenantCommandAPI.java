@@ -45,14 +45,18 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 组织名称包含匹配，可空
+     * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
      * @return 组织页
      */
     @Operation(summary = "组织列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<TenantRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(queries.list(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+        return ok(queries.list(page, pageSize, name, status));
     }
 
     /**

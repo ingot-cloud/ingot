@@ -31,13 +31,20 @@ public class TenantRepository {
 
     /**
      * 分页读取平台有权管理的未删除组织。
+     *
      * @param page 页码，从一开始
      * @param size 每页大小
+     * @param name 组织名称包含匹配，空白表示不限制
+     * @param enabled 启用状态，空表示不限制
      * @return 组织页及总数
      */
-    public Page<IamTenantEntity> page(int page, int size) {
+    public Page<IamTenantEntity> page(int page, int size, String name, Boolean enabled) {
+        String keyword = name == null ? null : name.trim();
         return tenants.selectPage(new Page<>(page, size), Wrappers.<IamTenantEntity>lambdaQuery()
-                .isNull(IamTenantEntity::getDeletedAt).orderByAsc(IamTenantEntity::getId));
+                .isNull(IamTenantEntity::getDeletedAt)
+                .like(keyword != null && !keyword.isEmpty(), IamTenantEntity::getName, keyword)
+                .eq(enabled != null, IamTenantEntity::getEnabled, enabled)
+                .orderByAsc(IamTenantEntity::getId));
     }
 
     /**

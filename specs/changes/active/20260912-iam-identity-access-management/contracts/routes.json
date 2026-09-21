@@ -366,7 +366,7 @@
     "action": "iam-platform:tenant:read",
     "request": null,
     "response": "RPageResponseResourceDetailTenantRecord",
-    "execution": "平台管理组织实体，不返回租户业务数据",
+    "execution": "平台管理组织实体，不返回租户业务数据；可选 name 包含匹配、status=ENABLED|DISABLED",
     "implemented": true,
     "query": [
       {
@@ -386,6 +386,24 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
         }
       }
     ]

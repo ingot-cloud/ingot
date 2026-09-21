@@ -442,3 +442,7 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 ## 2026-09-21 TenantRecord 所有者显示名
 
 平台组织列表/详情与租户设置读取 `TenantRecord` 时附带可选 `ownerDisplayName`（来自所有者租户成员 `display_name`），`ownerMemberId` 仍为转交标识。列表按当前页所有者 ID 批量查询，避免 N+1。成员缺失或名为空时省略该字段。未改 `specs/current/`，未 commit。
+
+## 2026-09-21 平台组织列表名称与状态筛选
+
+`GET /v1/platform/tenants` 原先只消费 `page`/`pageSize`，管理台传入的 `name`、`status` 被忽略。现按 FRONTEND UI01 落地：`name` 对组织名做包含匹配（空白不限制），`status` 仅接受 `ENABLED`/`DISABLED`（空白不限制，非法字面量 `InvalidArgument`），软删除行仍排除。未改 `specs/current/`。

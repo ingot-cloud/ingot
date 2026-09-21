@@ -101,7 +101,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/members/{id}/status | PATCH 暂停/恢复平台成员资格，不改变租户成员状态 |
 | /v1/platform/members/{id}/remove | POST 移出平台，不删除账号或租户成员 |
 | /v1/platform/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响；仅引用平台成员 |
-| /v1/platform/tenants | GET 列表（含所有者显示名）；POST 原子创建组织+所有者+基础开通 |
+| /v1/platform/tenants | GET 列表（含所有者显示名；可选 `name` 包含匹配、`status=ENABLED|DISABLED`）；POST 原子创建组织+所有者+基础开通 |
 | /v1/platform/tenants/preview | POST 校验创建输入并展示最小初始化结果 |
 | /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
 | /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限 |

@@ -168,7 +168,7 @@ class TenantQueryServiceTest {
         assertEquals("所有者", service.settings().record().ownerDisplayName());
 
         authenticate(PLATFORM);
-        var page = service.list(1, 20);
+        var page = service.list(1, 20, null, null);
         assertEquals(1, page.items().size());
         assertEquals("101", page.items().getFirst().record().ownerMemberId());
         assertEquals("所有者", page.items().getFirst().record().ownerDisplayName());
@@ -176,6 +176,34 @@ class TenantQueryServiceTest {
         var detail = service.get("10");
         assertEquals("101", detail.record().ownerMemberId());
         assertEquals("所有者", detail.record().ownerDisplayName());
+    }
+
+    @Test
+    void listFiltersByNameAndStatus() {
+        authenticate(PLATFORM);
+        jdbc.update("INSERT INTO iam_tenant VALUES (11,'研发中心',NULL,101,TRUE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (12,'测试停用',NULL,101,FALSE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (13,'已删除',NULL,101,TRUE,CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+
+        var byName = service.list(1, 20, "研发", null);
+        assertEquals(1, byName.items().size());
+        assertEquals("11", byName.items().getFirst().record().id());
+        assertEquals("研发中心", byName.items().getFirst().record().name());
+
+        var disabled = service.list(1, 20, null, "DISABLED");
+        assertEquals(1, disabled.items().size());
+        assertEquals("12", disabled.items().getFirst().record().id());
+
+        var combined = service.list(1, 20, "组织", "ENABLED");
+        assertEquals(1, combined.items().size());
+        assertEquals("10", combined.items().getFirst().record().id());
+
+        var none = service.list(1, 20, "不存在", null);
+        assertEquals(0, none.items().size());
+        assertEquals(0, none.total());
+
+        BizException invalid = assertThrows(BizException.class, () -> service.list(1, 20, null, "ENABLE"));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
     }
 
     private void assignment(long id, long memberId, long revisionId, String kind, String source) {

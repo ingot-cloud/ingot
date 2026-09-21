@@ -131,6 +131,9 @@ class ContractTest(unittest.TestCase):
         self.assertIn('email', tenant_filters)
         platform_filters = {item['name'] for item in self.by_id['platformListMembers']['query']}
         self.assertEqual({'page', 'pageSize'}, platform_filters)
+        tenant_list = {item['name']: item for item in self.by_id['platformListTenants']['query']}
+        self.assertEqual({'page', 'pageSize', 'name', 'status'}, set(tenant_list))
+        self.assertEqual(['ENABLED', 'DISABLED'], tenant_list['status']['schema']['enum'])
         export_status = self.by_id['tenantGetMemberExportStatus']
         self.assertEqual('/v1/tenant/members/export/{id}/status', export_status['path'])
         self.assertEqual('RExportTask', export_status['response'])
