@@ -1,0 +1,34 @@
+{
+  "environmentId": "iam-test-local",
+  "registered": true,
+  "independent": true,
+  "gatewayBaseUrl": "http://localhost:7980",
+  "authBaseUrl": "http://localhost:5100",
+  "bffBaseUrl": "http://localhost:5400",
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "name": "iam_test",
+    "user": "iam"
+  },
+  "redisNamespace": "iam-test",
+  "sites": {
+    "tenantAdmin": "http://tenant.localhost:5798",
+    "tenantLogin": "http://tenant-login.localhost:1798",
+    "platformAdmin": "http://platform.localhost:5799",
+    "platformLogin": "http://platform-login.localhost:1799"
+  },
+  "bootstrapUsername": "platform",
+  "oauth": {
+    "clientId": "ingot",
+    "clientSecret": "ingot",
+    "clientIdEnv": "IAM_TEST_OAUTH_CLIENT_ID",
+    "clientSecretEnv": "IAM_TEST_OAUTH_CLIENT_SECRET"
+  },
+  "credentialEnv": {
+    "platform-governor": "IAM_TEST_PASSWORD_PLATFORM_GOVERNOR",
+    "owner-a": "IAM_TEST_PASSWORD_OWNER_A",
+    "owner-b": "IAM_TEST_PASSWORD_OWNER_B"
+  },
+  "stateDir": "./runs"
+}

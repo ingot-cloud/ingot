@@ -414,3 +414,27 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 核对现有服务、控制器、测试源码及9月15–18日记录；在TASKS补勾限定范围的开发子项，保留T16/T17/B06和未满足完整条件的父任务未完成。历史测试结果不重记为本轮通过。新增TEST-DATA的测试数据 D01–D05及TD01–TD18场景卡（与 2026-09-13 DESIGN D01 区分），明确独立环境、真实接口构建、重复运行/重建、动态场景与前端共用证据。前端补充验收编号为 P24–P26。
 
 前端静态核对发现：角色/授权主体流程、成员写交互、用户组详情、应用人群、通讯录详情、字段策略编辑和辅助路径仍有缺口；由前端原change的IMPLEMENTATION-STATUS、IAM-INTEGRATION及U01–U13维护。后端不因前端列表存在勾选F系列。本轮不修改业务代码、不执行测试或写入数据库。
+
+## 2026-09-20 测试数据 D01 工具
+
+落地 `tools/iam/test-data/`：`prepare` / `verify` / `reset`、示例配置、场景清单与 unittest（缺配置失败、未登记/非独立环境拒绝、同一 runId 复用 objects、指纹漂移拒绝、reset 需 `--confirm-reset` 且不执行 DDL DROP）。TASKS 测试数据 D01 已勾选开发完成；D02–D05、A/F/L 验收与独立环境导入未做。未改 `specs/current/`，未 commit。
+
+## 2026-09-20 测试数据 D02 构建器
+
+新增 `build` 命令：stdlib HTTP 登录 Auth、调用 `/iam/v1` 创建账号/A-B 组织/部门/成员/组/共享角色/一条分配；清单已有对象跳过；一次性口令只写 `.secrets.json`，stdout 与 inventory 不含密码。unittest 用 FakeGateway 覆盖复用与口令不上报告。未对独立环境执行真实导入，TASKS 父项 D02 不勾选。未改 `specs/current/`，未 commit。
+
+## 2026-09-20 测试数据构建：账号创建 400
+
+独立环境 `build` 在 `POST /v1/platform/accounts` 遇到 `InvalidArgument`：注册用例把登录名冲突收成笼统错误，且中途失败不写清单，重跑会再次创建已存在的 `iam-test-*`。构建器改为 lookup 后创建、逐步写清单，并把服务端说明带回 CLI；`AccountService.create` 对已存在登录名返回「登录名已存在」。父任务 D02 不勾选。
+
+## 2026-09-20 测试数据构建：成员资格重复 400
+
+`reset` 只清清单不清库，且创建组织已写入所有者成员。`build` 再 `POST /v1/tenant/members`（owner-a/owner-b）或 `POST /v1/platform/members` 会撞唯一约束，服务端收成笼统 `InvalidArgument`。构建器改为：组织按名称复用并读取 `ownerMemberId`，所有者不再 POST 成员；其余成员按显示名列表复用，POST 400 时再查一次。成员冲突改为返回「成员资格已存在」。父任务 D02 不勾选。
+
+## 2026-09-20 测试数据构建：停用账号 409
+
+`reset-password` 会把 `iam_account.version` 加一，但构建器不回写清单。后续 `disable` / 暂停成员仍带创建时的 `"0"`，得到 `RevisionConflict`。构建器改为提交前 GET 当前版本，重置成功后回写，409 再读一次重试。父任务 D02 不勾选。
+
+## 2026-09-20 测试数据构建：共享角色 400
+
+共享角色的授权域是租户。构建器原先取平台应用列表第一项 `iam-platform` 的操作，发布时被 `RoleGrantValidator` 以「操作不属于该角色的管理域」拒绝，对外仍是笼统 `InvalidArgument`。改为选用 `iam-tenant` 的 `member:read` / `member:update`，ALL 范围不再带空字段；角色编码冲突返回「角色编码已存在」，校验失败带回具体说明。父任务 D02 不勾选。

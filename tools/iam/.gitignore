@@ -1,1 +1,4 @@
 __pycache__/
+test-data/runs/
+test-data/*.secrets.json
+test-data/config.local.json

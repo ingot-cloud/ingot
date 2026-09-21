@@ -42,8 +42,9 @@
 11. [阶段契约快照](./contracts/README.md)：历史结构验证，未覆盖本轮修订。
 12. [整改与职责边界](./REMEDIATION.md)：评估发现、框架归属、修正目标及任务验收映射。
 13. [独立测试数据](./TEST-DATA.md)：可重建环境、TD01–TD18 场景卡与测试数据 D01–D05；与 DESIGN D01（平台主体决策）不是同一编号。
+14. [联调操作手册](./VERIFICATION-GUIDE.md)：功能测试导读、数据导入步骤与按页操作；执行证据不自动勾选验收。
 
-前端 Agent 至少读取 REQUIREMENTS、DESIGN、API、FRONTEND、ACCEPTANCE、TEST-DATA；不依赖聊天记录推测行为。API 与实现导出的 OpenAPI 必须一致，实施若改变契约先回写并重新确认。
+前端 Agent 至少读取 REQUIREMENTS、DESIGN、API、FRONTEND、ACCEPTANCE、TEST-DATA、VERIFICATION-GUIDE；不依赖聊天记录推测行为。API 与实现导出的 OpenAPI 必须一致，实施若改变契约先回写并重新确认。
 
 ## 现状与相关变更
 

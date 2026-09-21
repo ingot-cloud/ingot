@@ -28,6 +28,8 @@
 
 建库顺序：001–005 → `007_member_export.sql` → 上述框架 DDL → `006_bootstrap.sql` → 可选的人工认证种子。`security_event` 暂无框架 DDL 文件，结构继续由 `005_auxiliary.sql` 提供，写入仍由 security-event-store-mysql 负责。
 
+独立测试环境编排见 `tools/iam/test-data/`（测试数据 D01/D02）：`prepare` / `build` / `verify` / `reset`。只接受已登记的独立库，不猜测开发库；`reset` 必须 `--confirm-reset`，且不会对任意库执行 DROP。`build` 走真实 `/iam/v1` 接口，口令不进报告。联调逐步操作见 change 内 `VERIFICATION-GUIDE.md`。
+
 运行测试：`python3 databases/iam/test_identity_schema.py` 校验结构约束，`python3 databases/iam/test_bootstrap_seed.py` 校验冷启动种子的完整性、幂等和组织初始化前置条件。均需要 Docker；不自动下载镜像。
 
 目标数据库使用 MySQL 8.0.16+，连接时区为 UTC。ID 使用正数 BIGINT UNSIGNED，API 使用字符串传输。成员状态对应 commons 的 MemberStatus：ACTIVE/SUSPENDED/REMOVED。独立的平台成员表和平台组关联表不引用租户成员。租户关联使用包含 tenant_id 的复合外键。
