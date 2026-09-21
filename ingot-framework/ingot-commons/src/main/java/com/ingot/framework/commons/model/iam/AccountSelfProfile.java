@@ -16,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
  * @param email 登录邮箱，可空
  * @param mustChangePassword 是否必须改密
  * @param member 当前成员最小资料
+ * @param version 当前账号资料版本，供 PATCH 携带 expectedVersion
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "返回当前认证账号的联系资料，不携带凭证或其他组织身份")
@@ -31,5 +32,7 @@ public record AccountSelfProfile(
         @NotNull @Schema(description = "是否必须改密", requiredMode = Schema.RequiredMode.REQUIRED)
         Boolean mustChangePassword,
         @NotNull @Schema(description = "当前成员最小资料", requiredMode = Schema.RequiredMode.REQUIRED)
-        CurrentProfile member) {
+        CurrentProfile member,
+        @NotBlank @Schema(description = "当前账号资料版本，供 PATCH 携带 expectedVersion", requiredMode = Schema.RequiredMode.REQUIRED)
+        String version) {
 }

@@ -115,7 +115,7 @@ public class CurrentAccountService {
 
     private static AccountSelfProfile profile(IamAccountEntity row, CurrentProfile member) {
         return new AccountSelfProfile(row.getId().toString(), row.getUsername(), row.getPhone(), row.getEmail(),
-                Boolean.TRUE.equals(row.getMustChangePassword()), member);
+                Boolean.TRUE.equals(row.getMustChangePassword()), member, version(row));
     }
 
     private static String version(IamAccountEntity row) {

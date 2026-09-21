@@ -47,6 +47,7 @@ class CurrentAccountServiceTest {
         assertEquals("alice", profile.username());
         assertEquals("13800000000", profile.phone());
         assertEquals("1001", profile.member().memberId());
+        assertEquals("0", profile.version());
     }
 
     @Test

@@ -191,9 +191,14 @@ public class AccountService {
      *
      * @param input 登录名与可选联系方式
      * @return 新账号 ID 与版本
+     * @throws BizException 登录名已存在或注册用例拒绝时使用 InvalidArgument
      */
     public CreatedResource create(AccountCreateInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_CREATE);
+        if (accounts.findByUsername(input.username()) != null) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "登录名已存在");
+        }
+        long operatorId = IamIds.require(actor.context().accountId());
         String password = initialPasswords.generate();
         try {
             registerUser.register(RegisterUserUseCase.RegisterUserCommand.builder()
@@ -203,11 +208,13 @@ public class AccountService {
                     .password(password)
                     .phone(blankToNull(input.phone()))
                     .email(blankToNull(input.email()))
-                    .createdBy(IamIds.require(actor.context().accountId()))
+                    .createdBy(operatorId)
                     .eventSource(EventSource.IAM)
                     .build());
         } catch (IllegalArgumentException exception) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            String detail = exception.getMessage();
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(),
+                    detail == null || detail.isBlank() ? IamReasonCode.INVALID_ARGUMENT.getText() : detail);
         }
         IamAccountEntity row = accounts.findByUsername(input.username());
         if (row == null) {

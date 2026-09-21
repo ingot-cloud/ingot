@@ -274,7 +274,7 @@ public class MemberQueryService {
                     replaceDepartments(tenantId, id, departmentBindings);
                 }
             } catch (DuplicateKeyException exception) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "成员资格已存在");
             }
             audits.write(actor.context(), access.nextId(), "member", IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, displayName), Map.of("member", "0"));

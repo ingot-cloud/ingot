@@ -180,7 +180,7 @@ public class RoleService {
             try {
                 roles.insertDefinition(entity);
             } catch (DuplicateKeyException exception) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色编码已存在");
             }
             publishRevision(id, kind, 1, input.baseRevisionId(), input.definition());
             audits.write(actor.context(), access.nextId(), ROLE, IamIds.text(id), AuditChangeType.CREATE,
@@ -425,7 +425,8 @@ public class RoleService {
         List<ValidationIssue> errors = validator.validate(grantDomain(kind), synthesized,
                 definition.parameterDefinitions());
         if (!errors.isEmpty()) {
-            throw new BizException(errors.getFirst().code());
+            ValidationIssue first = errors.getFirst();
+            throw new BizException(first.code().getCode(), first.message());
         }
         long id = access.nextId();
         IamRoleRevisionEntity entity = new IamRoleRevisionEntity();
