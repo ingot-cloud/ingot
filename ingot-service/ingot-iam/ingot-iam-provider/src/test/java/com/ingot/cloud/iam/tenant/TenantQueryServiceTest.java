@@ -44,6 +44,8 @@ class TenantQueryServiceTest {
     private final AtomicInteger invalidations = new AtomicInteger();
     private static final AuthorizationContext TENANT =
             new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
+    private static final AuthorizationContext PLATFORM =
+            new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001");
 
     @BeforeEach
     void database() {
@@ -55,7 +57,8 @@ class TenantQueryServiceTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16),"
                 + " version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY, name VARCHAR(128), avatar VARCHAR(256),"
-                + " owner_member_id BIGINT, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT)");
+                + " owner_member_id BIGINT, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT,"
+                + " created_at TIMESTAMP, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, account_id BIGINT, tenant_id BIGINT,"
                 + " display_name VARCHAR(128), status VARCHAR(16), version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("""
@@ -73,7 +76,7 @@ class TenantQueryServiceTest {
                 + "trace_id VARCHAR(128),occurred_at TIMESTAMP)");
         jdbc.update("INSERT INTO iam_account VALUES (1,TRUE,NULL,0),(2,TRUE,NULL,0)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE',0,NULL)");
-        jdbc.update("INSERT INTO iam_tenant VALUES (10,'组织',NULL,101,TRUE,NULL,0)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (10,'组织',NULL,101,TRUE,NULL,0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_tenant_member VALUES (101,1,10,'所有者','ACTIVE',0,NULL),"
                 + "(102,2,10,'成员','ACTIVE',0,NULL)");
         assignment(50, 101, 12, "SYSTEM", "INITIALIZATION");
@@ -87,7 +90,7 @@ class TenantQueryServiceTest {
                 new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()),
                 IamMybatisTestAccess.tenants(dataSource), IamMybatisTestAccess.assignments(dataSource),
                 new DataSourceTransactionManager(dataSource));
-        authenticate();
+        authenticate(TENANT);
     }
 
     @AfterEach
@@ -160,6 +163,21 @@ class TenantQueryServiceTest {
         assertEquals(0, invalidations.get());
     }
 
+    @Test
+    void listAndGetIncludeOwnerDisplayName() {
+        assertEquals("所有者", service.settings().record().ownerDisplayName());
+
+        authenticate(PLATFORM);
+        var page = service.list(1, 20);
+        assertEquals(1, page.items().size());
+        assertEquals("101", page.items().getFirst().record().ownerMemberId());
+        assertEquals("所有者", page.items().getFirst().record().ownerDisplayName());
+
+        var detail = service.get("10");
+        assertEquals("101", detail.record().ownerMemberId());
+        assertEquals("所有者", detail.record().ownerDisplayName());
+    }
+
     private void assignment(long id, long memberId, long revisionId, String kind, String source) {
         jdbc.update("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_member_id,revision_id,"
                         + "revision_kind,scope_bindings,valid_from,status,source,version) VALUES "
@@ -171,9 +189,10 @@ class TenantQueryServiceTest {
         return jdbc.queryForObject("SELECT status FROM iam_role_assignment WHERE id=?", String.class, id);
     }
 
-    private void authenticate() {
-        var user = InUser.stateless(1L, 10L, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
-                List.of(), List.of(), Map.of()).toBuilder().authorizationContext(TENANT).build();
+    private void authenticate(AuthorizationContext context) {
+        Long tenantId = context.tenantId() == null ? null : Long.parseLong(context.tenantId());
+        var user = InUser.stateless(1L, tenantId, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
+                List.of(), List.of(), Map.of()).toBuilder().authorizationContext(context).build();
         SecurityContextHolder.getContext().setAuthentication(
                 UsernamePasswordAuthenticationToken.authenticated(user, null, List.of()));
     }

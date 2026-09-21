@@ -94,8 +94,11 @@ public class TenantQueryService {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_TENANT_READ);
         IamPages.require(page, pageSize);
         var result = tenants.page(page, pageSize);
-        List<ResourceDetail<TenantRecord>> items = result.getRecords().stream()
-                .map(row -> IamDetails.of(record(row), row.getVersion().toString())).toList();
+        List<IamTenantEntity> rows = result.getRecords();
+        Map<BigInteger, String> names = tenants.displayNames(rows.stream()
+                .map(IamTenantEntity::getOwnerMemberId).toList());
+        List<ResourceDetail<TenantRecord>> items = rows.stream()
+                .map(row -> IamDetails.of(record(row, names), row.getVersion().toString())).toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
@@ -307,23 +310,28 @@ public class TenantQueryService {
     }
 
     private ResourceDetail<TenantRecord> load(long id) {
-        return detail(tenants.findActive(id));
+        return detail(tenants.findActive(id), true);
     }
 
     private ResourceDetail<TenantRecord> lock(long id) {
-        return detail(tenants.lockActive(id));
+        return detail(tenants.lockActive(id), false);
     }
 
-    private ResourceDetail<TenantRecord> detail(IamTenantEntity row) {
+    private ResourceDetail<TenantRecord> detail(IamTenantEntity row, boolean includeOwnerName) {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return IamDetails.of(record(row), row.getVersion().toString());
+        Map<BigInteger, String> names = includeOwnerName
+                ? tenants.displayNames(row.getOwnerMemberId() == null ? List.of() : List.of(row.getOwnerMemberId()))
+                : Map.of();
+        return IamDetails.of(record(row, names), row.getVersion().toString());
     }
 
-    private static TenantRecord record(IamTenantEntity row) {
+    private static TenantRecord record(IamTenantEntity row, Map<BigInteger, String> names) {
+        BigInteger ownerId = row.getOwnerMemberId();
         return new TenantRecord(row.getId().toString(), row.getName(), row.getAvatar(),
-                row.getOwnerMemberId() == null ? null : row.getOwnerMemberId().toString(),
+                ownerId == null ? null : ownerId.toString(),
+                ownerId == null ? null : names.get(ownerId),
                 Boolean.TRUE.equals(row.getEnabled()) ? ConfigurationStatus.ENABLED : ConfigurationStatus.DISABLED);
     }
 
