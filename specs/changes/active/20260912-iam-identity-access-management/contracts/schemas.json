@@ -4534,6 +4534,10 @@
             "type" : "string",
             "description" : "组织所有者成员 ID"
           },
+          "ownerDisplayName" : {
+            "type" : "string",
+            "description" : "所有者在该组织内的显示名称；成员缺失或名为空时省略"
+          },
           "status" : {
             "type" : "string",
             "description" : "组织启停状态",

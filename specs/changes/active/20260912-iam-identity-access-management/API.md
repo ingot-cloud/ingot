@@ -68,6 +68,7 @@ Auth 复用既有授权码/PKCE，管理台新增双入口 BFF 编排与会话�
 | Decision | allowed, reasonCode, message, sources[], scopeSummary, fieldAccess?, version, expiresAt；来源受诊断权限限制 |
 | Preview | version, valid, errors[], warnings[], impactSummary, effectiveResult；不写入任何授权 |
 | UpgradePreview | oldBaseRevisionId, newBaseRevisionId, changes[], conflicts[], effectiveResult, affectedAssignments；冲突有稳定 key |
+| TenantRecord | id, name, avatar?, ownerMemberId, ownerDisplayName?, status；ownerDisplayName 为所有者租户成员 display_name，成员缺失或名为空时省略；ownerMemberId 仍为转交标识 |
 | AuditEntry | actor, context, target, changeType, before/after 安全差异, revisions, timestamp, traceId |
 
 ScopeBindings 值使用 { kind: DEPARTMENTS/OBJECTS, ids[] }，不接收任意表达式；部门是否包含下级来自角色规则。范围/字段候选来源为资源目录能力，前端不能硬编码所有资源均有 SELF 或部门选项。
@@ -100,9 +101,9 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/members/{id}/status | PATCH 暂停/恢复平台成员资格，不改变租户成员状态 |
 | /v1/platform/members/{id}/remove | POST 移出平台，不删除账号或租户成员 |
 | /v1/platform/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响；仅引用平台成员 |
-| /v1/platform/tenants | GET 列表；POST 原子创建组织+所有者+基础开通 |
+| /v1/platform/tenants | GET 列表（含所有者显示名）；POST 原子创建组织+所有者+基础开通 |
 | /v1/platform/tenants/preview | POST 校验创建输入并展示最小初始化结果 |
-| /v1/platform/tenants/{id} | GET/PATCH 组织实体；不返回租户业务数据 |
+| /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
 | /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限 |
 | /v1/platform/tenants/{id}/entitlements/preview | POST 开通或套餐应用影响 |
 | /v1/platform/applications | GET/POST 应用目录 |
@@ -119,7 +120,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/members/export | POST 登记共享任务，返回 `CreatedResource`；GET `/{id}/status` 返回 `ExportTask`（不含成员快照）；GET `/{id}` 下载完整投影 |
 | /v1/tenant/departments | GET 必填 `purpose=MANAGED_DEPARTMENT` 及分页；POST；/{id} GET/PUT/DELETE |
 | /v1/tenant/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
-| /v1/tenant/settings | GET/PUT 组织设置；所有者转交使用独立 /owner-transfer POST |
+| /v1/tenant/settings | GET/PUT 组织设置（GET 含所有者显示名）；所有者转交使用独立 /owner-transfer POST |
 | /v1/tenant/applications | GET 已开通应用；/{id}/audience GET/PUT 可用人群 |
 | /v1/tenant/applications/{id}/actions | GET 当前已开通应用的操作与范围能力候选；仅供配置，不授予这些操作 |
 

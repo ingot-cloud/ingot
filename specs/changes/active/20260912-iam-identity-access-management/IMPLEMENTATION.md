@@ -438,3 +438,7 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 ## 2026-09-20 测试数据构建：共享角色 400
 
 共享角色的授权域是租户。构建器原先取平台应用列表第一项 `iam-platform` 的操作，发布时被 `RoleGrantValidator` 以「操作不属于该角色的管理域」拒绝，对外仍是笼统 `InvalidArgument`。改为选用 `iam-tenant` 的 `member:read` / `member:update`，ALL 范围不再带空字段；角色编码冲突返回「角色编码已存在」，校验失败带回具体说明。父任务 D02 不勾选。
+
+## 2026-09-21 TenantRecord 所有者显示名
+
+平台组织列表/详情与租户设置读取 `TenantRecord` 时附带可选 `ownerDisplayName`（来自所有者租户成员 `display_name`），`ownerMemberId` 仍为转交标识。列表按当前页所有者 ID 批量查询，避免 N+1。成员缺失或名为空时省略该字段。未改 `specs/current/`，未 commit。
