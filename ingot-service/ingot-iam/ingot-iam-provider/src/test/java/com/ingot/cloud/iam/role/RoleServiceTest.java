@@ -422,6 +422,39 @@ class RoleServiceTest {
         return revisionOf(Long.toString(roleId));
     }
 
+    @Test
+    void listSharedRolesFiltersByNameAndStatus() {
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,status,version) VALUES (1,1,'ACTIVE',0)");
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version)"
+                + " VALUES (41,NULL,NULL,'SHARED','alpha','演示共享',TRUE,0),"
+                + " (42,NULL,NULL,'SHARED','beta','停用共享',FALSE,0)");
+        authenticatePlatform();
+
+        var byName = service.list(AuthorizationDomain.PLATFORM, true, 1, 20, "演示", null);
+        assertEquals(1, byName.items().size());
+        assertEquals("41", byName.items().getFirst().record().id());
+
+        var disabled = service.list(AuthorizationDomain.PLATFORM, true, 1, 20, null, "DISABLED");
+        assertEquals(1, disabled.items().size());
+        assertEquals("42", disabled.items().getFirst().record().id());
+
+        var enabled = service.list(AuthorizationDomain.PLATFORM, true, 1, 20, "共享", "ENABLED");
+        assertEquals(2, enabled.total());
+
+        BizException invalid = assertThrows(BizException.class,
+                () -> service.list(AuthorizationDomain.PLATFORM, true, 1, 20, null, "ENABLE"));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
+    }
+
+    private void authenticatePlatform() {
+        var user = InUser.stateless(1L, null, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
+                List.of(), List.of(), Map.of()).toBuilder()
+                .authorizationContext(new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1"))
+                .build();
+        SecurityContextHolder.getContext().setAuthentication(
+                UsernamePasswordAuthenticationToken.authenticated(user, null, List.of()));
+    }
+
     private void authenticate() {
         var user = InUser.stateless(1L, 10L, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
                 List.of(), List.of(), Map.of()).toBuilder().authorizationContext(TENANT).build();

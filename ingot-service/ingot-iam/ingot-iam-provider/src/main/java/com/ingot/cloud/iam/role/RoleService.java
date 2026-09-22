@@ -21,6 +21,7 @@ import com.ingot.cloud.iam.persistence.entity.IamRoleGrantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleParameterEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
@@ -126,14 +127,31 @@ public class RoleService {
      * @param shared 是否共享角色入口
      * @param page 页码
      * @param pageSize 页大小
-     * @return 角色页
+     * @return 角色页，不按名称或状态筛选
      */
     public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared,
                                                           int page, int pageSize) {
+        return list(domain, shared, page, pageSize, null, null);
+    }
+
+    /**
+     * 列出当前路径可见的角色目录，可按名称包含匹配和启停状态筛选。
+     *
+     * @param domain 接口管理域
+     * @param shared 是否共享角色入口
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 角色名称包含匹配，空白表示不限制
+     * @param status 启停状态，空白表示不限制；仅接受 ENABLED/DISABLED
+     * @return 角色页
+     * @throws BizException 状态字面量非法时为 {@link IamReasonCode#INVALID_ARGUMENT}
+     */
+    public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared,
+                                                          int page, int pageSize, String name, String status) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         IamPages.require(page, pageSize);
         Page<IamRoleDefinitionEntity> rows = roles.pageDefinitions(domain, shared, tenantId(domain, actor), page,
-                pageSize);
+                pageSize, name, IamFilters.enabledOf(status));
         List<ResourceDetail<RoleSummary>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(summary(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);

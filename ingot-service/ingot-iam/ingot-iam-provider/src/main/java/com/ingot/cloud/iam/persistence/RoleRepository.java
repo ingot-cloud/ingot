@@ -21,6 +21,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamRoleGrantMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleParameterMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleRevisionMapper;
 import com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.RoleKind;
 import lombok.RequiredArgsConstructor;
@@ -51,12 +52,18 @@ public class RoleRepository {
      * @param tenantId 租户入口的可信组织 ID，其余入口忽略
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 角色名称包含匹配，空白表示不限制
+     * @param enabled 启用状态，空表示不限制
      * @return 角色页
      */
     public Page<IamRoleDefinitionEntity> pageDefinitions(AuthorizationDomain domain, boolean shared, Long tenantId,
-                                                         int page, int pageSize) {
+                                                         int page, int pageSize, String name, Boolean enabled) {
+        String keyword = IamFilters.containsName(name);
         return definitions.selectPage(new Page<>(page, pageSize),
-                visible(domain, shared, tenantId).orderByAsc(IamRoleDefinitionEntity::getId));
+                visible(domain, shared, tenantId)
+                        .like(keyword != null, IamRoleDefinitionEntity::getName, keyword)
+                        .eq(enabled != null, IamRoleDefinitionEntity::getEnabled, enabled)
+                        .orderByAsc(IamRoleDefinitionEntity::getId));
     }
 
     /**

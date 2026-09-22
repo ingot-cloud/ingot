@@ -48,14 +48,18 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 角色名称包含匹配，可空
+     * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
      * @return 角色页
      */
     @Operation(summary = "角色目录")
     @GetMapping
     public R<PageResponse<ResourceDetail<RoleSummary>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(roles.list(AuthorizationDomain.PLATFORM, true, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+        return ok(roles.list(AuthorizationDomain.PLATFORM, true, page, pageSize, name, status));
     }
 
     /**
