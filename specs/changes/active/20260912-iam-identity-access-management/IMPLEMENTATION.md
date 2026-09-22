@@ -446,3 +446,11 @@ A 系列仍须人工（见 `MANUAL-VERIFICATION.md`）：0.1 独立库与进程�
 ## 2026-09-21 平台组织列表名称与状态筛选
 
 `GET /v1/platform/tenants` 原先只消费 `page`/`pageSize`，管理台传入的 `name`、`status` 被忽略。现按 FRONTEND UI01 落地：`name` 对组织名做包含匹配（空白不限制），`status` 仅接受 `ENABLED`/`DISABLED`（空白不限制，非法字面量 `InvalidArgument`），软删除行仍排除。未改 `specs/current/`。
+
+## 2026-09-21 平台应用目录名称与状态筛选
+
+`GET /v1/platform/applications` 同样只消费分页参数。现与组织列表同一套 query：`name` 包含匹配、`status=ENABLED|DISABLED`，启停筛选不等于业务授权。解析共用 `IamFilters`。未改 `specs/current/`。
+
+## 2026-09-21 应用目录组织默认标记与列表刷新
+
+`GET /v1/platform/applications` 增加可选 `baseline` 布尔筛选。管理台删除/筛选后 `search()` 必须 refetch，避免 30s staleTime 把已删除记录留在列表。未改 `specs/current/`。

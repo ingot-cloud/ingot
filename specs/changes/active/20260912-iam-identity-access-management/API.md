@@ -106,7 +106,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
 | /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限 |
 | /v1/platform/tenants/{id}/entitlements/preview | POST 开通或套餐应用影响 |
-| /v1/platform/applications | GET/POST 应用目录 |
+| /v1/platform/applications | GET 列表（可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`）；POST 应用目录 |
 | /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用） |
 | /v1/platform/applications/{id}/resources | GET/POST 资源；/{resourceId} PUT/DELETE |
 | /v1/platform/applications/{id}/actions | GET/POST 操作；/{actionId} PUT/PATCH/DELETE |
