@@ -2,8 +2,11 @@ package com.ingot.cloud.iam.catalog;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,6 +43,7 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MenuDraft;
 import com.ingot.framework.commons.model.iam.MenuRecord;
+import com.ingot.framework.commons.model.iam.MenuTreeNode;
 import com.ingot.framework.commons.model.iam.MenuUpdateInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PlanDraft;
@@ -246,14 +250,17 @@ public class CatalogService {
      * @param applicationId 应用 ID
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 资源名称包含匹配，空白表示不限制
+     * @param code 资源编码包含匹配，空白表示不限制
      * @return 资源页
      */
-    public PageResponse<ResourceDetail<ResourceRecord>> listResources(String applicationId, int page, int pageSize) {
+    public PageResponse<ResourceDetail<ResourceRecord>> listResources(String applicationId, int page, int pageSize,
+                                                                     String name, String code) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_READ);
         long id = IamIds.require(applicationId);
         requireApplication(id);
         IamPages.require(page, pageSize);
-        Page<IamResourceEntity> rows = catalog.pageResources(id, page, pageSize);
+        Page<IamResourceEntity> rows = catalog.pageResources(id, page, pageSize, name, code);
         List<ResourceDetail<ResourceRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(resource(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
@@ -345,14 +352,19 @@ public class CatalogService {
      * @param applicationId 应用 ID
      * @param page 页码
      * @param pageSize 页大小
+     * @param resourceId 所属资源，空白表示不限制
+     * @param name 操作名称包含匹配，空白表示不限制
+     * @param ids 逗号分隔操作 ID，空白表示不限制
      * @return 操作页
      */
-    public PageResponse<ResourceDetail<ActionRecord>> listActions(String applicationId, int page, int pageSize) {
+    public PageResponse<ResourceDetail<ActionRecord>> listActions(String applicationId, int page, int pageSize,
+                                                                 String resourceId, String name, String ids) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
         long appId = IamIds.require(applicationId);
         requireApplication(appId);
         IamPages.require(page, pageSize);
-        Page<IamActionEntity> rows = catalog.pageActions(appId, page, pageSize);
+        Page<IamActionEntity> rows = catalog.pageActions(appId, page, pageSize, IamIds.optional(resourceId), name,
+                IamIds.optionalList(ids));
         List<ResourceDetail<ActionRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(action(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
@@ -491,6 +503,32 @@ public class CatalogService {
                 .map(row -> IamDetails.of(menu(row, texts(actions.getOrDefault(row.getId(), List.of()))),
                         version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 返回应用菜单树，不带分页。
+     *
+     * @param applicationId 应用 ID
+     * @return 根节点
+     */
+    public List<MenuTreeNode> listMenuTree(String applicationId) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MENU_READ);
+        long appId = IamIds.require(applicationId);
+        requireApplication(appId);
+        List<IamMenuEntity> rows = catalog.listMenus(appId);
+        Map<BigInteger, List<BigInteger>> actions = catalog.menuActionIds(appId,
+                rows.stream().map(IamMenuEntity::getId).toList());
+        Map<BigInteger, List<IamMenuEntity>> children = new LinkedHashMap<>();
+        List<IamMenuEntity> roots = new ArrayList<>();
+        Set<BigInteger> ids = rows.stream().map(IamMenuEntity::getId).collect(Collectors.toSet());
+        for (IamMenuEntity row : rows) {
+            if (row.getParentId() == null || !ids.contains(row.getParentId())) {
+                roots.add(row);
+                continue;
+            }
+            children.computeIfAbsent(row.getParentId(), key -> new ArrayList<>()).add(row);
+        }
+        return roots.stream().map(row -> menuTree(row, children, actions)).toList();
     }
 
     /**
@@ -779,6 +817,14 @@ public class CatalogService {
     private static ActionRecord action(IamActionEntity row) {
         return new ActionRecord(text(row.getId()), text(row.getApplicationId()), text(row.getResourceId()),
                 row.getCode(), row.getName(), statusOf(row.getEnabled()));
+    }
+
+    private MenuTreeNode menuTree(IamMenuEntity row, Map<BigInteger, List<IamMenuEntity>> children,
+                                 Map<BigInteger, List<BigInteger>> actions) {
+        List<MenuTreeNode> nodes = children.getOrDefault(row.getId(), List.of()).stream()
+                .map(child -> menuTree(child, children, actions)).toList();
+        return MenuTreeNode.of(IamDetails.of(menu(row, texts(actions.getOrDefault(row.getId(), List.of()))),
+                version(row.getVersion())), nodes);
     }
 
     private static MenuRecord menu(IamMenuEntity row, List<String> actionIds) {

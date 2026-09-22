@@ -9,7 +9,10 @@ import com.ingot.framework.commons.model.iam.ApplicationDraft;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
 import com.ingot.framework.commons.model.iam.ApplicationUpdateInput;
 import com.ingot.framework.commons.model.iam.ConfigurationStatusInput;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.CatalogListView;
 import com.ingot.framework.commons.model.iam.CreatedResource;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MenuDraft;
 import com.ingot.framework.commons.model.iam.MenuRecord;
 import com.ingot.framework.commons.model.iam.MenuUpdateInput;
@@ -139,6 +142,8 @@ public class PlatformApplicationAPI implements RShortcuts {
      * @param id 应用 ID
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 资源名称包含匹配，可空
+     * @param code 资源编码包含匹配，可空
      * @return 资源页
      */
     @Operation(summary = "应用资源")
@@ -146,8 +151,10 @@ public class PlatformApplicationAPI implements RShortcuts {
     public R<PageResponse<ResourceDetail<ResourceRecord>>> listResources(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(catalog.listResources(id, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String code) {
+        return ok(catalog.listResources(id, page, pageSize, name, code));
     }
 
     /**
@@ -197,6 +204,9 @@ public class PlatformApplicationAPI implements RShortcuts {
      * @param id 应用 ID
      * @param page 页码
      * @param pageSize 页大小
+     * @param resourceId 所属资源，可空
+     * @param name 操作名称包含匹配，可空
+     * @param ids 逗号分隔操作 ID，可空
      * @return 操作页
      */
     @Operation(summary = "应用操作")
@@ -204,8 +214,11 @@ public class PlatformApplicationAPI implements RShortcuts {
     public R<PageResponse<ResourceDetail<ActionRecord>>> listActions(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(catalog.listActions(id, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String resourceId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String ids) {
+        return ok(catalog.listActions(id, page, pageSize, resourceId, name, ids));
     }
 
     /**
@@ -268,16 +281,22 @@ public class PlatformApplicationAPI implements RShortcuts {
      * 列出应用菜单。
      *
      * @param id 应用 ID
-     * @param page 页码
-     * @param pageSize 页大小
-     * @return 菜单页
+     * @param view page 返回分页，tree 返回整树
+     * @param page 页码，tree 视图忽略
+     * @param pageSize 页大小，tree 视图忽略
+     * @return 菜单页或菜单树
      */
     @Operation(summary = "应用菜单")
     @GetMapping("/{id}/menus")
-    public R<PageResponse<ResourceDetail<MenuRecord>>> listMenus(
+    public R<?> listMenus(
             @PathVariable String id,
+            @RequestParam(defaultValue = CatalogListView.VALUE_PAGE) String view,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        CatalogListView listView = requireView(view);
+        if (listView == CatalogListView.TREE) {
+            return ok(catalog.listMenuTree(id));
+        }
         return ok(catalog.listMenus(id, page, pageSize));
     }
 
@@ -320,5 +339,13 @@ public class PlatformApplicationAPI implements RShortcuts {
     @DeleteMapping("/{id}/menus/{menuId}")
     public R<CreatedResource> deleteMenu(@PathVariable String id, @PathVariable String menuId) {
         return ok(catalog.deleteMenu(id, menuId));
+    }
+
+    private static CatalogListView requireView(String view) {
+        try {
+            return CatalogListView.getEnum(view);
+        } catch (IllegalArgumentException exception) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 }

@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.support;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 
@@ -44,6 +47,38 @@ public final class IamIds {
         } catch (NumberFormatException exception) {
             throw new BizException(failure);
         }
+    }
+
+    /**
+     * 解析可选 ID，空白表示不限制。
+     *
+     * @param value 字符串标识
+     * @return 正数 ID；空白为 {@code null}
+     */
+    public static Long optional(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return require(value);
+    }
+
+    /**
+     * 解析逗号分隔的 ID 列表，空白表示不限制。
+     *
+     * @param value 逗号分隔标识
+     * @return 正数 ID；空白为空列表
+     */
+    public static List<Long> optionalList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        List<Long> ids = new ArrayList<>();
+        for (String part : value.split(",")) {
+            if (!part.isBlank()) {
+                ids.add(require(part.trim()));
+            }
+        }
+        return ids;
     }
 
     /**

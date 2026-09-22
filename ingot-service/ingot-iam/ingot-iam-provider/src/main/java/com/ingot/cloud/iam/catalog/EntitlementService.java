@@ -134,7 +134,7 @@ public class EntitlementService {
             throw new BizException(IamReasonCode.APPLICATION_UNAVAILABLE);
         }
         IamPages.require(page, pageSize);
-        Page<IamActionEntity> rows = catalog.pageActions(appId, page, pageSize);
+        Page<IamActionEntity> rows = catalog.pageActions(appId, page, pageSize, null, null, List.of());
         List<ResourceDetail<ActionRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(action(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);

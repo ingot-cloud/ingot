@@ -213,11 +213,17 @@ public class CatalogRepository {
      * @param applicationId 应用 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 资源名称包含匹配，空白表示不限制
+     * @param code 资源编码包含匹配，空白表示不限制
      * @return 资源页
      */
-    public Page<IamResourceEntity> pageResources(long applicationId, int page, int pageSize) {
+    public Page<IamResourceEntity> pageResources(long applicationId, int page, int pageSize, String name, String code) {
+        String nameKeyword = IamFilters.containsName(name);
+        String codeKeyword = IamFilters.containsName(code);
         return resources.selectPage(new Page<>(page, pageSize), Wrappers.<IamResourceEntity>lambdaQuery()
                 .eq(IamResourceEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .like(nameKeyword != null, IamResourceEntity::getName, nameKeyword)
+                .like(codeKeyword != null, IamResourceEntity::getCode, codeKeyword)
                 .orderByAsc(IamResourceEntity::getId));
     }
 
@@ -306,11 +312,22 @@ public class CatalogRepository {
      * @param applicationId 应用 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param resourceId 所属资源，空表示不限制
+     * @param name 操作名称包含匹配，空白表示不限制
+     * @param ids 限定操作 ID，空表示不限制
      * @return 操作页
      */
-    public Page<IamActionEntity> pageActions(long applicationId, int page, int pageSize) {
+    public Page<IamActionEntity> pageActions(long applicationId, int page, int pageSize, Long resourceId, String name,
+                                             List<Long> ids) {
+        String keyword = IamFilters.containsName(name);
+        List<BigInteger> actionIds = ids == null ? List.of()
+                : ids.stream().map(BigInteger::valueOf).toList();
         return actions.selectPage(new Page<>(page, pageSize), Wrappers.<IamActionEntity>lambdaQuery()
                 .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .eq(resourceId != null, IamActionEntity::getResourceId,
+                        resourceId == null ? null : BigInteger.valueOf(resourceId))
+                .like(keyword != null, IamActionEntity::getName, keyword)
+                .in(!actionIds.isEmpty(), IamActionEntity::getId, actionIds)
                 .orderByAsc(IamActionEntity::getId));
     }
 
@@ -449,6 +466,19 @@ public class CatalogRepository {
      */
     public Page<IamMenuEntity> pageMenus(long applicationId, int page, int pageSize) {
         return menus.selectPage(new Page<>(page, pageSize), Wrappers.<IamMenuEntity>lambdaQuery()
+                .eq(IamMenuEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .orderByAsc(IamMenuEntity::getSortOrder)
+                .orderByAsc(IamMenuEntity::getId));
+    }
+
+    /**
+     * 列出应用全部菜单，按排序和 ID 稳定排列。
+     *
+     * @param applicationId 应用 ID
+     * @return 菜单行
+     */
+    public List<IamMenuEntity> listMenus(long applicationId) {
+        return menus.selectList(Wrappers.<IamMenuEntity>lambdaQuery()
                 .eq(IamMenuEntity::getApplicationId, BigInteger.valueOf(applicationId))
                 .orderByAsc(IamMenuEntity::getSortOrder)
                 .orderByAsc(IamMenuEntity::getId));
