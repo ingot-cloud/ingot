@@ -6496,7 +6496,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:shared-role:read",
-        "x-iam-execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+        "x-iam-execution": "固定版本发布不自动升级授权；可选 name 包含匹配、status=ENABLED|DISABLED",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
