@@ -18,6 +18,7 @@ import com.ingot.cloud.iam.persistence.entity.IamResourceEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamJson;
 import com.ingot.cloud.iam.support.IamPages;
@@ -101,12 +102,17 @@ public class CatalogService {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 应用名称包含匹配，空白表示不限制
+     * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
+     * @param baseline 是否组织默认开通，空表示不限制
      * @return 应用详情页
      */
-    public PageResponse<ResourceDetail<ApplicationRecord>> listApplications(int page, int pageSize) {
+    public PageResponse<ResourceDetail<ApplicationRecord>> listApplications(int page, int pageSize, String name,
+                                                                            String status, Boolean baseline) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_READ);
         IamPages.require(page, pageSize);
-        Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize);
+        Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, name, IamFilters.enabledOf(status),
+                baseline);
         List<ResourceDetail<ApplicationRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(application(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);

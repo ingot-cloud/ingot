@@ -134,6 +134,10 @@ class ContractTest(unittest.TestCase):
         tenant_list = {item['name']: item for item in self.by_id['platformListTenants']['query']}
         self.assertEqual({'page', 'pageSize', 'name', 'status'}, set(tenant_list))
         self.assertEqual(['ENABLED', 'DISABLED'], tenant_list['status']['schema']['enum'])
+        application_list = {item['name']: item for item in self.by_id['platformListApplications']['query']}
+        self.assertEqual({'page', 'pageSize', 'name', 'status', 'baseline'}, set(application_list))
+        self.assertEqual(['ENABLED', 'DISABLED'], application_list['status']['schema']['enum'])
+        self.assertEqual('boolean', application_list['baseline']['schema']['type'])
         export_status = self.by_id['tenantGetMemberExportStatus']
         self.assertEqual('/v1/tenant/members/export/{id}/status', export_status['path'])
         self.assertEqual('RExportTask', export_status['response'])

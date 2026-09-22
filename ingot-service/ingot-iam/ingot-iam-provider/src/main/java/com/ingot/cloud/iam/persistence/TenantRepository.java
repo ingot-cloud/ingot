@@ -14,6 +14,7 @@ import com.ingot.cloud.iam.persistence.entity.IamTenantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import com.ingot.cloud.iam.support.IamFilters;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -39,10 +40,10 @@ public class TenantRepository {
      * @return 组织页及总数
      */
     public Page<IamTenantEntity> page(int page, int size, String name, Boolean enabled) {
-        String keyword = name == null ? null : name.trim();
+        String keyword = IamFilters.containsName(name);
         return tenants.selectPage(new Page<>(page, size), Wrappers.<IamTenantEntity>lambdaQuery()
                 .isNull(IamTenantEntity::getDeletedAt)
-                .like(keyword != null && !keyword.isEmpty(), IamTenantEntity::getName, keyword)
+                .like(keyword != null, IamTenantEntity::getName, keyword)
                 .eq(enabled != null, IamTenantEntity::getEnabled, enabled)
                 .orderByAsc(IamTenantEntity::getId));
     }

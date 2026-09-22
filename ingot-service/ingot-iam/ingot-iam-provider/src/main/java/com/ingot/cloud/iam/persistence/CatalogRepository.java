@@ -28,6 +28,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamResourceMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleDeltaMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleGrantMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantAppEntitlementMapper;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.ActionMatchMode;
@@ -60,10 +61,18 @@ public class CatalogRepository {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 应用名称包含匹配，空白表示不限制
+     * @param enabled 启用状态，空表示不限制
+     * @param baseline 是否组织默认开通，空表示不限制
      * @return 应用页
      */
-    public Page<IamApplicationEntity> pageApplications(int page, int pageSize) {
+    public Page<IamApplicationEntity> pageApplications(int page, int pageSize, String name, Boolean enabled,
+                                                       Boolean baseline) {
+        String keyword = IamFilters.containsName(name);
         return applications.selectPage(new Page<>(page, pageSize), Wrappers.<IamApplicationEntity>lambdaQuery()
+                .like(keyword != null, IamApplicationEntity::getName, keyword)
+                .eq(enabled != null, IamApplicationEntity::getEnabled, enabled)
+                .eq(baseline != null, IamApplicationEntity::getBaseline, baseline)
                 .orderByAsc(IamApplicationEntity::getSortOrder)
                 .orderByAsc(IamApplicationEntity::getId));
     }

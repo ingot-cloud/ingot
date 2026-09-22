@@ -23,9 +23,12 @@ PAGE = [
     {'name': 'page', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'default': 1}},
     {'name': 'pageSize', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 200, 'default': 20}},
 ]
-TENANT_LIST = PAGE + [
+NAME_STATUS = PAGE + [
     {'name': 'name', 'required': False, 'schema': {'type': 'string'}},
     {'name': 'status', 'required': False, 'schema': {'type': 'string', 'enum': ['ENABLED', 'DISABLED']}},
+]
+APPLICATION_LIST = NAME_STATUS + [
+    {'name': 'baseline', 'required': False, 'schema': {'type': 'boolean'}},
 ]
 PHONE_EMAIL = [
     {'name': 'phone', 'required': False, 'schema': {'type': 'string'}},
@@ -154,7 +157,7 @@ def build():
         route('/v1/platform/tenants', 'get', 'platformListTenants', '组织列表', 'PLATFORM', 'iam-platform:tenant:read', None,
               'RPageResponseResourceDetailTenantRecord',
               '平台管理组织实体，不返回租户业务数据；可选 name 包含匹配、status=ENABLED|DISABLED',
-              query=TENANT_LIST),
+              query=NAME_STATUS),
         route('/v1/platform/tenants', 'post', 'platformCreateTenant', '原子创建组织', 'PLATFORM', 'iam-platform:tenant:create',
               'TenantCreateInput', 'RCreatedResource', '先校验创建 ACTION；目录生成计划；同事务初始化', 'tenant-create'),
         route('/v1/platform/tenants/preview', 'post', 'platformPreviewTenant', '预览组织初始化', 'PLATFORM', 'iam-platform:tenant:preview',
@@ -171,7 +174,9 @@ def build():
         route('/v1/platform/tenants/{id}/entitlements/preview', 'post', 'platformPreviewEntitlements', '预览开通影响', 'PLATFORM',
               'iam-platform:entitlement:preview', 'EntitlementReplaceInput', 'RPreviewEntitlementPreviewResult', '无写入'),
         route('/v1/platform/applications', 'get', 'platformListApplications', '应用目录', 'PLATFORM', 'iam-platform:application:read', None,
-              'RPageResponseResourceDetailApplicationRecord', '启用状态不等于业务授权', query=PAGE),
+              'RPageResponseResourceDetailApplicationRecord',
+              '启用状态不等于业务授权；可选 name 包含匹配、status=ENABLED|DISABLED、baseline',
+              query=APPLICATION_LIST),
         route('/v1/platform/applications', 'post', 'platformCreateApplication', '创建应用', 'PLATFORM', 'iam-platform:application:create',
               'ApplicationDraft', 'RCreatedResource', '租户域才可标记基础开通'),
         route('/v1/platform/applications/{id}', 'get', 'platformGetApplication', '应用详情', 'PLATFORM', 'iam-platform:application:read', None,

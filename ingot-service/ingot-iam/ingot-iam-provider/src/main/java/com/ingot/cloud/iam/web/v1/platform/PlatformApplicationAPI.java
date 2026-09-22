@@ -53,14 +53,20 @@ public class PlatformApplicationAPI implements RShortcuts {
      *
      * @param page 从 1 开始的页码
      * @param pageSize 每页条数
+     * @param name 应用名称包含匹配，可空
+     * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
+     * @param baseline 是否组织默认开通，可空
      * @return 应用页
      */
     @Operation(summary = "应用目录")
     @GetMapping
     public R<PageResponse<ResourceDetail<ApplicationRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(catalog.listApplications(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean baseline) {
+        return ok(catalog.listApplications(page, pageSize, name, status, baseline));
     }
 
     /**
