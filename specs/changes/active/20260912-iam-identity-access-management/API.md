@@ -108,9 +108,9 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/tenants/{id}/entitlements/preview | POST 开通或套餐应用影响 |
 | /v1/platform/applications | GET 列表（可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`）；POST 应用目录 |
 | /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用） |
-| /v1/platform/applications/{id}/resources | GET/POST 资源；/{resourceId} PUT/DELETE |
-| /v1/platform/applications/{id}/actions | GET/POST 操作；/{actionId} PUT/PATCH/DELETE |
-| /v1/platform/applications/{id}/menus | GET/POST 导航；/{menuId} PUT/DELETE |
+| /v1/platform/applications/{id}/resources | GET 分页（可选 `name`/`code` 包含匹配）；POST 资源；/{resourceId} PUT/DELETE |
+| /v1/platform/applications/{id}/actions | GET 分页（可选 `resourceId`、`name` 包含匹配、`ids` 逗号分隔回显）；POST 操作；/{actionId} PUT/PATCH/DELETE |
+| /v1/platform/applications/{id}/menus | GET `view=page` 分页或 `view=tree` 整树；POST 导航；/{menuId} PUT/DELETE |
 | /v1/platform/plans | GET/POST；/{id} GET/PUT；应用到租户须预览并显式提交 |
 | /v1/tenant/members | GET/POST 成员列表、创建成员关系；列表可选精确 `phone`/`email` |
 | /v1/tenant/members/{id} | GET/PATCH 组织资料，禁止全局凭证字段 |
