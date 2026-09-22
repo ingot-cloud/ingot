@@ -615,12 +615,14 @@ public class CatalogService {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 套餐名称包含匹配，空白表示不限制
+     * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
      * @return 套餐页
      */
-    public PageResponse<ResourceDetail<PlanRecord>> listPlans(int page, int pageSize) {
+    public PageResponse<ResourceDetail<PlanRecord>> listPlans(int page, int pageSize, String name, String status) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_PLAN_READ);
         IamPages.require(page, pageSize);
-        Page<IamPlanEntity> rows = catalog.pagePlans(page, pageSize);
+        Page<IamPlanEntity> rows = catalog.pagePlans(page, pageSize, name, IamFilters.enabledOf(status));
         List<ResourceDetail<PlanRecord>> items = new ArrayList<>();
         for (IamPlanEntity row : rows.getRecords()) {
             items.add(IamDetails.of(plan(row, texts(catalog.planApplicationIds(row.getId().longValue()))),
@@ -654,7 +656,7 @@ public class CatalogService {
             entity.setId(BigInteger.valueOf(id));
             entity.setName(input.name());
             entity.setDescription(nullable(input.description()));
-            entity.setEnabled(true);
+            entity.setEnabled(input.status() != ConfigurationStatus.DISABLED);
             catalog.insertPlan(entity);
             replacePlanApplications(id, input.applicationIds());
             audits.write(actor.context(), access.nextId(), PLAN, IamIds.text(id), AuditChangeType.CREATE,
@@ -676,11 +678,15 @@ public class CatalogService {
         return transaction.execute(status -> {
             IamPlanEntity current = requireLocked(catalog.lockPlan(planId));
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
-            catalog.updatePlan(planId, input.plan().name(), nullable(input.plan().description()), current.getVersion());
+            ConfigurationStatus nextStatus = input.plan().status() == null
+                    ? statusOf(current.getEnabled()) : input.plan().status();
+            catalog.updatePlan(planId, input.plan().name(), nullable(input.plan().description()),
+                    nextStatus == ConfigurationStatus.ENABLED, current.getVersion());
             replacePlanApplications(planId, input.plan().applicationIds());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), PLAN, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.NAME, current.getName()), Map.of(AuditField.NAME, input.plan().name()),
+                    Map.of(AuditField.NAME, current.getName(), AuditField.STATUS, statusOf(current.getEnabled()).name()),
+                    Map.of(AuditField.NAME, input.plan().name(), AuditField.STATUS, nextStatus.name()),
                     Map.of(PLAN, next));
             return loadPlan(planId);
         });

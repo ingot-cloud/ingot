@@ -41,14 +41,18 @@ public class PlatformPlanAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 套餐名称包含匹配，可空
+     * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
      * @return 套餐页
      */
     @Operation(summary = "套餐目录")
     @GetMapping
     public R<PageResponse<ResourceDetail<PlanRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(catalog.listPlans(page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+        return ok(catalog.listPlans(page, pageSize, name, status));
     }
 
     /**

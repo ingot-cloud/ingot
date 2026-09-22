@@ -127,6 +127,38 @@ class CatalogServiceTest {
     }
 
     @Test
+    void listPlansFiltersByNameAndStatus() {
+        jdbc.execute("""
+                CREATE TABLE iam_plan(id BIGINT PRIMARY KEY, name VARCHAR(128), description VARCHAR(512),
+                  enabled BOOLEAN, version BIGINT DEFAULT 0)
+                """);
+        jdbc.execute("CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT)");
+        jdbc.update("INSERT INTO iam_plan(id,name,enabled,version)"
+                + " VALUES (1,'基础套餐',TRUE,0),"
+                + " (2,'演示套餐',TRUE,0),"
+                + " (3,'停用套餐',FALSE,0)");
+
+        var byName = catalog.listPlans(1, 20, "演示", null);
+        assertEquals(1, byName.items().size());
+        assertEquals("2", byName.items().getFirst().record().id());
+
+        var disabled = catalog.listPlans(1, 20, null, "DISABLED");
+        assertEquals(1, disabled.items().size());
+        assertEquals("3", disabled.items().getFirst().record().id());
+
+        var combined = catalog.listPlans(1, 20, "套餐", "ENABLED");
+        assertEquals(2, combined.items().size());
+        assertEquals(2, combined.total());
+
+        var none = catalog.listPlans(1, 20, "不存在", null);
+        assertEquals(0, none.items().size());
+
+        BizException invalid = assertThrows(BizException.class,
+                () -> catalog.listPlans(1, 20, null, "ENABLE"));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
+    }
+
+    @Test
     void listResourcesFiltersByNameAndCode() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");

@@ -684,10 +684,15 @@ public class CatalogRepository {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 套餐名称包含匹配，空白表示不限制
+     * @param enabled 启用状态，空表示不限制
      * @return 套餐页
      */
-    public Page<IamPlanEntity> pagePlans(int page, int pageSize) {
+    public Page<IamPlanEntity> pagePlans(int page, int pageSize, String name, Boolean enabled) {
+        String keyword = IamFilters.containsName(name);
         return plans.selectPage(new Page<>(page, pageSize), Wrappers.<IamPlanEntity>lambdaQuery()
+                .like(keyword != null, IamPlanEntity::getName, keyword)
+                .eq(enabled != null, IamPlanEntity::getEnabled, enabled)
                 .orderByAsc(IamPlanEntity::getId));
     }
 
@@ -721,18 +726,20 @@ public class CatalogRepository {
     }
 
     /**
-     * 更新套餐名称与说明并将版本加一。
+     * 更新套餐名称、说明与启停状态，并将版本加一。
      *
      * @param id 套餐 ID
      * @param name 名称
      * @param description 说明，可空
+     * @param enabled 是否启用
      * @param currentVersion 锁定后的当前版本
      */
-    public void updatePlan(long id, String name, String description, BigInteger currentVersion) {
+    public void updatePlan(long id, String name, String description, boolean enabled, BigInteger currentVersion) {
         plans.update(Wrappers.<IamPlanEntity>lambdaUpdate()
                 .eq(IamPlanEntity::getId, BigInteger.valueOf(id))
                 .set(IamPlanEntity::getName, name)
                 .set(IamPlanEntity::getDescription, description)
+                .set(IamPlanEntity::getEnabled, enabled)
                 .set(IamPlanEntity::getVersion, currentVersion.add(BigInteger.ONE)));
     }
 
