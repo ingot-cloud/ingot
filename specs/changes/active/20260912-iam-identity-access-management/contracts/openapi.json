@@ -5175,7 +5175,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:plan:read",
-        "x-iam-execution": "修改套餐不自动改变既有开通",
+        "x-iam-execution": "修改套餐不自动改变既有开通；可选 name 包含匹配、status=ENABLED|DISABLED",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -5269,6 +5269,26 @@
               "minimum": 1,
               "maximum": 200,
               "default": 20
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ENABLED",
+                "DISABLED"
+              ]
             }
           }
         ]
@@ -20332,6 +20352,14 @@
               "type": "string",
               "description": "显式关联的应用 ID"
             }
+          },
+          "status": {
+            "type": "string",
+            "description": "套餐状态，可空；创建缺省启用，更新缺省保持当前状态",
+            "enum": [
+              "ENABLED",
+              "DISABLED"
+            ]
           }
         },
         "description": "声明套餐包含的应用清单，修改套餐不自动改变既有租户开通"

@@ -2381,6 +2381,11 @@
               "type" : "string",
               "description" : "显式关联的应用 ID"
             }
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "套餐状态，可空；创建缺省启用，更新缺省保持当前状态",
+            "enum" : [ "ENABLED", "DISABLED" ]
           }
         },
         "description" : "声明套餐包含的应用清单，修改套餐不自动改变既有租户开通"

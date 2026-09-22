@@ -860,7 +860,7 @@
     "action": "iam-platform:plan:read",
     "request": null,
     "response": "RPageResponseResourceDetailPlanRecord",
-    "execution": "修改套餐不自动改变既有开通",
+    "execution": "修改套餐不自动改变既有开通；可选 name 包含匹配、status=ENABLED|DISABLED",
     "implemented": true,
     "query": [
       {
@@ -880,6 +880,24 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
         }
       }
     ]
