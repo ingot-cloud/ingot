@@ -53,6 +53,7 @@ import com.ingot.framework.commons.model.iam.RolePublishInput;
 import com.ingot.framework.commons.model.iam.RoleRevision;
 import com.ingot.framework.commons.model.iam.RoleRevisionRef;
 import com.ingot.framework.commons.model.iam.RoleSummary;
+import com.ingot.framework.commons.model.iam.RoleUpdateInput;
 import com.ingot.framework.commons.model.iam.ScopeBinding;
 import com.ingot.framework.commons.model.iam.ScopeBindingKind;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
@@ -233,6 +234,39 @@ public class RoleService {
                     enabled ? AuditChangeType.ENABLE : AuditChangeType.DISABLE,
                     Map.of(AuditField.STATUS, statusOf(current.enabled()).name()),
                     Map.of(AuditField.STATUS, input.status().name()), Map.of(ROLE, next));
+            changes.markAll();
+            return new CreatedResource(id, next);
+        });
+    }
+
+    /**
+     * 更新角色名称、说明、分组与启停，编码与已发布版本不变。
+     *
+     * @param domain 接口管理域
+     * @param shared 是否共享角色入口
+     * @param id 角色 ID
+     * @param input 待写入的基本信息
+     * @return 提交后版本
+     */
+    public CreatedResource updateProfile(AuthorizationDomain domain, boolean shared, String id,
+                                         RoleUpdateInput input) {
+        ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
+        long roleId = IamIds.require(id);
+        return transaction.execute(status -> {
+            RoleRow current = lock(domain, shared, actor, roleId);
+            if (current.kind() == RoleKind.SYSTEM) {
+                throw new BizException(IamReasonCode.ACTION_DENIED);
+            }
+            IamIds.requireVersion(input.expectedVersion(), version(current.version()));
+            boolean enabled = input.status() == ConfigurationStatus.ENABLED;
+            String name = input.name().trim();
+            String description = blankToNull(input.description());
+            String groupName = blankToNull(input.groupName());
+            roles.updateProfile(roleId, name, description, groupName, enabled, current.version());
+            String next = nextVersion(current.version());
+            audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
+                    Map.of(AuditField.NAME, current.name(), AuditField.STATUS, statusOf(current.enabled()).name()),
+                    Map.of(AuditField.NAME, name, AuditField.STATUS, input.status().name()), Map.of(ROLE, next));
             changes.markAll();
             return new CreatedResource(id, next);
         });
@@ -723,6 +757,10 @@ public class RoleService {
 
     private static String text(BigInteger id) {
         return id == null ? null : IamIds.text(id.longValue());
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private enum AccessKind {

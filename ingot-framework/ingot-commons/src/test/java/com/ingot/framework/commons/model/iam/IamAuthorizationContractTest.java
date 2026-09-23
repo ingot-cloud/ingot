@@ -149,7 +149,7 @@ class IamAuthorizationContractTest {
                 DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
                 GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
-                RoleCreateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
+                RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
                 UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class,
                 MemberDepartmentInput.class, TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class,
                 DepartmentDraft.class, DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class,

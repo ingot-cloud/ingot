@@ -126,6 +126,27 @@ public class RoleRepository {
     }
 
     /**
+     * 更新角色名称、说明、分组与启停并将版本加一。
+     *
+     * @param id 角色 ID
+     * @param name 角色名称
+     * @param description 说明，可空
+     * @param groupName 仅展示分组，可空
+     * @param enabled 是否启用
+     * @param currentVersion 锁定后的当前版本
+     */
+    public void updateProfile(long id, String name, String description, String groupName, boolean enabled,
+                              BigInteger currentVersion) {
+        definitions.update(Wrappers.<IamRoleDefinitionEntity>lambdaUpdate()
+                .eq(IamRoleDefinitionEntity::getId, BigInteger.valueOf(id))
+                .set(IamRoleDefinitionEntity::getName, name)
+                .set(IamRoleDefinitionEntity::getDescription, description)
+                .set(IamRoleDefinitionEntity::getGroupName, groupName)
+                .set(IamRoleDefinitionEntity::getEnabled, enabled)
+                .set(IamRoleDefinitionEntity::getVersion, currentVersion.add(BigInteger.ONE)));
+    }
+
+    /**
      * 将角色定义版本加一。
      *
      * @param id 角色 ID

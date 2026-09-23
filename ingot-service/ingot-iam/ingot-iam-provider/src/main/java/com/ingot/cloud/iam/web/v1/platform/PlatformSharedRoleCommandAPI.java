@@ -14,6 +14,7 @@ import com.ingot.framework.commons.model.iam.RoleDefinitionDraft;
 import com.ingot.framework.commons.model.iam.RolePublishInput;
 import com.ingot.framework.commons.model.iam.RoleRevision;
 import com.ingot.framework.commons.model.iam.RoleSummary;
+import com.ingot.framework.commons.model.iam.RoleUpdateInput;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,16 +88,23 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
     }
 
     /**
-     * 启停共享角色。
+     * 更新共享角色名称、说明、分组与启停；未传名称时只改启停。
      *
      * @param id 角色 ID
-     * @param input 目标状态
+     * @param input 基本信息或仅启停
      * @return 提交后版本
      */
-    @Operation(summary = "启停角色")
+    @Operation(summary = "更新角色基本信息或启停")
     @PatchMapping("/{id}")
-    public R<CreatedResource> status(@PathVariable String id, @Valid @RequestBody ConfigurationStatusInput input) {
-        return ok(roles.changeStatus(AuthorizationDomain.PLATFORM, true, id, input));
+    public R<CreatedResource> patch(@PathVariable String id, @Valid @RequestBody RoleUpdateInput input) {
+        if (input.name() == null || input.name().isBlank()) {
+            return ok(roles.changeStatus(
+                    AuthorizationDomain.PLATFORM,
+                    true,
+                    id,
+                    new ConfigurationStatusInput(input.status(), input.expectedVersion())));
+        }
+        return ok(roles.updateProfile(AuthorizationDomain.PLATFORM, true, id, input));
     }
 
     /**
