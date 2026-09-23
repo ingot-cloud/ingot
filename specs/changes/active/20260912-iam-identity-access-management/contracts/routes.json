@@ -2421,7 +2421,7 @@
     "action": "iam-platform:account:lookup",
     "request": "AccountLookupInput",
     "response": "RResourceDetailAccountRecord",
-    "execution": "必须声明 purpose；MEMBER_CREATE 只返回 id 与登录名",
+    "execution": "必须声明 purpose；MEMBER_CREATE 返回 id、登录名与登录联系方式",
     "implemented": true
   },
   {
