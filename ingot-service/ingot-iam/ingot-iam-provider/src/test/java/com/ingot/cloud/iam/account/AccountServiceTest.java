@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 
 import com.ingot.cloud.iam.authorization.IamActionAuthorizer;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
+import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ObjectScopeClause;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
@@ -48,8 +49,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -119,7 +124,9 @@ class AccountServiceTest {
         when(evaluator.evaluate(any())).thenReturn(new AuthorizationEvaluator.AuthorizationView(
                 List.of(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE, IamAction.VALUE_PLATFORM_ACCOUNT_DELETE),
                 List.of(), Map.of(), "1", Instant.now().plusSeconds(60)));
-        service = new AccountService(access, scopes, evaluator, IamMybatisTestAccess.accountQueries(dataSource),
+        when(scopes.targetAllowed(any(), any(), any(), any())).thenReturn(true);
+        service = new AccountService(access, scopes, new ObjectCapabilities(evaluator, scopes),
+                IamMybatisTestAccess.accountQueries(dataSource),
                 IamMybatisTestAccess.accountWrites(dataSource, () -> 99L), IamMybatisTestAccess.accounts(dataSource),
                 IamMybatisTestAccess.memberQueries(dataSource), IamMybatisTestAccess.audits(dataSource),
                 mock(RegisterUserUseCase.class), mock(ManageAccountStatusUseCase.class),
@@ -144,6 +151,14 @@ class AccountServiceTest {
     }
 
     @Test
+    void lookupMissSaysAccountMissing() {
+        BizException failure = assertThrows(BizException.class,
+                () -> service.lookup(new AccountLookupInput(AccountLookupPurpose.ACCOUNT_MANAGE, "nobody", null, null)));
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), failure.getCode());
+        assertEquals("账号不存在", failure.getMessage());
+    }
+
+    @Test
     void memberCreateLookupReturnsLoginContactsWithoutOrgRelations() {
         var result = service.lookup(new AccountLookupInput(AccountLookupPurpose.MEMBER_CREATE, "alice", null, null));
         assertEquals("1", result.record().id());
@@ -160,6 +175,16 @@ class AccountServiceTest {
         var page = service.list(1, 20);
         assertEquals(1, page.items().size());
         assertEquals("2", page.items().getFirst().record().id());
+    }
+
+    @Test
+    void listReusesAuthorizationSnapshotForWriteCapabilities() {
+        var page = service.list(1, 20);
+        assertEquals(2, page.items().size());
+        verify(scopes, times(1)).objects(any(), eq(IamAction.PLATFORM_ACCOUNT_READ));
+        verify(scopes, never()).objects(any(), eq(IamAction.PLATFORM_ACCOUNT_UPDATE));
+        verify(scopes, never()).objects(any(), eq(IamAction.PLATFORM_ACCOUNT_DELETE));
+        verify(scopes).targetAllowed(any(), any(), eq(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE), eq("1"));
     }
 
     @Test

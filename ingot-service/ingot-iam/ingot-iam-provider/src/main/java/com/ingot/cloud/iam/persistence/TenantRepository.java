@@ -15,6 +15,7 @@ import com.ingot.cloud.iam.persistence.entity.IamTenantMemberEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
 import com.ingot.cloud.iam.support.IamFilters;
+import com.ingot.cloud.iam.support.IamOssPaths;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -87,7 +88,7 @@ public class TenantRepository {
      * 按持锁读到的版本条件更新已锁定组织的设置并递增版本。
      * @param id 已授权组织 ID
      * @param name 组织名称
-     * @param avatar 头像，可清空
+     * @param avatar 头像引用，可清空；入库只保存 {@code bucket/objectName}
      * @param enabled 启用状态，为空时保持原值
      * @param version 持锁读到的版本
      * @return 受影响行数；为 0 表示版本已被并发改写
@@ -96,7 +97,7 @@ public class TenantRepository {
         return tenants.update(Wrappers.<IamTenantEntity>lambdaUpdate()
                 .eq(IamTenantEntity::getId, BigInteger.valueOf(id))
                 .eq(IamTenantEntity::getVersion, version)
-                .set(IamTenantEntity::getName, name).set(IamTenantEntity::getAvatar, avatar)
+                .set(IamTenantEntity::getName, name).set(IamTenantEntity::getAvatar, IamOssPaths.store(avatar))
                 .set(enabled != null, IamTenantEntity::getEnabled, enabled)
                 .set(IamTenantEntity::getVersion, version.add(BigInteger.ONE)));
     }

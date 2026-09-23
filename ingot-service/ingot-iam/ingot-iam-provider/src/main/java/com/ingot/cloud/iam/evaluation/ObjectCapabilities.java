@@ -25,6 +25,11 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ObjectCapabilities {
+    private static final List<IamAction> PLATFORM_ACCOUNT = List.of(
+            IamAction.PLATFORM_ACCOUNT_UPDATE, IamAction.PLATFORM_ACCOUNT_DELETE,
+            IamAction.PLATFORM_ACCOUNT_ENABLE, IamAction.PLATFORM_ACCOUNT_DISABLE,
+            IamAction.PLATFORM_ACCOUNT_LOCK, IamAction.PLATFORM_ACCOUNT_UNLOCK,
+            IamAction.PLATFORM_ACCOUNT_RESET_PASSWORD);
     private static final List<IamAction> PLATFORM_MEMBER = List.of(
             IamAction.PLATFORM_MEMBER_UPDATE, IamAction.PLATFORM_MEMBER_STATUS, IamAction.PLATFORM_MEMBER_REMOVE);
     private static final List<IamAction> TENANT_MEMBER = List.of(
@@ -44,6 +49,22 @@ public class ObjectCapabilities {
      */
     public Snapshot snapshot(AuthorizationContext actor) {
         return new Snapshot(actor, evaluator.evaluate(actor));
+    }
+
+    /**
+     * 计算平台账号行上的展示能力，只消费已求值视图，不按写操作重新鉴权。
+     *
+     * @param snapshot 授权快照
+     * @param accountId 目标账号
+     * @return 按操作码索引的能力
+     */
+    public Map<String, ObjectCapability> platformAccount(Snapshot snapshot, String accountId) {
+        Map<String, ObjectCapability> result = new LinkedHashMap<>();
+        for (IamAction action : PLATFORM_ACCOUNT) {
+            result.put(action.getCode(), of(snapshot.view(), action,
+                    scopes.targetAllowed(snapshot.actor(), snapshot.view(), action.getCode(), accountId)));
+        }
+        return result;
     }
 
     /**

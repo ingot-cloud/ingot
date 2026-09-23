@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
  * @param ownerAccountId 已存在且有效的全局所有者账号
  * @param ownerDisplayName 所有者在本组织的显示名，可空时由服务生成
  * @param rootDepartmentName 根部门名称，可空时使用组织名称
- * @param avatar 组织头像，可空
+ * @param avatar 组织头像，可空；可提交时效链接或对象路径，入库只保存路径
  * @param planId 可选套餐；缺省时开通服务器标记的基础应用
  */
 @Schema(description = "提交组织创建所需的资料与所有者账号，基础目录引用由服务器生成")
@@ -26,7 +26,7 @@ public record TenantCreateInput(
         String ownerDisplayName,
         @Size(max = 128) @Schema(description = "根部门名称，可空时使用组织名称")
         String rootDepartmentName,
-        @Schema(description = "组织头像，可空")
+        @Schema(description = "组织头像，可空；可提交时效链接或对象路径，入库只保存路径")
         String avatar,
         @Schema(description = "可选套餐；缺省时开通服务器标记的基础应用")
         String planId) {

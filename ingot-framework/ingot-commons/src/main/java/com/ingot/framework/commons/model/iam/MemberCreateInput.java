@@ -19,7 +19,7 @@ import jakarta.validation.constraints.NotNull;
  * @since 1.0.0
  * @param accountId 已存在的全局账号 ID
  * @param displayName 当前域显示名，可空
- * @param avatar 当前域头像，可空
+ * @param avatar 当前域头像，可空；可提交时效链接或对象路径，入库只保存路径
  * @param departments 租户任职；平台必须为空且最多一个主部门
  */
 @Schema(description = "把已有全局账号关联为当前域成员，不创建或改写登录凭证")
@@ -28,7 +28,7 @@ public record MemberCreateInput(
         String accountId,
         @Schema(description = "当前域显示名，可空")
         String displayName,
-        @Schema(description = "当前域头像，可空")
+        @Schema(description = "当前域头像，可空；可提交时效链接或对象路径，入库只保存路径")
         String avatar,
         @NotNull @Schema(description = "租户任职；平台必须为空且最多一个主部门", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotNull @Valid MemberDepartmentBinding> departments) {

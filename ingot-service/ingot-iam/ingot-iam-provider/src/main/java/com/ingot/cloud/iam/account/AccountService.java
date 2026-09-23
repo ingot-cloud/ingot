@@ -3,11 +3,10 @@ package com.ingot.cloud.iam.account;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
+import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
@@ -15,7 +14,6 @@ import com.ingot.cloud.iam.identity.AccountCredentialRepository;
 import com.ingot.cloud.iam.persistence.AccountQueryRepository;
 import com.ingot.cloud.iam.persistence.AccountWriteRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
-import com.ingot.cloud.iam.persistence.ObjectScopeSql;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
@@ -36,7 +34,6 @@ import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
-import com.ingot.framework.commons.model.iam.ObjectCapability;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.VersionInput;
@@ -61,15 +58,10 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Service
 public class AccountService {
-    private static final List<IamAction> WRITE_ACTIONS = List.of(
-            IamAction.PLATFORM_ACCOUNT_UPDATE, IamAction.PLATFORM_ACCOUNT_DELETE,
-            IamAction.PLATFORM_ACCOUNT_ENABLE, IamAction.PLATFORM_ACCOUNT_DISABLE,
-            IamAction.PLATFORM_ACCOUNT_LOCK, IamAction.PLATFORM_ACCOUNT_UNLOCK,
-            IamAction.PLATFORM_ACCOUNT_RESET_PASSWORD);
-    private static final String ALLOWED_MESSAGE = "当前对象允许该操作";
+    private static final String ACCOUNT_NOT_FOUND = "账号不存在";
     private final IamAccess access;
     private final ResourceAccess scopes;
-    private final AuthorizationEvaluator evaluator;
+    private final ObjectCapabilities capabilities;
     private final AccountQueryRepository accounts;
     private final AccountWriteRepository writes;
     private final AccountCredentialRepository credentials;
@@ -89,7 +81,7 @@ public class AccountService {
      *
      * @param access 当前身份
      * @param scopes 对象范围
-     * @param evaluator 授权视图
+     * @param capabilities 列表展示能力
      * @param accounts 账号查询
      * @param writes 账号写入
      * @param credentials 锁定事实
@@ -103,7 +95,7 @@ public class AccountService {
      * @param initialPasswords 初始密码
      * @param transactionManager 同一数据源事务
      */
-    public AccountService(IamAccess access, ResourceAccess scopes, AuthorizationEvaluator evaluator,
+    public AccountService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
                           AccountQueryRepository accounts, AccountWriteRepository writes,
                           AccountCredentialRepository credentials, MemberQueryRepository members,
                           IamAuditWriter audits, RegisterUserUseCase registerUser,
@@ -112,7 +104,7 @@ public class AccountService {
                           InitialPasswordService initialPasswords, PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
-        this.evaluator = evaluator;
+        this.capabilities = capabilities;
         this.accounts = accounts;
         this.writes = writes;
         this.credentials = credentials;
@@ -138,10 +130,10 @@ public class AccountService {
         IamPages.require(page, pageSize);
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_READ);
         ObjectScope scope = scopes.objects(actor.context(), IamAction.PLATFORM_ACCOUNT_READ);
-        AuthorizationEvaluator.AuthorizationView view = evaluator.evaluate(actor.context());
+        ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         var result = accounts.page(scope, page, pageSize);
         List<ResourceDetail<AccountRecord>> items = result.getRecords().stream()
-                .map(row -> detail(actor, view, row))
+                .map(row -> detail(caps, row))
                 .toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
@@ -160,11 +152,11 @@ public class AccountService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return detail(actor, evaluator.evaluate(actor.context()), row);
+        return detail(capabilities.snapshot(actor.context()), row);
     }
 
     /**
-     * 按用途精确查找一个账号，未命中按对象不存在处理。
+     * 按用途精确查找一个账号，未命中或不可见时按账号不存在处理。
      *
      * @param input 单一查找条件
      * @return 受限投影
@@ -173,27 +165,34 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_LOOKUP);
         IamAccountEntity row = resolveLookup(input);
         if (row == null) {
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            throw accountNotFound();
         }
         long accountId = row.getId().longValueExact();
-        scopes.requireVisibleObject(actor.context(), IamAction.PLATFORM_ACCOUNT_LOOKUP, accountId);
+        try {
+            scopes.requireVisibleObject(actor.context(), IamAction.PLATFORM_ACCOUNT_LOOKUP, accountId);
+        } catch (BizException exception) {
+            if (IamReasonCode.OBJECT_NOT_FOUND.getCode().equals(exception.getCode())) {
+                throw accountNotFound();
+            }
+            throw exception;
+        }
         if (input.purpose() == AccountLookupPurpose.MEMBER_CREATE) {
             AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
                     row.getPhone(), row.getEmail(), Boolean.TRUE.equals(row.getEnabled()),
                     credentials.locked(accountId), Boolean.TRUE.equals(row.getMustChangePassword()), null);
             return IamDetails.of(record, version(row));
         }
-        return detail(actor, evaluator.evaluate(actor.context()), row);
+        return detail(capabilities.snapshot(actor.context()), row);
     }
 
     /**
      * 创建全局账号，初始密码由安全框架生成，不自动授予成员资格。
      *
      * @param input 登录名与可选联系方式
-     * @return 新账号 ID 与版本
+     * @return 一次性初始密码
      * @throws BizException 登录名已存在或注册用例拒绝时使用 InvalidArgument
      */
-    public CreatedResource create(AccountCreateInput input) {
+    public AccountSecret create(AccountCreateInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_CREATE);
         if (accounts.findByUsername(input.username()) != null) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "登录名已存在");
@@ -224,7 +223,7 @@ public class AccountService {
                 row.getId().toString(), AuditChangeType.CREATE, Map.of(),
                 Map.of(AuditField.NAME, row.getUsername(), AuditField.STATUS, enabled(row)),
                 Map.of("account", version(row))));
-        return new CreatedResource(row.getId().toString(), version(row));
+        return new AccountSecret(password);
     }
 
     /**
@@ -248,7 +247,7 @@ public class AccountService {
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.UPDATE, Map.of(AuditField.NAME, locked.getUsername()),
                     Map.of(AuditField.NAME, next.getUsername()), Map.of("account", version(next)));
-            return detail(actor, evaluator.evaluate(actor.context()), next);
+            return detail(capabilities.snapshot(actor.context()), next);
         });
     }
 
@@ -435,10 +434,9 @@ public class AccountService {
         return accounts.findByEmail(input.email());
     }
 
-    private ResourceDetail<AccountRecord> detail(ActiveIdentity actor, AuthorizationEvaluator.AuthorizationView view,
-                                                 IamAccountEntity row) {
+    private ResourceDetail<AccountRecord> detail(ObjectCapabilities.Snapshot caps, IamAccountEntity row) {
         long accountId = row.getId().longValueExact();
-        return IamDetails.of(record(row), capabilities(actor, view, accountId), version(row));
+        return IamDetails.of(record(row), capabilities.platformAccount(caps, IamIds.text(accountId)), version(row));
     }
 
     private AccountRecord record(IamAccountEntity row) {
@@ -447,24 +445,6 @@ public class AccountService {
         return new AccountRecord(IamIds.text(accountId), row.getUsername(), row.getPhone(), row.getEmail(),
                 Boolean.TRUE.equals(row.getEnabled()), credentials.locked(accountId),
                 Boolean.TRUE.equals(row.getMustChangePassword()), lastLogin);
-    }
-
-    private Map<String, ObjectCapability> capabilities(ActiveIdentity actor,
-                                                       AuthorizationEvaluator.AuthorizationView view, long accountId) {
-        Map<String, ObjectCapability> result = new LinkedHashMap<>();
-        for (IamAction action : WRITE_ACTIONS) {
-            if (!view.actionCodes().contains(action.getCode())) {
-                result.put(action.getCode(), new ObjectCapability(false, IamReasonCode.ACTION_DENIED,
-                        IamReasonCode.ACTION_DENIED.getText()));
-                continue;
-            }
-            boolean allowed = ObjectScopeSql.matches(scopes.objects(actor.context(), action), accountId);
-            result.put(action.getCode(), allowed
-                    ? new ObjectCapability(true, null, ALLOWED_MESSAGE)
-                    : new ObjectCapability(false, IamReasonCode.DATA_SCOPE_DENIED,
-                    IamReasonCode.DATA_SCOPE_DENIED.getText()));
-        }
-        return result;
     }
 
     private static String version(IamAccountEntity row) {
@@ -477,5 +457,9 @@ public class AccountService {
 
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private static BizException accountNotFound() {
+        return new BizException(IamReasonCode.OBJECT_NOT_FOUND.getCode(), ACCOUNT_NOT_FOUND);
     }
 }

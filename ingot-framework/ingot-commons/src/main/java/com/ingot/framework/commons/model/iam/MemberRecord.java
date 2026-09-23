@@ -13,7 +13,7 @@ import jakarta.validation.constraints.*;
  * @since 1.0.0
  * @param id 成员 ID，不是账号 ID
  * @param displayName 可见显示名称；隐藏时省略
- * @param avatar 可见头像；隐藏时省略
+ * @param avatar 可见头像时效链接；隐藏时省略
  * @param phone 允许输出的手机号字符串；可能已脱敏，隐藏时省略
  * @param email 允许输出的邮箱字符串；可能已脱敏，隐藏时省略
  * @param username 已关联全局账号的登录名；平台成员填写，租户成员省略
@@ -27,7 +27,7 @@ public record MemberRecord(
         String id,
          @Schema(description = "可见显示名称；隐藏时省略")
         String displayName,
-         @Schema(description = "可见头像；隐藏时省略")
+         @Schema(description = "可见头像时效链接；隐藏时省略")
         String avatar,
          @Schema(description = "允许输出的手机号字符串；可能已脱敏，隐藏时省略")
         String phone,

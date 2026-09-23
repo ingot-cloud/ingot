@@ -89,10 +89,10 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/me/capabilities | GET 刷新当前操作、版本、expiresAt |
 | /v1/me/profile | GET/PATCH 当前认证账号联系资料；AUTHENTICATED_SELF，禁止提交其他账号 ID |
 | /v1/me/password | PUT 当前账号改密；`CurrentPasswordInput`；请求体加密；不臆造密码策略 |
-| /v1/platform/accounts | GET 列表（page/pageSize）；POST 创建，返回 `{id,version}` 不回明文口令 |
-| /v1/platform/accounts/lookup | POST `AccountLookupInput`，必填 `purpose`：`MEMBER_CREATE` 返回 id、登录名与登录联系方式，`ACCOUNT_MANAGE` 仍不返回组织关系 |
+| /v1/platform/accounts | GET 列表（page/pageSize）；POST 创建，一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密，不得再被列表或详情读取 |
+| /v1/platform/accounts/lookup | POST `AccountLookupInput`，必填 `purpose`：`MEMBER_CREATE` 返回 id、登录名与登录联系方式，`ACCOUNT_MANAGE` 仍不返回组织关系；未命中或不可见返回 `ObjectNotFound`，说明为「账号不存在」 |
 | /v1/platform/accounts/{id} | GET/PATCH 资料；DELETE 仍有成员资格时 ObjectInUse |
-| /v1/platform/accounts/{id}/enable、disable、lock、unlock、reset-password | POST；锁定改密启停复用安全用例；仅重置返回一次性 `AccountSecret` |
+| /v1/platform/accounts/{id}/enable、disable、lock、unlock、reset-password | POST；锁定改密启停复用安全用例；创建与重置均一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密 |
 | /v1/platform/dictionaries | GET `view=tree|page|items`、`code`、MyBatis `current`/`size`；POST/PUT/PATCH/DELETE 及 `/sort` 走既有字典实体 |
 | /v1/platform/id-allocations | GET MyBatis 分页；POST/PUT/DELETE 既有发号实体 |
 | /v1/platform/social-configs | GET MyBatis 分页；POST/PUT/DELETE 既有社会化配置实体 |
@@ -198,7 +198,8 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - AssignmentUpdateInput / DelegationUpdateInput 分别为 `{expectedVersion,assignment}` / `{expectedVersion,delegation}`；服务端重验原委派来源、接收对象和所有派生授权，DTO 不赋予绕过资格。分配预览返回 Preview<AssignmentPreviewResult>，逐主体列出 allowed、errors、可披露 grants。
 - RoleCreateInput 为 `{code,name,description?,groupName?,kind,baseRevisionId?,definition}`；kind 只允许 SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM。仅 TENANT_CUSTOM 可绑定共享基础，此时 grants 必须为空。RoleDefinitionDraft 为 `{grants,deltas,parameterDefinitions,metadataOverrides?}`，完整版本与差异不能同时非空。RolePublishInput 为 `{expectedVersion,definition}`，发布不自动升级授权。预览待发布定义直接提交 RoleDefinitionDraft。
 - UpgradePreviewInput 为 `{newBaseRevisionId,resolutions?}`；UpgradeInput 为 `{expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}`。UpgradeResolution 为 `{key,choice,scopes?}`，choice 为 ACCEPT_BASE/KEEP_DELTA/REPLACE_SCOPE，只有替换范围必须携带 scopes。未解决冲突拒绝提交；默认不选择既有授权。
-- MemberCreateInput 为 `{accountId,displayName?,departments[]}`，不创建凭证；平台任职必须由服务拒绝非空部门。MemberProfileInput 为 `{expectedVersion,displayName?,avatar?,phone?,email?}`，禁止状态和凭证字段；phone/email 可空表示不修改，不可编辑或脱敏占位由服务拒绝。平台成员的 phone/email 写入关联全局账号的登录联系方式，空白表示清空。MemberDepartmentInput 为 `{expectedVersion,departments[{id,primary}]}`，部门不得重复且最多一个主部门。
+- MemberCreateInput 为 `{accountId,displayName?,avatar?,departments[]}`，不创建凭证；平台任职必须由服务拒绝非空部门。MemberProfileInput 为 `{expectedVersion,displayName?,avatar?,phone?,email?}`，禁止状态和凭证字段；phone/email 可空表示不修改，不可编辑或脱敏占位由服务拒绝。平台成员的 phone/email 写入关联全局账号的登录联系方式，空白表示清空。MemberDepartmentInput 为 `{expectedVersion,departments[{id,primary}]}`，部门不得重复且最多一个主部门。
+- 成员与组织 `avatar` 请求可提交预签名 URL 或 `bucket/objectName`；入库只保存对象路径，禁止持久化时效链接。响应经框架 `@OssUrl` 签发时效链接。
 - TenantCreateInput 为 `{name,ownerAccountId,ownerDisplayName?,rootDepartmentName?,avatar?,planId?}`。客户端不能提交治理版本、默认策略或任意应用清单；服务器从基础目录或指定套餐解析开通。预览返回 TenantPreviewResult，不含可回写的版本 ID。TenantUpdateInput / TenantSettingsInput 分别更新平台可见实体与租户设置。
 - ApplicationDraft 可标记 baseline，仅租户域允许。组织初始化缺省开通 baseline 应用；指定 planId 时改为该套餐内租户域启用应用。EntitlementReplaceInput 为 `{expectedVersion,entitlements[{applicationId,status,validFrom?,validUntil?}]}`。组与委派影响预览返回 ReferenceImpactPreview。
 

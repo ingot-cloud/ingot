@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
  * @since 1.0.0
  * @param expectedVersion 成员读取版本
  * @param displayName 显示名，可空表示不修改
- * @param avatar 头像，可空表示不修改
+ * @param avatar 头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径
  * @param phone 组织通讯录手机号，可空表示不修改；不可编辑或脱敏占位由服务拒绝
  * @param email 组织通讯录邮箱，可空表示不修改；不可编辑或脱敏占位由服务拒绝
  */
@@ -20,7 +20,7 @@ public record MemberProfileInput(
         String expectedVersion,
         @Schema(description = "显示名，可空表示不修改")
         String displayName,
-        @Schema(description = "头像，可空表示不修改")
+        @Schema(description = "头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径")
         String avatar,
         @Schema(description = "组织通讯录手机号，可空表示不修改")
         String phone,

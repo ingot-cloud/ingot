@@ -25,6 +25,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMemberDepartmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlatformMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import com.ingot.cloud.iam.support.IamOssPaths;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberStatus;
@@ -321,14 +322,14 @@ public class MemberQueryRepository {
      * @param id 新成员 ID
      * @param accountId 全局账号 ID
      * @param displayName 显示名称
-     * @param avatar 头像，可空
+     * @param avatar 头像引用；入库只保存 {@code bucket/objectName}
      */
     public void insertPlatform(long id, long accountId, String displayName, String avatar) {
         IamPlatformMemberEntity row = new IamPlatformMemberEntity();
         row.setId(BigInteger.valueOf(id));
         row.setAccountId(BigInteger.valueOf(accountId));
         row.setDisplayName(displayName);
-        row.setAvatar(avatar);
+        row.setAvatar(IamOssPaths.store(avatar));
         row.setStatus(MemberStatus.ACTIVE);
         platformMembers.insert(row);
     }
@@ -340,13 +341,15 @@ public class MemberQueryRepository {
      * @param tenantId 已授权租户 ID
      * @param accountId 全局账号 ID
      * @param displayName 显示名称
+     * @param avatar 头像引用；入库只保存 {@code bucket/objectName}
      */
-    public void insertTenant(long id, long tenantId, long accountId, String displayName) {
+    public void insertTenant(long id, long tenantId, long accountId, String displayName, String avatar) {
         IamTenantMemberEntity row = new IamTenantMemberEntity();
         row.setId(BigInteger.valueOf(id));
         row.setTenantId(BigInteger.valueOf(tenantId));
         row.setAccountId(BigInteger.valueOf(accountId));
         row.setDisplayName(displayName);
+        row.setAvatar(IamOssPaths.store(avatar));
         row.setStatus(MemberStatus.ACTIVE);
         tenantMembers.insert(row);
     }
@@ -415,7 +418,7 @@ public class MemberQueryRepository {
      *
      * @param memberId 平台成员 ID
      * @param displayName 显示名称，可空
-     * @param avatar 头像，可空
+     * @param avatar 头像引用，可空表示不修改；入库只保存 {@code bucket/objectName}
      * @param version 读取时的版本
      * @return 受影响行数；为 0 表示版本已被并发改写
      */
@@ -424,7 +427,7 @@ public class MemberQueryRepository {
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamPlatformMemberEntity::getVersion, version)
                 .set(displayName != null, IamPlatformMemberEntity::getDisplayName, displayName)
-                .set(avatar != null, IamPlatformMemberEntity::getAvatar, avatar)
+                .set(avatar != null, IamPlatformMemberEntity::getAvatar, IamOssPaths.store(avatar))
                 .set(IamPlatformMemberEntity::getVersion, version.add(BigInteger.ONE))
                 .set(IamPlatformMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
     }
@@ -435,7 +438,7 @@ public class MemberQueryRepository {
      * @param tenantId 已授权租户 ID
      * @param memberId 租户成员 ID
      * @param displayName 显示名称，可空
-     * @param avatar 头像，可空
+     * @param avatar 头像引用，可空表示不修改；入库只保存 {@code bucket/objectName}
      * @param phone 手机号，可空引用表示不改
      * @param email 邮箱，可空引用表示不改
      * @param version 读取时的版本
@@ -449,7 +452,7 @@ public class MemberQueryRepository {
                 .eq(IamTenantMemberEntity::getVersion, version)
                 .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
                 .set(displayName != null, IamTenantMemberEntity::getDisplayName, displayName)
-                .set(avatar != null, IamTenantMemberEntity::getAvatar, avatar)
+                .set(avatar != null, IamTenantMemberEntity::getAvatar, IamOssPaths.store(avatar))
                 .set(phone != null, IamTenantMemberEntity::getPhone, phone)
                 .set(email != null, IamTenantMemberEntity::getEmail, email)
                 .set(IamTenantMemberEntity::getVersion, version.add(BigInteger.ONE))

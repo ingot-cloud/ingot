@@ -14,6 +14,8 @@ import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.VersionInput;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InEncrypt;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -60,11 +62,13 @@ public class PlatformAccountAPI implements RShortcuts {
      * 创建全局账号。
      *
      * @param input 登录名与可选联系方式
-     * @return 新账号 ID
+     * @return 一次性初始密码，传输时信封加密
      */
     @Operation(summary = "创建全局账号")
     @PostMapping
-    public R<CreatedResource> create(@Valid @RequestBody AccountCreateInput input) {
+    @InCryptoHybridContext
+    @InEncrypt
+    public R<AccountSecret> create(@Valid @RequestBody AccountCreateInput input) {
         return ok(accounts.create(input));
     }
 
@@ -176,10 +180,12 @@ public class PlatformAccountAPI implements RShortcuts {
      *
      * @param id 账号 ID
      * @param input 期望版本
-     * @return 一次性明文初始密码
+     * @return 一次性初始密码，传输时信封加密
      */
     @Operation(summary = "重置全局账号密码")
     @PostMapping("/{id}/reset-password")
+    @InCryptoHybridContext
+    @InEncrypt
     public R<AccountSecret> resetPassword(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(accounts.resetPassword(id, input));
     }

@@ -58,4 +58,22 @@ class ObjectCapabilitiesTest {
         assertFalse(result.get(IamAction.VALUE_TENANT_MEMBER_DEPARTMENTS).allowed());
         assertEquals(IamReasonCode.ACTION_DENIED, result.get(IamAction.VALUE_TENANT_MEMBER_DEPARTMENTS).reasonCode());
     }
+
+    @Test
+    void platformAccountUsesSnapshotWithoutRequiringWriteActions() {
+        AuthorizationEvaluator evaluator = mock(AuthorizationEvaluator.class);
+        ResourceAccess scopes = mock(ResourceAccess.class);
+        AuthorizationEvaluator.AuthorizationView view = new AuthorizationEvaluator.AuthorizationView(
+                List.of(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE), List.of(), Map.of(), "1",
+                Instant.now().plusSeconds(30));
+        AuthorizationContext actor = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001");
+        when(evaluator.evaluate(actor)).thenReturn(view);
+        when(scopes.targetAllowed(eq(actor), eq(view), eq(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE), eq("2")))
+                .thenReturn(true);
+        ObjectCapabilities capabilities = new ObjectCapabilities(evaluator, scopes);
+        Map<String, ObjectCapability> result = capabilities.platformAccount(capabilities.snapshot(actor), "2");
+        assertTrue(result.get(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE).allowed());
+        assertFalse(result.get(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE).allowed());
+        assertEquals(IamReasonCode.ACTION_DENIED, result.get(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE).reasonCode());
+    }
 }

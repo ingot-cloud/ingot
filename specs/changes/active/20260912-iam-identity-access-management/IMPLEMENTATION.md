@@ -338,7 +338,7 @@ C18 审计写入补 `delegation_id`/`assignment_id`/`trace_id`（追踪取 MDC `
 
 C09 原实现平台账号、本人资料、字典/发号/社交仍只有旧控制器；Auth/Member 内部 RPC 回退 `SysUser`/`SysTenant`；Security 管理面用 `@AdminOrHasAnyAuthority` 超管短路；登录 JWT `scopes` 只有强制改密标记。现按 API §1.2 接通新入口，权威安全用例仍归框架：
 
-- 平台 `/v1/platform/accounts` 读写 `iam_account`：列表/详情/lookup/创建/资料/删除/启停/锁定解锁/重置密码。创建复用 `RegisterUserUseCase` + `InitialPasswordService`，返回 `{id,version}` 不回明文口令；重置密码才一次性返回 `AccountSecret`。`MEMBER_CREATE` lookup 只返回 id 与登录名。删除时仍有成员资格报 `OBJECT_IN_USE`。对象范围走 `ResourceAccess.objects` / `ObjectScopeSql.restrictAccounts`。
+- 平台 `/v1/platform/accounts` 读写 `iam_account`：列表/详情/lookup/创建/资料/删除/启停/锁定解锁/重置密码。创建复用 `RegisterUserUseCase` + `InitialPasswordService`，创建与重置均一次性返回 `AccountSecret`，HTTP `data` 走 HYBRID 信封加密。`MEMBER_CREATE` lookup 只返回 id 与登录名。删除时仍有成员资格报 `OBJECT_IN_USE`。对象范围走 `ResourceAccess.objects` / `ObjectScopeSql.restrictAccounts`。
 - `/v1/me/profile`、`PUT /v1/me/password`（`@InCryptoHybridContext`）只操作当前认证账号；普通改密缺旧密码失败关闭，强制改密走框架用例。
 - `/v1/platform/dictionaries`（`view=tree|page|items`）、`id-allocations`、`social-configs` 包一层 `IamAccess.require` 精确 ACTION，不改字典/发号/社交存储。
 - `IamUserAccountPortAdapter` / `IamUserCredentialPortAdapter`、`InnerUserDetailsAPI`、`UsernameIdentityResolver`、`TenantDetailsServiceImpl` 只读 `iam_account`/`iam_tenant`，Feign 仍把组织映射到既有 `SysTenant` DTO。社交绑定仅当 `user_id` 能命中新账号。

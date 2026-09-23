@@ -12,7 +12,7 @@ import jakarta.validation.constraints.*;
  * @since 1.0.0
  * @param id 租户 ID
  * @param name 组织名称
- * @param avatar 组织头像，可空
+ * @param avatar 组织头像时效链接，可空
  * @param ownerMemberId 组织所有者成员 ID
  * @param ownerDisplayName 所有者在该组织内的显示名称；成员缺失或名为空时省略
  * @param status 组织启停状态
@@ -24,7 +24,7 @@ public record TenantRecord(
         String id,
         @NotBlank @Schema(description = "组织名称", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
-         @Schema(description = "组织头像，可空")
+         @Schema(description = "组织头像时效链接，可空")
         String avatar,
         @NotBlank @Schema(description = "组织所有者成员 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         String ownerMemberId,

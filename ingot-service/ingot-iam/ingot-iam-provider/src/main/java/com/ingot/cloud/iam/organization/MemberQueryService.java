@@ -341,7 +341,7 @@ public class MemberQueryService {
                     members.insertPlatform(id, accountId, displayName, avatar);
                 } else {
                     long tenantId = IamIds.require(actor.context().tenantId());
-                    members.insertTenant(id, tenantId, accountId, displayName);
+                    members.insertTenant(id, tenantId, accountId, displayName, avatar);
                     replaceDepartments(tenantId, id, departmentBindings);
                 }
             } catch (DuplicateKeyException exception) {
