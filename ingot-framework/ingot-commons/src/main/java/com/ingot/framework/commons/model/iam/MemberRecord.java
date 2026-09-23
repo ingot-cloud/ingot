@@ -16,6 +16,7 @@ import jakarta.validation.constraints.*;
  * @param avatar 可见头像；隐藏时省略
  * @param phone 允许输出的手机号字符串；可能已脱敏，隐藏时省略
  * @param email 允许输出的邮箱字符串；可能已脱敏，隐藏时省略
+ * @param username 已关联全局账号的登录名；平台成员填写，租户成员省略
  * @param status 该域的成员资格
  * @param departments 仅包含可见部门关系；平台成员为空数组
  */
@@ -32,6 +33,8 @@ public record MemberRecord(
         String phone,
          @Schema(description = "允许输出的邮箱字符串；可能已脱敏，隐藏时省略")
         String email,
+         @Schema(description = "已关联全局账号的登录名；平台成员填写，租户成员省略")
+        String username,
         @NotNull @Schema(description = "该域的成员资格", requiredMode = Schema.RequiredMode.REQUIRED)
         MemberStatus status,
         @NotNull @Schema(description = "仅包含可见部门关系；平台成员为空数组", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -179,8 +179,8 @@ public class AccountService {
         scopes.requireVisibleObject(actor.context(), IamAction.PLATFORM_ACCOUNT_LOOKUP, accountId);
         if (input.purpose() == AccountLookupPurpose.MEMBER_CREATE) {
             AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
-                    null, null, Boolean.TRUE.equals(row.getEnabled()), credentials.locked(accountId),
-                    Boolean.TRUE.equals(row.getMustChangePassword()), null);
+                    row.getPhone(), row.getEmail(), Boolean.TRUE.equals(row.getEnabled()),
+                    credentials.locked(accountId), Boolean.TRUE.equals(row.getMustChangePassword()), null);
             return IamDetails.of(record, version(row));
         }
         return detail(actor, evaluator.evaluate(actor.context()), row);

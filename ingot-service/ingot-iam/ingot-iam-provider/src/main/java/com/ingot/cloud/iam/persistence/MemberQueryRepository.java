@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
@@ -55,11 +56,81 @@ public class MemberQueryRepository {
      * @return 成员页
      */
     public Page<IamPlatformMemberEntity> pagePlatform(ObjectScope scope, int page, int size) {
+        return pagePlatform(scope, page, size, null, null);
+    }
+
+    /**
+     * 分页列出平台成员。未指定资格时仍排除已移出；指定资格时按该值精确匹配。
+     *
+     * @param scope 已编译范围
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @param name 显示名包含匹配，空白表示不限制
+     * @param status 成员资格，空表示不限制且排除已移出
+     * @return 成员页
+     */
+    public Page<IamPlatformMemberEntity> pagePlatform(ObjectScope scope, int page, int size, String name,
+                                                      MemberStatus status) {
         LambdaQueryWrapper<IamPlatformMemberEntity> wrapper = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
-                .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)
+                .like(name != null && !name.isBlank(), IamPlatformMemberEntity::getDisplayName, name)
+                .eq(status != null, IamPlatformMemberEntity::getStatus, status)
+                .ne(status == null, IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)
                 .orderByAsc(IamPlatformMemberEntity::getId);
         ObjectScopeSql.restrictPlatformMembers(wrapper, scope);
         return platformMembers.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    /**
+     * 按账号 ID 读取未删除账号的联系资料。
+     *
+     * @param accountIds 全局账号 ID
+     * @return 以账号 ID 索引的联系资料
+     */
+    public Map<BigInteger, IamAccountEntity> accountContacts(Collection<BigInteger> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return Map.of();
+        }
+        List<IamAccountEntity> rows = accounts.selectList(Wrappers.<IamAccountEntity>lambdaQuery()
+                .select(IamAccountEntity::getId, IamAccountEntity::getUsername, IamAccountEntity::getPhone,
+                        IamAccountEntity::getEmail)
+                .in(IamAccountEntity::getId, accountIds)
+                .isNull(IamAccountEntity::getDeletedAt));
+        Map<BigInteger, IamAccountEntity> indexed = new LinkedHashMap<>();
+        for (IamAccountEntity row : rows) {
+            indexed.put(row.getId(), row);
+        }
+        return indexed;
+    }
+
+    /**
+     * 在调用方事务中按当前版本更新全局账号登录联系方式。空白写成空引用。
+     *
+     * @param accountId 全局账号 ID
+     * @param phone 登录手机号，空引用表示不修改
+     * @param email 登录邮箱，空引用表示不修改
+     * @return 受影响行数
+     */
+    public int updateAccountContacts(long accountId, String phone, String email) {
+        if (phone == null && email == null) {
+            return 1;
+        }
+        IamAccountEntity locked = accounts.lock(BigInteger.valueOf(accountId));
+        if (locked == null || locked.getVersion() == null) {
+            return 0;
+        }
+        LambdaUpdateWrapper<IamAccountEntity> update = Wrappers.<IamAccountEntity>lambdaUpdate()
+                .eq(IamAccountEntity::getId, locked.getId())
+                .isNull(IamAccountEntity::getDeletedAt)
+                .eq(IamAccountEntity::getVersion, locked.getVersion())
+                .set(IamAccountEntity::getVersion, locked.getVersion().add(BigInteger.ONE))
+                .set(IamAccountEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC));
+        if (phone != null) {
+            update.set(IamAccountEntity::getPhone, phone.isBlank() ? null : phone);
+        }
+        if (email != null) {
+            update.set(IamAccountEntity::getEmail, email.isBlank() ? null : email);
+        }
+        return accounts.update(update);
     }
 
     /**
@@ -122,15 +193,14 @@ public class MemberQueryRepository {
     }
 
     /**
-     * 读取未移出的平台成员。
+     * 按 ID 读取平台成员，包含已移出。
      *
      * @param memberId 平台成员 ID
      * @return 成员记录，不存在时为空
      */
     public IamPlatformMemberEntity findPlatform(long memberId) {
         return platformMembers.selectOne(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
-                .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
-                .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED));
+                .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId)));
     }
 
     /**
@@ -251,12 +321,14 @@ public class MemberQueryRepository {
      * @param id 新成员 ID
      * @param accountId 全局账号 ID
      * @param displayName 显示名称
+     * @param avatar 头像，可空
      */
-    public void insertPlatform(long id, long accountId, String displayName) {
+    public void insertPlatform(long id, long accountId, String displayName, String avatar) {
         IamPlatformMemberEntity row = new IamPlatformMemberEntity();
         row.setId(BigInteger.valueOf(id));
         row.setAccountId(BigInteger.valueOf(accountId));
         row.setDisplayName(displayName);
+        row.setAvatar(avatar);
         row.setStatus(MemberStatus.ACTIVE);
         platformMembers.insert(row);
     }
@@ -306,14 +378,13 @@ public class MemberQueryRepository {
     }
 
     /**
-     * 在调用方事务中锁定未移出的平台成员。
+     * 在调用方事务中锁定平台成员，包含已移出。
      *
      * @param memberId 平台成员 ID
-     * @return 锁定行，不存在或已移出时为空
+     * @return 锁定行，不存在时为空
      */
     public IamPlatformMemberEntity lockPlatform(long memberId) {
-        IamPlatformMemberEntity row = platformMembers.lock(BigInteger.valueOf(memberId));
-        return row == null || row.getStatus() == MemberStatus.REMOVED ? null : row;
+        return platformMembers.lock(BigInteger.valueOf(memberId));
     }
 
     /**
@@ -346,13 +417,12 @@ public class MemberQueryRepository {
      * @param displayName 显示名称，可空
      * @param avatar 头像，可空
      * @param version 读取时的版本
-     * @return 受影响行数；为 0 表示版本已被并发改写或成员已移出
+     * @return 受影响行数；为 0 表示版本已被并发改写
      */
     public int updatePlatform(long memberId, String displayName, String avatar, BigInteger version) {
         return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamPlatformMemberEntity::getVersion, version)
-                .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)
                 .set(displayName != null, IamPlatformMemberEntity::getDisplayName, displayName)
                 .set(avatar != null, IamPlatformMemberEntity::getAvatar, avatar)
                 .set(IamPlatformMemberEntity::getVersion, version.add(BigInteger.ONE))

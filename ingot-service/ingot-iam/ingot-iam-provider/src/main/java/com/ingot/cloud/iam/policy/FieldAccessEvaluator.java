@@ -221,6 +221,7 @@ public class FieldAccessEvaluator {
                 FieldProjection.project(raw.avatar(), avatar.visibility()),
                 FieldProjection.project(raw.phone(), phone.visibility()),
                 FieldProjection.project(raw.email(), email.visibility()),
+                raw.username(),
                 raw.status(), raw.departments());
     }
 

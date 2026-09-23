@@ -76,10 +76,10 @@ class IamCommandContractTest {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             var validator = factory.getValidator();
             var primary = new MemberDepartmentBinding("11", true);
-            assertFalse(validator.validate(new MemberCreateInput("1", "n", List.of(primary, primary))).isEmpty());
+            assertFalse(validator.validate(new MemberCreateInput("1", "n", null, List.of(primary, primary))).isEmpty());
             assertFalse(validator.validate(new MemberDepartmentInput("1",
                     List.of(primary, new MemberDepartmentBinding("12", true)))).isEmpty());
-            assertTrue(validator.validate(new MemberCreateInput("1", "n", List.of())).isEmpty());
+            assertTrue(validator.validate(new MemberCreateInput("1", "n", null, List.of())).isEmpty());
         }
     }
 

@@ -88,7 +88,7 @@ class FieldAccessEvaluatorTest {
         assertEquals(FieldVisibility.MASKED, phone.visibility());
         assertFalse(phone.editable());
         MemberRecord projected = evaluator.project(new MemberRecord("102", "成员", "a", "13800000000", "a@b.c",
-                MemberStatus.ACTIVE, List.of()), evaluator.memberAccess(10, 101, 102, PolicyScenario.MANAGEMENT));
+                null, MemberStatus.ACTIVE, List.of()), evaluator.memberAccess(10, 101, 102, PolicyScenario.MANAGEMENT));
         assertEquals(FieldProjection.MASKED_PLACEHOLDER, projected.phone());
         assertEquals(FieldProjection.MASKED_PLACEHOLDER, projected.email());
         assertEquals("成员", projected.displayName());
@@ -101,7 +101,7 @@ class FieldAccessEvaluatorTest {
         FieldAccess phone = evaluator.access(10, 101, 102, PolicyScenario.MANAGEMENT, MemberFieldKey.VALUE_PHONE);
         assertEquals(FieldVisibility.HIDDEN, phone.visibility());
         MemberRecord projected = evaluator.project(new MemberRecord("102", "成员", null, "13800000000", null,
-                MemberStatus.ACTIVE, List.of()), Map.of(MemberFieldKey.VALUE_PHONE, phone,
+                null, MemberStatus.ACTIVE, List.of()), Map.of(MemberFieldKey.VALUE_PHONE, phone,
                 MemberFieldKey.VALUE_DISPLAY_NAME, new FieldAccess(FieldVisibility.FULL, true),
                 MemberFieldKey.VALUE_AVATAR, new FieldAccess(FieldVisibility.FULL, true),
                 MemberFieldKey.VALUE_EMAIL, new FieldAccess(FieldVisibility.MASKED, false)));

@@ -90,7 +90,7 @@ public class MemberCommandService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         MemberRecord record = new MemberRecord(member.getId().toString(), member.getDisplayName(), null, null, null,
-                member.getStatus(), members.departmentViews(tenantId, Long.parseLong(memberId)));
+                null, member.getStatus(), members.departmentViews(tenantId, Long.parseLong(memberId)));
         return new ResourceDetail<>(record, Map.of(), Map.of(), version);
     }
 }

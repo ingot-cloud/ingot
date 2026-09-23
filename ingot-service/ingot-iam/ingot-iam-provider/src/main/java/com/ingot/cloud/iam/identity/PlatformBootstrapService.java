@@ -55,7 +55,7 @@ public class PlatformBootstrapService {
         long revisionId = governanceRevision();
         long accountId = account();
         long memberId = ids.nextId();
-        members.insertPlatform(memberId, accountId, properties.getDisplayName());
+        members.insertPlatform(memberId, accountId, properties.getDisplayName(), null);
         bootstrap.insertGovernanceAssignment(ids.nextId(), memberId, revisionId);
         log.info("[IamBootstrap] 平台身份已建立 username={} accountId={} memberId={} revisionId={}",
                 properties.getUsername(), accountId, memberId, revisionId);

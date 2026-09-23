@@ -179,6 +179,6 @@ class MemberExportServiceTest {
     }
 
     private static ResourceDetail<MemberRecord> detail(String id) {
-        return IamDetails.of(new MemberRecord(id, "成员", null, null, null, MemberStatus.ACTIVE, List.of()), "0");
+        return IamDetails.of(new MemberRecord(id, "成员", null, null, null, null, MemberStatus.ACTIVE, List.of()), "0");
     }
 }

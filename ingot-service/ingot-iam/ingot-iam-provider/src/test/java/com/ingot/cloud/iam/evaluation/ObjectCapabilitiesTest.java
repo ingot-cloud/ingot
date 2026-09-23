@@ -48,7 +48,7 @@ class ObjectCapabilitiesTest {
         ObjectCapabilities capabilities = new ObjectCapabilities(evaluator, scopes);
         ObjectCapabilities.Snapshot snapshot = capabilities.snapshot(ACTOR);
         Map<String, ObjectCapability> result = capabilities.tenantMember(snapshot,
-                new MemberRecord("102", "成员", null, null, null, MemberStatus.ACTIVE, List.of()));
+                new MemberRecord("102", "成员", null, null, null, null, MemberStatus.ACTIVE, List.of()));
         assertTrue(result.get(IamAction.VALUE_TENANT_MEMBER_UPDATE).allowed());
         assertNull(result.get(IamAction.VALUE_TENANT_MEMBER_UPDATE).reasonCode());
         assertFalse(result.get(IamAction.VALUE_TENANT_MEMBER_STATUS).allowed());

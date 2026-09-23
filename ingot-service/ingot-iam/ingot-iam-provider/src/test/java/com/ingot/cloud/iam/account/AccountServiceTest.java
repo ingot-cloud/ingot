@@ -45,7 +45,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -145,12 +144,12 @@ class AccountServiceTest {
     }
 
     @Test
-    void memberCreateLookupReturnsIdAndUsernameOnly() {
+    void memberCreateLookupReturnsLoginContactsWithoutOrgRelations() {
         var result = service.lookup(new AccountLookupInput(AccountLookupPurpose.MEMBER_CREATE, "alice", null, null));
         assertEquals("1", result.record().id());
         assertEquals("alice", result.record().username());
-        assertNull(result.record().phone());
-        assertNull(result.record().email());
+        assertEquals("13800000000", result.record().phone());
+        assertEquals("alice@example.com", result.record().email());
         assertEquals("0", result.version());
     }
 

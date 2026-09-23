@@ -5,6 +5,7 @@ import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
+import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -46,14 +47,18 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 显示名包含匹配，可空
+     * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
      * @return 成员页
      */
     @Operation(summary = "成员列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<MemberRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(queries.list(AuthorizationDomain.PLATFORM, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+        return ok(queries.listPlatform(page, pageSize, name, status));
     }
 
     /**
@@ -78,6 +83,23 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @GetMapping("/{id}")
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
         return ok(queries.get(AuthorizationDomain.PLATFORM, id));
+    }
+
+    /**
+     * 分页列出平台成员所在用户组。
+     *
+     * @param id 平台成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    @Operation(summary = "成员所在用户组")
+    @GetMapping("/{id}/groups")
+    public R<PageResponse<ResourceDetail<GroupRecord>>> groups(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(queries.listPlatformGroups(id, page, pageSize));
     }
 
     /**

@@ -2,7 +2,10 @@ package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -62,6 +65,40 @@ public class GroupRepository {
     public Page<IamPlatformGroupEntity> pagePlatform(int page, int pageSize) {
         return platformGroups.selectPage(new Page<>(page, pageSize), Wrappers.<IamPlatformGroupEntity>lambdaQuery()
                 .orderByAsc(IamPlatformGroupEntity::getId));
+    }
+
+    /**
+     * 按平台成员分页列出其所在用户组。
+     *
+     * @param memberId 平台成员 ID
+     * @param page 从 1 开始
+     * @param pageSize 页大小
+     * @return 组页
+     */
+    public Page<IamPlatformGroupEntity> pagePlatformByMember(long memberId, int page, int pageSize) {
+        Long total = platformMembers.selectCount(Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
+                .eq(IamPlatformGroupMemberEntity::getMemberId, BigInteger.valueOf(memberId)));
+        Page<IamPlatformGroupEntity> result = new Page<>(page, pageSize, total == null ? 0 : total);
+        if (total == null || total == 0) {
+            return result;
+        }
+        int offset = Math.max(page - 1, 0) * pageSize;
+        List<IamPlatformGroupMemberEntity> links = platformMembers.selectList(
+                Wrappers.<IamPlatformGroupMemberEntity>lambdaQuery()
+                        .eq(IamPlatformGroupMemberEntity::getMemberId, BigInteger.valueOf(memberId))
+                        .orderByAsc(IamPlatformGroupMemberEntity::getGroupId)
+                        .last("LIMIT " + pageSize + " OFFSET " + offset));
+        if (links.isEmpty()) {
+            return result;
+        }
+        List<BigInteger> ids = links.stream().map(IamPlatformGroupMemberEntity::getGroupId).toList();
+        Map<BigInteger, IamPlatformGroupEntity> indexed = new LinkedHashMap<>();
+        for (IamPlatformGroupEntity row : platformGroups.selectList(Wrappers.<IamPlatformGroupEntity>lambdaQuery()
+                .in(IamPlatformGroupEntity::getId, ids))) {
+            indexed.put(row.getId(), row);
+        }
+        result.setRecords(ids.stream().map(indexed::get).filter(Objects::nonNull).toList());
+        return result;
     }
 
     /**

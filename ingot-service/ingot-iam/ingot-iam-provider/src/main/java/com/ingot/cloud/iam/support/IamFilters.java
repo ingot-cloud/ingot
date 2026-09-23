@@ -3,6 +3,7 @@ package com.ingot.cloud.iam.support;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.MemberStatus;
 
 /**
  * <p>解析管理面列表筛选字面量，空白表示不限制，非法值拒绝。</p>
@@ -39,6 +40,23 @@ public final class IamFilters {
         }
         try {
             return ConfigurationStatus.getEnum(status.trim()) == ConfigurationStatus.ENABLED;
+        } catch (IllegalArgumentException ex) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+    }
+
+    /**
+     * 把成员资格字面量转成枚举。
+     *
+     * @param status {@link MemberStatus} 稳定字面量，空白表示不限制
+     * @return 成员资格；空白为 {@code null}
+     */
+    public static MemberStatus memberStatusOf(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return MemberStatus.getEnum(status.trim());
         } catch (IllegalArgumentException ex) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }

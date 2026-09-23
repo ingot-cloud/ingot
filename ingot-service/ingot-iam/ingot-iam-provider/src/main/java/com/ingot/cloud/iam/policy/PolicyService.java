@@ -395,7 +395,7 @@ public class PolicyService {
     private ResourceDetail<MemberRecord> member(IamTenantMemberEntity row, long viewerId,
                                                 FieldPolicySnapshot snapshot) {
         MemberRecord raw = new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
-                row.getPhone(), row.getEmail(), row.getStatus(), List.of());
+                row.getPhone(), row.getEmail(), null, row.getStatus(), List.of());
         Map<String, FieldAccess> access = fields.memberAccess(snapshot, viewerId, row.getId().longValueExact());
         String version = row.getVersion() == null ? "0" : row.getVersion().toString();
         return IamDetails.of(fields.project(raw, access), access, Map.of(), version);
