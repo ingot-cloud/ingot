@@ -61,15 +61,17 @@ public class CatalogRepository {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param domain 管理域，必填
      * @param name 应用名称包含匹配，空白表示不限制
      * @param enabled 启用状态，空表示不限制
      * @param baseline 是否组织默认开通，空表示不限制
      * @return 应用页
      */
-    public Page<IamApplicationEntity> pageApplications(int page, int pageSize, String name, Boolean enabled,
-                                                       Boolean baseline) {
+    public Page<IamApplicationEntity> pageApplications(int page, int pageSize, AuthorizationDomain domain, String name,
+                                                       Boolean enabled, Boolean baseline) {
         String keyword = IamFilters.containsName(name);
         return applications.selectPage(new Page<>(page, pageSize), Wrappers.<IamApplicationEntity>lambdaQuery()
+                .eq(IamApplicationEntity::getDomain, domain)
                 .like(keyword != null, IamApplicationEntity::getName, keyword)
                 .eq(enabled != null, IamApplicationEntity::getEnabled, enabled)
                 .eq(baseline != null, IamApplicationEntity::getBaseline, baseline)

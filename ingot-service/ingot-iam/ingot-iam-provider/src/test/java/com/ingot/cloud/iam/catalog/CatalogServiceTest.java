@@ -96,34 +96,50 @@ class CatalogServiceTest {
                 + " (2,'demo','TENANT','演示应用',2,TRUE,TRUE,0),"
                 + " (3,'off','TENANT','停用应用',3,FALSE,FALSE,0)");
 
-        var byName = catalog.listApplications(1, 20, "演示", null, null);
+        var byName = catalog.listApplications(1, 20, "TENANT", "演示", null, null);
         assertEquals(1, byName.items().size());
         assertEquals("2", byName.items().getFirst().record().id());
         assertEquals("演示应用", byName.items().getFirst().record().name());
 
-        var disabled = catalog.listApplications(1, 20, null, "DISABLED", null);
+        var disabled = catalog.listApplications(1, 20, "TENANT", null, "DISABLED", null);
         assertEquals(1, disabled.items().size());
         assertEquals("3", disabled.items().getFirst().record().id());
 
-        var combined = catalog.listApplications(1, 20, "应用", "ENABLED", null);
+        var combined = catalog.listApplications(1, 20, "TENANT", "应用", "ENABLED", null);
         assertEquals(1, combined.items().size());
         assertEquals("2", combined.items().getFirst().record().id());
 
-        var baseline = catalog.listApplications(1, 20, null, null, true);
+        var baseline = catalog.listApplications(1, 20, "TENANT", null, null, true);
         assertEquals(1, baseline.items().size());
         assertEquals("2", baseline.items().getFirst().record().id());
         assertEquals(true, baseline.items().getFirst().record().baseline());
 
-        var notBaseline = catalog.listApplications(1, 20, null, null, false);
-        assertEquals(2, notBaseline.items().size());
+        var notBaseline = catalog.listApplications(1, 20, "TENANT", null, null, false);
+        assertEquals(1, notBaseline.items().size());
+        assertEquals("3", notBaseline.items().getFirst().record().id());
 
-        var none = catalog.listApplications(1, 20, "不存在", null, null);
+        var platform = catalog.listApplications(1, 20, "PLATFORM", null, null, null);
+        assertEquals(1, platform.items().size());
+        assertEquals("1", platform.items().getFirst().record().id());
+
+        var tenant = catalog.listApplications(1, 20, "TENANT", null, null, null);
+        assertEquals(2, tenant.items().size());
+
+        var none = catalog.listApplications(1, 20, "TENANT", "不存在", null, null);
         assertEquals(0, none.items().size());
         assertEquals(0, none.total());
 
         BizException invalid = assertThrows(BizException.class,
-                () -> catalog.listApplications(1, 20, null, "ENABLE", null));
+                () -> catalog.listApplications(1, 20, "TENANT", null, "ENABLE", null));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
+
+        BizException missingDomain = assertThrows(BizException.class,
+                () -> catalog.listApplications(1, 20, null, null, null, null));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), missingDomain.getCode());
+
+        BizException illegalDomain = assertThrows(BizException.class,
+                () -> catalog.listApplications(1, 20, "MIXED", null, null, null));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), illegalDomain.getCode());
     }
 
     @Test

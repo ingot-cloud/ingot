@@ -468,6 +468,26 @@ class RoleServiceTest {
         assertEquals("1", detail.version());
     }
 
+    @Test
+    void updatePlatformCustomRoleProfileKeepsCode() {
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,status,version) VALUES (1,1,'ACTIVE',0)");
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,description,group_name,enabled,version)"
+                + " VALUES (61,'PLATFORM',NULL,'PLATFORM_CUSTOM','keep-code','旧名称','旧说明','旧分组',TRUE,0)");
+        authenticatePlatform();
+
+        var updated = service.updateProfile(AuthorizationDomain.PLATFORM, false, "61",
+                new RoleUpdateInput("0", "新名称", "新说明", "新分组", ConfigurationStatus.DISABLED));
+        assertEquals("1", updated.version());
+
+        var detail = service.get(AuthorizationDomain.PLATFORM, false, "61");
+        assertEquals("keep-code", detail.record().code());
+        assertEquals("新名称", detail.record().name());
+        assertEquals("新说明", detail.record().description());
+        assertEquals("新分组", detail.record().groupName());
+        assertEquals(ConfigurationStatus.DISABLED, detail.record().status());
+        assertEquals("1", detail.version());
+    }
+
     private void authenticatePlatform() {
         var user = InUser.stateless(1L, null, "web", "standard", UserTypeEnum.ADMIN.getValue(), "account",
                 List.of(), List.of(), Map.of()).toBuilder()

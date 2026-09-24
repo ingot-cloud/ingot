@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * <p>更新共享角色名称、说明、分组与启停；名称为空时只改启停，不改编码和已发布版本。</p>
+ * <p>更新角色名称、说明、分组与启停；名称为空时只改启停，不改编码和已发布版本。</p>
  *
  * @author jy
  * @since 1.0.0
@@ -15,7 +15,7 @@ import jakarta.validation.constraints.NotNull;
  * @param groupName 仅展示分组，可空
  * @param status 启停状态
  */
-@Schema(description = "更新共享角色名称、说明、分组与启停，不改编码和已发布版本")
+@Schema(description = "更新角色名称、说明、分组与启停，不改编码和已发布版本")
 public record RoleUpdateInput(
         @NotBlank @Schema(description = "读取时的配置版本", requiredMode = Schema.RequiredMode.REQUIRED)
         String expectedVersion,

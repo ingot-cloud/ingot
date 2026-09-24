@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.support;
 
 import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MemberStatus;
@@ -13,6 +14,23 @@ import com.ingot.framework.commons.model.iam.MemberStatus;
  */
 public final class IamFilters {
     private IamFilters() {
+    }
+
+    /**
+     * 解析必填管理域字面量。
+     *
+     * @param domain {@link AuthorizationDomain} 稳定字面量
+     * @return 管理域
+     */
+    public static AuthorizationDomain requireDomain(String domain) {
+        if (domain == null || domain.isBlank()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        try {
+            return AuthorizationDomain.getEnum(domain.trim());
+        } catch (IllegalArgumentException ex) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     /**

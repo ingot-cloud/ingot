@@ -106,17 +106,19 @@ public class CatalogService {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param domain {@link AuthorizationDomain} 稳定字面量，必填
      * @param name 应用名称包含匹配，空白表示不限制
      * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
      * @param baseline 是否组织默认开通，空表示不限制
      * @return 应用详情页
      */
-    public PageResponse<ResourceDetail<ApplicationRecord>> listApplications(int page, int pageSize, String name,
-                                                                            String status, Boolean baseline) {
+    public PageResponse<ResourceDetail<ApplicationRecord>> listApplications(int page, int pageSize, String domain,
+                                                                            String name, String status,
+                                                                            Boolean baseline) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_READ);
         IamPages.require(page, pageSize);
-        Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, name, IamFilters.enabledOf(status),
-                baseline);
+        Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, IamFilters.requireDomain(domain),
+                name, IamFilters.enabledOf(status), baseline);
         List<ResourceDetail<ApplicationRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(application(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
