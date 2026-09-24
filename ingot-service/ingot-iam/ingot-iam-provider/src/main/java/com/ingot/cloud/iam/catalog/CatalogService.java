@@ -2,6 +2,7 @@ package com.ingot.cloud.iam.catalog;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,17 @@ import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamJson;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.ActionCatalogItem;
+import com.ingot.framework.commons.model.iam.ActionCatalogResource;
+import com.ingot.framework.commons.model.iam.ActionCatalogView;
+import com.ingot.framework.commons.model.iam.ActionCodes;
 import com.ingot.framework.commons.model.iam.ActionDraft;
+import com.ingot.framework.commons.model.iam.ApplicationBundleAction;
+import com.ingot.framework.commons.model.iam.ApplicationBundleDraft;
+import com.ingot.framework.commons.model.iam.ApplicationBundleMenu;
+import com.ingot.framework.commons.model.iam.ApplicationBundleResource;
+import com.ingot.framework.commons.model.iam.ActionLookupInput;
+import com.ingot.framework.commons.model.iam.ActionLookupRecord;
 import com.ingot.framework.commons.model.iam.ActionRecord;
 import com.ingot.framework.commons.model.iam.ActionUpdateInput;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
@@ -42,6 +53,8 @@ import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.MenuAccessMode;
+import com.ingot.framework.commons.model.iam.MenuActionRecord;
 import com.ingot.framework.commons.model.iam.MenuDraft;
 import com.ingot.framework.commons.model.iam.MenuRecord;
 import com.ingot.framework.commons.model.iam.MenuTreeNode;
@@ -191,6 +204,46 @@ public class CatalogService {
             audits.write(actor.context(), access.nextId(), APPLICATION, IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(APPLICATION, "0"));
             return new CreatedResource(IamIds.text(id), "0");
+        });
+    }
+
+    /**
+     * 一次创建应用及其资源、操作与菜单；任一步失败整单回滚。
+     *
+     * @param input 应用、资源与菜单草稿
+     * @return 新应用 ID 与版本
+     */
+    public CreatedResource createApplicationBundle(ApplicationBundleDraft input) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_CREATE);
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_CREATE);
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_CREATE);
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MENU_CREATE);
+        ApplicationDraft application = input.application();
+        if (application.domain() == AuthorizationDomain.PLATFORM && application.baseline()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return transaction.execute(status -> {
+            long appId = access.nextId();
+            IamApplicationEntity entity = new IamApplicationEntity();
+            entity.setId(BigInteger.valueOf(appId));
+            entity.setCode(application.code());
+            entity.setDomain(application.domain());
+            entity.setName(application.name());
+            entity.setDescription(nullable(application.description()));
+            entity.setIcon(nullable(application.icon()));
+            entity.setSortOrder(application.sortOrder());
+            entity.setBaseline(application.baseline());
+            entity.setEnabled(true);
+            try {
+                catalog.insertApplication(entity);
+            } catch (DuplicateKeyException exception) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            audits.write(actor.context(), access.nextId(), APPLICATION, IamIds.text(appId), AuditChangeType.CREATE,
+                    Map.of(), Map.of(AuditField.NAME, application.name()), Map.of(APPLICATION, "0"));
+            Map<String, Long> actionIds = persistBundleCatalog(actor, appId, application.code(), input.resources());
+            persistBundleMenus(actor, appId, input.menus(), actionIds);
+            return new CreatedResource(IamIds.text(appId), "0");
         });
     }
 
@@ -398,6 +451,132 @@ public class CatalogService {
     }
 
     /**
+     * 一次返回应用内资源及操作树，供菜单选择操作。
+     *
+     * @param applicationId 应用 ID
+     * @return 操作目录
+     */
+    public ActionCatalogView getActionCatalog(String applicationId) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
+        long appId = IamIds.require(applicationId);
+        IamApplicationEntity application = catalog.findApplication(appId);
+        if (application == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        List<IamResourceEntity> resources = catalog.listResources(appId);
+        Map<BigInteger, List<IamActionEntity>> actions = new LinkedHashMap<>();
+        for (IamActionEntity row : catalog.listActions(appId)) {
+            actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
+        }
+        List<ActionCatalogResource> nodes = resources.stream()
+                .map(resource -> new ActionCatalogResource(text(resource.getId()), resource.getCode(),
+                        resource.getName(), actions.getOrDefault(resource.getId(), List.of()).stream()
+                                .map(this::catalogItem).toList()))
+                .toList();
+        return new ActionCatalogView(text(application.getId()), application.getCode(), application.getName(), nodes);
+    }
+
+    /**
+     * 一次返回指定资源下的全部操作，供权限树展开。
+     *
+     * @param applicationId 应用 ID
+     * @param resourceId 资源 ID
+     * @return 操作列表
+     */
+    public List<ActionRecord> listResourceActions(String applicationId, String resourceId) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
+        long appId = IamIds.require(applicationId);
+        long id = IamIds.require(resourceId);
+        if (catalog.findResource(appId, id) == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        return catalog.listActionsByResource(appId, id).stream().map(CatalogService::action).toList();
+    }
+
+    /**
+     * 一次返回菜单已绑定操作及资源名称，供详情回显。
+     *
+     * @param applicationId 应用 ID
+     * @param menuId 菜单 ID
+     * @return 已关联操作
+     */
+    public List<MenuActionRecord> listMenuActions(String applicationId, String menuId) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MENU_READ);
+        long appId = IamIds.require(applicationId);
+        long id = IamIds.require(menuId);
+        if (catalog.findMenu(appId, id) == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        List<BigInteger> actionIds = catalog.menuActionIds(appId, id);
+        if (actionIds.isEmpty()) {
+            return List.of();
+        }
+        List<IamActionEntity> rows = catalog.listActionsByIds(actionIds.stream().map(BigInteger::longValue).toList());
+        Map<BigInteger, IamResourceEntity> resources = new LinkedHashMap<>();
+        for (IamResourceEntity resource : catalog.listResourcesByIds(rows.stream()
+                .map(row -> row.getResourceId().longValue()).distinct().toList())) {
+            resources.put(resource.getId(), resource);
+        }
+        Map<BigInteger, IamActionEntity> byId = rows.stream()
+                .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
+        List<MenuActionRecord> result = new ArrayList<>();
+        for (BigInteger actionId : actionIds) {
+            IamActionEntity row = byId.get(actionId);
+            if (row == null) {
+                continue;
+            }
+            IamResourceEntity resource = resources.get(row.getResourceId());
+            result.add(new MenuActionRecord(text(row.getId()), row.getCode(), row.getName(),
+                    text(row.getResourceId()), resource == null ? "" : resource.getCode(),
+                    resource == null ? "" : resource.getName()));
+        }
+        return result;
+    }
+
+    /**
+     * 按操作 ID 批量解析名称、应用与资源，供权限回显。
+     *
+     * @param input 操作 ID
+     * @return 解析结果；未命中的 ID 省略
+     */
+    public List<ActionLookupRecord> lookupActions(ActionLookupInput input) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
+        List<Long> ids = requireIds(input.ids());
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        List<IamActionEntity> rows = catalog.listActionsByIds(ids);
+        Map<BigInteger, IamApplicationEntity> applications = new LinkedHashMap<>();
+        for (IamApplicationEntity application : catalog.listApplicationsByIds(rows.stream()
+                .map(row -> row.getApplicationId().longValue()).distinct().toList())) {
+            applications.put(application.getId(), application);
+        }
+        Map<BigInteger, IamResourceEntity> resources = new LinkedHashMap<>();
+        for (IamResourceEntity resource : catalog.listResourcesByIds(rows.stream()
+                .map(row -> row.getResourceId().longValue()).distinct().toList())) {
+            resources.put(resource.getId(), resource);
+        }
+        Map<BigInteger, IamActionEntity> byId = rows.stream()
+                .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
+        List<ActionLookupRecord> result = new ArrayList<>();
+        for (Long id : ids) {
+            IamActionEntity row = byId.get(BigInteger.valueOf(id));
+            if (row == null) {
+                continue;
+            }
+            IamApplicationEntity application = applications.get(row.getApplicationId());
+            IamResourceEntity resource = resources.get(row.getResourceId());
+            List<ScopeKind> scopes = resource == null ? List.of() : IamJson.read(resource.getScopeCapabilities(), SCOPES);
+            result.add(new ActionLookupRecord(text(row.getId()), row.getCode(), row.getName(),
+                    text(row.getApplicationId()), application == null ? "" : application.getCode(),
+                    application == null ? "" : application.getName(), text(row.getResourceId()),
+                    resource == null ? "" : resource.getCode(), resource == null ? "" : resource.getName(),
+                    scopes == null ? List.of() : scopes, statusOf(row.getEnabled())));
+        }
+        return result;
+    }
+
+    /**
      * 创建绑定资源的精确操作，操作码不得含通配符。
      *
      * @param applicationId 应用 ID
@@ -412,13 +591,17 @@ public class CatalogService {
         long appId = IamIds.require(applicationId);
         long resourceId = IamIds.require(input.resourceId());
         return transaction.execute(status -> {
-            requireLocked(catalog.lockResource(appId, resourceId));
+            IamApplicationEntity application = catalog.findApplication(appId);
+            if (application == null) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+            IamResourceEntity resource = requireLocked(catalog.lockResource(appId, resourceId));
             long id = access.nextId();
             IamActionEntity entity = new IamActionEntity();
             entity.setId(BigInteger.valueOf(id));
             entity.setApplicationId(BigInteger.valueOf(appId));
             entity.setResourceId(BigInteger.valueOf(resourceId));
-            entity.setCode(input.code());
+            entity.setCode(ActionCodes.compose(application.getCode(), resource.getCode(), input.code()));
             entity.setName(input.name());
             entity.setEnabled(true);
             try {
@@ -809,6 +992,167 @@ public class CatalogService {
         return id;
     }
 
+    private Map<String, Long> persistBundleCatalog(ActiveIdentity actor, long appId, String applicationCode,
+                                                   List<ApplicationBundleResource> resources) {
+        Map<String, Long> actionIds = new LinkedHashMap<>();
+        Set<String> resourceCodes = new HashSet<>();
+        Set<String> tempIds = new HashSet<>();
+        for (ApplicationBundleResource resource : resources == null ? List.<ApplicationBundleResource>of() : resources) {
+            String resourceTempId = requireTempId(resource.tempId());
+            if (!tempIds.add(resourceTempId) || !resourceCodes.add(resource.code())) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            long resourceId = access.nextId();
+            IamResourceEntity entity = new IamResourceEntity();
+            entity.setId(BigInteger.valueOf(resourceId));
+            entity.setApplicationId(BigInteger.valueOf(appId));
+            entity.setCode(resource.code());
+            entity.setName(resource.name());
+            entity.setScopeCapabilities(IamJson.array(resource.scopeCapabilities()));
+            entity.setFieldCapabilities(IamJson.array(resource.fieldCapabilities()));
+            entity.setEnabled(true);
+            try {
+                catalog.insertResource(entity);
+            } catch (DuplicateKeyException exception) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            audits.write(actor.context(), access.nextId(), RESOURCE, IamIds.text(resourceId), AuditChangeType.CREATE,
+                    Map.of(), Map.of(AuditField.NAME, resource.name()), Map.of(RESOURCE, "0"));
+            Set<String> actionCodes = new HashSet<>();
+            for (ApplicationBundleAction action : resource.actions() == null
+                    ? List.<ApplicationBundleAction>of() : resource.actions()) {
+                String actionTempId = requireTempId(action.tempId());
+                if (!tempIds.add(actionTempId) || !actionCodes.add(action.code())) {
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                }
+                long actionId = access.nextId();
+                IamActionEntity row = new IamActionEntity();
+                row.setId(BigInteger.valueOf(actionId));
+                row.setApplicationId(BigInteger.valueOf(appId));
+                row.setResourceId(BigInteger.valueOf(resourceId));
+                row.setCode(ActionCodes.compose(applicationCode, resource.code(), action.code()));
+                row.setName(action.name());
+                row.setEnabled(true);
+                try {
+                    catalog.insertAction(row);
+                } catch (DuplicateKeyException exception) {
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                }
+                audits.write(actor.context(), access.nextId(), ACTION, IamIds.text(actionId), AuditChangeType.CREATE,
+                        Map.of(), Map.of(AuditField.NAME, action.name()), Map.of(ACTION, "0"));
+                actionIds.put(actionTempId, actionId);
+            }
+        }
+        return actionIds;
+    }
+
+    private void persistBundleMenus(ActiveIdentity actor, long appId, List<ApplicationBundleMenu> menus,
+                                    Map<String, Long> actionIds) {
+        Map<String, Long> menuIds = new LinkedHashMap<>();
+        for (ApplicationBundleMenu menu : orderBundleMenus(menus)) {
+            Long parentId = null;
+            String parentTempId = blankToNull(menu.parentTempId());
+            if (parentTempId != null) {
+                parentId = menuIds.get(parentTempId);
+                if (parentId == null) {
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                }
+            }
+            List<String> bound = menu.accessMode() == MenuAccessMode.OPEN
+                    ? List.of()
+                    : resolveBundleActionIds(menu.actionTempIds(), actionIds);
+            long id = access.nextId();
+            MenuDraft draft = new MenuDraft(parentId == null ? null : IamIds.text(parentId), menu.name(), menu.kind(),
+                    menu.path(), menu.viewPath(), menu.routeName(), menu.icon(), menu.accessMode(), menu.matchMode(),
+                    bound, menu.sortOrder());
+            catalog.insertMenu(menuEntity(id, appId, parentId, draft, true));
+            replaceMenuActions(appId, id, bound);
+            audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE,
+                    Map.of(), Map.of(AuditField.NAME, menu.name()), Map.of(MENU, "0"));
+            menuIds.put(requireTempId(menu.tempId()), id);
+        }
+    }
+
+    private List<ApplicationBundleMenu> orderBundleMenus(List<ApplicationBundleMenu> menus) {
+        if (menus == null || menus.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ApplicationBundleMenu> byId = new LinkedHashMap<>();
+        for (ApplicationBundleMenu menu : menus) {
+            if (byId.put(requireTempId(menu.tempId()), menu) != null) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+        }
+        Map<String, List<ApplicationBundleMenu>> children = new LinkedHashMap<>();
+        List<ApplicationBundleMenu> roots = new ArrayList<>();
+        for (ApplicationBundleMenu menu : byId.values()) {
+            String parent = blankToNull(menu.parentTempId());
+            if (parent == null) {
+                roots.add(menu);
+                continue;
+            }
+            if (!byId.containsKey(parent)) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            children.computeIfAbsent(parent, key -> new ArrayList<>()).add(menu);
+        }
+        List<ApplicationBundleMenu> ordered = new ArrayList<>();
+        Set<String> visiting = new HashSet<>();
+        Set<String> visited = new HashSet<>();
+        for (ApplicationBundleMenu root : roots) {
+            visitBundleMenu(root, children, visiting, visited, ordered);
+        }
+        if (ordered.size() != byId.size()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return ordered;
+    }
+
+    private static void visitBundleMenu(ApplicationBundleMenu menu,
+                                        Map<String, List<ApplicationBundleMenu>> children,
+                                        Set<String> visiting, Set<String> visited,
+                                        List<ApplicationBundleMenu> ordered) {
+        String tempId = menu.tempId();
+        if (visited.contains(tempId)) {
+            return;
+        }
+        if (!visiting.add(tempId)) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        ordered.add(menu);
+        for (ApplicationBundleMenu child : children.getOrDefault(tempId, List.of())) {
+            visitBundleMenu(child, children, visiting, visited, ordered);
+        }
+        visiting.remove(tempId);
+        visited.add(tempId);
+    }
+
+    private static List<String> resolveBundleActionIds(List<String> actionTempIds, Map<String, Long> actionIds) {
+        if (actionTempIds == null || actionTempIds.isEmpty()) {
+            return List.of();
+        }
+        List<String> ids = new ArrayList<>();
+        for (String tempId : actionTempIds) {
+            Long id = actionIds.get(requireTempId(tempId));
+            if (id == null) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            ids.add(IamIds.text(id));
+        }
+        return ids;
+    }
+
+    private static String requireTempId(String value) {
+        if (value == null || value.isBlank()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return value.trim();
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     private void replaceMenuActions(long applicationId, long menuId, List<String> actionIds) {
         List<Long> ids = new ArrayList<>();
         if (actionIds != null) {
@@ -872,9 +1216,27 @@ public class CatalogService {
                 scopes == null ? List.of() : scopes, fields == null ? List.of() : fields, statusOf(row.getEnabled()));
     }
 
+    private ActionCatalogItem catalogItem(IamActionEntity row) {
+        return new ActionCatalogItem(text(row.getId()), text(row.getResourceId()), row.getCode(), row.getName(),
+                statusOf(row.getEnabled()));
+    }
+
     private static ActionRecord action(IamActionEntity row) {
         return new ActionRecord(text(row.getId()), text(row.getApplicationId()), text(row.getResourceId()),
                 row.getCode(), row.getName(), statusOf(row.getEnabled()));
+    }
+
+    private static List<Long> requireIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<Long> result = new ArrayList<>();
+        for (String id : ids) {
+            if (id != null && !id.isBlank()) {
+                result.add(IamIds.require(id));
+            }
+        }
+        return result;
     }
 
     private MenuTreeNode menuTree(IamMenuEntity row, Map<BigInteger, List<IamMenuEntity>> children,

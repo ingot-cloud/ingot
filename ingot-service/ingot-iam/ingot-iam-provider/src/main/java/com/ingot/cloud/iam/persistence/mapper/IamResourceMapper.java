@@ -25,6 +25,6 @@ public interface IamResourceMapper extends BaseMapper<IamResourceEntity> {
      * @param id 资源 ID
      * @return 命中行；不存在时为空
      */
-    @Select("SELECT name,version FROM iam_resource WHERE application_id=#{applicationId} AND id=#{id} FOR UPDATE")
+    @Select("SELECT code,name,version FROM iam_resource WHERE application_id=#{applicationId} AND id=#{id} FOR UPDATE")
     IamResourceEntity lockRow(@Param("applicationId") BigInteger applicationId, @Param("id") BigInteger id);
 }

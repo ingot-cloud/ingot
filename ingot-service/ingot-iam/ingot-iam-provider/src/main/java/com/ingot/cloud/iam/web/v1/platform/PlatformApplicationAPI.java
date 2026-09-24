@@ -1,10 +1,14 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import java.util.List;
+
 import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.support.IamPages;
+import com.ingot.framework.commons.model.iam.ActionCatalogView;
 import com.ingot.framework.commons.model.iam.ActionDraft;
 import com.ingot.framework.commons.model.iam.ActionRecord;
 import com.ingot.framework.commons.model.iam.ActionUpdateInput;
+import com.ingot.framework.commons.model.iam.ApplicationBundleDraft;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
 import com.ingot.framework.commons.model.iam.ApplicationUpdateInput;
@@ -14,6 +18,7 @@ import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.CatalogListView;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.MenuActionRecord;
 import com.ingot.framework.commons.model.iam.MenuDraft;
 import com.ingot.framework.commons.model.iam.MenuRecord;
 import com.ingot.framework.commons.model.iam.MenuUpdateInput;
@@ -79,6 +84,18 @@ public class PlatformApplicationAPI implements RShortcuts {
             return ok(catalog.listApplicationSummaries(page, pageSize, domain, name, status, baseline));
         }
         return ok(catalog.listApplications(page, pageSize, domain, name, status, baseline));
+    }
+
+    /**
+     * 一次创建应用及其资源、操作与菜单，失败整单回滚。
+     *
+     * @param input 应用、资源与菜单草稿
+     * @return 新应用 ID
+     */
+    @Operation(summary = "整包创建应用")
+    @PostMapping("/bundles")
+    public R<CreatedResource> createBundle(@Valid @RequestBody ApplicationBundleDraft input) {
+        return ok(catalog.createApplicationBundle(input));
     }
 
     /**
@@ -205,6 +222,31 @@ public class PlatformApplicationAPI implements RShortcuts {
     @DeleteMapping("/{id}/resources/{resourceId}")
     public R<CreatedResource> deleteResource(@PathVariable String id, @PathVariable String resourceId) {
         return ok(catalog.deleteResource(id, resourceId));
+    }
+
+    /**
+     * 一次返回指定资源下的全部操作，供权限树展开，不走分页列表。
+     *
+     * @param id 应用 ID
+     * @param resourceId 资源 ID
+     * @return 操作列表
+     */
+    @Operation(summary = "资源操作目录")
+    @GetMapping("/{id}/resources/{resourceId}/actions")
+    public R<List<ActionRecord>> listResourceActions(@PathVariable String id, @PathVariable String resourceId) {
+        return ok(catalog.listResourceActions(id, resourceId));
+    }
+
+    /**
+     * 一次返回应用内资源及操作树，供菜单选择操作。
+     *
+     * @param id 应用 ID
+     * @return 操作目录
+     */
+    @Operation(summary = "应用操作目录")
+    @GetMapping("/{id}/action-catalog")
+    public R<ActionCatalogView> getActionCatalog(@PathVariable String id) {
+        return ok(catalog.getActionCatalog(id));
     }
 
     /**
@@ -348,6 +390,19 @@ public class PlatformApplicationAPI implements RShortcuts {
     @DeleteMapping("/{id}/menus/{menuId}")
     public R<CreatedResource> deleteMenu(@PathVariable String id, @PathVariable String menuId) {
         return ok(catalog.deleteMenu(id, menuId));
+    }
+
+    /**
+     * 一次返回菜单已绑定操作及资源名称，供详情回显。
+     *
+     * @param id 应用 ID
+     * @param menuId 菜单 ID
+     * @return 已关联操作
+     */
+    @Operation(summary = "菜单关联操作")
+    @GetMapping("/{id}/menus/{menuId}/actions")
+    public R<List<MenuActionRecord>> listMenuActions(@PathVariable String id, @PathVariable String menuId) {
+        return ok(catalog.listMenuActions(id, menuId));
     }
 
     private static CatalogListView requireView(String view) {

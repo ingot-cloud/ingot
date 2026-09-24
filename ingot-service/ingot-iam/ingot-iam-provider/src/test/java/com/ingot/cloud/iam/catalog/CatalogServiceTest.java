@@ -9,11 +9,21 @@ import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.ActionDraft;
+import com.ingot.framework.commons.model.iam.ActionLookupInput;
+import com.ingot.framework.commons.model.iam.ActionMatchMode;
+import com.ingot.framework.commons.model.iam.ApplicationBundleAction;
+import com.ingot.framework.commons.model.iam.ApplicationBundleDraft;
+import com.ingot.framework.commons.model.iam.ApplicationBundleMenu;
+import com.ingot.framework.commons.model.iam.ApplicationBundleResource;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.MenuAccessMode;
+import com.ingot.framework.commons.model.iam.MenuKind;
+import com.ingot.framework.commons.model.iam.ScopeKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -87,6 +97,44 @@ class CatalogServiceTest {
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
         assertEquals("0", created.version());
+    }
+
+    @Test
+    void createApplicationBundlePersistsCatalogAndMenus() {
+        CreatedResource created = catalog.createApplicationBundle(new ApplicationBundleDraft(
+                new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
+                List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
+                        List.of(new ApplicationBundleAction("a1", "read", "查看")))),
+                List.of(
+                        new ApplicationBundleMenu("m1", null, "组织", MenuKind.DIRECTORY, null, null, null, null,
+                                MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 1),
+                        new ApplicationBundleMenu("m2", "m1", "成员", MenuKind.PAGE, "/members", "members", null, null,
+                                MenuAccessMode.ACTION, ActionMatchMode.ANY, List.of("a1"), 1))));
+        assertEquals("0", created.version());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
+        assertEquals("demo:account:read",
+                jdbc.queryForObject("SELECT code FROM iam_action WHERE name='查看'", String.class));
+        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu_action", Integer.class));
+        Long parentId = jdbc.queryForObject("SELECT id FROM iam_menu WHERE name='组织'", Long.class);
+        assertEquals(parentId, jdbc.queryForObject("SELECT parent_id FROM iam_menu WHERE name='成员'", Long.class));
+    }
+
+    @Test
+    void createApplicationBundleRollsBackWhenMenuActionIsUnknown() {
+        BizException invalid = assertThrows(BizException.class, () -> catalog.createApplicationBundle(
+                new ApplicationBundleDraft(
+                        new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
+                        List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
+                                List.of(new ApplicationBundleAction("a1", "read", "查看")))),
+                        List.of(new ApplicationBundleMenu("m1", null, "成员", MenuKind.PAGE, null, null, null, null,
+                                MenuAccessMode.ACTION, ActionMatchMode.ANY, List.of("missing"), 1)))));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_action", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Integer.class));
     }
 
     @Test
@@ -196,6 +244,23 @@ class CatalogServiceTest {
     }
 
     @Test
+    void createActionComposesApplicationAndResourceCode() {
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
+                + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                + " VALUES (21,1,'account','全局账号','[]','[]',TRUE,0)");
+
+        CreatedResource created = catalog.createAction("1", new ActionDraft("21", "read", "查看账号"));
+        assertEquals("0", created.version());
+        assertEquals("demo:account:read",
+                jdbc.queryForObject("SELECT code FROM iam_action WHERE name='查看账号'", String.class));
+
+        catalog.createAction("1", new ActionDraft("21", "demo:account:write", "编辑账号"));
+        assertEquals("demo:account:write",
+                jdbc.queryForObject("SELECT code FROM iam_action WHERE name='编辑账号'", String.class));
+    }
+
+    @Test
     void listActionsFiltersByResourceNameAndIds() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
@@ -237,5 +302,55 @@ class CatalogServiceTest {
         assertEquals(1, tree.getFirst().children().size());
         assertEquals("32", tree.getFirst().children().getFirst().record().id());
         assertEquals(List.of("11"), tree.getFirst().children().getFirst().record().actionIds());
+    }
+
+    @Test
+    void getActionCatalogGroupsResourcesAndActions() {
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
+                + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                + " VALUES (21,1,'member','成员','[]','[]',TRUE,0),(22,1,'dept','部门','[]','[]',TRUE,0)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
+                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0),(13,1,22,'demo:dept:read','查看部门',TRUE,0)");
+
+        var view = catalog.getActionCatalog("1");
+        assertEquals("demo", view.applicationCode());
+        assertEquals(2, view.resources().size());
+        assertEquals("查看成员", view.resources().getFirst().actions().getFirst().name());
+        assertEquals(1, view.resources().get(1).actions().size());
+    }
+
+    @Test
+    void listMenuActionsReturnsBoundActionsWithResourceNames() {
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
+                + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                + " VALUES (21,1,'member','成员','[]','[]',TRUE,0)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
+                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)");
+        jdbc.update("INSERT INTO iam_menu(id,application_id,parent_id,name,kind,match_mode,access_mode,sort_order,enabled,version)"
+                + " VALUES (32,1,NULL,'成员','PAGE','ANY','ACTION',1,TRUE,0)");
+        jdbc.update("INSERT INTO iam_menu_action(application_id,menu_id,action_id) VALUES (1,32,11)");
+
+        var actions = catalog.listMenuActions("1", "32");
+        assertEquals(1, actions.size());
+        assertEquals("查看成员", actions.getFirst().name());
+        assertEquals("成员", actions.getFirst().resourceName());
+    }
+
+    @Test
+    void lookupActionsResolvesApplicationAndResource() {
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
+                + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
+                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)");
+
+        var found = catalog.lookupActions(new ActionLookupInput(List.of("11")));
+        assertEquals(1, found.size());
+        assertEquals("演示", found.getFirst().applicationName());
+        assertEquals("成员", found.getFirst().resourceName());
+        assertEquals("demo:member:read", found.getFirst().code());
     }
 }

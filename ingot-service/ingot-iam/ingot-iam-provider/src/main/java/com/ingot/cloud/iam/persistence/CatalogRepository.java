@@ -257,6 +257,46 @@ public class CatalogRepository {
     }
 
     /**
+     * 列出应用内全部资源，供操作目录组树。
+     *
+     * @param applicationId 应用 ID
+     * @return 资源行
+     */
+    public List<IamResourceEntity> listResources(long applicationId) {
+        return resources.selectList(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .orderByAsc(IamResourceEntity::getId));
+    }
+
+    /**
+     * 按 ID 批量读取资源。
+     *
+     * @param ids 资源 ID
+     * @return 资源行；空集合返回空列表
+     */
+    public List<IamResourceEntity> listResourcesByIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return resources.selectList(Wrappers.<IamResourceEntity>lambdaQuery()
+                .in(IamResourceEntity::getId, ids.stream().map(BigInteger::valueOf).toList()));
+    }
+
+    /**
+     * 按 ID 批量读取应用。
+     *
+     * @param ids 应用 ID
+     * @return 应用行；空集合返回空列表
+     */
+    public List<IamApplicationEntity> listApplicationsByIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return applications.selectList(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .in(IamApplicationEntity::getId, ids.stream().map(BigInteger::valueOf).toList()));
+    }
+
+    /**
      * 读取指定应用下的资源。
      *
      * @param applicationId 应用 ID
@@ -357,6 +397,47 @@ public class CatalogRepository {
                         resourceId == null ? null : BigInteger.valueOf(resourceId))
                 .like(keyword != null, IamActionEntity::getName, keyword)
                 .in(!actionIds.isEmpty(), IamActionEntity::getId, actionIds)
+                .orderByAsc(IamActionEntity::getId));
+    }
+
+    /**
+     * 列出应用内全部操作，供操作目录组树。
+     *
+     * @param applicationId 应用 ID
+     * @return 操作行
+     */
+    public List<IamActionEntity> listActions(long applicationId) {
+        return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .orderByAsc(IamActionEntity::getId));
+    }
+
+    /**
+     * 列出指定资源下的全部操作，供权限树展开。
+     *
+     * @param applicationId 应用 ID
+     * @param resourceId 资源 ID
+     * @return 操作行
+     */
+    public List<IamActionEntity> listActionsByResource(long applicationId, long resourceId) {
+        return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .eq(IamActionEntity::getResourceId, BigInteger.valueOf(resourceId))
+                .orderByAsc(IamActionEntity::getId));
+    }
+
+    /**
+     * 按操作 ID 批量读取，供回显解析。
+     *
+     * @param ids 操作 ID
+     * @return 操作行；空集合返回空列表
+     */
+    public List<IamActionEntity> listActionsByIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                .in(IamActionEntity::getId, ids.stream().map(BigInteger::valueOf).toList())
                 .orderByAsc(IamActionEntity::getId));
     }
 
