@@ -12,7 +12,7 @@
 
 详细目录、状态机、工件职责和归档规则以 [specs/README.md](./specs/README.md) 为准。
 
-写后端业务代码时阅读 [in-framework](./.agents/skills/in-framework/SKILL.md)。枚举、时间、OSS、魔法值、JavaDoc、构造注入的细则在该 skill 的 [reference.md](./.agents/skills/in-framework/reference.md)，不必等用户提醒。
+写后端业务代码时阅读 [in-framework](./.agents/skills/in-framework/SKILL.md)。枚举、时间、OSS、魔法值、JavaDoc、构造注入的细则按该 skill 索引读 [references/](./.agents/skills/in-framework/references/)，不必等用户提醒。
 
 # 业务枚举契约
 
