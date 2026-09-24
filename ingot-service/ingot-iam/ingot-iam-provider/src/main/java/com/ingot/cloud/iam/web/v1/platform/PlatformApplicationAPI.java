@@ -29,6 +29,7 @@ import com.ingot.framework.commons.model.iam.ResourceRecord;
 import com.ingot.framework.commons.model.iam.ResourceUpdateInput;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
+import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -151,7 +152,7 @@ public class PlatformApplicationAPI implements RShortcuts {
     }
 
     /**
-     * 删除未被引用的应用。
+     * 删除未被资源、菜单、开通或套餐引用的应用；被拒时说明具体引用。
      *
      * @param id 应用 ID
      * @return 删除前版本
@@ -160,6 +161,20 @@ public class PlatformApplicationAPI implements RShortcuts {
     @DeleteMapping("/{id}")
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(catalog.deleteApplication(id));
+    }
+
+    /**
+     * 确认当前账号后强制清除应用及其全部关联。
+     *
+     * @param id 应用 ID
+     * @param input 版本与内嵌确认
+     * @return 删除前版本
+     */
+    @Operation(summary = "强制清除应用")
+    @PostMapping("/{id}/purge")
+    @InCryptoHybridContext
+    public R<CreatedResource> purge(@PathVariable String id, @Valid @RequestBody ApplicationPurgeRequest input) {
+        return ok(catalog.purgeApplication(id, input.toInput()));
     }
 
     /**

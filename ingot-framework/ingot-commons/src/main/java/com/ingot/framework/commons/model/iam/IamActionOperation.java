@@ -102,7 +102,11 @@ public enum IamActionOperation {
     /**
      * 撤销会话或令牌。
      */
-    REVOKE("revoke", true);
+    REVOKE("revoke", true),
+    /**
+     * 强制清除对象及其全部关联。
+     */
+    PURGE("purge", true);
 
     /**
      * ACTION 码末段使用的稳定字面量。

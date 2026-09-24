@@ -25,7 +25,7 @@ class IamEnumPersistenceContractTest {
                 AuditChangeType.class, DirectoryDefaultScope.class, MenuKind.class, ActionMatchMode.class,
                 MenuAccessMode.class, ScopeKind.class, PolicyEffect.class, IamAction.class, IamReasonCode.class,
                 MemberFieldKey.class, ExportTaskStatus.class, IamActionOperation.class,
-                AccountLookupPurpose.class, SelectionPurpose.class
+                AccountLookupPurpose.class, SelectionPurpose.class, SensitiveConfirmationKind.class
         }) {
             assertDoesNotThrow(() -> new CompositeEnumTypeHandler(type), type.getSimpleName());
         }

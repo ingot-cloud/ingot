@@ -11,7 +11,11 @@ import java.util.Objects;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.persistence.entity.IamActionEntity;
+import com.ingot.cloud.iam.persistence.entity.IamAppAudienceEntity;
 import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
+import com.ingot.cloud.iam.persistence.entity.IamAudienceDepartmentEntity;
+import com.ingot.cloud.iam.persistence.entity.IamAudienceGroupEntity;
+import com.ingot.cloud.iam.persistence.entity.IamAudienceMemberEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMenuActionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamMenuEntity;
 import com.ingot.cloud.iam.persistence.entity.IamPlanApplicationEntity;
@@ -21,7 +25,11 @@ import com.ingot.cloud.iam.persistence.entity.IamRoleDeltaEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleGrantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantAppEntitlementEntity;
 import com.ingot.cloud.iam.persistence.mapper.IamActionMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamAppAudienceMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamApplicationMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamAudienceDepartmentMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamAudienceGroupMapper;
+import com.ingot.cloud.iam.persistence.mapper.IamAudienceMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMenuActionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamMenuMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamPlanApplicationMapper;
@@ -57,6 +65,10 @@ public class CatalogRepository {
     private final IamTenantAppEntitlementMapper entitlements;
     private final IamRoleGrantMapper roleGrants;
     private final IamRoleDeltaMapper roleDeltas;
+    private final IamAppAudienceMapper appAudiences;
+    private final IamAudienceMemberMapper audienceMembers;
+    private final IamAudienceGroupMapper audienceGroups;
+    private final IamAudienceDepartmentMapper audienceDepartments;
 
     /**
      * 分页列出应用目录。
@@ -190,6 +202,46 @@ public class CatalogRepository {
      */
     public void deleteApplication(long id) {
         applications.deleteById(BigInteger.valueOf(id));
+    }
+
+    /**
+     * 按依赖顺序清除该应用全部关联后删除应用行。
+     *
+     * @param applicationId 应用 ID
+     */
+    public void purgeApplication(long applicationId) {
+        BigInteger application = BigInteger.valueOf(applicationId);
+        List<BigInteger> actionIds = actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                        .select(IamActionEntity::getId)
+                        .eq(IamActionEntity::getApplicationId, application))
+                .stream().map(IamActionEntity::getId).toList();
+        if (!actionIds.isEmpty()) {
+            roleGrants.delete(Wrappers.<IamRoleGrantEntity>lambdaQuery()
+                    .in(IamRoleGrantEntity::getActionId, actionIds));
+            roleDeltas.delete(Wrappers.<IamRoleDeltaEntity>lambdaQuery()
+                    .in(IamRoleDeltaEntity::getActionId, actionIds));
+        }
+        menuActions.delete(Wrappers.<IamMenuActionEntity>lambdaQuery()
+                .eq(IamMenuActionEntity::getApplicationId, application));
+        menus.delete(Wrappers.<IamMenuEntity>lambdaQuery()
+                .eq(IamMenuEntity::getApplicationId, application));
+        audienceMembers.delete(Wrappers.<IamAudienceMemberEntity>lambdaQuery()
+                .eq(IamAudienceMemberEntity::getApplicationId, application));
+        audienceGroups.delete(Wrappers.<IamAudienceGroupEntity>lambdaQuery()
+                .eq(IamAudienceGroupEntity::getApplicationId, application));
+        audienceDepartments.delete(Wrappers.<IamAudienceDepartmentEntity>lambdaQuery()
+                .eq(IamAudienceDepartmentEntity::getApplicationId, application));
+        appAudiences.delete(Wrappers.<IamAppAudienceEntity>lambdaQuery()
+                .eq(IamAppAudienceEntity::getApplicationId, application));
+        entitlements.delete(Wrappers.<IamTenantAppEntitlementEntity>lambdaQuery()
+                .eq(IamTenantAppEntitlementEntity::getApplicationId, application));
+        planApplications.delete(Wrappers.<IamPlanApplicationEntity>lambdaQuery()
+                .eq(IamPlanApplicationEntity::getApplicationId, application));
+        actions.delete(Wrappers.<IamActionEntity>lambdaQuery()
+                .eq(IamActionEntity::getApplicationId, application));
+        resources.delete(Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, application));
+        applications.deleteById(application);
     }
 
     /**

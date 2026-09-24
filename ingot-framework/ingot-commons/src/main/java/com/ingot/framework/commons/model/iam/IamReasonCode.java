@@ -30,6 +30,7 @@ public enum IamReasonCode implements ErrorCode {
     POLICY_CONFLICT("PolicyConflict", "策略或角色差异存在未解决的冲突", 400),
     REVISION_CONFLICT("RevisionConflict", "配置已变化，请重新预览后提交", 409),
     OBJECT_IN_USE("ObjectInUse", "对象仍被引用，无法删除", 400),
+    STEP_UP_FAILED("StepUpFailed", "身份确认失败，无法继续操作", 403),
     AUTHORIZATION_UNAVAILABLE("AuthorizationUnavailable", "暂时无法加载有效授权，请稍后重试", 503);
 
     /**

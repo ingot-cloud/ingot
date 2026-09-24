@@ -119,6 +119,7 @@ VERBS = {
     'unlock': '解锁',
     'reset-password': '重置密码',
     'revoke': '撤销',
+    'purge': '强制清除',
 }
 
 # 无宾语动词直接作为展示名，避免出现「转交所有者组织设置」这类拼接。
@@ -216,6 +217,19 @@ def collect(routes):
     return catalog
 
 
+def reserved_id(table, preferred, low, high):
+    """空库用预定保留号；该号已被占用则落到区间内下一个空号。
+
+    目录按排序重算序号时，中间插入新行不能改写已有库的主键。子行仍按自然键
+    解析父行，不依赖这里算出的标识。
+    """
+    return (f"COALESCE("
+            f"(SELECT {preferred} FROM DUAL "
+            f"WHERE NOT EXISTS (SELECT 1 FROM {table} taken WHERE taken.id = {preferred})), "
+            f"(SELECT COALESCE(MAX(taken.id), {low}) + 1 FROM {table} taken "
+            f"WHERE taken.id >= {low} AND taken.id < {high}))")
+
+
 def insert(table, columns, values, exists, source='DUAL', where=None):
     """存在即跳过的插入语句，重复执行不覆盖任何既有行。
 
@@ -236,6 +250,7 @@ def build():
         '-- IAM 正式冷启动种子：先按顺序执行 001–005 再执行本文件，可重复执行。',
         '-- 由 tools/iam/generate_bootstrap.py 从 contracts/routes.json 生成，不要手工编辑。',
         '-- 全部语句存在即跳过，不覆盖任何人工或业务修改；不含账号与凭证，',
+        '-- 新建行的保留号若已被占用，则落到所属区间内下一个空号。',
         '-- 平台首个账号由 provider 冷启动器经安全框架注册用例创建。',
         '',
         '-- 发号准备：静态保留标识全部小于起点，运行时发号不会与种子冲突。',
@@ -265,7 +280,8 @@ def build():
                 'iam_resource',
                 ['id', 'application_id', 'code', 'name', 'scope_capabilities', 'field_capabilities',
                  'enabled'],
-                [str(RESOURCE_BASE + resource_count), 'app.id', quote(resource), quote(name),
+                [reserved_id('iam_resource', RESOURCE_BASE + resource_count, RESOURCE_BASE, ACTION_BASE),
+                 'app.id', quote(resource), quote(name),
                  json_literal(scopes), json_literal(fields), 'TRUE'],
                 f"application_id = app.id AND code = {quote(resource)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
@@ -279,7 +295,8 @@ def build():
                 lines.append(insert(
                     'iam_action',
                     ['id', 'application_id', 'resource_id', 'code', 'name', 'enabled'],
-                    [str(ACTION_BASE + action_count), 'res.application_id', 'res.id', quote(code),
+                    [reserved_id('iam_action', ACTION_BASE + action_count, ACTION_BASE, MENU_BASE),
+                     'res.application_id', 'res.id', quote(code),
                      quote(action_name(code)), 'TRUE'],
                     f"code = {quote(code)}",
                     source='iam_resource res JOIN iam_application app ON app.id = res.application_id',
@@ -296,7 +313,8 @@ def build():
                 'iam_menu',
                 ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
                  'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
-                [str(MENU_BASE + menu_count), 'app.id', 'NULL', quote(directory_name),
+                [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
+                 'app.id', 'NULL', quote(directory_name),
                  quote(menu_path(directory_key)), 'NULL', quote(directory_key),
                  quote('DIRECTORY'), quote('ANY'), quote('ACTION'), str(order), 'TRUE'],
                 f"application_id = app.id AND route_name = {quote(directory_key)}",
@@ -308,7 +326,8 @@ def build():
                     'iam_menu',
                     ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
                      'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
-                    [str(MENU_BASE + menu_count), 'parent.application_id', 'parent.id',
+                    [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
+                     'parent.application_id', 'parent.id',
                      quote(page_name), quote(menu_path(view_key)), quote(view_key), quote(view_key),
                      quote('PAGE'), quote('ANY'), quote('ACTION'), str(page_order), 'TRUE'],
                     f"application_id = parent.application_id AND route_name = {quote(view_key)}",

@@ -322,7 +322,9 @@ public final class IamMybatisTestAccess {
                 mapper(source, IamMenuMapper.class), mapper(source, IamMenuActionMapper.class),
                 mapper(source, IamPlanMapper.class), mapper(source, IamPlanApplicationMapper.class),
                 mapper(source, IamTenantAppEntitlementMapper.class), mapper(source, IamRoleGrantMapper.class),
-                mapper(source, IamRoleDeltaMapper.class));
+                mapper(source, IamRoleDeltaMapper.class), mapper(source, IamAppAudienceMapper.class),
+                mapper(source, IamAudienceMemberMapper.class), mapper(source, IamAudienceGroupMapper.class),
+                mapper(source, IamAudienceDepartmentMapper.class));
     }
 
     /** 取得夹具的真实 Mapper；不接受任意 SQL。 */

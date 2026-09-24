@@ -21,6 +21,7 @@ import com.ingot.cloud.iam.persistence.entity.IamPlanEntity;
 import com.ingot.cloud.iam.persistence.entity.IamResourceEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
+import com.ingot.cloud.iam.support.SensitiveConfirmationGuard;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamIds;
@@ -41,6 +42,7 @@ import com.ingot.framework.commons.model.iam.ActionLookupRecord;
 import com.ingot.framework.commons.model.iam.ActionRecord;
 import com.ingot.framework.commons.model.iam.ActionUpdateInput;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
+import com.ingot.framework.commons.model.iam.ApplicationPurgeInput;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
 import com.ingot.framework.commons.model.iam.ApplicationSummary;
 import com.ingot.framework.commons.model.iam.ApplicationUpdateInput;
@@ -91,28 +93,35 @@ public class CatalogService {
     private static final String ACTION = "action";
     private static final String MENU = "menu";
     private static final String PLAN = "plan";
+    private static final String GOVERNANCE_PLATFORM_CODE = "iam-platform";
+    private static final String GOVERNANCE_TENANT_CODE = "iam-tenant";
+    private static final String GOVERNANCE_PURGE_DENIED = "治理应用不可强制清除";
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final AuthorizationChangeNotifier changes;
     private final CatalogRepository catalog;
+    private final SensitiveConfirmationGuard confirmations;
     private final TransactionTemplate transaction;
 
     /**
-     * 绑定身份、审计、目录库与事务。
+     * 绑定身份、审计、确认、目录库与事务。
      * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
      *
      * @param access 当前身份与 ACTION
      * @param audits 同事务审计
      * @param changes 应用/操作启停后的授权失效
      * @param catalog 目录持久化
+     * @param confirmations 写操作内嵌身份确认
      * @param transactionManager 同一数据源事务
      */
     public CatalogService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-                              CatalogRepository catalog, PlatformTransactionManager transactionManager) {
+                              CatalogRepository catalog, SensitiveConfirmationGuard confirmations,
+                              PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.catalog = catalog;
+        this.confirmations = confirmations;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -302,7 +311,7 @@ public class CatalogService {
     }
 
     /**
-     * 删除未被资源、开通或套餐引用的应用。
+     * 删除未被资源、菜单、开通或套餐引用的应用；被拒时说明具体引用。
      *
      * @param id 应用 ID
      * @return 删除前版本
@@ -312,14 +321,39 @@ public class CatalogService {
         long applicationId = IamIds.require(id);
         return transaction.execute(status -> {
             IamApplicationEntity current = requireLocked(catalog.lockApplication(applicationId));
-            requireUnused(catalog.countResources(applicationId));
-            requireUnused(catalog.countEntitlements(applicationId));
-            requireUnused(catalog.countPlanApplications(applicationId));
-            requireUnused(catalog.countMenus(applicationId));
+            CatalogInUse.requireApplicationUnused(catalog.countResources(applicationId),
+                    catalog.countMenus(applicationId), catalog.countEntitlements(applicationId),
+                    catalog.countPlanApplications(applicationId));
             catalog.deleteApplication(applicationId);
             audits.write(actor.context(), access.nextId(), APPLICATION, id, AuditChangeType.REMOVE,
                     Map.of(AuditField.NAME, current.getName()), Map.of(),
                     Map.of(APPLICATION, version(current.getVersion())));
+            return new CreatedResource(id, version(current.getVersion()));
+        });
+    }
+
+    /**
+     * 确认当前账号后，同一事务清除该应用全部关联并删除应用行。
+     *
+     * @param id 应用 ID
+     * @param input 版本与内嵌确认
+     * @return 删除前版本
+     */
+    public CreatedResource purgeApplication(String id, ApplicationPurgeInput input) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_PURGE);
+        confirmations.require(actor, input.confirmation());
+        long applicationId = IamIds.require(id);
+        return transaction.execute(status -> {
+            IamApplicationEntity current = requireLocked(catalog.lockApplication(applicationId));
+            IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
+            if (isGovernanceApplication(current.getCode())) {
+                throw new BizException(IamReasonCode.ACTION_DENIED.getCode(), GOVERNANCE_PURGE_DENIED);
+            }
+            catalog.purgeApplication(applicationId);
+            audits.write(actor.context(), access.nextId(), APPLICATION, id, AuditChangeType.REMOVE,
+                    Map.of(AuditField.NAME, current.getName()), Map.of(),
+                    Map.of(APPLICATION, version(current.getVersion())));
+            changes.markAll();
             return new CreatedResource(id, version(current.getVersion()));
         });
     }
@@ -417,7 +451,7 @@ public class CatalogService {
         long id = IamIds.require(resourceId);
         return transaction.execute(status -> {
             IamResourceEntity current = requireLocked(catalog.lockResource(appId, id));
-            requireUnused(catalog.countActions(appId, id));
+            CatalogInUse.requireUnused(catalog.countActions(appId, id), CatalogInUse.RESOURCE_HAS_ACTIONS);
             catalog.deleteResource(appId, id);
             audits.write(actor.context(), access.nextId(), RESOURCE, resourceId, AuditChangeType.REMOVE,
                     Map.of(AuditField.NAME, current.getName()), Map.of(),
@@ -682,9 +716,9 @@ public class CatalogService {
         long id = IamIds.require(actionId);
         return transaction.execute(status -> {
             IamActionEntity current = requireLocked(catalog.lockAction(appId, id));
-            requireUnused(catalog.countMenuActions(appId, id));
-            requireUnused(catalog.countRoleGrants(id));
-            requireUnused(catalog.countRoleDeltas(id));
+            CatalogInUse.requireUnused(catalog.countMenuActions(appId, id), CatalogInUse.ACTION_HAS_MENUS);
+            CatalogInUse.requireUnused(catalog.countRoleGrants(id), CatalogInUse.ACTION_HAS_GRANTS);
+            CatalogInUse.requireUnused(catalog.countRoleDeltas(id), CatalogInUse.ACTION_HAS_DELTAS);
             catalog.deleteAction(appId, id);
             audits.write(actor.context(), access.nextId(), ACTION, actionId, AuditChangeType.REMOVE,
                     Map.of(AuditField.NAME, current.getName()), Map.of(),
@@ -811,7 +845,7 @@ public class CatalogService {
         long id = IamIds.require(menuId);
         return transaction.execute(status -> {
             IamMenuEntity current = requireLocked(catalog.lockMenu(appId, id));
-            requireUnused(catalog.countChildMenus(appId, id));
+            CatalogInUse.requireUnused(catalog.countChildMenus(appId, id), CatalogInUse.MENU_HAS_CHILDREN);
             catalog.deleteMenu(appId, id);
             audits.write(actor.context(), access.nextId(), MENU, menuId, AuditChangeType.REMOVE,
                     Map.of(AuditField.NAME, current.getName()), Map.of(),
@@ -975,10 +1009,8 @@ public class CatalogService {
         return row;
     }
 
-    private static void requireUnused(long count) {
-        if (count > 0) {
-            throw new BizException(IamReasonCode.OBJECT_IN_USE);
-        }
+    private static boolean isGovernanceApplication(String code) {
+        return GOVERNANCE_PLATFORM_CODE.equals(code) || GOVERNANCE_TENANT_CODE.equals(code);
     }
 
     private Long requireMenuParent(long applicationId, String parentId) {

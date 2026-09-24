@@ -15,6 +15,7 @@ dependencies {
 
     testImplementation(deps.spring.spring_boot.test)
     testImplementation(deps.spring.spring_boot.data_redis_starter)
+    testImplementation(deps.spring.security_crypto)
     testCompileOnly(deps.lombok)
     testAnnotationProcessor(deps.lombok)
 }

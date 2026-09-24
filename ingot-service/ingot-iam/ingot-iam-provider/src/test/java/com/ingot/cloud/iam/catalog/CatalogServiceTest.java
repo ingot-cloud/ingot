@@ -16,11 +16,17 @@ import com.ingot.framework.commons.model.iam.ApplicationBundleAction;
 import com.ingot.framework.commons.model.iam.ApplicationBundleDraft;
 import com.ingot.framework.commons.model.iam.ApplicationBundleMenu;
 import com.ingot.framework.commons.model.iam.ApplicationBundleResource;
+import com.ingot.cloud.iam.support.SensitiveConfirmationGuard;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
+import com.ingot.framework.commons.model.iam.ApplicationPurgeInput;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
+import com.ingot.framework.commons.model.iam.SensitiveConfirmation;
+import com.ingot.framework.commons.model.iam.SensitiveConfirmationKind;
+import com.ingot.framework.security.account.domain.ConfirmPasswordFailedException;
+import com.ingot.framework.security.account.domain.port.inbound.ConfirmPasswordUseCase;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuKind;
 import com.ingot.framework.commons.model.iam.ScopeKind;
@@ -33,6 +39,8 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +64,7 @@ class CatalogServiceTest {
                   baseline BOOLEAN, enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
         jdbc.execute("CREATE TABLE iam_tenant_app_entitlement(id BIGINT PRIMARY KEY, tenant_id BIGINT, application_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT)");
         jdbc.execute("""
                 CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, application_id BIGINT, code VARCHAR(192),
                   name VARCHAR(128), scope_capabilities VARCHAR(4096), field_capabilities VARCHAR(4096),
@@ -72,6 +81,18 @@ class CatalogServiceTest {
                   sort_order INT, enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
         jdbc.execute("CREATE TABLE iam_menu_action(application_id BIGINT, menu_id BIGINT, action_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(4096))");
+        jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32), scopes VARCHAR(4096))");
+        jdbc.execute("""
+                CREATE TABLE iam_app_audience(tenant_id BIGINT, application_id BIGINT, enabled BOOLEAN,
+                  audience_kind VARCHAR(16), version BIGINT DEFAULT 0)
+                """);
+        jdbc.execute("CREATE TABLE iam_audience_member(tenant_id BIGINT, application_id BIGINT, member_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_audience_group(tenant_id BIGINT, application_id BIGINT, group_id BIGINT)");
+        jdbc.execute("""
+                CREATE TABLE iam_audience_department(tenant_id BIGINT, application_id BIGINT, department_id BIGINT,
+                  include_descendants BOOLEAN)
+                """);
         jdbc.execute("""
                 CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY,event_id VARCHAR(64),actor_account_id BIGINT,
                   actor_member_id BIGINT,domain VARCHAR(16),tenant_id BIGINT,target_type VARCHAR(64),target_id VARCHAR(128),
@@ -84,9 +105,13 @@ class CatalogServiceTest {
         when(access.require(any(), any())).thenReturn(actor);
         AtomicLong ids = new AtomicLong(100);
         when(access.nextId()).thenAnswer(invocation -> ids.incrementAndGet());
+        ConfirmPasswordUseCase passwords = mock(ConfirmPasswordUseCase.class);
+        doThrow(new ConfirmPasswordFailedException()).when(passwords)
+                .confirm(argThat(command -> command != null && "wrong".equals(command.getPassword())));
         catalog = new CatalogService(access, com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> {
                 }), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource),
+                new SensitiveConfirmationGuard(passwords),
                 new DataSourceTransactionManager(dataSource));
     }
 
@@ -135,6 +160,122 @@ class CatalogServiceTest {
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_action", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Integer.class));
+    }
+
+    @Test
+    void deleteApplicationExplainsOwnedCatalog() {
+        CreatedResource created = catalog.createApplicationBundle(new ApplicationBundleDraft(
+                new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
+                List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
+                        List.of())),
+                List.of(new ApplicationBundleMenu("m1", null, "成员", MenuKind.PAGE, null, null, null, null,
+                        MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 1))));
+        BizException inUse = assertThrows(BizException.class, () -> catalog.deleteApplication(created.id()));
+        assertEquals(IamReasonCode.OBJECT_IN_USE.getCode(), inUse.getCode());
+        assertEquals("无法删除应用：下仍有资源、菜单", inUse.getMessage());
+    }
+
+    @Test
+    void deleteApplicationExplainsEntitlementAndPlan() {
+        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
+                "演示", null, null, 1, true));
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
+                Long.parseLong(created.id()));
+        jdbc.update("INSERT INTO iam_plan_application(plan_id,application_id) VALUES (3,?)",
+                Long.parseLong(created.id()));
+        BizException inUse = assertThrows(BizException.class, () -> catalog.deleteApplication(created.id()));
+        assertEquals(IamReasonCode.OBJECT_IN_USE.getCode(), inUse.getCode());
+        assertEquals("无法删除应用：仍被组织开通、套餐引用", inUse.getMessage());
+    }
+
+    @Test
+    void purgeApplicationRejectsMissingConfirmation() {
+        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
+                "演示", null, null, 1, true));
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
+                Long.parseLong(created.id()));
+        BizException denied = assertThrows(BizException.class,
+                () -> catalog.purgeApplication(created.id(), new ApplicationPurgeInput("0", null)));
+        assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), denied.getCode());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
+    }
+
+    @Test
+    void purgeApplicationRejectsWrongPassword() {
+        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
+                "演示", null, null, 1, true));
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
+                Long.parseLong(created.id()));
+        BizException denied = assertThrows(BizException.class, () -> catalog.purgeApplication(created.id(),
+                new ApplicationPurgeInput("0",
+                        new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "wrong"))));
+        assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), denied.getCode());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
+    }
+
+    @Test
+    void purgeApplicationClearsAllAssociations() {
+        CreatedResource created = catalog.createApplicationBundle(new ApplicationBundleDraft(
+                new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
+                List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
+                        List.of(new ApplicationBundleAction("a1", "read", "查看")))),
+                List.of(new ApplicationBundleMenu("m1", null, "成员", MenuKind.PAGE, null, null, null, null,
+                        MenuAccessMode.ACTION, ActionMatchMode.ANY, List.of("a1"), 1))));
+        long applicationId = Long.parseLong(created.id());
+        Long actionId = jdbc.queryForObject("SELECT id FROM iam_action", Long.class);
+        jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
+                applicationId);
+        jdbc.update("INSERT INTO iam_plan_application(plan_id,application_id) VALUES (3,?)", applicationId);
+        jdbc.update("INSERT INTO iam_role_grant(revision_id,action_id) VALUES (1,?)", actionId);
+        jdbc.update("INSERT INTO iam_role_delta(revision_id,action_id,operation) VALUES (1,?,'ADD')", actionId);
+        jdbc.update("INSERT INTO iam_app_audience(tenant_id,application_id,enabled,audience_kind,version)"
+                + " VALUES (9,?,TRUE,'ALL',0)", applicationId);
+        jdbc.update("INSERT INTO iam_audience_member(tenant_id,application_id,member_id) VALUES (9,?,11)",
+                applicationId);
+        jdbc.update("INSERT INTO iam_audience_group(tenant_id,application_id,group_id) VALUES (9,?,12)",
+                applicationId);
+        jdbc.update("INSERT INTO iam_audience_department(tenant_id,application_id,department_id,include_descendants)"
+                + " VALUES (9,?,13,FALSE)", applicationId);
+
+        catalog.purgeApplication(created.id(), new ApplicationPurgeInput("0",
+                new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "ok")));
+
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_grant", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_delta", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu_action", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_audience_member", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_audience_group", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_audience_department", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_app_audience", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_plan_application", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_action", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+    }
+
+    @Test
+    void purgeApplicationRejectsGovernanceEvenWithPassword() {
+        CreatedResource created = catalog.createApplication(new ApplicationDraft("iam-platform",
+                AuthorizationDomain.PLATFORM, "平台治理", null, null, 1, false));
+        BizException denied = assertThrows(BizException.class, () -> catalog.purgeApplication(created.id(),
+                new ApplicationPurgeInput("0",
+                        new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "ok"))));
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(), denied.getCode());
+        assertEquals("治理应用不可强制清除", denied.getMessage());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+    }
+
+    @Test
+    void deleteEmptyApplicationStillUsesOrdinaryDelete() {
+        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
+                "演示", null, null, 1, true));
+        CreatedResource deleted = catalog.deleteApplication(created.id());
+        assertEquals("0", deleted.version());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
     }
 
     @Test
@@ -196,7 +337,6 @@ class CatalogServiceTest {
                 CREATE TABLE iam_plan(id BIGINT PRIMARY KEY, name VARCHAR(128), description VARCHAR(512),
                   enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
-        jdbc.execute("CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT)");
         jdbc.update("INSERT INTO iam_plan(id,name,enabled,version)"
                 + " VALUES (1,'基础套餐',TRUE,0),"
                 + " (2,'演示套餐',TRUE,0),"

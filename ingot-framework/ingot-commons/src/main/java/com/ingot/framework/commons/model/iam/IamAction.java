@@ -264,6 +264,10 @@ public enum IamAction {
      */
     PLATFORM_APPLICATION_DELETE("iam-platform:application:delete"),
     /**
+     * 契约字面量 {@code iam-platform:application:purge}。
+     */
+    PLATFORM_APPLICATION_PURGE("iam-platform:application:purge"),
+    /**
      * 契约字面量 {@code iam-platform:resource:read}。
      */
     PLATFORM_RESOURCE_READ("iam-platform:resource:read"),
@@ -844,6 +848,10 @@ public enum IamAction {
      * 契约字面量 {@code iam-platform:application:delete}。
      */
     public static final String VALUE_PLATFORM_APPLICATION_DELETE = "iam-platform:application:delete";
+    /**
+     * 契约字面量 {@code iam-platform:application:purge}。
+     */
+    public static final String VALUE_PLATFORM_APPLICATION_PURGE = "iam-platform:application:purge";
     /**
      * 契约字面量 {@code iam-platform:resource:read}。
      */
