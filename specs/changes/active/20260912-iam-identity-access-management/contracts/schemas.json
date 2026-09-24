@@ -2419,6 +2419,30 @@
           }
         }
       },
+      "PlanApplication" : {
+        "required" : [ "code", "id", "name", "status" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "应用 ID"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "应用编码"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "应用名称"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "应用启停状态",
+            "enum" : [ "ENABLED", "DISABLED" ]
+          }
+        },
+        "description" : "描述套餐已关联应用的展示内容"
+      },
       "PlanDraft" : {
         "required" : [ "applicationIds", "name" ],
         "type" : "object",
@@ -2450,7 +2474,7 @@
         "description" : "声明套餐包含的应用清单，修改套餐不自动改变既有租户开通"
       },
       "PlanRecord" : {
-        "required" : [ "applicationIds", "id", "name", "status" ],
+        "required" : [ "applicationIds", "applications", "id", "name", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2471,6 +2495,13 @@
             "items" : {
               "type" : "string",
               "description" : "显式关联的应用 ID"
+            }
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "已关联应用的展示内容",
+            "items" : {
+              "$ref" : "#/components/schemas/PlanApplication"
             }
           },
           "status" : {
