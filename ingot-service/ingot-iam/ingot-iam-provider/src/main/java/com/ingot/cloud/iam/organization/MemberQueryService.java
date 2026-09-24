@@ -114,12 +114,14 @@ public class MemberQueryService {
      * @param pageSize 页大小
      * @param name 显示名包含匹配，可空
      * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
+     * @param ids 逗号分隔成员 ID，可空；用于已选回显
      * @return 成员页
      */
-    public PageResponse<ResourceDetail<MemberRecord>> listPlatform(int page, int pageSize, String name, String status) {
+    public PageResponse<ResourceDetail<MemberRecord>> listPlatform(int page, int pageSize, String name, String status,
+                                                                  String ids) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
         return listProjected(actor, IamAction.PLATFORM_MEMBER_READ, page, pageSize, null, null,
-                IamFilters.containsName(name), IamFilters.memberStatusOf(status));
+                IamFilters.containsName(name), IamFilters.memberStatusOf(status), IamIds.optionalList(ids));
     }
 
     /**
@@ -157,7 +159,7 @@ public class MemberQueryService {
     public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
                                                                     int page, int pageSize, String phone,
                                                                     String email) {
-        return listProjected(actor, action, page, pageSize, phone, email, null, null);
+        return listProjected(actor, action, page, pageSize, phone, email, null, null, List.of());
     }
 
     /**
@@ -176,12 +178,33 @@ public class MemberQueryService {
     public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
                                                                     int page, int pageSize, String phone,
                                                                     String email, String name, MemberStatus status) {
+        return listProjected(actor, action, page, pageSize, phone, email, name, status, List.of());
+    }
+
+    /**
+     * 已通过 ACTION 校验后按范围、显示名、资格与成员 ID 列出成员。
+     *
+     * @param actor 当前身份
+     * @param action 列表或导出操作
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param phone 手机号精确筛选，可空
+     * @param email 邮箱精确筛选，可空
+     * @param name 平台显示名包含匹配，可空；租户列表忽略
+     * @param status 平台成员资格，可空；租户列表忽略
+     * @param ids 平台成员 ID，空表示不按 ID 限制
+     * @return 投影后的成员页
+     */
+    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
+                                                                    int page, int pageSize, String phone,
+                                                                    String email, String name, MemberStatus status,
+                                                                    List<Long> ids) {
         IamPages.require(page, pageSize);
         AuthorizationDomain domain = actor.context().domain();
         ObjectScope scope = scopes.memberRead(actor.context(), action);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         if (domain == AuthorizationDomain.PLATFORM) {
-            Page<IamPlatformMemberEntity> result = members.pagePlatform(scope, page, pageSize, name, status);
+            Page<IamPlatformMemberEntity> result = members.pagePlatform(scope, page, pageSize, name, status, ids);
             Map<BigInteger, IamAccountEntity> contacts = members.accountContacts(result.getRecords().stream()
                     .map(IamPlatformMemberEntity::getAccountId).toList());
             List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
@@ -277,6 +300,35 @@ public class MemberQueryService {
                 domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ,
                 id);
         return load(domain, actor, id);
+    }
+
+    /**
+     * 分页列出平台用户组的直接成员，按组成员关系过滤，不接受调用方传入成员 ID。
+     *
+     * @param groupId 平台组 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 显示名包含匹配，可空
+     * @return 成员页
+     */
+    public PageResponse<ResourceDetail<MemberRecord>> listPlatformGroupMembers(String groupId, int page, int pageSize,
+                                                                               String name) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_GROUP_READ);
+        IamPages.require(page, pageSize);
+        long id = IamIds.require(groupId);
+        if (groups.findPlatform(id) == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
+        Page<IamPlatformMemberEntity> result = members.pagePlatformByGroup(ObjectScope.all(), id, page, pageSize,
+                IamFilters.containsName(name));
+        Map<BigInteger, IamAccountEntity> contacts = members.accountContacts(result.getRecords().stream()
+                .map(IamPlatformMemberEntity::getAccountId).toList());
+        List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
+                .map(row -> IamDetails.of(platformMember(row, contacts.get(row.getAccountId())),
+                        capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
+                .toList();
+        return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
     /**

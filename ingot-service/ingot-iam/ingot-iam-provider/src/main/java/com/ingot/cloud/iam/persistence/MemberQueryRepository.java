@@ -57,7 +57,7 @@ public class MemberQueryRepository {
      * @return 成员页
      */
     public Page<IamPlatformMemberEntity> pagePlatform(ObjectScope scope, int page, int size) {
-        return pagePlatform(scope, page, size, null, null);
+        return pagePlatform(scope, page, size, null, null, List.of());
     }
 
     /**
@@ -72,10 +72,51 @@ public class MemberQueryRepository {
      */
     public Page<IamPlatformMemberEntity> pagePlatform(ObjectScope scope, int page, int size, String name,
                                                       MemberStatus status) {
+        return pagePlatform(scope, page, size, name, status, List.of());
+    }
+
+    /**
+     * 分页列出平台成员，可选按成员 ID 精确回显。
+     *
+     * @param scope 已编译范围
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @param name 显示名包含匹配，空白表示不限制
+     * @param status 成员资格，空表示不限制且排除已移出
+     * @param ids 成员 ID，空表示不按 ID 限制
+     * @return 成员页
+     */
+    public Page<IamPlatformMemberEntity> pagePlatform(ObjectScope scope, int page, int size, String name,
+                                                      MemberStatus status, Collection<Long> ids) {
+        List<BigInteger> memberIds = ids == null || ids.isEmpty() ? List.of()
+                : ids.stream().map(BigInteger::valueOf).toList();
         LambdaQueryWrapper<IamPlatformMemberEntity> wrapper = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
                 .like(name != null && !name.isBlank(), IamPlatformMemberEntity::getDisplayName, name)
                 .eq(status != null, IamPlatformMemberEntity::getStatus, status)
                 .ne(status == null, IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)
+                .in(!memberIds.isEmpty(), IamPlatformMemberEntity::getId, memberIds)
+                .orderByAsc(IamPlatformMemberEntity::getId);
+        ObjectScopeSql.restrictPlatformMembers(wrapper, scope);
+        return platformMembers.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    /**
+     * 分页列出指定平台用户组的直接成员，按组成员关系过滤。
+     *
+     * @param scope 已编译范围
+     * @param groupId 平台组 ID
+     * @param page 从 1 开始的页码
+     * @param size 页大小
+     * @param name 显示名包含匹配，空白表示不限制
+     * @return 成员页
+     */
+    public Page<IamPlatformMemberEntity> pagePlatformByGroup(ObjectScope scope, long groupId, int page, int size,
+                                                             String name) {
+        LambdaQueryWrapper<IamPlatformMemberEntity> wrapper = Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                .like(name != null && !name.isBlank(), IamPlatformMemberEntity::getDisplayName, name)
+                .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)
+                .apply("EXISTS (SELECT 1 FROM iam_platform_group_member gm WHERE gm.member_id = iam_platform_member.id"
+                        + " AND gm.group_id = {0})", BigInteger.valueOf(groupId))
                 .orderByAsc(IamPlatformMemberEntity::getId);
         ObjectScopeSql.restrictPlatformMembers(wrapper, scope);
         return platformMembers.selectPage(new Page<>(page, size), wrapper);

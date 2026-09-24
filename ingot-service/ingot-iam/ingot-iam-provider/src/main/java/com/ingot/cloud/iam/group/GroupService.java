@@ -19,6 +19,7 @@ import com.ingot.cloud.iam.persistence.entity.IamTenantGroupEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.cloud.iam.support.IamSelections;
@@ -91,20 +92,23 @@ public class GroupService {
      * @param domain 接口管理域
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 组名包含匹配，可空
      * @return 组页
      */
-    public PageResponse<ResourceDetail<GroupRecord>> list(AuthorizationDomain domain, int page, int pageSize) {
+    public PageResponse<ResourceDetail<GroupRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+                                                         String name) {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
         IamPages.require(page, pageSize);
+        String keyword = IamFilters.containsName(name);
         if (domain == AuthorizationDomain.PLATFORM) {
-            Page<IamPlatformGroupEntity> rows = groups.pagePlatform(page, pageSize);
+            Page<IamPlatformGroupEntity> rows = groups.pagePlatform(page, pageSize, keyword);
             List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
                     .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
                             version(row.getVersion())))
                     .toList();
             return IamPages.details(items, rows.getTotal(), page, pageSize);
         }
-        Page<IamTenantGroupEntity> rows = groups.pageTenant(tenantId(actor), page, pageSize);
+        Page<IamTenantGroupEntity> rows = groups.pageTenant(tenantId(actor), page, pageSize, keyword);
         List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
                 .map(row -> detail(domain, actor, row.getId().longValue(), row.getName(), row.getDescription(),
                         version(row.getVersion())))

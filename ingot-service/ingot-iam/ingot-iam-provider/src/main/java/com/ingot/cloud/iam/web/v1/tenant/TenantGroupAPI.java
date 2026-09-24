@@ -45,14 +45,16 @@ public class TenantGroupAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 组名包含匹配，可空
      * @return 组页
      */
     @Operation(summary = "用户组列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<GroupRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(groups.list(AuthorizationDomain.TENANT, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name) {
+        return ok(groups.list(AuthorizationDomain.TENANT, page, pageSize, name));
     }
 
     /**

@@ -60,10 +60,12 @@ public class GroupRepository {
      *
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 组名包含匹配，空白表示不限制
      * @return 组页
      */
-    public Page<IamPlatformGroupEntity> pagePlatform(int page, int pageSize) {
+    public Page<IamPlatformGroupEntity> pagePlatform(int page, int pageSize, String name) {
         return platformGroups.selectPage(new Page<>(page, pageSize), Wrappers.<IamPlatformGroupEntity>lambdaQuery()
+                .like(name != null && !name.isBlank(), IamPlatformGroupEntity::getName, name)
                 .orderByAsc(IamPlatformGroupEntity::getId));
     }
 
@@ -107,11 +109,13 @@ public class GroupRepository {
      * @param tenantId 已授权租户 ID
      * @param page 从 1 开始
      * @param pageSize 页大小
+     * @param name 组名包含匹配，空白表示不限制
      * @return 组页
      */
-    public Page<IamTenantGroupEntity> pageTenant(long tenantId, int page, int pageSize) {
+    public Page<IamTenantGroupEntity> pageTenant(long tenantId, int page, int pageSize, String name) {
         return tenantGroups.selectPage(new Page<>(page, pageSize), Wrappers.<IamTenantGroupEntity>lambdaQuery()
                 .eq(IamTenantGroupEntity::getTenantId, BigInteger.valueOf(tenantId))
+                .like(name != null && !name.isBlank(), IamTenantGroupEntity::getName, name)
                 .orderByAsc(IamTenantGroupEntity::getId));
     }
 

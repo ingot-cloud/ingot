@@ -104,7 +104,8 @@ class GroupServiceTest {
         // 部门树 700 → 710；成员 102 在 700，成员 103 在下级 710。
         jdbc.update("INSERT INTO iam_department VALUES (700,10,NULL,'总部'),(710,10,700,'研发')");
         jdbc.update("INSERT INTO iam_member_department VALUES (10,102,700,TRUE),(10,103,710,TRUE)");
-        jdbc.update("INSERT INTO iam_tenant_group VALUES (502,10,'客服组','',0,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_tenant_group VALUES (502,10,'客服组','',0,NULL,NULL),"
+                + "(503,10,'研发组','',0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_tenant_group_department VALUES (10,502,700,FALSE)");
         // 组 502 上挂着一条来自委派 61 的派生授权，委派只接收部门 700 本级。
         jdbc.update("INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,tenant_group_id,revision_id,"
@@ -127,6 +128,19 @@ class GroupServiceTest {
     @AfterEach
     void clear() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void listFiltersByName() {
+        var all = service.list(AuthorizationDomain.TENANT, 1, 20, null);
+        assertEquals(2, all.total());
+        var hit = service.list(AuthorizationDomain.TENANT, 1, 20, "客服");
+        assertEquals(1, hit.total());
+        assertEquals("客服组", hit.items().getFirst().record().name());
+        var miss = service.list(AuthorizationDomain.TENANT, 1, 20, "不存在");
+        assertEquals(0, miss.total());
+        var blank = service.list(AuthorizationDomain.TENANT, 1, 20, "  ");
+        assertEquals(2, blank.total());
     }
 
     @Test

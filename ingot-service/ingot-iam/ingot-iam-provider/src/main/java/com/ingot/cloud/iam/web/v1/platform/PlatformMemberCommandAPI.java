@@ -49,6 +49,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      * @param pageSize 页大小
      * @param name 显示名包含匹配，可空
      * @param status 成员资格，可空；仅接受 ACTIVE、SUSPENDED、REMOVED
+     * @param ids 逗号分隔成员 ID，可空；用于已选回显
      * @return 成员页
      */
     @Operation(summary = "成员列表")
@@ -57,8 +58,9 @@ public class PlatformMemberCommandAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String status) {
-        return ok(queries.listPlatform(page, pageSize, name, status));
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String ids) {
+        return ok(queries.listPlatform(page, pageSize, name, status, ids));
     }
 
     /**

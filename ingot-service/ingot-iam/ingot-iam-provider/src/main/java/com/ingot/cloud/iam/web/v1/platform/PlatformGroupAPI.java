@@ -1,12 +1,14 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
 import com.ingot.cloud.iam.group.GroupService;
+import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.GroupDraft;
 import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.GroupUpdateInput;
+import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ReferenceImpactPreview;
@@ -39,20 +41,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatformGroupAPI implements RShortcuts {
     private final GroupService groups;
+    private final MemberQueryService members;
 
     /**
      * 分页列出平台用户组。
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param name 组名包含匹配，可空
      * @return 组页
      */
     @Operation(summary = "用户组列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<GroupRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(groups.list(AuthorizationDomain.PLATFORM, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name) {
+        return ok(groups.list(AuthorizationDomain.PLATFORM, page, pageSize, name));
     }
 
     /**
@@ -102,6 +107,25 @@ public class PlatformGroupAPI implements RShortcuts {
     @DeleteMapping("/{id}")
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(groups.delete(AuthorizationDomain.PLATFORM, id));
+    }
+
+    /**
+     * 分页列出平台用户组的直接成员。
+     *
+     * @param id 组 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 显示名包含匹配，可空
+     * @return 成员页
+     */
+    @Operation(summary = "用户组成员列表")
+    @GetMapping("/{id}/members")
+    public R<PageResponse<ResourceDetail<MemberRecord>>> listMembers(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String name) {
+        return ok(members.listPlatformGroupMembers(id, page, pageSize, name));
     }
 
     /**
