@@ -107,7 +107,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
 | /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限 |
 | /v1/platform/tenants/{id}/entitlements/preview | POST 开通或套餐应用影响 |
-| /v1/platform/applications | GET 列表（可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`）；POST 应用目录 |
+| /v1/platform/applications | GET 列表必填 `domain=PLATFORM|TENANT`，可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`；缺省或非法 domain 为 InvalidArgument，不返回混合域全量；POST 应用目录 |
 | /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用） |
 | /v1/platform/applications/{id}/resources | GET 分页（可选 `name`/`code` 包含匹配）；POST 资源；/{resourceId} PUT/DELETE |
 | /v1/platform/applications/{id}/actions | GET 分页（可选 `resourceId`、`name` 包含匹配、`ids` 逗号分隔回显）；POST 操作；/{actionId} PUT/PATCH/DELETE |
@@ -140,7 +140,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | 路径（角色、授权管理域由 platform/tenant 区分） | 职责 |
 |---|---|
 | /v1/{domain}/roles | GET 目录；POST 自定义角色或 tenant 基于共享角色定制 |
-| /v1/{domain}/roles/{id} | GET 元数据；PATCH 状态；DELETE 仅未引用 |
+| /v1/{domain}/roles/{id} | GET 元数据；PATCH 平台角色接受 RoleUpdateInput（名称空白时只改启停），租户角色仍只接受启停；DELETE 仅未引用 |
 | /v1/{domain}/roles/{id}/revisions | GET 版本；POST 发布新版本，不自动升级授权 |
 | /v1/{domain}/roles/{id}/preview | POST 预览待发布最终定义 |
 | /v1/tenant/roles/{id}/upgrade-preview | POST {newBaseRevisionId, resolutions?} 三方比较 |
@@ -196,7 +196,7 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - MemberStatusInput 为 `{status, expectedVersion}`，只允许 ACTIVE/SUSPENDED，REMOVED 通过独立 remove 命令；ConfigurationStatusInput 使用 ENABLED/DISABLED。OwnerTransferInput 为 `{expectedVersion,newOwnerMemberId}`。
 - GroupUpdateInput 为 `{expectedVersion,group:{name,description?,selection}}`；AudienceUpdateInput 为 `{expectedVersion,audience:{kind,selection?,groupIds[]}}`，ALL 不携带选择器或组，SELECTED 携带选择器和组列表。平台组的部门限制仍须按可信域校验。
 - AssignmentUpdateInput / DelegationUpdateInput 分别为 `{expectedVersion,assignment}` / `{expectedVersion,delegation}`；服务端重验原委派来源、接收对象和所有派生授权，DTO 不赋予绕过资格。分配预览返回 Preview<AssignmentPreviewResult>，逐主体列出 allowed、errors、可披露 grants。
-- RoleCreateInput 为 `{code,name,description?,groupName?,kind,baseRevisionId?,definition}`；kind 只允许 SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM。仅 TENANT_CUSTOM 可绑定共享基础，此时 grants 必须为空。RoleDefinitionDraft 为 `{grants,deltas,parameterDefinitions,metadataOverrides?}`，完整版本与差异不能同时非空。RolePublishInput 为 `{expectedVersion,definition}`，发布不自动升级授权。预览待发布定义直接提交 RoleDefinitionDraft。
+- RoleCreateInput 为 `{code,name,description?,groupName?,kind,baseRevisionId?,definition}`；kind 只允许 SHARED/PLATFORM_CUSTOM/TENANT_CUSTOM。仅 TENANT_CUSTOM 可绑定共享基础，此时 grants 必须为空。RoleDefinitionDraft 为 `{grants,deltas,parameterDefinitions,metadataOverrides?}`，完整版本与差异不能同时非空。RolePublishInput 为 `{expectedVersion,definition}`，发布不自动升级授权。预览待发布定义直接提交 RoleDefinitionDraft。RoleUpdateInput 为 `{expectedVersion,name?,description?,groupName?,status}`，平台角色与共享角色 PATCH 共用；名称空白时只改启停。
 - UpgradePreviewInput 为 `{newBaseRevisionId,resolutions?}`；UpgradeInput 为 `{expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}`。UpgradeResolution 为 `{key,choice,scopes?}`，choice 为 ACCEPT_BASE/KEEP_DELTA/REPLACE_SCOPE，只有替换范围必须携带 scopes。未解决冲突拒绝提交；默认不选择既有授权。
 - MemberCreateInput 为 `{accountId,displayName?,avatar?,departments[]}`，不创建凭证；平台任职必须由服务拒绝非空部门。MemberProfileInput 为 `{expectedVersion,displayName?,avatar?,phone?,email?}`，禁止状态和凭证字段；phone/email 可空表示不修改，不可编辑或脱敏占位由服务拒绝。平台成员的 phone/email 写入关联全局账号的登录联系方式，空白表示清空。MemberDepartmentInput 为 `{expectedVersion,departments[{id,primary}]}`，部门不得重复且最多一个主部门。
 - 成员与组织 `avatar` 请求可提交预签名 URL 或 `bucket/objectName`；入库只保存对象路径，禁止持久化时效链接。响应经框架 `@OssUrl` 签发时效链接。
