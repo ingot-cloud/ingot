@@ -63,6 +63,7 @@ import com.ingot.framework.commons.model.iam.MenuRecord;
 import com.ingot.framework.commons.model.iam.MenuTreeNode;
 import com.ingot.framework.commons.model.iam.MenuUpdateInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.framework.commons.model.iam.PlanApplication;
 import com.ingot.framework.commons.model.iam.PlanDraft;
 import com.ingot.framework.commons.model.iam.PlanRecord;
 import com.ingot.framework.commons.model.iam.PlanSummary;
@@ -871,7 +872,8 @@ public class CatalogService {
         Page<IamPlanEntity> rows = catalog.pagePlans(page, pageSize, name, IamFilters.enabledOf(status));
         List<ResourceDetail<PlanRecord>> items = new ArrayList<>();
         for (IamPlanEntity row : rows.getRecords()) {
-            items.add(IamDetails.of(plan(row, texts(catalog.planApplicationIds(row.getId().longValue()))),
+            List<BigInteger> applicationIds = catalog.planApplicationIds(row.getId().longValue());
+            items.add(IamDetails.of(plan(row, texts(applicationIds), planApplications(applicationIds)),
                     version(row.getVersion())));
         }
         return IamPages.details(items, rows.getTotal(), page, pageSize);
@@ -995,7 +997,8 @@ public class CatalogService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return IamDetails.of(plan(row, texts(catalog.planApplicationIds(id))), version(row.getVersion()));
+        List<BigInteger> applicationIds = catalog.planApplicationIds(id);
+        return IamDetails.of(plan(row, texts(applicationIds), planApplications(applicationIds)), version(row.getVersion()));
     }
 
     private void requireApplication(long id) {
@@ -1289,8 +1292,28 @@ public class CatalogService {
                 row.getSortOrder() == null ? 0 : row.getSortOrder(), statusOf(row.getEnabled()));
     }
 
-    private static PlanRecord plan(IamPlanEntity row, List<String> applicationIds) {
-        return new PlanRecord(text(row.getId()), row.getName(), row.getDescription(), applicationIds,
+    private List<PlanApplication> planApplications(List<BigInteger> applicationIds) {
+        if (applicationIds == null || applicationIds.isEmpty()) {
+            return List.of();
+        }
+        Map<String, IamApplicationEntity> byId = new LinkedHashMap<>();
+        for (IamApplicationEntity row : catalog.listApplicationsByIds(
+                applicationIds.stream().map(BigInteger::longValue).toList())) {
+            byId.putIfAbsent(text(row.getId()), row);
+        }
+        List<PlanApplication> result = new ArrayList<>();
+        for (BigInteger applicationId : applicationIds) {
+            IamApplicationEntity row = byId.get(text(applicationId));
+            if (row != null) {
+                result.add(new PlanApplication(text(row.getId()), row.getCode(), row.getName(),
+                        statusOf(row.getEnabled())));
+            }
+        }
+        return result;
+    }
+
+    private static PlanRecord plan(IamPlanEntity row, List<String> applicationIds, List<PlanApplication> applications) {
+        return new PlanRecord(text(row.getId()), row.getName(), row.getDescription(), applicationIds, applications,
                 statusOf(row.getEnabled()));
     }
 

@@ -15,6 +15,7 @@ import jakarta.validation.constraints.*;
  * @param name 套餐名称
  * @param description 说明，可空
  * @param applicationIds 显式关联的应用 ID
+ * @param applications 已关联应用的展示内容，顺序与 applicationIds 一致；应用已删除时该项省略
  * @param status 套餐状态
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,6 +29,8 @@ public record PlanRecord(
         String description,
         @NotNull @Schema(description = "显式关联的应用 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotBlank String> applicationIds,
+        @NotNull @Valid @Schema(description = "已关联应用的展示内容", requiredMode = Schema.RequiredMode.REQUIRED)
+        List<PlanApplication> applications,
         @NotNull @Schema(description = "套餐状态", requiredMode = Schema.RequiredMode.REQUIRED)
         ConfigurationStatus status) {
 
@@ -37,6 +40,9 @@ public record PlanRecord(
     public PlanRecord {
         if (applicationIds != null) {
             applicationIds = Collections.unmodifiableList(new ArrayList<>(applicationIds));
+        }
+        if (applications != null) {
+            applications = Collections.unmodifiableList(new ArrayList<>(applications));
         }
     }
 }
