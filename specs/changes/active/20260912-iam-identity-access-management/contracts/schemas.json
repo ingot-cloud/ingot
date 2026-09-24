@@ -110,13 +110,13 @@
         "properties" : {
           "password" : {
             "type" : "string",
-            "description" : "新生成的初始密码明文"
+            "description" : "新生成的初始密码明文，HTTP 传输由信封加密"
           }
         },
-        "description" : "一次性返回管理员重置后的明文初始密码，不得再被列表或详情读取"
+        "description" : "一次性返回管理员签发的初始密码，不得再被列表或详情读取"
       },
       "AccountSelfProfile" : {
-        "required" : [ "accountId", "member", "mustChangePassword", "username" ],
+        "required" : [ "accountId", "member", "mustChangePassword", "username", "version" ],
         "type" : "object",
         "properties" : {
           "accountId" : {
@@ -141,6 +141,10 @@
           },
           "member" : {
             "$ref" : "#/components/schemas/CurrentProfile"
+          },
+          "version" : {
+            "type" : "string",
+            "description" : "当前账号资料版本，供 PATCH 携带 expectedVersion"
           }
         },
         "description" : "返回当前认证账号的联系资料，不携带凭证或其他组织身份"
@@ -886,7 +890,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "头像引用，可空"
+            "description" : "头像时效链接，可空"
           }
         },
         "description" : "返回当前成员身份的最小基础资料，不携带全局凭证或其他组织信息"
@@ -1273,15 +1277,54 @@
         },
         "description" : "声明单条显式开通及期限，来源由服务器写入"
       },
+      "EntitlementPreviewItem" : {
+        "required" : [ "applicationId", "source", "status" ],
+        "type" : "object",
+        "properties" : {
+          "applicationId" : {
+            "type" : "string",
+            "description" : "应用 ID"
+          },
+          "applicationName" : {
+            "type" : "string",
+            "description" : "应用目录名称；应用缺失或名为空时省略"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "显式开通或停用状态",
+            "enum" : [ "ENABLED", "DISABLED" ]
+          },
+          "source" : {
+            "type" : "string",
+            "description" : "开通来源",
+            "enum" : [ "INITIALIZATION", "MANUAL", "PLAN", "MIGRATION" ]
+          },
+          "sourceId" : {
+            "type" : "string",
+            "description" : "来源记录 ID，可空"
+          },
+          "validFrom" : {
+            "type" : "string",
+            "description" : "UTC 开始时间，可空",
+            "format" : "date-time"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "description" : "UTC 结束时间，不包含，可空",
+            "format" : "date-time"
+          }
+        },
+        "description" : "返回服务器解析后的单条开通并集，期限和来源不代表业务授权"
+      },
       "EntitlementPreviewResult" : {
         "required" : [ "entitlements", "impactSummary" ],
         "type" : "object",
         "properties" : {
           "entitlements" : {
             "type" : "array",
-            "description" : "将写入的开通清单",
+            "description" : "服务器解析后的开通并集",
             "items" : {
-              "$ref" : "#/components/schemas/EntitlementDraft"
+              "$ref" : "#/components/schemas/EntitlementPreviewItem"
             }
           },
           "impactSummary" : {
@@ -1301,6 +1344,10 @@
           "applicationId" : {
             "type" : "string",
             "description" : "应用 ID"
+          },
+          "applicationName" : {
+            "type" : "string",
+            "description" : "应用目录名称；应用缺失或名为空时省略"
           },
           "status" : {
             "type" : "string",
@@ -1337,15 +1384,19 @@
             "type" : "string",
             "description" : "开通配置读取版本"
           },
+          "planId" : {
+            "type" : "string",
+            "description" : "可选套餐；与自选开通取并集"
+          },
           "entitlements" : {
             "type" : "array",
-            "description" : "完整开通清单，应用不得重复",
+            "description" : "自选应用及期限覆盖，应用不得重复",
             "items" : {
               "$ref" : "#/components/schemas/EntitlementDraft"
             }
           }
         },
-        "description" : "整体替换租户显式开通清单并重验版本"
+        "description" : "提交套餐与自选开通覆盖，由服务器计算并集后整表替换"
       },
       "ExportTask" : {
         "required" : [ "expiresAt", "id", "status", "version" ],
@@ -1599,6 +1650,10 @@
             "type" : "string",
             "description" : "当前域显示名，可空"
           },
+          "avatar" : {
+            "type" : "string",
+            "description" : "当前域头像，可空；可提交时效链接或对象路径，入库只保存路径"
+          },
           "departments" : {
             "type" : "array",
             "description" : "租户任职；平台必须为空且最多一个主部门",
@@ -1675,7 +1730,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "头像，可空表示不修改"
+            "description" : "头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径"
           },
           "phone" : {
             "type" : "string",
@@ -1702,7 +1757,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "可见头像；隐藏时省略"
+            "description" : "可见头像时效链接；隐藏时省略"
           },
           "phone" : {
             "type" : "string",
@@ -1711,6 +1766,10 @@
           "email" : {
             "type" : "string",
             "description" : "允许输出的邮箱字符串；可能已脱敏，隐藏时省略"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "已关联全局账号的登录名；平台成员填写，租户成员省略"
           },
           "status" : {
             "type" : "string",
@@ -2421,6 +2480,21 @@
           }
         },
         "description" : "返回套餐应用清单，修改套餐不自动改变既有租户开通"
+      },
+      "PlanSummary" : {
+        "required" : [ "id", "name" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "套餐 ID"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "套餐名称"
+          }
+        },
+        "description" : "返回套餐选择器所需的最小标识，不附带应用清单"
       },
       "PlanUpdateInput" : {
         "required" : [ "expectedVersion", "plan" ],
@@ -4371,6 +4445,34 @@
         },
         "description" : "返回角色目录元数据，区分固定共享、系统及两域自定义来源"
       },
+      "RoleUpdateInput" : {
+        "required" : [ "expectedVersion", "status" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取时的配置版本"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "角色名称；空白时只改启停"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "说明，可空"
+          },
+          "groupName" : {
+            "type" : "string",
+            "description" : "仅展示分组，可空"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "启停状态",
+            "enum" : [ "ENABLED", "DISABLED" ]
+          }
+        },
+        "description" : "更新角色名称、说明、分组与启停，不改编码和已发布版本"
+      },
       "ScopeBinding" : {
         "required" : [ "ids", "kind" ],
         "type" : "object",
@@ -4476,17 +4578,24 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "组织头像，可空"
+            "description" : "组织头像，可空；可提交时效链接或对象路径，入库只保存路径"
           },
           "planId" : {
             "type" : "string",
-            "description" : "可选套餐；缺省时开通服务器标记的基础应用"
+            "description" : "可选套餐；与自选应用取并集"
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "自选应用及期限覆盖，可空；不是完整目录",
+            "items" : {
+              "$ref" : "#/components/schemas/EntitlementDraft"
+            }
           }
         },
-        "description" : "提交组织创建所需的资料与所有者账号，基础目录引用由服务器生成"
+        "description" : "提交组织创建所需的资料、所有者账号与开通选择，治理版本由服务器生成"
       },
       "TenantPreviewResult" : {
-        "required" : [ "applications", "name", "ownerAccountId", "ownerDisplayName", "rootDepartmentName" ],
+        "required" : [ "applications", "entitlements", "name", "ownerAccountId", "ownerDisplayName", "rootDepartmentName" ],
         "type" : "object",
         "properties" : {
           "name" : {
@@ -4507,9 +4616,16 @@
           },
           "applications" : {
             "type" : "array",
-            "description" : "将开通的基础或套餐应用",
+            "description" : "将开通应用的摘要",
             "items" : {
               "$ref" : "#/components/schemas/ApplicationSummary"
+            }
+          },
+          "entitlements" : {
+            "type" : "array",
+            "description" : "服务器解析后的开通并集",
+            "items" : {
+              "$ref" : "#/components/schemas/EntitlementPreviewItem"
             }
           },
           "planId" : {
@@ -4533,7 +4649,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "组织头像，可空"
+            "description" : "组织头像时效链接，可空"
           },
           "ownerMemberId" : {
             "type" : "string",
@@ -4543,10 +4659,27 @@
             "type" : "string",
             "description" : "所有者在该组织内的显示名称；成员缺失或名为空时省略"
           },
+          "ownerPhone" : {
+            "type" : "string",
+            "description" : "所有者在该组织内的手机号；成员缺失或为空时省略"
+          },
+          "ownerEmail" : {
+            "type" : "string",
+            "description" : "所有者在该组织内的邮箱；成员缺失或为空时省略"
+          },
           "status" : {
             "type" : "string",
             "description" : "组织启停状态",
             "enum" : [ "ENABLED", "DISABLED" ]
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "组织创建时间，UTC；缺失时省略",
+            "format" : "date-time"
+          },
+          "planId" : {
+            "type" : "string",
+            "description" : "最近一次提交的套餐，未选择时省略"
           }
         },
         "description" : "返回平台可管理的租户实体，不附带租户业务成员列表"
@@ -4567,7 +4700,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "组织头像，可空"
+            "description" : "组织头像，可空；可提交时效链接或对象路径，入库只保存路径"
           }
         },
         "description" : "更新当前组织可编辑设置，所有者转交使用独立命令"
@@ -4588,7 +4721,7 @@
           },
           "avatar" : {
             "type" : "string",
-            "description" : "组织头像，可空"
+            "description" : "组织头像，可空；可提交时效链接或对象路径，入库只保存路径"
           },
           "status" : {
             "type" : "string",

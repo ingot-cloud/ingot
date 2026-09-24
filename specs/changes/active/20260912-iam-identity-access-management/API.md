@@ -68,7 +68,8 @@ Auth 复用既有授权码/PKCE，管理台新增双入口 BFF 编排与会话�
 | Decision | allowed, reasonCode, message, sources[], scopeSummary, fieldAccess?, version, expiresAt；来源受诊断权限限制 |
 | Preview | version, valid, errors[], warnings[], impactSummary, effectiveResult；不写入任何授权 |
 | UpgradePreview | oldBaseRevisionId, newBaseRevisionId, changes[], conflicts[], effectiveResult, affectedAssignments；冲突有稳定 key |
-| TenantRecord | id, name, avatar?, ownerMemberId, ownerDisplayName?, status；ownerDisplayName 为所有者租户成员 display_name，成员缺失或名为空时省略；ownerMemberId 仍为转交标识 |
+| TenantRecord | id, name, avatar?, ownerMemberId, ownerDisplayName?, ownerPhone?, ownerEmail?, status, createdAt?；ownerDisplayName / ownerPhone / ownerEmail 来自所有者租户成员，成员缺失或对应值为空时省略；ownerMemberId 仍为转交标识；createdAt 为组织创建时间 UTC，缺失时省略 |
+| EntitlementRecord | id, applicationId, applicationName?, status, source, sourceId?, validFrom?, validUntil?；applicationName 来自应用目录，应用缺失或名为空时省略 |
 | AuditEntry | actor, context, target, changeType, before/after 安全差异, revisions, timestamp, traceId |
 
 ScopeBindings 值使用 { kind: DEPARTMENTS/OBJECTS, ids[] }，不接收任意表达式；部门是否包含下级来自角色规则。范围/字段候选来源为资源目录能力，前端不能硬编码所有资源均有 SELF 或部门选项。
@@ -102,17 +103,17 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/members/{id}/status | PATCH 暂停/恢复平台成员资格，不改变租户成员状态 |
 | /v1/platform/members/{id}/remove | POST 移出平台，不删除账号或租户成员 |
 | /v1/platform/groups | GET 列表可选 `name` 包含匹配组名；POST 创建；/{id} GET/PUT/DELETE；/{id}/members GET 分页列出该组直接成员（可选 `name` 包含匹配显示名），按组成员关系过滤，不接受 `ids`；/{id}/preview POST 引用影响；仅引用平台成员 |
-| /v1/platform/tenants | GET 列表（含所有者显示名；可选 `name` 包含匹配、`status=ENABLED|DISABLED`）；POST 原子创建组织+所有者+基础开通 |
-| /v1/platform/tenants/preview | POST 校验创建输入并展示最小初始化结果 |
-| /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
-| /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限 |
-| /v1/platform/tenants/{id}/entitlements/preview | POST 开通或套餐应用影响 |
-| /v1/platform/applications | GET 列表必填 `domain=PLATFORM|TENANT`，可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`；缺省或非法 domain 为 InvalidArgument，不返回混合域全量；POST 应用目录 |
+| /v1/platform/tenants | GET 列表（含所有者显示名与联系方式、创建时间、可选 `planId`；可选 `name` 包含匹配、`status=ENABLED|DISABLED`）；POST 原子创建组织+所有者+开通（`planId` 与 `applications` 取并集） |
+| /v1/platform/tenants/preview | POST 校验创建输入并展示最小初始化结果（含服务器解析后的开通并集） |
+| /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名、联系方式、创建时间与 `planId`）；PATCH 只改名称、头像与启停，不转交所有者；不返回租户业务数据 |
+| /v1/platform/tenants/{id}/entitlements | GET/PUT 显式开通及期限；PUT 提交 `planId?` 与自选 `entitlements`，服务器取并集后整表替换；列表项含应用名称 |
+| /v1/platform/tenants/{id}/entitlements/preview | POST 返回服务器解析后的开通并集，不回显未合并草稿 |
+| /v1/platform/applications | GET 列表必填 `domain=PLATFORM|TENANT`，可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`、`view=CATALOG|SUMMARY`（缺省 CATALOG 返回 ApplicationRecord；SUMMARY 返回 ApplicationSummary）；缺省或非法 domain 为 InvalidArgument，不返回混合域全量；POST 应用目录 |
 | /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用） |
 | /v1/platform/applications/{id}/resources | GET 分页（可选 `name`/`code` 包含匹配）；POST 资源；/{resourceId} PUT/DELETE |
 | /v1/platform/applications/{id}/actions | GET 分页（可选 `resourceId`、`name` 包含匹配、`ids` 逗号分隔回显）；POST 操作；/{actionId} PUT/PATCH/DELETE |
 | /v1/platform/applications/{id}/menus | GET `view=page` 分页或 `view=tree` 整树；POST 导航；/{menuId} PUT/DELETE |
-| /v1/platform/plans | GET/POST；/{id} GET/PUT；应用到租户须预览并显式提交 |
+| /v1/platform/plans | GET 可选 `name`、`status=ENABLED|DISABLED`、`view=CATALOG|SUMMARY`（缺省 CATALOG 返回 PlanRecord；SUMMARY 仅 `{id,name}`，不带 applicationIds）；POST；/{id} GET/PUT；套餐变化不自动改变既有开通，应用到租户须预览并显式提交 |
 | /v1/tenant/members | GET/POST 成员列表、创建成员关系；列表可选精确 `phone`/`email` |
 | /v1/tenant/members/{id} | GET/PATCH 组织资料，禁止全局凭证字段 |
 | /v1/tenant/members/{id}/departments | PUT 调整关系，校验两端 |
@@ -200,8 +201,8 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - UpgradePreviewInput 为 `{newBaseRevisionId,resolutions?}`；UpgradeInput 为 `{expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}`。UpgradeResolution 为 `{key,choice,scopes?}`，choice 为 ACCEPT_BASE/KEEP_DELTA/REPLACE_SCOPE，只有替换范围必须携带 scopes。未解决冲突拒绝提交；默认不选择既有授权。
 - MemberCreateInput 为 `{accountId,displayName?,avatar?,departments[]}`，不创建凭证；平台任职必须由服务拒绝非空部门。MemberProfileInput 为 `{expectedVersion,displayName?,avatar?,phone?,email?}`，禁止状态和凭证字段；phone/email 可空表示不修改，不可编辑或脱敏占位由服务拒绝。平台成员的 phone/email 写入关联全局账号的登录联系方式，空白表示清空。MemberDepartmentInput 为 `{expectedVersion,departments[{id,primary}]}`，部门不得重复且最多一个主部门。
 - 成员与组织 `avatar` 请求可提交预签名 URL 或 `bucket/objectName`；入库只保存对象路径，禁止持久化时效链接。响应经框架 `@OssUrl` 签发时效链接。
-- TenantCreateInput 为 `{name,ownerAccountId,ownerDisplayName?,rootDepartmentName?,avatar?,planId?}`。客户端不能提交治理版本、默认策略或任意应用清单；服务器从基础目录或指定套餐解析开通。预览返回 TenantPreviewResult，不含可回写的版本 ID。TenantUpdateInput / TenantSettingsInput 分别更新平台可见实体与租户设置。
-- ApplicationDraft 可标记 baseline，仅租户域允许。组织初始化缺省开通 baseline 应用；指定 planId 时改为该套餐内租户域启用应用。EntitlementReplaceInput 为 `{expectedVersion,entitlements[{applicationId,status,validFrom?,validUntil?}]}`。组与委派影响预览返回 ReferenceImpactPreview。
+- TenantCreateInput 为 `{name,ownerAccountId,ownerDisplayName?,rootDepartmentName?,avatar?,planId?,applications?[{applicationId,status,validFrom?,validUntil?}]}`。客户端不能提交治理版本或默认策略；`applications` 只表示自选应用及期限覆盖，不是完整目录。服务器计算 `planApps ∪ extras`：两者皆空时开通租户域 baseline；自选或缺套餐覆盖时自动补齐必开 baseline。预览返回 TenantPreviewResult（`applications` 摘要 + `entitlements` 并集，含名称、来源与期限），不含可回写的版本 ID。创建时把 `avatar` 规范为对象路径后写入组织行，并把选用的 `planId` 写入组织。TenantUpdateInput 为 `{expectedVersion,name,avatar?,status}`，只改平台可见名称、头像与启停，不转交所有者。TenantSettingsInput 更新租户设置。TenantRecord 含可选 `planId`。
+- ApplicationDraft 可标记 baseline，仅租户域允许。EntitlementReplaceInput 为 `{expectedVersion,planId?,entitlements[{applicationId,status,validFrom?,validUntil?}]}`；`entitlements` 为自选/覆盖，服务器与套餐取并集后整表替换，并回写组织 `planId`。开通预览回传解析后的 `EntitlementPreviewItem` 并集，不回显未合并草稿。组与委派影响预览返回 ReferenceImpactPreview。
 
 管理面与保留能力目标路径见 `contracts/openapi.json` 与 `contracts/routes.json`（96 路径 / 161 操作）。控制器接入后对应操作 `x-runtime-implemented=true`。OSS `/v1/oss/upload` 与 `/inner/*` 不进入该 OpenAPI。该文档不是线上已发布接口证明。
 

@@ -148,7 +148,7 @@ Java 新增及变更公共契约按仓库 JavaDoc 规范落盘；业务枚举、
 
 IdentityRepository 对新 iam_account / iam_platform_member / iam_tenant_member / iam_tenant 执行参数化联表查询，按可信身份限制账号、成员、租户并同时检查状态；不读取密码、不回退旧表、不合并域。ActiveIdentityService 区分身份无效与数据库不可用。标识在绑定前按目标数据库无符号整数校验，避免数据库数值隐式转换。
 
-TenantInitializer 是内部事务流程：调用方先验证创建组织 ACTION，再从服务器基础目录生成 TenantInitializationPlan。计划不是 HTTP DTO，不接受客户端决定系统治理版本或基础开通。InitializationCatalog 读取唯一启用的租户域系统角色最新版本、最新默认策略，以及 baseline 租户应用或指定套餐内的启用租户应用；HTTP 只接收 TenantCreateInput。TenantInitializationService 在平台域恢复身份并校验 `iam-platform:tenant:preview|create` 后调用目录与初始化事务。预览无写入；目录表缺少展示名列时预览名称回退为应用 code。事务检查所有者账号、租户域系统治理版本、应用与默认策略版本，写入组织、所有者成员、根部门关系、单条治理授权、基础开通与人群、固定默认引用及审计。没有复制角色/默认条目；审计失败同样回滚。
+TenantInitializer 是内部事务流程：调用方先验证创建组织 ACTION，再从服务器基础目录生成 TenantInitializationPlan。计划不是 HTTP DTO，不接受客户端决定系统治理版本或默认策略。InitializationCatalog 读取唯一启用的租户域系统角色最新版本、最新默认策略，并由 EntitlementResolver 计算开通并集：`planApps ∪ 自选应用`，两者皆空时用 baseline，缺必开 baseline 时自动补齐。HTTP 只接收 TenantCreateInput（可带 planId 与自选 applications）。TenantInitializationService 在平台域恢复身份并校验 `iam-platform:tenant:preview|create` 后调用目录与初始化事务。预览无写入；目录表缺少展示名列时预览名称回退为应用 code。事务检查所有者账号、租户域系统治理版本、应用与默认策略版本，写入组织（含 planId）、所有者成员、根部门关系、单条治理授权、开通（PLAN/MANUAL/INITIALIZATION 及期限）与人群、固定默认引用及审计。没有复制角色/默认条目；审计失败同样回滚。
 
 
 ## 当前实施落点：成员上下文与生命周期（2026-09-14）
@@ -161,7 +161,7 @@ MemberLifecycle 在租户行与成员写锁下进行资格或关系变更。暂�
 
 ## 当前实施落点：管理命令契约与目录计划（2026-09-14）
 
-管理请求已补齐成员/组织/部门/应用/资源/操作/菜单/套餐/开通及角色创建、发布、升级命令。升级冲突必须显式选择 ACCEPT_BASE、KEEP_DELTA 或 REPLACE_SCOPE。目标 OpenAPI 覆盖 API 第 3、4 节管理面路径；组织创建/预览与成员写入 7 个操作标记为已实现，其余仍为 false。InitializationCatalog 从目录生成初始化计划；HTTP 只接收 TenantCreateInput。
+管理请求已补齐成员/组织/部门/应用/资源/操作/菜单/套餐/开通及角色创建、发布、升级命令。升级冲突必须显式选择 ACCEPT_BASE、KEEP_DELTA 或 REPLACE_SCOPE。目标 OpenAPI 覆盖 API 第 3、4 节管理面路径；组织创建/预览与成员写入 7 个操作标记为已实现，其余仍为 false。InitializationCatalog 从目录与 EntitlementResolver 生成初始化计划；HTTP 只接收 TenantCreateInput。
 
 
 ## 2026-09-14 已批准的持久化与注入统一调整

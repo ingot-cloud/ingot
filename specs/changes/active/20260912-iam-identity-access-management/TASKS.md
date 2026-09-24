@@ -87,6 +87,7 @@ MP01–MP06 曾记录实体/Mapper、身份/目录/授权/策略访问迁移、�
 | [x] | T05.owner | 已实现 | 转交相关测试 | 2026-09-16 A26（含409） | 未执行 | TenantQueryService.transferOwner与条件更新 | 并发移出新所有者 |
 | [x] | T06.catalog | 已实现 | 相关单测存在 | 2026-09-16 A02 | 未执行 | CatalogService、EntitlementService及组/部门人群展开 | A08、A19 |
 | [x] | T06.application-domain | 已实现 | CatalogServiceTest.listApplicationsFiltersByNameAndStatus | 未执行 | 未执行 | `GET /v1/platform/applications` 必填 domain，按域分页 | 不补勾 T06 |
+| [x] | T06.entitlement-union | 已实现 | InitializationCatalogTest / EntitlementServiceTest | 未执行 | 未执行 | EntitlementResolver 计算套餐∪自选∪必要 baseline；preview/create/replace 写 PLAN/MANUAL；SUMMARY 列表 | 不补勾 T06 |
 | [x] | T07.role | 已实现 | RoleServiceTest | 2026-09-16 A04 | 未执行 | RoleService、RoleGrantValidator | A05/A16/A25 |
 | [x] | T07.platform-role-profile | 已实现 | RoleServiceTest.updatePlatformCustomRoleProfileKeepsCode | 未执行 | 未执行 | `PATCH /v1/platform/roles/{id}` 与共享角色同接受 RoleUpdateInput | 不补勾 T07 |
 | [x] | T08.delegation | 已实现 | AssignmentServiceTest/GroupServiceTest | 未执行完整HTTP | 未执行 | AssignmentService、DelegationService、DelegationAdmission、GroupService | A11/A12 |

@@ -860,7 +860,7 @@
     "action": "iam-platform:plan:read",
     "request": null,
     "response": "RPageResponseResourceDetailPlanRecord",
-    "execution": "修改套餐不自动改变既有开通；可选 name 包含匹配、status=ENABLED|DISABLED",
+    "execution": "修改套餐不自动改变既有开通",
     "implemented": true,
     "query": [
       {
@@ -880,24 +880,6 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
-        }
-      },
-      {
-        "name": "name",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "status",
-        "required": false,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "ENABLED",
-            "DISABLED"
-          ]
         }
       }
     ]
@@ -1086,7 +1068,7 @@
     "action": "iam-platform:shared-role:read",
     "request": null,
     "response": "RPageResponseResourceDetailRoleSummary",
-    "execution": "固定版本发布不自动升级授权；可选 name 包含匹配、status=ENABLED|DISABLED",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
     "implemented": true,
     "query": [
       {
@@ -1106,24 +1088,6 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
-        }
-      },
-      {
-        "name": "name",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      {
-        "name": "status",
-        "required": false,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "ENABLED",
-            "DISABLED"
-          ]
         }
       }
     ]
@@ -2421,7 +2385,7 @@
     "action": "iam-platform:account:lookup",
     "request": "AccountLookupInput",
     "response": "RResourceDetailAccountRecord",
-    "execution": "必须声明 purpose；MEMBER_CREATE 返回 id、登录名与登录联系方式",
+    "execution": "必须声明 purpose；MEMBER_CREATE 只返回 id 与登录名",
     "implemented": true
   },
   {
