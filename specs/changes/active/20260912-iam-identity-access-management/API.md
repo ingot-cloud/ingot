@@ -96,12 +96,12 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/dictionaries | GET `view=tree|page|items`、`code`、MyBatis `current`/`size`；POST/PUT/PATCH/DELETE 及 `/sort` 走既有字典实体 |
 | /v1/platform/id-allocations | GET MyBatis 分页；POST/PUT/DELETE 既有发号实体 |
 | /v1/platform/social-configs | GET MyBatis 分页；POST/PUT/DELETE 既有社会化配置实体 |
-| /v1/platform/members | GET/POST 平台成员列表、创建平台成员资格；关联全局账号，不自动授予角色；创建可带可选 `avatar`；列表无 phone/email 筛选，可选 `name` 包含匹配显示名、`status=ACTIVE\|SUSPENDED\|REMOVED`（不传 status 时排除已移出）；记录可带关联账号 `username` |
+| /v1/platform/members | GET/POST 平台成员列表、创建平台成员资格；关联全局账号，不自动授予角色；创建可带可选 `avatar`；列表无 phone/email 筛选，可选 `name` 包含匹配显示名、`ids` 逗号分隔按 ID 精确回显、`status=ACTIVE\|SUSPENDED\|REMOVED`（不传 status 时排除已移出）；记录可带关联账号 `username` |
 | /v1/platform/members/{id} | GET/PATCH 平台成员资料；不编辑全局凭证或租户资料 |
 | /v1/platform/members/{id}/groups | GET 该成员所在平台用户组，按 `iam_platform_group_member` 分页返回组名 |
 | /v1/platform/members/{id}/status | PATCH 暂停/恢复平台成员资格，不改变租户成员状态 |
 | /v1/platform/members/{id}/remove | POST 移出平台，不删除账号或租户成员 |
-| /v1/platform/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响；仅引用平台成员 |
+| /v1/platform/groups | GET 列表可选 `name` 包含匹配组名；POST 创建；/{id} GET/PUT/DELETE；/{id}/members GET 分页列出该组直接成员（可选 `name` 包含匹配显示名），按组成员关系过滤，不接受 `ids`；/{id}/preview POST 引用影响；仅引用平台成员 |
 | /v1/platform/tenants | GET 列表（含所有者显示名；可选 `name` 包含匹配、`status=ENABLED|DISABLED`）；POST 原子创建组织+所有者+基础开通 |
 | /v1/platform/tenants/preview | POST 校验创建输入并展示最小初始化结果 |
 | /v1/platform/tenants/{id} | GET/PATCH 组织实体（含所有者显示名）；不返回租户业务数据 |
@@ -120,7 +120,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/members/{id}/remove | POST 移出组织，不删除账号 |
 | /v1/tenant/members/export | POST 登记共享任务，返回 `CreatedResource`；GET `/{id}/status` 返回 `ExportTask`（不含成员快照）；GET `/{id}` 下载完整投影 |
 | /v1/tenant/departments | GET 必填 `purpose=MANAGED_DEPARTMENT` 及分页；POST；/{id} GET/PUT/DELETE |
-| /v1/tenant/groups | GET/POST；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
+| /v1/tenant/groups | GET 列表可选 `name` 包含匹配组名；POST 创建；/{id} GET/PUT/DELETE；/{id}/preview POST 引用影响 |
 | /v1/tenant/settings | GET/PUT 组织设置（GET 含所有者显示名）；所有者转交使用独立 /owner-transfer POST |
 | /v1/tenant/applications | GET 已开通应用；/{id}/audience GET/PUT 可用人群 |
 | /v1/tenant/applications/{id}/actions | GET 当前已开通应用的操作与范围能力候选；仅供配置，不授予这些操作 |

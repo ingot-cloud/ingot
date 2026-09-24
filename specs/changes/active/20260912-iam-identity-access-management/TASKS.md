@@ -88,6 +88,8 @@ MP01–MP06 曾记录实体/Mapper、身份/目录/授权/策略访问迁移、�
 | [x] | T06.catalog | 已实现 | 相关单测存在 | 2026-09-16 A02 | 未执行 | CatalogService、EntitlementService及组/部门人群展开 | A08、A19 |
 | [x] | T07.role | 已实现 | RoleServiceTest | 2026-09-16 A04 | 未执行 | RoleService、RoleGrantValidator | A05/A16/A25 |
 | [x] | T08.delegation | 已实现 | AssignmentServiceTest/GroupServiceTest | 未执行完整HTTP | 未执行 | AssignmentService、DelegationService、DelegationAdmission、GroupService | A11/A12 |
+| [x] | T08.group-name | 已实现 | GroupServiceTest.listFiltersByName、MemberQueryRepositoryTest | 未执行 | 未执行 | 组列表 `name` 包含匹配；平台成员列表可选 `ids` 回显 | 不补勾 T08 |
+| [x] | T08.group-members | 已实现 | MemberQueryRepositoryTest.pagePlatformByGroupFiltersMembershipAndName | 未执行 | 未执行 | `GET /v1/platform/groups/{id}/members` 按组成员关系分页，可选 `name` | 不补勾 T08 |
 | [x] | T09.evaluation | 已实现 | 求值测试记录 | 未执行多实例 | 未执行 | AuthorizationEvaluator、ScopeBinder | A15/A16 |
 | [x] | T10.scope | 部分实现 | 成员生命周期测试 | 部分HTTP | 未执行 | 成员/部门范围、MemberMutationGuard与ObjectCapabilities | A06/A07/A10/A19全入口 |
 | [x] | T10.export | 已实现 | MemberExportServiceTest | 未执行≥200/多实例 | 未执行 | MemberExportService、007_member_export | A27 |
