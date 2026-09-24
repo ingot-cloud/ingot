@@ -23,5 +23,6 @@ class IamOssPathsTest {
         assertNull(IamOssPaths.store(null));
         assertEquals("", IamOssPaths.store("  "));
         assertEquals("avatar", IamOssPaths.store("avatar"));
+        assertEquals("ep:menu", IamOssPaths.store("ep:menu"));
     }
 }

@@ -15,7 +15,7 @@ import jakarta.validation.constraints.*;
  * @param domain 应用所属管理域
  * @param name 应用名称
  * @param description 说明，可空
- * @param icon 图标，可空
+ * @param icon Iconify 名或已签发的 Logo 链接，可空
  * @param sortOrder 展示顺序
  * @param baseline 是否在组织初始化时开通；仅租户域可为 true
  * @param status 全局启停状态
@@ -33,7 +33,7 @@ public record ApplicationRecord(
         String name,
          @Schema(description = "说明，可空")
         String description,
-         @Schema(description = "图标，可空")
+         @Schema(description = "Iconify 名或已签发的 Logo 链接，可空")
         String icon,
          @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder,

@@ -13,7 +13,7 @@ import jakarta.validation.constraints.*;
  * @param id 应用 ID
  * @param code 应用命名空间
  * @param name 应用名称
- * @param icon 图标引用，可空
+ * @param icon Iconify 名或已签发的 Logo 链接，可空
  * @param sortOrder 展示顺序
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +25,7 @@ public record ApplicationSummary(
         String code,
         @NotBlank @Schema(description = "应用名称", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
-         @Schema(description = "图标引用，可空")
+         @Schema(description = "Iconify 名或已签发的 Logo 链接，可空")
         String icon,
          @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder) {

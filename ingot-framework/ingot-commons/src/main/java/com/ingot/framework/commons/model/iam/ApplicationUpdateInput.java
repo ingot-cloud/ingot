@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
  * @param expectedVersion 应用读取版本
  * @param name 应用名称
  * @param description 说明，可空
- * @param icon 图标，可空
+ * @param icon Iconify 名或 Logo 对象路径，可空
  * @param sortOrder 展示顺序
  * @param baseline 是否在组织初始化时开通；仅租户域可为 true，由服务按已保存域校验
  */
@@ -24,7 +24,7 @@ public record ApplicationUpdateInput(
         String name,
         @Schema(description = "说明，可空")
         String description,
-        @Schema(description = "图标，可空")
+        @Schema(description = "Iconify 名或 Logo 对象路径，可空")
         String icon,
         @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
         int sortOrder,

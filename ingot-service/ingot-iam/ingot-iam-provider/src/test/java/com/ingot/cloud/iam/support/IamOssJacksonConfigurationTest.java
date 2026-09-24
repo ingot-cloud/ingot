@@ -13,6 +13,10 @@ import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.jsontype.TypeIdResolver;
 import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
+import com.ingot.framework.commons.model.iam.ApplicationRecord;
+import com.ingot.framework.commons.model.iam.ApplicationSummary;
+import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
@@ -46,6 +50,18 @@ class IamOssJacksonConfigurationTest {
                 MemberStatus.ACTIVE, List.of());
         String json = mapper.writeValueAsString(record);
         assertTrue(json.contains("https://signed.example/ingot/user/avatar/a.png"));
+    }
+
+    @Test
+    void applicationIconPathIsSignedWhileIconifyNameStays() throws Exception {
+        OssService oss = mock(OssService.class);
+        when(oss.getObjectURL("ingot/app/icon/a.png")).thenReturn("https://signed.example/ingot/app/icon/a.png");
+        ObjectMapper mapper = mapper(oss);
+        ApplicationRecord record = new ApplicationRecord("1", "contacts", AuthorizationDomain.TENANT, "通讯录",
+                null, "ingot/app/icon/a.png", 0, false, ConfigurationStatus.ENABLED);
+        ApplicationSummary named = new ApplicationSummary("2", "iam-platform", "平台治理", "ep:menu", 0);
+        assertTrue(mapper.writeValueAsString(record).contains("https://signed.example/ingot/app/icon/a.png"));
+        assertTrue(mapper.writeValueAsString(named).contains("ep:menu"));
     }
 
     private static ObjectMapper mapper(OssService oss) {

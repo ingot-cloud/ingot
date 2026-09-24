@@ -1,6 +1,8 @@
 package com.ingot.cloud.iam.support;
 
 import com.ingot.framework.commons.jackson.InJackson2ObjectMapperBuilderCustomizer;
+import com.ingot.framework.commons.model.iam.ApplicationRecord;
+import com.ingot.framework.commons.model.iam.ApplicationSummary;
 import com.ingot.framework.commons.model.iam.CurrentProfile;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
@@ -26,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 public class IamOssJacksonConfiguration {
 
     /**
-     * 为成员、组织与当前资料的 {@code avatar} 注册读写 mixin。
+     * 为成员、组织与当前资料的 {@code avatar}，以及应用 Logo 路径的 {@code icon} 注册读写 mixin。
      *
      * @return ObjectMapper 定制器
      */
@@ -36,6 +38,8 @@ public class IamOssJacksonConfiguration {
             builder.mixIn(MemberRecord.class, ReadAvatar.class);
             builder.mixIn(TenantRecord.class, ReadAvatar.class);
             builder.mixIn(CurrentProfile.class, ReadAvatar.class);
+            builder.mixIn(ApplicationRecord.class, ReadIcon.class);
+            builder.mixIn(ApplicationSummary.class, ReadIcon.class);
             builder.mixIn(MemberCreateInput.class, SaveAvatar.class);
             builder.mixIn(MemberProfileInput.class, SaveAvatar.class);
             builder.mixIn(TenantCreateInput.class, SaveAvatar.class);
@@ -47,6 +51,11 @@ public class IamOssJacksonConfiguration {
     private abstract static class ReadAvatar {
         @OssUrl
         abstract String avatar();
+    }
+
+    private abstract static class ReadIcon {
+        @OssUrl
+        abstract String icon();
     }
 
     private abstract static class SaveAvatar {

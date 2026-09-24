@@ -26,6 +26,7 @@ import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamIds;
 import com.ingot.cloud.iam.support.IamJson;
+import com.ingot.cloud.iam.support.IamOssPaths;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ActionCatalogItem;
@@ -201,7 +202,7 @@ public class CatalogService {
             entity.setDomain(input.domain());
             entity.setName(input.name());
             entity.setDescription(nullable(input.description()));
-            entity.setIcon(nullable(input.icon()));
+            entity.setIcon(IamOssPaths.store(nullable(input.icon())));
             entity.setSortOrder(input.sortOrder());
             entity.setBaseline(input.baseline());
             entity.setEnabled(true);
@@ -239,7 +240,7 @@ public class CatalogService {
             entity.setDomain(application.domain());
             entity.setName(application.name());
             entity.setDescription(nullable(application.description()));
-            entity.setIcon(nullable(application.icon()));
+            entity.setIcon(IamOssPaths.store(nullable(application.icon())));
             entity.setSortOrder(application.sortOrder());
             entity.setBaseline(application.baseline());
             entity.setEnabled(true);
@@ -273,7 +274,8 @@ public class CatalogService {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             catalog.updateApplication(applicationId, input.name(), nullable(input.description()),
-                    nullable(input.icon()), input.sortOrder(), input.baseline(), current.getVersion());
+                    IamOssPaths.store(nullable(input.icon())), input.sortOrder(), input.baseline(),
+                    current.getVersion());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), APPLICATION, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.NAME, current.getName()), Map.of(AuditField.NAME, input.name()),
