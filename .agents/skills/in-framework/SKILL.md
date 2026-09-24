@@ -12,7 +12,7 @@ description: >-
 
 ## Instructions
 
-写或改本仓库 Java 业务代码时按本 skill 落盘。先对照检查清单，再按改动主题阅读 [reference.md](reference.md) 对应章节，不要凭记忆补全细则。
+写或改本仓库 Java 业务代码时按本 skill 落盘。先对照检查清单，再按改动主题阅读 [references/](references/) 对应篇，不要凭记忆补全细则。
 
 读多写少、来自远端的参考数据（策略、配置、字典、租户参数）走 [layered-cache](../layered-cache/SKILL.md)。提交信息走 [conventional-commits](../conventional-commits/SKILL.md)。
 
@@ -25,17 +25,19 @@ description: >-
 - [ ] JavaDoc：类型、对外方法、对外字段按 docs/standards/Javadoc.md 一并写上
 ```
 
+## 索引
+
 | 改动主题 | 阅读 |
 | --- | --- |
-| 时间字段、createdAt/updatedAt、定时或过期判断 | [reference.md § 接口时间](reference.md#接口时间) |
-| 业务枚举 | [reference.md § 业务枚举](reference.md#业务枚举) |
-| 魔法值、配置取值 | [reference.md § 魔法值与配置取值](reference.md#魔法值与配置取值) |
-| 头像、附件、OSS | [reference.md § OSS](reference.md#oss) |
-| Spring Bean 依赖 | [reference.md § 构造注入](reference.md#构造注入) |
-| 类型或对外 API 注释 | [reference.md § JavaDoc](reference.md#javadoc) |
+| 时间字段、createdAt/updatedAt、定时或过期判断 | [references/time.md](references/time.md) |
+| 业务枚举 | [references/enum.md](references/enum.md) |
+| 魔法值、配置取值 | [references/literals.md](references/literals.md) |
+| 头像、附件、OSS | [references/oss.md](references/oss.md) |
+| Spring Bean 依赖 | [references/injection.md](references/injection.md) |
+| 类型或对外 API 注释 | [references/javadoc.md](references/javadoc.md) |
 
 ## Examples
 
-新增租户状态枚举：按 [业务枚举](reference.md#业务枚举) 用 `EnumUtils` 建索引，不要手写 `HashMap`。
+新增租户状态枚举：按 [业务枚举](references/enum.md) 用 `EnumUtils` 建索引，不要手写 `HashMap`。
 
-接口返回 `createdAt`：按 [接口时间](reference.md#接口时间) 转成请求前端当地时间；识别不到时区用 `Asia/Shanghai`。到期判断用 `Instant`，不要拿请求时区去比。
+接口返回 `createdAt`：按 [接口时间](references/time.md) 转成请求前端当地时间；识别不到时区用 `Asia/Shanghai`。到期判断用 `Instant`，不要拿请求时区去比。
