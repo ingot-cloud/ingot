@@ -110,7 +110,8 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/platform/tenants/{id}/entitlements/preview | POST 返回服务器解析后的开通并集，不回显未合并草稿 |
 | /v1/platform/applications | GET 列表必填 `domain=PLATFORM|TENANT`，可选 `name` 包含匹配、`status=ENABLED|DISABLED`、`baseline`、`view=CATALOG|SUMMARY`（缺省 CATALOG 返回 ApplicationRecord；SUMMARY 返回 ApplicationSummary）；缺省或非法 domain 为 InvalidArgument，不返回混合域全量；POST 仅建应用目录项 |
 | /v1/platform/applications/bundles | POST 一次提交应用及其资源、操作与菜单；同一事务整单创建或整单回滚；需同时具备 application/resource/action/menu 的 create；资源与菜单可空；父子菜单与关联操作用客户端 tempId |
-| /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用） |
+| /v1/platform/applications/{id} | GET/PUT/PATCH 状态/DELETE（未引用；被资源、菜单、组织开通或套餐挡住时 `ObjectInUse`，消息列出具体引用，不改稳定错误码；普通 DELETE 不得 `force`，也不能靠省略确认完成清除） |
+| /v1/platform/applications/{id}/purge | POST 强制清除：请求体 `{ expectedVersion, confirmation }`；`confirmation` 必填内嵌（`kind`+`secret`），禁止独立验密 HTTP、短时 ticket 或客户端 `verified` 标记；入口先确认当前账号口令，失败整单不改库；通过后同一事务清全部关联（角色授权/差异、菜单与绑定、人群、开通、套餐、操作、资源、应用行）并失效授权快照；`iam-platform`/`iam-tenant` 治理应用即使密码正确也拒绝；需独立 ACTION `iam-platform:application:purge` |
 | /v1/platform/applications/{id}/resources | GET 分页（可选 `name`/`code` 包含匹配）；POST 资源；/{resourceId} PUT/DELETE |
 | /v1/platform/applications/{id}/resources/{resourceId}/actions | GET 该资源全部操作（不分页），供权限树展开 |
 | /v1/platform/applications/{id}/action-catalog | GET 应用资源及操作树（不分页），供菜单选择操作 |
@@ -172,7 +173,9 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 未保存草稿保留在前端；退出不产生生效版本。预览返回配置版本，提交同时携带 expectedVersion 和完整待写内容，服务器重新验证。角色发布/升级、批量授权及策略替换均为原子命令。
 
-权限错误：ActionDenied、DataScopeDenied、DelegationExceeded、RoleRevisionUnavailable、ApplicationUnavailable、PolicyConflict、RevisionConflict、ObjectInUse、AuthorizationUnavailable。消息为可展示中文；reasonCode 为稳定枚举，不能只让前端解析文字。
+权限错误：ActionDenied、DataScopeDenied、DelegationExceeded、RoleRevisionUnavailable、ApplicationUnavailable、PolicyConflict、RevisionConflict、ObjectInUse、StepUpFailed、AuthorizationUnavailable。消息为可展示中文；reasonCode 为稳定枚举，不能只让前端解析文字。
+
+敏感写命令的身份确认必须嵌在该写请求体内（`confirmation.kind` + `confirmation.secret`），由服务方法入口先 `require` 再改库。本期 `kind=LOGIN_PASSWORD`；`OPERATION_PASSWORD` 未实现则失败关闭。禁止 `/confirm-password`、`/verify-password` 或任何「已验密」响应。口令字段走 HYBRID 信封字段加密，不进 query；commons 契约不能依赖 crypto，入站 DTO 必须对 `secret` 挂 `@InDecryptField`，禁止把密文当口令比对。失败走与登录同一套失败计数/锁定，记 step-up 失败，不当成一次登录成功。
 
 401 重新认证；403 刷新能力后提示；404 显示不存在或不可访问，不区分是否真实存在；409 保留草稿并重新预览；503 禁止受保护提交、重试，不清为游客或成功空数据。
 

@@ -633,6 +633,18 @@
     "implemented": true
   },
   {
+    "path": "/v1/platform/applications/{id}/purge",
+    "method": "post",
+    "operationId": "platformPurgeApplication",
+    "summary": "强制清除应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:purge",
+    "request": "ApplicationPurgeInput",
+    "response": "RCreatedResource",
+    "execution": "确认内嵌写请求；同一事务清全部关联；治理应用不可清除",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/applications/{id}/resources",
     "method": "get",
     "operationId": "platformListResources",

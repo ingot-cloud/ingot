@@ -682,6 +682,16 @@
       "execution": "CATALOG: 平台资源范围及应用归属；引用拒删；操作 code 精确唯一；不得 force 级联删引用"
     },
     {
+      "legacyMethod": "PlatformApplicationAPI.purge",
+      "legacyHttp": "POST",
+      "legacyPath": "/v1/platform/applications/{id}/purge",
+      "domain": "PLATFORM",
+      "resource": "application",
+      "action": "iam-platform:application:purge",
+      "target": "POST /v1/platform/applications/{id}/purge",
+      "execution": "确认内嵌写请求；同一事务清全部关联；治理应用不可清除"
+    },
+    {
       "legacyMethod": "PlatformApplicationAPI.menuTree",
       "legacyHttp": "GET",
       "legacyPath": "/v1/platform/config/apps/{appId}/menus/tree",
