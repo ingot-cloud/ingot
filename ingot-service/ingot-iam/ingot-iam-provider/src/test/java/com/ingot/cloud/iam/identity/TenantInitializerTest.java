@@ -41,8 +41,9 @@ class TenantInitializerTest {
     }
 
     private TenantInitializationPlan plan(long governance, long directory, long application) {
-        return new TenantInitializationPlan(10, "研发组织", 2, 101, "组织所有者", 111, "根部门",
-                201, governance, directory, 22, List.of(new TenantInitializationPlan.Application(application, 301)), 401);
+        return new TenantInitializationPlan(10, "研发组织", "ingot/tenant/avatar/a.png", 2, 101, "组织所有者", 111, "根部门",
+                201, governance, directory, 22, List.of(new TenantInitializationPlan.Application(application, 301)),
+                null, 401);
     }
 
     @Test
@@ -51,6 +52,8 @@ class TenantInitializerTest {
         assertEquals("10", result.id());
         assertEquals("0", result.version());
         assertEquals(101L, jdbc.queryForObject("SELECT owner_member_id FROM iam_tenant WHERE id=10", Long.class));
+        assertEquals("ingot/tenant/avatar/a.png",
+                jdbc.queryForObject("SELECT avatar FROM iam_tenant WHERE id=10", String.class));
         assertEquals(2L, jdbc.queryForObject("SELECT account_id FROM iam_tenant_member WHERE id=101", Long.class));
         assertEquals(11L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment", Long.class));
         assertEquals("INITIALIZATION", jdbc.queryForObject("SELECT source FROM iam_role_assignment", String.class));

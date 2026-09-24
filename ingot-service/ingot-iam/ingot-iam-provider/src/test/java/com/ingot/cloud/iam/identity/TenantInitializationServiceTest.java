@@ -46,7 +46,10 @@ class TenantInitializationServiceTest {
                     }
                     return new com.ingot.cloud.iam.authorization.IamActionAuthorizer.Admission(true);
                 },
-                new InitializationCatalog(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource)),
+                new InitializationCatalog(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource),
+                        new com.ingot.cloud.iam.catalog.EntitlementResolver(
+                                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource),
+                                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource))),
                 new TenantInitializer(new DataSourceTransactionManager(dataSource), identities,
                         com.ingot.cloud.iam.persistence.IamMybatisTestAccess.tenantInit(dataSource),
                         com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource)),
@@ -69,7 +72,9 @@ class TenantInitializationServiceTest {
         assertTrue(preview.valid());
         assertEquals("研发组织", preview.effectiveResult().name());
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant", Integer.class));
-        assertFalse(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(preview).toString().contains("governanceRevisionId"));
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        assertFalse(mapper.valueToTree(preview).toString().contains("governanceRevisionId"));
     }
 
     @Test
@@ -85,13 +90,13 @@ class TenantInitializationServiceTest {
 
     @Test
     void invalidOwnerReturnsPreviewErrorWithoutWrite() {
-        var preview = service.preview(new TenantCreateInput("研发组织", "99", null, null, null, null));
+        var preview = service.preview(new TenantCreateInput("研发组织", "99", null, null, null, null, null));
         assertFalse(preview.valid());
         assertEquals(1, preview.errors().size());
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant", Integer.class));
     }
 
     private static TenantCreateInput input() {
-        return new TenantCreateInput("研发组织", "2", null, null, null, null);
+        return new TenantCreateInput("研发组织", "2", null, null, null, null, null);
     }
 }

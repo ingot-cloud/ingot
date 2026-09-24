@@ -156,6 +156,7 @@ class IamAuthorizationContractTest {
                 ResourceDraft.class, ResourceUpdateInput.class, ActionDraft.class, ActionUpdateInput.class,
                 MenuDraft.class, MenuUpdateInput.class, PlanDraft.class, PlanUpdateInput.class,
                 EntitlementReplaceInput.class, TenantPreviewResult.class, EntitlementPreviewResult.class,
+                EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class,
                 ReferenceImpactPreview.class, RoleSummary.class, ApplicationSummary.class,
                 AccountCreateInput.class, AccountUpdateInput.class, AccountLockInput.class,
                 AccountLookupInput.class, AccountRecord.class, AccountSecret.class,

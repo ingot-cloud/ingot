@@ -3,6 +3,10 @@ package com.ingot.cloud.iam.identity;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ingot.framework.commons.error.BizException;
+import java.util.List;
+
+import com.ingot.framework.commons.model.iam.ConfigurationStatus;
+import com.ingot.framework.commons.model.iam.EntitlementDraft;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.TenantCreateInput;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +33,10 @@ class InitializationCatalogTest {
         var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + java.util.UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
         new ResourceDatabasePopulator(new ClassPathResource("identity/initialization.sql")).execute(dataSource);
         jdbc = new JdbcTemplate(dataSource);
-        catalog = new InitializationCatalog(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource));
+        catalog = new InitializationCatalog(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource),
+                new com.ingot.cloud.iam.catalog.EntitlementResolver(
+                        com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalog(dataSource),
+                        com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource)));
     }
 
     @Test
@@ -40,7 +47,9 @@ class InitializationCatalogTest {
         assertEquals("组织所有者", preview.ownerDisplayName());
         assertEquals(1, preview.applications().size());
         assertEquals("iam-tenant", preview.applications().getFirst().code());
-        var json = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(preview);
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        var json = mapper.valueToTree(preview);
         assertFalse(json.toString().contains("governance"));
         assertFalse(json.has("governanceRevisionId"));
     }
@@ -59,15 +68,31 @@ class InitializationCatalogTest {
     }
 
     @Test
-    void planApplicationsReplaceBaselineAndRejectPlatformMembers() {
+    void planApplicationsUnionBaselineAndRejectUnavailableMembers() {
         jdbc.update("INSERT INTO iam_application(id,domain,code,name,baseline) VALUES (3,'TENANT','extra','Extra',FALSE)");
         jdbc.update("INSERT INTO iam_plan(id,name) VALUES (9,'基础套餐')");
         jdbc.update("INSERT INTO iam_plan_application(plan_id,application_id) VALUES (9,3)");
         var preview = catalog.preview(input("9"));
-        assertEquals("extra", preview.applications().getFirst().code());
+        assertEquals(2, preview.applications().size());
+        assertTrue(preview.applications().stream().anyMatch(item -> "extra".equals(item.code())));
+        assertTrue(preview.applications().stream().anyMatch(item -> "iam-tenant".equals(item.code())));
+        assertTrue(preview.entitlements().stream().anyMatch(item -> "PLAN".equals(item.source().getValue())
+                && "3".equals(item.applicationId())));
         jdbc.update("INSERT INTO iam_plan_application(plan_id,application_id) VALUES (9,2)");
         assertEquals(IamReasonCode.APPLICATION_UNAVAILABLE.getCode(),
                 assertThrows(BizException.class, () -> catalog.preview(input("9"))).getCode());
+    }
+
+    @Test
+    void extrasUnionPlanAndKeepBaseline() {
+        jdbc.update("INSERT INTO iam_application(id,domain,code,name,baseline) VALUES (3,'TENANT','extra','Extra',FALSE)");
+        var preview = catalog.preview(new TenantCreateInput("研发组织", "2", null, null, null, null,
+                List.of(new EntitlementDraft("3", ConfigurationStatus.ENABLED, null, null))));
+        assertEquals(2, preview.applications().size());
+        assertTrue(preview.entitlements().stream().anyMatch(item -> "3".equals(item.applicationId())
+                && item.source().getValue().equals("MANUAL")));
+        assertTrue(preview.entitlements().stream().anyMatch(item -> "1".equals(item.applicationId())
+                && item.source().getValue().equals("INITIALIZATION")));
     }
 
     @Test
@@ -89,6 +114,6 @@ class InitializationCatalogTest {
     }
 
     private static TenantCreateInput input(String planId) {
-        return new TenantCreateInput("研发组织", "2", null, null, null, planId);
+        return new TenantCreateInput("研发组织", "2", null, null, null, planId, null);
     }
 }

@@ -1,7 +1,10 @@
 package com.ingot.framework.commons.model.iam;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.ingot.framework.commons.jackson.WallClockInstantDeserializer;
+import com.ingot.framework.commons.jackson.WallClockInstantSerializer;
 
 import java.time.Instant;
 
@@ -17,8 +20,8 @@ import jakarta.validation.constraints.NotNull;
  * @since 1.0.0
  * @param applicationId 应用 ID
  * @param status 显式开通或停用
- * @param validFrom UTC 开始时间，可空
- * @param validUntil UTC 结束时间，不包含，可空
+ * @param validFrom 开始墙钟，可空；按请求时区解释后存 UTC
+ * @param validUntil 结束墙钟，不包含，可空；按请求时区解释后存 UTC
  */
 @Schema(description = "声明单条显式开通及期限，来源由服务器写入")
 public record EntitlementDraft(
@@ -26,9 +29,13 @@ public record EntitlementDraft(
         String applicationId,
         @NotNull @Schema(description = "显式开通或停用", requiredMode = Schema.RequiredMode.REQUIRED)
         ConfigurationStatus status,
-        @JsonFormat(shape = JsonFormat.Shape.STRING) @Schema(description = "UTC 开始时间，可空")
+        @JsonSerialize(using = WallClockInstantSerializer.class)
+        @JsonDeserialize(using = WallClockInstantDeserializer.class)
+        @Schema(description = "开始墙钟，可空；按请求时区解释后存 UTC")
         Instant validFrom,
-        @JsonFormat(shape = JsonFormat.Shape.STRING) @Schema(description = "UTC 结束时间，不包含，可空")
+        @JsonSerialize(using = WallClockInstantSerializer.class)
+        @JsonDeserialize(using = WallClockInstantDeserializer.class)
+        @Schema(description = "结束墙钟，不包含，可空；按请求时区解释后存 UTC")
         Instant validUntil) {
 
     /**

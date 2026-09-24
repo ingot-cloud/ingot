@@ -126,6 +126,7 @@ public class InitializationCatalogRepository {
     }
 
     private ApplicationSummary summary(IamApplicationEntity app) {
-        return new ApplicationSummary(app.getId().toString(), app.getCode(), app.getName(), app.getIcon(), app.getSortOrder());
+        return new ApplicationSummary(app.getId().toString(), app.getCode(), app.getName(), app.getIcon(),
+                app.getSortOrder() == null ? 0 : app.getSortOrder());
     }
 }

@@ -18,7 +18,8 @@ import jakarta.validation.constraints.NotNull;
  * @param ownerAccountId 所有者账号 ID
  * @param ownerDisplayName 所有者显示名
  * @param rootDepartmentName 根部门名称
- * @param applications 将开通的基础或套餐应用
+ * @param applications 将开通应用的摘要
+ * @param entitlements 服务器解析后的开通并集
  * @param planId 使用的套餐，未选择时为空
  */
 @Schema(description = "返回服务器解析后的最小初始化结果，不含治理版本或默认可被客户端回写的标识")
@@ -31,17 +32,22 @@ public record TenantPreviewResult(
         String ownerDisplayName,
         @NotBlank @Schema(description = "根部门名称", requiredMode = Schema.RequiredMode.REQUIRED)
         String rootDepartmentName,
-        @NotNull @Schema(description = "将开通的基础或套餐应用", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull @Schema(description = "将开通应用的摘要", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotNull @Valid ApplicationSummary> applications,
+        @NotNull @Schema(description = "服务器解析后的开通并集", requiredMode = Schema.RequiredMode.REQUIRED)
+        List<@NotNull @Valid EntitlementPreviewItem> entitlements,
         @Schema(description = "使用的套餐，未选择时为空")
         String planId) {
 
     /**
-     * 复制应用清单。
+     * 复制应用与开通清单。
      */
     public TenantPreviewResult {
         if (applications != null) {
             applications = Collections.unmodifiableList(new ArrayList<>(applications));
+        }
+        if (entitlements != null) {
+            entitlements = Collections.unmodifiableList(new ArrayList<>(entitlements));
         }
     }
 }

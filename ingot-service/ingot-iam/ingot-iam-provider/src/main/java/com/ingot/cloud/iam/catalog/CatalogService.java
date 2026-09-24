@@ -31,6 +31,7 @@ import com.ingot.framework.commons.model.iam.ActionRecord;
 import com.ingot.framework.commons.model.iam.ActionUpdateInput;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
+import com.ingot.framework.commons.model.iam.ApplicationSummary;
 import com.ingot.framework.commons.model.iam.ApplicationUpdateInput;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
 import com.ingot.framework.commons.model.iam.AuditField;
@@ -48,6 +49,7 @@ import com.ingot.framework.commons.model.iam.MenuUpdateInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PlanDraft;
 import com.ingot.framework.commons.model.iam.PlanRecord;
+import com.ingot.framework.commons.model.iam.PlanSummary;
 import com.ingot.framework.commons.model.iam.PlanUpdateInput;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.ResourceDraft;
@@ -121,6 +123,29 @@ public class CatalogService {
                 name, IamFilters.enabledOf(status), baseline);
         List<ResourceDetail<ApplicationRecord>> items = rows.getRecords().stream()
                 .map(row -> IamDetails.of(application(row), version(row.getVersion()))).toList();
+        return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 分页列出开通选择器所需的应用摘要。
+     *
+     * @param page 从 1 开始的页码
+     * @param pageSize 每页条数
+     * @param domain 管理域，必填 PLATFORM 或 TENANT
+     * @param name 应用名称包含匹配，空白表示不限制
+     * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
+     * @param baseline 是否组织默认开通，空表示不限制
+     * @return 应用摘要页
+     */
+    public PageResponse<ResourceDetail<ApplicationSummary>> listApplicationSummaries(int page, int pageSize,
+                                                                                     String domain, String name,
+                                                                                     String status, Boolean baseline) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_READ);
+        IamPages.require(page, pageSize);
+        Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, IamFilters.requireDomain(domain),
+                name, IamFilters.enabledOf(status), baseline);
+        List<ResourceDetail<ApplicationSummary>> items = rows.getRecords().stream()
+                .map(row -> IamDetails.of(applicationSummary(row), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
@@ -634,6 +659,26 @@ public class CatalogService {
     }
 
     /**
+     * 分页列出套餐选择器所需的最小标识，不附带应用清单。
+     *
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param name 套餐名称包含匹配，空白表示不限制
+     * @param status {@link ConfigurationStatus} 稳定字面量，空白表示不限制
+     * @return 套餐摘要页
+     */
+    public PageResponse<ResourceDetail<PlanSummary>> listPlanSummaries(int page, int pageSize, String name,
+                                                                       String status) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_PLAN_READ);
+        IamPages.require(page, pageSize);
+        Page<IamPlanEntity> rows = catalog.pagePlans(page, pageSize, name, IamFilters.enabledOf(status));
+        List<ResourceDetail<PlanSummary>> items = rows.getRecords().stream()
+                .map(row -> IamDetails.of(new PlanSummary(text(row.getId()), row.getName()), version(row.getVersion())))
+                .toList();
+        return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
      * 读取套餐详情。
      *
      * @param id 套餐 ID
@@ -813,6 +858,11 @@ public class CatalogService {
         return new ApplicationRecord(text(row.getId()), row.getCode(), row.getDomain(), row.getName(),
                 row.getDescription(), row.getIcon(), row.getSortOrder() == null ? 0 : row.getSortOrder(),
                 Boolean.TRUE.equals(row.getBaseline()), statusOf(row.getEnabled()));
+    }
+
+    private static ApplicationSummary applicationSummary(IamApplicationEntity row) {
+        return new ApplicationSummary(text(row.getId()), row.getCode(), row.getName(), row.getIcon(),
+                row.getSortOrder() == null ? 0 : row.getSortOrder());
     }
 
     private static ResourceRecord resource(IamResourceEntity row) {

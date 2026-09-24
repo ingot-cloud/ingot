@@ -57,10 +57,11 @@ class TenantQueryServiceTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16),"
                 + " version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY, name VARCHAR(128), avatar VARCHAR(256),"
-                + " owner_member_id BIGINT, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT,"
+                + " owner_member_id BIGINT, plan_id BIGINT, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT,"
                 + " created_at TIMESTAMP, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, account_id BIGINT, tenant_id BIGINT,"
-                + " display_name VARCHAR(128), status VARCHAR(16), version BIGINT, updated_at TIMESTAMP)");
+                + " display_name VARCHAR(128), phone VARCHAR(32), email VARCHAR(64), status VARCHAR(16),"
+                + " version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("""
                 CREATE TABLE iam_role_assignment(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT,
                   subject_type VARCHAR(16), platform_member_id BIGINT, platform_group_id BIGINT,
@@ -76,9 +77,10 @@ class TenantQueryServiceTest {
                 + "trace_id VARCHAR(128),occurred_at TIMESTAMP)");
         jdbc.update("INSERT INTO iam_account VALUES (1,TRUE,NULL,0),(2,TRUE,NULL,0)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE',0,NULL)");
-        jdbc.update("INSERT INTO iam_tenant VALUES (10,'组织',NULL,101,TRUE,NULL,0,NULL,NULL)");
-        jdbc.update("INSERT INTO iam_tenant_member VALUES (101,1,10,'所有者','ACTIVE',0,NULL),"
-                + "(102,2,10,'成员','ACTIVE',0,NULL)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (10,'组织',NULL,101,NULL,TRUE,NULL,0,"
+                + "TIMESTAMP '2026-01-02 03:04:05',NULL)");
+        jdbc.update("INSERT INTO iam_tenant_member VALUES (101,1,10,'所有者','13800000000','owner@example.com',"
+                + "'ACTIVE',0,NULL),(102,2,10,'成员',NULL,NULL,'ACTIVE',0,NULL)");
         assignment(50, 101, 12, "SYSTEM", "INITIALIZATION");
         assignment(51, 101, 32, "TENANT_CUSTOM", "MANUAL");
         invalidations.set(0);
@@ -166,24 +168,32 @@ class TenantQueryServiceTest {
     @Test
     void listAndGetIncludeOwnerDisplayName() {
         assertEquals("所有者", service.settings().record().ownerDisplayName());
+        assertEquals("13800000000", service.settings().record().ownerPhone());
+        assertEquals("owner@example.com", service.settings().record().ownerEmail());
 
         authenticate(PLATFORM);
         var page = service.list(1, 20, null, null);
         assertEquals(1, page.items().size());
         assertEquals("101", page.items().getFirst().record().ownerMemberId());
         assertEquals("所有者", page.items().getFirst().record().ownerDisplayName());
+        assertEquals("13800000000", page.items().getFirst().record().ownerPhone());
+        assertEquals("owner@example.com", page.items().getFirst().record().ownerEmail());
+        assertEquals("2026-01-02T03:04:05Z", page.items().getFirst().record().createdAt().toString());
 
         var detail = service.get("10");
         assertEquals("101", detail.record().ownerMemberId());
         assertEquals("所有者", detail.record().ownerDisplayName());
+        assertEquals("13800000000", detail.record().ownerPhone());
+        assertEquals("owner@example.com", detail.record().ownerEmail());
+        assertEquals("2026-01-02T03:04:05Z", detail.record().createdAt().toString());
     }
 
     @Test
     void listFiltersByNameAndStatus() {
         authenticate(PLATFORM);
-        jdbc.update("INSERT INTO iam_tenant VALUES (11,'研发中心',NULL,101,TRUE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
-        jdbc.update("INSERT INTO iam_tenant VALUES (12,'测试停用',NULL,101,FALSE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
-        jdbc.update("INSERT INTO iam_tenant VALUES (13,'已删除',NULL,101,TRUE,CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (11,'研发中心',NULL,101,NULL,TRUE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (12,'测试停用',NULL,101,NULL,FALSE,NULL,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_tenant VALUES (13,'已删除',NULL,101,NULL,TRUE,CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
 
         var byName = service.list(1, 20, "研发", null);
         assertEquals(1, byName.items().size());

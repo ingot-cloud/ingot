@@ -2,7 +2,10 @@ package com.ingot.cloud.iam.web.v1.platform;
 
 import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.support.IamPages;
+import com.ingot.framework.commons.error.BizException;
+import com.ingot.framework.commons.model.iam.CatalogRecordView;
 import com.ingot.framework.commons.model.iam.CreatedResource;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PlanDraft;
 import com.ingot.framework.commons.model.iam.PlanRecord;
@@ -43,15 +46,26 @@ public class PlatformPlanAPI implements RShortcuts {
      * @param pageSize 页大小
      * @param name 套餐名称包含匹配，可空
      * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
+     * @param view CATALOG 返回完整记录，SUMMARY 仅返回 id 与 name
      * @return 套餐页
      */
     @Operation(summary = "套餐目录")
     @GetMapping
-    public R<PageResponse<ResourceDetail<PlanRecord>>> list(
+    public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = CatalogRecordView.VALUE_CATALOG) String view) {
+        CatalogRecordView recordView;
+        try {
+            recordView = CatalogRecordView.getEnum(view);
+        } catch (IllegalArgumentException exception) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (recordView == CatalogRecordView.SUMMARY) {
+            return ok(catalog.listPlanSummaries(page, pageSize, name, status));
+        }
         return ok(catalog.listPlans(page, pageSize, name, status));
     }
 

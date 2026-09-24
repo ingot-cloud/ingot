@@ -15,9 +15,9 @@ import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.CatalogRepository;
 import com.ingot.cloud.iam.persistence.EntitlementRepository;
+import com.ingot.cloud.iam.persistence.TenantRepository;
 import com.ingot.cloud.iam.persistence.entity.IamActionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamAppAudienceEntity;
-import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
 import com.ingot.cloud.iam.persistence.entity.IamAudienceDepartmentEntity;
 import com.ingot.cloud.iam.persistence.entity.IamTenantAppEntitlementEntity;
 import com.ingot.cloud.iam.support.IamAccess;
@@ -35,7 +35,6 @@ import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.DepartmentSelection;
-import com.ingot.framework.commons.model.iam.EntitlementDraft;
 import com.ingot.framework.commons.model.iam.EntitlementPreviewResult;
 import com.ingot.framework.commons.model.iam.EntitlementRecord;
 import com.ingot.framework.commons.model.iam.EntitlementReplaceInput;
@@ -67,6 +66,8 @@ public class EntitlementService {
     private final AuthorizationChangeNotifier changes;
     private final CatalogRepository catalog;
     private final EntitlementRepository entitlements;
+    private final TenantRepository tenants;
+    private final EntitlementResolver resolver;
     private final TransactionTemplate transaction;
 
     /**
@@ -79,16 +80,21 @@ public class EntitlementService {
      * @param changes 开通与人群变更后的授权失效
      * @param catalog 操作分页、基础应用与应用目录
      * @param entitlements 开通与人群读写
+     * @param tenants 组织套餐回写
+     * @param resolver 套餐与自选并集
      * @param transactionManager 同一数据源事务
      */
     public EntitlementService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                                   CatalogRepository catalog, EntitlementRepository entitlements,
+                                  TenantRepository tenants, EntitlementResolver resolver,
                                   PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.catalog = catalog;
         this.entitlements = entitlements;
+        this.tenants = tenants;
+        this.resolver = resolver;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -151,12 +157,19 @@ public class EntitlementService {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ENTITLEMENT_PREVIEW);
         long id = IamIds.require(tenantId);
         requireTenant(id);
-        List<ValidationIssue> errors = validateReplace(id, input, false);
-        if (!input.expectedVersion().equals(entitlements.collectionVersion(id))) {
-            errors = new ArrayList<>(errors);
-            errors.add(new ValidationIssue("expectedVersion", IamReasonCode.REVISION_CONFLICT, "开通配置已变化，请重新预览后提交"));
+        List<ResolvedEntitlement> resolved;
+        try {
+            resolved = resolver.resolve(input.planId(), input.entitlements());
+        } catch (BizException exception) {
+            IamReasonCode code = IamReasonCode.INVALID_ARGUMENT.getCode().equals(exception.getCode())
+                    ? IamReasonCode.INVALID_ARGUMENT : IamReasonCode.APPLICATION_UNAVAILABLE;
+            ValidationIssue error = new ValidationIssue("entitlements", code, "开通应用不可用或套餐无效");
+            return new Preview<>(entitlements.collectionVersion(id), false, List.of(error), List.of(),
+                    new ImpactSummary(null, null, null, false), null);
         }
-        EntitlementPreviewResult result = new EntitlementPreviewResult(input.entitlements(),
+        List<ValidationIssue> errors = validateResolved(id, input, resolved, false);
+        EntitlementPreviewResult result = new EntitlementPreviewResult(
+                resolved.stream().map(ResolvedEntitlement::toPreview).toList(),
                 new ImpactSummary(null, null, null, false));
         return new Preview<>(entitlements.collectionVersion(id), errors.isEmpty(), errors, List.of(),
                 result.impactSummary(), result);
@@ -175,22 +188,24 @@ public class EntitlementService {
         return transaction.execute(status -> {
             requireTenant(id);
             IamIds.requireExpected(input.expectedVersion(), entitlements.collectionVersion(id));
-            List<ValidationIssue> errors = validateReplace(id, input, true);
+            List<ResolvedEntitlement> resolved = resolver.resolve(input.planId(), input.entitlements());
+            List<ValidationIssue> errors = validateResolved(id, input, resolved, true);
             if (!errors.isEmpty()) {
                 throw new BizException(errors.getFirst().code());
             }
             entitlements.deleteAllForTenant(id);
             LocalDateTime now = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-            for (EntitlementDraft draft : input.entitlements()) {
-                long applicationId = IamIds.require(draft.applicationId());
+            for (ResolvedEntitlement item : resolved) {
+                long applicationId = IamIds.require(item.application().id());
                 IamTenantAppEntitlementEntity entitlement = new IamTenantAppEntitlementEntity();
                 entitlement.setId(BigInteger.valueOf(access.nextId()));
                 entitlement.setTenantId(BigInteger.valueOf(id));
                 entitlement.setApplicationId(BigInteger.valueOf(applicationId));
-                entitlement.setEnabled(draft.status() == ConfigurationStatus.ENABLED);
-                entitlement.setSource(EntitlementSource.MANUAL);
-                entitlement.setValidFrom(draft.validFrom() == null ? now : utc(draft.validFrom()));
-                entitlement.setValidUntil(draft.validUntil() == null ? null : utc(draft.validUntil()));
+                entitlement.setEnabled(item.status() == ConfigurationStatus.ENABLED);
+                entitlement.setSource(item.source());
+                entitlement.setSourceId(item.sourceId() == null ? null : BigInteger.valueOf(Long.parseLong(item.sourceId())));
+                entitlement.setValidFrom(item.validFrom() == null ? now : utc(item.validFrom()));
+                entitlement.setValidUntil(item.validUntil() == null ? null : utc(item.validUntil()));
                 entitlements.insertEntitlement(entitlement);
                 IamAppAudienceEntity audience = new IamAppAudienceEntity();
                 audience.setTenantId(BigInteger.valueOf(id));
@@ -198,8 +213,9 @@ public class EntitlementService {
                 audience.setAudienceKind(AudienceKind.ALL);
                 entitlements.insertAudience(audience);
             }
+            tenants.updatePlanId(id, blank(input.planId()) ? null : Long.parseLong(input.planId()));
             audits.write(actor.context(), access.nextId(), ENTITLEMENT, tenantId, AuditChangeType.UPDATE,
-                    Map.of(), Map.of(AuditField.ENTITLEMENT, Integer.toString(input.entitlements().size())),
+                    Map.of(), Map.of(AuditField.ENTITLEMENT, Integer.toString(resolved.size())),
                     Map.of(ENTITLEMENT, entitlements.collectionVersion(id)));
             changes.markAll();
             return list(id, IamPages.DEFAULT_PAGE, IamPages.MAX_SIZE);
@@ -257,12 +273,15 @@ public class EntitlementService {
         requireTenant(tenantId);
         IamPages.require(page, pageSize);
         Page<IamTenantAppEntitlementEntity> rows = entitlements.pageEntitlements(tenantId, page, pageSize);
+        Map<BigInteger, String> names = catalog.applicationNames(rows.getRecords().stream()
+                .map(IamTenantAppEntitlementEntity::getApplicationId).toList());
         List<ResourceDetail<EntitlementRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(entitlement(row), version(row.getVersion()))).toList();
+                .map(row -> IamDetails.of(entitlement(row, names), version(row.getVersion()))).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
-    private List<ValidationIssue> validateReplace(long tenantId, EntitlementReplaceInput input, boolean requireVersion) {
+    private List<ValidationIssue> validateResolved(long tenantId, EntitlementReplaceInput input,
+                                                  List<ResolvedEntitlement> resolved, boolean requireVersion) {
         List<ValidationIssue> errors = new ArrayList<>();
         if (requireVersion) {
             try {
@@ -270,43 +289,27 @@ public class EntitlementService {
             } catch (BizException exception) {
                 errors.add(new ValidationIssue("expectedVersion", IamReasonCode.REVISION_CONFLICT, "开通配置已变化，请重新预览后提交"));
             }
+        } else if (!input.expectedVersion().equals(entitlements.collectionVersion(tenantId))) {
+            errors.add(new ValidationIssue("expectedVersion", IamReasonCode.REVISION_CONFLICT, "开通配置已变化，请重新预览后提交"));
         }
-        Set<String> requested = new LinkedHashSet<>();
         Set<Long> baseline = new LinkedHashSet<>();
         for (BigInteger applicationId : catalog.enabledBaselineIds(AuthorizationDomain.TENANT)) {
             baseline.add(applicationId.longValue());
         }
         Set<Long> enabledBaseline = new LinkedHashSet<>();
-        int index = 0;
-        for (EntitlementDraft draft : input.entitlements()) {
-            String path = "entitlements[" + index++ + "]";
-            if (!requested.add(draft.applicationId())) {
-                errors.add(new ValidationIssue(path, IamReasonCode.INVALID_ARGUMENT, "同一应用不能出现多条开通"));
-                continue;
-            }
-            long applicationId;
-            try {
-                applicationId = IamIds.require(draft.applicationId());
-            } catch (BizException exception) {
-                errors.add(new ValidationIssue(path + ".applicationId", IamReasonCode.INVALID_ARGUMENT, "应用 ID 不合法"));
-                continue;
-            }
-            IamApplicationEntity application = catalog.findApplication(applicationId);
-            if (application == null) {
-                errors.add(new ValidationIssue(path + ".applicationId", IamReasonCode.OBJECT_NOT_FOUND, "应用不存在"));
-                continue;
-            }
-            if (application.getDomain() != AuthorizationDomain.TENANT) {
-                errors.add(new ValidationIssue(path + ".applicationId", IamReasonCode.APPLICATION_UNAVAILABLE, "只能开通租户域应用"));
-            }
-            if (Boolean.TRUE.equals(application.getBaseline()) && draft.status() == ConfigurationStatus.ENABLED) {
-                enabledBaseline.add(applicationId);
+        for (ResolvedEntitlement item : resolved) {
+            if (item.status() == ConfigurationStatus.ENABLED) {
+                enabledBaseline.add(Long.parseLong(item.application().id()));
             }
         }
         if (!enabledBaseline.containsAll(baseline)) {
             errors.add(new ValidationIssue("entitlements", IamReasonCode.APPLICATION_UNAVAILABLE, "基础治理入口不可关闭"));
         }
         return errors;
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private ResourceDetail<AudienceDraft> loadAudience(long tenantId, long applicationId) {
@@ -362,8 +365,10 @@ public class EntitlementService {
         }
     }
 
-    private static EntitlementRecord entitlement(IamTenantAppEntitlementEntity row) {
-        return new EntitlementRecord(text(row.getId()), text(row.getApplicationId()),
+    private static EntitlementRecord entitlement(IamTenantAppEntitlementEntity row, Map<BigInteger, String> names) {
+        BigInteger applicationId = row.getApplicationId();
+        return new EntitlementRecord(text(row.getId()), text(applicationId),
+                applicationId == null ? null : names.get(applicationId),
                 statusOf(row.getEnabled()), row.getSource(),
                 row.getSourceId() == null ? null : row.getSourceId().toString(),
                 instant(row.getValidFrom()), instant(row.getValidUntil()));

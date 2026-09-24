@@ -46,6 +46,7 @@ CREATE TABLE iam_tenant (
     name VARCHAR(128) NOT NULL,
     avatar VARCHAR(512) NULL,
     owner_member_id BIGINT UNSIGNED NULL COMMENT '创建事务内允许暂空；提交前必须是本租户有效成员',
+    plan_id BIGINT UNSIGNED NULL COMMENT '最近一次提交的套餐；修改套餐目录不自动回写',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),

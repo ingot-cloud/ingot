@@ -13,13 +13,13 @@ import jakarta.validation.constraints.NotNull;
  *
  * @author jy
  * @since 1.0.0
- * @param entitlements 将写入的开通清单
+ * @param entitlements 服务器解析后的开通并集
  * @param impactSummary 允许披露的影响摘要
  */
 @Schema(description = "返回开通或套餐应用的可见影响，不把开通等同于业务授权")
 public record EntitlementPreviewResult(
-        @NotNull @Schema(description = "将写入的开通清单", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid EntitlementDraft> entitlements,
+        @NotNull @Schema(description = "服务器解析后的开通并集", requiredMode = Schema.RequiredMode.REQUIRED)
+        List<@NotNull @Valid EntitlementPreviewItem> entitlements,
         @NotNull @Valid @Schema(description = "允许披露的影响摘要", requiredMode = Schema.RequiredMode.REQUIRED)
         ImpactSummary impactSummary) {
 

@@ -8,6 +8,7 @@ import com.ingot.framework.commons.model.iam.ActionUpdateInput;
 import com.ingot.framework.commons.model.iam.ApplicationDraft;
 import com.ingot.framework.commons.model.iam.ApplicationRecord;
 import com.ingot.framework.commons.model.iam.ApplicationUpdateInput;
+import com.ingot.framework.commons.model.iam.CatalogRecordView;
 import com.ingot.framework.commons.model.iam.ConfigurationStatusInput;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.CatalogListView;
@@ -60,17 +61,23 @@ public class PlatformApplicationAPI implements RShortcuts {
      * @param name 应用名称包含匹配，可空
      * @param status 启停状态，可空；仅接受 ENABLED/DISABLED
      * @param baseline 是否组织默认开通，可空
+     * @param view CATALOG 返回完整记录，SUMMARY 返回选择器摘要
      * @return 应用页
      */
     @Operation(summary = "应用目录")
     @GetMapping
-    public R<PageResponse<ResourceDetail<ApplicationRecord>>> list(
+    public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam String domain,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Boolean baseline) {
+            @RequestParam(required = false) Boolean baseline,
+            @RequestParam(required = false, defaultValue = CatalogRecordView.VALUE_CATALOG) String view) {
+        CatalogRecordView recordView = requireRecordView(view);
+        if (recordView == CatalogRecordView.SUMMARY) {
+            return ok(catalog.listApplicationSummaries(page, pageSize, domain, name, status, baseline));
+        }
         return ok(catalog.listApplications(page, pageSize, domain, name, status, baseline));
     }
 
@@ -346,6 +353,14 @@ public class PlatformApplicationAPI implements RShortcuts {
     private static CatalogListView requireView(String view) {
         try {
             return CatalogListView.getEnum(view);
+        } catch (IllegalArgumentException exception) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+    }
+
+    private static CatalogRecordView requireRecordView(String view) {
+        try {
+            return CatalogRecordView.getEnum(view);
         } catch (IllegalArgumentException exception) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }

@@ -2,9 +2,11 @@ package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -87,6 +89,31 @@ public class CatalogRepository {
      */
     public IamApplicationEntity findApplication(long id) {
         return applications.selectById(BigInteger.valueOf(id));
+    }
+
+    /**
+     * 按应用 ID 批量读取目录名称，供开通列表展示。
+     *
+     * @param applicationIds 应用 ID，可含空值与重复
+     * @return 非空名称；找不到应用或名为空白时不入表
+     */
+    public Map<BigInteger, String> applicationNames(Collection<BigInteger> applicationIds) {
+        Map<BigInteger, String> names = new LinkedHashMap<>();
+        if (applicationIds == null || applicationIds.isEmpty()) {
+            return names;
+        }
+        List<BigInteger> ids = applicationIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) {
+            return names;
+        }
+        for (IamApplicationEntity row : applications.selectList(Wrappers.<IamApplicationEntity>lambdaQuery()
+                .select(IamApplicationEntity::getId, IamApplicationEntity::getName)
+                .in(IamApplicationEntity::getId, ids))) {
+            if (row.getName() != null && !row.getName().isBlank()) {
+                names.put(row.getId(), row.getName());
+            }
+        }
+        return names;
     }
 
     /**

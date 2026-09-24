@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.tenant;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -98,10 +99,10 @@ public class TenantQueryService {
         IamPages.require(page, pageSize);
         var result = tenants.page(page, pageSize, name, IamFilters.enabledOf(status));
         List<IamTenantEntity> rows = result.getRecords();
-        Map<BigInteger, String> names = tenants.displayNames(rows.stream()
+        Map<BigInteger, TenantRepository.OwnerContact> owners = tenants.ownerContacts(rows.stream()
                 .map(IamTenantEntity::getOwnerMemberId).toList());
         List<ResourceDetail<TenantRecord>> items = rows.stream()
-                .map(row -> IamDetails.of(record(row, names), row.getVersion().toString())).toList();
+                .map(row -> IamDetails.of(record(row, owners), row.getVersion().toString())).toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
@@ -324,18 +325,27 @@ public class TenantQueryService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        Map<BigInteger, String> names = includeOwnerName
-                ? tenants.displayNames(row.getOwnerMemberId() == null ? List.of() : List.of(row.getOwnerMemberId()))
+        Map<BigInteger, TenantRepository.OwnerContact> owners = includeOwnerName
+                ? tenants.ownerContacts(row.getOwnerMemberId() == null ? List.of() : List.of(row.getOwnerMemberId()))
                 : Map.of();
-        return IamDetails.of(record(row, names), row.getVersion().toString());
+        return IamDetails.of(record(row, owners), row.getVersion().toString());
     }
 
-    private static TenantRecord record(IamTenantEntity row, Map<BigInteger, String> names) {
+    private static TenantRecord record(IamTenantEntity row, Map<BigInteger, TenantRepository.OwnerContact> owners) {
         BigInteger ownerId = row.getOwnerMemberId();
+        TenantRepository.OwnerContact owner = ownerId == null ? null : owners.get(ownerId);
         return new TenantRecord(row.getId().toString(), row.getName(), row.getAvatar(),
                 ownerId == null ? null : ownerId.toString(),
-                ownerId == null ? null : names.get(ownerId),
-                Boolean.TRUE.equals(row.getEnabled()) ? ConfigurationStatus.ENABLED : ConfigurationStatus.DISABLED);
+                owner == null ? null : owner.displayName(),
+                owner == null ? null : owner.phone(),
+                owner == null ? null : owner.email(),
+                Boolean.TRUE.equals(row.getEnabled()) ? ConfigurationStatus.ENABLED : ConfigurationStatus.DISABLED,
+                instant(row.getCreatedAt()),
+                row.getPlanId() == null ? null : row.getPlanId().toString());
+    }
+
+    private static Instant instant(LocalDateTime value) {
+        return value == null ? null : value.toInstant(ZoneOffset.UTC);
     }
 
     private static void requireApplied(int rows) {

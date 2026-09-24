@@ -32,6 +32,10 @@ public class IamTenantEntity {
     @TableField("owner_member_id")
     private BigInteger ownerMemberId;
 
+    /** 最近一次提交的套餐 ID，可空。 */
+    @TableField("plan_id")
+    private BigInteger planId;
+
     /** 组织启用状态。 */
     @TableField("enabled")
     private Boolean enabled;
