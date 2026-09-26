@@ -57,9 +57,12 @@ Auth 复用既有授权码/PKCE，管理台新增双入口 BFF 编排与会话�
 | SubjectRef | type: MEMBER/GROUP, id；在当前 domain 内解析平台成员/平台组或租户成员/租户组，不混用 accountId，不接受跨域引用 |
 | Selection | members[], departments[{id, includeDescendants}]；仅当前域合法引用，后台按操作返回候选 |
 | ScopeExpression | kind: ALL/SELF/MEMBER_DEPARTMENTS/MANAGED_DEPARTMENTS/OBJECT_SET, parameterKey?, includeDescendants?；资源验证合法组合 |
-| ActionGrant | actionId, scopes: ScopeExpression[]；范围并集，不能引用未选操作 |
-| RoleRevision | id, roleId, revision, kind, baseRevisionId?, grants(完整角色), deltas(定制角色), parameterDefinitions, metadataOverrides |
+| ActionGrant | actionId, scopes: ScopeExpression[]；范围并集，不能引用未选操作；写模型，不含目录展示字段 |
+| RoleGrantList | items: RoleGrantRecord[]；角色当前绑定权限读响应，不分页 |
+| RoleGrantRecord | 角色当前绑定权限读模型：actionId 与 scopes，以及操作/应用/资源名称、范围能力与操作状态；操作已删除时仍保留该条，名称可空 |
+| RoleRevision | id, roleId, revision, kind, baseRevisionId?, grants(完整角色), deltas(定制角色), parameterDefinitions, metadataOverrides, displayDeltas?（仅列表读，相对上一版本的展示差异，含操作名称） |
 | RoleDelta | actionId, operation, scopes?；仅新增/替换携带范围 |
+| RoleDisplayDelta | actionId, actionName?, operation, scopes?；版本历史展示用，操作已删除时 actionName 可空 |
 | EffectiveRole | role/revision、合成 grants、逐操作 origin(BASE/ADDED/REMOVED/REPLACED)、参数定义、使用中的授权统计 |
 | AssignmentInput | subject, roleRevisionRef{kind,id}, scopeBindings(命名参数到类型化 ID 集合), validFrom?, validUntil?, delegationGrantId? |
 | DelegationInput | administratorMemberId, allowedRoleRevisionRefs[], recipientSelection, actionScopeCeilings[], validFrom?, validUntil?, maxAssignmentDuration |
@@ -142,13 +145,14 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 
 ## 4. 角色、授权、策略
 
-平台自有角色管理使用 /v1/platform/roles；共享角色发布使用 /v1/platform/shared-roles。租户聚合角色目录使用 /v1/tenant/roles，返回可用共享角色及本地角色，不为展示创建记录。
+平台自有角色管理使用 /v1/platform/roles；共享角色发布使用 /v1/platform/shared-roles（含 `GET /{id}/grants` 与 `GET /{id}/revisions`）。租户聚合角色目录使用 /v1/tenant/roles，返回可用共享角色及本地角色，不为展示创建记录。角色详情权限 Tab 走 `/{id}/grants`，不要用 revisions 的 actionId 再 `POST /actions/lookup`。`actions/lookup` 只服务已持有操作 ID 的选择器回显。
 
 | 路径（角色、授权管理域由 platform/tenant 区分） | 职责 |
 |---|---|
 | /v1/{domain}/roles | GET 目录；POST 自定义角色或 tenant 基于共享角色定制 |
 | /v1/{domain}/roles/{id} | GET 元数据；PATCH 平台角色接受 RoleUpdateInput（名称空白时只改启停），租户角色仍只接受启停；DELETE 仅未引用 |
-| /v1/{domain}/roles/{id}/revisions | GET 版本；POST 发布新版本，不自动升级授权 |
+| /v1/{domain}/roles/{id}/grants | GET 最新已发布版本的当前绑定权限（完整目录内容，不分页）；无版本返回 []；角色不存在与详情一致；调用方只需角色读权限 |
+| /v1/{domain}/roles/{id}/revisions | GET 版本（含相对上一版本的 displayDeltas，跨页由服务端补上一版本）；POST 发布新版本，不自动升级授权 |
 | /v1/{domain}/roles/{id}/preview | POST 预览待发布最终定义 |
 | /v1/tenant/roles/{id}/upgrade-preview | POST {newBaseRevisionId, resolutions?} 三方比较 |
 | /v1/tenant/roles/{id}/upgrade | POST {expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}；未解决冲突拒绝 |

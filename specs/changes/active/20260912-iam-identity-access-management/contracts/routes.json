@@ -990,6 +990,18 @@
     "implemented": true
   },
   {
+    "path": "/v1/platform/roles/{id}/grants",
+    "method": "get",
+    "operationId": "platformListRoleGrants",
+    "summary": "角色当前绑定权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/roles/{id}",
     "method": "patch",
     "operationId": "platformPatchRoleStatus",
@@ -1125,6 +1137,18 @@
     "action": "iam-platform:shared-role:read",
     "request": null,
     "response": "RResourceDetailRoleSummary",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/grants",
+    "method": "get",
+    "operationId": "platformSharedListRoleGrants",
+    "summary": "角色当前绑定权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RRoleGrantList",
     "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
     "implemented": true
   },
@@ -1950,6 +1974,18 @@
     "action": "iam-tenant:role:read",
     "request": null,
     "response": "RResourceDetailRoleSummary",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/grants",
+    "method": "get",
+    "operationId": "tenantListRoleGrants",
+    "summary": "角色当前绑定权限",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
     "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
     "implemented": true
   },
