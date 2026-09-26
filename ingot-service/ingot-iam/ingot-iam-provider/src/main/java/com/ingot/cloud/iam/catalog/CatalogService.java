@@ -578,11 +578,21 @@ public class CatalogService {
      */
     public List<ActionLookupRecord> lookupActions(ActionLookupInput input) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
-        List<Long> ids = requireIds(input.ids());
-        if (ids.isEmpty()) {
+        return resolveActions(input.ids());
+    }
+
+    /**
+     * 按操作 ID 解析目录内容，不校验 ACTION；调用方须已完成自身读授权。
+     *
+     * @param ids 操作 ID
+     * @return 解析结果；未命中的 ID 省略
+     */
+    public List<ActionLookupRecord> resolveActions(List<String> ids) {
+        List<Long> wanted = requireIds(ids);
+        if (wanted.isEmpty()) {
             return List.of();
         }
-        List<IamActionEntity> rows = catalog.listActionsByIds(ids);
+        List<IamActionEntity> rows = catalog.listActionsByIds(wanted);
         Map<BigInteger, IamApplicationEntity> applications = new LinkedHashMap<>();
         for (IamApplicationEntity application : catalog.listApplicationsByIds(rows.stream()
                 .map(row -> row.getApplicationId().longValue()).distinct().toList())) {
@@ -596,7 +606,7 @@ public class CatalogService {
         Map<BigInteger, IamActionEntity> byId = rows.stream()
                 .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
         List<ActionLookupRecord> result = new ArrayList<>();
-        for (Long id : ids) {
+        for (Long id : wanted) {
             IamActionEntity row = byId.get(BigInteger.valueOf(id));
             if (row == null) {
                 continue;

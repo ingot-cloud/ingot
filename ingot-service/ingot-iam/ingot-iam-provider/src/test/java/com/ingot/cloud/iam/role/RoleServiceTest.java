@@ -24,7 +24,9 @@ import com.ingot.framework.commons.model.iam.RoleDeltaOperation;
 import com.ingot.framework.commons.model.iam.RoleKind;
 import com.ingot.framework.commons.model.iam.RoleParameterDefinition;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
+import com.ingot.framework.commons.model.iam.RoleGrantRecord;
 import com.ingot.framework.commons.model.iam.RolePublishInput;
+import com.ingot.framework.commons.model.iam.RoleRevision;
 import com.ingot.framework.commons.model.iam.RoleUpdateInput;
 import com.ingot.framework.commons.model.iam.ScopeBindingKind;
 import com.ingot.framework.commons.model.iam.ScopeExpression;
@@ -45,6 +47,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * <p>验证角色版本形态与操作能力校验，以及升级只改本租户、本角色且重验通过的授权。</p>
@@ -83,12 +86,13 @@ class RoleServiceTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16),"
                 + " version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY, code VARCHAR(64), domain VARCHAR(16),"
-                + " name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE)");
+                + " name VARCHAR(128), description VARCHAR(512), icon VARCHAR(512), sort_order INT,"
+                + " baseline BOOLEAN, enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, application_id BIGINT, code VARCHAR(64),"
                 + " name VARCHAR(128), scope_capabilities VARCHAR(512), field_capabilities VARCHAR(512),"
-                + " enabled BOOLEAN DEFAULT TRUE)");
+                + " enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY, application_id BIGINT, resource_id BIGINT,"
-                + " code VARCHAR(192), name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE)");
+                + " code VARCHAR(192), name VARCHAR(128), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT,"
                 + " kind VARCHAR(24), code VARCHAR(64), name VARCHAR(128), description VARCHAR(256),"
                 + " group_name VARCHAR(64), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
@@ -142,13 +146,14 @@ class RoleServiceTest {
         jdbc.update("INSERT INTO iam_tenant_member VALUES (101,1,10,'管理员','ACTIVE',0,NULL),"
                 + "(102,2,10,'成员','ACTIVE',0,NULL)");
         // 租户应用的资源支持全部与管理部门范围；平台应用用于验证跨域引用被拒。
-        jdbc.update("INSERT INTO iam_application VALUES (1,'app-tenant','TENANT','业务',TRUE),"
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,enabled) VALUES (1,'app-tenant','TENANT','业务',TRUE),"
                 + "(2,'app-platform','PLATFORM','平台',TRUE)");
-        jdbc.update("INSERT INTO iam_resource VALUES (1,1,'order','订单',?,'[]',TRUE),"
-                + "(2,2,'tenant','租户',?,'[]',TRUE)", "[\"ALL\",\"SELF\",\"MANAGED_DEPARTMENTS\"]", "[\"ALL\"]");
-        jdbc.update("INSERT INTO iam_action VALUES (11,1,1,'tenant.order.read','读',TRUE),"
-                + "(12,1,1,'tenant.order.update','改',TRUE),(13,1,1,'tenant.order.export','导',FALSE),"
-                + "(21,2,2,'platform.tenant.read','平台读',TRUE)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled)"
+                + " VALUES (1,1,'order','订单',?,'[]',TRUE),(2,2,'tenant','租户',?,'[]',TRUE)",
+                "[\"ALL\",\"SELF\",\"MANAGED_DEPARTMENTS\"]", "[\"ALL\"]");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled)"
+                + " VALUES (11,1,1,'tenant.order.read','读',TRUE),(12,1,1,'tenant.order.update','改',TRUE),"
+                + "(13,1,1,'tenant.order.export','导',FALSE),(21,2,2,'platform.tenant.read','平台读',TRUE)");
         // 共享角色 20 的基础版本 30（读）与新基础 31（读+改）。
         jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version)"
                 + " VALUES (20,'TENANT',NULL,'SHARED','shared','共享业务',TRUE,0)");
@@ -164,6 +169,7 @@ class RoleServiceTest {
                 new AuthorizationChangeNotifier(event -> { }), new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
+                IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 transactions);
         authenticate();
     }
@@ -171,6 +177,42 @@ class RoleServiceTest {
     @AfterEach
     void clear() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void listCurrentGrantsReturnsCatalogContentForLatestRevision() {
+        var created = service.create(AuthorizationDomain.TENANT, false, input(null,
+                new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
+
+        List<RoleGrantRecord> grants = service.listCurrentGrants(AuthorizationDomain.TENANT, false, created.id());
+        assertEquals(1, grants.size());
+        assertEquals("11", grants.getFirst().actionId());
+        assertEquals("读", grants.getFirst().actionName());
+        assertEquals("app-tenant", grants.getFirst().applicationCode());
+        assertEquals("订单", grants.getFirst().resourceName());
+        assertEquals(List.of(ScopeKind.ALL, ScopeKind.SELF, ScopeKind.MANAGED_DEPARTMENTS),
+                grants.getFirst().scopeCapabilities());
+    }
+
+    @Test
+    void listRevisionsAttachesDisplayDeltasAgainstPreviousVersion() {
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,status,version) VALUES (1,1,'ACTIVE',0)");
+        authenticatePlatform();
+        var created = service.create(AuthorizationDomain.PLATFORM, true, new RoleCreateInput(
+                "shared-" + UUID.randomUUID(), "共享角色", null, null, RoleKind.SHARED, null,
+                new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
+        service.publish(AuthorizationDomain.PLATFORM, true, created.id(),
+                new RolePublishInput(created.version(), new RoleDefinitionDraft(
+                        List.of(grant("11", ScopeKind.ALL), grant("12", ScopeKind.ALL)), List.of(), List.of(), null)));
+
+        var page = service.listRevisions(AuthorizationDomain.PLATFORM, true, created.id(), 1, 20);
+        assertEquals(2, page.items().size());
+        RoleRevision latest = page.items().getFirst().record();
+        assertEquals(1, latest.displayDeltas().size());
+        assertEquals("12", latest.displayDeltas().getFirst().actionId());
+        assertEquals(RoleDeltaOperation.ADD, latest.displayDeltas().getFirst().operation());
+        assertEquals("改", latest.displayDeltas().getFirst().actionName());
+        assertTrue(page.items().getLast().record().displayDeltas().isEmpty());
     }
 
     @Test

@@ -5,12 +5,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier;
+import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.delegation.DelegationAdmission;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.RoleRepository;
@@ -29,6 +33,7 @@ import com.ingot.cloud.iam.support.IamJson;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ActionGrant;
+import com.ingot.framework.commons.model.iam.ActionLookupRecord;
 import com.ingot.framework.commons.model.iam.AuditChangeType;
 import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -46,6 +51,9 @@ import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.RoleCreateInput;
 import com.ingot.framework.commons.model.iam.RoleDefinitionDraft;
 import com.ingot.framework.commons.model.iam.RoleDelta;
+import com.ingot.framework.commons.model.iam.RoleDeltaOperation;
+import com.ingot.framework.commons.model.iam.RoleDisplayDelta;
+import com.ingot.framework.commons.model.iam.RoleGrantRecord;
 import com.ingot.framework.commons.model.iam.RoleKind;
 import com.ingot.framework.commons.model.iam.RoleMetadataOverrides;
 import com.ingot.framework.commons.model.iam.RoleParameterDefinition;
@@ -92,10 +100,11 @@ public class RoleService {
     private final RoleGrantValidator validator;
     private final DelegationAdmission delegations;
     private final RoleRepository roles;
+    private final CatalogService catalog;
     private final TransactionTemplate transaction;
 
     /**
-     * 绑定身份、审计、失效通知、合成缓存与角色表。
+     * 绑定身份、审计、失效通知、合成缓存、目录解析与角色表。
      * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
      *
      * @param access 当前身份
@@ -105,11 +114,12 @@ public class RoleService {
      * @param validator 操作与范围能力校验
      * @param delegations 委派派生授权准入
      * @param roles 角色持久化
+     * @param catalog 操作目录解析
      * @param transactionManager 同一数据源事务
      */
     public RoleService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                            RoleSynthesisCache synthesis, RoleGrantValidator validator,
-                           DelegationAdmission delegations, RoleRepository roles,
+                           DelegationAdmission delegations, RoleRepository roles, CatalogService catalog,
                            PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
@@ -118,6 +128,7 @@ public class RoleService {
         this.validator = validator;
         this.delegations = delegations;
         this.roles = roles;
+        this.catalog = catalog;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -169,6 +180,30 @@ public class RoleService {
     public ResourceDetail<RoleSummary> get(AuthorizationDomain domain, boolean shared, String id) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         return loadSummary(domain, shared, actor, IamIds.require(id));
+    }
+
+    /**
+     * 读取角色最新已发布版本的当前绑定权限，带目录展示内容。
+     *
+     * @param domain 接口管理域
+     * @param shared 是否共享角色入口
+     * @param id 角色 ID
+     * @return 当前绑定权限；尚无版本时为空列表
+     */
+    public List<RoleGrantRecord> listCurrentGrants(AuthorizationDomain domain, boolean shared, String id) {
+        ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
+        long roleId = IamIds.require(id);
+        loadSummary(domain, shared, actor, roleId);
+        IamRoleRevisionEntity latest = roles.latestRevision(roleId);
+        if (latest == null || latest.getId() == null) {
+            return List.of();
+        }
+        RevisionData data = loadRevision(latest.getId().longValue());
+        List<ActionGrant> grants = data.grants();
+        if (grants.isEmpty() && based(data.baseRevisionId())) {
+            grants = synthesizedGrants(latest.getId().longValue());
+        }
+        return toGrantRecords(grants);
     }
 
     /**
@@ -317,8 +352,27 @@ public class RoleService {
         loadSummary(domain, shared, actor, roleId);
         IamPages.require(page, pageSize);
         Page<IamRoleRevisionEntity> rows = roles.pageRevisions(roleId, page, pageSize);
-        List<ResourceDetail<RoleRevision>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(revision(row), version(row.getRevision()))).toList();
+        List<IamRoleRevisionEntity> records = rows.getRecords();
+        List<RoleRevision> revisions = records.stream().map(this::revision).toList();
+        RoleRevision older = olderRevision(roleId, records);
+        Set<String> actionIds = new LinkedHashSet<>();
+        for (int index = 0; index < revisions.size(); index++) {
+            RoleRevision current = revisions.get(index);
+            RoleRevision previous = index + 1 < revisions.size() ? revisions.get(index + 1) : older;
+            for (RoleDelta delta : rawDisplayDeltas(current, previous)) {
+                if (delta.actionId() != null && !delta.actionId().isBlank()) {
+                    actionIds.add(delta.actionId());
+                }
+            }
+        }
+        Map<String, ActionLookupRecord> actions = indexActions(catalog.resolveActions(List.copyOf(actionIds)));
+        List<ResourceDetail<RoleRevision>> items = new ArrayList<>();
+        for (int index = 0; index < revisions.size(); index++) {
+            RoleRevision current = revisions.get(index);
+            RoleRevision previous = index + 1 < revisions.size() ? revisions.get(index + 1) : older;
+            items.add(IamDetails.of(withDisplayDeltas(current, displayDeltas(current, previous, actions)),
+                    version(records.get(index).getRevision())));
+        }
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
@@ -695,7 +749,131 @@ public class RoleService {
         RevisionData data = loadRevision(row.getId().longValue());
         return new RoleRevision(text(row.getId()), text(row.getRoleId()), version(row.getRevision()),
                 row.getKind(), text(row.getBaseRevisionId()), data.grants(), data.deltas(), data.parameters(),
-                data.metadata());
+                data.metadata(), List.of());
+    }
+
+    private RoleRevision olderRevision(long roleId, List<IamRoleRevisionEntity> records) {
+        IamRoleRevisionEntity last = records.isEmpty() ? null : records.getLast();
+        if (last == null || last.getRevision() == null || last.getRevision().longValue() <= 1) {
+            return null;
+        }
+        IamRoleRevisionEntity previous = roles.findPreviousRevision(roleId, last.getRevision().longValue());
+        return previous == null ? null : revision(previous);
+    }
+
+    private List<RoleGrantRecord> toGrantRecords(List<ActionGrant> grants) {
+        if (grants == null || grants.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ActionLookupRecord> actions = indexActions(catalog.resolveActions(grants.stream()
+                .map(ActionGrant::actionId).filter(id -> id != null && !id.isBlank()).distinct().toList()));
+        List<RoleGrantRecord> result = new ArrayList<>();
+        for (ActionGrant grant : grants) {
+            ActionLookupRecord action = actions.get(grant.actionId());
+            result.add(new RoleGrantRecord(grant.actionId(),
+                    action == null ? "" : action.code(),
+                    action == null ? "" : blankToEmpty(action.name(), action.code()),
+                    action == null ? "" : action.applicationId(),
+                    action == null ? "" : action.applicationCode(),
+                    action == null ? "" : action.applicationName(),
+                    action == null ? "" : action.resourceId(),
+                    action == null ? "" : action.resourceCode(),
+                    action == null ? "" : action.resourceName(),
+                    grant.scopes() == null ? List.of() : grant.scopes(),
+                    action == null || action.scopeCapabilities() == null ? List.of() : action.scopeCapabilities(),
+                    action == null ? null : action.status()));
+        }
+        return result;
+    }
+
+    private static List<RoleDelta> rawDisplayDeltas(RoleRevision current, RoleRevision previous) {
+        if (current.deltas() != null && !current.deltas().isEmpty()) {
+            return current.deltas();
+        }
+        if (previous == null) {
+            return List.of();
+        }
+        return grantDeltas(current.grants(), previous.grants());
+    }
+
+    private static List<RoleDisplayDelta> displayDeltas(RoleRevision current, RoleRevision previous,
+                                                        Map<String, ActionLookupRecord> actions) {
+        List<RoleDisplayDelta> result = new ArrayList<>();
+        for (RoleDelta delta : rawDisplayDeltas(current, previous)) {
+            ActionLookupRecord action = actions.get(delta.actionId());
+            result.add(new RoleDisplayDelta(delta.actionId(),
+                    action == null ? "" : blankToEmpty(action.name(), action.code()),
+                    delta.operation(),
+                    delta.scopes() == null ? List.of() : delta.scopes()));
+        }
+        return result;
+    }
+
+    private static List<RoleDelta> grantDeltas(List<ActionGrant> current, List<ActionGrant> previous) {
+        Map<String, ActionGrant> older = indexGrants(previous);
+        Map<String, ActionGrant> newer = indexGrants(current);
+        List<RoleDelta> deltas = new ArrayList<>();
+        for (ActionGrant grant : current == null ? List.<ActionGrant>of() : current) {
+            ActionGrant before = older.get(grant.actionId());
+            if (before == null) {
+                deltas.add(new RoleDelta(grant.actionId(), RoleDeltaOperation.ADD, grant.scopes()));
+                continue;
+            }
+            if (!scopeFingerprint(before.scopes()).equals(scopeFingerprint(grant.scopes()))) {
+                deltas.add(new RoleDelta(grant.actionId(), RoleDeltaOperation.REPLACE_SCOPE, grant.scopes()));
+            }
+        }
+        for (ActionGrant grant : previous == null ? List.<ActionGrant>of() : previous) {
+            if (!newer.containsKey(grant.actionId())) {
+                deltas.add(new RoleDelta(grant.actionId(), RoleDeltaOperation.REMOVE, grant.scopes()));
+            }
+        }
+        return deltas;
+    }
+
+    private static Map<String, ActionGrant> indexGrants(List<ActionGrant> grants) {
+        Map<String, ActionGrant> result = new LinkedHashMap<>();
+        if (grants == null) {
+            return result;
+        }
+        for (ActionGrant grant : grants) {
+            result.putIfAbsent(grant.actionId(), grant);
+        }
+        return result;
+    }
+
+    private static Map<String, ActionLookupRecord> indexActions(List<ActionLookupRecord> records) {
+        Map<String, ActionLookupRecord> result = new LinkedHashMap<>();
+        for (ActionLookupRecord record : records) {
+            result.putIfAbsent(record.id(), record);
+        }
+        return result;
+    }
+
+    private static RoleRevision withDisplayDeltas(RoleRevision revision, List<RoleDisplayDelta> deltas) {
+        return new RoleRevision(revision.id(), revision.roleId(), revision.revision(), revision.kind(),
+                revision.baseRevisionId(), revision.grants(), revision.deltas(), revision.parameterDefinitions(),
+                revision.metadataOverrides(), deltas);
+    }
+
+    private static String scopeFingerprint(List<ScopeExpression> scopes) {
+        if (scopes == null || scopes.isEmpty()) {
+            return "";
+        }
+        return scopes.stream()
+                .map(scope -> (scope.kind() == null ? "" : scope.kind().name())
+                        + "|" + (scope.parameterKey() == null ? "" : scope.parameterKey())
+                        + "|" + Boolean.TRUE.equals(scope.includeDescendants()))
+                .sorted()
+                .reduce((left, right) -> left + ";" + right)
+                .orElse("");
+    }
+
+    private static String blankToEmpty(String value, String fallback) {
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+        return fallback == null ? "" : fallback;
     }
 
     private static RoleSummary summary(IamRoleDefinitionEntity row) {

@@ -315,6 +315,17 @@ public final class IamMybatisTestAccess {
         }
     }
 
+    /** 在当前夹具数据源上建立只读解析用的目录服务。 */
+    public static com.ingot.cloud.iam.catalog.CatalogService catalogService(
+            com.ingot.cloud.iam.support.IamAccess access, DataSource source,
+            org.springframework.transaction.PlatformTransactionManager transactions) {
+        return new com.ingot.cloud.iam.catalog.CatalogService(access, audits(source),
+                new com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier(event -> { }),
+                catalogs(source),
+                new com.ingot.cloud.iam.support.SensitiveConfirmationGuard(command -> { }),
+                transactions);
+    }
+
     /** 在当前夹具数据源上建立目录 Repository。 */
     public static CatalogRepository catalogs(DataSource source) {
         return new CatalogRepository(mapper(source, IamApplicationMapper.class),

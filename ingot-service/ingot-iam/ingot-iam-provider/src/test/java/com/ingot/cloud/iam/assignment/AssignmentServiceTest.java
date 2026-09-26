@@ -153,6 +153,7 @@ class AssignmentServiceTest {
         var roles = new RoleService(access, audits, changes, new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
+                IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 transactions);
         service = new AssignmentService(access, audits, changes, roles,
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),

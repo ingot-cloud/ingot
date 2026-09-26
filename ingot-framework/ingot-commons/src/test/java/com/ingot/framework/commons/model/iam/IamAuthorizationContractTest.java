@@ -107,11 +107,11 @@ class IamAuthorizationContractTest {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             RoleRevision duplicate = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
                     input.baseRevisionId(), input.grants(), List.of(input.deltas().getFirst(), input.deltas().getFirst()),
-                    input.parameterDefinitions(), input.metadataOverrides());
+                    input.parameterDefinitions(), input.metadataOverrides(), input.displayDeltas());
             assertFalse(factory.getValidator().validate(duplicate).isEmpty());
             RoleRevision copied = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
                     input.baseRevisionId(), fixture("role-shared", RoleRevision.class).grants(), input.deltas(),
-                    input.parameterDefinitions(), input.metadataOverrides());
+                    input.parameterDefinitions(), input.metadataOverrides(), input.displayDeltas());
             assertFalse(factory.getValidator().validate(copied).isEmpty());
         }
     }
@@ -138,7 +138,7 @@ class IamAuthorizationContractTest {
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
         for (Class<?> type : List.of(AuthorizationContext.class, SubjectRef.class, Selection.class,
-                RoleRevision.class, AssignmentBatchInput.class, DelegationInput.class,
+                RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class, RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class,
                 FieldAccess.class, FieldRule.class, DirectoryRule.class,
                 CreatedResource.class, ObjectCapability.class,
                 Bootstrap.class, CurrentCapabilities.class, MemberRecord.class, TenantRecord.class,
@@ -209,6 +209,7 @@ class IamAuthorizationContractTest {
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<EntitlementRecord>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleSummary>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleRevision>>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<RoleGrantList>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AssignmentRecord>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AuditEntry>>>>() {}.getType(),

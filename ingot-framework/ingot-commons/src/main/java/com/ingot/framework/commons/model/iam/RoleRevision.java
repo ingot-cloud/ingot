@@ -19,6 +19,7 @@ import jakarta.validation.constraints.*;
  * @param deltas 租户定制差异，其余为空集合
  * @param parameterDefinitions 命名参数定义，键及类型须一致
  * @param metadataOverrides 定制元数据覆盖，其余为空
+ * @param displayDeltas 列表读时相对上一版本的展示差异，含操作名称；写入不使用
  */
 @Schema(description = "传输不可变角色版本及原始定义，不持久化租户合成后的完整副本")
 public record RoleRevision(
@@ -39,7 +40,10 @@ public record RoleRevision(
         @NotNull @Schema(description = "命名参数定义，键及类型须一致", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
         @Valid @Schema(description = "定制元数据覆盖，其余为空")
-        RoleMetadataOverrides metadataOverrides) {
+        RoleMetadataOverrides metadataOverrides,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        @Schema(description = "相对上一版本的展示差异，含操作名称；仅列表读填充")
+        List<@NotNull @Valid RoleDisplayDelta> displayDeltas) {
 
     /**
      * 复制输入集合，防止校验与消费之间被外部修改；必填空引用由 Bean Validation 拒绝。
@@ -53,6 +57,11 @@ public record RoleRevision(
         }
         if (parameterDefinitions != null) {
             parameterDefinitions = Collections.unmodifiableList(new ArrayList<>(parameterDefinitions));
+        }
+        if (displayDeltas != null) {
+            displayDeltas = Collections.unmodifiableList(new ArrayList<>(displayDeltas));
+        } else {
+            displayDeltas = List.of();
         }
     }
 

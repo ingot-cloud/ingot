@@ -11,6 +11,7 @@ import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.RoleCreateInput;
 import com.ingot.framework.commons.model.iam.RoleDefinitionDraft;
+import com.ingot.framework.commons.model.iam.RoleGrantList;
 import com.ingot.framework.commons.model.iam.RolePublishInput;
 import com.ingot.framework.commons.model.iam.RoleRevision;
 import com.ingot.framework.commons.model.iam.RoleSummary;
@@ -85,6 +86,18 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
     @GetMapping("/{id}")
     public R<ResourceDetail<RoleSummary>> get(@PathVariable String id) {
         return ok(roles.get(AuthorizationDomain.PLATFORM, true, id));
+    }
+
+    /**
+     * 读取共享角色最新已发布版本的当前绑定权限。
+     *
+     * @param id 角色 ID
+     * @return 当前绑定权限
+     */
+    @Operation(summary = "角色当前绑定权限")
+    @GetMapping("/{id}/grants")
+    public R<RoleGrantList> grants(@PathVariable String id) {
+        return ok(new RoleGrantList(roles.listCurrentGrants(AuthorizationDomain.PLATFORM, true, id)));
     }
 
     /**

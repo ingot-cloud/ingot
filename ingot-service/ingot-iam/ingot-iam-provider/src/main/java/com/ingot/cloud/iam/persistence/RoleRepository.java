@@ -217,6 +217,23 @@ public class RoleRepository {
     }
 
     /**
+     * 读取指定序号之前最近的已发布版本。
+     *
+     * @param roleId 角色 ID
+     * @param revision 当前版本序号
+     * @return 上一版本行，不存在时为空
+     */
+    public IamRoleRevisionEntity findPreviousRevision(long roleId, long revision) {
+        Page<IamRoleRevisionEntity> page = revisions.selectPage(new Page<>(1, 1, false),
+                Wrappers.<IamRoleRevisionEntity>lambdaQuery()
+                        .eq(IamRoleRevisionEntity::getRoleId, BigInteger.valueOf(roleId))
+                        .lt(IamRoleRevisionEntity::getRevision, BigInteger.valueOf(revision))
+                        .orderByDesc(IamRoleRevisionEntity::getRevision)
+                        .orderByDesc(IamRoleRevisionEntity::getId));
+        return page.getRecords().isEmpty() ? null : page.getRecords().getFirst();
+    }
+
+    /**
      * 读取角色最新不可变版本。
      *
      * @param roleId 角色 ID

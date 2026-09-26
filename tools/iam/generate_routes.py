@@ -92,6 +92,7 @@ def role_routes(domain, prefix, ns, shared=False):
         route(path, 'post', f'{prefix_id}CreateRole', '创建角色并发布首个版本', domain, f'{ns}:{kind}:create', 'RoleCreateInput', created, execution,
               'role-create' if domain == 'TENANT' and not shared else None),
         route(f'{path}/{{id}}', 'get', f'{prefix_id}GetRole', '角色元数据', domain, f'{ns}:{kind}:read', None, detail, execution),
+        route(f'{path}/{{id}}/grants', 'get', f'{prefix_id}ListRoleGrants', '角色当前绑定权限', domain, f'{ns}:{kind}:read', None, 'RRoleGrantList', execution),
         route(f'{path}/{{id}}', 'patch', f'{prefix_id}PatchRoleStatus', '启停角色', domain, f'{ns}:{kind}:status', 'ConfigurationStatusInput', created, execution),
         route(f'{path}/{{id}}', 'delete', f'{prefix_id}DeleteRole', '删除未引用角色', domain, f'{ns}:{kind}:delete', None, created, execution),
         route(f'{path}/{{id}}/revisions', 'get', f'{prefix_id}ListRoleRevisions', '角色版本', domain, f'{ns}:{kind}:read', None, revision_page, execution, query=PAGE),
