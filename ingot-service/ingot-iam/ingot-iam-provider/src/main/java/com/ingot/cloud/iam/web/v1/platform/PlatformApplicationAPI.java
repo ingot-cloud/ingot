@@ -5,6 +5,7 @@ import java.util.List;
 import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.ActionCatalogView;
+import com.ingot.framework.commons.model.iam.GrantCatalogResource;
 import com.ingot.framework.commons.model.iam.ActionDraft;
 import com.ingot.framework.commons.model.iam.ActionRecord;
 import com.ingot.framework.commons.model.iam.ActionUpdateInput;
@@ -262,6 +263,23 @@ public class PlatformApplicationAPI implements RShortcuts {
     @GetMapping("/{id}/action-catalog")
     public R<ActionCatalogView> getActionCatalog(@PathVariable String id) {
         return ok(catalog.getActionCatalog(id));
+    }
+
+    /**
+     * 按资源分页返回启用资源及其启用操作，供角色权限选择器组树。
+     *
+     * @param id 应用 ID
+     * @param page 从 1 开始的页码
+     * @param pageSize 每页资源数
+     * @return 授权选择目录页
+     */
+    @Operation(summary = "授权选择目录")
+    @GetMapping("/{id}/grant-catalog")
+    public R<PageResponse<GrantCatalogResource>> pageGrantCatalog(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(catalog.pageGrantCatalog(id, page, pageSize));
     }
 
     /**

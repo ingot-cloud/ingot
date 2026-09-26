@@ -32,6 +32,8 @@ import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ActionCatalogItem;
 import com.ingot.framework.commons.model.iam.ActionCatalogResource;
 import com.ingot.framework.commons.model.iam.ActionCatalogView;
+import com.ingot.framework.commons.model.iam.GrantCatalogAction;
+import com.ingot.framework.commons.model.iam.GrantCatalogResource;
 import com.ingot.framework.commons.model.iam.ActionCodes;
 import com.ingot.framework.commons.model.iam.ActionDraft;
 import com.ingot.framework.commons.model.iam.ApplicationBundleAction;
@@ -511,6 +513,34 @@ public class CatalogService {
                                 .map(this::catalogItem).toList()))
                 .toList();
         return new ActionCatalogView(text(application.getId()), application.getCode(), application.getName(), nodes);
+    }
+
+    /**
+     * 按资源分页返回启用资源及其启用操作，供角色权限选择器组树。
+     *
+     * @param applicationId 应用 ID
+     * @param page 从 1 开始的页码
+     * @param pageSize 每页资源数
+     * @return 授权选择目录页
+     */
+    public PageResponse<GrantCatalogResource> pageGrantCatalog(String applicationId, int page, int pageSize) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
+        long appId = IamIds.require(applicationId);
+        requireApplication(appId);
+        IamPages.require(page, pageSize);
+        Page<IamResourceEntity> rows = catalog.pageEnabledResources(appId, page, pageSize);
+        List<Long> resourceIds = rows.getRecords().stream().map(row -> row.getId().longValue()).toList();
+        Map<BigInteger, List<IamActionEntity>> actions = new LinkedHashMap<>();
+        for (IamActionEntity row : catalog.listEnabledActionsByResourceIds(appId, resourceIds)) {
+            actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
+        }
+        List<GrantCatalogResource> items = rows.getRecords().stream()
+                .map(resource -> new GrantCatalogResource(text(resource.getId()), resource.getCode(),
+                        resource.getName(), scopesOf(resource),
+                        actions.getOrDefault(resource.getId(), List.of()).stream()
+                                .map(this::grantCatalogAction).toList()))
+                .toList();
+        return IamPages.of(items, rows.getTotal(), page, pageSize);
     }
 
     /**
@@ -1266,6 +1296,15 @@ public class CatalogService {
     private ActionCatalogItem catalogItem(IamActionEntity row) {
         return new ActionCatalogItem(text(row.getId()), text(row.getResourceId()), row.getCode(), row.getName(),
                 statusOf(row.getEnabled()));
+    }
+
+    private GrantCatalogAction grantCatalogAction(IamActionEntity row) {
+        return new GrantCatalogAction(text(row.getId()), row.getCode(), row.getName());
+    }
+
+    private static List<ScopeKind> scopesOf(IamResourceEntity row) {
+        List<ScopeKind> scopes = IamJson.read(row.getScopeCapabilities(), SCOPES);
+        return scopes == null ? List.of() : scopes;
     }
 
     private static ActionRecord action(IamActionEntity row) {

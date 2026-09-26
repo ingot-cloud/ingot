@@ -71,6 +71,21 @@ public final class IamPages {
     }
 
     /**
+     * 组装非详情分页响应。
+     *
+     * @param items 当前页
+     * @param total 相同过滤条件下的总数
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param <T> 记录类型
+     * @return 分页信封
+     */
+    public static <T> PageResponse<T> of(List<T> items, long total, int page, int pageSize) {
+        require(page, pageSize);
+        return new PageResponse<>(items, total, page, pageSize);
+    }
+
+    /**
      * 组装导出等完整结果信封，不受单页上限约束。
      *
      * @param items 已按当前权限投影的全部记录

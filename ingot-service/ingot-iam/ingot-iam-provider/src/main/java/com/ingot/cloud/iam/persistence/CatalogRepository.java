@@ -309,6 +309,21 @@ public class CatalogRepository {
     }
 
     /**
+     * 分页列出应用内启用资源，供授权选择目录。
+     *
+     * @param applicationId 应用 ID
+     * @param page 从 1 开始
+     * @param pageSize 页大小
+     * @return 启用资源页
+     */
+    public Page<IamResourceEntity> pageEnabledResources(long applicationId, int page, int pageSize) {
+        return resources.selectPage(new Page<>(page, pageSize), Wrappers.<IamResourceEntity>lambdaQuery()
+                .eq(IamResourceEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .eq(IamResourceEntity::getEnabled, true)
+                .orderByAsc(IamResourceEntity::getId));
+    }
+
+    /**
      * 列出应用内全部资源，供操作目录组树。
      *
      * @param applicationId 应用 ID
@@ -475,6 +490,24 @@ public class CatalogRepository {
         return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
                 .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
                 .eq(IamActionEntity::getResourceId, BigInteger.valueOf(resourceId))
+                .orderByAsc(IamActionEntity::getId));
+    }
+
+    /**
+     * 列出指定资源集合下的启用操作，供授权选择目录组树。
+     *
+     * @param applicationId 应用 ID
+     * @param resourceIds 资源 ID
+     * @return 启用操作行；空集合返回空列表
+     */
+    public List<IamActionEntity> listEnabledActionsByResourceIds(long applicationId, Collection<Long> resourceIds) {
+        if (resourceIds == null || resourceIds.isEmpty()) {
+            return List.of();
+        }
+        return actions.selectList(Wrappers.<IamActionEntity>lambdaQuery()
+                .eq(IamActionEntity::getApplicationId, BigInteger.valueOf(applicationId))
+                .in(IamActionEntity::getResourceId, resourceIds.stream().map(BigInteger::valueOf).toList())
+                .eq(IamActionEntity::getEnabled, true)
                 .orderByAsc(IamActionEntity::getId));
     }
 

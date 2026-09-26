@@ -445,6 +445,32 @@ class CatalogServiceTest {
     }
 
     @Test
+    void pageGrantCatalogNestsEnabledActionsAndSkipsDisabled() {
+        jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
+                + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
+        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0),"
+                + "(22,1,'hidden','隐藏','[]','[]',FALSE,0),"
+                + "(23,1,'dept','部门','[]','[]',TRUE,0)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
+                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0),"
+                + "(12,1,21,'demo:member:off','停用查看',FALSE,0),"
+                + "(13,1,22,'demo:hidden:read','查看隐藏',TRUE,0),"
+                + "(14,1,23,'demo:dept:read','查看部门',TRUE,0)");
+
+        var first = catalog.pageGrantCatalog("1", 1, 1);
+        assertEquals(2, first.total());
+        assertEquals("21", first.items().getFirst().id());
+        assertEquals(List.of(ScopeKind.ALL), first.items().getFirst().scopeCapabilities());
+        assertEquals(1, first.items().getFirst().actions().size());
+        assertEquals("查看成员", first.items().getFirst().actions().getFirst().name());
+
+        var second = catalog.pageGrantCatalog("1", 2, 1);
+        assertEquals("23", second.items().getFirst().id());
+        assertEquals(1, second.items().getFirst().actions().size());
+    }
+
+    @Test
     void getActionCatalogGroupsResourcesAndActions() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
