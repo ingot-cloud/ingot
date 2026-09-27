@@ -79,7 +79,10 @@ class IamCommandContractTest {
             assertFalse(validator.validate(new MemberCreateInput("1", "n", null, List.of(primary, primary))).isEmpty());
             assertFalse(validator.validate(new MemberDepartmentInput("1",
                     List.of(primary, new MemberDepartmentBinding("12", true)))).isEmpty());
-            assertTrue(validator.validate(new MemberCreateInput("1", "n", null, List.of())).isEmpty());
+            MemberCreateInput created = new MemberCreateInput("1", "n", null, List.of());
+            assertTrue(validator.validate(created).isEmpty());
+            assertTrue(created.roleIds().isEmpty());
+            assertTrue(created.groupIds().isEmpty());
         }
     }
 

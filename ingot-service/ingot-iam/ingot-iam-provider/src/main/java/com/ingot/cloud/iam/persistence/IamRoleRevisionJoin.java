@@ -22,6 +22,16 @@ public class IamRoleRevisionJoin {
     private BigInteger id;
 
     /**
+     * 角色定义 ID。
+     */
+    private BigInteger roleId;
+
+    /**
+     * 角色名称。
+     */
+    private String name;
+
+    /**
      * 角色版本种类。
      */
     private RoleKind kind;

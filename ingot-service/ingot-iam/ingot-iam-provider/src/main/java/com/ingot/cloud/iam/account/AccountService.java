@@ -59,6 +59,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class AccountService {
     private static final String ACCOUNT_NOT_FOUND = "账号不存在";
+    private static final String MEMBERSHIP_EXISTS = "该账号已是平台成员";
     private final IamAccess access;
     private final ResourceAccess scopes;
     private final ObjectCapabilities capabilities;
@@ -160,6 +161,7 @@ public class AccountService {
      *
      * @param input 单一查找条件
      * @return 受限投影
+     * @throws BizException 添加平台成员时该账号已有成员资格
      */
     public ResourceDetail<AccountRecord> lookup(AccountLookupInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_LOOKUP);
@@ -177,6 +179,10 @@ public class AccountService {
             throw exception;
         }
         if (input.purpose() == AccountLookupPurpose.MEMBER_CREATE) {
+            if (input.domain() == AuthorizationDomain.PLATFORM
+                    && members.findPlatformByAccount(accountId) != null) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);
+            }
             AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
                     row.getPhone(), row.getEmail(), Boolean.TRUE.equals(row.getEnabled()),
                     credentials.locked(accountId), Boolean.TRUE.equals(row.getMustChangePassword()), null);

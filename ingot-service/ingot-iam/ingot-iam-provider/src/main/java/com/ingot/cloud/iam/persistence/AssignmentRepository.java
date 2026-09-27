@@ -265,6 +265,21 @@ public class AssignmentRepository {
     }
 
     /**
+     * 列出平台成员当前有效的直接分配，按 ID 升序。
+     *
+     * @param memberId 平台成员 ID
+     * @return 有效分配行
+     */
+    public List<IamRoleAssignmentEntity> listActivePlatformMember(long memberId) {
+        return assignments.selectList(Wrappers.<IamRoleAssignmentEntity>lambdaQuery()
+                .eq(IamRoleAssignmentEntity::getDomain, AuthorizationDomain.PLATFORM)
+                .eq(IamRoleAssignmentEntity::getSubjectType, SubjectType.MEMBER)
+                .eq(IamRoleAssignmentEntity::getPlatformMemberId, BigInteger.valueOf(memberId))
+                .eq(IamRoleAssignmentEntity::getStatus, GrantStatus.ACTIVE)
+                .orderByAsc(IamRoleAssignmentEntity::getId));
+    }
+
+    /**
      * 读取角色版本及其定义归属。
      *
      * @param id 角色版本 ID

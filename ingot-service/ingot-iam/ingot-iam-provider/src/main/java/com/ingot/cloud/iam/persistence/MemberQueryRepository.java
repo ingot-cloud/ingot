@@ -235,6 +235,17 @@ public class MemberQueryRepository {
     }
 
     /**
+     * 按全局账号读取平台成员资格，包含暂停与已移出。
+     *
+     * @param accountId 全局账号 ID
+     * @return 成员记录；该账号从未写入平台成员表时为空
+     */
+    public IamPlatformMemberEntity findPlatformByAccount(long accountId) {
+        return platformMembers.selectOne(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                .eq(IamPlatformMemberEntity::getAccountId, BigInteger.valueOf(accountId)));
+    }
+
+    /**
      * 按 ID 读取平台成员，包含已移出。
      *
      * @param memberId 平台成员 ID

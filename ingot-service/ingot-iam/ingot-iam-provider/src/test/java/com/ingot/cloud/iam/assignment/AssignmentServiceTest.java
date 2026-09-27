@@ -155,7 +155,7 @@ class AssignmentServiceTest {
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 transactions);
-        service = new AssignmentService(access, audits, changes, roles,
+        service = new AssignmentService(access, audits, changes, roles, IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),
                 transactions);
         governed = true;

@@ -9,9 +9,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.group.GroupService;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.GroupRepository;
 import com.ingot.cloud.iam.persistence.MemberQueryRepository;
@@ -42,6 +44,8 @@ import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
+import com.ingot.framework.commons.model.iam.MemberRoleReplaceInput;
+import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.PolicyScenario;
@@ -67,6 +71,8 @@ public class MemberQueryService {
     private final IamAuditWriter audits;
     private final MemberQueryRepository members;
     private final GroupRepository groups;
+    private final AssignmentService assignments;
+    private final GroupService groupCommands;
     private final TransactionTemplate transaction;
 
     /**
@@ -80,11 +86,14 @@ public class MemberQueryService {
      * @param audits 同事务审计
      * @param members 成员持久化
      * @param groups 用户组持久化
+     * @param assignments 直接角色写入
+     * @param groupCommands 用户组加入
      * @param transactionManager 同一数据源事务
      */
     public MemberQueryService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
                               FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members,
-                              GroupRepository groups, PlatformTransactionManager transactionManager) {
+                              GroupRepository groups, AssignmentService assignments, GroupService groupCommands,
+                              PlatformTransactionManager transactionManager) {
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -92,6 +101,8 @@ public class MemberQueryService {
         this.audits = audits;
         this.members = members;
         this.groups = groups;
+        this.assignments = assignments;
+        this.groupCommands = groupCommands;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -356,6 +367,33 @@ public class MemberQueryService {
     }
 
     /**
+     * 列出平台成员的简单直接角色。
+     *
+     * @param memberId 平台成员 ID
+     * @return 按名称排序的直接角色
+     */
+    public List<MemberRoleView> listDirectRoles(String memberId) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
+        long id = IamIds.require(memberId);
+        scopes.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
+        return assignments.listDirectRoles(AuthorizationDomain.PLATFORM, memberId);
+    }
+
+    /**
+     * 替换平台成员的简单直接角色。
+     *
+     * @param memberId 平台成员 ID
+     * @param input 目标角色 ID
+     * @return 替换后的直接角色
+     */
+    public List<MemberRoleView> replaceDirectRoles(String memberId, MemberRoleReplaceInput input) {
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_UPDATE);
+        long id = IamIds.require(memberId);
+        scopes.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_UPDATE, id);
+        return assignments.replaceDirectRoles(AuthorizationDomain.PLATFORM, memberId, input.roleIds());
+    }
+
+    /**
      * 把已有账号关联为当前域成员。
      *
      * @param domain 接口管理域
@@ -366,6 +404,10 @@ public class MemberQueryService {
         ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_MEMBER_CREATE : IamAction.TENANT_MEMBER_CREATE);
         if (domain == AuthorizationDomain.PLATFORM && !input.departments().isEmpty()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (domain != AuthorizationDomain.PLATFORM
+                && (!input.roleIds().isEmpty() || !input.groupIds().isEmpty())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         Set<String> departmentIds = new LinkedHashSet<>();
@@ -401,6 +443,15 @@ public class MemberQueryService {
             }
             audits.write(actor.context(), access.nextId(), "member", IamIds.text(id), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, displayName), Map.of("member", "0"));
+            if (domain == AuthorizationDomain.PLATFORM) {
+                if (!input.roleIds().isEmpty()) {
+                    assignments.grantDirectRoles(domain, IamIds.text(id), input.roleIds());
+                }
+                if (!input.groupIds().isEmpty()) {
+                    access.require(domain, IamAction.PLATFORM_GROUP_UPDATE);
+                    groupCommands.addPlatformMemberToGroups(id, input.groupIds());
+                }
+            }
             return new CreatedResource(IamIds.text(id), "0");
         });
     }

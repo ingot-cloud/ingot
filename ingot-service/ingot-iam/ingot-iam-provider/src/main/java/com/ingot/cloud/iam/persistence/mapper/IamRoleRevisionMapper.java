@@ -58,7 +58,7 @@ public interface IamRoleRevisionMapper extends BaseMapper<IamRoleRevisionEntity>
      * @return 联查投影，不存在时为空
      */
     @Select("""
-            SELECT r.id,r.kind,d.enabled,d.domain,d.tenant_id FROM iam_role_revision r
+            SELECT r.id,r.kind,r.role_id,d.name,d.enabled,d.domain,d.tenant_id FROM iam_role_revision r
               JOIN iam_role_definition d ON d.id=r.role_id
              WHERE r.id=#{id}
             """)

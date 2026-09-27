@@ -21,6 +21,8 @@ import jakarta.validation.constraints.NotNull;
  * @param displayName 当前域显示名，可空
  * @param avatar 当前域头像，可空；可提交时效链接或对象路径，入库只保存路径
  * @param departments 租户任职；平台必须为空且最多一个主部门
+ * @param roleIds 选填的直接角色定义 ID，默认为空；平台创建时可写入最新已发布版本
+ * @param groupIds 选填的平台用户组 ID，默认为空；租户路径拒绝非空
  */
 @Schema(description = "把已有全局账号关联为当前域成员，不创建或改写登录凭证")
 public record MemberCreateInput(
@@ -31,15 +33,34 @@ public record MemberCreateInput(
         @Schema(description = "当前域头像，可空；可提交时效链接或对象路径，入库只保存路径")
         String avatar,
         @NotNull @Schema(description = "租户任职；平台必须为空且最多一个主部门", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid MemberDepartmentBinding> departments) {
+        List<@NotNull @Valid MemberDepartmentBinding> departments,
+        @Schema(description = "选填的直接角色定义 ID，默认为空")
+        List<String> roleIds,
+        @Schema(description = "选填的用户组 ID，默认为空")
+        List<String> groupIds) {
 
     /**
-     * 规范化任职集合。
+     * 兼容仅提交任职的创建请求。
+     *
+     * @param accountId 已存在的全局账号 ID
+     * @param displayName 当前域显示名，可空
+     * @param avatar 当前域头像，可空
+     * @param departments 租户任职
+     */
+    public MemberCreateInput(String accountId, String displayName, String avatar,
+                             List<MemberDepartmentBinding> departments) {
+        this(accountId, displayName, avatar, departments, List.of(), List.of());
+    }
+
+    /**
+     * 规范化任职与选填集合。
      */
     public MemberCreateInput {
         if (departments != null) {
             departments = Collections.unmodifiableList(new ArrayList<>(departments));
         }
+        roleIds = copyIds(roleIds);
+        groupIds = copyIds(groupIds);
     }
 
     /**
@@ -66,5 +87,12 @@ public record MemberCreateInput(
             }
         }
         return true;
+    }
+
+    private static List<String> copyIds(List<String> ids) {
+        if (ids == null) {
+            return List.of();
+        }
+        return Collections.unmodifiableList(new ArrayList<>(ids));
     }
 }

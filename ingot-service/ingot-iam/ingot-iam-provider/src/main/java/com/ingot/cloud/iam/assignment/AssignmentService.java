@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +18,10 @@ import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.AssignmentRepository;
 import com.ingot.cloud.iam.delegation.DelegationAdmission;
 import com.ingot.cloud.iam.persistence.IamRoleRevisionJoin;
+import com.ingot.cloud.iam.persistence.RoleRepository;
 import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
+import com.ingot.cloud.iam.persistence.entity.IamRoleDefinitionEntity;
+import com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity;
 import com.ingot.cloud.iam.role.RoleService;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamAdmission;
@@ -41,6 +47,7 @@ import com.ingot.framework.commons.model.iam.GrantStatus;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.ImpactSummary;
+import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -67,10 +74,12 @@ public class AssignmentService {
     private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
     };
     private static final String ASSIGNMENT = "assignment";
+    private static final String EMPTY_SCOPE_JSON = "{}";
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final AuthorizationChangeNotifier changes;
     private final RoleService roles;
+    private final RoleRepository roleStore;
     private final AssignmentRepository assignments;
     private final DelegationAdmission delegations;
     private final TransactionTemplate transaction;
@@ -83,18 +92,20 @@ public class AssignmentService {
      * @param audits 同事务审计
      * @param changes 授权热缓存失效
      * @param roles 角色版本合成
+     * @param roleStore 角色定义与最新版本
      * @param assignments 分配持久化
      * @param delegations 委派派生授权准入
      * @param transactionManager 同一数据源事务
      */
     public AssignmentService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-                                 RoleService roles, AssignmentRepository assignments,
+                                 RoleService roles, RoleRepository roleStore, AssignmentRepository assignments,
                                  DelegationAdmission delegations,
                                  PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.roles = roles;
+        this.roleStore = roleStore;
         this.assignments = assignments;
         this.delegations = delegations;
         this.transaction = new TransactionTemplate(transactionManager);
@@ -234,6 +245,72 @@ public class AssignmentService {
                     text(current.getDelegationGrantId()), id);
             changes.markAll();
             return new CreatedResource(id, version(current.getVersion()));
+        });
+    }
+
+    /**
+     * 读取平台成员的简单直接角色，不含用户组继承或带范围、有效期、委派来源的授权。
+     *
+     * @param domain 接口管理域
+     * @param memberId 平台成员 ID
+     * @return 按名称排序的直接角色
+     */
+    public List<MemberRoleView> listDirectRoles(AuthorizationDomain domain, String memberId) {
+        access.require(domain, IamAction.PLATFORM_MEMBER_READ);
+        requirePlatform(domain);
+        long id = IamIds.require(memberId);
+        if (!assignments.platformMemberExists(id)) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        return collectDirectRoles(id);
+    }
+
+    /**
+     * 为新建平台成员追加简单直接角色，调用方须已处于同一事务。
+     *
+     * @param domain 接口管理域
+     * @param memberId 平台成员 ID
+     * @param roleIds 角色定义 ID
+     */
+    public void grantDirectRoles(AuthorizationDomain domain, String memberId, List<String> roleIds) {
+        requirePlatform(domain);
+        IamAdmission admission = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_CREATE);
+        grantDirectRoles(domain, admission, IamIds.require(memberId), uniqueIds(roleIds));
+    }
+
+    /**
+     * 替换平台成员的简单直接角色；带范围、有效期或委派来源的授权保持不变。
+     *
+     * @param domain 接口管理域
+     * @param memberId 平台成员 ID
+     * @param roleIds 目标角色定义 ID
+     * @return 替换后的直接角色
+     */
+    public List<MemberRoleView> replaceDirectRoles(AuthorizationDomain domain, String memberId, List<String> roleIds) {
+        access.require(domain, IamAction.PLATFORM_MEMBER_UPDATE);
+        requirePlatform(domain);
+        IamAdmission admission = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_CREATE);
+        long id = IamIds.require(memberId);
+        List<String> desired = uniqueIds(roleIds);
+        return transaction.execute(status -> {
+            if (!assignments.platformMemberExists(id)) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+            Map<String, List<IamRoleAssignmentEntity>> current = simpleAssignmentsByRole(id);
+            for (Map.Entry<String, List<IamRoleAssignmentEntity>> entry : current.entrySet()) {
+                if (desired.contains(entry.getKey())) {
+                    continue;
+                }
+                for (IamRoleAssignmentEntity row : entry.getValue()) {
+                    if (assignments.revoke(row.getId().longValueExact(), row.getVersion()) != 1) {
+                        throw new BizException(IamReasonCode.REVISION_CONFLICT);
+                    }
+                }
+            }
+            List<String> adding = desired.stream().filter(roleId -> !current.containsKey(roleId)).toList();
+            grantDirectRoles(domain, admission, id, adding);
+            changes.markAll();
+            return collectDirectRoles(id);
         });
     }
 
@@ -468,6 +545,101 @@ public class AssignmentService {
 
     private static String text(BigInteger id) {
         return id == null ? null : IamIds.text(id.longValue());
+    }
+
+    private void grantDirectRoles(AuthorizationDomain domain, IamAdmission admission, long memberId,
+                                  List<String> roleIds) {
+        ActiveIdentity actor = admission.actor();
+        for (String roleId : roleIds) {
+            AssignmentInput item = simpleAssignment(memberId, latestPublished(domain, roleId));
+            List<ValidationIssue> errors = validate(domain, admission, item, null);
+            if (!errors.isEmpty()) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            insert(domain, actor, item);
+        }
+        if (!roleIds.isEmpty()) {
+            changes.markAll();
+        }
+    }
+
+    private List<MemberRoleView> collectDirectRoles(long memberId) {
+        Map<String, MemberRoleView> rolesById = new LinkedHashMap<>();
+        for (IamRoleAssignmentEntity row : assignments.listActivePlatformMember(memberId)) {
+            if (!isSimpleDirect(row)) {
+                continue;
+            }
+            IamRoleRevisionJoin revision = assignments.findRevision(row.getRevisionId().longValueExact());
+            if (revision == null || revision.getRoleId() == null) {
+                continue;
+            }
+            String roleId = IamIds.text(revision.getRoleId().longValueExact());
+            String name = revision.getName() == null || revision.getName().isBlank() ? roleId : revision.getName();
+            rolesById.putIfAbsent(roleId, new MemberRoleView(roleId, name));
+        }
+        return rolesById.values().stream().sorted(Comparator.comparing(MemberRoleView::name)).toList();
+    }
+
+    private Map<String, List<IamRoleAssignmentEntity>> simpleAssignmentsByRole(long memberId) {
+        Map<String, List<IamRoleAssignmentEntity>> grouped = new LinkedHashMap<>();
+        for (IamRoleAssignmentEntity row : assignments.listActivePlatformMember(memberId)) {
+            if (!isSimpleDirect(row)) {
+                continue;
+            }
+            IamRoleRevisionJoin revision = assignments.findRevision(row.getRevisionId().longValueExact());
+            if (revision == null || revision.getRoleId() == null) {
+                continue;
+            }
+            grouped.computeIfAbsent(IamIds.text(revision.getRoleId().longValueExact()), key -> new ArrayList<>())
+                    .add(row);
+        }
+        return grouped;
+    }
+
+    private RoleRevisionRef latestPublished(AuthorizationDomain domain, String roleId) {
+        long id = IamIds.require(roleId);
+        IamRoleDefinitionEntity definition = roleStore.findDefinition(domain, false, null, id);
+        if (definition == null || !Boolean.TRUE.equals(definition.getEnabled())) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        IamRoleRevisionEntity latest = roleStore.latestRevision(id);
+        if (latest == null || latest.getId() == null) {
+            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        }
+        return new RoleRevisionRef(latest.getKind(), IamIds.text(latest.getId().longValueExact()));
+    }
+
+    private static AssignmentInput simpleAssignment(long memberId, RoleRevisionRef revision) {
+        return new AssignmentInput(new SubjectRef(SubjectType.MEMBER, IamIds.text(memberId)), revision, Map.of(),
+                null, null, null);
+    }
+
+    private static boolean isSimpleDirect(IamRoleAssignmentEntity row) {
+        if (row.getSource() != AssignmentSource.MANUAL || row.getDelegationGrantId() != null
+                || row.getValidUntil() != null) {
+            return false;
+        }
+        String bindings = row.getScopeBindings();
+        return bindings == null || bindings.isBlank() || EMPTY_SCOPE_JSON.equals(bindings.trim());
+    }
+
+    private static List<String> uniqueIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        LinkedHashSet<String> unique = new LinkedHashSet<>();
+        for (String id : ids) {
+            if (id != null && !id.isBlank()) {
+                unique.add(id.trim());
+            }
+        }
+        return List.copyOf(unique);
+    }
+
+    private static void requirePlatform(AuthorizationDomain domain) {
+        if (domain != AuthorizationDomain.PLATFORM) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private static IamAction action(AuthorizationDomain domain, AccessKind kind) {

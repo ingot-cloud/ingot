@@ -41,6 +41,7 @@ import com.ingot.framework.commons.model.iam.ReferenceImpactPreview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.Selection;
 import com.ingot.framework.commons.model.iam.ValidationIssue;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -114,6 +115,47 @@ public class GroupService {
                         version(row.getVersion())))
                 .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 把平台成员加入指定用户组；已在组内的项跳过。
+     *
+     * @param memberId 平台成员 ID
+     * @param groupIds 用户组 ID
+     */
+    public void addPlatformMemberToGroups(long memberId, List<String> groupIds) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return;
+        }
+        LinkedHashSet<String> unique = new LinkedHashSet<>();
+        for (String groupId : groupIds) {
+            if (groupId != null && !groupId.isBlank()) {
+                unique.add(groupId.trim());
+            }
+        }
+        transaction.execute(status -> {
+            if (!groups.existsActivePlatformMember(memberId)) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+            for (String groupId : unique) {
+                long id = IamIds.require(groupId);
+                if (groups.findPlatform(id) == null) {
+                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                }
+                boolean already = groups.platformMemberIds(id).stream()
+                        .anyMatch(current -> current.longValue() == memberId);
+                if (already) {
+                    continue;
+                }
+                try {
+                    groups.insertPlatformMember(id, memberId);
+                } catch (DuplicateKeyException exception) {
+                    // 并发加入同一组时视为已成功
+                }
+            }
+            changes.markAll();
+            return null;
+        });
     }
 
     /**

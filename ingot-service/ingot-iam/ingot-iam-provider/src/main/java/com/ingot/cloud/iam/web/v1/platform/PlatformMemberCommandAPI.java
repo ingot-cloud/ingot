@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import java.util.List;
+
 import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
@@ -9,6 +11,8 @@ import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
+import com.ingot.framework.commons.model.iam.MemberRoleReplaceInput;
+import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberStatusInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -102,6 +107,32 @@ public class PlatformMemberCommandAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
         return ok(queries.listPlatformGroups(id, page, pageSize));
+    }
+
+    /**
+     * 列出平台成员的简单直接角色。
+     *
+     * @param id 平台成员 ID
+     * @return 角色 ID 与名称
+     */
+    @Operation(summary = "成员直接角色")
+    @GetMapping("/{id}/roles")
+    public R<List<MemberRoleView>> roles(@PathVariable String id) {
+        return ok(queries.listDirectRoles(id));
+    }
+
+    /**
+     * 替换平台成员的简单直接角色。
+     *
+     * @param id 平台成员 ID
+     * @param input 目标角色 ID
+     * @return 替换后的直接角色
+     */
+    @Operation(summary = "替换成员直接角色")
+    @PutMapping("/{id}/roles")
+    public R<List<MemberRoleView>> replaceRoles(@PathVariable String id,
+                                                @Valid @RequestBody MemberRoleReplaceInput input) {
+        return ok(queries.replaceDirectRoles(id, input));
     }
 
     /**

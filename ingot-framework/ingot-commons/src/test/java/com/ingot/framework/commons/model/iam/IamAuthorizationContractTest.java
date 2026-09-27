@@ -152,6 +152,7 @@ class IamAuthorizationContractTest {
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
                 RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
                 UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class,
+                MemberRoleView.class, MemberRoleReplaceInput.class,
                 MemberDepartmentInput.class, TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class,
                 DepartmentDraft.class, DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class,
                 ResourceDraft.class, ResourceUpdateInput.class, ActionDraft.class, ActionUpdateInput.class,
@@ -249,6 +250,8 @@ class IamAuthorizationContractTest {
         assertTrue(schemas.get("ExportTask").getRequired().containsAll(List.of("id", "status", "version", "expiresAt")));
         assertFalse(schemas.get("ExportTask").getRequired().contains("failureCode"));
         assertTrue(schemas.get("AccountLookupInput").getRequired().contains("purpose"));
+        assertFalse(schemas.get("AccountLookupInput").getRequired().contains("domain"));
+        assertTrue(schemas.get("AccountLookupInput").getProperties().containsKey("domain"));
         assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("exactlyOneCriterion"));
         assertFalse(schemas.get("AccountLookupInput").getProperties().containsKey("isExactlyOneCriterion"));
         assertNotNull(schemas.get("RExportTask"));
