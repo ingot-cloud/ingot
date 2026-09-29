@@ -3,9 +3,10 @@ name: in-framework
 description: >-
   Enforces Ingot backend framework coding rules: API wall-clock time in the
   client timezone with UTC storage, business enums, JavaDoc, OSS object paths,
-  constructor injection, and named constants. Use when writing or changing Java
-  business code, time fields, createdAt/updatedAt, enums, JavaDoc,
-  OSS/avatar/attachment fields, Spring Bean injection, or magic literals.
+  constructor injection, named constants, and association-list queries. Use when
+  writing or changing Java business code, time fields, createdAt/updatedAt,
+  enums, JavaDoc, OSS/avatar/attachment fields, Spring Bean injection, magic
+  literals, or APIs that list a target's bound or related records.
 ---
 
 # Ingot 框架编码规范
@@ -23,6 +24,7 @@ description: >-
 - [ ] OSS：入库 bucket/objectName，响应 @OssUrl
 - [ ] 注入：private final + @RequiredArgsConstructor；不新增字段/Setter 注入
 - [ ] JavaDoc：类型、对外方法、对外字段按 docs/standards/Javadoc.md 一并写上
+- [ ] 关联列表：target 的绑定数据走独立接口，SQL 按关联表过滤分页，禁止用 ids 回查父列表
 ```
 
 ## 索引
@@ -35,6 +37,7 @@ description: >-
 | 头像、附件、OSS | [references/oss.md](references/oss.md) |
 | Spring Bean 依赖 | [references/injection.md](references/injection.md) |
 | 类型或对外 API 注释 | [references/javadoc.md](references/javadoc.md) |
+| 关联对象列表、绑定查询、ids 回显 | [references/association-lists.md](references/association-lists.md) |
 
 ## Examples
 
