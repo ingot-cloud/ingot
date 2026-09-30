@@ -175,11 +175,36 @@ public class PlatformAuthorizationEditor {
                 AuthorizationCandidateKind.ACTION, AuthorizationCandidateKind.OBJECT).contains(kind)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
-        var clauses = evaluator.evaluate(actor.context()).scope(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()).clauses();
-        List<BigInteger> visible = clauses.stream().anyMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all) ? null
-                : clauses.stream().flatMap(clause -> clause.objectIds().stream()).distinct().map(BigInteger::new).toList();
+        var view = evaluator.evaluate(actor.context());
+        List<BigInteger> visible = kind == AuthorizationCandidateKind.MEMBER
+                ? visibleIds(view.scope(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()), actor.context().memberId())
+                : null;
+        if (kind == AuthorizationCandidateKind.OBJECT) {
+            var actions = objectActions(null, null, actionId, null);
+            if (actions.isEmpty()) { return unsupported(page, pageSize); }
+            String code = actions.getFirst().code();
+            if (!code.startsWith(CORE_APPLICATION + ":")) { return unsupported(page, pageSize); }
+            String resource = code.substring(code.indexOf(':') + 1, code.lastIndexOf(':'));
+            PlatformScopeObjectResource adapter = PlatformScopeObjectResource.find(resource);
+            if (adapter == null) { return unsupported(page, pageSize); }
+            IamAction read = adapter.getReadAction();
+            visible = view.actionCodes().contains(read.getCode())
+                    ? visibleIds(view.scope(read.getCode()), adapter == PlatformScopeObjectResource.MEMBER
+                            ? actor.context().memberId() : null)
+                    : List.of();
+        }
         return query(actor, kind, null, null, null, null, actionId, applicationId, keyword, ids, page, pageSize,
-                kind == AuthorizationCandidateKind.MEMBER || kind == AuthorizationCandidateKind.OBJECT ? visible : null);
+                visible);
+    }
+
+    private static List<BigInteger> visibleIds(com.ingot.cloud.iam.evaluation.ResolvedActionScope scope,
+            String selfMemberId) {
+        if (scope.clauses().stream().anyMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all)) { return null; }
+        return scope.clauses().stream().flatMap(clause -> {
+            var ids = new ArrayList<>(clause.objectIds());
+            if (clause.self() && selfMemberId != null) { ids.add(selfMemberId); }
+            return ids.stream();
+        }).distinct().map(BigInteger::new).toList();
     }
 
     private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
@@ -259,7 +284,9 @@ public class PlatformAuthorizationEditor {
                         new RoleRevisionRef(row.kind(), id), parameters, grants,
                         operationOptions.stream().filter(option -> operationIds.contains(option.id())).toList(), null);
             }
-            return new AuthorizationOption(id, row.name(), null, null, null, null, null, null);
+            return new AuthorizationOption(id, row.name(),
+                    kind == AuthorizationCandidateKind.ACTION ? row.resourceName() : null,
+                    null, null, null, null, null);
         }).toList();
         return new AuthorizationCandidatePage(options, candidates.count(query), page, size, true, null);
     }

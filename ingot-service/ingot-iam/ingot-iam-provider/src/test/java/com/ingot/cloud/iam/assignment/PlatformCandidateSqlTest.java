@@ -29,11 +29,17 @@ class PlatformCandidateSqlTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,display_name VARCHAR(100),status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_platform_group(id BIGINT PRIMARY KEY,name VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_platform_group_member(group_id BIGINT,member_id BIGINT)");
+        jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),enabled BOOLEAN)");
+        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY,application_id BIGINT,name VARCHAR(100),enabled BOOLEAN)");
+        jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY,application_id BIGINT,resource_id BIGINT,name VARCHAR(100),enabled BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_delegation_recipient_member(delegation_id BIGINT,platform_member_id BIGINT)");
         jdbc.update("INSERT INTO iam_platform_member VALUES(1,'张三','ACTIVE'),(2,'李四','ACTIVE'),(3,'王五','ACTIVE')");
         jdbc.update("INSERT INTO iam_platform_group VALUES(10,'允许组'),(11,'越界组'),(12,'空组')");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES(10,1),(10,2),(11,1),(11,3)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(60,1),(60,2)");
+        jdbc.update("INSERT INTO iam_application VALUES(100,'平台应用','PLATFORM',TRUE),(200,'租户应用','TENANT',TRUE)");
+        jdbc.update("INSERT INTO iam_resource VALUES(210,100,'成员管理',TRUE),(211,100,'用户组管理',TRUE),(212,200,'租户资源',TRUE)");
+        jdbc.update("INSERT INTO iam_action VALUES(300,100,210,'创建',TRUE),(301,100,211,'创建',TRUE),(302,200,212,'创建',TRUE)");
         mapper = IamMybatisTestAccess.mapper(source, AuthorizationCandidateMapper.class);
     }
     @Test
@@ -55,6 +61,34 @@ class PlatformCandidateSqlTest {
         var second = query(AuthorizationCandidateKind.MEMBER, null, List.of(), 2, 2);
         assertEquals(3, mapper.count(first)); assertEquals(2, mapper.page(first).size());
         assertEquals(BigInteger.valueOf(3), mapper.page(second).getFirst().id());
+    }
+
+    @Test
+    void platformObjectCandidatesDoNotIncludeTenantApplications() {
+        var query = new AuthorizationCandidateSql.Query(AuthorizationCandidateKind.OBJECT, BigInteger.ONE,
+                null, null, "application", "%", List.of(), null, 0, 20);
+        assertEquals(1, mapper.count(query));
+        assertEquals(BigInteger.valueOf(100), mapper.page(query).getFirst().id());
+    }
+    @Test
+    void actionCandidatesSearchResourceAndActionNamesWithinTheSelectedApplication() {
+        var byResource = actionQuery("%用户组管理%", 0, 20);
+        assertEquals(1, mapper.count(byResource));
+        var groupCreate = mapper.page(byResource).getFirst();
+        assertEquals(BigInteger.valueOf(301), groupCreate.id());
+        assertEquals("创建", groupCreate.name());
+        assertEquals("用户组管理", groupCreate.resourceName());
+
+        var first = actionQuery("%创建%", 0, 1);
+        var second = actionQuery("%创建%", 1, 1);
+        assertEquals(2, mapper.count(first));
+        assertEquals(BigInteger.valueOf(300), mapper.page(first).getFirst().id());
+        assertEquals(BigInteger.valueOf(301), mapper.page(second).getFirst().id());
+    }
+
+    private static AuthorizationCandidateSql.Query actionQuery(String keyword, int offset, int size) {
+        return new AuthorizationCandidateSql.Query(AuthorizationCandidateKind.ACTION, BigInteger.ONE,
+                null, BigInteger.valueOf(100), null, keyword, List.of(), null, offset, size);
     }
     private static AuthorizationCandidateSql.Query query(AuthorizationCandidateKind kind, List<BigInteger> allowed,
             List<BigInteger> ids, int offset, int size) {

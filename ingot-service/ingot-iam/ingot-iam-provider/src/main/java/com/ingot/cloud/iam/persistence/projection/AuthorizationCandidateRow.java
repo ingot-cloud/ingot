@@ -6,9 +6,11 @@ package com.ingot.cloud.iam.persistence.projection;
  * @param name 对象显示名称
  * @param kind 角色版本种类
  * @param revision 角色版本号
+ * @param resourceName 操作候选所属资源名称；其他候选为空
  * @author jy
  * @since 1.0.0
  */
 public record AuthorizationCandidateRow(java.math.BigInteger id, String name,
-        com.ingot.framework.commons.model.iam.RoleKind kind, java.math.BigInteger revision) {
+        com.ingot.framework.commons.model.iam.RoleKind kind, java.math.BigInteger revision,
+        String resourceName) {
 }

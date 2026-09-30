@@ -15,6 +15,7 @@ import com.ingot.cloud.iam.evaluation.AuthorizationEvaluationRepository;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.assignment.PlatformScopeObjectResource;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.ObjectScopeSql;
 import com.ingot.cloud.iam.persistence.entity.IamApplicationEntity;
@@ -234,8 +235,9 @@ public class DiagnoseAuditService {
             return;
         }
         if (actor.context().domain() == AuthorizationDomain.PLATFORM) {
-            if (!scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
-                    IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode(), targetId)) {
+            PlatformScopeObjectResource resource = PlatformScopeObjectResource.find(resourceOf(actionCode));
+            if (resource == null || !scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
+                    resource.getReadAction().getCode(), targetId)) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
             return;

@@ -17,6 +17,7 @@ import com.ingot.framework.commons.error.BizException;
  */
 public final class AuthorizationCandidateSql {
     private static final String LIMIT = " ORDER BY x.id LIMIT #{q.size} OFFSET #{q.offset}";
+    private static final String PLATFORM_DOMAIN = AuthorizationDomain.PLATFORM.getValue();
     private static final String ROLE_BOUNDARY = "d.domain='" + AuthorizationDomain.PLATFORM.getValue()
             + "' AND d.tenant_id IS NULL AND d.enabled=TRUE";
     private static final String REVISION_BOUNDARY = "r.kind IN ('" + RoleKind.PLATFORM_CUSTOM.getValue()
@@ -29,7 +30,9 @@ public final class AuthorizationCandidateSql {
      */
     public static String page(Map<String, Object> parameters) {
         Query q = (Query) parameters.get("q");
-        return "<script>SELECT x.id,x.name,x.kind,x.revision FROM (" + source(q) + ") x WHERE "
+        String resourceName = q.kind() == AuthorizationCandidateKind.ACTION
+                ? ",x.resource_name" : ",NULL AS resource_name";
+        return "<script>SELECT x.id,x.name,x.kind,x.revision" + resourceName + " FROM (" + source(q) + ") x WHERE "
                 + filters(q) + LIMIT + "</script>";
     }
     /**
@@ -100,7 +103,9 @@ public final class AuthorizationCandidateSql {
     public record RoleQuery(BigInteger roleId, String keyword, List<BigInteger> ids,
             List<BigInteger> allowedRevisionIds, int offset, int size) { }
     private static String filters(Query q) {
-        String sql = "x.name LIKE #{q.keyword} ESCAPE '!'";
+        String sql = q.kind() == AuthorizationCandidateKind.ACTION
+                ? "(x.name LIKE #{q.keyword} ESCAPE '!' OR x.resource_name LIKE #{q.keyword} ESCAPE '!')"
+                : "x.name LIKE #{q.keyword} ESCAPE '!'";
         if (!q.ids().isEmpty()) {
             sql += " AND x.id IN <foreach collection='q.ids' item='id' open='(' close=')' separator=','>#{id}</foreach>";
         }
@@ -122,7 +127,7 @@ public final class AuthorizationCandidateSql {
             case MEMBER -> "SELECT id,display_name AS name,NULL AS kind,NULL AS revision FROM iam_platform_member WHERE status='ACTIVE'";
             case GROUP -> "SELECT g.id,g.name,NULL AS kind,NULL AS revision FROM iam_platform_group g" + groupFilter(q);
             case APPLICATION -> "SELECT id,name,NULL AS kind,NULL AS revision FROM iam_application WHERE domain='PLATFORM' AND enabled=TRUE";
-            case ACTION -> "SELECT a.id,a.name,NULL AS kind,NULL AS revision FROM iam_action a JOIN iam_application app ON app.id=a.application_id "
+            case ACTION -> "SELECT a.id,a.name,NULL AS kind,NULL AS revision,r.name AS resource_name FROM iam_action a JOIN iam_application app ON app.id=a.application_id "
                     + "JOIN iam_resource r ON r.id=a.resource_id WHERE app.domain='PLATFORM' AND app.enabled=TRUE AND a.enabled=TRUE AND r.enabled=TRUE"
                     + (q.applicationId() == null ? "" : " AND app.id=#{q.applicationId}");
             case OBJECT -> objectSource(q.objectResource());
@@ -145,18 +150,22 @@ public final class AuthorizationCandidateSql {
             case GROUP -> { table="iam_platform_group"; label="name"; }
             case ENTITLEMENT, TENANT -> { table="iam_tenant"; label="name"; where=" WHERE deleted_at IS NULL"; }
             case ACCOUNT -> { table="iam_account"; label="username"; where=" WHERE deleted_at IS NULL"; }
-            case APPLICATION -> { table="iam_application"; label="name"; }
-            case RESOURCE -> { table="iam_resource"; label="name"; }
-            case ACTION -> { table="iam_action"; label="name"; }
-            case MENU -> { table="iam_menu"; label="name"; }
+            case APPLICATION -> { table="iam_application"; label="name"; where=" WHERE domain='" + PLATFORM_DOMAIN + "'"; }
+            case RESOURCE -> { table="iam_resource"; label="name"; where=platformApplication(); }
+            case ACTION -> { table="iam_action"; label="name"; where=platformApplication(); }
+            case MENU -> { table="iam_menu"; label="name"; where=platformApplication(); }
             case ROLE -> { table="iam_role_definition"; label="name"; where=" WHERE domain='PLATFORM'"; }
-            case SHARED_ROLE -> { table="iam_role_definition"; label="name"; where=" WHERE kind='SHARED'"; }
+            case SHARED_ROLE -> { table="iam_role_definition"; label="name"; where=" WHERE kind='SHARED' AND domain='" + PLATFORM_DOMAIN + "'"; }
             case PLAN -> { table="iam_plan"; label="name"; }
             case ASSIGNMENT -> { table="iam_role_assignment"; label="CAST(id AS CHAR)"; where=" WHERE domain='PLATFORM'"; }
             case DELEGATION -> { table="iam_delegation_grant"; label="CAST(id AS CHAR)"; where=" WHERE domain='PLATFORM'"; }
             default -> throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return "SELECT id," + label + " AS name,NULL AS kind,NULL AS revision FROM " + table + where;
+    }
+
+    private static String platformApplication() {
+        return " WHERE application_id IN (SELECT id FROM iam_application WHERE domain='" + PLATFORM_DOMAIN + "')";
     }
     /**
      * <p>已由服务端验证的候选查询，不接收用户 SQL、表名或列名。</p>

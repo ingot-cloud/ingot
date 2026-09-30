@@ -4,7 +4,7 @@ package com.ingot.framework.commons.model.iam;
  * <p>分页授权配置候选，固定版本携带参数与操作，委派携带可披露的完整限制。</p>
  * @param id 候选实际标识
  * @param name 可披露名称
- * @param summary 授权依据摘要
+ * @param summary 候选上下文摘要；委派为授权依据，诊断操作为所属资源名称
  * @param roleRevisionRef 固定角色版本引用
  * @param parameterDefinitions 该版本的范围参数
  * @param grants 该版本合成的操作授权
