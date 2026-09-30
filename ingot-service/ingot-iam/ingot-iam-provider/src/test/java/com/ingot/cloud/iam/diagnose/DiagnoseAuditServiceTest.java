@@ -187,6 +187,13 @@ class DiagnoseAuditServiceTest {
     private IamApplicationMapper applications;
 
     private DiagnoseAuditService service() {
+        com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(
+                new org.apache.ibatis.builder.MapperBuilderAssistant(new org.apache.ibatis.session.Configuration(), "test"),
+                IamAuthorizationAuditEntity.class);
+        com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(
+                new org.apache.ibatis.builder.MapperBuilderAssistant(new org.apache.ibatis.session.Configuration(), "test-member"),
+                IamTenantMemberEntity.class);
+
         access = mock(IamAccess.class);
         evaluator = mock(AuthorizationEvaluator.class);
         evaluations = mock(AuthorizationEvaluationRepository.class);

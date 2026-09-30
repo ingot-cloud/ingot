@@ -1,0 +1,20 @@
+{
+  "id": "90",
+  "assignment": {
+    "subject": {"type": "MEMBER", "id": "1002"},
+    "roleRevisionRef": {"kind": "PLATFORM_CUSTOM", "id": "31"},
+    "scopeBindings": {"members": {"kind": "OBJECTS", "ids": ["1002"]}},
+    "validFrom": "2026-09-29T08:00:00Z",
+    "validUntil": "2026-09-30T08:00:00Z",
+    "delegationGrantId": "60"
+  },
+  "status": "ACTIVE",
+  "source": "MANUAL",
+  "subjectName": "接收成员",
+  "roleName": "成员只读",
+  "revisionNumber": "2",
+  "delegationSummary": "来源委派 60",
+  "createdAt": "2026-09-28 16:00:00",
+  "grantedBy": {"memberId": "1001", "name": "授权管理员"},
+  "effectiveStatus": "PENDING"
+}

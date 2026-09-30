@@ -36,6 +36,8 @@ def controller_operations():
         if path.name in EXCLUDED_CONTROLLERS:
             continue
         text = path.read_text()
+        if not re.search(r'@(?:RestController|Controller)\b', text):
+            continue
         class_match = CLASS_MAPPING.search(text)
         if class_match is None:
             raise AssertionError(f'missing class RequestMapping: {path}')
@@ -109,7 +111,7 @@ class ContractTest(unittest.TestCase):
                 envelope = envelopes[name]
                 data = envelope['properties']['data']
                 if name not in UNTYPED_ENVELOPES:
-                    self.assertIn('$ref', data)
+                    self.assertIn('$ref', data['items'] if data.get('type') == 'array' else data)
         error = self.document['components']['schemas']['IamErrorEnvelope']
         self.assertEqual([None], error['properties']['data']['enum'])
         self.assertEqual([False], error['properties']['success']['enum'])

@@ -72,6 +72,10 @@ public class RoleGrantValidator {
                 errors.add(new ValidationIssue(GRANTS, IamReasonCode.INVALID_ARGUMENT, "操作不属于该角色的管理域"));
                 continue;
             }
+            if (domain == AuthorizationDomain.PLATFORM && grant.scopes().stream().anyMatch(scope ->
+                    scope.kind() == ScopeKind.MEMBER_DEPARTMENTS || scope.kind() == ScopeKind.MANAGED_DEPARTMENTS)) {
+                errors.add(new ValidationIssue(GRANTS, IamReasonCode.INVALID_ARGUMENT, "平台角色不得使用部门范围"));
+            }
             errors.addAll(scopes(grant, capability, declared));
         }
         return List.copyOf(errors);

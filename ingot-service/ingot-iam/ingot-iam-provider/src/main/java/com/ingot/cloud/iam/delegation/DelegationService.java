@@ -22,6 +22,7 @@ import com.ingot.cloud.iam.persistence.entity.IamDelegationRecipientMemberEntity
 import com.ingot.cloud.iam.persistence.entity.IamDelegationRoleRevisionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.IamCapabilities;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
@@ -69,11 +70,16 @@ public class DelegationService {
     private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
     };
     private static final String DELEGATION = "delegation";
+    private static final int MAX_ADMINISTRATOR_NAME_LENGTH = 128;
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final AuthorizationChangeNotifier changes;
     private final DelegationRepository delegations;
     private final TransactionTemplate transaction;
+    private final com.ingot.cloud.iam.role.RoleService roles;
+    private final com.ingot.cloud.iam.persistence.AssignmentRepository assignments;
+    private final com.ingot.cloud.iam.role.RoleGrantValidator grantValidator;
+    private final com.ingot.cloud.iam.assignment.PlatformAuthorizationEditor editor;
 
     /**
      * 绑定身份、审计、失效与委派表。
@@ -83,14 +89,26 @@ public class DelegationService {
      * @param audits 同事务审计
      * @param changes 授权热缓存失效
      * @param delegations 委派持久化
+     * @param roles 角色固定版本合成
+     * @param assignments 版本、主体与组边界
+     * @param editor 平台范围对象验证
+     * @param grantValidator 操作资源能力验证
      * @param transactionManager 同一数据源事务
      */
     public DelegationService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-                                 DelegationRepository delegations, PlatformTransactionManager transactionManager) {
+                                 DelegationRepository delegations, com.ingot.cloud.iam.role.RoleService roles,
+                             com.ingot.cloud.iam.persistence.AssignmentRepository assignments,
+                             com.ingot.cloud.iam.role.RoleGrantValidator grantValidator,
+                             com.ingot.cloud.iam.assignment.PlatformAuthorizationEditor editor,
+                             PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
         this.changes = changes;
         this.delegations = delegations;
+        this.roles = roles;
+        this.assignments = assignments;
+        this.grantValidator = grantValidator;
+        this.editor = editor;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -103,12 +121,46 @@ public class DelegationService {
      * @return 委派页
      */
     public PageResponse<ResourceDetail<DelegationRecord>> list(AuthorizationDomain domain, int page, int pageSize) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
+        return list(domain, page, pageSize, null);
+    }
+
+    /**
+     * 在当前治理边界内按平台管理员显示名称筛选并分页列出委派。
+     *
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param administratorName 平台管理员显示名称包含匹配，空白表示不限制
+     * @return 委派页
+     */
+    public PageResponse<ResourceDetail<DelegationRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+                                                                 String administratorName) {
+        ActiveIdentity actor = requireManagement(domain, AccessKind.READ);
         IamPages.require(page, pageSize);
-        Page<IamDelegationGrantEntity> rows = delegations.page(domain, tenantId(domain, actor), page, pageSize);
+        String search = administratorName == null ? null : administratorName.strip();
+        if (search != null && search.length() > MAX_ADMINISTRATOR_NAME_LENGTH) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+        if (domain != AuthorizationDomain.PLATFORM && search != null) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        Long tenantId = tenantId(domain, actor);
+        Page<IamDelegationGrantEntity> rows = delegations.page(domain, tenantId, page, pageSize, search);
+        var children = delegations.children(domain, rows.getRecords().stream().map(IamDelegationGrantEntity::getId).toList());
+        Map<BigInteger, String> administratorNames = domain == AuthorizationDomain.PLATFORM
+                ? delegations.platformAdministratorNames(rows.getRecords().stream()
+                    .map(IamDelegationGrantEntity::getPlatformAdministratorId).toList()) : Map.of();
+        IamCapabilities permissions = rows.getRecords().isEmpty() ? new IamCapabilities(Map.of())
+                : recordCapabilities(domain, actor);
         List<ResourceDetail<DelegationRecord>> items = new ArrayList<>();
         for (IamDelegationGrantEntity row : rows.getRecords()) {
-            items.add(load(domain, actor, row.getId().longValue()));
+            BigInteger administratorId = domain == AuthorizationDomain.PLATFORM
+                    ? row.getPlatformAdministratorId() : row.getTenantAdministratorId();
+            items.add(detail(domain, row, children.get(row.getId()), permissions,
+                    administratorNames.get(administratorId)));
         }
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
@@ -121,7 +173,7 @@ public class DelegationService {
      * @return 委派详情
      */
     public ResourceDetail<DelegationRecord> get(AuthorizationDomain domain, String id) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
+        ActiveIdentity actor = requireManagement(domain, AccessKind.READ);
         return load(domain, actor, IamIds.require(id));
     }
 
@@ -133,9 +185,12 @@ public class DelegationService {
      * @return 新委派 ID
      */
     public CreatedResource create(AuthorizationDomain domain, DelegationInput input) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.CREATE));
+        ActiveIdentity actor = requireManagement(domain, AccessKind.CREATE);
         validate(domain, actor, input);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            requireManagement(domain, AccessKind.CREATE);
+            validate(domain, actor, input);
             long id = access.nextId();
             insertGrant(domain, actor, id, input);
             replaceChildren(domain, actor, id, input);
@@ -148,6 +203,21 @@ public class DelegationService {
     }
 
     /**
+     * 预览新委派定义，不产生分配或委派。
+     * @param domain 管理域
+     * @param input 委派草稿
+     * @return 校验结果
+     */
+    public Preview<ReferenceImpactPreview> previewCreate(AuthorizationDomain domain, DelegationInput input) {
+        ActiveIdentity actor = requireManagement(domain, AccessKind.CREATE);
+        List<ValidationIssue> errors = new ArrayList<>();
+        try { validate(domain, actor, input); }
+        catch (BizException exception) { errors.add(new ValidationIssue("delegation", IamReasonCode.find(exception.getCode()), exception.getMessage())); }
+        var impact = new ImpactSummary(null, 0L, 0L, false);
+        return new Preview<>("0", errors.isEmpty(), errors, List.of(), impact, new ReferenceImpactPreview(List.of(), impact));
+    }
+
+    /**
      * 调整委派；派生授权超出新上限时整批拒绝。
      *
      * @param domain 接口管理域
@@ -156,12 +226,16 @@ public class DelegationService {
      * @return 更新后详情
      */
     public ResourceDetail<DelegationRecord> replace(AuthorizationDomain domain, String id, DelegationUpdateInput input) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.UPDATE));
+        ActiveIdentity actor = requireManagement(domain, AccessKind.UPDATE);
         validate(domain, actor, input.delegation());
         long delegationId = IamIds.require(id);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            requireManagement(domain, AccessKind.UPDATE);
             ResourceDetail<DelegationRecord> current = lock(domain, actor, delegationId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
+            if (current.record().status() != GrantStatus.ACTIVE) { throw new BizException(IamReasonCode.INVALID_ARGUMENT); }
+            validate(domain, actor, input.delegation());
             if (!derivedStillValid(delegationId, input.delegation())) {
                 throw new BizException(IamReasonCode.POLICY_CONFLICT);
             }
@@ -185,9 +259,11 @@ public class DelegationService {
      * @return 撤销前版本
      */
     public CreatedResource delete(AuthorizationDomain domain, String id) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.DELETE));
+        ActiveIdentity actor = requireManagement(domain, AccessKind.DELETE);
         long delegationId = IamIds.require(id);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            requireManagement(domain, AccessKind.DELETE);
             ResourceDetail<DelegationRecord> current = lock(domain, actor, delegationId);
             delegations.revoke(delegationId, new BigInteger(current.version()));
             delegations.revokeDerivedAssignments(delegationId);
@@ -209,21 +285,24 @@ public class DelegationService {
      * @return 引用影响
      */
     public Preview<ReferenceImpactPreview> preview(AuthorizationDomain domain, String id, DelegationUpdateInput input) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.PREVIEW));
+        ActiveIdentity actor = requireManagement(domain, AccessKind.PREVIEW);
         ResourceDetail<DelegationRecord> current = load(domain, actor, IamIds.require(id));
         List<ValidationIssue> errors = new ArrayList<>();
         try {
-            validate(domain, actor, input.delegation());
             IamIds.requireVersion(input.expectedVersion(), current.version());
+            validate(domain, actor, input.delegation());
         } catch (BizException exception) {
             errors.add(new ValidationIssue("delegation", IamReasonCode.INVALID_ARGUMENT, exception.getMessage()));
         }
-        List<String> affected = derivedIds(IamIds.require(id));
+        List<String> allAffected = errors.isEmpty() ? conflictingIds(IamIds.require(id), input.delegation()) : List.of();
+        boolean canDisclose = access.allows(domain, domain == AuthorizationDomain.PLATFORM
+                ? IamAction.PLATFORM_ASSIGNMENT_READ : IamAction.TENANT_ASSIGNMENT_READ, true);
+        List<String> affected = canDisclose ? allAffected : List.of();
         if (errors.isEmpty() && !derivedStillValid(IamIds.require(id), input.delegation())) {
             errors.add(new ValidationIssue("delegation", IamReasonCode.POLICY_CONFLICT, "存在超出新上限的派生授权"));
         }
         ReferenceImpactPreview result = new ReferenceImpactPreview(affected,
-                new ImpactSummary(null, (long) affected.size(), 1L, false));
+                new ImpactSummary(null, canDisclose ? (long) allAffected.size() : null, 1L, !canDisclose && !allAffected.isEmpty()));
         return new Preview<>(current.version(), errors.isEmpty(), errors, List.of(), result.impactSummary(), result);
     }
 
@@ -231,14 +310,46 @@ public class DelegationService {
         IamSelections.requireCompatible(domain, input.recipientSelection());
         long adminId = IamIds.require(input.administratorMemberId());
         boolean admin = domain == AuthorizationDomain.PLATFORM
-                ? delegations.platformMemberExists(adminId)
+                ? assignments.platformMemberActive(adminId)
                 : delegations.tenantMemberExists(IamIds.require(actor.context().tenantId()), adminId);
         if (!admin) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
+        if (!input.isValidPeriod() || !input.isPositiveDuration()) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (domain == AuthorizationDomain.PLATFORM) {
+            for (String member : input.recipientSelection().members()) {
+                if (!assignments.platformMemberActive(IamIds.require(member))) {
+                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                }
+            }
+        }
+        java.util.Set<String> actions = new java.util.LinkedHashSet<>();
         for (RoleRevisionRef ref : input.allowedRoleRevisionRefs()) {
-            if (!delegations.roleRevisionExists(IamIds.require(ref.id()), ref.kind())) {
+            var revision = assignments.findRevision(IamIds.require(ref.id()));
+            if (revision == null || revision.getKind() != ref.kind() || !Boolean.TRUE.equals(revision.getEnabled())
+                    || domain == AuthorizationDomain.PLATFORM && (revision.getDomain() != domain
+                        || revision.getTenantId() != null || ref.kind() != com.ingot.framework.commons.model.iam.RoleKind.PLATFORM_CUSTOM
+                        && ref.kind() != com.ingot.framework.commons.model.iam.RoleKind.SYSTEM)) {
                 throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+            }
+            roles.synthesizedGrants(IamIds.require(ref.id())).forEach(grant -> actions.add(grant.actionId()));
+        }
+        if (domain == AuthorizationDomain.PLATFORM) {
+            java.util.Set<String> ceilings = input.actionScopeCeilings().stream().map(ActionScopeCeiling::actionId)
+                    .collect(java.util.stream.Collectors.toSet());
+            if (!ceilings.equals(actions) || ceilings.size() != input.actionScopeCeilings().size()) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            for (ActionScopeCeiling ceiling : input.actionScopeCeilings()) {
+                List<com.ingot.framework.commons.model.iam.RoleParameterDefinition> parameters = ceiling.scopeBindings()
+                        .entrySet().stream().map(entry -> new com.ingot.framework.commons.model.iam.RoleParameterDefinition(
+                                entry.getKey(), entry.getValue().kind())).toList();
+                if (!editor.validCeilingObjects(ceiling) || !grantValidator.validate(domain, List.of(new com.ingot.framework.commons.model.iam.ActionGrant(
+                        ceiling.actionId(), ceiling.scopes())), parameters).isEmpty()) {
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                }
             }
         }
     }
@@ -248,15 +359,44 @@ public class DelegationService {
         if (grant == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
+        var children = delegations.children(domain, List.of(grant.getId())).get(grant.getId());
+        String administratorName = domain == AuthorizationDomain.PLATFORM
+                ? delegations.platformAdministratorNames(List.of(grant.getPlatformAdministratorId()))
+                    .get(grant.getPlatformAdministratorId()) : null;
+        return detail(domain, grant, children, recordCapabilities(domain, actor), administratorName);
+    }
+
+    private IamCapabilities recordCapabilities(AuthorizationDomain domain, ActiveIdentity actor) {
+        return domain == AuthorizationDomain.PLATFORM ? access.capabilities(actor, List.of(
+                IamAction.PLATFORM_DELEGATION_READ, IamAction.PLATFORM_DELEGATION_UPDATE,
+                IamAction.PLATFORM_DELEGATION_DELETE, IamAction.PLATFORM_DELEGATION_PREVIEW))
+                : new IamCapabilities(Map.of());
+    }
+
+    private ResourceDetail<DelegationRecord> detail(AuthorizationDomain domain, IamDelegationGrantEntity grant,
+            DelegationRepository.Children children, IamCapabilities permissions, String administratorName) {
+        long id = grant.getId().longValueExact();
         long administratorId = first(grant.getPlatformAdministratorId(), grant.getTenantAdministratorId());
-        DelegationInput input = new DelegationInput(IamIds.text(administratorId), revisions(id),
-                recipients(domain, id), ceilings(id), instant(grant.getValidFrom()), instant(grant.getValidUntil()),
+        DelegationInput input = new DelegationInput(IamIds.text(administratorId), revisions(children),
+                recipients(domain, children), ceilings(children), instant(grant.getValidFrom()), instant(grant.getValidUntil()),
                 duration(grant));
-        return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus()), version(grant.getVersion()));
+        Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new java.util.LinkedHashMap<>();
+        if (domain != AuthorizationDomain.PLATFORM) {
+            return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName),
+                    version(grant.getVersion()));
+        }
+        for (AccessKind kind : List.of(AccessKind.READ, AccessKind.UPDATE, AccessKind.DELETE, AccessKind.PREVIEW)) {
+            IamAction operation = action(domain, kind);
+            boolean allowed = (kind == AccessKind.READ || grant.getStatus() == GrantStatus.ACTIVE)
+                    && permissions.allows(operation, true);
+            capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
+                    allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前身份不可操作该委派"));
+        }
+        return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName),
+                capabilities, version(grant.getVersion()));
     }
 
     private ResourceDetail<DelegationRecord> lock(AuthorizationDomain domain, ActiveIdentity actor, long id) {
-        load(domain, actor, id);
         if (delegations.lock(domain, tenantId(domain, actor), id) == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
@@ -351,14 +491,14 @@ public class DelegationService {
         }
     }
 
-    private List<RoleRevisionRef> revisions(long id) {
-        return delegations.loadRoleRevisions(id).stream()
+    private List<RoleRevisionRef> revisions(DelegationRepository.Children children) {
+        return children.revisions().stream()
                 .map(row -> new RoleRevisionRef(row.getRevisionKind(), text(row.getRevisionId())))
                 .toList();
     }
 
-    private Selection recipients(AuthorizationDomain domain, long id) {
-        List<IamDelegationRecipientMemberEntity> members = delegations.loadRecipientMembers(id);
+    private Selection recipients(AuthorizationDomain domain, DelegationRepository.Children children) {
+        List<IamDelegationRecipientMemberEntity> members = children.members();
         List<String> memberIds;
         if (domain == AuthorizationDomain.PLATFORM) {
             memberIds = members.stream()
@@ -374,15 +514,15 @@ public class DelegationService {
                     .toList();
         }
         List<DepartmentSelection> departments = domain == AuthorizationDomain.PLATFORM ? List.of()
-                : delegations.loadRecipientDepartments(id).stream()
+                : children.departments().stream()
                 .map(row -> new DepartmentSelection(text(row.getDepartmentId()),
                         Boolean.TRUE.equals(row.getIncludeDescendants())))
                 .toList();
         return new Selection(memberIds, departments);
     }
 
-    private List<ActionScopeCeiling> ceilings(long id) {
-        return delegations.loadCeilings(id).stream()
+    private List<ActionScopeCeiling> ceilings(DelegationRepository.Children children) {
+        return children.ceilings().stream()
                 .map(row -> new ActionScopeCeiling(text(row.getActionId()),
                         IamJson.read(row.getScopes(), SCOPES),
                         IamJson.read(row.getScopeBindings(), BINDINGS)))
@@ -390,26 +530,49 @@ public class DelegationService {
     }
 
     private boolean derivedStillValid(long delegationId, DelegationInput next) {
-        for (IamRoleAssignmentEntity row : delegations.activeDerivedAssignments(delegationId)) {
+        return conflictingIds(delegationId, next).isEmpty();
+    }
+
+    private List<String> conflictingIds(long delegationId, DelegationInput next) {
+        return delegations.activeDerivedAssignments(delegationId).stream()
+                .filter(row -> !derivedValid(row, next)).map(row -> text(row.getId())).toList();
+    }
+
+    private boolean derivedValid(IamRoleAssignmentEntity row, DelegationInput next) {
             long revisionId = row.getRevisionId().longValue();
             boolean allowed = next.allowedRoleRevisionRefs().stream()
                     .anyMatch(ref -> IamIds.require(ref.id()) == revisionId);
             if (!allowed) {
                 return false;
             }
+            if (row.getDomain() != AuthorizationDomain.PLATFORM) { return true; }
             Instant from = instant(row.getValidFrom());
             Instant until = instant(row.getValidUntil());
-            if (until == null || Duration.between(from, until).compareTo(next.maxAssignmentDuration()) > 0) {
+            if (until == null || from == null || Duration.between(from, until).compareTo(next.maxAssignmentDuration()) > 0
+                    || next.validFrom() != null && from.isBefore(next.validFrom())
+                    || next.validUntil() != null && until.isAfter(next.validUntil())) {
                 return false;
             }
-        }
+            if (row.getDomain() == AuthorizationDomain.PLATFORM) {
+                List<String> receivers = row.getSubjectType() == com.ingot.framework.commons.model.iam.SubjectType.MEMBER
+                        ? List.of(text(row.getPlatformMemberId()))
+                        : assignments.platformGroupMemberIds(row.getPlatformGroupId().longValueExact()).stream()
+                            .map(BigInteger::toString).toList();
+                if (receivers.isEmpty() || !next.recipientSelection().members().containsAll(receivers)) {
+                    return false;
+                }
+                var bindings = IamJson.read(row.getScopeBindings(), BINDINGS);
+                for (var grant : roles.synthesizedGrants(revisionId)) {
+                    var ceiling = next.actionScopeCeilings().stream().filter(value -> value.actionId().equals(grant.actionId()))
+                            .findFirst().orElse(null);
+                    if (ceiling == null || !com.ingot.cloud.iam.evaluation.ScopeBinder.covers(
+                            com.ingot.cloud.iam.evaluation.ScopeBinder.bind(ceiling),
+                            com.ingot.cloud.iam.evaluation.ScopeBinder.bind(grant, bindings))) {
+                        return false;
+                    }
+                }
+            }
         return true;
-    }
-
-    private List<String> derivedIds(long delegationId) {
-        return delegations.activeDerivedAssignments(delegationId).stream()
-                .map(row -> text(row.getId()))
-                .toList();
     }
 
     private static Long tenantId(AuthorizationDomain domain, ActiveIdentity actor) {
@@ -441,6 +604,11 @@ public class DelegationService {
 
     private static String text(BigInteger id) {
         return id == null ? null : IamIds.text(id.longValue());
+    }
+
+    private ActiveIdentity requireManagement(AuthorizationDomain domain, AccessKind kind) {
+        return domain == AuthorizationDomain.PLATFORM ? access.requireGoverned(domain, action(domain, kind))
+                : access.require(domain, action(domain, kind));
     }
 
     private static IamAction action(AuthorizationDomain domain, AccessKind kind) {

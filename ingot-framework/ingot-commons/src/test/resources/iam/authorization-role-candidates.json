@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "710",
+      "roleId": "710",
+      "roleName": "人员管理",
+      "name": "人员管理",
+      "nodeType": "ROLE"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20
+}

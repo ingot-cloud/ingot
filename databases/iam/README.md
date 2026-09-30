@@ -8,7 +8,8 @@
 - `004_policy_audit_migration.sql`：默认策略引用、通讯录/字段规则、审计和迁移批次/映射/处置。
 - `005_auxiliary.sql`：保留字典、发号、社会化、历史安全事件和套餐记录的结构。来源为仓库 SQL 的 CREATE TABLE，仅用于目标结构，不复制任何 INSERT 数据。
 - `007_member_export.sql`：租户成员导出任务状态、成员 ID 快照与过期时间，供多实例读取，不保存字段原值。
-- `006_bootstrap.sql`：唯一的正式冷启动种子，写入两个治理应用、资源与字段能力、107 个精确操作、平台与组织菜单树、每域一个 SYSTEM 治理角色及其固定版本授权、默认策略版本和发号高水位。由 `python3 tools/iam/generate_bootstrap.py` 从 change 的 `contracts/routes.json` 生成，不要手工编辑。
+- `010_assignment_audit_index.sql`：已有目标库的分配创建审计索引补丁；新建库与重复执行均可安全跳过已存在索引。
+- `006_bootstrap.sql`：唯一的正式冷启动种子，写入两个治理应用、资源与字段能力、130 个精确操作、平台与组织菜单树、每域一个 SYSTEM 治理角色及其固定版本授权、默认策略版本和发号高水位。由 `python3 tools/iam/generate_bootstrap.py` 从 change 的 `contracts/routes.json` 生成，不要手工编辑。
 - `seed-manual-verification.sql`：隔离环境人工认证种子，不是生产数据，不进入迁移导入。必须先执行 001–005、`007_member_export.sql`、下列框架 DDL 与 `006_bootstrap.sql`；它只补两个可登录账号、一个平台成员和一条治理授权，目录与治理角色一律复用冷启动种子，避免同一份目录出现两个来源。
 
 `006_bootstrap.sql` 是数据而非结构，编号只表示执行顺序：`test_identity_schema.py` 只加载 DDL，把它排除在外，避免种子行占用结构夹具的标识。种子的三条硬约束：
@@ -46,3 +47,5 @@
 - 辅助表旧列 user_id/tenant_id/app_id/plan_id 分别映射新 Account/Tenant/Application/Plan；保持列名不等于可以跳过引用验证。社会化密钥和发号高水位需单独演练。
 
 账号登录名目标约束为全局唯一。源快照中软删除账号占用同名、格式不兼容或关联不明确时，由迁移工具报告并要求显式处置，不自动丢弃账号或覆盖凭证。
+
+已有库菜单补丁 `008_platform_accounts_menu.sql` 和套餐列补丁 `009_tenant_plan.sql` 不属于全新建库顺序；全新结构与种子已包含其结果。`010_assignment_audit_index.sql` 在全新库和已有库均可重复执行。

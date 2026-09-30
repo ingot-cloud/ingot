@@ -16,7 +16,7 @@ python3 tools/iam/test-data/iam_test_data.py reset   --config tools/iam/test-dat
 
 ## 导入前
 
-1. 目标必须是**已登记的独立空库**。DDL 顺序：`001`–`005` → `007_member_export.sql` → 框架 `account_lock_state.sql` / `add_password_history.sql` → `006_bootstrap.sql`。详见 `databases/iam/README.md`。
+1. 目标必须是**已登记的独立空库**。DDL 顺序：`001`–`005` → `007_member_export.sql` → `010_assignment_audit_index.sql` → 框架 `account_lock_state.sql` / `add_password_history.sql` → `006_bootstrap.sql`。详见 `databases/iam/README.md`。
 2. **不要**再执行 `seed-manual-verification.sql`（那是历史 Bruno 的 `platform`/`owner` + `password`，与 `iam-test-*` 不是一套数据）。
 3. IAM 打开 `ingot.iam.bootstrap.enabled=true` 启动一次，用 WARN 日志中的初始口令登录 `platform`（不传 `org`），立刻改密。把改密后的口令放到环境变量 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`。
 4. 复制 `config.example.json` 为未入库的 `config.local.json`：`registered`/`independent` 必须为 true；填独立库、Redis 命名空间和四站地址。配置缺失会失败，不会猜测开发库。
@@ -40,3 +40,18 @@ python3 tools/iam/test-data/iam_test_data.py reset   --config tools/iam/test-dat
 ```bash
 python3 tools/iam/test-data/test_iam_test_data.py
 ```
+
+## 平台角色分配增量
+
+先让已登记测试环境的 IAM 进程加载本轮后端，并执行 `010_assignment_audit_index.sql`（可重复运行）。治理账号改密后的口令从 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR` 或既有忽略的 secrets 文件读取，不写进配置、Spec 或报告。
+
+```bash
+python3 tools/iam/test-data/iam_test_data.py refinement-build --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928
+python3 tools/iam/test-data/iam_test_data.py refinement-verify --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928
+```
+
+`refinement-build` 先验证新上下文接口与直接创建/撤销资格，再通过正式接口创建 9 个平台身份：治理管理员、纯受限管理员、兼具两类资格的管理员、两个接收成员、名单外成员，以及业务权限与委派范围完全重合/部分重合/不重合的管理员。创建固定角色版本、允许组与越界组、有效委派和真实派生分配；已有清单对象复用。过期清单需要新 run-id，并按验收步骤重新设置有效期，不能将历史数据的过期当成逻辑失败。
+
+`refinement-verify` 检查独立资格、入口及业务范围、候选边界、来源与授权时间、伪造来源/成员/组/对象/期限、多来源拼接、委派收窄拒绝及无部分保存、他人分配不可读/撤销、人员快捷角色门禁和真实诊断来源。HTTP 报告通过只代表列出的子集；浏览器、多时区、并发锁竞争、委派撤销/到期及组变化仍须执行 PR-A01–PR-A07。
+
+当前导入和 HTTP 运行尚未通过验收，不把夹具工具开发完成作为实际测试数据已导入。

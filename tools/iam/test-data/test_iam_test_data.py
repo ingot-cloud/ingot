@@ -17,6 +17,8 @@ import build
 import client
 import iam_test_data
 import lib
+import refinement
+from urllib.parse import parse_qs, urlparse
 
 
 def sample_config(state_dir: Path, **overrides) -> dict:
@@ -117,6 +119,52 @@ class TestDataToolTest(unittest.TestCase):
             ["verify", "--config", str(self.config_path), "--run-id", "cli-1"]
         )
         self.assertEqual(code, 0)
+
+    def test_refinement_requires_credential_before_remote_calls(self):
+        transport = FakeGateway()
+        with self.assertRaises(lib.ConfigError):
+            refinement.refinement_build(self.config, "refine-no-secret", state_override=self.state,
+                                        transport=transport, getenv=lambda name: None)
+        self.assertEqual(transport.calls, [])
+
+    def test_refinement_rejects_non_governance_before_creating_objects(self):
+        class NoGovernance:
+            def __init__(self):
+                self.calls = []
+
+            def request(self, method, url, **kwargs):
+                self.calls.append((method, urlparse(url).path))
+                if url.endswith("/oauth2/token"):
+                    return {"access_token": "test-token"}
+                return {"data": {"directCreate": False, "directRevoke": False}}
+
+        transport = NoGovernance()
+        with self.assertRaises(lib.ConfigError):
+            refinement.refinement_build(self.config, "refine-no-authority", state_override=self.state,
+                transport=transport, getenv={"IAM_TEST_PASSWORD_PLATFORM_GOVERNOR": "test-secret"}.get)
+        self.assertEqual(transport.calls, [("POST", "/oauth2/token"),
+                                         ("GET", "/iam/v1/platform/assignments/context")])
+        state = lib.read_inventory(lib.inventory_path(self.config, "refine-no-authority", self.state))
+        self.assertEqual(state["objects"], {})
+
+    def test_refinement_candidate_pagination_keeps_basis(self):
+        class PagedCandidates:
+            def __init__(self):
+                self.queries = []
+
+            def iam(self, method, path, token):
+                query = parse_qs(urlparse(path).query)
+                self.queries.append(query)
+                page = int(query["page"][0])
+                begin = (page - 1) * 20
+                return {"data": {"items": [{"id": str(i)} for i in range(begin, min(begin + 20, 45))],
+                                  "pageSize": 20, "total": 45}}
+
+        session = PagedCandidates()
+        items = list(refinement.candidates(session, "test-token", "MEMBER", delegationGrantId="700"))
+        self.assertEqual(len(items), 45)
+        self.assertEqual([query["page"] for query in session.queries], [["1"], ["2"], ["3"]])
+        self.assertTrue(all(query["delegationGrantId"] == ["700"] for query in session.queries))
 
     def test_build_reuses_inventory_and_hides_passwords(self):
         lib.prepare(self.config, "run-e", state_override=self.state)

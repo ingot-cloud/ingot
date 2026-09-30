@@ -96,12 +96,74 @@ class AuthorizationEvaluatorTest {
         jdbc.update("INSERT INTO iam_role_revision VALUES (31,21,NULL),(32,22,NULL)");
         jdbc.update("INSERT INTO iam_role_grant VALUES (31,11,'[]'),(32,12,'[]')");
         jdbc.update("""
-                INSERT INTO iam_role_assignment VALUES
+                INSERT INTO iam_role_assignment(id,domain,tenant_id,subject_type,platform_member_id,platform_group_id,tenant_member_id,tenant_group_id,revision_id,status,valid_from,valid_until,delegation_grant_id,scope_bindings) VALUES
                 (41,'PLATFORM',NULL,'GROUP',NULL,501,NULL,NULL,31,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL,NULL,'{}'),
                 (42,'TENANT',10,'MEMBER',NULL,NULL,101,NULL,32,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL,NULL,'{}')
                 """);
         jdbc.update("INSERT INTO iam_platform_group_member VALUES (501,1001)");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD revision_kind VARCHAR(24) DEFAULT 'SYSTEM'");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD domain VARCHAR(16)");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD tenant_id BIGINT");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD platform_administrator_id BIGINT");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD version BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_action ADD resource_id BIGINT DEFAULT 5");
+        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, enabled BOOLEAN)");
+        jdbc.update("INSERT INTO iam_resource VALUES (5,TRUE)");
+        int entryId = 100;
+        for (IamAction entry : List.of(IamAction.PLATFORM_ASSIGNMENT_READ, IamAction.PLATFORM_ASSIGNMENT_CREATE,
+                IamAction.PLATFORM_ASSIGNMENT_UPDATE, IamAction.PLATFORM_ASSIGNMENT_DELETE)) {
+            jdbc.update("INSERT INTO iam_action(id,application_id,code,enabled,resource_id) VALUES (?,1,?,TRUE,5)",
+                    entryId++, entry.getCode());
+        }
         evaluator = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource);
+    }
+
+    @Test
+    void validOwnedDelegationProvidesOnlyRestrictedAssignmentEntry() {
+        jdbc.update("DELETE FROM iam_role_assignment WHERE domain='PLATFORM'");
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,domain,platform_administrator_id,version)"
+                + " VALUES (70,'ACTIVE','PLATFORM',1001,0)");
+        var view = evaluator.evaluate(PLATFORM);
+        assertTrue(view.actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_READ.getCode()));
+        assertTrue(view.actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode()));
+        assertTrue(view.actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_UPDATE.getCode()));
+        assertTrue(view.actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_DELETE.getCode()));
+        assertTrue(view.governedCodes().isEmpty());
+        assertFalse(view.actionCodes().contains(IamAction.PLATFORM_ROLE_CREATE.getCode()));
+        assertFalse(view.actionCodes().contains(IamAction.PLATFORM_DELEGATION_CREATE.getCode()));
+        assertFalse(view.actionCodes().contains(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()));
+        assertFalse(view.actionCodes().contains(IamAction.PLATFORM_TENANT_CREATE.getCode()));
+        assertTrue(view.scope(IamAction.PLATFORM_ASSIGNMENT_READ.getCode()).isEmpty());
+        jdbc.update("UPDATE iam_delegation_grant SET status='REVOKED' WHERE id=70");
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_READ.getCode()));
+    }
+
+    @Test
+    void delegatedEntryRespectsDisabledCatalog() {
+        jdbc.update("DELETE FROM iam_role_assignment WHERE domain='PLATFORM'");
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,domain,platform_administrator_id,version)"
+                + " VALUES (70,'ACTIVE','PLATFORM',1001,0)");
+        jdbc.update("UPDATE iam_action SET enabled=FALSE WHERE code=?", IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode());
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode()));
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_READ.getCode()));
+        jdbc.update("UPDATE iam_resource SET enabled=FALSE WHERE id=5");
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().isEmpty());
+        jdbc.update("UPDATE iam_resource SET enabled=TRUE WHERE id=5");
+        jdbc.update("UPDATE iam_application SET enabled=FALSE WHERE id=1");
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().isEmpty());
+    }
+
+    @Test
+    void delegationDoesNotNarrowExistingBusinessScopeOrGovernance() {
+        jdbc.update("UPDATE iam_role_grant SET scopes='[{\"kind\":\"ALL\"}]' WHERE revision_id=31");
+        var before = evaluator.evaluate(PLATFORM);
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,domain,platform_administrator_id,version)"
+                + " VALUES (71,'ACTIVE','PLATFORM',1001,0)");
+        var after = evaluator.evaluate(PLATFORM);
+        assertEquals(before.scope(IamAction.PLATFORM_TENANT_CREATE.getCode()),
+                after.scope(IamAction.PLATFORM_TENANT_CREATE.getCode()));
+        assertTrue(after.governedCodes().contains(IamAction.PLATFORM_TENANT_CREATE.getCode()));
+        assertFalse(after.governedCodes().contains(IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode()));
     }
 
     private void entitleTenantApplication() {
@@ -121,7 +183,7 @@ class AuthorizationEvaluatorTest {
      * @param validUntil 委派截止；null 表示不限期
      */
     private void platformDelegationOnPlatformAssignment(LocalDateTime validUntil) {
-        jdbc.update("INSERT INTO iam_delegation_grant VALUES (61,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',?)",
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,valid_from,valid_until) VALUES (61,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',?)",
                 validUntil);
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (61,31)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES (61,NULL,1001,NULL)");
@@ -336,7 +398,7 @@ class AuthorizationEvaluatorTest {
         entitleTenantApplication();
         tenantGroupAssignmentOnly();
         jdbc.update("INSERT INTO iam_tenant_group_member VALUES (10,502,101)");
-        jdbc.update("INSERT INTO iam_delegation_grant VALUES (62,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL)");
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,valid_from,valid_until) VALUES (62,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL)");
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (62,32)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (62,12,'[]','{}')");
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=62 WHERE id=42");
@@ -353,7 +415,7 @@ class AuthorizationEvaluatorTest {
     void recipientDepartmentReachesTheMemberOnlyWhenDescendantsAreIncluded() {
         entitleTenantApplication();
         departmentChainWithMemberAtLeaf();
-        jdbc.update("INSERT INTO iam_delegation_grant VALUES (63,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL)");
+        jdbc.update("INSERT INTO iam_delegation_grant(id,status,valid_from,valid_until) VALUES (63,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL)");
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES (63,32)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (63,12,'[]','{}')");
         jdbc.update("INSERT INTO iam_delegation_recipient_department VALUES (63,10,700,FALSE)");

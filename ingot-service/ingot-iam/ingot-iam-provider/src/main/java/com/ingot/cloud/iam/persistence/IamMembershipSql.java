@@ -77,6 +77,17 @@ public final class IamMembershipSql {
                      WHERE rm.delegation_id=d.id AND rm.platform_member_id=#{memberId})
             """;
     /**
+     * 平台派生组的全部成员持续符合接收名单且组非空，任何扩大立即失败关闭。
+     */
+    public static final String AND_PLATFORM_GROUP_RECIPIENTS_REACHED = """
+             AND EXISTS(SELECT 1 FROM iam_platform_group_member gm WHERE gm.group_id=ra.platform_group_id)
+             AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member gm
+               WHERE gm.group_id=ra.platform_group_id AND NOT EXISTS(
+                 SELECT 1 FROM iam_delegation_recipient_member rm
+                  WHERE rm.delegation_id=d.id AND rm.platform_member_id=gm.member_id))
+            """;
+
+    /**
      * 派生授权的角色版本仍在委派白名单内的判定条件。
      *
      * <p>以 {@code AND} 开头，供求值 SQL 在已定位委派行别名 {@code d} 与分配行别名 {@code ra} 后追加。</p>

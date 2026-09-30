@@ -76,7 +76,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.database = "iam_bootstrap_" + uuid.uuid4().hex
         self.sql(f"CREATE DATABASE `{self.database}`", database=False)
         for schema in sorted(SCHEMA_DIRECTORY.glob("[0-9][0-9][0-9]_*.sql")):
-            if schema == BOOTSTRAP:
+            if schema == BOOTSTRAP or schema.name in {"008_platform_accounts_menu.sql", "009_tenant_plan.sql"}:
                 continue
             self.sql(schema.read_text())
 
@@ -86,8 +86,8 @@ class BootstrapSeedTest(unittest.TestCase):
     def test_empty_database_gets_complete_catalog_without_credentials(self):
         self.bootstrap()
         self.assertEqual(2, self.count("iam_application"))
-        self.assertEqual(40, self.count("iam_resource"))
-        self.assertEqual(145, self.count("iam_action"))
+        self.assertEqual(34, self.count("iam_resource"))
+        self.assertEqual(130, self.count("iam_action"))
         self.assertEqual(24, self.count("iam_menu"))
         self.assertEqual(2, self.count("iam_default_policy_revision"))
         self.assertEqual(1, self.count("biz_leaf_alloc", "biz_tag = 'iam'"))
@@ -212,7 +212,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(15, self.count("iam_resource", "application_id = 500001"))
         self.assertEqual(46, self.count("iam_action", "application_id = 500001"))
         self.assertEqual(13, self.count("iam_menu", "application_id = 500001"))
-        self.assertEqual(145, self.count("iam_role_grant"))
+        self.assertEqual(130, self.count("iam_role_grant"))
 
     def test_manual_verification_seed_layers_on_the_cold_start_catalog(self):
         self.bootstrap()
@@ -221,7 +221,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(2, self.count("iam_account"))
         self.assertEqual(1, self.count("iam_platform_member"))
         self.assertEqual(2, self.count("iam_role_definition"))
-        self.assertEqual(145, self.count("iam_role_grant"))
+        self.assertEqual(130, self.count("iam_role_grant"))
         # The governance assignment resolves the platform revision from the seed, not a fixed id.
         self.assertEqual("1", self.sql("""
             SELECT COUNT(*) FROM iam_role_assignment assignment

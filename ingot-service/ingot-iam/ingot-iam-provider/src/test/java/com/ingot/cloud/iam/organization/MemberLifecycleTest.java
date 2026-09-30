@@ -37,6 +37,8 @@ class MemberLifecycleTest {
     void database() {
         var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
         jdbc = new JdbcTemplate(dataSource);
+        jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY, code VARCHAR(64), domain VARCHAR(16))");
+        jdbc.update("INSERT INTO iam_application VALUES(1, 'iam-platform', 'PLATFORM')");
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT)");
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16), version BIGINT, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY, owner_member_id BIGINT, enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT)");

@@ -20,10 +20,12 @@ import com.ingot.cloud.iam.delegation.DelegationAdmission;
 import com.ingot.cloud.iam.persistence.IamRoleRevisionJoin;
 import com.ingot.cloud.iam.persistence.RoleRepository;
 import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
+import com.ingot.cloud.iam.persistence.entity.IamDelegationGrantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleDefinitionEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity;
 import com.ingot.cloud.iam.role.RoleService;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.IamCapabilities;
 import com.ingot.cloud.iam.support.IamAdmission;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
@@ -71,6 +73,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Service
 public class AssignmentService {
+    private static final int MAX_SUBJECT_KEYWORD_LENGTH = 128;
     private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
     };
     private static final String ASSIGNMENT = "assignment";
@@ -83,6 +86,8 @@ public class AssignmentService {
     private final AssignmentRepository assignments;
     private final DelegationAdmission delegations;
     private final TransactionTemplate transaction;
+    private final com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess;
+    private final PlatformAuthorizationEditor editor;
 
     /**
      * 绑定身份、审计、角色合成与分配表。
@@ -95,11 +100,14 @@ public class AssignmentService {
      * @param roleStore 角色定义与最新版本
      * @param assignments 分配持久化
      * @param delegations 委派派生授权准入
+     * @param editor 平台参数对象验证
+     * @param resourceAccess 成员对象边界
      * @param transactionManager 同一数据源事务
      */
     public AssignmentService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
                                  RoleService roles, RoleRepository roleStore, AssignmentRepository assignments,
                                  DelegationAdmission delegations,
+                                 com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess, PlatformAuthorizationEditor editor,
                                  PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
@@ -108,6 +116,8 @@ public class AssignmentService {
         this.roleStore = roleStore;
         this.assignments = assignments;
         this.delegations = delegations;
+        this.resourceAccess = resourceAccess;
+        this.editor = editor;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -120,11 +130,47 @@ public class AssignmentService {
      * @return 授权页
      */
     public PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize) {
-        ActiveIdentity actor = access.require(domain, action(domain, AccessKind.READ));
+        return list(domain, page, pageSize, null, null);
+    }
+
+    /**
+     * 在平台分配可见边界内按接收主体和名称分页；租户列表保持原契约。
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 平台接收主体类型，可空
+     * @param keyword 平台成员显示名或组名称，可空
+     * @return 筛选后的分配页
+     */
+    public PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+            SubjectType subjectType, String keyword) {
+        IamAdmission admission = access.admit(domain, action(domain, AccessKind.READ));
+        ActiveIdentity actor = admission.actor();
         IamPages.require(page, pageSize);
-        Page<IamRoleAssignmentEntity> rows = assignments.page(domain, tenantId(domain, actor), page, pageSize);
+        String search = keyword == null ? null : keyword.strip();
+        if (search != null && search.length() > MAX_SUBJECT_KEYWORD_LENGTH) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+        if (domain != AuthorizationDomain.PLATFORM && (subjectType != null || search != null)) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        Page<IamRoleAssignmentEntity> rows = domain == AuthorizationDomain.PLATFORM
+                ? admission.governed()
+                    ? assignments.pagePlatform(page, pageSize, subjectType, search)
+                    : assignments.pageOwned(IamIds.require(actor.context().memberId()), page, pageSize,
+                            subjectType, search)
+                : assignments.page(domain, tenantId(domain, actor), page, pageSize);
+        var presentation = domain == AuthorizationDomain.PLATFORM ? assignments.presentation(rows.getRecords().stream()
+                .map(IamRoleAssignmentEntity::getId).toList()) : Map.<BigInteger,
+                com.ingot.cloud.iam.persistence.projection.AssignmentPresentation>of();
+        IamCapabilities permissions = rows.getRecords().isEmpty() ? new IamCapabilities(Map.of())
+                : recordCapabilities(domain, actor);
+        var sources = recordSources(domain, actor, rows.getRecords(), permissions);
         List<ResourceDetail<AssignmentRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(record(row), version(row.getVersion()))).toList();
+                .map(row -> detail(domain, actor, row, presentation.get(row.getId()), permissions, sources)).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
@@ -142,10 +188,15 @@ public class AssignmentService {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            IamAdmission currentAdmission = access.admit(domain, action(domain, AccessKind.CREATE));
+            if (!batchSource(currentAdmission, input).isEmpty()) {
+                throw new BizException(IamReasonCode.ACTION_DENIED);
+            }
             CreatedResource first = null;
             int index = 0;
             for (AssignmentInput item : input.items()) {
-                List<ValidationIssue> errors = validate(domain, admission, item, null);
+                List<ValidationIssue> errors = validate(domain, currentAdmission, item, null);
                 if (!errors.isEmpty()) {
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
                 }
@@ -187,6 +238,34 @@ public class AssignmentService {
     }
 
     /**
+     * 预览一条既有分配，读、编辑与撤销遵循相同来源边界。
+     * @param domain 管理域
+     * @param id 分配 ID
+     * @param input 草稿与版本
+     * @return 无写入的校验效果
+     */
+    public Preview<AssignmentPreviewResult> previewUpdate(AuthorizationDomain domain, String id, AssignmentUpdateInput input) {
+        IamAdmission admission = access.admit(domain, action(domain, AccessKind.UPDATE));
+        var current = assignments.find(domain, tenantId(domain, admission.actor()), IamIds.require(id));
+        requireRecord(domain, admission, current);
+        IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
+        if (current.getStatus() != GrantStatus.ACTIVE) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        AssignmentInput next = input.assignment();
+        if (!sameSubject(current, next.subject()) || !sameDelegation(current.getDelegationGrantId(), next.delegationGrantId())
+                || current.getRevisionKind() != next.roleRevisionRef().kind()
+                || current.getRevisionId().longValueExact() != IamIds.require(next.roleRevisionRef().id())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        var errors = validate(domain, admission, next, IamIds.require(id));
+        var grants = errors.isEmpty() ? roles.synthesizedGrants(IamIds.require(next.roleRevisionRef().id())) : List.<ActionGrant>of();
+        return new Preview<>(version(current.getVersion()), errors.isEmpty(), errors, List.of(),
+                new ImpactSummary(null, 1L, null, false), new AssignmentPreviewResult(List.of(
+                    new AssignmentPreviewItem(next.subject(), errors.isEmpty(), errors, grants))));
+    }
+
+    /**
      * 调整既有授权，禁止改写主体或伪造委派来源。
      *
      * @param domain 接口管理域
@@ -199,14 +278,20 @@ public class AssignmentService {
         ActiveIdentity actor = admission.actor();
         long assignmentId = IamIds.require(id);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            IamAdmission currentAdmission = access.admit(domain, action(domain, AccessKind.UPDATE));
             IamRoleAssignmentEntity current = lock(domain, actor, assignmentId);
+            requireRecord(domain, currentAdmission, current);
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
             AssignmentInput next = input.assignment();
-            if (!sameSubject(current, next.subject()) || !sameDelegation(current.getDelegationGrantId(),
+            if (current.getStatus() != GrantStatus.ACTIVE
+                    || domain == AuthorizationDomain.PLATFORM && (current.getRevisionKind() != next.roleRevisionRef().kind()
+                    || current.getRevisionId().longValueExact() != IamIds.require(next.roleRevisionRef().id()))
+                    || !sameSubject(current, next.subject()) || !sameDelegation(current.getDelegationGrantId(),
                     next.delegationGrantId())) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
-            List<ValidationIssue> errors = validate(domain, admission, next, assignmentId);
+            List<ValidationIssue> errors = validate(domain, currentAdmission, next, assignmentId);
             if (!errors.isEmpty()) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
@@ -234,7 +319,10 @@ public class AssignmentService {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.DELETE));
         long assignmentId = IamIds.require(id);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            IamAdmission currentAdmission = access.admit(domain, action(domain, AccessKind.DELETE));
             IamRoleAssignmentEntity current = lock(domain, actor, assignmentId);
+            requireRecord(domain, currentAdmission, current);
             if (assignments.revoke(assignmentId, current.getVersion()) != 1) {
                 throw new BizException(IamReasonCode.REVISION_CONFLICT);
             }
@@ -275,6 +363,14 @@ public class AssignmentService {
     public void grantDirectRoles(AuthorizationDomain domain, String memberId, List<String> roleIds) {
         requirePlatform(domain);
         IamAdmission admission = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_CREATE);
+        if (!admission.governed()) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        assignments.lockAuthorization(domain);
+        admission = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_CREATE);
+        if (!admission.governed()) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
         grantDirectRoles(domain, admission, IamIds.require(memberId), uniqueIds(roleIds));
     }
 
@@ -293,6 +389,13 @@ public class AssignmentService {
         long id = IamIds.require(memberId);
         List<String> desired = uniqueIds(roleIds);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            IamAdmission creating = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_CREATE);
+            IamAdmission revoking = access.admit(domain, IamAction.PLATFORM_ASSIGNMENT_DELETE);
+            if (!creating.governed() || !revoking.governed()) {
+                throw new BizException(IamReasonCode.ACTION_DENIED);
+            }
+            resourceAccess.requireVisibleMember(creating.actor().context(), IamAction.PLATFORM_MEMBER_UPDATE, id);
             if (!assignments.platformMemberExists(id)) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
@@ -305,13 +408,146 @@ public class AssignmentService {
                     if (assignments.revoke(row.getId().longValueExact(), row.getVersion()) != 1) {
                         throw new BizException(IamReasonCode.REVISION_CONFLICT);
                     }
+                    audits.write(creating.actor().context(), access.nextId(), ASSIGNMENT, text(row.getId()),
+                            AuditChangeType.DISABLE, Map.of(AuditField.STATUS, GrantStatus.ACTIVE.name()),
+                            Map.of(AuditField.STATUS, GrantStatus.REVOKED.name()),
+                            Map.of(ASSIGNMENT, nextVersion(row.getVersion())), null, text(row.getId()));
                 }
             }
             List<String> adding = desired.stream().filter(roleId -> !current.containsKey(roleId)).toList();
-            grantDirectRoles(domain, admission, id, adding);
+            grantDirectRoles(domain, creating, id, adding);
             changes.markAll();
             return collectDirectRoles(id);
         });
+    }
+
+    /**
+     * 返回平台分配配置资格；任何直接资格都必须来自对应精确操作的非委派来源。
+     * @return 当前配置资格
+     */
+    public com.ingot.framework.commons.model.iam.AssignmentContext context() {
+        ActiveIdentity actor = access.requireCurrent();
+        if (actor.context().domain() != AuthorizationDomain.PLATFORM) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        var actions = List.of(
+                IamAction.PLATFORM_ASSIGNMENT_READ, IamAction.PLATFORM_ASSIGNMENT_CREATE,
+                IamAction.PLATFORM_ASSIGNMENT_UPDATE, IamAction.PLATFORM_ASSIGNMENT_DELETE);
+        IamCapabilities permissions = access.capabilities(actor, actions);
+        if (actions.stream().noneMatch(action -> permissions.allows(action, false))) {
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        }
+        return new com.ingot.framework.commons.model.iam.AssignmentContext(
+                permissions.allows(IamAction.PLATFORM_ASSIGNMENT_READ, true),
+                permissions.allows(IamAction.PLATFORM_ASSIGNMENT_CREATE, true),
+                permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true),
+                permissions.allows(IamAction.PLATFORM_ASSIGNMENT_DELETE, true),
+                assignments.effectiveDelegations(IamIds.require(actor.context().memberId())).size());
+    }
+
+    /**
+     * 成员创建事务在插入成员前取得共用授权首锁。
+     * @param domain 管理域
+     */
+    public void lockAuthorization(AuthorizationDomain domain) {
+        assignments.lockAuthorization(domain);
+    }
+
+    /**
+     * 读取分配详情，沿用列表的可信来源边界。
+     * @param domain 管理域
+     * @param id 分配 ID
+     * @return 可披露详情
+     */
+    public ResourceDetail<AssignmentRecord> detail(AuthorizationDomain domain, String id) {
+        IamAdmission admission = access.admit(domain, action(domain, AccessKind.READ));
+        IamRoleAssignmentEntity row = assignments.find(domain, tenantId(domain, admission.actor()), IamIds.require(id));
+        requireRecord(domain, admission, row);
+        return detail(domain, admission.actor(), row);
+    }
+
+    private void requireRecord(AuthorizationDomain domain, IamAdmission admission, IamRoleAssignmentEntity row) {
+        if (row == null || !recordAllowed(domain, admission, row)) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+    }
+
+    private boolean recordAllowed(AuthorizationDomain domain, IamAdmission admission, IamRoleAssignmentEntity row) {
+        if (domain != AuthorizationDomain.PLATFORM || admission.governed()) {
+            return true;
+        }
+        if (row.getDelegationGrantId() == null) {
+            return false;
+        }
+        var source = assignments.findDelegation(domain, null, row.getDelegationGrantId().longValueExact());
+        return source != null && source.getPlatformAdministratorId() != null
+                && source.getPlatformAdministratorId().toString().equals(admission.actor().context().memberId());
+    }
+
+    private ResourceDetail<AssignmentRecord> detail(AuthorizationDomain domain, ActiveIdentity actor,
+                                                   IamRoleAssignmentEntity row) {
+        IamCapabilities permissions = recordCapabilities(domain, actor);
+        return detail(domain, actor, row, domain == AuthorizationDomain.PLATFORM
+                ? assignments.presentation(List.of(row.getId())).get(row.getId()) : null,
+                permissions, recordSources(domain, actor, List.of(row), permissions));
+    }
+
+    private IamCapabilities recordCapabilities(AuthorizationDomain domain, ActiveIdentity actor) {
+        return domain == AuthorizationDomain.PLATFORM ? access.capabilities(actor, List.of(
+                IamAction.PLATFORM_ASSIGNMENT_READ, IamAction.PLATFORM_ASSIGNMENT_UPDATE,
+                IamAction.PLATFORM_ASSIGNMENT_DELETE)) : new IamCapabilities(Map.of());
+    }
+
+    private Map<BigInteger, IamDelegationGrantEntity> recordSources(AuthorizationDomain domain, ActiveIdentity actor,
+            List<IamRoleAssignmentEntity> rows, IamCapabilities permissions) {
+        if (domain != AuthorizationDomain.PLATFORM || List.of(IamAction.PLATFORM_ASSIGNMENT_READ,
+                IamAction.PLATFORM_ASSIGNMENT_UPDATE, IamAction.PLATFORM_ASSIGNMENT_DELETE).stream()
+                .allMatch(action -> permissions.allows(action, true))) {
+            return Map.of();
+        }
+        List<BigInteger> ids = rows.stream().map(IamRoleAssignmentEntity::getDelegationGrantId)
+                .filter(java.util.Objects::nonNull).distinct().toList();
+        return assignments.findDelegations(domain, tenantId(domain, actor), ids);
+    }
+
+    private ResourceDetail<AssignmentRecord> detail(AuthorizationDomain domain, ActiveIdentity actor,
+            IamRoleAssignmentEntity row, com.ingot.cloud.iam.persistence.projection.AssignmentPresentation presentation,
+            IamCapabilities permissions, Map<BigInteger, IamDelegationGrantEntity> sources) {
+        if (domain != AuthorizationDomain.PLATFORM) { return IamDetails.of(record(row), version(row.getVersion())); }
+        var source = row.getDelegationGrantId() == null ? null : sources.get(row.getDelegationGrantId());
+        boolean owned = source != null && source.getPlatformAdministratorId() != null
+                && source.getPlatformAdministratorId().toString().equals(actor.context().memberId());
+        Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new LinkedHashMap<>();
+        for (AccessKind kind : List.of(AccessKind.READ, AccessKind.UPDATE, AccessKind.DELETE)) {
+            IamAction operation = action(domain, kind);
+            boolean allowed = (kind == AccessKind.READ || row.getStatus() == GrantStatus.ACTIVE)
+                    && (kind != AccessKind.UPDATE || presentation == null || presentation.sourceValid())
+                    && permissions.allows(operation, false)
+                    && (permissions.allows(operation, true) || owned);
+            capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
+                    allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前身份不可操作该分配"));
+        }
+        AssignmentRecord basic = record(row);
+        if (domain == AuthorizationDomain.PLATFORM && presentation != null) {
+            var state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.ACTIVE;
+            Instant now = Instant.now();
+            if (row.getStatus() == GrantStatus.REVOKED) {
+                state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.REVOKED;
+            } else if (row.getValidUntil() != null && !now.isBefore(instant(row.getValidUntil()))) {
+                state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.EXPIRED;
+            } else if (!presentation.sourceValid()) {
+                state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.SOURCE_INVALID;
+            } else if (row.getValidFrom() != null && now.isBefore(instant(row.getValidFrom()))) {
+                state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.PENDING;
+            }
+            basic = new AssignmentRecord(basic.id(), basic.assignment(), basic.status(), basic.source(),
+                    presentation.subjectName(), presentation.roleName(), text(presentation.revisionNumber()),
+                    row.getDelegationGrantId() == null ? "直接分配" : "来源委派 " + row.getDelegationGrantId(),
+                    instant(row.getCreatedAt()), new com.ingot.framework.commons.model.iam.AssignmentAuthor(
+                        text(presentation.authorId()), presentation.authorName() == null ? "未知" : presentation.authorName()),
+                    state);
+        }
+        return IamDetails.of(basic, capabilities, version(row.getVersion()));
     }
 
     private ResourceDetail<AssignmentRecord> get(AuthorizationDomain domain, ActiveIdentity actor, long id) {
@@ -319,7 +555,7 @@ public class AssignmentService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return IamDetails.of(record(row), version(row.getVersion()));
+        return detail(domain, actor, row);
     }
 
     private CreatedResource insert(AuthorizationDomain domain, ActiveIdentity actor, AssignmentInput item) {
@@ -389,12 +625,16 @@ public class AssignmentService {
         } else {
             revisionUsable = true;
         }
+        if (domain == AuthorizationDomain.PLATFORM && revisionUsable) {
+            errors.addAll(editor.validateBindings(item));
+        }
         Instant from = item.validFrom() == null ? Instant.now() : item.validFrom();
         if (item.validUntil() != null && !from.isBefore(item.validUntil())) {
             errors.add(new ValidationIssue("validUntil", IamReasonCode.INVALID_ARGUMENT, "起止时间必须形成左闭右开区间"));
         }
         if (sourced(item)) {
-            errors.addAll(validateDelegation(domain, actor, item, from, revisionUsable));
+            errors.addAll(validateDelegation(domain, actor, item, from, revisionUsable,
+                    domain == AuthorizationDomain.PLATFORM && currentId != null && admission.governed()));
         } else if (!admission.governed()) {
             // 无完整治理资格时不能凭空落授权，必须声明自己那条委派作为来源。
             errors.add(new ValidationIssue("delegationGrantId", IamReasonCode.ACTION_DENIED,
@@ -426,12 +666,13 @@ public class AssignmentService {
      * 委派派生分配的校验交给共用准入组件，写入路径额外要求委派由当前操作者持有。
      */
     private List<ValidationIssue> validateDelegation(AuthorizationDomain domain, ActiveIdentity actor,
-                                                     AssignmentInput item, Instant from, boolean revisionUsable) {
+            AssignmentInput item, Instant from, boolean revisionUsable, boolean governingExisting) {
         long delegationId = IamIds.require(item.delegationGrantId());
         long revisionId = IamIds.require(item.roleRevisionRef().id());
         List<ActionGrant> grants = revisionUsable ? roles.synthesizedGrants(revisionId) : List.of();
         return delegations.check(new DelegationAdmission.Request(domain, tenantId(domain, actor), delegationId,
-                IamIds.require(actor.context().memberId()), revisionId, grants, item.scopeBindings(), item.subject(),
+                governingExisting ? null : IamIds.require(actor.context().memberId()), revisionId, grants,
+                item.scopeBindings(), item.subject(),
                 from, item.validUntil()));
     }
 
@@ -442,10 +683,12 @@ public class AssignmentService {
     private boolean subjectExists(AuthorizationDomain domain, ActiveIdentity actor, SubjectRef subject) {
         long id = IamIds.require(subject.id());
         if (domain == AuthorizationDomain.PLATFORM && subject.type() == SubjectType.MEMBER) {
-            return assignments.platformMemberExists(id);
+            return assignments.platformMemberActive(id);
         }
         if (domain == AuthorizationDomain.PLATFORM) {
-            return assignments.platformGroupExists(id);
+            List<BigInteger> members = assignments.platformGroupMemberIds(id);
+            return assignments.platformGroupExists(id) && !members.isEmpty()
+                    && members.stream().allMatch(member -> assignments.platformMemberActive(member.longValueExact()));
         }
         long tenant = IamIds.require(actor.context().tenantId());
         if (subject.type() == SubjectType.MEMBER) {

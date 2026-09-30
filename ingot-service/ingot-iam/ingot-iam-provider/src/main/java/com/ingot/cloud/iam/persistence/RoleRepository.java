@@ -45,6 +45,14 @@ public class RoleRepository {
     private final IamActionMapper actions;
 
     /**
+     * 平台角色写入先锁治理应用，防止预览后停用或撤权并发绕过分配校验。
+     * @param domain 管理域
+     */
+    public void lockAuthorization(AuthorizationDomain domain) {
+        if (domain == AuthorizationDomain.PLATFORM) { assignments.lockPlatformAuthorization(); }
+    }
+
+    /**
      * 分页列出当前入口可见的角色定义。
      *
      * @param domain 接口管理域

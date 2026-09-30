@@ -16,13 +16,15 @@ IMAGE = "mysql:8.4"
 SCHEMA_DIRECTORY = Path(__file__).parent
 STARTUP_TIMEOUT_SECONDS = 60
 # Numbered data seeds carry rows, not structure; loading them would collide with these fixtures.
-DATA_SEEDS = {"006_bootstrap.sql"}
+DATA_SEEDS = {"006_bootstrap.sql", "008_platform_accounts_menu.sql"}
+# Existing-database patch: the canonical 001 already contains plan_id.
+UPGRADE_ONLY = {"009_tenant_plan.sql"}
 
 
 def schema_files():
     """Ordered DDL files only, so fixture identifiers stay free of seeded catalog rows."""
     return [item for item in sorted(SCHEMA_DIRECTORY.glob("[0-9][0-9][0-9]_*.sql"))
-            if item.name not in DATA_SEEDS]
+            if item.name not in DATA_SEEDS | UPGRADE_ONLY]
 
 
 class IdentitySchemaTest(unittest.TestCase):

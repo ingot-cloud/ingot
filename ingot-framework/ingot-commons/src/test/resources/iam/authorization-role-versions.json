@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "711",
+      "roleId": "710",
+      "roleName": "人员管理",
+      "name": "v2",
+      "nodeType": "REVISION",
+      "revisionNumber": 2,
+      "roleRevisionRef": {
+        "kind": "PLATFORM_CUSTOM",
+        "id": "711"
+      }
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20
+}

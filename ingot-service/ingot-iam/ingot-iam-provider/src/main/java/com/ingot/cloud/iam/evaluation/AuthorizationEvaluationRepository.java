@@ -1,6 +1,8 @@
 package com.ingot.cloud.iam.evaluation;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.ingot.cloud.iam.persistence.mapper.IamActionMapper;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class AuthorizationEvaluationRepository {
+    private static final int ACTION_QUERY_BATCH_SIZE = 500;
     private final IamRoleAssignmentMapper assignments;
     private final IamRoleGrantMapper grants;
     private final IamRoleDeltaMapper deltas;
@@ -64,6 +67,26 @@ public class AuthorizationEvaluationRepository {
                     new BigInteger(actor.tenantId()), memberId);
         }
         return assignments.listPlatformGroup(actor.domain(), GrantStatus.ACTIVE, SubjectType.GROUP, memberId);
+    }
+
+    /**
+     * 读取本人有效平台委派；租户行为保持原契约。
+     * @param actor 可信身份
+     * @return 委派集合
+     */
+    public List<com.ingot.cloud.iam.persistence.entity.IamDelegationGrantEntity> effectiveDelegations(
+            AuthorizationContext actor) {
+        return actor.domain() == AuthorizationDomain.PLATFORM
+                ? assignments.effectivePlatformDelegations(new BigInteger(actor.memberId())) : List.of();
+    }
+
+    /**
+     * 读取当前启用的平台委派入口操作。
+     * @param codes 精确操作码
+     * @return 可用入口操作
+     */
+    public List<String> enabledPlatformEntries(List<String> codes) {
+        return actions.enabledPlatformEntries(codes);
     }
 
     /**
@@ -114,6 +137,22 @@ public class AuthorizationEvaluationRepository {
      */
     public List<AuthorizationEvalRows.Action> listActions(BigInteger actionId) {
         return actions.listWithApplication(actionId);
+    }
+
+    /**
+     * 批量读取本次授权涉及的操作及应用信息，去重并分批限制 IN 参数规模。
+     *
+     * @param actionIds 本次合成授权的操作 ID，允许为空
+     * @return 命中的操作投影；不存在的操作省略
+     */
+    public List<AuthorizationEvalRows.IndexedAction> listActionsByIds(Collection<BigInteger> actionIds) {
+        List<BigInteger> ids = actionIds.stream().distinct().toList();
+        List<AuthorizationEvalRows.IndexedAction> result = new ArrayList<>(ids.size());
+        for (int offset = 0; offset < ids.size(); offset += ACTION_QUERY_BATCH_SIZE) {
+            result.addAll(actions.listWithApplications(ids.subList(offset,
+                    Math.min(offset + ACTION_QUERY_BATCH_SIZE, ids.size()))));
+        }
+        return result;
     }
 
     /**

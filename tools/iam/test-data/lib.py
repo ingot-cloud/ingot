@@ -42,7 +42,7 @@ class ConfigError(ValueError):
 def ddl_files():
     """权威初始化顺序：001–005 → 007 → 框架 DDL → 006。不含人工种子。"""
     numbered = sorted(DDL_DIRECTORY.glob("[0-9][0-9][0-9]_*.sql"))
-    identity = [item for item in numbered if item.name != "006_bootstrap.sql"]
+    identity = [item for item in numbered if item.name not in {"006_bootstrap.sql", "008_platform_accounts_menu.sql", "009_tenant_plan.sql"}]
     bootstrap = DDL_DIRECTORY / "006_bootstrap.sql"
     return identity + [FRAMEWORK_LOCK_DDL, FRAMEWORK_PASSWORD_DDL, bootstrap]
 
@@ -235,11 +235,14 @@ def help_text() -> str:
   python3 tools/iam/test-data/iam_test_data.py prepare --config <file> --run-id <id>
   python3 tools/iam/test-data/iam_test_data.py build   --config <file> --run-id <id>
   python3 tools/iam/test-data/iam_test_data.py verify  --config <file> --run-id <id>
+  python3 tools/iam/test-data/iam_test_data.py refinement-build  --config <file> --run-id <id>
+  python3 tools/iam/test-data/iam_test_data.py refinement-verify --config <file> --run-id <id>
   python3 tools/iam/test-data/iam_test_data.py reset   --config <file> --run-id <id> --confirm-reset
 
 配置必须指向已登记的独立测试环境。缺失字段立即失败，不猜测开发库。
 同一 runId 的 prepare 复用清单，不覆盖测试人员已写入的 objects。
 build 通过真实 /iam/v1 接口创建账号/组织/部门/成员/组/共享角色/分配，已有清单对象会跳过。
+refinement-build 构建平台治理/纯受限/两类资格及范围重合场景；refinement-verify 执行真实 HTTP 断言。
 一次性口令只写入同目录 .secrets.json，stdout 报告不含密码。
 指纹漂移时拒绝静默改回，需 reset 后重建。
 凭证只通过环境变量名引用，报告不打印密码。

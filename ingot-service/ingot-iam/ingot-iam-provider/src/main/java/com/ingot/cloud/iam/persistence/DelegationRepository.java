@@ -2,7 +2,12 @@ package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -25,6 +30,7 @@ import com.ingot.cloud.iam.persistence.mapper.IamPlatformMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleAssignmentMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamRoleRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.GrantStatus;
 import com.ingot.framework.commons.model.iam.MemberStatus;
@@ -41,6 +47,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class DelegationRepository {
+    private static final String PLATFORM_ADMINISTRATOR_NAME_FILTER = "EXISTS (SELECT 1 FROM iam_platform_member administrator"
+            + " WHERE administrator.id = iam_delegation_grant.platform_administrator_id"
+            + " AND administrator.display_name LIKE {0} ESCAPE '!')";
     private final IamDelegationGrantMapper grants;
     private final IamDelegationRoleRevisionMapper revisions;
     private final IamDelegationRecipientMemberMapper recipientMembers;
@@ -61,8 +70,46 @@ public class DelegationRepository {
      * @return 委派页
      */
     public Page<IamDelegationGrantEntity> page(AuthorizationDomain domain, Long tenantId, int page, int pageSize) {
+        return page(domain, tenantId, page, pageSize, null);
+    }
+
+    /**
+     * 在管理域边界内按平台管理员显示名称筛选委派，再分页及统计。
+     *
+     * @param domain 授权域
+     * @param tenantId 租户域必填，平台域忽略
+     * @param page 从 1 开始
+     * @param pageSize 页大小
+     * @param administratorName 平台管理员显示名称包含匹配，空白表示不限制
+     * @return 委派页
+     */
+    public Page<IamDelegationGrantEntity> page(AuthorizationDomain domain, Long tenantId, int page, int pageSize,
+                                                String administratorName) {
+        String name = IamFilters.containsName(administratorName);
+        String pattern = name == null ? null : "%" + name.replace("!", "!!").replace("%", "!%")
+                .replace("_", "!_") + "%";
         return grants.selectPage(new Page<>(page, pageSize), scoped(domain, tenantId)
+                .apply(domain == AuthorizationDomain.PLATFORM && name != null,
+                        PLATFORM_ADMINISTRATOR_NAME_FILTER, pattern)
                 .orderByAsc(IamDelegationGrantEntity::getId));
+    }
+
+    /**
+     * 批量读取已通过平台委派分页边界的管理员显示名称。
+     *
+     * @param administratorIds 已通过平台委派边界的成员 ID
+     * @return 成员 ID 到显示名称的映射，成员缺失时无对应项
+     */
+    public Map<BigInteger, String> platformAdministratorNames(Collection<BigInteger> administratorIds) {
+        if (administratorIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<BigInteger, String> result = new HashMap<>();
+        platformMembers.selectList(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                .in(IamPlatformMemberEntity::getId, administratorIds)
+                .select(IamPlatformMemberEntity::getId, IamPlatformMemberEntity::getDisplayName))
+                .forEach(member -> result.put(member.getId(), member.getDisplayName()));
+        return result;
     }
 
     /**
@@ -76,6 +123,66 @@ public class DelegationRepository {
     public IamDelegationGrantEntity find(AuthorizationDomain domain, Long tenantId, long id) {
         return grants.selectOne(scoped(domain, tenantId)
                 .eq(IamDelegationGrantEntity::getId, BigInteger.valueOf(id)));
+    }
+
+    /**
+     * 批量加载已通过管理域筛选的委派子行，每类子行只查询一次。
+     *
+     * @param domain 可信管理域，平台不查询接收部门
+     * @param ids 已通过 page 或 find 验证归属的委派 ID，允许为空
+     * @return 按委派 ID 索引的子行；没有子行的委派返回空集合
+     */
+    public Map<BigInteger, Children> children(AuthorizationDomain domain, Collection<BigInteger> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        var roleRows = revisions.selectList(Wrappers.<IamDelegationRoleRevisionEntity>lambdaQuery()
+                .in(IamDelegationRoleRevisionEntity::getDelegationId, ids)
+                .orderByAsc(IamDelegationRoleRevisionEntity::getRevisionId)).stream()
+                .collect(Collectors.groupingBy(IamDelegationRoleRevisionEntity::getDelegationId));
+        var memberRows = recipientMembers.selectList(Wrappers.<IamDelegationRecipientMemberEntity>lambdaQuery()
+                .in(IamDelegationRecipientMemberEntity::getDelegationId, ids)).stream()
+                .collect(Collectors.groupingBy(IamDelegationRecipientMemberEntity::getDelegationId));
+        Map<BigInteger, List<IamDelegationRecipientDepartmentEntity>> departmentRows = domain == AuthorizationDomain.PLATFORM
+                ? Map.of() : recipientDepartments.selectList(Wrappers.<IamDelegationRecipientDepartmentEntity>lambdaQuery()
+                .in(IamDelegationRecipientDepartmentEntity::getDelegationId, ids)
+                .orderByAsc(IamDelegationRecipientDepartmentEntity::getDepartmentId)).stream()
+                .collect(Collectors.groupingBy(IamDelegationRecipientDepartmentEntity::getDelegationId));
+        var ceilingRows = ceilings.selectList(Wrappers.<IamDelegationActionCeilingEntity>lambdaQuery()
+                .in(IamDelegationActionCeilingEntity::getDelegationId, ids)
+                .orderByAsc(IamDelegationActionCeilingEntity::getActionId)).stream()
+                .collect(Collectors.groupingBy(IamDelegationActionCeilingEntity::getDelegationId));
+        Map<BigInteger, Children> result = new LinkedHashMap<>();
+        for (BigInteger id : ids) {
+            result.put(id, new Children(roleRows.getOrDefault(id, List.of()), memberRows.getOrDefault(id, List.of()),
+                    departmentRows.getOrDefault(id, List.of()), ceilingRows.getOrDefault(id, List.of())));
+        }
+        return result;
+    }
+
+    /**
+     * <p>保存同一委派的批量加载子行，仅在本次响应组装内复用。</p>
+     *
+     * @param revisions 允许的固定角色版本
+     * @param members 接收成员
+     * @param departments 接收部门
+     * @param ceilings 操作范围上限
+     * @author jy
+     * @since 1.0.0
+     */
+    public record Children(List<IamDelegationRoleRevisionEntity> revisions,
+                           List<IamDelegationRecipientMemberEntity> members,
+                           List<IamDelegationRecipientDepartmentEntity> departments,
+                           List<IamDelegationActionCeilingEntity> ceilings) {
+        /**
+         * 固定子行集合，避免不同响应记录之间意外修改共享查询结果。
+         */
+        public Children {
+            revisions = List.copyOf(revisions);
+            members = List.copyOf(members);
+            departments = List.copyOf(departments);
+            ceilings = List.copyOf(ceilings);
+        }
     }
 
     /**
@@ -303,9 +410,7 @@ public class DelegationRepository {
         return assignments.selectList(Wrappers.<IamRoleAssignmentEntity>lambdaQuery()
                 .eq(IamRoleAssignmentEntity::getDelegationGrantId, BigInteger.valueOf(delegationId))
                 .eq(IamRoleAssignmentEntity::getStatus, GrantStatus.ACTIVE)
-                .select(IamRoleAssignmentEntity::getId, IamRoleAssignmentEntity::getRevisionId,
-                        IamRoleAssignmentEntity::getValidFrom, IamRoleAssignmentEntity::getValidUntil,
-                        IamRoleAssignmentEntity::getVersion));
+                .orderByAsc(IamRoleAssignmentEntity::getId));
     }
 
     private static LambdaQueryWrapper<IamDelegationGrantEntity> scoped(AuthorizationDomain domain, Long tenantId) {

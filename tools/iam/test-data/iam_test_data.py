@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from build import build
+from refinement import refinement_build, refinement_verify
 from client import TransportError
 from lib import ConfigError, help_text, load_config, prepare, reset, verify
 
@@ -19,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=help_text(),
     )
-    parser.add_argument("command", choices=("prepare", "build", "verify", "reset", "help"))
+    parser.add_argument("command", choices=("prepare", "build", "verify", "reset", "refinement-build", "refinement-verify", "help"))
     parser.add_argument("--config", type=Path, help="测试环境 JSON 配置")
     parser.add_argument("--run-id", dest="run_id", help="本次运行标识")
     parser.add_argument(
@@ -44,6 +45,10 @@ def main(argv: list[str] | None = None) -> int:
             result = prepare(config, args.run_id)
         elif args.command == "build":
             result = build(config, args.run_id)
+        elif args.command == "refinement-build":
+            result = refinement_build(config, args.run_id)
+        elif args.command == "refinement-verify":
+            result = refinement_verify(config, args.run_id)
         elif args.command == "verify":
             result = verify(config, args.run_id)
         else:

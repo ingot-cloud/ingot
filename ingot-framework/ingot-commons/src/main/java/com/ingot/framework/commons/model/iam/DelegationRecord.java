@@ -13,6 +13,7 @@ import jakarta.validation.constraints.*;
  * @param id 委派 ID
  * @param delegation 当前委派限制
  * @param status 生效或撤销状态
+ * @param administratorName 管理员显示名称，成员资料缺失时为空
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "返回可见委派定义及撤销状态")
@@ -22,5 +23,7 @@ public record DelegationRecord(
         @NotNull @Valid @Schema(description = "当前委派限制", requiredMode = Schema.RequiredMode.REQUIRED)
         DelegationInput delegation,
         @NotNull @Schema(description = "生效或撤销状态", requiredMode = Schema.RequiredMode.REQUIRED)
-        GrantStatus status) {
+        GrantStatus status,
+        @Schema(description = "管理员显示名称，成员资料缺失时省略")
+        String administratorName) {
 }

@@ -24,11 +24,28 @@ public final class AuthorizationEvalRows {
      * @param delegationGrantId 委派来源；直接授权为空
      * @param validUntil 分配自身截止；不限期为空
      * @param delegationValidUntil 来源委派截止；无委派或不限期为空
+     * @param assignmentId 分配来源
+     * @param revisionKind 固定版本种类
+     * @param groupId 组来源，成员直接分配为空
      * @author jy
      * @since 1.0.0
      */
     public record Assignment(BigInteger revisionId, String scopeBindings, BigInteger delegationGrantId,
-                             LocalDateTime validUntil, LocalDateTime delegationValidUntil) {
+                             LocalDateTime validUntil, LocalDateTime delegationValidUntil,
+                             BigInteger assignmentId, com.ingot.framework.commons.model.iam.RoleKind revisionKind,
+                             BigInteger groupId) {
+        /**
+         * 保持现有投影夹具兼容。
+         * @param revisionId 版本
+         * @param scopeBindings 参数
+         * @param delegationGrantId 委派
+         * @param validUntil 截止
+         * @param delegationValidUntil 来源截止
+         */
+        public Assignment(BigInteger revisionId, String scopeBindings, BigInteger delegationGrantId,
+                          LocalDateTime validUntil, LocalDateTime delegationValidUntil) {
+            this(revisionId, scopeBindings, delegationGrantId, validUntil, delegationValidUntil, null, null, null);
+        }
     }
 
     /**
@@ -101,6 +118,22 @@ public final class AuthorizationEvalRows {
      */
     public record Action(String code, Boolean enabled, AuthorizationDomain domain, Boolean appEnabled,
                          BigInteger applicationId) {
+    }
+
+    /**
+     * <p>带操作 ID 的批量授权查询投影，不改变既有单操作投影的构造契约。</p>
+     *
+     * @param id 操作 ID
+     * @param code 精确操作码
+     * @param enabled 操作是否启用
+     * @param domain 应用授权域
+     * @param appEnabled 应用是否启用
+     * @param applicationId 应用 ID
+     * @author jy
+     * @since 1.0.0
+     */
+    public record IndexedAction(BigInteger id, String code, Boolean enabled, AuthorizationDomain domain,
+                                Boolean appEnabled, BigInteger applicationId) {
     }
 
     /**

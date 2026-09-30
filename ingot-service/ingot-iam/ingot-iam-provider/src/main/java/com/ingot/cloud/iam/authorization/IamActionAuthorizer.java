@@ -1,7 +1,13 @@
 package com.ingot.cloud.iam.authorization;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 
 /**
  * <p>在写操作前校验当前身份是否拥有精确 ACTION，不根据角色名或平台成员资格放行。</p>
@@ -19,6 +25,28 @@ public interface IamActionAuthorizer {
      * @throws com.ingot.framework.commons.error.BizException 无授权为 ActionDenied；基础设施故障为 AuthorizationUnavailable
      */
     Admission admit(AuthorizationContext actor, IamAction action);
+
+    /**
+     * 批量计算仅供页面展示和只读候选查询的操作资格，不替代实际写入的 {@link #admit}。
+     * 实现应在本次调用内复用同一份最新授权事实；无权操作省略，依赖故障仍抛出。
+     *
+     * @param actor 已通过身份恢复的当前成员
+     * @param actions 页面需要展示的精确操作
+     * @return 有权操作及其治理资格来源
+     */
+    default Map<IamAction, Admission> capabilities(AuthorizationContext actor, Collection<IamAction> actions) {
+        Map<IamAction, Admission> result = new LinkedHashMap<>();
+        for (IamAction action : actions) {
+            try {
+                result.put(action, admit(actor, action));
+            } catch (BizException exception) {
+                if (!IamReasonCode.ACTION_DENIED.getCode().equals(exception.getCode())) {
+                    throw exception;
+                }
+            }
+        }
+        return Map.copyOf(result);
+    }
 
     /**
      * 确认 actor 对指定 ACTION 有授权；拒绝时必须抛出异常。

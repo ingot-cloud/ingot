@@ -420,6 +420,9 @@ public class MemberQueryService {
         }
         long accountId = IamIds.require(input.accountId());
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            access.require(domain, domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_MEMBER_CREATE : IamAction.TENANT_MEMBER_CREATE);
             scopes.requireCreate(actor.context(),
                     domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_CREATE
                             : IamAction.TENANT_MEMBER_CREATE, departmentIds);

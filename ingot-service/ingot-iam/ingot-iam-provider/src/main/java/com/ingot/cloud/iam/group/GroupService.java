@@ -134,6 +134,7 @@ public class GroupService {
             }
         }
         transaction.execute(status -> {
+            groups.lockAuthorization(AuthorizationDomain.PLATFORM);
             if (!groups.existsActivePlatformMember(memberId)) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
@@ -181,6 +182,8 @@ public class GroupService {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.CREATE));
         IamSelections.requireCompatible(domain, input.selection());
         return transaction.execute(status -> {
+            groups.lockAuthorization(domain);
+            access.require(domain, action(domain, AccessKind.CREATE));
             long id = access.nextId();
             insertGroup(domain, actor, id, input);
             replaceSelection(domain, actor, id, input.selection());
@@ -204,6 +207,8 @@ public class GroupService {
         IamSelections.requireCompatible(domain, input.group().selection());
         long groupId = IamIds.require(id);
         return transaction.execute(status -> {
+            groups.lockAuthorization(domain);
+            access.require(domain, action(domain, AccessKind.UPDATE));
             ResourceDetail<GroupRecord> current = lock(domain, actor, groupId);
             IamIds.requireVersion(input.expectedVersion(), current.version());
             List<String> invalid = invalidDelegatedAssignments(domain, actor, groupId, input.group().selection());
@@ -232,6 +237,8 @@ public class GroupService {
         ActiveIdentity actor = access.require(domain, action(domain, AccessKind.DELETE));
         long groupId = IamIds.require(id);
         return transaction.execute(status -> {
+            groups.lockAuthorization(domain);
+            access.require(domain, action(domain, AccessKind.DELETE));
             ResourceDetail<GroupRecord> current = lock(domain, actor, groupId);
             if (referenced(domain, actor, groupId)) {
                 throw new BizException(IamReasonCode.OBJECT_IN_USE);

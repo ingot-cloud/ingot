@@ -11,6 +11,7 @@ import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
+import com.ingot.framework.commons.model.iam.SubjectType;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,14 +46,39 @@ public class PlatformAssignmentAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param subjectType 可选接收主体类型
+     * @param keyword 可选接收成员或组名称
      * @return 授权页
      */
     @Operation(summary = "授权列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<AssignmentRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(assignments.list(AuthorizationDomain.PLATFORM, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) SubjectType subjectType,
+            @RequestParam(required = false) String keyword) {
+        return ok(assignments.list(AuthorizationDomain.PLATFORM, page, pageSize, subjectType, keyword));
+    }
+
+    /**
+     * 当前身份的分配配置资格。
+     * @return 资格与有效委派数量
+     */
+    @GetMapping("/context")
+    @Operation(summary = "角色分配上下文")
+    public R<com.ingot.framework.commons.model.iam.AssignmentContext> context() {
+        return ok(assignments.context());
+    }
+
+    /**
+     * 读取一条可见分配。
+     * @param id 分配 ID
+     * @return 分配详情与逐条能力
+     */
+    @GetMapping("/{id}")
+    @Operation(summary = "角色分配详情")
+    public R<ResourceDetail<AssignmentRecord>> detail(@PathVariable String id) {
+        return ok(assignments.detail(AuthorizationDomain.PLATFORM, id));
     }
 
     /**
@@ -77,6 +103,19 @@ public class PlatformAssignmentAPI implements RShortcuts {
     @PostMapping("/preview")
     public R<Preview<AssignmentPreviewResult>> preview(@Valid @RequestBody AssignmentBatchInput input) {
         return ok(assignments.preview(AuthorizationDomain.PLATFORM, input));
+    }
+
+    /**
+     * 预览既有分配草稿。
+     * @param id 分配 ID
+     * @param input 草稿与版本
+     * @return 预览
+     */
+    @PostMapping("/{id}/preview")
+    @Operation(summary = "预览分配调整")
+    public R<Preview<AssignmentPreviewResult>> previewUpdate(@PathVariable String id,
+            @Valid @RequestBody AssignmentUpdateInput input) {
+        return ok(assignments.previewUpdate(AuthorizationDomain.PLATFORM, id, input));
     }
 
     /**

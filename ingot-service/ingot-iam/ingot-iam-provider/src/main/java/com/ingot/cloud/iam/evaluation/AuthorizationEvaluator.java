@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -86,6 +87,30 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     @Override
     public Admission admit(AuthorizationContext actor, IamAction action) {
         return new Admission(authorized(actor, action).governedCodes().contains(action.getCode()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<IamAction, Admission> capabilities(AuthorizationContext actor, Collection<IamAction> actions) {
+        if (actor == null) {
+            throw new BizException(IamReasonCode.IDENTITY_INVALID);
+        }
+        if (actions.isEmpty()) {
+            return Map.of();
+        }
+        // 展示资格只读取一次最新事实，绝不缓存或复用于后续写命令。
+        AuthorizationView view = evaluateRaw(actor);
+        Set<String> allowed = new LinkedHashSet<>(view.actionCodes());
+        Set<String> governed = new LinkedHashSet<>(view.governedCodes());
+        Map<IamAction, Admission> result = new LinkedHashMap<>();
+        for (IamAction action : actions) {
+            if (allowed.contains(action.getCode())) {
+                result.put(action, new Admission(governed.contains(action.getCode())));
+            }
+        }
+        return Map.copyOf(result);
     }
 
     /**
@@ -179,11 +204,21 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             Set<String> sources = new LinkedHashSet<>();
             EvaluationScope scope = new EvaluationScope();
             Deadline deadline = scope.deadline;
+            Map<Long, List<ActionGrant>> revisionGrants = new HashMap<>();
+            Set<BigInteger> actionIds = new LinkedHashSet<>();
             for (AssignmentEval assignment : assignments) {
-                List<ActionGrant> grants = synthesized(assignment.revisionId());
+                List<ActionGrant> grants = revisionGrants.computeIfAbsent(assignment.revisionId(), this::synthesized);
+                grants.forEach(grant -> actionIds.add(new BigInteger(grant.actionId())));
+            }
+            for (AuthorizationEvalRows.IndexedAction action : evaluations.listActionsByIds(actionIds)) {
+                scope.actions.put(action.id(), action);
+            }
+            Map<Long, Map<String, ActionScopeCeiling>> delegationCeilings = new HashMap<>();
+            for (AssignmentEval assignment : assignments) {
+                List<ActionGrant> grants = revisionGrants.get(assignment.revisionId());
                 sources.add(Long.toString(assignment.revisionId()));
                 Map<String, ActionScopeCeiling> ceilings = assignment.delegationId() == null
-                        ? Map.of() : ceilings(assignment.delegationId());
+                        ? Map.of() : delegationCeilings.computeIfAbsent(assignment.delegationId(), this::ceilings);
                 boolean delegated = assignment.delegationId() != null;
                 for (ActionGrant grant : grants) {
                     String code = actionCode(actor, new BigInteger(grant.actionId()), scope);
@@ -208,6 +243,17 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
                             .filter(clause -> !clause.empty()).toList());
                 }
             }
+            // 委派仅补充分配入口，绝不向业务范围或完整治理资格集合写入。
+            var effectiveDelegations = evaluations.effectiveDelegations(actor);
+            if (!effectiveDelegations.isEmpty()) {
+                codes.addAll(evaluations.enabledPlatformEntries(List.of(IamAction.PLATFORM_ASSIGNMENT_READ.getCode(),
+                        IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode(), IamAction.PLATFORM_ASSIGNMENT_UPDATE.getCode(),
+                        IamAction.PLATFORM_ASSIGNMENT_DELETE.getCode())));
+            }
+            for (var delegation : effectiveDelegations) {
+                sources.add("delegation" + KEY_SEPARATOR + delegation.getId() + KEY_SEPARATOR + delegation.getVersion());
+                deadline.merge(delegation.getValidUntil());
+            }
             Map<String, ResolvedActionScope> resolved = new LinkedHashMap<>();
             for (String code : codes) {
                 resolved.put(code, new ResolvedActionScope(scopes.getOrDefault(code, List.of())));
@@ -220,6 +266,39 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             failure.initCause(exception);
             throw failure;
         }
+    }
+
+    /**
+     * 展开真实有效分配来源及该操作范围，不伪造来源记录。
+     * @param actor 被诊断的可信域成员
+     * @param actionId 已验证操作
+     * @return 操作对应的真实来源，披露边界由诊断入口再次过滤
+     */
+    public List<com.ingot.framework.commons.model.iam.DecisionSource> decisionSources(AuthorizationContext actor,
+                                                                                    String actionId) {
+        List<AuthorizationEvalRows.Assignment> rows = new ArrayList<>(evaluations.listDirectAssignments(actor));
+        rows.addAll(evaluations.listGroupAssignments(actor));
+        List<com.ingot.framework.commons.model.iam.DecisionSource> result = new ArrayList<>();
+        for (var row : rows) {
+            for (ActionGrant grant : synthesized(row.revisionId().longValueExact())) {
+                if (!grant.actionId().equals(actionId) || row.assignmentId() == null) { continue; }
+                var ceiling = row.delegationGrantId() == null ? null
+                        : ceilings(row.delegationGrantId().longValueExact()).get(actionId);
+                if (row.delegationGrantId() != null && ceiling == null) { continue; }
+                var bound = ScopeBinder.constrain(ScopeBinder.bind(grant, bindings(row.scopeBindings())), ceiling);
+                String ranges = bound.isEmpty() ? "无对象范围" : bound.stream().map(clause -> clause.all() ? "全部"
+                        : clause.self() ? "本人" : !clause.objectIds().isEmpty() ? "指定对象 " + clause.objectIds().size() + " 个"
+                        : "部门范围").distinct().collect(java.util.stream.Collectors.joining("、"));
+                String summary = "分配 " + row.assignmentId() + (row.groupId() == null ? "（直接成员）" : "（用户组 " + row.groupId() + "）")
+                        + " / 固定版本 " + row.revisionId() + (row.delegationGrantId() == null ? " / 直接授权" : " / 来源委派 " + row.delegationGrantId())
+                        + " / " + ranges;
+                result.add(new com.ingot.framework.commons.model.iam.DecisionSource(row.assignmentId().toString(),
+                        row.delegationGrantId() == null ? null : row.delegationGrantId().toString(),
+                        row.revisionKind() == null ? null : new com.ingot.framework.commons.model.iam.RoleRevisionRef(
+                                row.revisionKind(), row.revisionId().toString()), summary));
+            }
+        }
+        return List.copyOf(result);
     }
 
     private static AuthorizationContext contextFromKey(String cacheKey) {
@@ -311,10 +390,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     }
 
     private String actionCode(AuthorizationContext actor, BigInteger actionId, EvaluationScope scope) {
-        AuthorizationEvalRows.Action action = scope.actions.computeIfAbsent(actionId, id -> {
-            List<AuthorizationEvalRows.Action> rows = evaluations.listActions(id);
-            return rows.size() == 1 ? rows.getFirst() : null;
-        });
+        AuthorizationEvalRows.IndexedAction action = scope.actions.get(actionId);
         if (action == null) {
             return null;
         }
@@ -390,7 +466,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      */
     private static final class EvaluationScope {
         private final Deadline deadline = new Deadline();
-        private final Map<BigInteger, AuthorizationEvalRows.Action> actions = new HashMap<>();
+        private final Map<BigInteger, AuthorizationEvalRows.IndexedAction> actions = new HashMap<>();
         private final Map<BigInteger, AuthorizationEvalRows.Entitlement> entitlements = new HashMap<>();
     }
 

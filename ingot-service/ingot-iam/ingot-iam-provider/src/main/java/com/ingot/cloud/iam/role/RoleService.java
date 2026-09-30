@@ -25,6 +25,7 @@ import com.ingot.cloud.iam.persistence.entity.IamRoleGrantEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleParameterEntity;
 import com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity;
 import com.ingot.cloud.iam.support.IamAccess;
+import com.ingot.cloud.iam.support.IamCapabilities;
 import com.ingot.cloud.iam.support.IamFilters;
 import com.ingot.cloud.iam.support.IamAuditWriter;
 import com.ingot.cloud.iam.support.IamDetails;
@@ -164,8 +165,10 @@ public class RoleService {
         IamPages.require(page, pageSize);
         Page<IamRoleDefinitionEntity> rows = roles.pageDefinitions(domain, shared, tenantId(domain, actor), page,
                 pageSize, name, IamFilters.enabledOf(status));
+        IamCapabilities permissions = rows.getRecords().isEmpty() ? new IamCapabilities(Map.of())
+                : summaryCapabilities(domain, shared, actor);
         List<ResourceDetail<RoleSummary>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(summary(row), version(row.getVersion()))).toList();
+                .map(row -> summaryDetail(domain, shared, row, permissions)).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
@@ -215,9 +218,15 @@ public class RoleService {
      * @return 新角色 ID
      */
     public CreatedResource create(AuthorizationDomain domain, boolean shared, RoleCreateInput input) {
-        ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.CREATE));
+        ActiveIdentity actor = domain == AuthorizationDomain.PLATFORM
+                ? access.requireGoverned(domain, action(domain, shared, AccessKind.CREATE))
+                : access.require(domain, action(domain, shared, AccessKind.CREATE));
         RoleKind kind = requireCreatable(domain, shared, input.kind());
         return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
+            if (domain == AuthorizationDomain.PLATFORM) {
+                access.requireGoverned(domain, action(domain, shared, AccessKind.CREATE));
+            }
             long id = access.nextId();
             Long tenantId = kind == RoleKind.TENANT_CUSTOM ? IamIds.require(actor.context().tenantId()) : null;
             IamRoleDefinitionEntity entity = new IamRoleDefinitionEntity();
@@ -257,6 +266,7 @@ public class RoleService {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
             RoleRow current = lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -288,6 +298,7 @@ public class RoleService {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
             RoleRow current = lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -319,6 +330,7 @@ public class RoleService {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.DELETE));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
             RoleRow current = lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -389,6 +401,7 @@ public class RoleService {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.PUBLISH));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
             RoleRow current = lock(domain, shared, actor, roleId);
             if (current.kind() == RoleKind.SYSTEM) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -700,7 +713,29 @@ public class RoleService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return IamDetails.of(summary(row), version(row.getVersion()));
+        return summaryDetail(domain, shared, row, summaryCapabilities(domain, shared, actor));
+    }
+
+    private IamCapabilities summaryCapabilities(AuthorizationDomain domain, boolean shared, ActiveIdentity actor) {
+        return domain == AuthorizationDomain.PLATFORM && !shared ? access.capabilities(actor, List.of(
+                IamAction.PLATFORM_ROLE_READ, IamAction.PLATFORM_ROLE_STATUS, IamAction.PLATFORM_ROLE_DELETE,
+                IamAction.PLATFORM_ROLE_PUBLISH, IamAction.PLATFORM_ROLE_PREVIEW)) : new IamCapabilities(Map.of());
+    }
+
+    private ResourceDetail<RoleSummary> summaryDetail(AuthorizationDomain domain, boolean shared,
+            IamRoleDefinitionEntity row, IamCapabilities permissions) {
+        if (domain != AuthorizationDomain.PLATFORM || shared) {
+            return IamDetails.of(summary(row), version(row.getVersion()));
+        }
+        Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new LinkedHashMap<>();
+        for (AccessKind kind : List.of(AccessKind.READ, AccessKind.STATUS, AccessKind.DELETE, AccessKind.PUBLISH, AccessKind.PREVIEW)) {
+            IamAction operation = action(domain, false, kind);
+            boolean allowed = (kind == AccessKind.READ || row.getKind() != RoleKind.SYSTEM)
+                    && permissions.allows(operation, false);
+            capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
+                    allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前角色不可执行此操作"));
+        }
+        return IamDetails.of(summary(row), capabilities, version(row.getVersion()));
     }
 
     private RoleRow lock(AuthorizationDomain domain, boolean shared, ActiveIdentity actor, long id) {

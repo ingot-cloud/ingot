@@ -20,6 +20,13 @@ import org.apache.ibatis.annotations.Select;
 @InterceptorIgnore(tenantLine = IamPersistence.EXPLICIT_BOUNDARY, dataPermission = IamPersistence.EXPLICIT_BOUNDARY)
 public interface IamPlatformMemberMapper extends BaseMapper<IamPlatformMemberEntity> {
     /**
+     * 取得平台授权事务首锁，再锁定成员资格。
+     * @return 治理应用标识
+     */
+    @Select(com.ingot.cloud.iam.persistence.IamAuthorizationSql.PLATFORM_WRITE_LOCK)
+    BigInteger lockPlatformAuthorization();
+
+    /**
      * 锁定平台成员资格，调用方须处于事务中。
      * @param id 平台成员 ID
      * @return 成员记录，不存在时为空

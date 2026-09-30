@@ -74,6 +74,12 @@ public class DelegationAdmission {
         if (validFrom != null && now.isBefore(validFrom) || validUntil != null && !now.isBefore(validUntil)) {
             errors.add(new ValidationIssue("delegationGrantId", IamReasonCode.ACTION_DENIED, "委派不在有效期内"));
         }
+        Instant requestedFrom = request.validFrom() == null ? now : request.validFrom();
+        if (request.domain() == AuthorizationDomain.PLATFORM && (validFrom != null && requestedFrom.isBefore(validFrom)
+                || validUntil != null && (request.validUntil() == null || request.validUntil().isAfter(validUntil)))) {
+            errors.add(new ValidationIssue("validUntil", IamReasonCode.DELEGATION_EXCEEDED,
+                    "分配起止时间超出来源委派有效期"));
+        }
         errors.addAll(duration(delegation, request));
         if (!assignments.delegationAllowsRevision(request.delegationId(), request.revisionId())) {
             errors.add(new ValidationIssue("roleRevisionRef", IamReasonCode.ACTION_DENIED, "委派不允许该角色版本"));

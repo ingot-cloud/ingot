@@ -56,6 +56,16 @@ public class GroupRepository {
     private final IamRoleAssignmentMapper assignments;
 
     /**
+     * 组写入先锁平台授权治理应用，防止与分配校验并发扩大组。
+     * @param domain 管理域
+     */
+    public void lockAuthorization(com.ingot.framework.commons.model.iam.AuthorizationDomain domain) {
+        if (domain == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM) {
+            assignments.lockPlatformAuthorization();
+        }
+    }
+
+    /**
      * 分页列出平台用户组。
      *
      * @param page 从 1 开始

@@ -40,6 +40,14 @@ public class MemberLifecycleRepository {
     private final IamMemberDepartmentMapper memberDepartments;
 
     /**
+     * 取得平台授权事务的首个写锁，租户事务仍使用原有组织锁。
+     * @param domain 管理域
+     */
+    public void lockAuthorization(AuthorizationDomain domain) {
+        if (domain == AuthorizationDomain.PLATFORM) { platformMembers.lockPlatformAuthorization(); }
+    }
+
+    /**
      * 锁定组织并读取所有者成员 ID。
      * @param tenantId 已授权租户 ID
      * @return 所有者成员 ID 文本，组织不存在时为空

@@ -155,7 +155,7 @@ class IamAuthorizationContractTest {
                 MemberRoleView.class, MemberRoleReplaceInput.class,
                 MemberDepartmentInput.class, TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class,
                 DepartmentDraft.class, DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class,
-                ResourceDraft.class, ResourceUpdateInput.class, ActionDraft.class, ActionUpdateInput.class,
+                ResourceDraft.class, ResourceUpdateInput.class, ApplicationPurgeInput.class, ActionDraft.class, ActionUpdateInput.class,
                 MenuDraft.class, MenuUpdateInput.class, PlanDraft.class, PlanUpdateInput.class,
                 EntitlementReplaceInput.class, TenantPreviewResult.class, EntitlementPreviewResult.class,
                 EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class,
@@ -163,7 +163,7 @@ class IamAuthorizationContractTest {
                 AccountCreateInput.class, AccountUpdateInput.class, AccountLockInput.class,
                 AccountLookupInput.class, AccountRecord.class, AccountSecret.class,
                 AccountSelfProfile.class, AccountSelfProfileInput.class, CurrentPasswordInput.class,
-                ExportTask.class, SelectionPurpose.class, AccountLookupPurpose.class)) {
+                ApplicationBundleDraft.class, ActionLookupInput.class, ExportTask.class, SelectionPurpose.class, AccountLookupPurpose.class)) {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
         }
         for (java.lang.reflect.Type type : List.of(
@@ -197,6 +197,15 @@ class IamAuthorizationContractTest {
                 new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleSummary>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AssignmentRecord>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberRoleView>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionRecord>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<List<MenuActionRecord>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionLookupRecord>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<ActionCatalogView>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GrantCatalogResource>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentContext>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationCandidatePage>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationRoleCandidatePage>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DelegationRecord>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceDraft>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {}.getType(),

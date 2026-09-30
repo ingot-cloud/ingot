@@ -45,6 +45,37 @@ public interface IamActionMapper extends BaseMapper<IamActionEntity> {
     List<AuthorizationEvalRows.Action> listWithApplication(@Param("id") BigInteger id);
 
     /**
+     * 批量读取操作与应用信息，保持与单操作查询相同的启停和域投影。
+     *
+     * @param ids 去重后的操作 ID，不得为空集合
+     * @return 命中操作；未命中的 ID 不出现
+     */
+    @Select("""
+            <script>
+            SELECT a.id,a.code,a.enabled,app.domain,app.enabled AS app_enabled,app.id AS application_id
+              FROM iam_action a JOIN iam_application app ON app.id=a.application_id
+             WHERE a.id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </script>
+            """)
+    List<AuthorizationEvalRows.IndexedAction> listWithApplications(@Param("ids") Collection<BigInteger> ids);
+
+    /**
+     * 读取启用的平台分配入口，委派不能绕过应用、资源或操作停用。
+     * @param codes 服务器声明的精确入口操作码
+     * @return 当前可用操作码
+     */
+    @Select("""
+            <script>SELECT a.code FROM iam_action a
+              JOIN iam_application app ON app.id=a.application_id
+              JOIN iam_resource r ON r.id=a.resource_id
+             WHERE app.domain='PLATFORM' AND app.enabled=TRUE AND r.enabled=TRUE AND a.enabled=TRUE
+               AND a.code IN <foreach collection="codes" item="code" open="(" separator="," close=")">#{code}</foreach>
+            </script>
+            """)
+    List<String> enabledPlatformEntries(@Param("codes") List<String> codes);
+
+    /**
      * 读取多个操作的引用前提：自身与应用/资源启停、应用授权域及资源范围能力。
      *
      * @param ids 操作 ID，不得为空集合

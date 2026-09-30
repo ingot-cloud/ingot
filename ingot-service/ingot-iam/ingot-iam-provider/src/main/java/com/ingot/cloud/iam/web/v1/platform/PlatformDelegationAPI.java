@@ -45,14 +45,16 @@ public class PlatformDelegationAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param administratorName 管理员显示名称包含匹配，可空
      * @return 委派页
      */
     @Operation(summary = "委派列表")
     @GetMapping
     public R<PageResponse<ResourceDetail<DelegationRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(delegations.list(AuthorizationDomain.PLATFORM, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String administratorName) {
+        return ok(delegations.list(AuthorizationDomain.PLATFORM, page, pageSize, administratorName));
     }
 
     /**
@@ -65,6 +67,17 @@ public class PlatformDelegationAPI implements RShortcuts {
     @PostMapping
     public R<CreatedResource> create(@Valid @RequestBody DelegationInput input) {
         return ok(delegations.create(AuthorizationDomain.PLATFORM, input));
+    }
+
+    /**
+     * 创建前校验委派草稿。
+     * @param input 委派定义
+     * @return 校验效果
+     */
+    @PostMapping("/preview")
+    @Operation(summary = "预览新委派")
+    public R<Preview<ReferenceImpactPreview>> previewCreate(@Valid @RequestBody DelegationInput input) {
+        return ok(delegations.previewCreate(AuthorizationDomain.PLATFORM, input));
     }
 
     /**

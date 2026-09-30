@@ -35,7 +35,10 @@ class IamResponseContractTest {
     @Test
     void responseFixturesPassNestedValidation() throws Exception {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-            for (Object value : List.of(fixture("bootstrap", new TypeReference<Bootstrap>() {}),
+            for (Object value : List.of(fixture("assignment-record", new TypeReference<AssignmentRecord>() {}),
+                    fixture("assignment-context", new TypeReference<AssignmentContext>() {}),
+                    fixture("authorization-candidates", new TypeReference<AuthorizationCandidatePage>() {}),
+                    fixture("bootstrap", new TypeReference<Bootstrap>() {}),
                     fixture("member-detail", new TypeReference<ResourceDetail<MemberRecord>>() {}),
                     fixture("member-page", new TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {}),
                     fixture("decision-restricted", new TypeReference<Decision>() {}),
@@ -68,6 +71,23 @@ class IamResponseContractTest {
         assertTrue(mapper.valueToTree(new ImpactSummary(1L, 2L, 3L, false)).get("affectedMembers").isIntegralNumber());
         assertTrue(mapper.valueToTree(new GroupRecord("g", "组", null,
                 new Selection(List.of(), List.of()), 1L)).get("visibleMemberCount").isIntegralNumber());
+    }
+
+    @Test
+    void assignmentCreationUsesClientWallClockWhileValidityRemainsAnInstant() {
+        var instant = java.time.Instant.parse("2026-09-28T08:00:00Z");
+        var input = new AssignmentInput(new SubjectRef(SubjectType.MEMBER, "1002"),
+                new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "31"), Map.of(), instant, null, null);
+        var record = new AssignmentRecord("90", input, GrantStatus.ACTIVE, AssignmentSource.MANUAL,
+                "接收人", "角色", "1", "直接分配", instant, new AssignmentAuthor(null, "未知"), AssignmentEffectiveStatus.ACTIVE);
+        for (var sample : Map.of("Asia/Shanghai", "2026-09-28 16:00:00", "America/New_York", "2026-09-28 04:00:00").entrySet()) {
+            var json = mapper.copy().setTimeZone(java.util.TimeZone.getTimeZone(sample.getKey())).valueToTree(record);
+            assertEquals(sample.getValue(), json.get("createdAt").asText());
+            assertEquals("2026-09-28T08:00:00Z", json.at("/assignment/validFrom").asText());
+            assertEquals("未知", json.at("/grantedBy/name").asText());
+        }
+        assertTrue(mapper.valueToTree(new AssignmentContext(false, false, false, false, 1))
+                .get("effectiveDelegationCount").isIntegralNumber());
     }
 
     @Test

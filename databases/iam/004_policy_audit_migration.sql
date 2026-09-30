@@ -126,6 +126,7 @@ CREATE TABLE iam_authorization_audit (
     UNIQUE KEY uk_iam_audit_event (event_id),
     KEY idx_iam_audit_tenant_time (tenant_id, occurred_at, id),
     KEY idx_iam_audit_actor (actor_account_id, occurred_at, id),
+    KEY idx_iam_audit_assignment_create (assignment_id, change_type, occurred_at, id),
     KEY idx_iam_audit_delivery (delivered_at, id),
     CONSTRAINT ck_iam_audit_context CHECK ((domain = 'PLATFORM' AND tenant_id IS NULL) OR (domain = 'TENANT' AND tenant_id IS NOT NULL))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

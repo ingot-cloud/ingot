@@ -276,6 +276,8 @@ def build():
         for resource in sorted(catalog[application]):
             resource_count += 1
             name, scopes, fields = RESOURCES[resource]
+            if APPLICATIONS[application]['domain'] == 'PLATFORM':
+                scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]
             lines.append(insert(
                 'iam_resource',
                 ['id', 'application_id', 'code', 'name', 'scope_capabilities', 'field_capabilities',

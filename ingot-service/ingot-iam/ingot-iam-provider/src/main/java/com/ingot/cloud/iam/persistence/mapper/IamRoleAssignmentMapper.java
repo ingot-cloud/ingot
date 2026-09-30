@@ -38,7 +38,8 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
     @Select("""
             SELECT ra.revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_until,
                    (SELECT d.valid_until FROM iam_delegation_grant d
-                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until
+                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until,
+                   ra.id AS assignment_id,ra.revision_kind,COALESCE(ra.platform_group_id,ra.tenant_group_id) AS group_id
               FROM iam_role_assignment ra
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
                AND ra.platform_member_id=#{memberId} AND ra.tenant_id IS NULL
@@ -71,7 +72,8 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
     @Select(IamMembershipSql.DEPARTMENT_REACH + """
             SELECT ra.revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_until,
                    (SELECT d.valid_until FROM iam_delegation_grant d
-                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until
+                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until,
+                   ra.id AS assignment_id,ra.revision_kind,COALESCE(ra.platform_group_id,ra.tenant_group_id) AS group_id
               FROM iam_role_assignment ra
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
                AND ra.tenant_member_id=#{memberId} AND ra.tenant_id=#{tenantId}
@@ -104,7 +106,8 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
     @Select("""
             SELECT ra.revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_until,
                    (SELECT d.valid_until FROM iam_delegation_grant d
-                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until
+                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until,
+                   ra.id AS assignment_id,ra.revision_kind,COALESCE(ra.platform_group_id,ra.tenant_group_id) AS group_id
               FROM iam_role_assignment ra
               JOIN iam_platform_group_member gm ON gm.group_id=ra.platform_group_id
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
@@ -116,7 +119,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                      WHERE d.id=ra.delegation_grant_id AND d.status=#{status}
                        AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
                        AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
-            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_RECIPIENT_REACHED + """
+            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_GROUP_RECIPIENTS_REACHED + """
                        ))
             """)
     List<AuthorizationEvalRows.Assignment> listPlatformGroup(@Param("domain") AuthorizationDomain domain,
@@ -138,7 +141,8 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
     @Select(IamMembershipSql.DEPARTMENT_REACH + IamMembershipSql.MEMBER_GROUPS + """
             SELECT ra.revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_until,
                    (SELECT d.valid_until FROM iam_delegation_grant d
-                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until
+                     WHERE d.id=ra.delegation_grant_id) AS delegation_valid_until,
+                   ra.id AS assignment_id,ra.revision_kind,COALESCE(ra.platform_group_id,ra.tenant_group_id) AS group_id
               FROM iam_role_assignment ra
              WHERE ra.domain=#{domain} AND ra.status=#{status} AND ra.subject_type=#{subjectType}
                AND ra.tenant_group_id """ + IamMembershipSql.IN_MEMBER_GROUPS + """
@@ -188,6 +192,69 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
             """)
     IamRoleAssignmentEntity lockTenant(@Param("id") BigInteger id, @Param("domain") AuthorizationDomain domain,
                                        @Param("tenantId") BigInteger tenantId);
+
+    /**
+     * 一次批量关联平台分配标签及最早创建审计，避免逐行读取授权人。
+     * @param ids 当前可披露页 ID
+     * @return 显示信息
+     */
+    @Select("""
+            <script>SELECT ra.id,COALESCE(m.display_name,g.name) AS subject_name,
+                   d.name AS role_name,r.revision AS revision_number,au.actor_member_id AS author_id,
+                   author.display_name AS author_name,
+                   CASE WHEN d.enabled=FALSE THEN FALSE WHEN ra.delegation_grant_id IS NULL THEN TRUE
+                   ELSE EXISTS(SELECT 1 FROM iam_delegation_grant dg
+                     WHERE dg.id=ra.delegation_grant_id AND dg.status='ACTIVE'
+                       AND (dg.valid_from IS NULL OR dg.valid_from&lt;=CURRENT_TIMESTAMP)
+                       AND (dg.valid_until IS NULL OR dg.valid_until&gt;CURRENT_TIMESTAMP)
+                       AND EXISTS(SELECT 1 FROM iam_delegation_role_revision dr WHERE dr.delegation_id=dg.id
+                         AND dr.revision_id=ra.revision_id)
+                       AND ((ra.subject_type='MEMBER' AND EXISTS(SELECT 1 FROM iam_delegation_recipient_member rm
+                         WHERE rm.delegation_id=dg.id AND rm.platform_member_id=ra.platform_member_id))
+                       OR (ra.subject_type='GROUP' AND EXISTS(SELECT 1 FROM iam_platform_group_member gm
+                         WHERE gm.group_id=ra.platform_group_id)
+                         AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member gm
+                           WHERE gm.group_id=ra.platform_group_id AND NOT EXISTS(
+                             SELECT 1 FROM iam_delegation_recipient_member rm
+                              WHERE rm.delegation_id=dg.id AND rm.platform_member_id=gm.member_id))))) END AS source_valid
+              FROM iam_role_assignment ra JOIN iam_role_revision r ON r.id=ra.revision_id
+              JOIN iam_role_definition d ON d.id=r.role_id
+              LEFT JOIN iam_platform_member m ON m.id=ra.platform_member_id
+              LEFT JOIN iam_platform_group g ON g.id=ra.platform_group_id
+              LEFT JOIN iam_authorization_audit au ON au.assignment_id=ra.id AND au.change_type='CREATE'
+               AND NOT EXISTS(SELECT 1 FROM iam_authorization_audit older WHERE older.assignment_id=ra.id
+                    AND older.change_type='CREATE' AND (older.occurred_at&lt;au.occurred_at
+                    OR (older.occurred_at=au.occurred_at AND older.id&lt;au.id)))
+              LEFT JOIN iam_platform_member author ON author.id=au.actor_member_id
+             WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL
+               AND ra.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+            </script>
+            """)
+    List<com.ingot.cloud.iam.persistence.projection.AssignmentPresentation> presentation(
+            @Param("ids") List<BigInteger> ids);
+
+    /**
+     * 本人有效平台委派，只提供分配入口，不产生业务授权。
+     * @param memberId 可信平台成员
+     * @return 有效委派
+     */
+    @Select("""
+            SELECT d.* FROM iam_delegation_grant d
+             WHERE d.domain='PLATFORM' AND d.tenant_id IS NULL AND d.status='ACTIVE'
+               AND d.platform_administrator_id=#{memberId}
+               AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
+               AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
+             ORDER BY d.id
+            """)
+    List<com.ingot.cloud.iam.persistence.entity.IamDelegationGrantEntity> effectivePlatformDelegations(
+            @Param("memberId") BigInteger memberId);
+
+    /**
+     * 平台写入的首个锁，统一委派、分配与组成员变更顺序。
+     * @return 治理应用行
+     */
+    @Select(com.ingot.cloud.iam.persistence.IamAuthorizationSql.PLATFORM_WRITE_LOCK)
+    BigInteger lockPlatformAuthorization();
 
     /**
      * 统计引用指定角色任一版本的授权条数。

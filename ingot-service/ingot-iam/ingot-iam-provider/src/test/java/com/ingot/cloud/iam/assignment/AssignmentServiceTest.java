@@ -157,7 +157,8 @@ class AssignmentServiceTest {
                 transactions);
         service = new AssignmentService(access, audits, changes, roles, IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),
-                transactions);
+                org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class),
+                org.mockito.Mockito.mock(PlatformAuthorizationEditor.class), transactions);
         governed = true;
         authenticate();
     }

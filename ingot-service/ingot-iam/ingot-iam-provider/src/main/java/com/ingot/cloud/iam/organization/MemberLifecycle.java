@@ -157,6 +157,7 @@ public class MemberLifecycle {
         long targetId = id(memberId).longValueExact();
         Long tenantId = actor.tenantId() == null ? null : id(actor.tenantId()).longValueExact();
         return transaction.execute(status -> {
+            members.lockAuthorization(actor.domain());
             String owner = lockTenant(actor);
             identities.requireActive(actor);
             MemberLifecycleRepository.LockedMember before = lockMember(actor, targetId);

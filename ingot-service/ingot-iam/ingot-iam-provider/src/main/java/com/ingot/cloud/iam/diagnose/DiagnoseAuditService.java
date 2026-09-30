@@ -90,7 +90,14 @@ public class DiagnoseAuditService {
         String memberId = resolveMember(domain, actor, input);
         IamAction memberRead = domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
-        scopes.requireVisibleMember(actor.context(), memberRead, IamIds.require(memberId));
+        if (domain == AuthorizationDomain.PLATFORM) {
+            if (!scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
+                    IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode(), memberId)) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+        } else {
+            scopes.requireVisibleMember(actor.context(), memberRead, IamIds.require(memberId));
+        }
         IamApplicationEntity application = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
                 .eq(IamApplicationEntity::getId, id(IamIds.require(input.applicationId())))
                 .eq(IamApplicationEntity::getDomain, domain));
@@ -110,9 +117,16 @@ public class DiagnoseAuditService {
         IamReasonCode denied = denial(domain, actor, target, application, action, view, input.targetId());
         boolean allowed = denied == null;
         AuthorizationEvaluator.AuthorizationView operatorView = evaluator.evaluate(actor.context());
-        List<DecisionSource> sources = discloseSources(domain, actor, memberId, operatorView)
-                ? List.of(new DecisionSource(null, null, null, "已按当前身份展开有效授权"))
-                : List.of();
+        List<DecisionSource> sources = List.of();
+        if (discloseSources(domain, actor, memberId, operatorView)) {
+            sources = evaluator.decisionSources(target, input.actionId());
+        } else if (domain == AuthorizationDomain.PLATFORM
+                && operatorView.actionCodes().contains(IamAction.PLATFORM_ASSIGNMENT_READ.getCode())) {
+            var owned = evaluations.effectiveDelegations(actor.context()).stream()
+                    .map(row -> row.getId().toString()).collect(java.util.stream.Collectors.toSet());
+            sources = evaluator.decisionSources(target, input.actionId()).stream()
+                    .filter(source -> source.delegationId() != null && owned.contains(source.delegationId())).toList();
+        }
         return new Decision(allowed, denied, allowed ? "当前计算允许该操作" : denied.getText(), sources, SCOPE_SUMMARY,
                 discloseFields(actor, input.targetId()), view.version(), view.expiresAt());
     }
@@ -219,6 +233,13 @@ public class DiagnoseAuditService {
         if (targetId == null || targetId.isBlank()) {
             return;
         }
+        if (actor.context().domain() == AuthorizationDomain.PLATFORM) {
+            if (!scopes.targetAllowed(actor.context(), evaluator.evaluate(actor.context()),
+                    IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode(), targetId)) {
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            }
+            return;
+        }
         String resource = resourceOf(actionCode);
         if ("member".equals(resource)) {
             scopes.requireVisibleMember(actor.context(), memberRead, IamIds.require(targetId));
@@ -256,7 +277,7 @@ public class DiagnoseAuditService {
         }
         IamAction assignmentRead = domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_ASSIGNMENT_READ : IamAction.TENANT_ASSIGNMENT_READ;
-        return operatorView.actionCodes().contains(assignmentRead.getCode());
+        return operatorView.governedCodes().contains(assignmentRead.getCode());
     }
 
     private static String resourceOf(String actionCode) {

@@ -2,7 +2,11 @@ package com.ingot.cloud.iam.persistence;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -45,6 +49,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class AssignmentRepository {
+    private static final String PLATFORM_MEMBER_NAME_FILTER = "EXISTS (SELECT 1 FROM iam_platform_member m "
+            + "WHERE m.id=platform_member_id AND m.display_name LIKE {0} ESCAPE '!')";
+    private static final String PLATFORM_GROUP_NAME_FILTER = "EXISTS (SELECT 1 FROM iam_platform_group g "
+            + "WHERE g.id=platform_group_id AND g.name LIKE {0} ESCAPE '!')";
     private final IamRoleAssignmentMapper assignments;
     private final IamDelegationGrantMapper delegations;
     private final IamDelegationRoleRevisionMapper delegationRevisions;
@@ -69,6 +77,91 @@ public class AssignmentRepository {
     public Page<IamRoleAssignmentEntity> page(AuthorizationDomain domain, Long tenantId, int page, int pageSize) {
         return assignments.selectPage(new Page<>(page, pageSize), scoped(domain, tenantId)
                 .orderByAsc(IamRoleAssignmentEntity::getId));
+    }
+
+    /**
+     * 对平台治理管理员可见分配先筛选接收对象，再由数据库分页和计数。
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 可选接收主体类型
+     * @param keyword 可选的已规范化名称关键字
+     * @return 平台分配页
+     */
+    public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
+            String keyword) {
+        var query = scoped(AuthorizationDomain.PLATFORM, null);
+        filterPlatformSubject(query, subjectType, keyword);
+        return assignments.selectPage(new Page<>(page, pageSize), query.orderByAsc(IamRoleAssignmentEntity::getId));
+    }
+
+    /**
+     * 按本人持有来源分页列出平台分配，包含历史失效来源，禁止跨管理员读取。
+     * @param memberId 可信成员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 可选接收主体类型
+     * @param keyword 可选的已规范化名称关键字
+     * @return 分配页
+     */
+    public Page<IamRoleAssignmentEntity> pageOwned(long memberId, int page, int pageSize,
+            SubjectType subjectType, String keyword) {
+        var query = scoped(AuthorizationDomain.PLATFORM, null)
+                .apply("EXISTS (SELECT 1 FROM iam_delegation_grant owned WHERE owned.id=delegation_grant_id "
+                        + "AND owned.domain={0} AND owned.tenant_id IS NULL AND owned.platform_administrator_id={1})",
+                        AuthorizationDomain.PLATFORM.name(), BigInteger.valueOf(memberId));
+        filterPlatformSubject(query, subjectType, keyword);
+        return assignments.selectPage(new Page<>(page, pageSize), query.orderByDesc(IamRoleAssignmentEntity::getId));
+    }
+
+    private static void filterPlatformSubject(LambdaQueryWrapper<IamRoleAssignmentEntity> query,
+            SubjectType subjectType, String keyword) {
+        if (subjectType != null) {
+            query.eq(IamRoleAssignmentEntity::getSubjectType, subjectType);
+        }
+        if (keyword == null) {
+            return;
+        }
+        String pattern = "%" + keyword.replace("!", "!!").replace("%", "!%")
+                .replace("_", "!_") + "%";
+        if (subjectType == SubjectType.MEMBER) {
+            query.apply(PLATFORM_MEMBER_NAME_FILTER, pattern);
+        } else if (subjectType == SubjectType.GROUP) {
+            query.apply(PLATFORM_GROUP_NAME_FILTER, pattern);
+        } else {
+            query.and(nested -> nested.apply(PLATFORM_MEMBER_NAME_FILTER, pattern)
+                    .or().apply(PLATFORM_GROUP_NAME_FILTER, pattern));
+        }
+    }
+
+    /**
+     * 锁定平台授权治理应用，平台所有相关写入先取此锁。
+     * @param domain 管理域
+     */
+    public void lockAuthorization(AuthorizationDomain domain) {
+        if (domain == AuthorizationDomain.PLATFORM) {
+            assignments.lockPlatformAuthorization();
+        }
+    }
+
+    /**
+     * 批量读取可披露分配的显示信息。
+     * @param ids 可见页标识
+     * @return 按 ID 索引的信息
+     */
+    public java.util.Map<BigInteger, com.ingot.cloud.iam.persistence.projection.AssignmentPresentation> presentation(
+            List<BigInteger> ids) {
+        if (ids.isEmpty()) { return java.util.Map.of(); }
+        return assignments.presentation(ids).stream().collect(java.util.stream.Collectors.toMap(
+                com.ingot.cloud.iam.persistence.projection.AssignmentPresentation::id, value -> value));
+    }
+
+    /**
+     * 读取本人当前有效委派。
+     * @param memberId 可信平台成员
+     * @return 有效委派
+     */
+    public List<IamDelegationGrantEntity> effectiveDelegations(long memberId) {
+        return assignments.effectivePlatformDelegations(BigInteger.valueOf(memberId));
     }
 
     /**
@@ -124,6 +217,7 @@ public class AssignmentRepository {
                        LocalDateTime validUntil, BigInteger currentVersion) {
         assignments.update(Wrappers.<IamRoleAssignmentEntity>lambdaUpdate()
                 .eq(IamRoleAssignmentEntity::getId, BigInteger.valueOf(id))
+                .eq(IamRoleAssignmentEntity::getVersion, currentVersion)
                 .set(IamRoleAssignmentEntity::getRevisionId, BigInteger.valueOf(revisionId))
                 .set(IamRoleAssignmentEntity::getRevisionKind, revisionKind)
                 .set(IamRoleAssignmentEntity::getScopeBindings, bindings)
@@ -165,6 +259,31 @@ public class AssignmentRepository {
             wrapper.eq(IamDelegationGrantEntity::getTenantId, BigInteger.valueOf(tenantId));
         }
         return delegations.selectOne(wrapper);
+    }
+
+    /**
+     * 批量读取可见分配的委派来源，列表对象能力不再逐行查询来源持有人。
+     *
+     * @param domain 可信管理域
+     * @param tenantId 租户域必填，平台域忽略
+     * @param ids 已按当前域筛选的分配所引用的委派 ID
+     * @return 按 ID 索引的来源，缺失来源省略
+     */
+    public Map<BigInteger, IamDelegationGrantEntity> findDelegations(AuthorizationDomain domain, Long tenantId,
+            Collection<BigInteger> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        var wrapper = Wrappers.<IamDelegationGrantEntity>lambdaQuery()
+                .eq(IamDelegationGrantEntity::getDomain, domain)
+                .in(IamDelegationGrantEntity::getId, ids);
+        if (domain == AuthorizationDomain.PLATFORM) {
+            wrapper.isNull(IamDelegationGrantEntity::getTenantId);
+        } else {
+            wrapper.eq(IamDelegationGrantEntity::getTenantId, BigInteger.valueOf(tenantId));
+        }
+        return delegations.selectList(wrapper).stream()
+                .collect(Collectors.toMap(IamDelegationGrantEntity::getId, Function.identity()));
     }
 
     /**
@@ -224,6 +343,17 @@ public class AssignmentRepository {
         return platformMembers.selectCount(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(id))
                 .ne(IamPlatformMemberEntity::getStatus, MemberStatus.REMOVED)) > 0;
+    }
+
+    /**
+     * 查询当前可接收平台分配的活动成员，与专用候选口径一致。
+     * @param id 平台成员标识
+     * @return 活动成员存在时为 true
+     */
+    public boolean platformMemberActive(long id) {
+        return platformMembers.selectCount(Wrappers.<IamPlatformMemberEntity>lambdaQuery()
+                .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(id))
+                .eq(IamPlatformMemberEntity::getStatus, MemberStatus.ACTIVE)) > 0;
     }
 
     /**

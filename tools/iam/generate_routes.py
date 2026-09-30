@@ -87,8 +87,10 @@ def role_routes(domain, prefix, ns, shared=False):
     created = 'RCreatedResource'
     preview = 'RPreviewEffectiveRole'
     execution = '固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本'
+    role_query = PAGE + ([{'name': 'name', 'required': False, 'schema': {'type': 'string'}}]
+                         if domain == 'PLATFORM' and not shared else [])
     items = [
-        route(path, 'get', f'{prefix_id}ListRoles', '角色目录', domain, f'{ns}:{kind}:read', None, page, execution, query=PAGE),
+        route(path, 'get', f'{prefix_id}ListRoles', '角色目录', domain, f'{ns}:{kind}:read', None, page, execution, query=role_query),
         route(path, 'post', f'{prefix_id}CreateRole', '创建角色并发布首个版本', domain, f'{ns}:{kind}:create', 'RoleCreateInput', created, execution,
               'role-create' if domain == 'TENANT' and not shared else None),
         route(f'{path}/{{id}}', 'get', f'{prefix_id}GetRole', '角色元数据', domain, f'{ns}:{kind}:read', None, detail, execution),
@@ -107,8 +109,12 @@ def assignment_routes(domain, prefix, ns):
     page = 'RPageResponseResourceDetailAssignmentRecord'
     created = 'RCreatedResource'
     execution = '原子分配；逐授权合成后并集；平台不得使用部门参数；提交重验委派来源'
+    list_query = PAGE if domain != 'PLATFORM' else PAGE + [
+        {'name': 'subjectType', 'required': False, 'schema': {'type': 'string', 'enum': ['MEMBER', 'GROUP']}},
+        {'name': 'keyword', 'required': False, 'schema': {'type': 'string', 'maxLength': 128}},
+    ]
     return [
-        route(f'{prefix}/assignments', 'get', f'{domain.lower()}ListAssignments', '授权列表', domain, f'{ns}:assignment:read', None, page, execution, query=PAGE),
+        route(f'{prefix}/assignments', 'get', f'{domain.lower()}ListAssignments', '授权列表', domain, f'{ns}:assignment:read', None, page, execution, query=list_query),
         route(f'{prefix}/assignments', 'post', f'{domain.lower()}CreateAssignments', '原子批量分配', domain, f'{ns}:assignment:create', 'AssignmentBatchInput', created, execution),
         route(f'{prefix}/assignments/{{id}}', 'put', f'{domain.lower()}PutAssignment', '调整授权', domain, f'{ns}:assignment:update', 'AssignmentUpdateInput', detail, execution),
         route(f'{prefix}/assignments/{{id}}', 'delete', f'{domain.lower()}DeleteAssignment', '撤销授权并保留审计', domain, f'{ns}:assignment:delete', None, created, execution),
@@ -121,8 +127,10 @@ def delegation_routes(domain, prefix, ns):
     created = 'RCreatedResource'
     preview = 'RPreviewReferenceImpactPreview'
     execution = '治理权限创建委派；收缩取交集；来源撤销使派生授权无效'
+    delegation_query = PAGE + ([{'name': 'administratorName', 'required': False, 'schema': {'type': 'string'}}]
+                               if domain == 'PLATFORM' else [])
     return [
-        route(f'{prefix}/delegations', 'get', f'{domain.lower()}ListDelegations', '委派列表', domain, f'{ns}:delegation:read', None, page, execution, query=PAGE),
+        route(f'{prefix}/delegations', 'get', f'{domain.lower()}ListDelegations', '委派列表', domain, f'{ns}:delegation:read', None, page, execution, query=delegation_query),
         route(f'{prefix}/delegations', 'post', f'{domain.lower()}CreateDelegation', '创建委派', domain, f'{ns}:delegation:create', 'DelegationInput', created, execution, 'delegation'),
         route(f'{prefix}/delegations/{{id}}', 'get', f'{domain.lower()}GetDelegation', '委派详情', domain, f'{ns}:delegation:read', None, detail, execution),
         route(f'{prefix}/delegations/{{id}}', 'put', f'{domain.lower()}PutDelegation', '调整委派', domain, f'{ns}:delegation:update', 'DelegationUpdateInput', detail, execution),
@@ -225,6 +233,31 @@ def build():
               'RResourceDetailPlanRecord', '修改套餐不自动改变既有开通'),
         route('/v1/platform/plans/{id}', 'put', 'platformPutPlan', '更新套餐', 'PLATFORM', 'iam-platform:plan:update',
               'PlanUpdateInput', 'RResourceDetailPlanRecord', '不影响已开通租户'),
+    ]
+    # 已有运行时辅助接口补齐发布快照，不新增业务操作。
+    routes += [
+        route('/v1/platform/members/{id}/groups', 'get', 'platformMemberGroups', '成员所在用户组', 'PLATFORM',
+              'iam-platform:member:read', None, 'RPageResponseResourceDetailGroupRecord', '成员可见范围与平台组边界', query=PAGE),
+        route('/v1/platform/members/{id}/roles', 'get', 'platformMemberRoles', '成员直接角色', 'PLATFORM',
+              'iam-platform:member:read', None, 'RListMemberRoleView', '仅返回简单直接分配；成员对象范围'),
+        route('/v1/platform/members/{id}/roles', 'put', 'platformReplaceMemberRoles', '替换成员直接角色', 'PLATFORM',
+              'iam-platform:member:update', 'MemberRoleReplaceInput', 'RListMemberRoleView',
+              '成员对象边界；同时要求非委派的 assignment:create/delete；新增和移除同事务审计'),
+        route('/v1/platform/groups/{id}/members', 'get', 'platformGroupMembers', '用户组成员分页', 'PLATFORM',
+              'iam-platform:group:read', None, 'RPageResponseResourceDetailMemberRecord', '可信平台组与成员可见范围', query=PAGE + [{'name': 'name', 'required': False, 'schema': {'type': 'string'}}]),
+        route('/v1/platform/applications/bundles', 'post', 'platformCreateApplicationBundle', '整包创建应用', 'PLATFORM',
+              'iam-platform:application:create', 'ApplicationBundleDraft', 'RCreatedResource',
+              '同时校验 resource/action/menu:create；整单事务'),
+        route('/v1/platform/applications/{id}/resources/{resourceId}/actions', 'get', 'platformResourceActions', '资源操作目录', 'PLATFORM',
+              'iam-platform:action:read', None, 'RListActionRecord', '本应用本资源操作'),
+        route('/v1/platform/applications/{id}/action-catalog', 'get', 'platformActionCatalog', '应用操作目录', 'PLATFORM',
+              'iam-platform:action:read', None, 'RActionCatalogView', '本应用资源及操作目录'),
+        route('/v1/platform/applications/{id}/grant-catalog', 'get', 'platformGrantCatalog', '授权选择目录', 'PLATFORM',
+              'iam-platform:action:read', None, 'RPageResponseGrantCatalogResource', '启用资源和操作；按资源分页', query=PAGE),
+        route('/v1/platform/applications/{id}/menus/{menuId}/actions', 'get', 'platformMenuActions', '菜单关联操作', 'PLATFORM',
+              'iam-platform:menu:read', None, 'RListMenuActionRecord', '本应用本菜单操作关联'),
+        route('/v1/platform/actions/lookup', 'post', 'platformLookupActions', '解析操作标识', 'PLATFORM',
+              'iam-platform:action:read', 'ActionLookupInput', 'RListActionLookupRecord', '已发布操作最小展示信息'),
     ]
     routes += role_routes('PLATFORM', '/v1/platform', 'iam-platform')
     routes += role_routes('PLATFORM', '/v1/platform', 'iam-platform', shared=True)
@@ -382,6 +415,45 @@ def build():
         route('/v1/platform/social-configs/{id}', 'delete', 'platformDeleteSocialConfig', '删除社会化登录配置', 'PLATFORM',
               'iam-platform:social-config:delete', None, 'RVoid', retained),
     ]
+    for path, operation_id, action, kinds, arguments, admission in [
+        ('assignments/candidates', 'platformAssignmentCandidates', 'assignment:read',
+         ['DELEGATION', 'ROLE_REVISION', 'MEMBER', 'GROUP', 'OBJECT'],
+         ['delegationGrantId', 'revisionId', 'parameterKey', 'actionId'],
+         '分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据候选按单条来源筛选'),
+        ('delegations/candidates', 'platformDelegationCandidates', 'delegation:read',
+         ['ROLE_REVISION', 'MEMBER', 'OBJECT'], ['actionId'],
+         '委派 READ、CREATE、UPDATE 任一独立治理资格'),
+        ('authorization/diagnose/candidates', 'platformDiagnoseCandidates', 'authorization:diagnose',
+         ['MEMBER', 'APPLICATION', 'ACTION', 'OBJECT'], ['actionId', 'applicationId'],
+         '精确 DIAGNOSE 操作及目标可披露边界'),
+    ]:
+        editor_query = PAGE + [
+            {'name': 'kind', 'required': True, 'schema': {'type': 'string', 'enum': kinds}},
+            *[{'name': name, 'required': False, 'schema': {'type': 'string'}} for name in arguments + ['keyword']],
+            {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+        ]
+        routes.append(route('/v1/platform/' + path, 'get', operation_id, '平台授权配置候选', 'PLATFORM',
+            'iam-platform:' + action, None, 'RAuthorizationCandidatePage',
+            admission + '；分页搜索及已选回显；未知对象适配器显式不支持', query=editor_query))
+    routes += [
+        route('/v1/platform/assignments/context', 'get', 'platformAssignmentContext', '平台分配上下文', 'PLATFORM',
+            'iam-platform:assignment:read', None, 'RAssignmentContext', '分配 READ/CREATE/UPDATE/DELETE 任一入口；独立直接资格与有效委派数；入口不计入治理资格'),
+        route('/v1/platform/assignments/{id}', 'get', 'platformAssignmentDetail', '分配详情', 'PLATFORM',
+            'iam-platform:assignment:read', None, 'RResourceDetailAssignmentRecord', '同列表的当前可信身份及持有来源边界'),
+        route('/v1/platform/assignments/{id}/preview', 'post', 'platformPreviewAssignmentUpdate', '预览分配调整', 'PLATFORM',
+            'iam-platform:assignment:update', 'AssignmentUpdateInput', 'RPreviewAssignmentPreviewResult', '主体、版本和依据固定；编辑边界及版本校验'),
+        route('/v1/platform/delegations/preview', 'post', 'platformPreviewDelegationCreate', '预览创建委派', 'PLATFORM',
+            'iam-platform:delegation:create', 'DelegationInput', 'RPreviewReferenceImpactPreview', '完整独立治理资格；全部固定版本操作必须有范围上限'),
+    ]
+    routes.append(route('/v1/platform/assignments/role-candidates', 'get', 'platformAssignmentRoleCandidates',
+        '角色分配两级树候选', 'PLATFORM', 'iam-platform:assignment:read', None,
+        'RAuthorizationRoleCandidatePage',
+        '分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据按本人单条有效委派过滤；角色及版本分别分页，版本倒序；不合成版本授权',
+        query=PAGE + [
+            *[{'name': name, 'required': False, 'schema': {'type': 'string'}}
+              for name in ['delegationGrantId', 'roleId', 'keyword']],
+            {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+        ]))
     for item in routes:
         item['implemented'] = True
     seen = set()
