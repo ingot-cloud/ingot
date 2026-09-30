@@ -22,3 +22,16 @@
 ## 双入口 BFF 文档边界
 
 2026-09-16 新增的 [BFF-LOGIN](../BFF-LOGIN.md) 是已确认契约。2026-09-19：后端 B01–B05 已落地，B06 四站浏览器与全量 IAM 证据未做。BFF 路径不属于 `/api/iam/v1`，不混入本目录已接入的 96/161 快照。前端必须同时读取 BFF-LOGIN，不能因为 OpenAPI 标记已接入就认为登录完成。
+
+## 2026-09-28 平台角色分配增量
+
+本次快照为 **115 条路径 / 182 个操作**。补齐源码已存在的目录/人员辅助入口，以及平台分配上下文、详情、更新预览、三类专用候选、委派创建预览。`assignment-context.json`、`assignment-record.json`、`authorization-candidates.json` 为新增验证夹具；AssignmentRecord 的授权创建时间是请求当地墙钟字符串，分配/委派有效期仍为 UTC ISO Instant。
+
+委派候选与诊断候选的 kind 和参数各自受限，不能把一种编辑器的权限当成另一种编辑器的权限。上下文允许分配四种入口中的任意一种；委派编辑候选允许 READ/CREATE/UPDATE 任一独立治理资格，`x-iam-execution` 记录组合准入规则。契约与控制器检查已通过，仍不等同于真实 HTTP 验收。
+
+
+## 2026-09-29 角色单选树增量（待手动验证）
+
+快照增加角色树候选，当前 116 路径 / 183 操作。新增 AuthorizationRoleCandidatePage、AuthorizationRoleNode 与对应 R 信封；根与版本示例均同步到 commons 的夹具目录。schema 本轮按 Java 契约人工同步，契约导出入口已登记新类型；用户要求自行测试，因此未执行 Java 导出测试、契约 --check、HTTP 或构建。历史验证结果不覆盖本轮。后续可按前述再生成流程核对，不能据工件生成标记验收通过。
+
+2026-09-30：平台分配列表 GET 在原分页参数之外增加可选 `subjectType` 和 `keyword`，租户列表不变；已从当前 schema 和路由清单刷新 OpenAPI。路径/操作数仍为 116/183；实际 HTTP 筛选和权限边界待人工验证。

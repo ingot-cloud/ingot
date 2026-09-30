@@ -933,6 +933,196 @@
     "implemented": true
   },
   {
+    "path": "/v1/platform/members/{id}/groups",
+    "method": "get",
+    "operationId": "platformMemberGroups",
+    "summary": "成员所在用户组",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailGroupRecord",
+    "execution": "成员可见范围与平台组边界",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members/{id}/roles",
+    "method": "get",
+    "operationId": "platformMemberRoles",
+    "summary": "成员直接角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RListMemberRoleView",
+    "execution": "仅返回简单直接分配；成员对象范围",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/roles",
+    "method": "put",
+    "operationId": "platformReplaceMemberRoles",
+    "summary": "替换成员直接角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:update",
+    "request": "MemberRoleReplaceInput",
+    "response": "RListMemberRoleView",
+    "execution": "成员对象边界；同时要求非委派的 assignment:create/delete；新增和移除同事务审计",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/groups/{id}/members",
+    "method": "get",
+    "operationId": "platformGroupMembers",
+    "summary": "用户组成员分页",
+    "domain": "PLATFORM",
+    "action": "iam-platform:group:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailMemberRecord",
+    "execution": "可信平台组与成员可见范围",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/bundles",
+    "method": "post",
+    "operationId": "platformCreateApplicationBundle",
+    "summary": "整包创建应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:application:create",
+    "request": "ApplicationBundleDraft",
+    "response": "RCreatedResource",
+    "execution": "同时校验 resource/action/menu:create；整单事务",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}/actions",
+    "method": "get",
+    "operationId": "platformResourceActions",
+    "summary": "资源操作目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RListActionRecord",
+    "execution": "本应用本资源操作",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/action-catalog",
+    "method": "get",
+    "operationId": "platformActionCatalog",
+    "summary": "应用操作目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RActionCatalogView",
+    "execution": "本应用资源及操作目录",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/grant-catalog",
+    "method": "get",
+    "operationId": "platformGrantCatalog",
+    "summary": "授权选择目录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": null,
+    "response": "RPageResponseGrantCatalogResource",
+    "execution": "启用资源和操作；按资源分页",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/applications/{id}/menus/{menuId}/actions",
+    "method": "get",
+    "operationId": "platformMenuActions",
+    "summary": "菜单关联操作",
+    "domain": "PLATFORM",
+    "action": "iam-platform:menu:read",
+    "request": null,
+    "response": "RListMenuActionRecord",
+    "execution": "本应用本菜单操作关联",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/actions/lookup",
+    "method": "post",
+    "operationId": "platformLookupActions",
+    "summary": "解析操作标识",
+    "domain": "PLATFORM",
+    "action": "iam-platform:action:read",
+    "request": "ActionLookupInput",
+    "response": "RListActionLookupRecord",
+    "execution": "已发布操作最小展示信息",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/roles",
     "method": "get",
     "operationId": "platformListRoles",
@@ -961,6 +1151,13 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
         }
       }
     ]
@@ -1264,6 +1461,25 @@
           "maximum": 200,
           "default": 20
         }
+      },
+      {
+        "name": "subjectType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "GROUP"
+          ]
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
       }
     ]
   },
@@ -1344,6 +1560,13 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "administratorName",
+        "required": false,
+        "schema": {
+          "type": "string"
         }
       }
     ]
@@ -2779,5 +3002,355 @@
     "response": "RVoid",
     "execution": "保留既有领域实现；平台精确 ACTION；不改存储语义",
     "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/candidates",
+    "method": "get",
+    "operationId": "platformAssignmentCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据候选按单条来源筛选；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "DELEGATION",
+            "ROLE_REVISION",
+            "MEMBER",
+            "GROUP",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/candidates",
+    "method": "get",
+    "operationId": "platformDelegationCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "委派 READ、CREATE、UPDATE 任一独立治理资格；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "MEMBER",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/authorization/diagnose/candidates",
+    "method": "get",
+    "operationId": "platformDiagnoseCandidates",
+    "summary": "平台授权配置候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:authorization:diagnose",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "精确 DIAGNOSE 操作及目标可披露边界；分页搜索及已选回显；未知对象适配器显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "APPLICATION",
+            "ACTION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "applicationId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/context",
+    "method": "get",
+    "operationId": "platformAssignmentContext",
+    "summary": "平台分配上下文",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RAssignmentContext",
+    "execution": "分配 READ/CREATE/UPDATE/DELETE 任一入口；独立直接资格与有效委派数；入口不计入治理资格",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}",
+    "method": "get",
+    "operationId": "platformAssignmentDetail",
+    "summary": "分配详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RResourceDetailAssignmentRecord",
+    "execution": "同列表的当前可信身份及持有来源边界",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/{id}/preview",
+    "method": "post",
+    "operationId": "platformPreviewAssignmentUpdate",
+    "summary": "预览分配调整",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:update",
+    "request": "AssignmentUpdateInput",
+    "response": "RPreviewAssignmentPreviewResult",
+    "execution": "主体、版本和依据固定；编辑边界及版本校验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/delegations/preview",
+    "method": "post",
+    "operationId": "platformPreviewDelegationCreate",
+    "summary": "预览创建委派",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:create",
+    "request": "DelegationInput",
+    "response": "RPreviewReferenceImpactPreview",
+    "execution": "完整独立治理资格；全部固定版本操作必须有范围上限",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/role-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentRoleCandidates",
+    "summary": "角色分配两级树候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据按本人单条有效委派过滤；角色及版本分别分页，版本倒序；不合成版本授权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "delegationGrantId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "roleId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
   }
 ]

@@ -75,3 +75,17 @@
 新增并续补 [TEST-DATA](./TEST-DATA.md)：测试数据 D01–D05 后续在可重建的独立环境落地；TD01–TD18 为可执行场景卡，关联后端 A/F/L 与前端 U/P24–P26。DESIGN D01 仍是 2026-09-13 平台主体决策。现有人工种子不足以代表完整测试数据已交付。前端须适配本次范围内全部已实现管理能力，列表/封装不算完整页面；视觉与交互约束见 [FRONTEND](./FRONTEND.md) 第5节。
 
 本轮未改变API/DTO/授权规则，未运行测试或准备数据，未更新current、未归档。缺口依赖和状态继续由原change维护，不另建重复变更。
+
+
+## 2026-09-28 平台角色分配增量
+
+已获用户明确实施批准；规格与契约见 [AUTHORIZATION-REFINEMENT](./AUTHORIZATION-REFINEMENT.md)。本轮先完成平台两端，主 change 保留 implementing；真实验收单列记录。
+
+2026-09-28 增量开发与验证证据见 [AUTHORIZATION-REFINEMENT-STATUS](./AUTHORIZATION-REFINEMENT-STATUS.md)，PR07 真实环境验收保持未完成。
+
+
+2026-09-29：用户已批准实施 [角色单选树增量](./ROLE-PICKER-REFINEMENT.md)，状态 approved→implementing。测试由用户执行，本轮不运行测试/构建/类型检查/lint，不更新 current 或提交。
+
+2026-09-30：用户要求优化平台角色分配表格列宽与接收对象筛选。增量 API、交互、查询边界及 AL01–AL03 任务记录在本 active change；主状态保持 implementing，人工验收仍由用户执行。
+
+2026-09-30：平台委派列表新增可选管理员显示名称筛选和名称回显，分页/计数由数据库执行；DL01 开发完成，DL02 真实 HTTP 与页面验收待完成。租户委派接口保持兼容。

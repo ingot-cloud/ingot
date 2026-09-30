@@ -464,3 +464,18 @@ D02 不写动态期限，本项默认未执行。
 5. 导出第一页 CSV、或成员不足 250。
 6. 缺 XC 条件时用 Mock、空列表或「暂无数据」代替 503/409。
 7. 把本手册勾完当成 T16/T17/P26 完成。
+
+## 2026-09-28 平台角色分配增量验收
+
+先部署本轮 IAM 构建并执行 `010_assignment_audit_index.sql`；保持测试环境登记与独立性。配置测试治理口令到 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`（不粘贴到 Spec/报告），执行：
+
+```bash
+python3 tools/iam/test-data/iam_test_data.py refinement-build --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928
+python3 tools/iam/test-data/iam_test_data.py refinement-verify --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928
+```
+
+登录使用工具生成的 `iam-test-refine-governor`、`iam-test-refine-limited`、`iam-test-refine-both`，口令从忽略的 run secrets 文件取得，不写入验收报告。检查治理身份默认直接分配；纯受限身份只见角色分配 Tab，单条依据自动关联、固定版本/人群/对象不能越界；兼具资格者继续可直接分配。人员页纯受限角色只读，快捷按钮跳转统一分配表单；不得允许人员新增/角色替换绕过治理资格。
+
+按 PR-A01–PR-A07 逐项记录：分页搜索和超过一页的已选回显；授权时间与生效时间区分；直接/派生分配元信息；日期选择器跨时区；409 保留草稿并刷新版本；403 刷新权限；503 可重试；更换依据/角色/对象清除旧预览；委派收窄冲突拒绝；撤销/到期/组变化后不能残留派生权限；预览后并发撤权、组变化、委派收窄时原子提交或拒绝。诊断来源必须为真实 ID 与固定版本，只有目标有权时能跳转详情。
+
+自动化与 HTTP 子集通过后仍要保存三类身份的浏览器交互和视觉证据。当前这部分未执行，不勾选 PR07。

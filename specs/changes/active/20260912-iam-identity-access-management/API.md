@@ -159,6 +159,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/roles/{id}/upgrade-preview | POST {newBaseRevisionId, resolutions?} 三方比较 |
 | /v1/tenant/roles/{id}/upgrade | POST {expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}；未解决冲突拒绝 |
 | /v1/{domain}/assignments | GET；POST {items: AssignmentInput[]} 原子分配 |
+| /v1/platform/assignments 列表筛选 | GET 在原分页参数外可选 `subjectType=MEMBER|GROUP`、`keyword`（接收成员显示名或用户组名称，去首尾空白，最长 128 字符）；两者在数据库分页前同时生效。关键字中的 `%`、`_` 按普通文字匹配；未传参数保持原列表。受限管理员仍只可见本人委派产生的分配；不扩展租户列表契约 |
 | /v1/{domain}/assignments/preview | POST 同分配输入，返回逐接收对象效果及限制 |
 | /v1/{domain}/assignments/{id} | PUT 调整版本/范围/期限；DELETE 撤销，保留审计 |
 | /v1/{domain}/delegations | GET/POST；/{id} GET/PUT/DELETE |
@@ -231,3 +232,21 @@ AuditEntry 的 before/after 使用 AuditField 枚举白名单，涵盖名称、�
 - 导出交付覆盖全部获授权记录，不能以第一页200条代表导出；T13应给出任务状态、失败、下载、过期及多实例语义的实际接口，不把本地临时文件当作完整契约。
 - bootstrap菜单先检查域、应用状态/开通/人群，再判定菜单条件，OPEN不绕过这些边界。授权version应反映相关事实，expiresAt不跨越最近有效期边界。
 - 2026-09-16 已重新生成 schemas/routes/openapi；查询参数、purpose 与导出状态写入 schema。x-runtime-implemented 仍只说明控制器存在，不证明安全语义或 A24 真实 HTTP。examples 未新增口令夹具，避免臆造密码协议。
+
+
+## 2026-09-28 平台角色分配增量
+
+已获用户明确实施批准；规格与契约见 [AUTHORIZATION-REFINEMENT](./AUTHORIZATION-REFINEMENT.md)。本轮先完成平台两端，主 change 保留 implementing；真实验收单列记录。
+
+
+## 2026-09-29 平台角色单选树候选
+
+新增 `GET /api/iam/v1/platform/assignments/role-candidates`。参数 `delegationGrantId?`、`roleId?`、`keyword?`、`ids?`、`page=1`、`pageSize=20`；页大小沿用 IAM 1–200 校验，界面固定默认 20。无 roleId 查询角色根层，传 roleId 查询该角色版本；ids 是当前层的少量已选回显。keyword 只匹配角色名称，通配符作为普通文字转义。
+
+R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。items 是 `AuthorizationRoleNode { id, roleId, roleName, name, nodeType, revisionNumber?, roleRevisionRef? }`；id/roleId/引用 ID 均为字符串，revisionNumber 与统计/分页为 JSON 数字，nodeType 为 ROLE/REVISION。根节点无版本字段，版本节点名称为 vN，携带固定版本引用。示例见 contracts/examples/authorization-role-candidates.json 与 authorization-role-versions.json。
+
+当前可信身份须有平台分配读取入口，并有直接 CREATE/UPDATE 独立资格或当前有效、归属本人的所选委派。根仅展示至少一个可分配版本的启用平台角色；版本必须属于 roleId 且满足同一委派白名单。根、子层、计数及 ids 回显使用同一边界。版本按版本号倒序、ID 倒序。该查询不合成授权、不加载参数；选择确认后仍用现有 kind=ROLE_REVISION&ids=版本ID 获取完整参数。错误沿用 400/401/403/503 等现有 IAM 协议；提交与预览契约无变更。
+
+## 2026-09-30 平台角色及授权管理员列表筛选
+
+`GET /api/iam/v1/platform/roles` 已支持可选 `name`（角色名称包含匹配），前端角色 Tab 使用该参数。`GET /api/iam/v1/platform/delegations` 新增可选 `administratorName`（平台成员显示名称包含匹配）；空白与省略均不筛选，去空白后最多 128 字符，LIKE 通配符按普通文字匹配。筛选在服务端治理边界内先执行，再分页及统计。平台 `DelegationRecord` 新增可选 `administratorName`，缺失时客户端显示 `delegation.administratorMemberId`。两接口的默认分页及权限规则不变；租户委派列表无新增筛选参数，也不增加名称查询。OpenAPI 中同步标注参数与响应字段。
