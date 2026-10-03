@@ -8,6 +8,7 @@
 - `004_policy_audit_migration.sql`：默认策略引用、通讯录/字段规则、审计和迁移批次/映射/处置。
 - `005_auxiliary.sql`：保留字典、发号、社会化、历史安全事件和套餐记录的结构。来源为仓库 SQL 的 CREATE TABLE，仅用于目标结构，不复制任何 INSERT 数据。
 - `007_member_export.sql`：租户成员导出任务状态、成员 ID 快照与过期时间，供多实例读取，不保存字段原值。
+- `011_delegation_duration_mode.sql`：已有库新增 LIMITED/UNLIMITED 单次分配期限模式；新建库已由 003 包含，不重复执行。升级顺序为 DDL → 全部 IAM 后端节点 → 前端；新缓存命名空间隔离旧授权视图。回退前处理不限期限委派和长期派生分配。
 - `010_assignment_audit_index.sql`：已有目标库的分配创建审计索引补丁；新建库与重复执行均可安全跳过已存在索引。
 - `006_bootstrap.sql`：唯一的正式冷启动种子，写入两个治理应用、资源与字段能力、130 个精确操作、平台与组织菜单树、每域一个 SYSTEM 治理角色及其固定版本授权、默认策略版本和发号高水位。由 `python3 tools/iam/generate_bootstrap.py` 从 change 的 `contracts/routes.json` 生成，不要手工编辑。
 - `seed-manual-verification.sql`：隔离环境人工认证种子，不是生产数据，不进入迁移导入。必须先执行 001–005、`007_member_export.sql`、下列框架 DDL 与 `006_bootstrap.sql`；它只补两个可登录账号、一个平台成员和一条治理授权，目录与治理角色一律复用冷启动种子，避免同一份目录出现两个来源。

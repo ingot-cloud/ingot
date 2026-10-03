@@ -978,6 +978,39 @@
     "implemented": true
   },
   {
+    "path": "/v1/platform/members/{id}/assignments",
+    "method": "get",
+    "operationId": "platformMemberAssignments",
+    "summary": "成员角色分配",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "成员对象可见且沿用分配来源边界；按关联表分页，返回逐条能力",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
     "path": "/v1/platform/members/{id}/roles",
     "method": "put",
     "operationId": "platformReplaceMemberRoles",
@@ -2389,6 +2422,84 @@
     "implemented": true
   },
   {
+    "path": "/v1/tenant/assignments/scope-candidates",
+    "method": "get",
+    "operationId": "tenantAssignmentScopeCandidates",
+    "summary": "租户分配范围对象候选",
+    "domain": "TENANT",
+    "action": "iam-tenant:assignment:create",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配 CREATE 或 UPDATE 资格；固定版本与参数键重验；只返回当前租户真实对象；未知资源显式不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
     "path": "/v1/tenant/assignments/preview",
     "method": "post",
     "operationId": "tenantPreviewAssignments",
@@ -3092,6 +3203,20 @@
             "type": "string"
           }
         }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
       }
     ]
   },
@@ -3146,6 +3271,13 @@
         }
       },
       {
+        "name": "excludeMemberId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
         "name": "keyword",
         "required": false,
         "schema": {
@@ -3160,6 +3292,20 @@
           "items": {
             "type": "string"
           }
+        }
+      },
+      {
+        "name": "tree",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "required": false,
+        "schema": {
+          "type": "string"
         }
       }
     ]
@@ -3349,6 +3495,256 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/role-candidates",
+    "method": "get",
+    "operationId": "platformDelegationRoleCandidates",
+    "summary": "委派管理两级角色树候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "委派 CREATE、UPDATE 或 READ 任一独立治理资格；角色与版本分别分页、版本倒序；不要求分配资格",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "roleId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/members",
+    "method": "get",
+    "operationId": "platformRoleMembers",
+    "summary": "角色有效接收主体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色 READ 对象边界及分配 READ 独立资格；组继承按组 READ 对象过滤；SQL 去重、同条件计数与分页；默认全部固定版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/groups",
+    "method": "get",
+    "operationId": "platformRoleGroups",
+    "summary": "角色有效接收主体",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleSubjectPage",
+    "execution": "角色 READ 对象边界及分配 READ 独立资格；组继承按组 READ 对象过滤；SQL 去重、同条件计数与分页；默认全部固定版本",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{id}/members/{memberId}/assignments",
+    "method": "get",
+    "operationId": "platformRoleMemberSources",
+    "summary": "角色成员有效分配来源",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "同有效成员关系边界；分配来源批量标签及逐条能力；禁止把移出组当成撤权",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "revisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/delegations/{id}/selected-candidates",
+    "method": "get",
+    "operationId": "platformDelegationSelectedCandidates",
+    "summary": "委派已选实体关系",
+    "domain": "PLATFORM",
+    "action": "iam-platform:delegation:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "独立治理 READ 及委派对象边界；真实关联、候选过滤、同边界计数分页；OBJECT 必填 actionId",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "MEMBER",
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "excludeMemberId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "actionId",
+        "required": false,
+        "schema": {
+          "type": "string"
         }
       }
     ]

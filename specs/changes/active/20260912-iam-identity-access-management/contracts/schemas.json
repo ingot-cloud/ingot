@@ -1192,6 +1192,12 @@
           },
           "unavailableMessage" : {
             "type" : "string"
+          },
+          "contextLabel" : {
+            "type" : "string"
+          },
+          "hierarchical" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1256,13 +1262,23 @@
           },
           "delegation" : {
             "$ref" : "#/components/schemas/DelegationInput"
+          },
+          "parentId" : {
+            "type" : "string"
+          },
+          "hasChildren" : {
+            "type" : "boolean"
+          },
+          "ancestorPath" : {
+            "type" : "string"
+          },
+          "selectable" : {
+            "type" : "boolean"
           }
         }
       },
       "AuthorizationRoleCandidatePage" : {
-        "required" : [
-          "items"
-        ],
+        "required" : [ "items" ],
         "type" : "object",
         "properties" : {
           "items" : {
@@ -1287,13 +1303,7 @@
         "description" : "授权角色树层级分页"
       },
       "AuthorizationRoleNode" : {
-        "required" : [
-          "id",
-          "name",
-          "nodeType",
-          "roleId",
-          "roleName"
-        ],
+        "required" : [ "id", "name", "nodeType", "roleId", "roleName" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1310,10 +1320,7 @@
           },
           "nodeType" : {
             "type" : "string",
-            "enum" : [
-              "ROLE",
-              "REVISION"
-            ]
+            "enum" : [ "ROLE", "REVISION" ]
           },
           "revisionNumber" : {
             "type" : "integer",
@@ -1532,7 +1539,7 @@
         "description" : "只返回操作者可获知的授权来源，不能披露的标识省略并给出概括说明"
       },
       "DelegationInput" : {
-        "required" : [ "actionScopeCeilings", "administratorMemberId", "allowedRoleRevisionRefs", "maxAssignmentDuration", "recipientSelection" ],
+        "required" : [ "actionScopeCeilings", "administratorMemberId", "allowedRoleRevisionRefs", "recipientSelection" ],
         "type" : "object",
         "properties" : {
           "administratorMemberId" : {
@@ -1568,8 +1575,14 @@
           },
           "maxAssignmentDuration" : {
             "type" : "string",
-            "description" : "单次分配最长持续时间，ISO-8601 duration，必须为正",
+            "description" : "有限模式必填的正持续时间；不限模式为空",
             "format" : "duration"
+          },
+          "assignmentDurationMode" : {
+            "type" : "string",
+            "description" : "单次期限模式，省略按 LIMITED",
+            "default" : "LIMITED",
+            "enum" : [ "LIMITED", "UNLIMITED" ]
           }
         },
         "description" : "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -2301,6 +2314,13 @@
               "type" : "string",
               "description" : "选填的用户组 ID，默认为空"
             }
+          },
+          "roleAssignments" : {
+            "type" : "array",
+            "description" : "选填的固定版本直接分配",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRoleAssignmentDraft"
+            }
           }
         },
         "description" : "把已有全局账号关联为当前域成员，不创建或改写登录凭证"
@@ -2426,6 +2446,33 @@
           }
         },
         "description" : "返回经字段策略处理的成员资料，隐藏字段以空引用省略，脱敏字段只携带脱敏值"
+      },
+      "MemberRoleAssignmentDraft" : {
+        "required" : [ "roleId", "roleRevisionRef", "scopeBindings" ],
+        "type" : "object",
+        "properties" : {
+          "roleId" : {
+            "type" : "string"
+          },
+          "roleRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            }
+          },
+          "validFrom" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "description" : "新平台成员的固定版本角色分配"
       },
       "MemberRoleReplaceInput" : {
         "required" : [ "roleIds" ],
@@ -4541,6 +4588,23 @@
           }
         }
       },
+      "RRoleSubjectPage" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/RoleSubjectPage"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RVoid" : {
         "type" : "object",
         "properties" : {
@@ -5458,6 +5522,63 @@
           }
         },
         "description" : "引用明确来源的不可变角色版本，服务端还须校验域、状态及可分配性"
+      },
+      "RoleSubjectPage" : {
+        "required" : [ "items" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleSubjectSummary"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inheritedSourcesRestricted" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RoleSubjectSummary" : {
+        "required" : [ "id", "name", "revisionNumbers", "sourceTypes" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "revisionNumbers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "sourceTypes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "MEMBER", "GROUP" ]
+            }
+          },
+          "sourceCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "RoleSummary" : {
         "required" : [ "code", "id", "kind", "name", "status" ],
