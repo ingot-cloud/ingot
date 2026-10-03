@@ -9,6 +9,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ingot.framework.commons.jackson.ClientWallClock;
 import com.ingot.framework.commons.jackson.InJackson2ObjectMapperBuilderCustomizer;
 import com.ingot.framework.commons.jackson.InJacksonModule;
 import com.ingot.framework.commons.jackson.InJavaTimeModule;
@@ -17,16 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 /**
- * <p>Description  : JacksonConfig.</p>
- * <p>Author       : wangchao.</p>
- * <p>Date         : 2020/11/17.</p>
- * <p>Time         : 8:37 下午.</p>
+ * <p>注册接口 JSON 基础模块和默认时区，并叠加业务模块及定制器。</p>
+ *
+ * @author wangchao
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration
@@ -34,15 +34,15 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnClass(ObjectMapper.class)
 public class JacksonConfig {
 
-    private static final String ASIA_BEIJING = "Asia/Beijing";
-
+    /**
+     * 基础配置与业务定制器共同生效，业务扩展不能抑制框架时间及长整型契约。
+     */
     @Bean
-    @ConditionalOnMissingBean
     public Jackson2ObjectMapperBuilderCustomizer customizer(List<InJackson2ObjectMapperBuilderCustomizer> customizers,
                                                             List<InJacksonModule> modules) {
         return builder -> {
             builder.locale(Locale.getDefault());
-            builder.timeZone(TimeZone.getTimeZone(ASIA_BEIJING));
+            builder.timeZone(TimeZone.getTimeZone(ClientWallClock.FALLBACK_ZONE));
             builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
             // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
             builder.modules((list) -> {
