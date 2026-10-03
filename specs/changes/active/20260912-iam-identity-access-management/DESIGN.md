@@ -215,3 +215,10 @@ TASKS把已有开发子项与父任务验收分开标记，并分列开发状态
 
 
 2026-10-03 用户批准实施 [平台角色工作区与委派优化](./ROLE-WORKSPACE-DELEGATION-REFINEMENT.md)，含独立关联分页、期限模式、自我授权收紧与统一选择器/样式。
+# 2026-10-03 登录记录时间解析修复（approved → implementing）
+
+日志中 `LoginRecordDTO.loginAt` 在 `2026-10-03 20:38:24` 的第 10 位解析失败：Auth 使用框架空格格式，IAM 在注册 `InJackson2ObjectMapperBuilderCustomizer`（OSS mixin）后，`JacksonConfig.customizer` 上按整个 `Jackson2ObjectMapperBuilderCustomizer` 类型判断的退让条件抑制了基础配置，接收端回退到标准 JavaTimeModule。
+
+移除基础 customizer 的宽泛退让条件，使 `InModule`、`JavaTimeModule`、`InJavaTimeModule` 始终与已有业务扩展共同装配。保留扩展模块顺序、mixin、未知字段和 JSON 格式行为，不用 DTO 格式注解绕过装配缺陷。默认时区改用已有 `ClientWallClock.FALLBACK_ZONE`，不再使用无效的 `Asia/Beijing`。`LocalDateTime` 模块继续按原契约解析墙钟字面量，不新增隐式时区转换或改写库存时间；既有请求墙钟适配器和 UTC/Instant 执行边界保持不变。
+
+兼容性：恢复已声明的时间及长整型 JSON 契约，无 DDL、字段、依赖或登录回调协议变更。自动化用 Spring 自动配置上下文叠加 IAM OSS mixin，验证真实登录记录转换、输出格式、扩展效果及已明确时区的覆盖；真实 Auth/IAM 登录成功、失败及 Member 回调由人工联调验收。

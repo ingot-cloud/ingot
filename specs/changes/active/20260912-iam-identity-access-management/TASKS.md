@@ -196,3 +196,9 @@ PR01–PR06 仅标记开发及相关自动化完成。PR07 需真实 HTTP 和三
 - [ ] RW07 人工验收：宽窄屏、主题、三类身份、真实权限/记录、浏览器请求次数；由用户执行。
 
 RW06 验证证据与 RW07 人工清单见 [本轮实施记录](./ROLE-WORKSPACE-DELEGATION-REFINEMENT.md)。全仓 lint 的历史阻塞已单独记录。
+
+## 2026-10-03 登录记录 JSON 时间修复（approved → implementing）
+
+- [x] JT01（开发完成）：移除基础 Jackson customizer 的宽泛退让条件，恢复统一时间/长整型模块并复用上海默认时区常量；保留登录字段与账号保护行为。
+- [x] JT02（自动化完成）：修改前复现 IAM OSS 扩展共存时成功/失败及 Member 登录记录的第 10 位时间解析失败；修复后 LoginRecordJacksonConfigurationTest 6 项及既有 IamOssJacksonConfigurationTest 3 项通过，覆盖 Spring 自动配置、HTTP 转换、统一格式/长整型、OSS 读写及显式时区覆盖；diff 检查通过。
+- [ ] JT03（人工验收）：更新并重启使用 ingot-core 的 Auth/IAM/Member 服务，检查成功及错误密码登录回调不再报时间解析异常，登录记录/失败计数正常，公共接口时间和头像展示正常；不以自动化替代。
