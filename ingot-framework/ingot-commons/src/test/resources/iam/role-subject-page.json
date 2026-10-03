@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "id": "1",
+      "name": "测试成员",
+      "revisionNumbers": [
+        1,
+        2
+      ],
+      "sourceTypes": [
+        "MEMBER",
+        "GROUP"
+      ],
+      "sourceCount": 4
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20,
+  "inheritedSourcesRestricted": false
+}

@@ -35,6 +35,7 @@ public class AuthorizationCacheConfiguration {
      * 来源持有者 bean 名，避免与其它模块的同类型 bean 冲突。
      */
     public static final String SOURCE_HOLDER_BEAN_NAME = "iamAuthorizationSourceHolder";
+    private static final String AUTHORIZATION_RULE_VERSION = "delegation-duration-v2:";
     private static final String CACHE_NAME = "iam-authorization";
     private static final String ALL_DOMAIN = "all";
     private static final TypeReference<AuthorizationEvaluator.AuthorizationView> VIEW_TYPE = new TypeReference<>() {
@@ -85,7 +86,7 @@ public class AuthorizationCacheConfiguration {
                 .cacheable(view -> view != null)
                 .sourceHolder(sourceHolder)
                 .l2MultiKey(redisProvider.getIfAvailable(), objectMapperProvider.getIfAvailable(), VIEW_TYPE,
-                        properties.getRedisKeyPrefix())
+                        properties.getRedisKeyPrefix() + AUTHORIZATION_RULE_VERSION)
                 .registry(registryProvider.getIfAvailable())
                 .build();
     }

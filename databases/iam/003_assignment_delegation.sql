@@ -8,7 +8,8 @@ CREATE TABLE iam_delegation_grant (
     tenant_administrator_id BIGINT UNSIGNED NULL,
     valid_from DATETIME(6) NULL,
     valid_until DATETIME(6) NULL,
-    max_assignment_duration_seconds BIGINT UNSIGNED NOT NULL,
+    assignment_duration_mode VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'LIMITED',
+    max_assignment_duration_seconds BIGINT UNSIGNED NULL,
     max_assignment_duration_nanos INT UNSIGNED NOT NULL DEFAULT 0,
     status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'ACTIVE',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -26,7 +27,10 @@ CREATE TABLE iam_delegation_grant (
     CONSTRAINT ck_iam_delegation_status CHECK (status IN ('ACTIVE', 'REVOKED')),
     CONSTRAINT ck_iam_delegation_interval CHECK (valid_from IS NULL OR valid_until IS NULL OR valid_from < valid_until),
     CONSTRAINT ck_iam_delegation_duration CHECK (max_assignment_duration_nanos < 1000000000 AND
-        (max_assignment_duration_seconds > 0 OR max_assignment_duration_nanos > 0))
+        ((assignment_duration_mode='LIMITED' AND max_assignment_duration_seconds IS NOT NULL
+          AND (max_assignment_duration_seconds > 0 OR max_assignment_duration_nanos > 0))
+         OR (assignment_duration_mode='UNLIMITED' AND domain='PLATFORM'
+          AND max_assignment_duration_seconds IS NULL AND max_assignment_duration_nanos=0)))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE iam_delegation_role_revision (

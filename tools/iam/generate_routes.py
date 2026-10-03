@@ -240,6 +240,10 @@ def build():
               'iam-platform:member:read', None, 'RPageResponseResourceDetailGroupRecord', '成员可见范围与平台组边界', query=PAGE),
         route('/v1/platform/members/{id}/roles', 'get', 'platformMemberRoles', '成员直接角色', 'PLATFORM',
               'iam-platform:member:read', None, 'RListMemberRoleView', '仅返回简单直接分配；成员对象范围'),
+        route('/v1/platform/members/{id}/assignments', 'get', 'platformMemberAssignments',
+              '成员角色分配', 'PLATFORM', 'iam-platform:assignment:read', None,
+              'RPageResponseResourceDetailAssignmentRecord',
+              '成员对象可见且沿用分配来源边界；按关联表分页，返回逐条能力', query=PAGE),
         route('/v1/platform/members/{id}/roles', 'put', 'platformReplaceMemberRoles', '替换成员直接角色', 'PLATFORM',
               'iam-platform:member:update', 'MemberRoleReplaceInput', 'RListMemberRoleView',
               '成员对象边界；同时要求非委派的 assignment:create/delete；新增和移除同事务审计'),
@@ -330,6 +334,18 @@ def build():
               '未解决冲突拒绝；选定授权逐条验证，失败整次回滚', 'role-upgrade'),
     ]
     routes += assignment_routes('TENANT', '/v1/tenant', 'iam-tenant')
+    routes.append(route('/v1/tenant/assignments/scope-candidates', 'get',
+        'tenantAssignmentScopeCandidates', '租户分配范围对象候选', 'TENANT',
+        'iam-tenant:assignment:create', None, 'RAuthorizationCandidatePage',
+        '分配 CREATE 或 UPDATE 资格；固定版本与参数键重验；只返回当前租户真实对象；未知资源显式不支持',
+        query=PAGE + [
+            {'name': 'revisionId', 'required': True, 'schema': {'type': 'string'}},
+            {'name': 'parameterKey', 'required': True, 'schema': {'type': 'string'}},
+            {'name': 'keyword', 'required': False, 'schema': {'type': 'string'}},
+            {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+            {'name': 'tree', 'required': False, 'schema': {'type': 'boolean'}},
+            {'name': 'parentId', 'required': False, 'schema': {'type': 'string'}},
+        ]))
     routes += [
         route('/v1/tenant/assignments/preview', 'post', 'tenantPreviewAssignments', '预览原子分配批次', 'TENANT',
               'iam-tenant:assignment:create', 'AssignmentBatchInput', 'RPreviewAssignmentPreviewResult',
@@ -421,7 +437,7 @@ def build():
          ['delegationGrantId', 'revisionId', 'parameterKey', 'actionId'],
          '分配 READ 入口；直接候选另验 CREATE 或 UPDATE 独立治理资格；有依据候选按单条来源筛选'),
         ('delegations/candidates', 'platformDelegationCandidates', 'delegation:read',
-         ['ROLE_REVISION', 'MEMBER', 'OBJECT'], ['actionId'],
+         ['ROLE_REVISION', 'MEMBER', 'OBJECT'], ['actionId', 'excludeMemberId'],
          '委派 READ、CREATE、UPDATE 任一独立治理资格'),
         ('authorization/diagnose/candidates', 'platformDiagnoseCandidates', 'authorization:diagnose',
          ['MEMBER', 'APPLICATION', 'ACTION', 'OBJECT'], ['actionId', 'applicationId'],
@@ -432,6 +448,11 @@ def build():
             *[{'name': name, 'required': False, 'schema': {'type': 'string'}} for name in arguments + ['keyword']],
             {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
         ]
+        if path != 'authorization/diagnose/candidates':
+            editor_query += [
+                {'name': 'tree', 'required': False, 'schema': {'type': 'boolean'}},
+                {'name': 'parentId', 'required': False, 'schema': {'type': 'string'}},
+            ]
         routes.append(route('/v1/platform/' + path, 'get', operation_id, '平台授权配置候选', 'PLATFORM',
             'iam-platform:' + action, None, 'RAuthorizationCandidatePage',
             admission + '；分页搜索及已选回显；未知对象适配器显式不支持', query=editor_query))
@@ -453,6 +474,30 @@ def build():
             *[{'name': name, 'required': False, 'schema': {'type': 'string'}}
               for name in ['delegationGrantId', 'roleId', 'keyword']],
             {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+        ]))
+    routes.append(route('/v1/platform/delegations/role-candidates', 'get', 'platformDelegationRoleCandidates',
+        '委派管理两级角色树候选', 'PLATFORM', 'iam-platform:delegation:read', None,
+        'RAuthorizationRoleCandidatePage',
+        '委派 CREATE、UPDATE 或 READ 任一独立治理资格；角色与版本分别分页、版本倒序；不要求分配资格',
+        query=PAGE + [
+            *[{'name': name, 'required': False, 'schema': {'type': 'string'}}
+              for name in ['roleId', 'keyword']],
+            {'name': 'ids', 'required': False, 'schema': {'type': 'array', 'items': {'type': 'string'}}},
+        ]))
+    workspace_query = PAGE + [{'name': name, 'required': False, 'schema': {'type': 'string'}} for name in ['revisionId', 'keyword']]
+    for relation in ['members', 'groups']:
+        routes.append(route('/v1/platform/roles/{id}/' + relation, 'get', 'platformRole' + relation.title(),
+            '角色有效接收主体', 'PLATFORM', 'iam-platform:role:read', None, 'RRoleSubjectPage',
+            '角色 READ 对象边界及分配 READ 独立资格；组继承按组 READ 对象过滤；SQL 去重、同条件计数与分页；默认全部固定版本', query=workspace_query))
+    routes.append(route('/v1/platform/roles/{id}/members/{memberId}/assignments', 'get', 'platformRoleMemberSources',
+        '角色成员有效分配来源', 'PLATFORM', 'iam-platform:role:read', None, 'RPageResponseResourceDetailAssignmentRecord',
+        '同有效成员关系边界；分配来源批量标签及逐条能力；禁止把移出组当成撤权', query=PAGE + [{'name': 'revisionId', 'required': False, 'schema': {'type': 'string'}}]))
+    routes.append(route('/v1/platform/delegations/{id}/selected-candidates', 'get', 'platformDelegationSelectedCandidates',
+        '委派已选实体关系', 'PLATFORM', 'iam-platform:delegation:read', None, 'RAuthorizationCandidatePage',
+        '独立治理 READ 及委派对象边界；真实关联、候选过滤、同边界计数分页；OBJECT 必填 actionId', query=PAGE + [
+            {'name': 'kind', 'required': True, 'schema': {'type': 'string', 'enum': ['MEMBER', 'ROLE_REVISION', 'OBJECT']}},
+            {'name': 'excludeMemberId', 'required': False, 'schema': {'type': 'string'}},
+            {'name': 'actionId', 'required': False, 'schema': {'type': 'string'}},
         ]))
     for item in routes:
         item['implemented'] = True

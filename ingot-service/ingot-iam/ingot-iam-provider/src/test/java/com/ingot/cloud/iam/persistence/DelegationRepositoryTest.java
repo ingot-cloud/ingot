@@ -38,7 +38,7 @@ class DelegationRepositoryTest {
         jdbc.execute("CREATE TABLE iam_tenant_member (id BIGINT PRIMARY KEY, tenant_id BIGINT, display_name VARCHAR(255))");
         jdbc.execute("CREATE TABLE iam_delegation_grant (id BIGINT PRIMARY KEY, domain VARCHAR(20), tenant_id BIGINT,"
                 + " platform_administrator_id BIGINT, tenant_administrator_id BIGINT, valid_from TIMESTAMP,"
-                + " valid_until TIMESTAMP, max_assignment_duration_seconds BIGINT, max_assignment_duration_nanos INT,"
+                + " valid_until TIMESTAMP, assignment_duration_mode VARCHAR(16) DEFAULT 'LIMITED', max_assignment_duration_seconds BIGINT, max_assignment_duration_nanos INT,"
                 + " status VARCHAR(20), version BIGINT, created_at TIMESTAMP)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (101,'张三'),(102,'张_四'),(103,'李四')");
         jdbc.update("INSERT INTO iam_tenant_member VALUES (201,7,'张五')");

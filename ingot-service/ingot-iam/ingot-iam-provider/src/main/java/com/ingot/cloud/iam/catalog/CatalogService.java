@@ -254,7 +254,8 @@ public class CatalogService {
             }
             audits.write(actor.context(), access.nextId(), APPLICATION, IamIds.text(appId), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, application.name()), Map.of(APPLICATION, "0"));
-            Map<String, Long> actionIds = persistBundleCatalog(actor, appId, application.code(), input.resources());
+            Map<String, Long> actionIds = persistBundleCatalog(actor, appId, application.code(),
+                    application.domain(), input.resources());
             persistBundleMenus(actor, appId, input.menus(), actionIds);
             return new CreatedResource(IamIds.text(appId), "0");
         });
@@ -396,7 +397,8 @@ public class CatalogService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_CREATE);
         long appId = IamIds.require(applicationId);
         return transaction.execute(status -> {
-            requireLocked(catalog.lockApplication(appId));
+            IamApplicationEntity application = requireLocked(catalog.lockApplication(appId));
+            requireResourceScopes(application.getDomain(), input.scopeCapabilities());
             long id = access.nextId();
             IamResourceEntity entity = new IamResourceEntity();
             entity.setId(BigInteger.valueOf(id));
@@ -432,6 +434,8 @@ public class CatalogService {
         long id = IamIds.require(resourceId);
         return transaction.execute(status -> {
             IamResourceEntity current = requireLocked(catalog.lockResource(appId, id));
+            IamApplicationEntity application = requireLocked(catalog.findApplication(appId));
+            requireResourceScopes(application.getDomain(), input.scopeCapabilities());
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
             catalog.updateResource(appId, id, input.name(), IamJson.array(input.scopeCapabilities()),
                     IamJson.array(input.fieldCapabilities()), current.getVersion());
@@ -1047,6 +1051,13 @@ public class CatalogService {
         }
     }
 
+    private static void requireResourceScopes(AuthorizationDomain domain, List<ScopeKind> scopes) {
+        if (domain == AuthorizationDomain.PLATFORM && scopes != null && scopes.stream().anyMatch(scope ->
+                scope == ScopeKind.MEMBER_DEPARTMENTS || scope == ScopeKind.MANAGED_DEPARTMENTS)) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "平台应用不支持部门范围");
+        }
+    }
+
     private static <T> T requireLocked(T row) {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
@@ -1070,11 +1081,13 @@ public class CatalogService {
     }
 
     private Map<String, Long> persistBundleCatalog(ActiveIdentity actor, long appId, String applicationCode,
+                                                   AuthorizationDomain domain,
                                                    List<ApplicationBundleResource> resources) {
         Map<String, Long> actionIds = new LinkedHashMap<>();
         Set<String> resourceCodes = new HashSet<>();
         Set<String> tempIds = new HashSet<>();
         for (ApplicationBundleResource resource : resources == null ? List.<ApplicationBundleResource>of() : resources) {
+            requireResourceScopes(domain, resource.scopeCapabilities());
             String resourceTempId = requireTempId(resource.tempId());
             if (!tempIds.add(resourceTempId) || !resourceCodes.add(resource.code())) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);

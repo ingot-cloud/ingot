@@ -43,26 +43,27 @@ class PlatformAssignmentBoundaryTest {
         when(manager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         return new AssignmentService(access, mock(IamAuditWriter.class), new AuthorizationChangeNotifier(event -> { }),
                 mock(RoleService.class), mock(RoleRepository.class), store, mock(DelegationAdmission.class),
-                mock(ResourceAccess.class), mock(PlatformAuthorizationEditor.class), manager);
+                mock(ResourceAccess.class), mock(PlatformAuthorizationEditor.class),
+                mock(TenantScopeCandidates.class), manager);
     }
     @Test
     void restrictedListUsesOwnedSourcesRatherThanGlobalPage() {
         var service = service(false);
-        when(store.pageOwned(1001, 1, 20, null, null))
+        when(store.pageOwned(1001, 1, 20, null, null, null))
                 .thenReturn(new Page<IamRoleAssignmentEntity>(1, 20).setRecords(List.of()));
         assertTrue(service.list(AuthorizationDomain.PLATFORM, 1, 20).items().isEmpty());
-        verify(store).pageOwned(1001, 1, 20, null, null);
-        verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any());
+        verify(store).pageOwned(1001, 1, 20, null, null, null);
+        verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any(), any());
         verify(store, never()).page(any(), any(), anyInt(), anyInt());
     }
     @Test
     void restrictedListKeepsOwnerBoundaryWhenFilteringGroupNames() {
         var service = service(false);
-        when(store.pageOwned(1001, 2, 20, SubjectType.GROUP, "运维"))
+        when(store.pageOwned(1001, 2, 20, SubjectType.GROUP, "运维", null))
                 .thenReturn(new Page<IamRoleAssignmentEntity>(2, 20).setRecords(List.of()));
         assertTrue(service.list(AuthorizationDomain.PLATFORM, 2, 20, SubjectType.GROUP, " 运维 ").items().isEmpty());
-        verify(store).pageOwned(1001, 2, 20, SubjectType.GROUP, "运维");
-        verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any());
+        verify(store).pageOwned(1001, 2, 20, SubjectType.GROUP, "运维", null);
+        verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any(), any());
     }
     @Test
     void restrictedDetailAndRevokeRejectDirectAndOtherAdministratorsSources() {

@@ -31,6 +31,8 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @param ids 已选回显
      * @param page 页码
      * @param pageSize 页大小
+     * @param tree 是否按树分支分页
+     * @param parentId 树分支父节点
      * @return 可配置候选
      */
     @GetMapping("/assignments/candidates")
@@ -39,9 +41,10 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
             @RequestParam(required=false) String delegationGrantId, @RequestParam(required=false) String revisionId,
             @RequestParam(required=false) String parameterKey, @RequestParam(required=false) String actionId,
             @RequestParam(required=false) String keyword, @RequestParam(required=false) List<String> ids,
-            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize) {
+            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize,
+            @RequestParam(defaultValue="false") boolean tree, @RequestParam(required=false) String parentId) {
         return ok(editor.assignments(kind, delegationGrantId, revisionId, parameterKey, actionId, null,
-                keyword, ids, page, pageSize));
+                keyword, ids, page, pageSize, tree, parentId));
     }
 
     /**
@@ -73,6 +76,9 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @param ids 已选回显
      * @param page 页码
      * @param pageSize 页大小
+     * @param tree 是否按树分支分页
+     * @param parentId 树分支父节点
+     * @param excludeMemberId 接收名单排除的管理员，分页前过滤
      * @return 候选
      */
     @GetMapping("/delegations/candidates")
@@ -80,8 +86,45 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
     public R<AuthorizationCandidatePage> delegations(@RequestParam AuthorizationCandidateKind kind,
             @RequestParam(required=false) String actionId, @RequestParam(required=false) String keyword,
             @RequestParam(required=false) List<String> ids, @RequestParam(defaultValue="1") int page,
+            @RequestParam(defaultValue="20") int pageSize,
+            @RequestParam(defaultValue="false") boolean tree, @RequestParam(required=false) String parentId,
+            @RequestParam(required=false) String excludeMemberId) {
+        return ok(editor.delegations(kind, actionId, keyword, ids, page, pageSize, tree, parentId, excludeMemberId));
+    }
+    /**
+     * 分页读取委派已选成员、固定版本或范围对象的真实关系。
+     * @param id 可见委派 ID
+     * @param excludeMemberId 草稿管理员；缺省排除已存管理员
+     * @param kind 关系种类
+     * @param actionId 对象所属操作，OBJECT 必填
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 已选候选关系页
+     */
+    @GetMapping("/delegations/{id}/selected-candidates")
+    @Operation(summary="委派已选实体关联分页")
+    public R<AuthorizationCandidatePage> selected(@PathVariable String id,
+            @RequestParam AuthorizationCandidateKind kind, @RequestParam(required=false) String actionId,
+            @RequestParam(required=false) String excludeMemberId,
+            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize) {
+        return ok(editor.selectedDelegationCandidates(id, kind, actionId, page, pageSize, excludeMemberId));
+    }
+    /**
+     * 查询委派管理可选择的角色与固定版本树当前层。
+     * @param roleId 指定角色时返回其版本
+     * @param keyword 角色名称搜索词
+     * @param ids 当前层少量已选节点回显
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 分页角色树节点
+     */
+    @GetMapping("/delegations/role-candidates")
+    @Operation(summary="委派管理两级角色树候选")
+    public R<AuthorizationRoleCandidatePage> delegationRoleCandidates(
+            @RequestParam(required=false) String roleId, @RequestParam(required=false) String keyword,
+            @RequestParam(required=false) List<String> ids, @RequestParam(defaultValue="1") int page,
             @RequestParam(defaultValue="20") int pageSize) {
-        return ok(editor.delegations(kind, actionId, keyword, ids, page, pageSize));
+        return ok(editor.delegationRoleCandidates(roleId, keyword, ids, page, pageSize));
     }
     /**
      * 查询只读诊断候选。

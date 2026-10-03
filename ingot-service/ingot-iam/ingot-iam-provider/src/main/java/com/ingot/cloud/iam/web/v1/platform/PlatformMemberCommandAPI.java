@@ -3,9 +3,11 @@ package com.ingot.cloud.iam.web.v1.platform;
 import java.util.List;
 
 import com.ingot.cloud.iam.organization.MemberCommandService;
+import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.AssignmentRecord;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
@@ -46,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlatformMemberCommandAPI implements RShortcuts {
     private final MemberCommandService members;
     private final MemberQueryService queries;
+    private final AssignmentService assignments;
 
     /**
      * 分页列出平台成员。
@@ -119,6 +122,21 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @GetMapping("/{id}/roles")
     public R<List<MemberRoleView>> roles(@PathVariable String id) {
         return ok(queries.listDirectRoles(id));
+    }
+
+    /**
+     * 按成员关联分页读取实际角色分配及逐条操作能力。
+     * @param id 平台成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 当前身份可见的分配页
+     */
+    @Operation(summary = "成员角色分配")
+    @GetMapping("/{id}/assignments")
+    public R<PageResponse<ResourceDetail<AssignmentRecord>>> assignments(@PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(assignments.listForMember(id, page, pageSize));
     }
 
     /**

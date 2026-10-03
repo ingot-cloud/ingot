@@ -104,8 +104,11 @@ class AuthorizationEvaluatorTest {
         jdbc.execute("ALTER TABLE iam_role_assignment ADD revision_kind VARCHAR(24) DEFAULT 'SYSTEM'");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD domain VARCHAR(16)");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD tenant_id BIGINT");
-        jdbc.execute("ALTER TABLE iam_delegation_grant ADD platform_administrator_id BIGINT");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD platform_administrator_id BIGINT DEFAULT 9999");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD version BIGINT DEFAULT 0");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD assignment_duration_mode VARCHAR(16) DEFAULT 'UNLIMITED'");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD max_assignment_duration_seconds BIGINT");
+        jdbc.execute("ALTER TABLE iam_delegation_grant ADD max_assignment_duration_nanos INT DEFAULT 0");
         jdbc.execute("ALTER TABLE iam_action ADD resource_id BIGINT DEFAULT 5");
         jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, enabled BOOLEAN)");
         jdbc.update("INSERT INTO iam_resource VALUES (5,TRUE)");
@@ -195,6 +198,38 @@ class AuthorizationEvaluatorTest {
     private void tenantGroupAssignmentOnly() {
         jdbc.update("UPDATE iam_role_assignment SET subject_type='GROUP',tenant_member_id=NULL,tenant_group_id=502"
                 + " WHERE id=42");
+    }
+
+    @Test
+    void historicalSelfGrantCannotSurviveThroughOwnDelegationOrGroup() {
+        platformDelegationOnPlatformAssignment(null);
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+        jdbc.update("UPDATE iam_delegation_grant SET platform_administrator_id=1001 WHERE id=61");
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+        jdbc.update("UPDATE iam_role_assignment SET subject_type='MEMBER',platform_member_id=1001,platform_group_id=NULL WHERE id=41");
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+        jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL WHERE id=41");
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+    }
+
+    @Test
+    void addingAdministratorInvalidatesWholeDerivedGroupEvenWhenWhitelisted() {
+        platformDelegationOnPlatformAssignment(null);
+        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(61,NULL,9999,NULL)");
+        jdbc.update("INSERT INTO iam_platform_group_member VALUES(501,9999)");
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+    }
+
+    @Test
+    void limitedModeRejectsLongGrantAndChecksElapsedDuration() {
+        platformDelegationOnPlatformAssignment(null);
+        jdbc.update("UPDATE iam_delegation_grant SET assignment_duration_mode='LIMITED',max_assignment_duration_seconds=86400 WHERE id=61");
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+        LocalDateTime from = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
+        jdbc.update("UPDATE iam_role_assignment SET valid_from=?,valid_until=? WHERE id=41", from, from.plusHours(24));
+        assertTrue(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
+        jdbc.update("UPDATE iam_role_assignment SET valid_until=? WHERE id=41", from.plusHours(25));
+        assertFalse(evaluator.evaluate(PLATFORM).actionCodes().contains(IamAction.VALUE_PLATFORM_TENANT_CREATE));
     }
 
     @Test

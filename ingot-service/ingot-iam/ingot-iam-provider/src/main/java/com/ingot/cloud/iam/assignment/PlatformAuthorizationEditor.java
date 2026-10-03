@@ -59,6 +59,29 @@ public class PlatformAuthorizationEditor {
     public AuthorizationCandidatePage assignments(AuthorizationCandidateKind kind, String source, String revisionId,
             String parameterKey, String actionId, String applicationId, String keyword, List<String> ids,
             int page, int pageSize) {
+        return assignments(kind, source, revisionId, parameterKey, actionId, applicationId, keyword, ids,
+                page, pageSize, false, null);
+    }
+
+    /**
+     * 在原有分配资格边界内按真实层级资源读取树的当前分支。
+     * @param kind 候选种类
+     * @param source 所选委派
+     * @param revisionId 固定版本
+     * @param parameterKey 范围参数
+     * @param actionId 范围操作
+     * @param applicationId 应用
+     * @param keyword 搜索词
+     * @param ids 已选回显
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param tree 请求树分支
+     * @param parentId 父节点，根分支为空
+     * @return 候选页
+     */
+    public AuthorizationCandidatePage assignments(AuthorizationCandidateKind kind, String source, String revisionId,
+            String parameterKey, String actionId, String applicationId, String keyword, List<String> ids,
+            int page, int pageSize, boolean tree, String parentId) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_READ);
         if (kind == AuthorizationCandidateKind.APPLICATION || kind == AuthorizationCandidateKind.ACTION) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -75,7 +98,7 @@ public class PlatformAuthorizationEditor {
             }
         }
         return query(actor, kind, source, basis, revisionId, parameterKey, actionId, applicationId, keyword,
-                ids, page, pageSize, null);
+                ids, page, pageSize, null, tree, parentId);
     }
 
     /**
@@ -101,6 +124,27 @@ public class PlatformAuthorizationEditor {
                 && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true)) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
+        return rolePage(roleId, keyword, ids, page, pageSize, basis);
+    }
+
+    /**
+     * 查询委派管理专用的角色与固定版本树，不要求角色分配资格。
+     * @param roleId 指定角色时只查询其版本
+     * @param keyword 角色名称搜索
+     * @param ids 当前层少量已选节点回显
+     * @param page 从 1 开始的页码
+     * @param pageSize 页大小
+     * @return 平台委派可选择的角色树当前层
+     */
+    public AuthorizationRoleCandidatePage delegationRoleCandidates(String roleId, String keyword,
+            List<String> ids, int page, int pageSize) {
+        requireDelegationActor();
+        return rolePage(roleId, keyword, ids, page, pageSize, null);
+    }
+
+    private AuthorizationRoleCandidatePage rolePage(String roleId, String keyword, List<String> ids,
+            int page, int pageSize, DelegationInput basis) {
+        IamPages.require(page, pageSize);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream()
                 .map(value -> BigInteger.valueOf(IamIds.require(value))).distinct().toList();
         if (selected.size() > IamPages.MAX_SIZE) {
@@ -139,6 +183,98 @@ public class PlatformAuthorizationEditor {
      */
     public AuthorizationCandidatePage delegations(AuthorizationCandidateKind kind, String actionId, String keyword,
             List<String> ids, int page, int pageSize) {
+        return delegations(kind, actionId, keyword, ids, page, pageSize, false, null);
+    }
+
+    /**
+     * 在委派管理权限内读取层级范围对象的当前分支。
+     * @param kind 候选种类
+     * @param actionId 范围操作
+     * @param keyword 搜索词
+     * @param ids 已选回显
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param tree 请求树分支
+     * @param parentId 父节点
+     * @return 候选页
+     */
+    public AuthorizationCandidatePage delegations(AuthorizationCandidateKind kind, String actionId, String keyword,
+            List<String> ids, int page, int pageSize, boolean tree, String parentId) {
+        ActiveIdentity actor = requireDelegationActor();
+        if (!Set.of(AuthorizationCandidateKind.MEMBER, AuthorizationCandidateKind.ROLE_REVISION,
+                AuthorizationCandidateKind.OBJECT).contains(kind)) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return query(actor, kind, null, null, null, null, actionId, null, keyword, ids, page, pageSize,
+                null, tree, parentId);
+    }
+
+    /**
+     * 查询委派接收成员候选，排除授权管理员发生在计数与分页之前。
+     * @param kind 候选类型
+     * @param actionId 对象操作
+     * @param keyword 搜索词
+     * @param ids 少量回显标识
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param tree 是否查询树分支
+     * @param parentId 父节点
+     * @param excludeMemberId 需要排除的管理员
+     * @return 可选候选页
+     */
+    public AuthorizationCandidatePage delegations(AuthorizationCandidateKind kind, String actionId, String keyword,
+            List<String> ids, int page, int pageSize, boolean tree, String parentId, String excludeMemberId) {
+        ActiveIdentity actor = requireDelegationActor();
+        if (!Set.of(AuthorizationCandidateKind.MEMBER, AuthorizationCandidateKind.ROLE_REVISION,
+                AuthorizationCandidateKind.OBJECT).contains(kind)) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        return query(actor, kind, null, null, null, null, actionId, null, keyword, ids, page, pageSize,
+                null, tree, parentId, excludeMemberId, null);
+    }
+
+    /**
+     * 按可见委派的真实关系读取已选实体，不将全集 ID 拆分为伪关联查询。
+     * @param id 委派 ID
+     * @param kind 已选实体类型
+     * @param actionId 对象关系所属操作
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 经候选有效性过滤的关联页
+     */
+    public AuthorizationCandidatePage selectedDelegationCandidates(String id, AuthorizationCandidateKind kind,
+            String actionId, int page, int pageSize) {
+        return selectedDelegationCandidates(id, kind, actionId, page, pageSize, null);
+    }
+
+    /**
+     * 分页读取委派已选实体，编辑接收名单时排除当前管理员。
+     * @param id 委派标识
+     * @param kind 已选实体种类
+     * @param actionId 指定对象所属操作
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param excludeMemberId 草稿管理员，缺省排除已存管理员
+     * @return 同候选边界的关联分页
+     */
+    public AuthorizationCandidatePage selectedDelegationCandidates(String id, AuthorizationCandidateKind kind,
+            String actionId, int page, int pageSize, String excludeMemberId) {
+        ActiveIdentity actor = access.requireGoverned(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DELEGATION_READ);
+        long delegationId = IamIds.require(id);
+        var visibility = visibleIds(evaluator.evaluate(actor.context()).scope(IamAction.PLATFORM_DELEGATION_READ.getCode()), null);
+        var delegation = delegations.find(AuthorizationDomain.PLATFORM, null, delegationId);
+        if (visibility != null && !visibility.contains(BigInteger.valueOf(delegationId))
+                || delegation == null) {
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        if (!Set.of(AuthorizationCandidateKind.MEMBER, AuthorizationCandidateKind.ROLE_REVISION,
+                AuthorizationCandidateKind.OBJECT).contains(kind)
+                || kind == AuthorizationCandidateKind.OBJECT && (actionId == null || actionId.isBlank())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        return query(actor, kind, null, null, null, null, actionId, null, null, List.of(), page, pageSize,
+                null, false, null, excludeMemberId == null || excludeMemberId.isBlank() ? delegation.getPlatformAdministratorId().toString() : excludeMemberId, id);
+    }
+
+    private ActiveIdentity requireDelegationActor() {
         ActiveIdentity actor = access.requireCurrent();
         if (actor.context().domain() != AuthorizationDomain.PLATFORM) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
@@ -150,11 +286,7 @@ public class PlatformAuthorizationEditor {
                 && !permissions.allows(IamAction.PLATFORM_DELEGATION_READ, true)) {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
-        if (!Set.of(AuthorizationCandidateKind.MEMBER, AuthorizationCandidateKind.ROLE_REVISION,
-                AuthorizationCandidateKind.OBJECT).contains(kind)) {
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        }
-        return query(actor, kind, null, null, null, null, actionId, null, keyword, ids, page, pageSize, null);
+        return actor;
     }
 
     /**
@@ -210,6 +342,22 @@ public class PlatformAuthorizationEditor {
     private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
             DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
             String keyword, List<String> ids, int page, int size, List<BigInteger> visibility) {
+        return query(actor, kind, source, basis, revisionId, key, actionId, applicationId, keyword, ids,
+                page, size, visibility, false, null);
+    }
+
+    private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
+            DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
+            String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
+            boolean tree, String parentId) {
+        return query(actor, kind, source, basis, revisionId, key, actionId, applicationId, keyword, ids,
+                page, size, visibility, tree, parentId, null, null);
+    }
+
+    private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
+            DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
+            String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
+            boolean tree, String parentId, String excludeMemberId, String selectedDelegationId) {
         IamPages.require(page, size);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream().map(value ->
                 BigInteger.valueOf(IamIds.require(value))).distinct().toList();
@@ -218,7 +366,9 @@ public class PlatformAuthorizationEditor {
         if (basis != null && kind == AuthorizationCandidateKind.ROLE_REVISION) {
             allowed = basis.allowedRoleRevisionRefs().stream().map(ref -> new BigInteger(ref.id())).toList();
         } else if (basis != null && kind == AuthorizationCandidateKind.MEMBER) {
-            allowed = basis.recipientSelection().members().stream().map(BigInteger::new).toList();
+            String administratorId = basis.administratorMemberId();
+            allowed = basis.recipientSelection().members().stream().filter(id -> !id.equals(administratorId))
+                    .map(BigInteger::new).toList();
         }
         String resource = null;
         if (kind == AuthorizationCandidateKind.OBJECT) {
@@ -247,11 +397,30 @@ public class PlatformAuthorizationEditor {
         }
         String search = keyword == null ? "" : keyword.trim();
         search = "%" + search.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        boolean hierarchical = kind == AuthorizationCandidateKind.OBJECT
+                && PlatformScopeObjectResource.find(resource) == PlatformScopeObjectResource.MENU;
+        List<BigInteger> navigationIds = allowed;
+        if (hierarchical && tree && selected.isEmpty() && "%".equals(search)
+                && allowed != null && !allowed.isEmpty()) {
+            navigationIds = candidates.menuAncestorIds(allowed);
+        }
         var query = new AuthorizationCandidateSql.Query(kind, new BigInteger(actor.context().memberId()),
                 source == null || source.isBlank() ? null : BigInteger.valueOf(IamIds.require(source)),
                 applicationId == null || applicationId.isBlank() ? null : BigInteger.valueOf(IamIds.require(applicationId)),
-                resource, search, selected, allowed, Math.multiplyExact(page - 1, size), size);
+                resource, search, selected, navigationIds, Math.multiplyExact(page - 1, size), size,
+                hierarchical && tree && selectedDelegationId == null, parentId == null || parentId.isBlank() ? null
+                    : BigInteger.valueOf(IamIds.require(parentId)),
+                excludeMemberId == null || excludeMemberId.isBlank() ? null : BigInteger.valueOf(IamIds.require(excludeMemberId)),
+                selectedDelegationId == null ? null : BigInteger.valueOf(IamIds.require(selectedDelegationId)),
+                actionId == null || actionId.isBlank() ? null : BigInteger.valueOf(IamIds.require(actionId)));
         var rows = candidates.page(query);
+        Map<BigInteger, String> paths = hierarchical && !rows.isEmpty()
+                ? candidates.menuPaths(rows.stream().map(
+                        com.ingot.cloud.iam.persistence.projection.AuthorizationCandidateRow::id).toList())
+                    .stream().collect(java.util.stream.Collectors.toMap(
+                            AuthorizationCandidateMapper.TreePath::leafId,
+                            AuthorizationCandidateMapper.TreePath::ancestorPath))
+                : Map.of();
         List<BigInteger> delegationIds = kind == AuthorizationCandidateKind.DELEGATION
                 ? rows.stream().map(com.ingot.cloud.iam.persistence.projection.AuthorizationCandidateRow::id).toList()
                 : List.of();
@@ -265,13 +434,14 @@ public class PlatformAuthorizationEditor {
         }
         List<AuthorizationActionOption> operationOptions = actionOptions(revisionGrants.values().stream()
                 .flatMap(Collection::stream).map(ActionGrant::actionId).distinct().toList());
+        List<BigInteger> selectableIds = allowed;
         List<AuthorizationOption> options = rows.stream().map(row -> {
             String id = row.id().toString();
             if (kind == AuthorizationCandidateKind.DELEGATION) {
                 DelegationInput input = source(actor, sources.get(row.id()), children.get(row.id()), permissions);
                 return new AuthorizationOption(id, "委派 " + id, "允许 " + input.allowedRoleRevisionRefs().size()
                         + " 个固定版本 / " + input.recipientSelection().members().size() + " 名接收成员 / 最长 "
-                        + input.maxAssignmentDuration(), null, null, null, null, input);
+                        + (input.assignmentDurationMode() == AssignmentDurationMode.UNLIMITED ? "不限期限" : input.maxAssignmentDuration()), null, null, null, null, input);
             }
             if (kind == AuthorizationCandidateKind.ROLE_REVISION) {
                 long revision = row.id().longValueExact();
@@ -286,9 +456,13 @@ public class PlatformAuthorizationEditor {
             }
             return new AuthorizationOption(id, row.name(),
                     kind == AuthorizationCandidateKind.ACTION ? row.resourceName() : null,
-                    null, null, null, null, null);
+                    null, null, null, null, null,
+                    row.parentId() == null ? null : row.parentId().toString(), row.hasChildren(),
+                    paths.get(row.id()), !hierarchical || selectableIds == null
+                            || selectableIds.contains(row.id()));
         }).toList();
-        return new AuthorizationCandidatePage(options, candidates.count(query), page, size, true, null);
+        return new AuthorizationCandidatePage(options, candidates.count(query), page, size, true, null,
+                null, hierarchical);
     }
 
     private AuthorizationCandidateMapper.ActionRow objectAction(String revisionId, String key, String actionId,
@@ -355,13 +529,19 @@ public class PlatformAuthorizationEditor {
         var definitions = roleStore.listParameters(revisionId);
         var bindings = input.scopeBindings();
         if (bindings == null) { return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "缺少范围参数")); }
+        if (bindings.size() != definitions.size()
+                || definitions.stream().anyMatch(parameter -> !bindings.containsKey(parameter.getParameterKey()))) {
+            return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT,
+                    "固定角色版本的范围参数必须全部配置"));
+        }
         for (var entry : bindings.entrySet()) {
             var parameter = definitions.stream().filter(value -> value.getParameterKey().equals(entry.getKey())).findFirst().orElse(null);
             if (parameter == null || entry.getValue().kind() != parameter.getBindingKind()) {
                 return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "参数未声明或类型不匹配"));
             }
             var action = objectAction(input.roleRevisionRef().id(), entry.getKey(), null, null);
-            if (!objectsExist(action, entry.getValue())) {
+            if (entry.getValue() == null || entry.getValue().ids() == null
+                    || entry.getValue().ids().isEmpty() || !objectsExist(action, entry.getValue())) {
                 return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "资源不支持对象查询或包含无效对象"));
             }
         }
@@ -416,7 +596,9 @@ public class PlatformAuthorizationEditor {
         return new DelegationInput(source.getPlatformAdministratorId().toString(), refs, new Selection(members, List.of()), ceilings,
                 source.getValidFrom() == null ? null : source.getValidFrom().toInstant(ZoneOffset.UTC),
                 source.getValidUntil() == null ? null : source.getValidUntil().toInstant(ZoneOffset.UTC),
-                Duration.ofSeconds(source.getMaxAssignmentDurationSeconds(), source.getMaxAssignmentDurationNanos()));
+                source.getAssignmentDurationMode() == AssignmentDurationMode.UNLIMITED ? null
+                    : Duration.ofSeconds(source.getMaxAssignmentDurationSeconds(), source.getMaxAssignmentDurationNanos()),
+                source.getAssignmentDurationMode());
     }
 
     private static AuthorizationCandidatePage unsupported(int page, int size) {

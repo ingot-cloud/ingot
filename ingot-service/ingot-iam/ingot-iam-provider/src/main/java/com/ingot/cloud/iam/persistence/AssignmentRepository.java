@@ -89,8 +89,26 @@ public class AssignmentRepository {
      */
     public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
             String keyword) {
+        return pagePlatform(page, pageSize, subjectType, keyword, null);
+    }
+
+    /**
+     * 按平台成员关联过滤分配后分页，避免由客户端回查全局列表。
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 主体类型
+     * @param keyword 名称条件
+     * @param memberId 可选平台成员 ID
+     * @return 分配页
+     */
+    public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
+            String keyword, Long memberId) {
         var query = scoped(AuthorizationDomain.PLATFORM, null);
         filterPlatformSubject(query, subjectType, keyword);
+        if (memberId != null) {
+            query.eq(IamRoleAssignmentEntity::getSubjectType, SubjectType.MEMBER)
+                    .eq(IamRoleAssignmentEntity::getPlatformMemberId, BigInteger.valueOf(memberId));
+        }
         return assignments.selectPage(new Page<>(page, pageSize), query.orderByAsc(IamRoleAssignmentEntity::getId));
     }
 
@@ -105,11 +123,30 @@ public class AssignmentRepository {
      */
     public Page<IamRoleAssignmentEntity> pageOwned(long memberId, int page, int pageSize,
             SubjectType subjectType, String keyword) {
+        return pageOwned(memberId, page, pageSize, subjectType, keyword, null);
+    }
+
+    /**
+     * 按委派归属和接收成员双重过滤后分页。
+     * @param memberId 当前委派管理员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 主体类型
+     * @param keyword 名称条件
+     * @param recipientId 可选接收成员
+     * @return 分配页
+     */
+    public Page<IamRoleAssignmentEntity> pageOwned(long memberId, int page, int pageSize,
+            SubjectType subjectType, String keyword, Long recipientId) {
         var query = scoped(AuthorizationDomain.PLATFORM, null)
                 .apply("EXISTS (SELECT 1 FROM iam_delegation_grant owned WHERE owned.id=delegation_grant_id "
                         + "AND owned.domain={0} AND owned.tenant_id IS NULL AND owned.platform_administrator_id={1})",
                         AuthorizationDomain.PLATFORM.name(), BigInteger.valueOf(memberId));
         filterPlatformSubject(query, subjectType, keyword);
+        if (recipientId != null) {
+            query.eq(IamRoleAssignmentEntity::getSubjectType, SubjectType.MEMBER)
+                    .eq(IamRoleAssignmentEntity::getPlatformMemberId, BigInteger.valueOf(recipientId));
+        }
         return assignments.selectPage(new Page<>(page, pageSize), query.orderByDesc(IamRoleAssignmentEntity::getId));
     }
 

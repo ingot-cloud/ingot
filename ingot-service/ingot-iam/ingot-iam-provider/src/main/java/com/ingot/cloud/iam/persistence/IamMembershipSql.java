@@ -72,6 +72,7 @@ public final class IamMembershipSql {
      * <p>以 {@code AND} 开头，供求值 SQL 在已定位委派行别名 {@code d} 后追加。</p>
      */
     public static final String AND_PLATFORM_RECIPIENT_REACHED = """
+             AND d.platform_administrator_id<>#{memberId}
              AND EXISTS (
                     SELECT 1 FROM iam_delegation_recipient_member rm
                      WHERE rm.delegation_id=d.id AND rm.platform_member_id=#{memberId})
@@ -80,6 +81,8 @@ public final class IamMembershipSql {
      * 平台派生组的全部成员持续符合接收名单且组非空，任何扩大立即失败关闭。
      */
     public static final String AND_PLATFORM_GROUP_RECIPIENTS_REACHED = """
+             AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member self_member
+                WHERE self_member.group_id=ra.platform_group_id AND self_member.member_id=d.platform_administrator_id)
              AND EXISTS(SELECT 1 FROM iam_platform_group_member gm WHERE gm.group_id=ra.platform_group_id)
              AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member gm
                WHERE gm.group_id=ra.platform_group_id AND NOT EXISTS(
@@ -96,6 +99,18 @@ public final class IamMembershipSql {
              AND EXISTS (
                     SELECT 1 FROM iam_delegation_role_revision dr
                      WHERE dr.delegation_id=d.id AND dr.revision_id=ra.revision_id)
+            """;
+
+    /**
+     * 平台派生分配持续核对期限模式，长期授权仍受来源失效边界约束。
+     */
+    public static final String AND_PLATFORM_DURATION_ALLOWED = """
+             AND (d.valid_from IS NULL OR ra.valid_from>=d.valid_from)
+             AND (d.valid_until IS NULL OR ra.valid_until<=d.valid_until
+                  OR (ra.valid_until IS NULL AND d.assignment_duration_mode='UNLIMITED'))
+             AND (d.assignment_duration_mode='UNLIMITED' OR (ra.valid_until IS NOT NULL
+                  AND TIMESTAMPDIFF(MICROSECOND,ra.valid_from,ra.valid_until)
+                      <=d.max_assignment_duration_seconds*1000000+FLOOR(d.max_assignment_duration_nanos/1000)))
             """;
 
     /**

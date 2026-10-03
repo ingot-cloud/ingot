@@ -76,7 +76,8 @@ public class DelegationAdmission {
         }
         Instant requestedFrom = request.validFrom() == null ? now : request.validFrom();
         if (request.domain() == AuthorizationDomain.PLATFORM && (validFrom != null && requestedFrom.isBefore(validFrom)
-                || validUntil != null && (request.validUntil() == null || request.validUntil().isAfter(validUntil)))) {
+                || validUntil != null && (!requestedFrom.isBefore(validUntil) || (request.validUntil() == null && delegation.getAssignmentDurationMode() != com.ingot.framework.commons.model.iam.AssignmentDurationMode.UNLIMITED)
+                    || request.validUntil() != null && request.validUntil().isAfter(validUntil)))) {
             errors.add(new ValidationIssue("validUntil", IamReasonCode.DELEGATION_EXCEEDED,
                     "分配起止时间超出来源委派有效期"));
         }
@@ -86,13 +87,15 @@ public class DelegationAdmission {
         } else {
             errors.addAll(ceilings(request));
         }
-        if (!reaches(request)) {
+        if (!reaches(request) || selfAssignment(delegation, request)) {
             errors.add(new ValidationIssue("subject", IamReasonCode.ACTION_DENIED, "接收者不在委派人群内"));
         }
         return List.copyOf(errors);
     }
 
     private List<ValidationIssue> duration(IamDelegationGrantEntity delegation, Request request) {
+        if (request.domain() == AuthorizationDomain.PLATFORM
+                && delegation.getAssignmentDurationMode() == com.ingot.framework.commons.model.iam.AssignmentDurationMode.UNLIMITED) return List.of();
         Instant from = request.validFrom() == null ? Instant.now() : request.validFrom();
         if (request.validUntil() == null) {
             return List.of(new ValidationIssue("validUntil", IamReasonCode.INVALID_ARGUMENT,
@@ -132,6 +135,14 @@ public class DelegationAdmission {
                     bindings == null ? Map.of() : bindings));
         }
         return ceilings;
+    }
+
+    private boolean selfAssignment(IamDelegationGrantEntity delegation, Request request) {
+        if (request.domain() != AuthorizationDomain.PLATFORM) return false;
+        BigInteger administrator = delegation.getPlatformAdministratorId();
+        return request.subject().type() == SubjectType.MEMBER
+                ? administrator != null && administrator.toString().equals(request.subject().id())
+                : assignments.platformGroupMemberIds(IamIds.require(request.subject().id())).contains(administrator);
     }
 
     private boolean reaches(Request request) {

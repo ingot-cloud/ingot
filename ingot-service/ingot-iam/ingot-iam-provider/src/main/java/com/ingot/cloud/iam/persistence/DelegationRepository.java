@@ -220,16 +220,19 @@ public class DelegationRepository {
      * @param validUntil 失效时间，可空
      * @param seconds 派生分配最长秒数
      * @param nanos 派生分配最长纳秒
+     * @param durationMode 单次期限模式
      * @param currentVersion 锁定后的当前版本
      */
     public void update(long id, BigInteger platformAdmin, BigInteger tenantAdmin, LocalDateTime validFrom,
-                       LocalDateTime validUntil, long seconds, int nanos, BigInteger currentVersion) {
+                       LocalDateTime validUntil, Long seconds, int nanos,
+                       com.ingot.framework.commons.model.iam.AssignmentDurationMode durationMode, BigInteger currentVersion) {
         grants.update(Wrappers.<IamDelegationGrantEntity>lambdaUpdate()
                 .eq(IamDelegationGrantEntity::getId, BigInteger.valueOf(id))
                 .set(IamDelegationGrantEntity::getPlatformAdministratorId, platformAdmin)
                 .set(IamDelegationGrantEntity::getTenantAdministratorId, tenantAdmin)
                 .set(IamDelegationGrantEntity::getValidFrom, validFrom)
                 .set(IamDelegationGrantEntity::getValidUntil, validUntil)
+                .set(IamDelegationGrantEntity::getAssignmentDurationMode, durationMode)
                 .set(IamDelegationGrantEntity::getMaxAssignmentDurationSeconds, seconds)
                 .set(IamDelegationGrantEntity::getMaxAssignmentDurationNanos, nanos)
                 .set(IamDelegationGrantEntity::getVersion, currentVersion.add(BigInteger.ONE)));
@@ -239,6 +242,7 @@ public class DelegationRepository {
      * 撤销委派并将版本加一。
      *
      * @param id 委派 ID
+     * @param durationMode 单次期限模式
      * @param currentVersion 锁定后的当前版本
      */
     public void revoke(long id, BigInteger currentVersion) {

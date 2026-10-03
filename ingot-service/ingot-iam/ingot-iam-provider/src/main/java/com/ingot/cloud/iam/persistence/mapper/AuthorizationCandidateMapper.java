@@ -62,6 +62,52 @@ public interface AuthorizationCandidateMapper {
              ORDER BY app.id,r.id,a.id</script>
             """)
     List<ActionRow> actions(@Param("ids") List<BigInteger> ids);
+
+    /**
+     * 为已过滤的菜单候选批量读取祖先路径，不用于扩大候选集合。
+     * @param ids 当前页可披露菜单 ID
+     * @return 每个菜单的名称路径
+     */
+    @Select("""
+            <script>WITH RECURSIVE candidate_ancestors(leaf_id,parent_id,application_id,label_path,depth) AS (
+              SELECT m.id AS leaf_id,m.parent_id,m.application_id,
+                     CAST(m.name AS CHAR(4096)) AS label_path,0 AS depth
+                FROM iam_menu m
+               WHERE m.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+              UNION ALL
+              SELECT n.leaf_id,p.parent_id,n.application_id,
+                     CONCAT(p.name,' / ',n.label_path),n.depth+1
+                FROM candidate_ancestors n JOIN iam_menu p ON p.id=n.parent_id AND p.application_id=n.application_id
+               WHERE n.depth&lt;32
+            )
+            SELECT leaf_id, label_path AS ancestor_path FROM (
+              SELECT leaf_id,label_path,ROW_NUMBER() OVER (PARTITION BY leaf_id ORDER BY depth DESC) AS rn
+                FROM candidate_ancestors
+            ) ranked WHERE rn=1</script>
+            """)
+    List<TreePath> menuPaths(@Param("ids") List<BigInteger> ids);
+
+    /**
+     * 仅为受限菜单树展开可见叶节点的祖先；祖先仍不获得选择资格。
+     * @param ids 已通过委派上限验证的菜单 ID
+     * @return 叶节点及其同应用祖先 ID
+     */
+    @Select("""
+            <script>WITH RECURSIVE menu_ancestors(id,parent_id,application_id,depth) AS (
+              SELECT m.id,m.parent_id,m.application_id,0
+                FROM iam_menu m JOIN iam_application a ON a.id=m.application_id
+               WHERE a.domain='PLATFORM' AND m.id IN
+                 <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+              UNION ALL
+              SELECT p.id,p.parent_id,p.application_id,n.depth+1
+                FROM menu_ancestors n JOIN iam_menu p ON p.id=n.parent_id AND p.application_id=n.application_id
+               WHERE n.depth&lt;32
+            ) SELECT DISTINCT id FROM menu_ancestors</script>
+            """)
+    List<BigInteger> menuAncestorIds(@Param("ids") List<BigInteger> ids);
+
+    /** 已可见节点的名称路径。 */
+    record TreePath(BigInteger leafId, String ancestorPath) { }
     /**
      * <p>操作元数据原始投影，范围能力按框架 JSON 契约解析。</p>
      * @param id 操作

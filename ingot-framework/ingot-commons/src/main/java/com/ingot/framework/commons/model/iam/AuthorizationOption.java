@@ -10,9 +10,33 @@ package com.ingot.framework.commons.model.iam;
  * @param grants 该版本合成的操作授权
  * @param actions 操作的应用与资源展示信息
  * @param delegation 单条委派的完整限制
+ * @param parentId 层级候选的父节点，普通列表为空
+ * @param hasChildren 层级候选是否有子节点
+ * @param ancestorPath 搜索与已选回显所需祖先名称路径
+ * @param selectable 树形候选是否可直接选中；受限范围的祖先节点仅用于导航
  * @author jy
  * @since 1.0.0
  */
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-public record AuthorizationOption(@jakarta.validation.constraints.NotBlank String id, @jakarta.validation.constraints.NotBlank String name, String summary, RoleRevisionRef roleRevisionRef, java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants, java.util.List<AuthorizationActionOption> actions, DelegationInput delegation) {
+public record AuthorizationOption(@jakarta.validation.constraints.NotBlank String id, @jakarta.validation.constraints.NotBlank String name, String summary, RoleRevisionRef roleRevisionRef, java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants, java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId, Boolean hasChildren, String ancestorPath, Boolean selectable) {
+    /**
+     * 保持非树形候选构造契约。
+     */
+    public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
+            java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
+            java.util.List<AuthorizationActionOption> actions, DelegationInput delegation) {
+        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation,
+                null, null, null, null);
+    }
+
+    /**
+     * 保持已有树形候选构造契约。
+     */
+    public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
+            java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
+            java.util.List<AuthorizationActionOption> actions, DelegationInput delegation,
+            String parentId, Boolean hasChildren, String ancestorPath) {
+        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation,
+                parentId, hasChildren, ancestorPath, null);
+    }
 }

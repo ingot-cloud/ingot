@@ -57,9 +57,11 @@ class PlatformDelegationConflictTest {
         grant.setMaxAssignmentDurationSeconds(Duration.ofDays(7).toSeconds()); grant.setMaxAssignmentDurationNanos(0);
         when(store.find(DOMAIN, null, 60)).thenReturn(grant);
         when(store.lock(DOMAIN, null, 60)).thenReturn(BigInteger.valueOf(60));
-        when(store.loadRoleRevisions(60)).thenReturn(List.of());
-        when(store.loadRecipientMembers(60)).thenReturn(List.of());
-        when(store.loadCeilings(60)).thenReturn(List.of());
+        when(store.children(DOMAIN, List.of(BigInteger.valueOf(60))))
+                .thenReturn(Map.of(BigInteger.valueOf(60), new DelegationRepository.Children(
+                        List.of(), List.of(), List.of(), List.of())));
+        when(store.platformAdministratorNames(List.of(BigInteger.valueOf(1001)))).thenReturn(Map.of());
+        when(access.capabilities(eq(actor), anyList())).thenReturn(new IamCapabilities(Map.of()));
         derived.setId(BigInteger.valueOf(90)); derived.setDomain(DOMAIN); derived.setRevisionId(BigInteger.valueOf(31));
         derived.setRevisionKind(RoleKind.PLATFORM_CUSTOM); derived.setSubjectType(SubjectType.MEMBER);
         derived.setPlatformMemberId(BigInteger.valueOf(1002)); derived.setScopeBindings(IamJson.object(Map.of(
@@ -115,6 +117,41 @@ class PlatformDelegationConflictTest {
         var result = service.preview(DOMAIN, "60", new DelegationUpdateInput("0", next));
         assertFalse(result.valid()); assertTrue(result.effectiveResult().affectedAssignmentIds().isEmpty());
         assertNull(result.impactSummary().affectedAssignments()); assertTrue(result.impactSummary().restricted());
+    }
+    @Test
+    void unlimitedAllowsLongDerivedAssignmentButLimitedShrinkRejectsEntireChange() {
+        derived.setValidUntil(null);
+        var current = valid();
+        var unlimited = new DelegationInput(current.administratorMemberId(), current.allowedRoleRevisionRefs(),
+                current.recipientSelection(), current.actionScopeCeilings(), current.validFrom(), current.validUntil(),
+                null, AssignmentDurationMode.UNLIMITED);
+        assertTrue(service.preview(DOMAIN, "60", new DelegationUpdateInput("0", unlimited)).valid());
+        var limited = service.preview(DOMAIN, "60", new DelegationUpdateInput("0", current));
+        assertFalse(limited.valid());
+        assertEquals(List.of("90"), limited.effectiveResult().affectedAssignmentIds());
+        assertThrows(BizException.class, () -> service.replace(DOMAIN, "60", new DelegationUpdateInput("0", current)));
+        verify(store, never()).deleteChildren(anyLong());
+    }
+    @Test
+    void boundedUnlimitedSourceCannotBeNarrowedBeforeFutureDerivedStart() {
+        derived.setValidFrom(LocalDateTime.ofInstant(until, ZoneOffset.UTC));
+        derived.setValidUntil(null);
+        var current = valid();
+        var next = new DelegationInput(current.administratorMemberId(), current.allowedRoleRevisionRefs(),
+                current.recipientSelection(), current.actionScopeCeilings(), null, until.minusSeconds(1),
+                null, AssignmentDurationMode.UNLIMITED);
+        assertFalse(service.preview(DOMAIN, "60", new DelegationUpdateInput("0", next)).valid());
+        assertThrows(BizException.class, () -> service.replace(DOMAIN, "60", new DelegationUpdateInput("0", next)));
+        verify(store, never()).deleteChildren(anyLong());
+    }
+
+    @Test
+    void administratorCannotBeIncludedAsDirectOrGroupRecipient() {
+        var self = input(versions(), List.of("1001", "1002"), List.of("1002", "1003"), null, null, Duration.ofDays(7));
+        assertFalse(service.previewCreate(DOMAIN, self).valid());
+        derived.setSubjectType(SubjectType.GROUP); derived.setPlatformGroupId(BigInteger.valueOf(80));
+        when(assignments.platformGroupMemberIds(80)).thenReturn(List.of(BigInteger.valueOf(1001), BigInteger.valueOf(1002)));
+        assertFalse(service.preview(DOMAIN, "60", new DelegationUpdateInput("0", valid())).valid());
     }
     @Test
     void revocationRevokesDerivedAssignmentsAndCommitsTogether() {

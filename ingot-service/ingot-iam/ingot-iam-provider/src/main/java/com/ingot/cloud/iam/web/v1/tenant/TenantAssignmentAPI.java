@@ -1,12 +1,14 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
 import com.ingot.cloud.iam.assignment.AssignmentService;
+import com.ingot.cloud.iam.assignment.TenantScopeCandidates;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AssignmentBatchInput;
 import com.ingot.framework.commons.model.iam.AssignmentPreviewResult;
 import com.ingot.framework.commons.model.iam.AssignmentRecord;
 import com.ingot.framework.commons.model.iam.AssignmentUpdateInput;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.AuthorizationCandidatePage;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * <p>提供租户原子角色分配，提交时重验委派来源与范围。</p>
@@ -39,6 +42,31 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TenantAssignmentAPI implements RShortcuts {
     private final AssignmentService assignments;
+    private final TenantScopeCandidates scopeCandidates;
+
+    /**
+     * 按固定角色版本及参数查询真实范围对象，未知资源明确返回不支持。
+     * @param revisionId 固定版本 ID
+     * @param parameterKey 已声明参数键
+     * @param keyword 搜索文字
+     * @param ids 已选 ID 回显
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param tree 是否按部门树分支分页
+     * @param parentId 父部门 ID
+     * @return 当前租户分页候选
+     */
+    @Operation(summary = "租户分配范围对象候选")
+    @GetMapping("/scope-candidates")
+    public R<AuthorizationCandidatePage> scopeCandidates(@RequestParam String revisionId,
+            @RequestParam String parameterKey, @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(required = false) List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(defaultValue = "false") boolean tree,
+            @RequestParam(required = false) String parentId) {
+        return ok(scopeCandidates.list(revisionId, parameterKey, keyword, ids, page, pageSize, tree, parentId));
+    }
 
     /**
      * 分页列出租户授权。

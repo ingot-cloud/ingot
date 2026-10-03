@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -50,6 +51,7 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.ImpactSummary;
 import com.ingot.framework.commons.model.iam.MemberRoleView;
+import com.ingot.framework.commons.model.iam.MemberRoleAssignmentDraft;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
@@ -88,6 +90,7 @@ public class AssignmentService {
     private final TransactionTemplate transaction;
     private final com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess;
     private final PlatformAuthorizationEditor editor;
+    private final TenantScopeCandidates tenantScopeCandidates;
 
     /**
      * 绑定身份、审计、角色合成与分配表。
@@ -101,6 +104,7 @@ public class AssignmentService {
      * @param assignments 分配持久化
      * @param delegations 委派派生授权准入
      * @param editor 平台参数对象验证
+     * @param tenantScopeCandidates 租户参数对象验证
      * @param resourceAccess 成员对象边界
      * @param transactionManager 同一数据源事务
      */
@@ -108,6 +112,7 @@ public class AssignmentService {
                                  RoleService roles, RoleRepository roleStore, AssignmentRepository assignments,
                                  DelegationAdmission delegations,
                                  com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess, PlatformAuthorizationEditor editor,
+                                 TenantScopeCandidates tenantScopeCandidates,
                                  PlatformTransactionManager transactionManager) {
         this.access = access;
         this.audits = audits;
@@ -118,6 +123,7 @@ public class AssignmentService {
         this.delegations = delegations;
         this.resourceAccess = resourceAccess;
         this.editor = editor;
+        this.tenantScopeCandidates = tenantScopeCandidates;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -144,6 +150,25 @@ public class AssignmentService {
      */
     public PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
             SubjectType subjectType, String keyword) {
+        return list(domain, page, pageSize, subjectType, keyword, null);
+    }
+
+    /**
+     * 列出一个可见平台成员的角色分配，沿用分配治理与来源边界。
+     * @param memberId 平台成员 ID
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 关联分配页
+     */
+    public PageResponse<ResourceDetail<AssignmentRecord>> listForMember(String memberId, int page, int pageSize) {
+        long id = IamIds.require(memberId);
+        ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
+        resourceAccess.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
+        return list(AuthorizationDomain.PLATFORM, page, pageSize, SubjectType.MEMBER, null, id);
+    }
+
+    private PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+            SubjectType subjectType, String keyword, Long memberId) {
         IamAdmission admission = access.admit(domain, action(domain, AccessKind.READ));
         ActiveIdentity actor = admission.actor();
         IamPages.require(page, pageSize);
@@ -159,9 +184,9 @@ public class AssignmentService {
         }
         Page<IamRoleAssignmentEntity> rows = domain == AuthorizationDomain.PLATFORM
                 ? admission.governed()
-                    ? assignments.pagePlatform(page, pageSize, subjectType, search)
+                    ? assignments.pagePlatform(page, pageSize, subjectType, search, memberId)
                     : assignments.pageOwned(IamIds.require(actor.context().memberId()), page, pageSize,
-                            subjectType, search)
+                            subjectType, search, memberId)
                 : assignments.page(domain, tenantId(domain, actor), page, pageSize);
         var presentation = domain == AuthorizationDomain.PLATFORM ? assignments.presentation(rows.getRecords().stream()
                 .map(IamRoleAssignmentEntity::getId).toList()) : Map.<BigInteger,
@@ -172,6 +197,20 @@ public class AssignmentService {
         List<ResourceDetail<AssignmentRecord>> items = rows.getRecords().stream()
                 .map(row -> detail(domain, actor, row, presentation.get(row.getId()), permissions, sources)).toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 批量装配已通过角色关联 SQL 边界的分配行，复用历史账本的标签与逐条能力。
+     * @param actor 当前可信身份
+     * @param rows 仅限服务端完成可见性筛选的关联行
+     * @return 可披露分配详情
+     */
+    public List<ResourceDetail<AssignmentRecord>> presentPlatformRows(ActiveIdentity actor, List<IamRoleAssignmentEntity> rows) {
+        var presentation = assignments.presentation(rows.stream().map(IamRoleAssignmentEntity::getId).toList());
+        IamCapabilities permissions = rows.isEmpty() ? new IamCapabilities(Map.of()) : recordCapabilities(AuthorizationDomain.PLATFORM, actor);
+        var sources = recordSources(AuthorizationDomain.PLATFORM, actor, rows, permissions);
+        return rows.stream().map(row -> detail(AuthorizationDomain.PLATFORM, actor, row,
+                presentation.get(row.getId()), permissions, sources)).toList();
     }
 
     /**
@@ -372,6 +411,30 @@ public class AssignmentService {
             throw new BizException(IamReasonCode.ACTION_DENIED);
         }
         grantDirectRoles(domain, admission, IamIds.require(memberId), uniqueIds(roleIds));
+    }
+
+    /**
+     * 在成员创建事务内写入选定的最新固定版本及其全部范围参数。
+     *
+     * @param memberId 刚创建的平台成员
+     * @param drafts 已配置的直接分配
+     */
+    public void grantMemberRoleAssignments(String memberId, List<MemberRoleAssignmentDraft> drafts) {
+        if (drafts == null || drafts.isEmpty()) {
+            return;
+        }
+        Set<String> roleIds = new LinkedHashSet<>();
+        List<AssignmentInput> items = new ArrayList<>(drafts.size());
+        for (MemberRoleAssignmentDraft draft : drafts) {
+            if (draft == null || !roleIds.add(draft.roleId())
+                    || !latestPublished(AuthorizationDomain.PLATFORM, draft.roleId())
+                            .equals(draft.roleRevisionRef())) {
+                throw new BizException(IamReasonCode.REVISION_CONFLICT);
+            }
+            items.add(new AssignmentInput(new SubjectRef(SubjectType.MEMBER, memberId),
+                    draft.roleRevisionRef(), draft.scopeBindings(), draft.validFrom(), draft.validUntil(), null));
+        }
+        create(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(items));
     }
 
     /**
@@ -627,6 +690,8 @@ public class AssignmentService {
         }
         if (domain == AuthorizationDomain.PLATFORM && revisionUsable) {
             errors.addAll(editor.validateBindings(item));
+        } else if (domain == AuthorizationDomain.TENANT && revisionUsable) {
+            errors.addAll(tenantScopeCandidates.validate(actor, item));
         }
         Instant from = item.validFrom() == null ? Instant.now() : item.validFrom();
         if (item.validUntil() != null && !from.isBefore(item.validUntil())) {
@@ -794,7 +859,12 @@ public class AssignmentService {
                                   List<String> roleIds) {
         ActiveIdentity actor = admission.actor();
         for (String roleId : roleIds) {
-            AssignmentInput item = simpleAssignment(memberId, latestPublished(domain, roleId));
+            RoleRevisionRef revision = latestPublished(domain, roleId);
+            if (!roleStore.listParameters(IamIds.require(revision.id())).isEmpty()) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(),
+                        "参数化角色不能通过简单角色接口分配");
+            }
+            AssignmentInput item = simpleAssignment(memberId, revision);
             List<ValidationIssue> errors = validate(domain, admission, item, null);
             if (!errors.isEmpty()) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);

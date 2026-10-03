@@ -115,7 +115,7 @@ class AssignmentServiceTest {
                 CREATE TABLE iam_delegation_grant(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT,
                   platform_administrator_id BIGINT, tenant_administrator_id BIGINT, valid_from TIMESTAMP,
                   valid_until TIMESTAMP, max_assignment_duration_seconds BIGINT,
-                  max_assignment_duration_nanos INT, status VARCHAR(16), version BIGINT DEFAULT 0,
+                  max_assignment_duration_nanos INT, assignment_duration_mode VARCHAR(16) DEFAULT 'LIMITED', status VARCHAR(16), version BIGINT DEFAULT 0,
                   created_at TIMESTAMP)
                 """);
         jdbc.execute("CREATE TABLE iam_delegation_role_revision(delegation_id BIGINT, revision_id BIGINT,"
@@ -158,7 +158,8 @@ class AssignmentServiceTest {
         service = new AssignmentService(access, audits, changes, roles, IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),
                 org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class),
-                org.mockito.Mockito.mock(PlatformAuthorizationEditor.class), transactions);
+                org.mockito.Mockito.mock(PlatformAuthorizationEditor.class),
+                org.mockito.Mockito.mock(TenantScopeCandidates.class), transactions);
         governed = true;
         authenticate();
     }

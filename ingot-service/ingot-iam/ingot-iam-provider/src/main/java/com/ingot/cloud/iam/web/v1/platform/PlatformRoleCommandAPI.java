@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatformRoleCommandAPI implements RShortcuts {
     private final RoleService roles;
+    private final com.ingot.cloud.iam.role.PlatformRoleWorkspace workspace;
 
     /**
      * 分页列出平台角色。
@@ -62,6 +63,55 @@ public class PlatformRoleCommandAPI implements RShortcuts {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status) {
         return ok(roles.list(AuthorizationDomain.PLATFORM, false, page, pageSize, name, status));
+    }
+
+    /**
+     * 查询该角色所有或指定固定版本的有效成员，包含可见组继承。
+     * @param id 可见角色 ID
+     * @param revisionId 可选固定版本
+     * @param keyword 成员名称
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 去重有效成员页
+     */
+    @GetMapping("/{id}/members")
+    @Operation(summary="角色有效成员")
+    public R<com.ingot.framework.commons.model.iam.RoleSubjectPage> members(@PathVariable String id,
+            @RequestParam(required=false) String revisionId, @RequestParam(required=false) String keyword,
+            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize) {
+        return ok(workspace.subjects(id, revisionId, com.ingot.framework.commons.model.iam.SubjectType.MEMBER, keyword, page, pageSize));
+    }
+    /**
+     * 查询该角色当前有效分配的可见用户组。
+     * @param id 可见角色 ID
+     * @param revisionId 可选固定版本
+     * @param keyword 用户组名称
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 有效用户组页
+     */
+    @GetMapping("/{id}/groups")
+    @Operation(summary="角色有效用户组")
+    public R<com.ingot.framework.commons.model.iam.RoleSubjectPage> groups(@PathVariable String id,
+            @RequestParam(required=false) String revisionId, @RequestParam(required=false) String keyword,
+            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize) {
+        return ok(workspace.subjects(id, revisionId, com.ingot.framework.commons.model.iam.SubjectType.GROUP, keyword, page, pageSize));
+    }
+    /**
+     * 分页查看成员的直接或组继承来源，保持分配对象能力。
+     * @param id 可见角色 ID
+     * @param memberId 成员 ID
+     * @param revisionId 可选固定版本
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 当前有效来源页
+     */
+    @GetMapping("/{id}/members/{memberId}/assignments")
+    @Operation(summary="角色成员有效分配来源")
+    public R<PageResponse<ResourceDetail<com.ingot.framework.commons.model.iam.AssignmentRecord>>> sources(
+            @PathVariable String id, @PathVariable String memberId, @RequestParam(required=false) String revisionId,
+            @RequestParam(defaultValue="1") int page, @RequestParam(defaultValue="20") int pageSize) {
+        return ok(workspace.sources(id, memberId, revisionId, page, pageSize));
     }
 
     /**

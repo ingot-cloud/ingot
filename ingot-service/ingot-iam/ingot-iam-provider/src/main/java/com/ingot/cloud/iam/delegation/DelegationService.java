@@ -315,12 +315,14 @@ public class DelegationService {
         if (!admin) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        if (!input.isValidPeriod() || !input.isPositiveDuration()) {
+        if (!input.isValidPeriod() || !input.isPositiveDuration()
+                || domain == AuthorizationDomain.TENANT && input.assignmentDurationMode()
+                    == com.ingot.framework.commons.model.iam.AssignmentDurationMode.UNLIMITED) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         if (domain == AuthorizationDomain.PLATFORM) {
             for (String member : input.recipientSelection().members()) {
-                if (!assignments.platformMemberActive(IamIds.require(member))) {
+                if (IamIds.require(member) == adminId || !assignments.platformMemberActive(IamIds.require(member))) {
                     throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
                 }
             }
@@ -379,7 +381,7 @@ public class DelegationService {
         long administratorId = first(grant.getPlatformAdministratorId(), grant.getTenantAdministratorId());
         DelegationInput input = new DelegationInput(IamIds.text(administratorId), revisions(children),
                 recipients(domain, children), ceilings(children), instant(grant.getValidFrom()), instant(grant.getValidUntil()),
-                duration(grant));
+                duration(grant), grant.getAssignmentDurationMode());
         Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new java.util.LinkedHashMap<>();
         if (domain != AuthorizationDomain.PLATFORM) {
             return IamDetails.of(new DelegationRecord(IamIds.text(id), input, grant.getStatus(), administratorName),
@@ -415,8 +417,9 @@ public class DelegationService {
                 ? BigInteger.valueOf(IamIds.require(input.administratorMemberId())) : null);
         entity.setValidFrom(utc(input.validFrom()));
         entity.setValidUntil(utc(input.validUntil()));
-        entity.setMaxAssignmentDurationSeconds(input.maxAssignmentDuration().getSeconds());
-        entity.setMaxAssignmentDurationNanos(input.maxAssignmentDuration().getNano());
+        entity.setAssignmentDurationMode(input.assignmentDurationMode());
+        entity.setMaxAssignmentDurationSeconds(input.maxAssignmentDuration() == null ? null : input.maxAssignmentDuration().getSeconds());
+        entity.setMaxAssignmentDurationNanos(input.maxAssignmentDuration() == null ? 0 : input.maxAssignmentDuration().getNano());
         entity.setStatus(GrantStatus.ACTIVE);
         try {
             delegations.insert(entity);
@@ -432,8 +435,10 @@ public class DelegationService {
                         ? BigInteger.valueOf(IamIds.require(input.administratorMemberId())) : null,
                 domain == AuthorizationDomain.TENANT
                         ? BigInteger.valueOf(IamIds.require(input.administratorMemberId())) : null,
-                utc(input.validFrom()), utc(input.validUntil()), input.maxAssignmentDuration().getSeconds(),
-                input.maxAssignmentDuration().getNano(), new BigInteger(currentVersion));
+                utc(input.validFrom()), utc(input.validUntil()),
+                input.maxAssignmentDuration() == null ? null : input.maxAssignmentDuration().getSeconds(),
+                input.maxAssignmentDuration() == null ? 0 : input.maxAssignmentDuration().getNano(),
+                input.assignmentDurationMode(), new BigInteger(currentVersion));
     }
 
     private void replaceChildren(AuthorizationDomain domain, ActiveIdentity actor, long id, DelegationInput input) {
@@ -548,9 +553,10 @@ public class DelegationService {
             if (row.getDomain() != AuthorizationDomain.PLATFORM) { return true; }
             Instant from = instant(row.getValidFrom());
             Instant until = instant(row.getValidUntil());
-            if (until == null || from == null || Duration.between(from, until).compareTo(next.maxAssignmentDuration()) > 0
+            if (from == null || next.assignmentDurationMode() == com.ingot.framework.commons.model.iam.AssignmentDurationMode.LIMITED
+                    && (until == null || Duration.between(from, until).compareTo(next.maxAssignmentDuration()) > 0)
                     || next.validFrom() != null && from.isBefore(next.validFrom())
-                    || next.validUntil() != null && until.isAfter(next.validUntil())) {
+                    || next.validUntil() != null && (!from.isBefore(next.validUntil()) || until != null && until.isAfter(next.validUntil()))) {
                 return false;
             }
             if (row.getDomain() == AuthorizationDomain.PLATFORM) {
@@ -558,7 +564,8 @@ public class DelegationService {
                         ? List.of(text(row.getPlatformMemberId()))
                         : assignments.platformGroupMemberIds(row.getPlatformGroupId().longValueExact()).stream()
                             .map(BigInteger::toString).toList();
-                if (receivers.isEmpty() || !next.recipientSelection().members().containsAll(receivers)) {
+                if (receivers.isEmpty() || receivers.contains(next.administratorMemberId())
+                        || !next.recipientSelection().members().containsAll(receivers)) {
                     return false;
                 }
                 var bindings = IamJson.read(row.getScopeBindings(), BINDINGS);
@@ -580,6 +587,7 @@ public class DelegationService {
     }
 
     private static Duration duration(IamDelegationGrantEntity grant) {
+        if (grant.getAssignmentDurationMode() == com.ingot.framework.commons.model.iam.AssignmentDurationMode.UNLIMITED) return null;
         return Duration.ofSeconds(
                 grant.getMaxAssignmentDurationSeconds() == null ? 0 : grant.getMaxAssignmentDurationSeconds(),
                 grant.getMaxAssignmentDurationNanos() == null ? 0 : grant.getMaxAssignmentDurationNanos());

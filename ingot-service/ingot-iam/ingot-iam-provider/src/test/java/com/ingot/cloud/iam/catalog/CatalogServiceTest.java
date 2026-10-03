@@ -29,6 +29,7 @@ import com.ingot.framework.security.account.domain.ConfirmPasswordFailedExceptio
 import com.ingot.framework.security.account.domain.port.inbound.ConfirmPasswordUseCase;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuKind;
+import com.ingot.framework.commons.model.iam.ResourceDraft;
 import com.ingot.framework.commons.model.iam.ScopeKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,6 +123,22 @@ class CatalogServiceTest {
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
         assertEquals("0", created.version());
+    }
+
+    @Test
+    void platformResourceRejectsDepartmentScopesWhileTenantCatalogCanDeclareThem() {
+        CreatedResource platform = catalog.createApplication(new ApplicationDraft("platform", AuthorizationDomain.PLATFORM,
+                "平台", null, null, 1, false));
+        BizException denied = assertThrows(BizException.class, () -> catalog.createResource(platform.id(),
+                new ResourceDraft("application", "应用", List.of(ScopeKind.MANAGED_DEPARTMENTS), List.of())));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), denied.getCode());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
+
+        CreatedResource tenant = catalog.createApplication(new ApplicationDraft("tenant", AuthorizationDomain.TENANT,
+                "租户", null, null, 1, true));
+        catalog.createResource(tenant.id(), new ResourceDraft("member", "成员",
+                List.of(ScopeKind.MANAGED_DEPARTMENTS), List.of()));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
     }
 
     @Test

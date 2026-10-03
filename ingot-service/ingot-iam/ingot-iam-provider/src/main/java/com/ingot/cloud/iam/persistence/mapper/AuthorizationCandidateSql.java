@@ -32,7 +32,13 @@ public final class AuthorizationCandidateSql {
         Query q = (Query) parameters.get("q");
         String resourceName = q.kind() == AuthorizationCandidateKind.ACTION
                 ? ",x.resource_name" : ",NULL AS resource_name";
-        return "<script>SELECT x.id,x.name,x.kind,x.revision" + resourceName + " FROM (" + source(q) + ") x WHERE "
+        boolean menu = q.kind() == AuthorizationCandidateKind.OBJECT
+                && q.objectResource() != null
+                && PlatformScopeObjectResource.find(q.objectResource()) == PlatformScopeObjectResource.MENU;
+        String treeColumns = menu ? ",x.parent_id,x.has_children"
+                : ",NULL AS parent_id,FALSE AS has_children";
+        return "<script>SELECT x.id,x.name,x.kind,x.revision" + resourceName + treeColumns
+                + " FROM (" + source(q) + ") x WHERE "
                 + filters(q) + LIMIT + "</script>";
     }
     /**
@@ -113,6 +119,27 @@ public final class AuthorizationCandidateSql {
             sql += q.allowedIds().isEmpty() ? " AND 1=0" :
                     " AND x.id IN <foreach collection='q.allowedIds' item='id' open='(' close=')' separator=','>#{id}</foreach>";
         }
+        if (q.tree() && q.kind() == AuthorizationCandidateKind.OBJECT
+                && PlatformScopeObjectResource.find(q.objectResource()) == PlatformScopeObjectResource.MENU
+                && q.ids().isEmpty() && "%".equals(q.keyword())) {
+            sql += q.parentId() == null ? " AND x.parent_id IS NULL" : " AND x.parent_id=#{q.parentId}";
+        }
+        if (q.excludeMemberId() != null && q.kind() == AuthorizationCandidateKind.MEMBER) {
+            sql += " AND x.id&lt;&gt;#{q.excludeMemberId}";
+        }
+        if (q.selectedDelegationId() != null) {
+            sql += switch (q.kind()) {
+                case MEMBER -> " AND EXISTS(SELECT 1 FROM iam_delegation_recipient_member selected WHERE "
+                        + "selected.delegation_id=#{q.selectedDelegationId} AND selected.platform_member_id=x.id)";
+                case ROLE_REVISION -> " AND EXISTS(SELECT 1 FROM iam_delegation_role_revision selected WHERE "
+                        + "selected.delegation_id=#{q.selectedDelegationId} AND selected.revision_id=x.id)";
+                case OBJECT -> " AND EXISTS(SELECT 1 FROM iam_delegation_action_ceiling selected "
+                        + "JOIN JSON_TABLE(selected.scope_bindings, '$.*.ids[*]' COLUMNS(object_id DECIMAL(20,0) PATH '$')) bound "
+                        + "WHERE selected.delegation_id=#{q.selectedDelegationId} AND selected.action_id=#{q.selectedActionId} "
+                        + "AND bound.object_id=x.id)";
+                default -> throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            };
+        }
         return sql;
     }
     private static String source(Query q) {
@@ -136,7 +163,10 @@ public final class AuthorizationCandidateSql {
     private static String groupFilter(Query q) {
         String recipient = q.delegationId() == null ? "" : " OR NOT EXISTS(SELECT 1 FROM iam_delegation_recipient_member rm "
                 + "WHERE rm.delegation_id=#{q.delegationId} AND rm.platform_member_id=gm.member_id)";
-        return " WHERE EXISTS(SELECT 1 FROM iam_platform_group_member gm WHERE gm.group_id=g.id) "
+        String self = q.delegationId() == null ? "" : " AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member self_member "
+                + "JOIN iam_delegation_grant source ON source.id=#{q.delegationId} WHERE self_member.group_id=g.id "
+                + "AND self_member.member_id=source.platform_administrator_id)";
+        return " WHERE EXISTS(SELECT 1 FROM iam_platform_group_member gm WHERE gm.group_id=g.id) " + self
                 + "AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member gm LEFT JOIN iam_platform_member m ON m.id=gm.member_id "
                 + "WHERE gm.group_id=g.id AND (m.id IS NULL OR m.status&lt;&gt;'ACTIVE'" + recipient + "))";
     }
@@ -153,7 +183,11 @@ public final class AuthorizationCandidateSql {
             case APPLICATION -> { table="iam_application"; label="name"; where=" WHERE domain='" + PLATFORM_DOMAIN + "'"; }
             case RESOURCE -> { table="iam_resource"; label="name"; where=platformApplication(); }
             case ACTION -> { table="iam_action"; label="name"; where=platformApplication(); }
-            case MENU -> { table="iam_menu"; label="name"; where=platformApplication(); }
+            case MENU -> {
+                return "SELECT m.id,m.name,NULL AS kind,NULL AS revision,m.parent_id,"
+                        + "EXISTS(SELECT 1 FROM iam_menu child WHERE child.parent_id=m.id) AS has_children "
+                        + "FROM iam_menu m" + platformApplication();
+            }
             case ROLE -> { table="iam_role_definition"; label="name"; where=" WHERE domain='PLATFORM'"; }
             case SHARED_ROLE -> { table="iam_role_definition"; label="name"; where=" WHERE kind='SHARED' AND domain='" + PLATFORM_DOMAIN + "'"; }
             case PLAN -> { table="iam_plan"; label="name"; }
@@ -179,10 +213,32 @@ public final class AuthorizationCandidateSql {
      * @param allowedIds 当前依据范围，null 表示未额外收窄
      * @param offset 分页偏移
      * @param size 每页上限
+     * @param excludeMemberId 接收候选排除的管理员
+     * @param selectedDelegationId 可信现有委派，按真实已选关系分页
+     * @param selectedActionId 对象已选关系所属操作
      * @author jy
      * @since 1.0.0
      */
     public record Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
                         BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
-                        List<BigInteger> allowedIds, int offset, int size) { }
+                        List<BigInteger> allowedIds, int offset, int size, boolean tree,
+                        BigInteger parentId, BigInteger excludeMemberId, BigInteger selectedDelegationId,
+                        BigInteger selectedActionId) {
+        /** 保持普通树候选查询的构造契约。 */
+        public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
+                BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
+                List<BigInteger> allowedIds, int offset, int size, boolean tree, BigInteger parentId) {
+            this(kind, memberId, delegationId, applicationId, objectResource, keyword, ids,
+                    allowedIds, offset, size, tree, parentId, null, null, null);
+        }
+        /**
+         * 保持普通列表与对象校验查询构造契约。
+         */
+        public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
+                BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
+                List<BigInteger> allowedIds, int offset, int size) {
+            this(kind, memberId, delegationId, applicationId, objectResource, keyword, ids,
+                    allowedIds, offset, size, false, null);
+        }
+    }
 }

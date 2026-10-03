@@ -379,7 +379,9 @@ public final class IamMybatisTestAccess {
                     IamPlatformGroupMemberMapper.class, IamTenantGroupMemberMapper.class,
                     IamRoleDeltaMapper.class, IamRoleParameterMapper.class, IamTenantGroupDepartmentMapper.class,
                     IamDirectoryRuleMapper.class, IamPolicySelectorMapper.class, IamResourceMapper.class,
-                    IamMemberExportMapper.class, com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class
+                    IamMemberExportMapper.class, com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class,
+                    com.ingot.cloud.iam.persistence.mapper.TenantScopeCandidateMapper.class,
+                    com.ingot.cloud.iam.persistence.mapper.RoleWorkspaceMapper.class
             }) {
                 sessions.getConfiguration().addMapper(mapper);
             }

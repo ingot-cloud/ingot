@@ -1,0 +1,28 @@
+{
+  "administratorMemberId": "99",
+  "allowedRoleRevisionRefs": [
+    {
+      "kind": "PLATFORM_CUSTOM",
+      "id": "31"
+    }
+  ],
+  "recipientSelection": {
+    "members": [
+      "1",
+      "2"
+    ],
+    "departments": []
+  },
+  "actionScopeCeilings": [
+    {
+      "actionId": "11",
+      "scopes": [
+        {
+          "kind": "ALL"
+        }
+      ],
+      "scopeBindings": {}
+    }
+  ],
+  "assignmentDurationMode": "UNLIMITED"
+}

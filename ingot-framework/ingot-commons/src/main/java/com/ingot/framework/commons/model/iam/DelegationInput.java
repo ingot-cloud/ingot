@@ -18,7 +18,8 @@ import jakarta.validation.constraints.*;
  * @param actionScopeCeilings 逐操作范围上限
  * @param validFrom UTC 生效时间，包含；空值无起始边界
  * @param validUntil UTC 失效时间，不包含；空值无结束边界
- * @param maxAssignmentDuration 单次分配最长持续时间，ISO-8601 duration，必须为正
+ * @param maxAssignmentDuration 有限模式的正持续时间；不限模式为空
+ * @param assignmentDurationMode 单次期限模式；省略兼容有限期限
  */
 @Schema(description = "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效")
 public record DelegationInput(
@@ -34,21 +35,41 @@ public record DelegationInput(
         Instant validFrom,
         @JsonFormat(shape = JsonFormat.Shape.STRING) @Schema(description = "UTC 失效时间，不包含；空值无结束边界")
         Instant validUntil,
-        @NotNull @JsonFormat(shape = JsonFormat.Shape.STRING)
-        @Schema(description = "单次分配最长持续时间，ISO-8601 duration，必须为正", type = "string",
-                format = "duration", implementation = String.class, requiredMode = Schema.RequiredMode.REQUIRED)
-        Duration maxAssignmentDuration) {
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        @Schema(description = "有限模式必填的正持续时间；不限模式为空", type = "string",
+                format = "duration", implementation = String.class)
+        Duration maxAssignmentDuration,
+        @Schema(description = "单次期限模式，省略按 LIMITED", defaultValue = "LIMITED")
+        AssignmentDurationMode assignmentDurationMode) {
 
     /**
      * 复制输入集合，防止校验与消费之间被外部修改；必填空引用由 Bean Validation 拒绝。
      */
     public DelegationInput {
+        if (assignmentDurationMode == null) assignmentDurationMode = AssignmentDurationMode.LIMITED;
         if (allowedRoleRevisionRefs != null) {
             allowedRoleRevisionRefs = Collections.unmodifiableList(new ArrayList<>(allowedRoleRevisionRefs));
         }
         if (actionScopeCeilings != null) {
             actionScopeCeilings = Collections.unmodifiableList(new ArrayList<>(actionScopeCeilings));
         }
+    }
+
+    /**
+     * 保持既有有限期限调用的构造契约。
+     * @param administratorMemberId 授权管理员
+     * @param allowedRoleRevisionRefs 允许的固定版本
+     * @param recipientSelection 接收人群
+     * @param actionScopeCeilings 全部操作上限
+     * @param validFrom 来源生效瞬时
+     * @param validUntil 来源截止瞬时
+     * @param maxAssignmentDuration 正的最长持续时间
+     */
+    public DelegationInput(String administratorMemberId, List<RoleRevisionRef> allowedRoleRevisionRefs,
+            Selection recipientSelection, List<ActionScopeCeiling> actionScopeCeilings,
+            Instant validFrom, Instant validUntil, Duration maxAssignmentDuration) {
+        this(administratorMemberId, allowedRoleRevisionRefs, recipientSelection, actionScopeCeilings,
+                validFrom, validUntil, maxAssignmentDuration, AssignmentDurationMode.LIMITED);
     }
 
     /**
@@ -64,14 +85,15 @@ public record DelegationInput(
     }
 
     /**
-     * 最长分配期限必须为正值。
+     * 有限模式的最长分配期限为正值，不限模式不携带时长。
      *
      * @return 是否满足结构约束
      */
     @com.fasterxml.jackson.annotation.JsonIgnore
-    @jakarta.validation.constraints.AssertTrue(message = "最长分配期限必须为正值")
+    @jakarta.validation.constraints.AssertTrue(message = "有限模式需要正的最长分配期限，不限模式不得携带时长")
     @Schema(hidden = true)
     public boolean isPositiveDuration() {
-        return maxAssignmentDuration == null || (!maxAssignmentDuration.isZero() && !maxAssignmentDuration.isNegative());
+        return assignmentDurationMode == AssignmentDurationMode.UNLIMITED ? maxAssignmentDuration == null
+                : maxAssignmentDuration != null && !maxAssignmentDuration.isZero() && !maxAssignmentDuration.isNegative();
     }
 }

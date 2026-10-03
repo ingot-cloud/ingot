@@ -43,7 +43,8 @@ class IamAuthorizationContractTest {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Object value : List.of(fixture("role-shared", RoleRevision.class),
                     fixture("role-delta", RoleRevision.class), fixture("assignment", AssignmentInput.class),
-                    fixture("delegation", DelegationInput.class), fixture("field-readonly", FieldRule.class))) {
+                    fixture("delegation", DelegationInput.class), fixture("delegation-unlimited", DelegationInput.class),
+                    fixture("role-subject-page", RoleSubjectPage.class), fixture("field-readonly", FieldRule.class))) {
                 assertTrue(factory.getValidator().validate(value).isEmpty(), value.getClass().getSimpleName());
             }
             RoleRevision role = fixture("role-shared", RoleRevision.class);
@@ -75,6 +76,14 @@ class IamAuthorizationContractTest {
                         input.validFrom(), input.validUntil(), duration)).isEmpty());
             }
         }
+    }
+
+    @Test
+    void workspaceExampleRetainsNumericVersionsAndVisibleCounts() throws Exception {
+        var data = mapper.valueToTree(fixture("role-subject-page", RoleSubjectPage.class));
+        assertTrue(data.path("total").isNumber());
+        assertTrue(data.path("items").get(0).path("revisionNumbers").get(0).isNumber());
+        assertTrue(data.path("items").get(0).path("sourceCount").isNumber());
     }
 
     @Test
@@ -121,7 +130,8 @@ class IamAuthorizationContractTest {
         ObjectNode node = mapper.valueToTree(fixture("delegation", DelegationInput.class));
         assertFalse(node.has("validPeriod"));
         assertFalse(node.has("positiveDuration"));
-        assertEquals(7, node.size());
+        assertEquals(8, node.size());
+        assertEquals("LIMITED", node.path("assignmentDurationMode").asText());
     }
 
     @Test
@@ -135,10 +145,23 @@ class IamAuthorizationContractTest {
     }
 
     @Test
+    void omittedDurationModeStaysLimitedAndUnlimitedCannotCarryDuration() throws Exception {
+        var limited = new DelegationInput("1", List.of(new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "2")),
+                new Selection(List.of("3"), List.of()), List.of(), null, null, Duration.ofDays(1));
+        assertEquals(AssignmentDurationMode.LIMITED, limited.assignmentDurationMode());
+        assertTrue(limited.isPositiveDuration());
+        var unlimited = new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(),
+                List.of(), null, null, null, AssignmentDurationMode.UNLIMITED);
+        assertTrue(unlimited.isPositiveDuration());
+        assertFalse(new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(),
+                List.of(), null, null, Duration.ofDays(1), AssignmentDurationMode.UNLIMITED).isPositiveDuration());
+    }
+
+    @Test
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
         for (Class<?> type : List.of(AuthorizationContext.class, SubjectRef.class, Selection.class,
-                RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class, RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class,
+                RoleSubjectSummary.class, RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class, RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class,
                 FieldAccess.class, FieldRule.class, DirectoryRule.class,
                 CreatedResource.class, ObjectCapability.class,
                 Bootstrap.class, CurrentCapabilities.class, MemberRecord.class, TenantRecord.class,
@@ -219,6 +242,7 @@ class IamAuthorizationContractTest {
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<EntitlementRecord>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleSummary>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleRevision>>>>() {}.getType(),
+                new com.fasterxml.jackson.core.type.TypeReference<R<RoleSubjectPage>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<RoleGrantList>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AssignmentRecord>>>>() {}.getType(),
                 new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {}.getType(),

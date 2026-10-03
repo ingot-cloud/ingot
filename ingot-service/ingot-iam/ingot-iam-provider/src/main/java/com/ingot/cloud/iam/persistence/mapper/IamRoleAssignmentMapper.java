@@ -50,7 +50,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                      WHERE d.id=ra.delegation_grant_id AND d.status=#{status}
                        AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
                        AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
-            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_RECIPIENT_REACHED + """
+            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_DURATION_ALLOWED + IamMembershipSql.AND_PLATFORM_RECIPIENT_REACHED + """
                        ))
             """)
     List<AuthorizationEvalRows.Assignment> listPlatformDirect(@Param("domain") AuthorizationDomain domain,
@@ -119,7 +119,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                      WHERE d.id=ra.delegation_grant_id AND d.status=#{status}
                        AND (d.valid_from IS NULL OR d.valid_from<=CURRENT_TIMESTAMP)
                        AND (d.valid_until IS NULL OR d.valid_until>CURRENT_TIMESTAMP)
-            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_GROUP_RECIPIENTS_REACHED + """
+            """ + IamMembershipSql.AND_REVISION_STILL_ALLOWED + IamMembershipSql.AND_PLATFORM_DURATION_ALLOWED + IamMembershipSql.AND_PLATFORM_GROUP_RECIPIENTS_REACHED + """
                        ))
             """)
     List<AuthorizationEvalRows.Assignment> listPlatformGroup(@Param("domain") AuthorizationDomain domain,
@@ -207,11 +207,16 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                      WHERE dg.id=ra.delegation_grant_id AND dg.status='ACTIVE'
                        AND (dg.valid_from IS NULL OR dg.valid_from&lt;=CURRENT_TIMESTAMP)
                        AND (dg.valid_until IS NULL OR dg.valid_until&gt;CURRENT_TIMESTAMP)
+                       AND (dg.valid_from IS NULL OR ra.valid_from&gt;=dg.valid_from)
+                       AND (dg.valid_until IS NULL OR ra.valid_until&lt;=dg.valid_until OR (ra.valid_until IS NULL AND dg.assignment_duration_mode='UNLIMITED'))
+                       AND (dg.assignment_duration_mode='UNLIMITED' OR (ra.valid_until IS NOT NULL AND TIMESTAMPDIFF(MICROSECOND,ra.valid_from,ra.valid_until)&lt;=dg.max_assignment_duration_seconds*1000000+FLOOR(dg.max_assignment_duration_nanos/1000)))
                        AND EXISTS(SELECT 1 FROM iam_delegation_role_revision dr WHERE dr.delegation_id=dg.id
                          AND dr.revision_id=ra.revision_id)
-                       AND ((ra.subject_type='MEMBER' AND EXISTS(SELECT 1 FROM iam_delegation_recipient_member rm
+                       AND ((ra.subject_type='MEMBER' AND ra.platform_member_id&lt;&gt;dg.platform_administrator_id AND EXISTS(SELECT 1 FROM iam_delegation_recipient_member rm
                          WHERE rm.delegation_id=dg.id AND rm.platform_member_id=ra.platform_member_id))
-                       OR (ra.subject_type='GROUP' AND EXISTS(SELECT 1 FROM iam_platform_group_member gm
+                       OR (ra.subject_type='GROUP' AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member self_member
+                         WHERE self_member.group_id=ra.platform_group_id AND self_member.member_id=dg.platform_administrator_id)
+                         AND EXISTS(SELECT 1 FROM iam_platform_group_member gm
                          WHERE gm.group_id=ra.platform_group_id)
                          AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member gm
                            WHERE gm.group_id=ra.platform_group_id AND NOT EXISTS(

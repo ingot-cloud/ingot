@@ -407,8 +407,14 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         if (domain != AuthorizationDomain.PLATFORM
-                && (!input.roleIds().isEmpty() || !input.groupIds().isEmpty())) {
+                && (!input.roleIds().isEmpty() || !input.groupIds().isEmpty()
+                    || !input.roleAssignments().isEmpty())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        Set<String> selectedRoleIds = new LinkedHashSet<>(input.roleIds());
+        if (input.roleAssignments().stream().anyMatch(draft ->
+                draft == null || !selectedRoleIds.add(draft.roleId()))) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色不能重复选择");
         }
         Set<String> departmentIds = new LinkedHashSet<>();
         Map<String, Boolean> departmentBindings = new LinkedHashMap<>();
@@ -449,6 +455,9 @@ public class MemberQueryService {
             if (domain == AuthorizationDomain.PLATFORM) {
                 if (!input.roleIds().isEmpty()) {
                     assignments.grantDirectRoles(domain, IamIds.text(id), input.roleIds());
+                }
+                if (!input.roleAssignments().isEmpty()) {
+                    assignments.grantMemberRoleAssignments(IamIds.text(id), input.roleAssignments());
                 }
                 if (!input.groupIds().isEmpty()) {
                     access.require(domain, IamAction.PLATFORM_GROUP_UPDATE);

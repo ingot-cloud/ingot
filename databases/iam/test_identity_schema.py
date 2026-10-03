@@ -18,7 +18,7 @@ STARTUP_TIMEOUT_SECONDS = 60
 # Numbered data seeds carry rows, not structure; loading them would collide with these fixtures.
 DATA_SEEDS = {"006_bootstrap.sql", "008_platform_accounts_menu.sql"}
 # Existing-database patch: the canonical 001 already contains plan_id.
-UPGRADE_ONLY = {"009_tenant_plan.sql"}
+UPGRADE_ONLY = {"009_tenant_plan.sql", "011_delegation_duration_mode.sql"}
 
 
 def schema_files():
@@ -255,6 +255,23 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_delegation_recipient_department VALUES (1, 10, 11, 1)", error=1452)
         self.sql("INSERT INTO iam_delegation_recipient_department VALUES (2, 10, 11, 1)")
         self.sql("UPDATE iam_delegation_grant SET max_assignment_duration_seconds = 0 WHERE id = 1", error=3819)
+
+    def test_delegation_duration_modes_preserve_legacy_and_reject_ambiguous_modes(self):
+        self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,max_assignment_duration_seconds) VALUES (701,'PLATFORM',1001,86400)")
+        self.assertEqual('LIMITED', self.sql("SELECT assignment_duration_mode FROM iam_delegation_grant WHERE id=701"))
+        self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,assignment_duration_mode) VALUES (702,'PLATFORM',1001,'UNLIMITED')")
+        self.assertEqual('1', self.sql("SELECT max_assignment_duration_seconds IS NULL FROM iam_delegation_grant WHERE id=702"))
+        self.sql("UPDATE iam_delegation_grant SET max_assignment_duration_seconds=1 WHERE id=702", error=3819)
+        self.sql("INSERT INTO iam_delegation_grant (id,domain,tenant_id,tenant_administrator_id,assignment_duration_mode) VALUES (703,'TENANT',10,101,'UNLIMITED')", error=3819)
+        self.sql("UPDATE iam_delegation_grant SET assignment_duration_mode='UNKNOWN' WHERE id=701", error=3819)
+
+    def test_existing_database_duration_upgrade_preserves_limited_records(self):
+        self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,max_assignment_duration_seconds) VALUES (710,'PLATFORM',1001,86400)")
+        self.sql("ALTER TABLE iam_delegation_grant DROP CHECK ck_iam_delegation_duration, DROP COLUMN assignment_duration_mode, MODIFY COLUMN max_assignment_duration_seconds BIGINT UNSIGNED NOT NULL, ADD CONSTRAINT ck_iam_delegation_duration CHECK (max_assignment_duration_seconds > 0 OR max_assignment_duration_nanos > 0)")
+        self.sql((SCHEMA_DIRECTORY / "011_delegation_duration_mode.sql").read_text())
+        self.assertEqual('LIMITED\t86400', self.sql("SELECT assignment_duration_mode,max_assignment_duration_seconds FROM iam_delegation_grant WHERE id=710"))
+        self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,assignment_duration_mode) VALUES (711,'PLATFORM',1001,'UNLIMITED')")
+        self.sql("UPDATE iam_delegation_grant SET max_assignment_duration_seconds=NULL WHERE id=710", error=3819)
 
     def test_assignment_cannot_mix_subject_domain_or_delegation(self):
         self.sql("INSERT INTO iam_delegation_grant (id, domain, platform_administrator_id, max_assignment_duration_seconds) VALUES (1, 'PLATFORM', 1001, 3600)")

@@ -23,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
  * @param departments 租户任职；平台必须为空且最多一个主部门
  * @param roleIds 选填的直接角色定义 ID，默认为空；平台创建时可写入最新已发布版本
  * @param groupIds 选填的平台用户组 ID，默认为空；租户路径拒绝非空
+ * @param roleAssignments 选填的固定版本直接分配；平台成员、角色与组在同一事务写入
  */
 @Schema(description = "把已有全局账号关联为当前域成员，不创建或改写登录凭证")
 public record MemberCreateInput(
@@ -37,7 +38,9 @@ public record MemberCreateInput(
         @Schema(description = "选填的直接角色定义 ID，默认为空")
         List<String> roleIds,
         @Schema(description = "选填的用户组 ID，默认为空")
-        List<String> groupIds) {
+        List<String> groupIds,
+        @Schema(description = "选填的固定版本直接分配")
+        List<@NotNull @Valid MemberRoleAssignmentDraft> roleAssignments) {
 
     /**
      * 兼容仅提交任职的创建请求。
@@ -49,7 +52,23 @@ public record MemberCreateInput(
      */
     public MemberCreateInput(String accountId, String displayName, String avatar,
                              List<MemberDepartmentBinding> departments) {
-        this(accountId, displayName, avatar, departments, List.of(), List.of());
+        this(accountId, displayName, avatar, departments, List.of(), List.of(), List.of());
+    }
+
+    /**
+     * 保持旧客户端的角色定义 ID 和用户组创建构造契约。
+     *
+     * @param accountId 全局账号
+     * @param displayName 当前域显示名
+     * @param avatar 头像
+     * @param departments 租户部门
+     * @param roleIds 简单角色
+     * @param groupIds 平台用户组
+     */
+    public MemberCreateInput(String accountId, String displayName, String avatar,
+                             List<MemberDepartmentBinding> departments, List<String> roleIds,
+                             List<String> groupIds) {
+        this(accountId, displayName, avatar, departments, roleIds, groupIds, List.of());
     }
 
     /**
@@ -61,6 +80,8 @@ public record MemberCreateInput(
         }
         roleIds = copyIds(roleIds);
         groupIds = copyIds(groupIds);
+        roleAssignments = roleAssignments == null ? List.of()
+                : Collections.unmodifiableList(new ArrayList<>(roleAssignments));
     }
 
     /**

@@ -48,7 +48,11 @@ public class IamDelegationGrantEntity {
     @TableField("valid_until")
     private LocalDateTime validUntil;
 
-    /** 派生分配最长秒数。 */
+    /** 单次分配期限模式，历史默认 LIMITED。 */
+    @TableField("assignment_duration_mode")
+    private AssignmentDurationMode assignmentDurationMode;
+
+    /** 派生分配最长秒数；UNLIMITED 为空。 */
     @TableField("max_assignment_duration_seconds")
     private Long maxAssignmentDurationSeconds;
 
