@@ -112,6 +112,7 @@ def assignment_routes(domain, prefix, ns):
     list_query = PAGE if domain != 'PLATFORM' else PAGE + [
         {'name': 'subjectType', 'required': False, 'schema': {'type': 'string', 'enum': ['MEMBER', 'GROUP']}},
         {'name': 'keyword', 'required': False, 'schema': {'type': 'string', 'maxLength': 128}},
+        {'name': 'effectiveStatus', 'required': False, 'schema': {'type': 'string', 'enum': ['PENDING', 'ACTIVE', 'EXPIRED', 'REVOKED', 'SOURCE_INVALID']}},
     ]
     return [
         route(f'{prefix}/assignments', 'get', f'{domain.lower()}ListAssignments', '授权列表', domain, f'{ns}:assignment:read', None, page, execution, query=list_query),

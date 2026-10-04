@@ -3,6 +3,7 @@ package com.ingot.cloud.iam.web.v1.platform;
 import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AssignmentBatchInput;
+import com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus;
 import com.ingot.framework.commons.model.iam.AssignmentPreviewResult;
 import com.ingot.framework.commons.model.iam.AssignmentRecord;
 import com.ingot.framework.commons.model.iam.AssignmentUpdateInput;
@@ -48,6 +49,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @param pageSize 页大小
      * @param subjectType 可选接收主体类型
      * @param keyword 可选接收成员或组名称
+     * @param effectiveStatus 可选计算生效状态
      * @return 授权页
      */
     @Operation(summary = "授权列表")
@@ -56,8 +58,9 @@ public class PlatformAssignmentAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
             @RequestParam(required = false) SubjectType subjectType,
-            @RequestParam(required = false) String keyword) {
-        return ok(assignments.list(AuthorizationDomain.PLATFORM, page, pageSize, subjectType, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) AssignmentEffectiveStatus effectiveStatus) {
+        return ok(assignments.list(AuthorizationDomain.PLATFORM, page, pageSize, subjectType, keyword, effectiveStatus));
     }
 
     /**

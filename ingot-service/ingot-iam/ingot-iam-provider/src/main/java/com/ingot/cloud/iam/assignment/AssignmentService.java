@@ -150,7 +150,23 @@ public class AssignmentService {
      */
     public PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
             SubjectType subjectType, String keyword) {
-        return list(domain, page, pageSize, subjectType, keyword, null);
+        return list(domain, page, pageSize, subjectType, keyword, null, null);
+    }
+
+    /**
+     * 在既有平台分配可见边界内按计算状态组合筛选并分页。
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 接收主体类型，可空
+     * @param keyword 成员或组名称，可空
+     * @param effectiveStatus 计算状态，可空；租户域禁止传入
+     * @return 筛选后的分配页
+     */
+    public PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
+            SubjectType subjectType, String keyword,
+            com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus effectiveStatus) {
+        return list(domain, page, pageSize, subjectType, keyword, null, effectiveStatus);
     }
 
     /**
@@ -164,11 +180,12 @@ public class AssignmentService {
         long id = IamIds.require(memberId);
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
         resourceAccess.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
-        return list(AuthorizationDomain.PLATFORM, page, pageSize, SubjectType.MEMBER, null, id);
+        return list(AuthorizationDomain.PLATFORM, page, pageSize, SubjectType.MEMBER, null, id, null);
     }
 
     private PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
-            SubjectType subjectType, String keyword, Long memberId) {
+            SubjectType subjectType, String keyword, Long memberId,
+            com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus effectiveStatus) {
         IamAdmission admission = access.admit(domain, action(domain, AccessKind.READ));
         ActiveIdentity actor = admission.actor();
         IamPages.require(page, pageSize);
@@ -179,15 +196,22 @@ public class AssignmentService {
         if (search != null && search.isEmpty()) {
             search = null;
         }
-        if (domain != AuthorizationDomain.PLATFORM && (subjectType != null || search != null)) {
+        if (domain != AuthorizationDomain.PLATFORM && (subjectType != null || search != null || effectiveStatus != null)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
-        Page<IamRoleAssignmentEntity> rows = domain == AuthorizationDomain.PLATFORM
-                ? admission.governed()
+        Page<IamRoleAssignmentEntity> rows;
+        if (domain != AuthorizationDomain.PLATFORM) {
+            rows = assignments.page(domain, tenantId(domain, actor), page, pageSize);
+        } else if (admission.governed()) {
+            rows = effectiveStatus == null
                     ? assignments.pagePlatform(page, pageSize, subjectType, search, memberId)
-                    : assignments.pageOwned(IamIds.require(actor.context().memberId()), page, pageSize,
-                            subjectType, search, memberId)
-                : assignments.page(domain, tenantId(domain, actor), page, pageSize);
+                    : assignments.pagePlatform(page, pageSize, subjectType, search, memberId, effectiveStatus);
+        } else {
+            long administratorId = IamIds.require(actor.context().memberId());
+            rows = effectiveStatus == null
+                    ? assignments.pageOwned(administratorId, page, pageSize, subjectType, search, memberId)
+                    : assignments.pageOwned(administratorId, page, pageSize, subjectType, search, memberId, effectiveStatus);
+        }
         var presentation = domain == AuthorizationDomain.PLATFORM ? assignments.presentation(rows.getRecords().stream()
                 .map(IamRoleAssignmentEntity::getId).toList()) : Map.<BigInteger,
                 com.ingot.cloud.iam.persistence.projection.AssignmentPresentation>of();

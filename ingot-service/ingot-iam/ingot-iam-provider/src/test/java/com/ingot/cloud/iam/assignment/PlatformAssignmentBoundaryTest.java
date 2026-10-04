@@ -66,6 +66,23 @@ class PlatformAssignmentBoundaryTest {
         verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any(), any());
     }
     @Test
+    void stateFilterKeepsRestrictedAndGovernedQueriesSeparate() {
+        var restricted = service(false);
+        when(store.pageOwned(1001, 2, 20, SubjectType.GROUP, "运维", null, AssignmentEffectiveStatus.SOURCE_INVALID))
+                .thenReturn(new Page<IamRoleAssignmentEntity>(2, 20).setRecords(List.of()));
+        assertTrue(restricted.list(AuthorizationDomain.PLATFORM, 2, 20, SubjectType.GROUP, " 运维 ",
+                AssignmentEffectiveStatus.SOURCE_INVALID).items().isEmpty());
+        verify(store).pageOwned(1001, 2, 20, SubjectType.GROUP, "运维", null, AssignmentEffectiveStatus.SOURCE_INVALID);
+        verify(store, never()).pagePlatform(anyInt(), anyInt(), any(), any(), any(), any());
+
+        var governed = service(true);
+        when(store.pagePlatform(1, 20, null, null, null, AssignmentEffectiveStatus.ACTIVE))
+                .thenReturn(new Page<IamRoleAssignmentEntity>(1, 20).setRecords(List.of()));
+        assertTrue(governed.list(AuthorizationDomain.PLATFORM, 1, 20, null, null,
+                AssignmentEffectiveStatus.ACTIVE).items().isEmpty());
+        verify(store).pagePlatform(1, 20, null, null, null, AssignmentEffectiveStatus.ACTIVE);
+    }
+    @Test
     void restrictedDetailAndRevokeRejectDirectAndOtherAdministratorsSources() {
         var service = service(false);
         var row = row(null); when(store.find(AuthorizationDomain.PLATFORM, null, 90)).thenReturn(row);

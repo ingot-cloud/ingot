@@ -30,7 +30,9 @@ import com.ingot.cloud.iam.persistence.mapper.IamRoleRevisionMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantGroupMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantGroupMemberMapper;
 import com.ingot.cloud.iam.persistence.mapper.IamTenantMemberMapper;
+import com.ingot.cloud.iam.persistence.mapper.PlatformAssignmentStateSql;
 import com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows;
+import com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus;
 import com.ingot.framework.commons.model.iam.AssignmentSource;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.GrantStatus;
@@ -53,6 +55,10 @@ public class AssignmentRepository {
             + "WHERE m.id=platform_member_id AND m.display_name LIKE {0} ESCAPE '!')";
     private static final String PLATFORM_GROUP_NAME_FILTER = "EXISTS (SELECT 1 FROM iam_platform_group g "
             + "WHERE g.id=platform_group_id AND g.name LIKE {0} ESCAPE '!')";
+    private static final String EXPIRED_TIME_FILTER = "valid_until<=CURRENT_TIMESTAMP";
+    private static final String UNEXPIRED_TIME_FILTER = "(valid_until IS NULL OR valid_until>CURRENT_TIMESTAMP)";
+    private static final String FUTURE_TIME_FILTER = "valid_from>CURRENT_TIMESTAMP";
+    private static final String STARTED_TIME_FILTER = "(valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP)";
     private final IamRoleAssignmentMapper assignments;
     private final IamDelegationGrantMapper delegations;
     private final IamDelegationRoleRevisionMapper delegationRevisions;
@@ -103,13 +109,31 @@ public class AssignmentRepository {
      */
     public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
             String keyword, Long memberId) {
+        return pagePlatform(page, pageSize, subjectType, keyword, memberId, null);
+    }
+
+    /**
+     * 按接收对象、名称和计算状态共同筛选后，由数据库计数并分页。
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 接收主体类型，可空
+     * @param keyword 名称条件，可空
+     * @param memberId 平台成员关联条件，可空
+     * @param effectiveStatus 计算状态，可空；省略保持原查询
+     * @return 平台分配页
+     */
+    public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
+            String keyword, Long memberId, AssignmentEffectiveStatus effectiveStatus) {
         var query = scoped(AuthorizationDomain.PLATFORM, null);
         filterPlatformSubject(query, subjectType, keyword);
+        filterPlatformStatus(query, effectiveStatus);
         if (memberId != null) {
             query.eq(IamRoleAssignmentEntity::getSubjectType, SubjectType.MEMBER)
                     .eq(IamRoleAssignmentEntity::getPlatformMemberId, BigInteger.valueOf(memberId));
         }
-        return assignments.selectPage(new Page<>(page, pageSize), query.orderByAsc(IamRoleAssignmentEntity::getId));
+        Page<IamRoleAssignmentEntity> rows = countPlatformPage(page, pageSize, query);
+        return rows.getCurrent() > rows.getPages() ? rows
+                : assignments.selectPage(rows, query.orderByAsc(IamRoleAssignmentEntity::getId));
     }
 
     /**
@@ -138,16 +162,67 @@ public class AssignmentRepository {
      */
     public Page<IamRoleAssignmentEntity> pageOwned(long memberId, int page, int pageSize,
             SubjectType subjectType, String keyword, Long recipientId) {
+        return pageOwned(memberId, page, pageSize, subjectType, keyword, recipientId, null);
+    }
+
+    /**
+     * 在本人委派来源边界内组合计算状态条件，包含可见的历史失效分配。
+     * @param memberId 当前委派管理员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 接收主体类型，可空
+     * @param keyword 名称条件，可空
+     * @param recipientId 接收成员关联条件，可空
+     * @param effectiveStatus 计算状态，可空
+     * @return 本人来源的分配页
+     */
+    public Page<IamRoleAssignmentEntity> pageOwned(long memberId, int page, int pageSize,
+            SubjectType subjectType, String keyword, Long recipientId, AssignmentEffectiveStatus effectiveStatus) {
         var query = scoped(AuthorizationDomain.PLATFORM, null)
                 .apply("EXISTS (SELECT 1 FROM iam_delegation_grant owned WHERE owned.id=delegation_grant_id "
                         + "AND owned.domain={0} AND owned.tenant_id IS NULL AND owned.platform_administrator_id={1})",
                         AuthorizationDomain.PLATFORM.name(), BigInteger.valueOf(memberId));
         filterPlatformSubject(query, subjectType, keyword);
+        filterPlatformStatus(query, effectiveStatus);
         if (recipientId != null) {
             query.eq(IamRoleAssignmentEntity::getSubjectType, SubjectType.MEMBER)
                     .eq(IamRoleAssignmentEntity::getPlatformMemberId, BigInteger.valueOf(recipientId));
         }
-        return assignments.selectPage(new Page<>(page, pageSize), query.orderByDesc(IamRoleAssignmentEntity::getId));
+        Page<IamRoleAssignmentEntity> rows = countPlatformPage(page, pageSize, query);
+        return rows.getCurrent() > rows.getPages() ? rows
+                : assignments.selectPage(rows, query.orderByDesc(IamRoleAssignmentEntity::getId));
+    }
+
+    private Page<IamRoleAssignmentEntity> countPlatformPage(int page, int pageSize,
+            LambdaQueryWrapper<IamRoleAssignmentEntity> query) {
+        // 根表分页无 JOIN/GROUP BY，用同一 Wrapper 显式计数，避免复杂来源谓词的自动 COUNT 改写。
+        Page<IamRoleAssignmentEntity> rows = new Page<>(page, pageSize, false);
+        rows.setTotal(assignments.selectCount(query));
+        return rows;
+    }
+
+    private static void filterPlatformStatus(LambdaQueryWrapper<IamRoleAssignmentEntity> query,
+            AssignmentEffectiveStatus effectiveStatus) {
+        if (effectiveStatus == null) {
+            return;
+        }
+        if (effectiveStatus == AssignmentEffectiveStatus.REVOKED) {
+            query.eq(IamRoleAssignmentEntity::getStatus, GrantStatus.REVOKED);
+            return;
+        }
+        query.eq(IamRoleAssignmentEntity::getStatus, GrantStatus.ACTIVE);
+        if (effectiveStatus == AssignmentEffectiveStatus.EXPIRED) {
+            query.apply(EXPIRED_TIME_FILTER);
+            return;
+        }
+        query.apply(UNEXPIRED_TIME_FILTER);
+        if (effectiveStatus == AssignmentEffectiveStatus.PENDING) {
+            query.apply(FUTURE_TIME_FILTER);
+        } else if (effectiveStatus == AssignmentEffectiveStatus.ACTIVE) {
+            query.apply(STARTED_TIME_FILTER);
+        }
+        query.apply(PlatformAssignmentStateSql.SOURCE_FILTER,
+                effectiveStatus != AssignmentEffectiveStatus.SOURCE_INVALID);
     }
 
     private static void filterPlatformSubject(LambdaQueryWrapper<IamRoleAssignmentEntity> query,
