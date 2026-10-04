@@ -9020,6 +9020,21 @@
               "type": "string",
               "maxLength": 128
             }
+          },
+          {
+            "name": "effectiveStatus",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACTIVE",
+                "EXPIRED",
+                "REVOKED",
+                "SOURCE_INVALID"
+              ]
+            }
           }
         ]
       },

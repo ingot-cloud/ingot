@@ -159,7 +159,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/roles/{id}/upgrade-preview | POST {newBaseRevisionId, resolutions?} 三方比较 |
 | /v1/tenant/roles/{id}/upgrade | POST {expectedVersion,newBaseRevisionId,resolutions,assignmentIds[]}；未解决冲突拒绝 |
 | /v1/{domain}/assignments | GET；POST {items: AssignmentInput[]} 原子分配 |
-| /v1/platform/assignments 列表筛选 | GET 在原分页参数外可选 `subjectType=MEMBER|GROUP`、`keyword`（接收成员显示名或用户组名称，去首尾空白，最长 128 字符）；两者在数据库分页前同时生效。关键字中的 `%`、`_` 按普通文字匹配；未传参数保持原列表。受限管理员仍只可见本人委派产生的分配；不扩展租户列表契约 |
+| /v1/platform/assignments 列表筛选 | GET 在原分页参数外可选 `subjectType=MEMBER|GROUP`、`keyword`（接收成员显示名或用户组名称，去首尾空白，最长 128 字符）、`effectiveStatus=PENDING|ACTIVE|EXPIRED|REVOKED|SOURCE_INVALID`（计算状态，与响应一致；未知值返回 400）；条件在数据库分页和计数前同时生效。关键字中的 `%`、`_` 按普通文字匹配；未传参数保持原列表。受限管理员仍只可见本人委派产生的分配；不扩展租户及人员关联列表契约 |
 | /v1/{domain}/assignments/preview | POST 同分配输入，返回逐接收对象效果及限制 |
 | /v1/{domain}/assignments/{id} | PUT 调整版本/范围/期限；DELETE 撤销，保留审计 |
 | /v1/{domain}/delegations | GET/POST；/{id} GET/PUT/DELETE |

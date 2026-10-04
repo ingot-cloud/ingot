@@ -1513,6 +1513,20 @@
           "type": "string",
           "maxLength": 128
         }
+      },
+      {
+        "name": "effectiveStatus",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "ACTIVE",
+            "EXPIRED",
+            "REVOKED",
+            "SOURCE_INVALID"
+          ]
+        }
       }
     ]
   },
