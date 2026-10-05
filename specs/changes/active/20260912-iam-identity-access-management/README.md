@@ -114,3 +114,8 @@
 
 
 2026-10-05：用户批准分配范围步骤调整，第二步选择角色与有效期，第三步独立范围配置/全部权限视图、全局进度及跨页遗漏定位；新建和编辑均可调整指定对象。详见 [分配范围配置增量](./ASSIGNMENT-MULTI-ROLE-REFINEMENT.md)，HTTP DTO 与后端范围校验契约保持。
+
+
+## 2026-10-05 平台对象资源识别收紧
+
+用户已明确批准实施，需求、兼容与任务见 [PLATFORM-OBJECT-RESOLUTION-REFINEMENT](./PLATFORM-OBJECT-RESOLUTION-REFINEMENT.md)。根据真实应用和资源关联识别对象候选，覆盖分配、委派、诊断、回显及提交校验；主 change 保持 implementing。
