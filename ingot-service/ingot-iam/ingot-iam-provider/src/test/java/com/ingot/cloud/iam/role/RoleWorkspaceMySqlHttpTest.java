@@ -199,6 +199,30 @@ class RoleWorkspaceMySqlHttpTest {
     }
 
     @Test
+    void customActionCodeDoesNotChangeApplicationObjectsInReplayOrWrite() throws Exception {
+        jdbc.update("UPDATE iam_action SET code='aaaa' WHERE id=331");
+        jdbc.update("UPDATE iam_role_assignment SET scope_bindings=? WHERE id=501",
+                "{\"objects.with.dot\":{\"kind\":\"OBJECTS\",\"ids\":[\"100\"]}}");
+        try {
+            var objects = get("/v1/platform/assignments/501/selected-candidates?kind=OBJECT&parameterKey=objects.with.dot");
+            assertTrue(objects.path("supported").asBoolean());
+            assertEquals(1, objects.path("total").asInt());
+            assertEquals("100", objects.path("items").get(0).path("id").asText());
+            var input = new AssignmentInput(new SubjectRef(SubjectType.MEMBER, "1"),
+                    new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "31"),
+                    Map.of("objects.with.dot", new ScopeBinding(ScopeBindingKind.OBJECTS, List.of("100"))),
+                    null, null, null);
+            var created = post("/v1/platform/assignments", new AssignmentBatchInput(List.of(input)));
+            assertEquals(200, created.statusCode(), created.body());
+            assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id>10000", Integer.class));
+        } finally {
+            jdbc.update("UPDATE iam_action SET code='iam-platform:application:read' WHERE id=331");
+            jdbc.update("UPDATE iam_role_assignment SET scope_bindings='{}' WHERE id=501");
+            jdbc.update("DELETE FROM iam_role_assignment WHERE id>10000");
+        }
+    }
+
+    @Test
     void multiRoleBatchPersistsEverySubjectAndRollsBackWholeInvalidBatch() throws Exception {
         var inputs = new ArrayList<AssignmentInput>();
         for (var subject : List.of(new SubjectRef(SubjectType.MEMBER, "1"), new SubjectRef(SubjectType.GROUP, "80"))) {
@@ -259,11 +283,11 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.update("INSERT INTO iam_delegation_grant(id,domain,tenant_id,platform_administrator_id,status,valid_from,valid_until,assignment_duration_mode,max_assignment_duration_seconds,max_assignment_duration_nanos) VALUES(60,'PLATFORM',NULL,99,'ACTIVE',NULL,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),'UNLIMITED',NULL,0)");
         jdbc.update("INSERT INTO iam_delegation_role_revision VALUES(60,31,'PLATFORM_CUSTOM'),(60,32,'PLATFORM_CUSTOM')");
         jdbc.update("INSERT INTO iam_delegation_recipient_member(delegation_id,platform_member_id) VALUES(60,1),(60,2)");
-        jdbc.update("INSERT INTO iam_application(id,name,domain) VALUES(100,'App','PLATFORM'),(101,'Other','PLATFORM')");
+        jdbc.update("INSERT INTO iam_application(id,name,domain,code) VALUES(100,'App','PLATFORM','iam-platform'),(101,'Other','PLATFORM','other')");
         jdbc.update("UPDATE iam_application SET code='iam-platform' WHERE id=100");
-        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY,application_id BIGINT,name VARCHAR(100),enabled BOOLEAN,scope_capabilities JSON)");
+        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY,application_id BIGINT,name VARCHAR(100),enabled BOOLEAN,scope_capabilities JSON,code VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY,application_id BIGINT,resource_id BIGINT,name VARCHAR(100),code VARCHAR(100),enabled BOOLEAN)");
-        jdbc.update("INSERT INTO iam_resource VALUES(330,100,'应用',TRUE,'[\"ALL\",\"OBJECT_SET\"]')");
+        jdbc.update("INSERT INTO iam_resource VALUES(330,100,'应用',TRUE,'[\"ALL\",\"OBJECT_SET\"]','application')");
         jdbc.update("INSERT INTO iam_action VALUES(331,100,330,'查看应用','iam-platform:application:read',TRUE)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES(60,331,'[{\"kind\":\"OBJECT_SET\",\"parameterKey\":\"objects\"}]','{\"objects\":{\"kind\":\"OBJECTS\",\"ids\":[\"100\"]}}')");
         String insert = "INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,platform_group_id,revision_id,revision_kind,scope_bindings,delegation_grant_id,valid_from,valid_until,status,source,version,created_at) VALUES(?, 'PLATFORM', ?, ?, ?, ?, 'PLATFORM_CUSTOM','{}', ?, DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 HOUR), ?, ?, 'MANUAL',0,UTC_TIMESTAMP())";

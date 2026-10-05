@@ -312,12 +312,7 @@ public class PlatformAuthorizationEditor {
                 ? visibleIds(view.scope(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()), actor.context().memberId())
                 : null;
         if (kind == AuthorizationCandidateKind.OBJECT) {
-            var actions = objectActions(null, null, actionId, null);
-            if (actions.isEmpty()) { return unsupported(page, pageSize); }
-            String code = actions.getFirst().code();
-            if (!code.startsWith(CORE_APPLICATION + ":")) { return unsupported(page, pageSize); }
-            String resource = code.substring(code.indexOf(':') + 1, code.lastIndexOf(':'));
-            PlatformScopeObjectResource adapter = PlatformScopeObjectResource.find(resource);
+            PlatformScopeObjectResource adapter = objectResource(objectActions(null, null, actionId, null));
             if (adapter == null) { return unsupported(page, pageSize); }
             IamAction read = adapter.getReadAction();
             visible = view.actionCodes().contains(read.getCode())
@@ -430,25 +425,21 @@ public class PlatformAuthorizationEditor {
         String resource = null;
         if (kind == AuthorizationCandidateKind.OBJECT) {
             var actions = objectActions(revisionId, key, actionId, basis);
-            var action = actions.isEmpty() ? null : actions.getFirst();
-            if (action == null || !action.code().startsWith(CORE_APPLICATION + ":")) {
-                return unsupported(page, size);
-            }
-            String code = action.code();
-            resource = code.substring(code.indexOf(':') + 1, code.lastIndexOf(':'));
-            if (PlatformScopeObjectResource.find(resource) == null) { return unsupported(page, size); }
+            PlatformScopeObjectResource adapter = objectResource(actions);
+            if (adapter == null) { return unsupported(page, size); }
+            resource = adapter.getValue();
             if (basis != null) {
                 for (var boundedAction : actions) {
-                ActionScopeCeiling ceiling = basis.actionScopeCeilings().stream()
-                        .filter(value -> value.actionId().equals(boundedAction.id().toString())).findFirst()
-                        .orElseThrow(() -> new BizException(IamReasonCode.DELEGATION_EXCEEDED));
-                var clauses = com.ingot.cloud.iam.evaluation.ScopeBinder.bind(ceiling);
-                if (clauses.stream().noneMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all)) {
-                    List<BigInteger> bounded = clauses.stream().filter(clause -> !clause.self()
-                            && !clause.memberDepartments() && clause.departmentIds().isEmpty())
-                            .flatMap(value -> value.objectIds().stream()).distinct().map(BigInteger::new).toList();
-                    allowed = allowed == null ? bounded : allowed.stream().filter(bounded::contains).toList();
-                }
+                    ActionScopeCeiling ceiling = basis.actionScopeCeilings().stream()
+                            .filter(value -> value.actionId().equals(boundedAction.id().toString())).findFirst()
+                            .orElseThrow(() -> new BizException(IamReasonCode.DELEGATION_EXCEEDED));
+                    var clauses = com.ingot.cloud.iam.evaluation.ScopeBinder.bind(ceiling);
+                    if (clauses.stream().noneMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all)) {
+                        List<BigInteger> bounded = clauses.stream().filter(clause -> !clause.self()
+                                && !clause.memberDepartments() && clause.departmentIds().isEmpty())
+                                .flatMap(value -> value.objectIds().stream()).distinct().map(BigInteger::new).toList();
+                        allowed = allowed == null ? bounded : allowed.stream().filter(bounded::contains).toList();
+                    }
                 }
             }
         }
@@ -523,10 +514,16 @@ public class PlatformAuthorizationEditor {
                 null, hierarchical);
     }
 
-    private AuthorizationCandidateMapper.ActionRow objectAction(String revisionId, String key, String actionId,
-                                                                 DelegationInput basis) {
-        var actions = objectActions(revisionId, key, actionId, basis);
-        return actions.isEmpty() ? null : actions.getFirst();
+    private PlatformScopeObjectResource objectResource(List<AuthorizationCandidateMapper.ActionRow> actions) {
+        // 只信任关联目录元数据，整组操作必须指向同一已接入资源。
+        PlatformScopeObjectResource resource = null;
+        for (var action : actions) {
+            if (!CORE_APPLICATION.equals(action.applicationCode())) { return null; }
+            PlatformScopeObjectResource current = PlatformScopeObjectResource.find(action.resourceCode());
+            if (current == null || resource != null && resource != current) { return null; }
+            resource = current;
+        }
+        return resource;
     }
 
     private List<AuthorizationCandidateMapper.ActionRow> objectActions(String revisionId, String key, String actionId,
@@ -549,7 +546,8 @@ public class PlatformAuthorizationEditor {
         }
         if (actions.isEmpty()) { return List.of(); }
         var rows = candidates.actions(actions.stream().map(value -> BigInteger.valueOf(IamIds.require(value))).toList());
-        if (rows.size() != actions.size() || rows.stream().map(AuthorizationCandidateMapper.ActionRow::resourceId)
+        if (rows.size() != actions.size() || rows.stream().map(AuthorizationCandidateMapper.ActionRow::applicationId)
+                .distinct().count() != 1 || rows.stream().map(AuthorizationCandidateMapper.ActionRow::resourceId)
                 .distinct().count() != 1) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
@@ -597,9 +595,9 @@ public class PlatformAuthorizationEditor {
             if (parameter == null || entry.getValue().kind() != parameter.getBindingKind()) {
                 return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "参数未声明或类型不匹配"));
             }
-            var action = objectAction(input.roleRevisionRef().id(), entry.getKey(), null, null);
+            var resource = objectResource(objectActions(input.roleRevisionRef().id(), entry.getKey(), null, null));
             if (entry.getValue() == null || entry.getValue().ids() == null
-                    || entry.getValue().ids().isEmpty() || !objectsExist(action, entry.getValue())) {
+                    || entry.getValue().ids().isEmpty() || !objectsExist(resource, entry.getValue())) {
                 return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "资源不支持对象查询或包含无效对象"));
             }
         }
@@ -612,19 +610,16 @@ public class PlatformAuthorizationEditor {
      * @return 对象合法时 true
      */
     public boolean validCeilingObjects(ActionScopeCeiling ceiling) {
-        var action = objectAction(null, null, ceiling.actionId(), null);
-        return ceiling.scopeBindings().values().stream().allMatch(value -> objectsExist(action, value));
+        var resource = objectResource(objectActions(null, null, ceiling.actionId(), null));
+        return ceiling.scopeBindings().values().stream().allMatch(value -> objectsExist(resource, value));
     }
 
-    private boolean objectsExist(AuthorizationCandidateMapper.ActionRow action, ScopeBinding binding) {
-        if (binding.kind() != ScopeBindingKind.OBJECTS) { return false; }
+    private boolean objectsExist(PlatformScopeObjectResource resource, ScopeBinding binding) {
+        if (resource == null || binding.kind() != ScopeBindingKind.OBJECTS) { return false; }
         if (binding.ids().isEmpty()) { return true; }
-        if (action == null || !action.code().startsWith(CORE_APPLICATION + ":")) { return false; }
-        String resource = action.code().substring(action.code().indexOf(':') + 1, action.code().lastIndexOf(':'));
-        if (PlatformScopeObjectResource.find(resource) == null) { return false; }
         List<BigInteger> ids = binding.ids().stream().map(value -> BigInteger.valueOf(IamIds.require(value))).distinct().toList();
         var query = new AuthorizationCandidateSql.Query(AuthorizationCandidateKind.OBJECT, null, null,
-                null, resource, "%", ids, null, 0, IamPages.DEFAULT_SIZE);
+                null, resource.getValue(), "%", ids, null, 0, IamPages.DEFAULT_SIZE);
         return candidates.count(query) == ids.size();
     }
 

@@ -29,9 +29,9 @@ class PlatformCandidateSqlTest {
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,display_name VARCHAR(100),status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_platform_group(id BIGINT PRIMARY KEY,name VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_platform_group_member(group_id BIGINT,member_id BIGINT)");
-        jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),enabled BOOLEAN)");
-        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY,application_id BIGINT,name VARCHAR(100),enabled BOOLEAN)");
-        jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY,application_id BIGINT,resource_id BIGINT,name VARCHAR(100),enabled BOOLEAN)");
+        jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),enabled BOOLEAN,code VARCHAR(100))");
+        jdbc.execute("CREATE TABLE iam_resource(id BIGINT PRIMARY KEY,application_id BIGINT,name VARCHAR(100),enabled BOOLEAN,code VARCHAR(100),scope_capabilities VARCHAR(100))");
+        jdbc.execute("CREATE TABLE iam_action(id BIGINT PRIMARY KEY,application_id BIGINT,resource_id BIGINT,name VARCHAR(100),enabled BOOLEAN,code VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_menu(id BIGINT PRIMARY KEY,application_id BIGINT,parent_id BIGINT,name VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),tenant_id BIGINT,enabled BOOLEAN)");
         jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY,role_id BIGINT,kind VARCHAR(32),revision BIGINT)");
@@ -42,15 +42,27 @@ class PlatformCandidateSqlTest {
         jdbc.update("INSERT INTO iam_platform_group VALUES(10,'允许组'),(11,'越界组'),(12,'空组')");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES(10,1),(10,2),(11,1),(11,3)");
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(60,1),(60,2)");
-        jdbc.update("INSERT INTO iam_application VALUES(100,'平台应用','PLATFORM',TRUE),(200,'租户应用','TENANT',TRUE)");
-        jdbc.update("INSERT INTO iam_resource VALUES(210,100,'成员管理',TRUE),(211,100,'用户组管理',TRUE),(212,200,'租户资源',TRUE)");
-        jdbc.update("INSERT INTO iam_action VALUES(300,100,210,'创建',TRUE),(301,100,211,'创建',TRUE),(302,200,212,'创建',TRUE)");
+        jdbc.update("INSERT INTO iam_application VALUES(100,'平台应用','PLATFORM',TRUE,'iam-platform'),(200,'租户应用','TENANT',TRUE,'iam-tenant')");
+        jdbc.update("INSERT INTO iam_resource VALUES(210,100,'成员管理',TRUE,'member','[]'),(211,100,'用户组管理',TRUE,'group','[]'),(212,200,'租户资源',TRUE,'member','[]')");
+        jdbc.update("INSERT INTO iam_action VALUES(300,100,210,'创建',TRUE,'aaaa'),(301,100,211,'创建',TRUE,'iam-platform:application:create'),(302,200,212,'创建',TRUE,'iam-platform:member:create'),(303,100,212,'不一致关联',TRUE,'iam-platform:member:create')");
         jdbc.update("INSERT INTO iam_menu VALUES(700,100,NULL,'应用配置'),(701,100,700,'资源菜单'),"
                 + "(702,200,NULL,'租户菜单')");
         jdbc.update("INSERT INTO iam_role_definition VALUES(400,'平台治理','PLATFORM',NULL,TRUE),(401,'平台测试','PLATFORM',NULL,TRUE),(402,'租户角色','TENANT',1,TRUE),(403,'停用角色','PLATFORM',NULL,FALSE)");
         jdbc.update("INSERT INTO iam_role_revision VALUES(500,400,'PLATFORM_CUSTOM',1),(501,400,'PLATFORM_CUSTOM',2),(502,401,'SYSTEM',1),(503,402,'TENANT_CUSTOM',1),(504,403,'PLATFORM_CUSTOM',1)");
         mapper = IamMybatisTestAccess.mapper(source, AuthorizationCandidateMapper.class);
     }
+    @Test
+    void actionMetadataUsesAssociatedCodesAndRejectsCrossApplicationResource() {
+        var rows = mapper.actions(List.of(BigInteger.valueOf(300), BigInteger.valueOf(301),
+                BigInteger.valueOf(302), BigInteger.valueOf(303)));
+        assertEquals(2, rows.size());
+        assertEquals("iam-platform", rows.getFirst().applicationCode());
+        assertEquals("member", rows.getFirst().resourceCode());
+        assertEquals("aaaa", rows.getFirst().code());
+        assertEquals("group", rows.get(1).resourceCode());
+        assertEquals("iam-platform:application:create", rows.get(1).code());
+    }
+
     @Test
     void groupCandidateMustBeNonEmptyAndEveryMemberMustBeReached() {
         var query = query(AuthorizationCandidateKind.GROUP, null, List.of(), 0, 20);

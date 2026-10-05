@@ -54,9 +54,10 @@ public interface AuthorizationCandidateMapper {
      */
     @Select("""
             <script>SELECT a.id,a.name,a.code,a.application_id,app.name AS application_name,
-                   a.resource_id,r.name AS resource_name,r.scope_capabilities
+                   app.code AS application_code,a.resource_id,r.name AS resource_name,
+                   r.code AS resource_code,r.scope_capabilities
               FROM iam_action a JOIN iam_application app ON app.id=a.application_id
-              JOIN iam_resource r ON r.id=a.resource_id
+              JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=a.application_id
              WHERE app.domain='PLATFORM' AND app.enabled=TRUE AND r.enabled=TRUE AND a.enabled=TRUE
                AND a.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
              ORDER BY app.id,r.id,a.id</script>
@@ -115,12 +116,15 @@ public interface AuthorizationCandidateMapper {
      * @param code 完整操作码
      * @param applicationId 应用
      * @param applicationName 应用名称
+     * @param applicationCode 实际关联应用的编码，用于对象适配
      * @param resourceId 资源
      * @param resourceName 资源名称
+     * @param resourceCode 实际关联资源的编码，用于对象适配
      * @param scopeCapabilities 范围能力 JSON
      * @author jy
      * @since 1.0.0
      */
     record ActionRow(BigInteger id, String name, String code, BigInteger applicationId, String applicationName,
-                     BigInteger resourceId, String resourceName, String scopeCapabilities) { }
+                     String applicationCode, BigInteger resourceId, String resourceName, String resourceCode,
+                     String scopeCapabilities) { }
 }

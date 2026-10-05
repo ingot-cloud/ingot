@@ -54,7 +54,7 @@ class PlatformAssignmentSelectionTest {
                 List.of(new ScopeExpression(ScopeKind.OBJECT_SET, "objects", false)))));
         when(candidates.actions(anyList())).thenReturn(List.of(new AuthorizationCandidateMapper.ActionRow(
                 BigInteger.valueOf(331), "查看", "iam-platform:application:read", BigInteger.ONE, "平台",
-                BigInteger.valueOf(330), "应用", "[\"ALL\",\"OBJECT_SET\"]")));
+                "iam-platform", BigInteger.valueOf(330), "应用", "application", "[\"ALL\",\"OBJECT_SET\"]")));
         editor.selectedAssignmentCandidates(actor, "90", input(null), AuthorizationCandidateKind.OBJECT, "objects", 1, 20);
         var query = ArgumentCaptor.forClass(AuthorizationCandidateSql.Query.class);
         verify(candidates).page(query.capture());

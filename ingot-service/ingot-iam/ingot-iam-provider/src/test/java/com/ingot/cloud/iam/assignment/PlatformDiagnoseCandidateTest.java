@@ -88,7 +88,7 @@ class PlatformDiagnoseCandidateTest {
         when(candidates.actions(List.of(BigInteger.valueOf(70)))).thenReturn(List.of(
                 new AuthorizationCandidateMapper.ActionRow(BigInteger.valueOf(70), "查看应用",
                         IamAction.VALUE_PLATFORM_APPLICATION_READ, BigInteger.TEN, "平台",
-                        BigInteger.ONE, "应用", "[]")));
+                        "iam-platform", BigInteger.ONE, "应用", "application", "[]")));
         when(candidates.page(any(AuthorizationCandidateSql.Query.class))).thenReturn(List.of());
     }
 
