@@ -55,9 +55,9 @@ class DelegationRepositoryTest {
         var first = delegations.page(AuthorizationDomain.PLATFORM, null, 1, 1, "张");
         var second = delegations.page(AuthorizationDomain.PLATFORM, null, 2, 1, "张");
         assertEquals(2, first.getTotal());
-        assertEquals(BigInteger.ONE, first.getRecords().get(0).getId());
+        assertEquals(BigInteger.valueOf(2), first.getRecords().get(0).getId());
         assertEquals(2, second.getTotal());
-        assertEquals(BigInteger.valueOf(2), second.getRecords().get(0).getId());
+        assertEquals(BigInteger.ONE, second.getRecords().get(0).getId());
         assertEquals(3, delegations.page(AuthorizationDomain.PLATFORM, null, 1, 20).getTotal());
     }
 

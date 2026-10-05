@@ -43,6 +43,8 @@ class IamAuthorizationContractTest {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Object value : List.of(fixture("role-shared", RoleRevision.class),
                     fixture("role-delta", RoleRevision.class), fixture("assignment", AssignmentInput.class),
+                    fixture("assignment-multi-role", AssignmentBatchInput.class),
+                    fixture("assignment-selected-candidates", AuthorizationCandidatePage.class),
                     fixture("delegation", DelegationInput.class), fixture("delegation-unlimited", DelegationInput.class),
                     fixture("role-subject-page", RoleSubjectPage.class), fixture("field-readonly", FieldRule.class))) {
                 assertTrue(factory.getValidator().validate(value).isEmpty(), value.getClass().getSimpleName());
@@ -51,6 +53,22 @@ class IamAuthorizationContractTest {
             assertTrue(mapper.valueToTree(role).get("id").isTextual());
             assertTrue(mapper.valueToTree(role).get("revision").isTextual());
         }
+    }
+
+    @Test
+    void multiRoleBatchKeepsSeparateBindingsAndStringIds() throws Exception {
+        AssignmentBatchInput input = fixture("assignment-multi-role", AssignmentBatchInput.class);
+        assertEquals(4, input.items().size());
+        assertEquals(List.of("31", "32", "31", "32"),
+                input.items().stream().map(item -> item.roleRevisionRef().id()).toList());
+        assertEquals(List.of("100", "101", "100", "101"),
+                input.items().stream().map(item -> item.scopeBindings().get("objects").ids().getFirst()).toList());
+        var tree = mapper.valueToTree(input);
+        assertTrue(tree.path("items").get(0).path("subject").path("id").isTextual());
+        assertTrue(tree.path("items").get(1).path("roleRevisionRef").path("id").isTextual());
+        var selected = mapper.valueToTree(fixture("assignment-selected-candidates", AuthorizationCandidatePage.class));
+        assertTrue(selected.path("items").get(0).path("id").isTextual());
+        assertEquals(1, selected.path("total").asInt());
     }
 
     @Test

@@ -61,7 +61,7 @@ public class DelegationRepository {
     private final IamRoleRevisionMapper roleRevisions;
 
     /**
-     * 分页列出当前域委派。
+     * 分页列出当前域委派，平台按 ID 倒序，租户保持 ID 正序。
      *
      * @param domain 授权域
      * @param tenantId 租户域必填，平台域忽略
@@ -74,7 +74,7 @@ public class DelegationRepository {
     }
 
     /**
-     * 在管理域边界内按平台管理员显示名称筛选委派，再分页及统计。
+     * 在管理域边界内按平台管理员显示名称筛选委派，再分页及统计；平台按 ID 倒序。
      *
      * @param domain 授权域
      * @param tenantId 租户域必填，平台域忽略
@@ -91,7 +91,8 @@ public class DelegationRepository {
         return grants.selectPage(new Page<>(page, pageSize), scoped(domain, tenantId)
                 .apply(domain == AuthorizationDomain.PLATFORM && name != null,
                         PLATFORM_ADMINISTRATOR_NAME_FILTER, pattern)
-                .orderByAsc(IamDelegationGrantEntity::getId));
+                .orderByDesc(domain == AuthorizationDomain.PLATFORM, IamDelegationGrantEntity::getId)
+                .orderByAsc(domain != AuthorizationDomain.PLATFORM, IamDelegationGrantEntity::getId));
     }
 
     /**

@@ -140,6 +140,18 @@ public final class AuthorizationCandidateSql {
                 default -> throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             };
         }
+        if (q.selectedAssignmentId() != null) {
+            sql += switch (q.kind()) {
+                case ROLE_REVISION -> " AND EXISTS(SELECT 1 FROM iam_role_assignment selected WHERE "
+                        + "selected.id=#{q.selectedAssignmentId} AND selected.revision_id=x.id)";
+                case OBJECT -> " AND EXISTS(SELECT 1 FROM iam_role_assignment selected "
+                        + "JOIN JSON_TABLE(JSON_EXTRACT(selected.scope_bindings, "
+                        + "CONCAT('$.',JSON_QUOTE(#{q.selectedParameterKey}),'.ids')), "
+                        + "'$[*]' COLUMNS(object_id DECIMAL(20,0) PATH '$')) bound "
+                        + "WHERE selected.id=#{q.selectedAssignmentId} AND bound.object_id=x.id)";
+                default -> throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            };
+        }
         return sql;
     }
     private static String source(Query q) {
@@ -150,7 +162,8 @@ public final class AuthorizationCandidateSql {
                     + "AND (valid_until IS NULL OR valid_until&gt;CURRENT_TIMESTAMP)";
             case ROLE_REVISION -> "SELECT r.id,d.name,r.kind,r.revision FROM iam_role_revision r "
                     + "JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.tenant_id IS NULL "
-                    + "AND d.enabled=TRUE AND r.kind IN ('PLATFORM_CUSTOM','SYSTEM')";
+                    + (q.selectedAssignmentId() == null ? "AND d.enabled=TRUE " : "")
+                    + "AND r.kind IN ('PLATFORM_CUSTOM','SYSTEM')";
             case MEMBER -> "SELECT id,display_name AS name,NULL AS kind,NULL AS revision FROM iam_platform_member WHERE status='ACTIVE'";
             case GROUP -> "SELECT g.id,g.name,NULL AS kind,NULL AS revision FROM iam_platform_group g" + groupFilter(q);
             case APPLICATION -> "SELECT id,name,NULL AS kind,NULL AS revision FROM iam_application WHERE domain='PLATFORM' AND enabled=TRUE";
@@ -216,6 +229,8 @@ public final class AuthorizationCandidateSql {
      * @param excludeMemberId 接收候选排除的管理员
      * @param selectedDelegationId 可信现有委派，按真实已选关系分页
      * @param selectedActionId 对象已选关系所属操作
+     * @param selectedAssignmentId 已通过分配详情可见边界验证的分配 ID
+     * @param selectedParameterKey 已选对象关系的固定版本参数键
      * @author jy
      * @since 1.0.0
      */
@@ -223,7 +238,17 @@ public final class AuthorizationCandidateSql {
                         BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
                         List<BigInteger> allowedIds, int offset, int size, boolean tree,
                         BigInteger parentId, BigInteger excludeMemberId, BigInteger selectedDelegationId,
-                        BigInteger selectedActionId) {
+                        BigInteger selectedActionId, BigInteger selectedAssignmentId,
+                        String selectedParameterKey) {
+        /** 保持既有委派关联候选查询的构造契约。 */
+        public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
+                BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
+                List<BigInteger> allowedIds, int offset, int size, boolean tree, BigInteger parentId,
+                BigInteger excludeMemberId, BigInteger selectedDelegationId, BigInteger selectedActionId) {
+            this(kind, memberId, delegationId, applicationId, objectResource, keyword, ids,
+                    allowedIds, offset, size, tree, parentId, excludeMemberId, selectedDelegationId,
+                    selectedActionId, null, null);
+        }
         /** 保持普通树候选查询的构造契约。 */
         public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
                 BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,

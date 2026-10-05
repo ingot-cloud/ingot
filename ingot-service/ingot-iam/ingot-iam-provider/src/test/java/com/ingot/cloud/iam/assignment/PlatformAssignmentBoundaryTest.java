@@ -88,11 +88,13 @@ class PlatformAssignmentBoundaryTest {
         var row = row(null); when(store.find(AuthorizationDomain.PLATFORM, null, 90)).thenReturn(row);
         when(store.lock(AuthorizationDomain.PLATFORM, null, 90)).thenReturn(row);
         assertThrows(BizException.class, () -> service.detail(AuthorizationDomain.PLATFORM, "90"));
+        assertThrows(BizException.class, () -> service.selectedCandidates("90", AuthorizationCandidateKind.ROLE_REVISION, null, 1, 20));
         assertThrows(BizException.class, () -> service.delete(AuthorizationDomain.PLATFORM, "90"));
         row.setDelegationGrantId(BigInteger.valueOf(60));
         var source = new IamDelegationGrantEntity(); source.setPlatformAdministratorId(BigInteger.valueOf(1002));
         when(store.findDelegation(AuthorizationDomain.PLATFORM, null, 60)).thenReturn(source);
         assertThrows(BizException.class, () -> service.detail(AuthorizationDomain.PLATFORM, "90"));
+        assertThrows(BizException.class, () -> service.selectedCandidates("90", AuthorizationCandidateKind.ROLE_REVISION, null, 1, 20));
         assertThrows(BizException.class, () -> service.delete(AuthorizationDomain.PLATFORM, "90"));
         verify(store, never()).revoke(anyLong(), any());
     }

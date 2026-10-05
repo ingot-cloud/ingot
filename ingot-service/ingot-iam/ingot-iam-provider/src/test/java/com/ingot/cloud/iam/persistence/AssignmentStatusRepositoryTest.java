@@ -86,11 +86,11 @@ class AssignmentStatusRepositoryTest {
     @Test
     void fiveStatesUseDisplayPrecedenceAndDatabasePagination() {
         var expected = Map.of(
-                AssignmentEffectiveStatus.ACTIVE, List.of(1L, 6L, 8L, 11L),
+                AssignmentEffectiveStatus.ACTIVE, List.of(11L, 8L, 6L, 1L),
                 AssignmentEffectiveStatus.PENDING, List.of(2L),
                 AssignmentEffectiveStatus.EXPIRED, List.of(3L),
                 AssignmentEffectiveStatus.REVOKED, List.of(4L),
-                AssignmentEffectiveStatus.SOURCE_INVALID, List.of(5L, 7L, 9L, 10L, 13L, 14L));
+                AssignmentEffectiveStatus.SOURCE_INVALID, List.of(14L, 13L, 10L, 9L, 7L, 5L));
         expected.forEach((state, ids) -> {
             var page = assignments.pagePlatform(1, 20, null, null, null, state);
             assertEquals(ids.size(), page.getTotal(), state.name());
@@ -99,7 +99,7 @@ class AssignmentStatusRepositoryTest {
         });
         var second = assignments.pagePlatform(2, 2, null, null, null, AssignmentEffectiveStatus.ACTIVE);
         assertEquals(4, second.getTotal());
-        assertEquals(List.of(BigInteger.valueOf(8), BigInteger.valueOf(11)), second.getRecords().stream()
+        assertEquals(List.of(BigInteger.valueOf(6), BigInteger.ONE), second.getRecords().stream()
                 .map(row -> row.getId()).toList());
         var overflow = assignments.pagePlatform(3, 2, null, null, null, AssignmentEffectiveStatus.ACTIVE);
         assertEquals(4, overflow.getTotal());

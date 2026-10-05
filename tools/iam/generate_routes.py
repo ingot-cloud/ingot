@@ -500,6 +500,12 @@ def build():
             {'name': 'excludeMemberId', 'required': False, 'schema': {'type': 'string'}},
             {'name': 'actionId', 'required': False, 'schema': {'type': 'string'}},
         ]))
+    routes.append(route('/v1/platform/assignments/{id}/selected-candidates', 'get', 'platformAssignmentSelectedCandidates',
+        '角色分配已选候选', 'PLATFORM', 'iam-platform:assignment:read', None, 'RAuthorizationCandidatePage',
+        '分配详情相同 READ/来源归属边界；仅返回固定版本和持久化参数绑定关系，OBJECT 与当前来源上限交集；SQL 同边界分页/计数，来源失效明确不支持', query=PAGE + [
+            {'name': 'kind', 'required': True, 'schema': {'type': 'string', 'enum': ['ROLE_REVISION', 'OBJECT']}},
+            {'name': 'parameterKey', 'required': False, 'schema': {'type': 'string'}},
+        ]))
     for item in routes:
         item['implemented'] = True
     seen = set()

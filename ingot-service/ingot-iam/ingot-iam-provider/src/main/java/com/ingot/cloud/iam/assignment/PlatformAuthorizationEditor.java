@@ -339,6 +339,54 @@ public class PlatformAuthorizationEditor {
         }).distinct().map(BigInteger::new).toList();
     }
 
+    /**
+     * 按已验证可见的分配读取固定版本或已绑定对象，不扩大为通用候选列表。
+     * @param actor 已通过分配详情边界的身份
+     * @param assignmentId 可信分配标识
+     * @param input 持久化分配定义，不接收客户端替换版本或来源
+     * @param kind 固定版本或范围对象
+     * @param parameterKey 对象所属固定版本参数
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 与实际关联相交的候选页
+     */
+    public AuthorizationCandidatePage selectedAssignmentCandidates(ActiveIdentity actor, String assignmentId,
+            AssignmentInput input, AuthorizationCandidateKind kind, String parameterKey, int page, int pageSize) {
+        IamPages.require(page, pageSize);
+        if (kind != AuthorizationCandidateKind.ROLE_REVISION && kind != AuthorizationCandidateKind.OBJECT) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        DelegationInput basis = null;
+        if (kind == AuthorizationCandidateKind.OBJECT) {
+            if (parameterKey == null || parameterKey.isBlank()
+                    || !input.scopeBindings().containsKey(parameterKey)) {
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            }
+            if (input.delegationGrantId() != null && !input.delegationGrantId().isBlank()) {
+                var grant = delegations.find(AuthorizationDomain.PLATFORM, null,
+                        IamIds.require(input.delegationGrantId()));
+                var children = grant == null ? null : delegations.children(AuthorizationDomain.PLATFORM,
+                        List.of(grant.getId())).get(grant.getId());
+                try {
+                    basis = source(actor, grant, children, new IamCapabilities(Map.of()), true);
+                } catch (BizException unavailable) {
+                    return new AuthorizationCandidatePage(List.of(), 0, page, pageSize, false,
+                            "来源委派已失效，当前对象不能作为可提交候选");
+                }
+            }
+            try {
+                return query(actor, kind, input.delegationGrantId(), basis, input.roleRevisionRef().id(),
+                        parameterKey, null, null, null, List.of(), page, pageSize, null,
+                        false, null, null, null, assignmentId);
+            } catch (BizException unavailable) {
+                return new AuthorizationCandidatePage(List.of(), 0, page, pageSize, false,
+                        "固定版本或范围参数已不可用，请检查角色与授权依据");
+            }
+        }
+        return query(actor, kind, null, null, null, null, null, null, null, List.of(),
+                page, pageSize, null, false, null, null, null, assignmentId);
+    }
+
     private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
             DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
             String keyword, List<String> ids, int page, int size, List<BigInteger> visibility) {
@@ -358,6 +406,15 @@ public class PlatformAuthorizationEditor {
             DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
             String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
             boolean tree, String parentId, String excludeMemberId, String selectedDelegationId) {
+        return query(actor, kind, source, basis, revisionId, key, actionId, applicationId, keyword, ids,
+                page, size, visibility, tree, parentId, excludeMemberId, selectedDelegationId, null);
+    }
+
+    private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
+            DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
+            String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
+            boolean tree, String parentId, String excludeMemberId, String selectedDelegationId,
+            String selectedAssignmentId) {
         IamPages.require(page, size);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream().map(value ->
                 BigInteger.valueOf(IamIds.require(value))).distinct().toList();
@@ -412,7 +469,8 @@ public class PlatformAuthorizationEditor {
                     : BigInteger.valueOf(IamIds.require(parentId)),
                 excludeMemberId == null || excludeMemberId.isBlank() ? null : BigInteger.valueOf(IamIds.require(excludeMemberId)),
                 selectedDelegationId == null ? null : BigInteger.valueOf(IamIds.require(selectedDelegationId)),
-                actionId == null || actionId.isBlank() ? null : BigInteger.valueOf(IamIds.require(actionId)));
+                actionId == null || actionId.isBlank() ? null : BigInteger.valueOf(IamIds.require(actionId)),
+                selectedAssignmentId == null ? null : BigInteger.valueOf(IamIds.require(selectedAssignmentId)), key);
         var rows = candidates.page(query);
         Map<BigInteger, String> paths = hierarchical && !rows.isEmpty()
                 ? candidates.menuPaths(rows.stream().map(
@@ -579,10 +637,15 @@ public class PlatformAuthorizationEditor {
 
     private DelegationInput source(ActiveIdentity actor, IamDelegationGrantEntity source,
             DelegationRepository.Children children, IamCapabilities permissions) {
+        return source(actor, source, children, permissions, false);
+    }
+
+    private DelegationInput source(ActiveIdentity actor, IamDelegationGrantEntity source,
+            DelegationRepository.Children children, IamCapabilities permissions, boolean visibleRecord) {
         Instant now = Instant.now();
         if (source == null || source.getPlatformAdministratorId() == null
                 || !source.getPlatformAdministratorId().toString().equals(actor.context().memberId())
-                    && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true)
+                    && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true) && !visibleRecord
                 || source.getStatus() != GrantStatus.ACTIVE
                 || source.getValidFrom() != null && now.isBefore(source.getValidFrom().toInstant(ZoneOffset.UTC))
                 || source.getValidUntil() != null && !now.isBefore(source.getValidUntil().toInstant(ZoneOffset.UTC))) {

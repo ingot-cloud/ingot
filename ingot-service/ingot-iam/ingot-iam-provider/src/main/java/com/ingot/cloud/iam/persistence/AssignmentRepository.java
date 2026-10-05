@@ -113,12 +113,12 @@ public class AssignmentRepository {
     }
 
     /**
-     * 按接收对象、名称和计算状态共同筛选后，由数据库计数并分页。
+     * 按接收对象、名称和计算状态共同筛选后计数，平台主列表按 ID 倒序分页。
      * @param page 页码
      * @param pageSize 页大小
      * @param subjectType 接收主体类型，可空
      * @param keyword 名称条件，可空
-     * @param memberId 平台成员关联条件，可空
+     * @param memberId 平台成员关联条件，可空；关联列表保持既有 ID 正序
      * @param effectiveStatus 计算状态，可空；省略保持原查询
      * @return 平台分配页
      */
@@ -133,7 +133,8 @@ public class AssignmentRepository {
         }
         Page<IamRoleAssignmentEntity> rows = countPlatformPage(page, pageSize, query);
         return rows.getCurrent() > rows.getPages() ? rows
-                : assignments.selectPage(rows, query.orderByAsc(IamRoleAssignmentEntity::getId));
+                : assignments.selectPage(rows, query.orderByDesc(memberId == null, IamRoleAssignmentEntity::getId)
+                        .orderByAsc(memberId != null, IamRoleAssignmentEntity::getId));
     }
 
     /**

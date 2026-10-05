@@ -553,6 +553,25 @@ public class AssignmentService {
         return detail(domain, admission.actor(), row);
     }
 
+    /**
+     * 读取平台分配真实绑定的固定版本或范围对象，沿用详情的来源归属边界。
+     * @param id 分配 ID
+     * @param kind 固定版本或范围对象
+     * @param parameterKey 范围对象对应参数
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 受限关联页
+     */
+    public com.ingot.framework.commons.model.iam.AuthorizationCandidatePage selectedCandidates(String id,
+            com.ingot.framework.commons.model.iam.AuthorizationCandidateKind kind, String parameterKey,
+            int page, int pageSize) {
+        IamAdmission admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_READ);
+        IamRoleAssignmentEntity row = assignments.find(AuthorizationDomain.PLATFORM, null, IamIds.require(id));
+        requireRecord(AuthorizationDomain.PLATFORM, admission, row);
+        return editor.selectedAssignmentCandidates(admission.actor(), id, record(row).assignment(), kind,
+                parameterKey, page, pageSize);
+    }
+
     private void requireRecord(AuthorizationDomain domain, IamAdmission admission, IamRoleAssignmentEntity row) {
         if (row == null || !recordAllowed(domain, admission, row)) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);

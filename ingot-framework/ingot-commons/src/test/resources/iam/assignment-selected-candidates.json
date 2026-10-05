@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "id": "100",
+      "name": "平台应用"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20,
+  "supported": true
+}

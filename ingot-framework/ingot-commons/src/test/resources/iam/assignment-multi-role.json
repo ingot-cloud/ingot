@@ -1,0 +1,80 @@
+{
+  "items": [
+    {
+      "subject": {
+        "type": "MEMBER",
+        "id": "1002"
+      },
+      "roleRevisionRef": {
+        "kind": "PLATFORM_CUSTOM",
+        "id": "31"
+      },
+      "scopeBindings": {
+        "objects": {
+          "kind": "OBJECTS",
+          "ids": [
+            "100"
+          ]
+        }
+      },
+      "validUntil": "2026-10-06T00:00:00Z"
+    },
+    {
+      "subject": {
+        "type": "MEMBER",
+        "id": "1002"
+      },
+      "roleRevisionRef": {
+        "kind": "PLATFORM_CUSTOM",
+        "id": "32"
+      },
+      "scopeBindings": {
+        "objects": {
+          "kind": "OBJECTS",
+          "ids": [
+            "101"
+          ]
+        }
+      },
+      "validUntil": "2026-10-06T00:00:00Z"
+    },
+    {
+      "subject": {
+        "type": "GROUP",
+        "id": "1003"
+      },
+      "roleRevisionRef": {
+        "kind": "PLATFORM_CUSTOM",
+        "id": "31"
+      },
+      "scopeBindings": {
+        "objects": {
+          "kind": "OBJECTS",
+          "ids": [
+            "100"
+          ]
+        }
+      },
+      "validUntil": "2026-10-06T00:00:00Z"
+    },
+    {
+      "subject": {
+        "type": "GROUP",
+        "id": "1003"
+      },
+      "roleRevisionRef": {
+        "kind": "PLATFORM_CUSTOM",
+        "id": "32"
+      },
+      "scopeBindings": {
+        "objects": {
+          "kind": "OBJECTS",
+          "ids": [
+            "101"
+          ]
+        }
+      },
+      "validUntil": "2026-10-06T00:00:00Z"
+    }
+  ]
+}

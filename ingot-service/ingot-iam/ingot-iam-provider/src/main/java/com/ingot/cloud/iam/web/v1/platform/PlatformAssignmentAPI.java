@@ -85,6 +85,26 @@ public class PlatformAssignmentAPI implements RShortcuts {
     }
 
     /**
+     * 分页读取可见分配的固定版本资料与已绑定对象。
+     * @param id 分配标识
+     * @param kind ROLE_REVISION 或 OBJECT
+     * @param parameterKey OBJECT 的固定版本参数键
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 真实关联且符合当前边界的候选页
+     */
+    @GetMapping("/{id}/selected-candidates")
+    @Operation(summary = "角色分配已选候选")
+    public R<com.ingot.framework.commons.model.iam.AuthorizationCandidatePage> selectedCandidates(
+            @PathVariable String id,
+            @RequestParam com.ingot.framework.commons.model.iam.AuthorizationCandidateKind kind,
+            @RequestParam(required = false) String parameterKey,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(assignments.selectedCandidates(id, kind, parameterKey, page, pageSize));
+    }
+
+    /**
      * 原子批量分配。
      *
      * @param input 批次
