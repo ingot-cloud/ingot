@@ -169,6 +169,8 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/tenant/policies/preview | POST {policyDraft, viewerMemberId, target?}；无副作用 |
 | /v1/{domain}/authorization/diagnose | POST {memberId/accountId, applicationId, actionId, targetId?} |
 
+2026-10-04：`GET /v1/platform/assignments` 与 `GET /v1/platform/delegations` 的默认及筛选结果统一按 `id DESC` 分页，大 ID 在前；沿用既有主键，不新增排序参数。IAM 的 Leaf 号段 ID 为趋势递增，此顺序不承诺严格创建时间先后。权限边界、总数与请求/响应字段不变；租户及人员关联列表保持既有顺序。
+
 平台诊断的 `targetId` 是所选操作所属资源的对象 ID。平台 `diagnose/candidates?kind=MEMBER` 按诊断者可诊断成员范围过滤；`kind=OBJECT` 按该资源读取操作的对象范围过滤，提交诊断时重验同一读取边界。无读取资格返回空候选，资源未接入对象查询返回 `supported=false`；不带 `targetId` 仍可进行操作级诊断。接口路径和请求结构不变。
 
 `diagnose/candidates?kind=ACTION` 的每个 Option 使用 `id` 表示单个操作 ID、`name` 表示原始操作名称、`summary` 表示所属资源名称。搜索词匹配资源名称或操作名称，且始终受所选 `applicationId` 限制；诊断 POST 仍只接收单个 `actionId`。
@@ -274,3 +276,13 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 2026-10-03 用户批准实施 [平台角色工作区与委派优化](./ROLE-WORKSPACE-DELEGATION-REFINEMENT.md)，含独立关联分页、期限模式、自我授权收紧与统一选择器/样式。
 
 2026-10-03：委派已选关系候选亦支持可选 `excludeMemberId`；缺省排除已存管理员，编辑可传草稿管理员。期限模式及有效主体聚合详见本轮实施记录，响应/来源副本已同步。
+
+
+## 2026-10-05 平台多角色分配与范围配置
+
+已获用户批准，需求、接口、兼容和任务见 [ASSIGNMENT-MULTI-ROLE-REFINEMENT](./ASSIGNMENT-MULTI-ROLE-REFINEMENT.md)。新建支持多个角色（每个角色一个固定版本），范围沿用角色定义、对象参数独立，统一有效期；编辑仍固定版本。开发与人工验收分别记录，保留已有未提交改动。
+
+新增 `GET /v1/platform/assignments/{id}/selected-candidates`：必传 kind=ROLE_REVISION|OBJECT，OBJECT 必传 parameterKey；page/pageSize 默认1/20。响应 AuthorizationCandidatePage，来源失效对象 supported=false。ROLE_REVISION 仅固定版本，OBJECT 通过持久化 scope_bindings JSON 关系分页，并与实际角色参数资源、单条来源上限相交。不会读取客户端传入的版本、来源或 ids。预览 effectiveResult.items 与请求 items 同序；每项对应一个主体与版本。本轮提交 DTO 不变，成员/组×多个角色见 assignment-multi-role.json。
+
+
+2026-10-05：用户批准分配范围步骤调整，第二步选择角色与有效期，第三步独立范围配置/全部权限视图、全局进度及跨页遗漏定位；新建和编辑均可调整指定对象。详见 [分配范围配置增量](./ASSIGNMENT-MULTI-ROLE-REFINEMENT.md)，HTTP DTO 与后端范围校验契约保持。

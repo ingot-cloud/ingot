@@ -21053,6 +21053,148 @@
           }
         ]
       }
+    },
+    "/v1/platform/assignments/{id}/selected-candidates": {
+      "get": {
+        "operationId": "platformAssignmentSelectedCandidates",
+        "summary": "角色分配已选候选",
+        "tags": [
+          "PLATFORM"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "PLATFORM",
+        "x-iam-action": "iam-platform:assignment:read",
+        "x-iam-execution": "分配详情相同 READ/来源归属边界；仅返回固定版本和持久化参数绑定关系，OBJECT 与当前来源上限交集；SQL 同边界分页/计数，来源失效明确不支持",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAuthorizationCandidatePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ROLE_REVISION",
+                "OBJECT"
+              ]
+            }
+          },
+          {
+            "name": "parameterKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -22979,11 +23121,11 @@
           "assignmentDurationMode": {
             "type": "string",
             "description": "单次期限模式，省略按 LIMITED",
-            "default": "LIMITED",
             "enum": [
               "LIMITED",
               "UNLIMITED"
-            ]
+            ],
+            "default": "LIMITED"
           }
         },
         "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"

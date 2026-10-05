@@ -245,3 +245,17 @@ GET `/v1/platform/assignments` 新增可选 `effectiveStatus: AssignmentEffectiv
 | 10,013 | 883.09 ms | 3.85 ms | 2.81 ms |
 
 两个数据集的五种状态结果、总数与旧查询一致。单独调用旧查询的 `PaginationInnerInterceptor.autoCountSql`，不执行 JDBC，3 次采样中位数为 1125.49 ms，确认自动 COUNT 解析改写为主要瓶颈。10,013 条数据的其余状态最终分页中位数：未生效 7.18 ms、有效 7.84 ms、已到期 4.19 ms、来源失效 17.23 ms。上述仅是隔离环境 Repository 计数与分页耗时，不包含实际网关、鉴权及列表展示装配；真实接口响应待 ASP03 人工复测。临时测试容器已清理，未访问现有业务数据库。
+
+## 2026-10-04 平台授权列表 ID 倒序（approved → implementing）
+
+`GET /v1/platform/assignments` 的治理列表由 ID 正序改为倒序，本人委派来源列表已为倒序，保持不变；`GET /v1/platform/delegations` 由 ID 正序改为倒序。排序由服务端在 LIMIT/OFFSET 前完成，使用唯一主键形成稳定顺序；沿用分配显式计数和委派既有分页，不改变过滤及计数谓词，不增排序参数或数据库索引。成员关联分配的治理列表仍按原顺序，租户分配/委派及其他关联列表不变。
+
+IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段发号，多实例号段与事务并发不保证全局创建时间单调，因此 API 约定为 ID 倒序，不将其表述为严格 `created_at` 倒序。自动验证复用现有分配状态/委派名称筛选 Repository 回归，更新跨页记录顺序预期；人工分别创建记录、刷新列表及切换筛选核对顺序和总数，不以自动检查代替页面验收。
+
+
+## 2026-10-05 平台多角色分配与范围配置
+
+已获用户批准，需求、接口、兼容和任务见 [ASSIGNMENT-MULTI-ROLE-REFINEMENT](./ASSIGNMENT-MULTI-ROLE-REFINEMENT.md)。新建支持多个角色（每个角色一个固定版本），范围沿用角色定义、对象参数独立，统一有效期；编辑仍固定版本。开发与人工验收分别记录，保留已有未提交改动。
+
+
+2026-10-05：用户批准分配范围步骤调整，第二步选择角色与有效期，第三步独立范围配置/全部权限视图、全局进度及跨页遗漏定位；新建和编辑均可调整指定对象。详见 [分配范围配置增量](./ASSIGNMENT-MULTI-ROLE-REFINEMENT.md)，HTTP DTO 与后端范围校验契约保持。

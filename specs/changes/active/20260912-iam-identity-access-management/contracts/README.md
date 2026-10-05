@@ -49,3 +49,8 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 
 当前快照 **123 路径 / 190 操作**，新增角色成员、组、成员真实来源以及委派已选关系分页。期限模式省略为 LIMITED；UNLIMITED 仅平台可用，时长为空，长期派生分配仍依赖来源有效性。新增 `delegation-unlimited.json` 与 `role-subject-page.json` 经 Jackson / Bean Validation 验证；版本号、可见计数保持数字。候选及已选关系均支持接收名单排除当前管理员。
 2026-10-03：平台分配列表增加可选 `effectiveStatus` 五种计算状态过滤，路径/操作数保持 123/190；响应模型、租户列表和人员关联列表不变。路由及 OpenAPI 已从现有模型刷新，生成一致性和 7 项契约检查通过，实际页面人工验收单列 AS03。
+
+
+## 2026-10-05 平台多角色分配与记录范围回显
+
+当前快照 **124 路径 / 191 操作**，新增分配 `/{id}/selected-candidates`，只接受 ROLE_REVISION／OBJECT（OBJECT 必填 parameterKey），沿用详情可见边界。`assignment-multi-role.json` 与 `assignment-selected-candidates.json` 已通过 Jackson／嵌套 Bean Validation；逐角色参数互相独立，提交仍为原 AssignmentBatchInput。Java 契约 12 项、路由／OpenAPI 生成及 7 项契约检查通过，隔离 MySQL／真实 HTTP 亦验证固定版本、实际已选关联与整批回滚。页面人工验收待 MA05。

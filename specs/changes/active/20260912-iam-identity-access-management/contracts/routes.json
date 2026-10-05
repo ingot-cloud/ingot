@@ -3762,5 +3762,56 @@
         }
       }
     ]
+  },
+  {
+    "path": "/v1/platform/assignments/{id}/selected-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentSelectedCandidates",
+    "summary": "角色分配已选候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:read",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "分配详情相同 READ/来源归属边界；仅返回固定版本和持久化参数绑定关系，OBJECT 与当前来源上限交集；SQL 同边界分页/计数，来源失效明确不支持",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "parameterKey",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
   }
 ]

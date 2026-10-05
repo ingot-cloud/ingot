@@ -1581,8 +1581,8 @@
           "assignmentDurationMode" : {
             "type" : "string",
             "description" : "单次期限模式，省略按 LIMITED",
-            "default" : "LIMITED",
-            "enum" : [ "LIMITED", "UNLIMITED" ]
+            "enum" : [ "LIMITED", "UNLIMITED" ],
+            "default" : "LIMITED"
           }
         },
         "description" : "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
