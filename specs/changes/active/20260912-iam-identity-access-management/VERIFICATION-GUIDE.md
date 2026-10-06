@@ -60,19 +60,17 @@
 
 ### 3.2 权威 DDL（不要跳步、不要混种子）
 
-在目标库按顺序执行（路径相对后端仓根）：
+路径相对后端仓根。先停止使用目标库的服务，确认库名并备份需要保留的数据，再执行完整文件：
 
-1. `databases/iam/001_identity.sql`
-2. `databases/iam/002_catalog_role.sql`
-3. `databases/iam/003_assignment_delegation.sql`
-4. `databases/iam/004_policy_audit_migration.sql`
-5. `databases/iam/005_auxiliary.sql`
-6. `databases/iam/007_member_export.sql`
-7. `ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql`
-8. `ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql`
-9. `databases/iam/006_bootstrap.sql`
+```sh
+mysql --database=iam_test < databases/ingot_iam.sql
+```
+
+完整文件可重复导入，会先对清单内56张表执行 `DROP TABLE IF EXISTS`，清空旧账号、授权及业务数据，目录默认布局为 `layout.main`；没有账号种子，重建后须重新选择下方一种身份初始化方式。分片仅用于空库，来源和顺序以 `databases/iam/manifest.json` 为准：001–005 → 框架表CREATE → 006。导出任务已并入004，平台字段配置保存在角色版本；历史ALTER位于migrations目录，不作为新库初始化执行。框架密码DDL中的固定USE已从完整文件投影移除，避免误写其他库。
 
 到这里库里只有治理目录，没有测试账号。`006` 可重复执行且不覆盖人工改过的行。
+
+初始化目录含3应用：`iam-platform`（平台治理）、`iam-tenant`（组织治理）及独立 `platform:develop`（开发者平台）。“平台管理”下有全局账号；开发者应用下有生成二维码、客户端管理、社交管理和业务ID管理。客户端仍调用Auth，社交/业务ID仍调用现有IAM API，精确权限码没有更改。单独重跑006不会给已发布SYSTEM版本追加这些权限，旧测试库要按本节完整重建后验证。
 
 **二选一，不要两个都做：**
 
@@ -141,7 +139,7 @@ python3 tools/iam/test-data/iam_test_data.py verify  --config tools/iam/test-dat
 python3 tools/iam/test-data/iam_test_data.py reset --config tools/iam/test-data/config.local.json --run-id demo --confirm-reset
 ```
 
-`reset` **只清清单，不 DROP 库**。要彻底重来：空库重跑 3.2，再 `reset` + `prepare` + `build`。
+`reset` **只清清单，不 DROP 库**。要彻底重来：停止服务并确认/备份目标测试库，重跑3.2完整SQL及所选身份初始化方式，再 `reset` + `prepare` + `build`。
 
 组织所有者登录失败（`S0400 用户名或密码错误`）时：确认 `IAM_TEST_PASSWORD_OWNER_A` 未设置；删掉 `demo.secrets.json`（保留 `demo.json`）后再 `build`，让工具重新 resetPassword。Auth 把「用户不存在」和「密码错」都显示成同一句，不要只猜密码。
 
@@ -467,7 +465,7 @@ D02 不写动态期限，本项默认未执行。
 
 ## 2026-09-28 平台角色分配增量验收
 
-先部署本轮 IAM 构建并执行 `010_assignment_audit_index.sql`；保持测试环境登记与独立性。配置测试治理口令到 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`（不粘贴到 Spec/报告），执行：
+先部署本轮 IAM 构建并执行 `migrations/010_assignment_audit_index.sql`；保持测试环境登记与独立性。配置测试治理口令到 `IAM_TEST_PASSWORD_PLATFORM_GOVERNOR`（不粘贴到 Spec/报告），执行：
 
 ```bash
 python3 tools/iam/test-data/iam_test_data.py refinement-build --config tools/iam/test-data/config.local.json --run-id platform-refinement-20260928

@@ -1,23 +1,59 @@
-# IAM 目标结构
+# IAM 建库与升级脚本
 
-仅供 `20260912-iam-identity-access-management` 的隔离目标库使用，尚未接入服务初始化或正式切换脚本。
+正式初始化的唯一来源为 [manifest.json](./manifest.json)，完整导入文件为 [ingot_iam.sql](../ingot_iam.sql)。该文件由权威DDL与正式种子生成，可在明确选定的测试库重复执行；每次都会清空并重建清单内全部表，不是保留数据的升级脚本，不保存开发数据库快照。
 
-- `001_identity.sql`：账号、独立平台成员、租户成员、部门、多部门关系、两域组与组成员。无默认业务数据，不读取或覆盖旧表。
-- `002_catalog_role.sql`：应用、资源、精确操作、菜单、显式开通、人群、套餐、角色版本与差异。租户域应用可标记 `baseline`，仅这些应用在组织初始化时缺省开通；平台应用不能标记为基础开通。
-- `003_assignment_delegation.sql`：受限委派、接收人群、操作上限、固定版本白名单及角色分配。
-- `004_policy_audit_migration.sql`：默认策略引用、通讯录/字段规则、审计和迁移批次/映射/处置。
-- `005_auxiliary.sql`：保留字典、发号、社会化、历史安全事件和套餐记录的结构。来源为仓库 SQL 的 CREATE TABLE，仅用于目标结构，不复制任何 INSERT 数据。
-- `007_member_export.sql`：租户成员导出任务状态、成员 ID 快照与过期时间，供多实例读取，不保存字段原值。
-- `011_delegation_duration_mode.sql`：已有库新增 LIMITED/UNLIMITED 单次分配期限模式；新建库已由 003 包含，不重复执行。升级顺序为 DDL → 全部 IAM 后端节点 → 前端；新缓存命名空间隔离旧授权视图。回退前处理不限期限委派和长期派生分配。
-- `010_assignment_audit_index.sql`：已有目标库的分配创建审计索引补丁；新建库与重复执行均可安全跳过已存在索引。
-- `006_bootstrap.sql`：唯一的正式冷启动种子，写入两个治理应用、资源与字段能力、130 个精确操作、平台与组织菜单树、每域一个 SYSTEM 治理角色及其固定版本授权、默认策略版本和发号高水位。由 `python3 tools/iam/generate_bootstrap.py` 从 change 的 `contracts/routes.json` 生成，不要手工编辑。
-- `seed-manual-verification.sql`：隔离环境人工认证种子，不是生产数据，不进入迁移导入。必须先执行 001–005、`007_member_export.sql`、下列框架 DDL 与 `006_bootstrap.sql`；它只补两个可登录账号、一个平台成员和一条治理授权，目录与治理角色一律复用冷启动种子，避免同一份目录出现两个来源。
+## 新建库脚本（001–006）
 
-`006_bootstrap.sql` 是数据而非结构，编号只表示执行顺序：`test_identity_schema.py` 只加载 DDL，把它排除在外，避免种子行占用结构夹具的标识。种子的三条硬约束：
+| 文件 | 内容 |
+|---|---|
+| `001_identity.sql` | 账号、平台/租户成员、部门、两域用户组及关联；已包含套餐plan_id列。 |
+| `002_catalog_role.sql` | 应用、资源、操作、菜单、开通、人群、套餐、角色及固定版本。 |
+| `003_assignment_delegation.sql` | 分配、委派、人群及逐操作上限；已包含LIMITED/UNLIMITED模式。 |
+| `004_policy_audit_migration.sql` | 默认策略、租户通讯录/字段规则、导出任务、审计及迁移记录；已包含分配创建审计索引和原007导出建表内容。平台字段权限在角色版本中保存，不再建独立策略表。 |
+| `005_auxiliary.sql` | 字典、发号、社会化、历史安全事件及套餐辅助结构；不带开发数据。 |
+| `006_bootstrap.sql` | 唯一正式种子：3应用、36资源、138操作、30菜单、54菜单关联、2治理角色及固定版本、默认策略与发号起点。 |
 
-- **不含任何账号与凭证。** 受控平台账号由 provider 的冷启动器经安全框架注册用例创建，配置开关 `ingot.iam.bootstrap` 默认关闭。
-- **存在即跳过。** 每条语句按自然键（应用/资源/操作 code、菜单 route_name、角色 domain+code、策略 kind+revision）判断，父行一律由自然键解析，保留标识只用于本次新建的行。重复执行不覆盖任何人工或业务修改。
-- **保留标识全部小于发号起点 1000000。** 运行时发号不会与种子标识冲突。
+原007–011统一归入 [migrations](./migrations/README.md)，只按已有库实际缺项选择执行。旧平台独立策略及012/013已删除。新建库不能再遍历历史ALTER补丁；编排和测试统一读取manifest，不按目录glob猜顺序。
+
+生成及只读检查：
+
+```sh
+python3 tools/iam/generate_database.py
+python3 tools/iam/generate_database.py --check
+```
+
+生成命令同时更新006和ingot_iam.sql，检查模式不写文件。底层 `generate_bootstrap.py` 仅生成正式种子；推荐用上述完整入口避免两个初始化文件不同步。修改DDL或目录生成源后重新生成，不手改生成结果。
+
+停止使用目标库的服务，确认目标库并备份需要保留的数据，再导入：
+
+```sh
+mysql --database=ingot_iam < databases/ingot_iam.sql
+```
+
+库须事先创建，连接/凭证按本机配置提供。完整SQL先按逆序对manifest内56张表执行 `DROP TABLE IF EXISTS`，然后建表并写入正式治理目录；不创建/删除数据库、不切换数据库、不删除清单外表。循环外键要求仅删除阶段临时关闭外键检查，建表与种子阶段开启，结束后恢复原会话设置。DDL无法整体回滚，导入失败后修正原因重新执行；需要恢复原数据时使用备份。
+
+001–005权威结构源本身不执行重置，仅完整文件负责删除编排。分片仅适用于空库，按manifest的001–005→框架CREATE→006顺序；框架源中的固定USE不能原样执行到其他库，优先使用已投影到当前库的完整文件。
+
+种子约束：
+
+- 不含账号、凭证、业务组织、角色分配、审计或登录运行状态。受控平台首账号通过 `ingot.iam.bootstrap` 启动器及安全框架注册用例创建，开关默认关闭。
+- 单独执行006时存在即跳过：按自然键判断并解析父行，保留既有业务修改。只给本次新建的治理版本初始化授权，不向已有不可变版本追加权限。完整文件会先删除旧表，不能用其保留业务修改。
+- 新建的DIRECTORY菜单默认 `view_path = 'layout.main'`，PAGE使用对应页面注册键；完整初始化和正式种子保持一致。
+- 平台治理应用 `iam-platform` 的“平台管理”包含全局账号、平台人员、角色与授权。独立平台应用 `platform:develop` 为开发者平台，包含生成二维码、客户端管理、社交管理、业务ID管理，沿用 `platform.develop.*` 页面键。租户治理仍为 `iam-tenant`，不包含平台开发者功能。
+- 社交/业务ID目录位于开发者应用，API仍使用原 `iam-platform:social-config:*` / `iam-platform:id-allocation:*` 的8个精确操作码；客户端沿用Auth注解的6个 `platform:develop:client:*` 精确操作码；星号仅是文档概括，种子不存通配码。菜单和操作同应用关联。新建平台治理版本覆盖全部平台正式应用，租户治理仅覆盖租户域，不因菜单存在自动授予其他成员权限。
+- 保留标识小于发号起点1000000。原ingot_iam.sql开发快照已移出正式初始化，可从Git历史查阅。
+- `seed-manual-verification.sql` 仅供隔离人工测试；每次完整初始化后按需单独执行一次，不进入完整文件或默认编排。它创建platform/owner测试账号、平台成员及治理分配；也可改用受控平台首账号初始化器，两种方式选择一种。
+
+运行验证（Docker使用本地MySQL镜像，不下载、不连接已有库）：
+
+```sh
+python3 tools/iam/test_database_sources.py
+python3 databases/iam/test_identity_schema.py
+python3 databases/iam/test_bootstrap_seed.py
+python3 tools/iam/test-data/test_iam_test_data.py
+```
+
+MySQL回归比较完整文件与分片的所有表定义及种子行数，验证首次、部分初始化后及带循环外键数据的重复导入、目录默认布局、无关表保留和会话外键设置恢复；初始化结果不带账号或运行状态。单独执行006的种子幂等及权限版本不变检查继续保留。
 
 ## 框架权威 DDL（不在本目录重复定义）
 
@@ -28,11 +64,9 @@
 | `account_lock_state` | `ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql` | `LockStatePort` / `DefaultLockStatePortAdapter` |
 | `password_history`、`password_expiration` | `ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql` | security-credential 既有用例 |
 
-建库顺序：001–005 → `007_member_export.sql` → 上述框架 DDL → `006_bootstrap.sql` → 可选的人工认证种子。`security_event` 暂无框架 DDL 文件，结构继续由 `005_auxiliary.sql` 提供，写入仍由 security-event-store-mysql 负责。
+建库顺序以manifest为准：重建清单表 → 001–005 → 上述框架表CREATE → 006 → 可选人工认证种子；导出表已合并在004。`security_event` 暂无框架 DDL 文件，结构继续由 `005_auxiliary.sql` 提供，写入仍由 security-event-store-mysql 负责。
 
 独立测试环境编排见 `tools/iam/test-data/`（测试数据 D01/D02）：`prepare` / `build` / `verify` / `reset`。只接受已登记的独立库，不猜测开发库；`reset` 必须 `--confirm-reset`，且不会对任意库执行 DROP。`build` 走真实 `/iam/v1` 接口，口令不进报告。联调逐步操作见 change 内 `VERIFICATION-GUIDE.md`。
-
-运行测试：`python3 databases/iam/test_identity_schema.py` 校验结构约束，`python3 databases/iam/test_bootstrap_seed.py` 校验冷启动种子的完整性、幂等和组织初始化前置条件。均需要 Docker；不自动下载镜像。
 
 目标数据库使用 MySQL 8.0.16+，连接时区为 UTC。ID 使用正数 BIGINT UNSIGNED，API 使用字符串传输。成员状态对应 commons 的 MemberStatus：ACTIVE/SUSPENDED/REMOVED。独立的平台成员表和平台组关联表不引用租户成员。租户关联使用包含 tenant_id 的复合外键。
 
@@ -49,4 +83,12 @@
 
 账号登录名目标约束为全局唯一。源快照中软删除账号占用同名、格式不兼容或关联不明确时，由迁移工具报告并要求显式处置，不自动丢弃账号或覆盖凭证。
 
-已有库菜单补丁 `008_platform_accounts_menu.sql` 和套餐列补丁 `009_tenant_plan.sql` 不属于全新建库顺序；全新结构与种子已包含其结果。`010_assignment_audit_index.sql` 在全新库和已有库均可重复执行。
+已有库升级脚本保留在migrations子目录；菜单、套餐列、审计索引及期限模式的最新结果已纳入权威结构/正式种子。详细前置条件见migrations/README.md，不能把整个目录无差别用于新库。
+
+## 平台角色字段部署
+
+框架未投产，平台角色字段权限是唯一模型，不保留平台独立成员/组策略表、API或迁移开关。用户在确认目标库后重建测试库，使用最新 `databases/ingot_iam.sql` 并导入测试身份，部署相同版本的IAM、SDK和前端；本次修改未操作实际业务库。
+
+角色版本字段JSON为非空对象。正式治理版本显式冻结成员字段默认：phone/email脱敏，displayName/avatar完整可见及可编辑；目录和注册能力仍可收窄。字段完整可见须发布并分配角色，治理身份不绕过。未声明字段隐藏，缺失快照拒绝求值；角色发布不自动升级已有分配。租户字段策略与通讯录结构保留。
+
+[人工验收](../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md) 和 [接入样板](../../examples/iam-ops/README.md) 已按唯一角色字段闭环更新。

@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "domain": "PLATFORM",
+    "applicationCode": "iam-ops",
+    "resourceCode": "incident"
+  },
+  "actionCodes": [
+    "iam-ops:incident:read",
+    "iam-ops:incident:update"
+  ]
+}

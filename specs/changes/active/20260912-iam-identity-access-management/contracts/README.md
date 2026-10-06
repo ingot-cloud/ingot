@@ -54,3 +54,16 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 ## 2026-10-05 平台多角色分配与记录范围回显
 
 当前快照 **124 路径 / 191 操作**，新增分配 `/{id}/selected-candidates`，只接受 ROLE_REVISION／OBJECT（OBJECT 必填 parameterKey），沿用详情可见边界。`assignment-multi-role.json` 与 `assignment-selected-candidates.json` 已通过 Jackson／嵌套 Bean Validation；逐角色参数互相独立，提交仍为原 AssignmentBatchInput。Java 契约 12 项、路由／OpenAPI 生成及 7 项契约检查通过，隔离 MySQL／真实 HTTP 亦验证固定版本、实际已选关联与整批回滚。页面人工验收待 MA05。
+
+## 2026-10-05 资源扩展增量
+
+管理面新增资源执行/字段策略及候选、分配升级与专用树/对象候选；当前 **133路径 / 201操作**。`resource-field-policy.json`、`assignment-upgrade.json` 与 `authorization-v2-request.json` 经 Jackson 与嵌套 Bean Validation 验证。内部 v2 与签名对象端点单列 `internal-openapi.json`，生成 `python3 tools/iam/build_internal_contract.py`，一致性检查附加 `--check`；不加入浏览器权限目录。FieldPolicyDecision 同时传输 filterableFields/sortableFields 及完整范围，原值筛选/排序需结合当前可见性检查。
+
+
+## 2026-10-05 平台角色字段固定版本（最终契约）
+
+当前公开快照 **129路径 / 196操作**，新增平台角色创建只读预览；角色草稿、固定版本、权限目录、详情、诊断来源和升级预览携带资源字段快照。`role-platform-fields.json` 与 `authorization-v2-request.json` 经Jackson/嵌套校验验证。内部v2每个操作传输独立字段条款与GRANTS合并模式，字段结论必需；请求只携带resource/actionCodes，无roleFieldsSupported，响应没有roleFields或顶层fields。
+
+平台旧独立策略API、枚举和夹具已删除，不保留deprecated兼容端点；租户FieldPolicyInput/FieldRule及通讯录契约保持原行为。资源执行能力由角色权限目录提供，不再由独立平台策略入口查询。创建和修改成员隐藏的suppliedFields只用于服务端校验，不进入传输模型。当前无部署开关或迁移期；自动化与人工状态见[增量任务](../ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
+
+上文资源扩展增量中的独立平台策略夹具及133/201快照仅记录历史，不能用于当前调用。

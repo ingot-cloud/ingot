@@ -24,8 +24,8 @@
 - [x] **0.1 独立目标库**
   - 环境：本机或隔离 Docker MySQL 8.4，**禁止**指向现网/共享业务库。
   - 数据：空库；会话时区 UTC。
-  - 步骤：创建库名并导出为 `IAM_DATABASE`；依次执行 `databases/iam/001_identity.sql` … `005_auxiliary.sql`、`databases/iam/007_member_export.sql`、框架 DDL（`account_lock_state`、`password_history`/`password_expiration`）、`databases/iam/006_bootstrap.sql`，再执行 `databases/iam/seed-manual-verification.sql`。
-  - 预期：55 张表存在；`006` 写入 2 个应用、40 个资源、145 个 ACTION、24 个菜单、每域一个 SYSTEM 治理角色及 145 条授权、2 个默认策略版本；种子账号 `platform` / `owner` 明文口令均为 `password`；leaf 标签 `iam` 的 `max_id >= 1000000`。
+  - 步骤：创建库名并导出为 `IAM_DATABASE`；在该空库导入 `databases/ingot_iam.sql`（来源及顺序见manifest；不再重复叠加历史ALTER），再执行 `databases/iam/seed-manual-verification.sql`。
+  - 当前预期：57 张表存在；`006` 写入 2 个应用、35 个资源、134 个 ACTION、25 个菜单、每域一个 SYSTEM 治理角色及 134 条授权、2 个默认策略版本；种子账号 `platform` / `owner` 明文口令均为 `password`；leaf 标签 `iam` 的 `max_id >= 1000000`。下方2026-09-16证据为当时目录版本，不能代替最新目录人工验收。
   - 说明：`006` 可重复执行且不覆盖人工修改；平台受控账号另有 `ingot.iam.bootstrap.enabled` 启动器路径，与本清单的固定口令夹具互斥，两者只用其一。
   - 证据：2026-09-16 本机隔离库 + 种子；你确认 0.1 通过（Bruno / IDE）。
 
@@ -56,7 +56,7 @@
 冷启动分两段：目录与治理角色由 `databases/iam/006_bootstrap.sql` 落库，受控平台账号由 provider 启动器经安全框架注册用例创建。0.1 已覆盖 SQL 段的行数与幂等，本段只验证 Java 段与真实登录。
 
 - [ ] **A21.1 受控平台账号首启**
-  - 环境：空库执行完 001–005、`007_member_export.sql`、框架 DDL 与 `006_bootstrap.sql`，**不要**执行 `seed-manual-verification.sql`；IAM 进程设 `ingot.iam.bootstrap.enabled=true`。
+  - 环境：选定空库导入 `databases/ingot_iam.sql`（权威来源见manifest），**不要**执行 `seed-manual-verification.sql`；IAM 进程设 `ingot.iam.bootstrap.enabled=true`。
   - 数据：`iam_account`、`iam_platform_member`、`iam_role_assignment` 均为空。
   - 步骤：启动 IAM 进程一次，从启动日志取 WARN 行给出的初始口令；用该账号走 Auth 密码登录且不传 `tenant`。
   - 预期：`iam_account` 出现配置的登录名（默认 `platform`），`iam_platform_member` 一行，治理 assignment 指向平台域 SYSTEM 角色版本；口令未硬编码在源码或 SQL 中；首次登录被要求改密，口令超出有效期后失效。

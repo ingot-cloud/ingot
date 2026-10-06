@@ -6,7 +6,7 @@ description: >-
   constructor injection, named constants, and association-list queries. Use when
   writing or changing Java business code, time fields, createdAt/updatedAt,
   enums, JavaDoc, OSS/avatar/attachment fields, Spring Bean injection, magic
-  literals, or APIs that list a target's bound or related records.
+  literals, IAM custom-resource integration, or APIs that list a target's bound or related records.
 ---
 
 # Ingot 框架编码规范
@@ -37,6 +37,7 @@ description: >-
 | 头像、附件、OSS | [references/oss.md](references/oss.md) |
 | Spring Bean 依赖 | [references/injection.md](references/injection.md) |
 | 类型或对外 API 注释 | [references/javadoc.md](references/javadoc.md) |
+| 自定义资源、多应用权限、对象范围、字段脱敏/编辑控制 | [references/iam-resource-extension.md](references/iam-resource-extension.md) |
 | 关联对象列表、绑定查询、ids 回显 | [references/association-lists.md](references/association-lists.md) |
 
 ## Examples

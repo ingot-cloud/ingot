@@ -1,0 +1,1017 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "IAM资源内部v2契约",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/inner/authorization/v2/evaluate": {
+      "post": {
+        "operationId": "iamEvaluateV2",
+        "description": "INNER受信任调用及在线原始身份；请求不能替代用户；注册操作模式决定fresh或读热缓存",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R信封；精确错误码区分拒绝和不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAuthorizationDecision"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inner/iam/resource-objects/query": {
+      "post": {
+        "operationId": "resourceObjectQuery",
+        "description": "固定资源服务白名单；HMAC覆盖payload及短时间窗；payload.context与原认证身份完全一致；只返回最小候选或存在性",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedResourceObjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R信封；精确错误码区分拒绝和不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RResourceObjectResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionDecision": {
+        "required": [
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "governed": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScopeCondition"
+            }
+          },
+          "fields": {
+            "$ref": "#/components/schemas/FieldPolicyDecision"
+          }
+        }
+      },
+      "ActionGrant": {
+        "required": [
+          "actionId",
+          "scopes"
+        ],
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "description": "操作 ID"
+          },
+          "scopes": {
+            "type": "array",
+            "description": "按并集合成的范围项",
+            "items": {
+              "$ref": "#/components/schemas/ScopeExpression"
+            }
+          }
+        },
+        "description": "操作及其范围，不允许脱离操作合并范围"
+      },
+      "ActionScopeCeiling": {
+        "required": [
+          "actionId",
+          "scopeBindings",
+          "scopes"
+        ],
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "description": "操作 ID"
+          },
+          "scopes": {
+            "type": "array",
+            "description": "该操作允许范围的并集",
+            "items": {
+              "$ref": "#/components/schemas/ScopeExpression"
+            }
+          },
+          "scopeBindings": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScopeBinding"
+            },
+            "description": "委派范围参数，不接受未绑定的管理范围"
+          }
+        },
+        "description": "限定委派允许的单个操作与范围，范围参数在该委派内绑定"
+      },
+      "AuthorizationActionOption": {
+        "required": [
+          "id",
+          "name",
+          "scopeCapabilities"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "applicationId": {
+            "type": "string"
+          },
+          "applicationName": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "resourceName": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "scopeCapabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "SELF",
+                "MEMBER_DEPARTMENTS",
+                "MANAGED_DEPARTMENTS",
+                "OBJECT_SET"
+              ]
+            }
+          }
+        }
+      },
+      "AuthorizationCandidatePage": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationOption"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supported": {
+            "type": "boolean"
+          },
+          "unavailableMessage": {
+            "type": "string"
+          },
+          "contextLabel": {
+            "type": "string"
+          },
+          "hierarchical": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthorizationContext": {
+        "required": [
+          "accountId",
+          "domain",
+          "memberId"
+        ],
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "当前管理域",
+            "enum": [
+              "PLATFORM",
+              "TENANT"
+            ]
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "租户域必填；平台域为空"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "全局账号 ID"
+          },
+          "memberId": {
+            "type": "string",
+            "description": "当前域的成员 ID"
+          }
+        },
+        "description": "经认证选择的当前成员身份；不接受客户端直接指定权限域",
+        "readOnly": true
+      },
+      "AuthorizationDecision": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "context": {
+            "$ref": "#/components/schemas/AuthorizationContext"
+          },
+          "actions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ActionDecision"
+            }
+          },
+          "version": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthorizationOption": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "roleRevisionRef": {
+            "$ref": "#/components/schemas/RoleRevisionRef"
+          },
+          "parameterDefinitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleParameterDefinition"
+            }
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionGrant"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationActionOption"
+            }
+          },
+          "delegation": {
+            "$ref": "#/components/schemas/DelegationInput"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "hasChildren": {
+            "type": "boolean"
+          },
+          "ancestorPath": {
+            "type": "string"
+          },
+          "selectable": {
+            "type": "boolean"
+          },
+          "resourceFieldPermissions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/FieldAccess"
+              }
+            }
+          }
+        }
+      },
+      "AuthorizationRequest": {
+        "required": [
+          "actionCodes",
+          "resource"
+        ],
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "actionCodes": {
+            "maxItems": 100,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DelegationInput": {
+        "required": [
+          "actionScopeCeilings",
+          "administratorMemberId",
+          "allowedRoleRevisionRefs",
+          "recipientSelection"
+        ],
+        "type": "object",
+        "properties": {
+          "administratorMemberId": {
+            "type": "string",
+            "description": "当前域的授权管理员成员 ID"
+          },
+          "allowedRoleRevisionRefs": {
+            "type": "array",
+            "description": "允许分配的固定角色版本集合",
+            "items": {
+              "$ref": "#/components/schemas/RoleRevisionRef"
+            }
+          },
+          "recipientSelection": {
+            "$ref": "#/components/schemas/Selection"
+          },
+          "actionScopeCeilings": {
+            "type": "array",
+            "description": "逐操作范围上限",
+            "items": {
+              "$ref": "#/components/schemas/ActionScopeCeiling"
+            }
+          },
+          "validFrom": {
+            "type": "string",
+            "description": "UTC 生效时间，包含；空值无起始边界",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "description": "UTC 失效时间，不包含；空值无结束边界",
+            "format": "date-time"
+          },
+          "maxAssignmentDuration": {
+            "type": "string",
+            "description": "有限模式必填的正持续时间；不限模式为空",
+            "format": "duration"
+          },
+          "assignmentDurationMode": {
+            "type": "string",
+            "description": "单次期限模式，省略按 LIMITED",
+            "default": "LIMITED",
+            "enum": [
+              "LIMITED",
+              "UNLIMITED"
+            ]
+          }
+        },
+        "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
+      },
+      "DepartmentSelection": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "部门 ID"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "是否包含下级，默认 false"
+          }
+        },
+        "description": "租户部门选择项；平台域不支持"
+      },
+      "FieldAccess": {
+        "required": [
+          "visibility"
+        ],
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "description": "字段可见程度",
+            "enum": [
+              "HIDDEN",
+              "MASKED",
+              "FULL"
+            ]
+          },
+          "editable": {
+            "type": "boolean",
+            "description": "是否允许编辑，非 FULL 必须为 false"
+          }
+        },
+        "description": "描述服务端计算后的字段输出与编辑能力，不独立授予对象或写操作权限"
+      },
+      "FieldPolicyDecision": {
+        "type": "object",
+        "properties": {
+          "defaults": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            }
+          },
+          "ceilings": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            }
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResolvedFieldRule"
+            }
+          },
+          "filterableFields": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sortableFields": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mergeMode": {
+            "type": "string",
+            "enum": [
+              "RESTRICTIONS",
+              "GRANTS"
+            ]
+          }
+        }
+      },
+      "IamErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "success"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "InvalidArgument",
+              "IdentityInvalid",
+              "ActionDenied",
+              "DataScopeDenied",
+              "DelegationExceeded",
+              "RoleRevisionUnavailable",
+              "ApplicationUnavailable",
+              "ObjectNotFound",
+              "PolicyConflict",
+              "RevisionConflict",
+              "ObjectInUse",
+              "StepUpFailed",
+              "AuthorizationUnavailable"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "nullable": true,
+            "enum": [
+              null
+            ]
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          }
+        }
+      },
+      "ObjectAssociation": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ASSIGNMENT",
+              "DELEGATION"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "parameterKey": {
+            "type": "string"
+          },
+          "actionId": {
+            "type": "string"
+          }
+        }
+      },
+      "RAuthorizationDecision": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AuthorizationDecision"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RResourceObjectResult": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceObjectResult"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResolvedFieldRule": {
+        "type": "object",
+        "properties": {
+          "fieldKey": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScopeCondition"
+            }
+          },
+          "access": {
+            "$ref": "#/components/schemas/FieldAccess"
+          }
+        }
+      },
+      "ResourceKey": {
+        "required": [
+          "applicationCode",
+          "domain",
+          "resourceCode"
+        ],
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "enum": [
+              "PLATFORM",
+              "TENANT"
+            ]
+          },
+          "applicationCode": {
+            "type": "string"
+          },
+          "resourceCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ResourceObjectInvocation": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/ResourceObjectQuery"
+          },
+          "verifyIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResourceObjectQuery": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "context": {
+            "$ref": "#/components/schemas/AuthorizationContext"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "ASSIGNMENT",
+              "DELEGATION",
+              "DIAGNOSE"
+            ]
+          },
+          "keyword": {
+            "type": "string"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tree": {
+            "type": "boolean"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "association": {
+            "$ref": "#/components/schemas/ObjectAssociation"
+          }
+        }
+      },
+      "ResourceObjectResult": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "$ref": "#/components/schemas/AuthorizationCandidatePage"
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RoleParameterDefinition": {
+        "required": [
+          "key",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "命名参数键，在当前版本内唯一"
+          },
+          "kind": {
+            "type": "string",
+            "description": "允许的绑定集合类型",
+            "enum": [
+              "DEPARTMENTS",
+              "OBJECTS"
+            ]
+          }
+        },
+        "description": "声明角色版本中的命名范围参数及其绑定类型"
+      },
+      "RoleRevisionRef": {
+        "required": [
+          "id",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "角色版本来源种类",
+            "enum": [
+              "SYSTEM",
+              "SHARED",
+              "PLATFORM_CUSTOM",
+              "TENANT_CUSTOM"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "角色版本 ID，不是角色定义 ID"
+          }
+        },
+        "description": "引用明确来源的不可变角色版本，服务端还须校验域、状态及可分配性"
+      },
+      "ScopeBinding": {
+        "required": [
+          "ids",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "部门或对象集合类型",
+            "enum": [
+              "DEPARTMENTS",
+              "OBJECTS"
+            ]
+          },
+          "ids": {
+            "type": "array",
+            "description": "字符串 ID 集合",
+            "items": {
+              "type": "string",
+              "description": "字符串 ID 集合"
+            }
+          }
+        },
+        "description": "命名范围参数的类型化值"
+      },
+      "ScopeCondition": {
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "boolean"
+          },
+          "objectIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ownerMemberId": {
+            "type": "string"
+          },
+          "departmentSets": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ScopeExpression": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "范围种类",
+            "enum": [
+              "ALL",
+              "SELF",
+              "MEMBER_DEPARTMENTS",
+              "MANAGED_DEPARTMENTS",
+              "OBJECT_SET"
+            ]
+          },
+          "parameterKey": {
+            "type": "string",
+            "description": "管理部门或对象集合的命名参数"
+          },
+          "includeDescendants": {
+            "type": "boolean",
+            "description": "部门范围是否包含下级"
+          }
+        },
+        "description": "操作范围表达式；资源能力、参数及归属需由服务端验证"
+      },
+      "Selection": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "description": "成员 ID 集合，默认空数组",
+            "items": {
+              "type": "string",
+              "description": "成员 ID 集合，默认空数组"
+            }
+          },
+          "departments": {
+            "type": "array",
+            "description": "部门集合，平台域必须为空",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentSelection"
+            }
+          }
+        },
+        "description": "当前域内的成员与部门选择"
+      },
+      "SignedResourceObjectRequest": {
+        "type": "object",
+        "properties": {
+          "payload": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

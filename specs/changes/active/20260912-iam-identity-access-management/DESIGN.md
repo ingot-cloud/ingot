@@ -264,3 +264,30 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 ## 2026-10-05 平台对象资源识别收紧（已批准）
 
 范围对象由操作实际关联的应用编码和资源编码定位适配器，不截取操作码或依赖关联操作顺序。同一参数关联全部操作必须在同一启用平台应用/资源内；元数据 SQL 核对资源与操作所属应用一致。多操作委派上限仍逐条取交集。候选、记录回显、诊断和对象存在性校验统一识别。无额外查询，无接口或 DDL 变更，详情见 [增量设计](./PLATFORM-OBJECT-RESOLUTION-REFINEMENT.md)。
+
+
+## 2026-10-05 通用资源扩展与分配升级
+
+用户已批准实施 [资源扩展增量](./RESOURCE-EXTENSION-REFINEMENT.md)，包含跨服务授权、平台独立字段策略及显式分配版本升级。以增量契约为准；不提前更新 current。
+
+
+## 2026-10-05 初始化工件整理
+
+用户已授权整理脚本，保持既有结构与授权语义；权威DDL合并、历史补丁归类及完整初始化生成见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md)。
+
+
+## 2026-10-05 平台角色字段权限（用户已批准）
+
+本轮替代平台独立字段策略，角色版本固化字段权限，按操作与来源范围正向合并。共享/租户保持原行为；实施与独立人工任务见 [ROLE-FIELD-AUTHORIZATION-REFINEMENT](./ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
+
+2026-10-05 用户批准测试阶段直接替换平台字段模型：删除迁移开关、旧平台独立策略及兼容契约，全部平台版本保存显式字段快照；租户保持原行为。执行及验收见[平台角色字段权限增量](ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
+
+
+## 2026-10-06 目录默认布局与重复初始化（用户已批准）
+
+正式种子 DIRECTORY 的 `view_path` 统一为 `layout.main`。完整 `ingot_iam.sql` 在创建前删除manifest内的目标表，仅删除阶段关闭外键检查，建表/种子阶段开启并在完成后恢复原会话设置。重复执行清空目标表，不含账号或业务授权，不是存量升级；原无DROP决定被替代。决策、回退和独立人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-目录布局与重复初始化已批准)。
+
+
+## 2026-10-06 初始化菜单补齐（用户已批准）
+
+全局账号加入平台治理的“平台管理”；开发者平台恢复独立应用 `platform:develop`，包含生成二维码、客户端管理、社交管理、业务ID管理。页面注册键与现有接口权限码保持，应用/资源归属显式声明，平台新建治理版本覆盖本域全部正式应用，租户不继承。实施及人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-全局账号与开发者平台初始化补齐已批准)。

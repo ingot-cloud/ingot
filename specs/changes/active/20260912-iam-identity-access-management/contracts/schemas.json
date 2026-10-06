@@ -272,6 +272,40 @@
         },
         "description" : "一次返回某应用的资源及操作树，供菜单选择操作，不走分页列表拼装"
       },
+      "ActionDecision" : {
+        "required" : [ "fields" ],
+        "type" : "object",
+        "properties" : {
+          "allowed" : {
+            "type" : "boolean"
+          },
+          "governed" : {
+            "type" : "boolean"
+          },
+          "scope" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeCondition"
+            }
+          },
+          "fields" : {
+            "$ref" : "#/components/schemas/FieldPolicyDecision"
+          }
+        }
+      },
+      "ActionDescriptor" : {
+        "required" : [ "code", "mode" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [ "READ_ONLY", "MUTATING" ]
+          }
+        }
+      },
       "ActionDraft" : {
         "required" : [ "code", "name", "resourceId" ],
         "type" : "object",
@@ -994,6 +1028,114 @@
         },
         "description" : "调整既有授权的版本范围和期限并保留来源校验"
       },
+      "AssignmentUpgradeInput" : {
+        "required" : [ "items", "targetRevisionRef" ],
+        "type" : "object",
+        "properties" : {
+          "targetRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "items" : {
+            "maxItems" : 100,
+            "minItems" : 0,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AssignmentUpgradeItem"
+            }
+          }
+        }
+      },
+      "AssignmentUpgradeItem" : {
+        "required" : [ "expectedVersion", "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "expectedVersion" : {
+            "type" : "string"
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            }
+          }
+        }
+      },
+      "AssignmentUpgradePreviewItem" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "subject" : {
+            "$ref" : "#/components/schemas/SubjectRef"
+          },
+          "previousRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            }
+          },
+          "before" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionGrant"
+            }
+          },
+          "after" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionGrant"
+            }
+          },
+          "allowed" : {
+            "type" : "boolean"
+          },
+          "issues" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "beforeFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              }
+            }
+          },
+          "afterFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              }
+            }
+          }
+        }
+      },
+      "AssignmentUpgradeResult" : {
+        "type" : "object",
+        "properties" : {
+          "targetRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AssignmentUpgradePreviewItem"
+            }
+          }
+        }
+      },
       "AudienceDraft" : {
         "required" : [ "groupIds", "kind" ],
         "type" : "object",
@@ -1226,6 +1368,30 @@
         "description" : "经认证选择的当前成员身份；不接受客户端直接指定权限域",
         "readOnly" : true
       },
+      "AuthorizationDecision" : {
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "context" : {
+            "$ref" : "#/components/schemas/AuthorizationContext"
+          },
+          "actions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ActionDecision"
+            }
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "AuthorizationOption" : {
         "required" : [ "id", "name" ],
         "type" : "object",
@@ -1274,6 +1440,32 @@
           },
           "selectable" : {
             "type" : "boolean"
+          },
+          "resourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              }
+            }
+          }
+        }
+      },
+      "AuthorizationRequest" : {
+        "required" : [ "actionCodes", "resource" ],
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "actionCodes" : {
+            "maxItems" : 100,
+            "minItems" : 0,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -1534,6 +1726,17 @@
           "summary" : {
             "type" : "string",
             "description" : "安全概括说明"
+          },
+          "resourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              },
+              "description" : "可披露固定版本字段快照；空引用表示历史安全默认"
+            },
+            "description" : "可披露固定版本字段快照；空引用表示历史安全默认"
           }
         },
         "description" : "只返回操作者可获知的授权来源，不能披露的标识省略并给出概括说明"
@@ -1581,8 +1784,8 @@
           "assignmentDurationMode" : {
             "type" : "string",
             "description" : "单次期限模式，省略按 LIMITED",
-            "enum" : [ "LIMITED", "UNLIMITED" ],
-            "default" : "LIMITED"
+            "default" : "LIMITED",
+            "enum" : [ "LIMITED", "UNLIMITED" ]
           }
         },
         "description" : "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -1831,6 +2034,17 @@
           },
           "usage" : {
             "$ref" : "#/components/schemas/UsageSummary"
+          },
+          "resourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              },
+              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+            },
+            "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
         },
         "description" : "返回角色固定版本的合成定义及受限使用统计，不将合成副本作为持久化来源"
@@ -2063,6 +2277,47 @@
         },
         "description" : "描述资源字段允许配置的可见性与编辑能力，不能代替对象级计算结果"
       },
+      "FieldPolicyDecision" : {
+        "type" : "object",
+        "properties" : {
+          "defaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            }
+          },
+          "ceilings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            }
+          },
+          "rules" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResolvedFieldRule"
+            }
+          },
+          "filterableFields" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "sortableFields" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "mergeMode" : {
+            "type" : "string",
+            "enum" : [ "RESTRICTIONS", "GRANTS" ]
+          }
+        }
+      },
       "FieldPolicyDraft" : {
         "required" : [ "defaultRevisionId", "rules" ],
         "type" : "object",
@@ -2187,6 +2442,20 @@
             "items" : {
               "$ref" : "#/components/schemas/GrantCatalogAction"
             }
+          },
+          "fieldCapabilities" : {
+            "type" : "array",
+            "description" : "目录与后端共同支持的字段能力",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldCapability"
+            }
+          },
+          "fieldDefaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            },
+            "description" : "后端安全默认字段权限"
           }
         },
         "description" : "授权选择目录中的启用资源，内嵌该资源全部启用操作"
@@ -2749,6 +3018,24 @@
           }
         },
         "description" : "整体更新菜单配置并重验本应用操作引用"
+      },
+      "ObjectAssociation" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "ASSIGNMENT", "DELEGATION" ]
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "parameterKey" : {
+            "type" : "string"
+          },
+          "actionId" : {
+            "type" : "string"
+          }
+        }
       },
       "ObjectCapability" : {
         "type" : "object",
@@ -3410,6 +3697,36 @@
           }
         }
       },
+      "PreviewAssignmentUpgradeResult" : {
+        "required" : [ "errors", "impactSummary", "valid", "version", "warnings" ],
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "string"
+          },
+          "valid" : {
+            "type" : "boolean"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "impactSummary" : {
+            "$ref" : "#/components/schemas/ImpactSummary"
+          },
+          "effectiveResult" : {
+            "$ref" : "#/components/schemas/AssignmentUpgradeResult"
+          }
+        }
+      },
       "PreviewEffectiveRole" : {
         "required" : [ "errors", "impactSummary", "valid", "version", "warnings" ],
         "type" : "object",
@@ -3527,6 +3844,36 @@
           },
           "effectiveResult" : {
             "$ref" : "#/components/schemas/ReferenceImpactPreview"
+          }
+        }
+      },
+      "PreviewRoleDefinitionDraft" : {
+        "required" : [ "errors", "impactSummary", "valid", "version", "warnings" ],
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "string"
+          },
+          "valid" : {
+            "type" : "boolean"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "impactSummary" : {
+            "$ref" : "#/components/schemas/ImpactSummary"
+          },
+          "effectiveResult" : {
+            "$ref" : "#/components/schemas/RoleDefinitionDraft"
           }
         }
       },
@@ -3658,6 +4005,23 @@
           }
         }
       },
+      "RAssignmentUpgradeResult" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AssignmentUpgradeResult"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RAuthorizationCandidatePage" : {
         "type" : "object",
         "properties" : {
@@ -3669,6 +4033,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/AuthorizationCandidatePage"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RAuthorizationDecision" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AuthorizationDecision"
           },
           "success" : {
             "type" : "boolean"
@@ -4163,6 +4544,23 @@
           }
         }
       },
+      "RPreviewAssignmentUpgradeResult" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PreviewAssignmentUpgradeResult"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RPreviewEffectiveRole" : {
         "type" : "object",
         "properties" : {
@@ -4231,6 +4629,23 @@
           }
         }
       },
+      "RPreviewRoleDefinitionDraft" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PreviewRoleDefinitionDraft"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RPreviewTenantPreviewResult" : {
         "type" : "object",
         "properties" : {
@@ -4259,6 +4674,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/PreviewUpgradePreview"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RResourceDescriptor" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ResourceDescriptor"
           },
           "success" : {
             "type" : "boolean"
@@ -4571,6 +5003,23 @@
           }
         }
       },
+      "RResourceObjectResult" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ResourceObjectResult"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RRoleGrantList" : {
         "type" : "object",
         "properties" : {
@@ -4639,6 +5088,63 @@
           }
         },
         "description" : "返回组或委派变更中允许披露的引用影响，隐藏对象不以零计数代替"
+      },
+      "ResolvedFieldRule" : {
+        "type" : "object",
+        "properties" : {
+          "fieldKey" : {
+            "type" : "string"
+          },
+          "scope" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeCondition"
+            }
+          },
+          "access" : {
+            "$ref" : "#/components/schemas/FieldAccess"
+          }
+        }
+      },
+      "ResourceDescriptor" : {
+        "required" : [ "actions", "defaults", "fields", "key", "readAction", "scopeCapabilities" ],
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionDescriptor"
+            }
+          },
+          "scopeCapabilities" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ALL", "SELF", "MEMBER_DEPARTMENTS", "MANAGED_DEPARTMENTS", "OBJECT_SET" ]
+            }
+          },
+          "fields" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldCapability"
+            }
+          },
+          "defaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            }
+          },
+          "readAction" : {
+            "type" : "string"
+          },
+          "hierarchical" : {
+            "type" : "boolean"
+          }
+        }
       },
       "ResourceDetailAccountRecord" : {
         "required" : [ "capabilities", "fieldAccess", "record", "version" ],
@@ -5131,6 +5637,94 @@
         },
         "description" : "声明应用内资源及其允许配置的范围和字段能力"
       },
+      "ResourceKey" : {
+        "required" : [ "applicationCode", "domain", "resourceCode" ],
+        "type" : "object",
+        "properties" : {
+          "domain" : {
+            "type" : "string",
+            "enum" : [ "PLATFORM", "TENANT" ]
+          },
+          "applicationCode" : {
+            "type" : "string"
+          },
+          "resourceCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResourceObjectInvocation" : {
+        "type" : "object",
+        "properties" : {
+          "query" : {
+            "$ref" : "#/components/schemas/ResourceObjectQuery"
+          },
+          "verifyIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ResourceObjectQuery" : {
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "context" : {
+            "$ref" : "#/components/schemas/AuthorizationContext"
+          },
+          "purpose" : {
+            "type" : "string",
+            "enum" : [ "ASSIGNMENT", "DELEGATION", "DIAGNOSE" ]
+          },
+          "keyword" : {
+            "type" : "string"
+          },
+          "ids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "allowedIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "tree" : {
+            "type" : "boolean"
+          },
+          "parentId" : {
+            "type" : "string"
+          },
+          "association" : {
+            "$ref" : "#/components/schemas/ObjectAssociation"
+          }
+        }
+      },
+      "ResourceObjectResult" : {
+        "type" : "object",
+        "properties" : {
+          "candidates" : {
+            "$ref" : "#/components/schemas/AuthorizationCandidatePage"
+          },
+          "exists" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "ResourceRecord" : {
         "required" : [ "applicationId", "code", "fieldCapabilities", "id", "name", "scopeCapabilities", "status" ],
         "type" : "object",
@@ -5268,6 +5862,17 @@
           },
           "metadataOverrides" : {
             "$ref" : "#/components/schemas/RoleMetadataOverrides"
+          },
+          "resourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              },
+              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+            },
+            "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
         },
         "description" : "提交待发布的角色定义内容，不含服务器分配的版本标识"
@@ -5396,6 +6001,27 @@
             "type" : "string",
             "description" : "操作启停；目录缺失时省略",
             "enum" : [ "ENABLED", "DISABLED" ]
+          },
+          "fieldCapabilities" : {
+            "type" : "array",
+            "description" : "资源字段能力",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldCapability"
+            }
+          },
+          "fieldDefaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            },
+            "description" : "资源安全默认值"
+          },
+          "fieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            },
+            "description" : "本版本资源字段快照；未声明字段不授予权限"
           }
         },
         "description" : "角色当前绑定权限，带操作、应用与资源展示内容"
@@ -5503,6 +6129,28 @@
             "items" : {
               "$ref" : "#/components/schemas/RoleDisplayDelta"
             }
+          },
+          "resourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              },
+              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+            },
+            "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+          },
+          "previousResourceFieldPermissions" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldAccess"
+              },
+              "description" : "相对上一版本的字段比较基线；仅版本历史读填充"
+            },
+            "description" : "相对上一版本的字段比较基线；仅版本历史读填充"
           }
         },
         "description" : "传输不可变角色版本及原始定义，不持久化租户合成后的完整副本"
@@ -5665,6 +6313,32 @@
         },
         "description" : "命名范围参数的类型化值"
       },
+      "ScopeCondition" : {
+        "type" : "object",
+        "properties" : {
+          "all" : {
+            "type" : "boolean"
+          },
+          "objectIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "ownerMemberId" : {
+            "type" : "string"
+          },
+          "departmentSets" : {
+            "type" : "array",
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        }
+      },
       "ScopeExpression" : {
         "required" : [ "kind" ],
         "type" : "object",
@@ -5721,6 +6395,21 @@
           }
         },
         "description" : "嵌在敏感写请求体内的身份确认，不单独作为验密接口响应"
+      },
+      "SignedResourceObjectRequest" : {
+        "type" : "object",
+        "properties" : {
+          "payload" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "signature" : {
+            "type" : "string"
+          }
+        }
       },
       "SubjectRef" : {
         "required" : [ "id", "type" ],

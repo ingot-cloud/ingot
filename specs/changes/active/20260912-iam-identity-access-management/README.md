@@ -119,3 +119,37 @@
 ## 2026-10-05 平台对象资源识别收紧
 
 用户已明确批准实施，需求、兼容与任务见 [PLATFORM-OBJECT-RESOLUTION-REFINEMENT](./PLATFORM-OBJECT-RESOLUTION-REFINEMENT.md)。根据真实应用和资源关联识别对象候选，覆盖分配、委派、诊断、回显及提交校验；主 change 保持 implementing。
+
+
+## 2026-10-05 通用资源扩展与分配升级
+
+用户已批准实施 [资源扩展增量](./RESOURCE-EXTENSION-REFINEMENT.md)，包含跨服务授权、平台独立字段策略及显式分配版本升级。以增量契约为准；不提前更新 current。
+
+本增量状态：validating，RE01–RE08 开发及自动化完成，RE09 人工验收待执行。主 change 保持 implementing，历史待办保留。部署与验收见 [RESOURCE-EXTENSION-VERIFICATION](./RESOURCE-EXTENSION-VERIFICATION.md)。
+
+
+## 2026-10-05 IAM SQL 整理
+
+用户已授权整理脚本，保持既有结构与授权语义；权威DDL合并、历史补丁归类及完整初始化生成见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md)。
+
+SQL01–SQL05开发及自动化验证完成，增量validating；实际环境导入未执行。001–006为新建库来源，原007–012归入migrations；完整文件生成57张表及最新正式目录，不含开发快照数据。
+
+
+## 2026-10-05 平台角色字段权限（用户已批准）
+
+本轮替代平台独立字段策略，角色版本固化字段权限，按操作与来源范围正向合并。共享/租户保持原行为；实施与独立人工任务见 [ROLE-FIELD-AUTHORIZATION-REFINEMENT](./ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
+
+
+2026-10-05：角色字段增量 RF01–RF07 开发、自动化及来源同步完成，增量 validating；RF08 用户人工/部署/性能待执行，主 change 仍 implementing。按 [新版资源验收清单](RESOURCE-EXTENSION-VERIFICATION.md) 执行，不能再用旧独立成员/组字段策略与 HIDDEN 优先步骤。新模型需先部署013/全部IAM/SDK/前端，并明确完成旧策略迁移后启用。
+
+2026-10-05：平台字段模型直接替换DC01–DC04开发/自动化完成（后端57+17+345，前端92+116，隔离数据库24+12），增量validating；人工RF08未执行，主change仍implementing。无需启用开关，已移除平台独立策略及012/013。
+
+
+## 2026-10-06 目录默认布局与重复初始化（用户已批准）
+
+正式种子 DIRECTORY 的 `view_path` 统一为 `layout.main`。完整 `ingot_iam.sql` 在创建前删除manifest内的目标表，仅删除阶段关闭外键检查，建表/种子阶段开启并在完成后恢复原会话设置。重复执行清空目标表，不含账号或业务授权，不是存量升级；原无DROP决定被替代。决策、回退和独立人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-目录布局与重复初始化已批准)。
+
+
+## 2026-10-06 初始化菜单补齐（用户已批准）
+
+全局账号加入平台治理的“平台管理”；开发者平台恢复独立应用 `platform:develop`，包含生成二维码、客户端管理、社交管理、业务ID管理。页面注册键与现有接口权限码保持，应用/资源归属显式声明，平台新建治理版本覆盖本域全部正式应用，租户不继承。实施及人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-全局账号与开发者平台初始化补齐已批准)。

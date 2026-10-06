@@ -3813,5 +3813,193 @@
         }
       }
     ]
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/preview",
+    "method": "post",
+    "operationId": "platformPreviewAssignmentUpgrade",
+    "summary": "预览分配版本升级",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "AssignmentUpgradeInput",
+    "response": "RPreviewAssignmentUpgradeResult",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade",
+    "method": "post",
+    "operationId": "platformAssignmentUpgrade",
+    "summary": "升级分配版本",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "AssignmentUpgradeInput",
+    "response": "RAssignmentUpgradeResult",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "example": "assignment-upgrade"
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/role-candidates",
+    "method": "get",
+    "operationId": "platformAssignmentUpgradeRoles",
+    "summary": "升级目标角色版本候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RAuthorizationRoleCandidatePage",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "assignmentId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "roleId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/assignments/upgrade/candidates",
+    "method": "get",
+    "operationId": "platformAssignmentUpgradeCandidates",
+    "summary": "升级版本与对象候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RAuthorizationCandidatePage",
+    "execution": "独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      {
+        "name": "assignmentId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "keyword",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "ids",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ROLE_REVISION",
+            "OBJECT"
+          ]
+        }
+      },
+      {
+        "name": "revisionId",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "parameterKey",
+        "schema": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "tree",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "parentId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/preview",
+    "method": "post",
+    "operationId": "platformPreviewRoleCreate",
+    "summary": "预览平台角色创建与字段权限",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:create",
+    "request": "RoleCreateInput",
+    "response": "RPreviewRoleDefinitionDraft",
+    "execution": "角色字段仅平台自定义；注册资源能力与目录交集；只读预览，发布重验",
+    "implemented": true
   }
 ]
