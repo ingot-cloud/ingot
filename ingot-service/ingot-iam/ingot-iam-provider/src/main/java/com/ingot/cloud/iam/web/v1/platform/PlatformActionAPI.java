@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import java.util.List;
 
 import com.ingot.cloud.iam.catalog.CatalogService;
@@ -37,6 +40,7 @@ public class PlatformActionAPI implements RShortcuts {
      */
     @Operation(summary = "解析操作")
     @PostMapping("/lookup")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
     public R<List<ActionLookupRecord>> lookup(@Valid @RequestBody ActionLookupInput input) {
         return ok(catalog.lookupActions(input));
     }

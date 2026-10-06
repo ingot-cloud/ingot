@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,7 +15,6 @@ import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.enums.CommonStatusEnum;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
-import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
@@ -60,6 +62,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "平台字典")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_READ)
     public R<?> list(@RequestParam(defaultValue = VIEW_PAGE) String view,
                      @RequestParam(required = false) String code,
                      Page<PlatformDict> page, DictQueryDTO query) {
@@ -88,6 +91,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "创建平台字典")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_CREATE)
     public R<Void> create(@Validated(Group.Create.class) @RequestBody PlatformDict params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DICTIONARY_CREATE);
         dictionaries.create(params);
@@ -103,6 +107,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "更新平台字典")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_UPDATE)
     public R<Void> update(@PathVariable Long id, @Validated(Group.Update.class) @RequestBody PlatformDict params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DICTIONARY_UPDATE);
         params.setId(id);
@@ -119,6 +124,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "切换字典状态")
     @PatchMapping("/{id}/status/{status}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_UPDATE)
     public R<Void> changeStatus(@PathVariable Long id, @PathVariable CommonStatusEnum status) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DICTIONARY_UPDATE);
         dictionaries.changeStatus(id, status);
@@ -133,6 +139,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "批量排序字典")
     @PutMapping("/sort")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_UPDATE)
     public R<Void> sort(@RequestBody List<DictSortDTO> items) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DICTIONARY_UPDATE);
         dictionaries.batchSort(items);
@@ -147,6 +154,7 @@ public class PlatformDictionaryAPI implements RShortcuts {
      */
     @Operation(summary = "删除平台字典")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DICTIONARY_DELETE)
     public R<Void> remove(@PathVariable Long id) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_DICTIONARY_DELETE);
         dictionaries.delete(id);

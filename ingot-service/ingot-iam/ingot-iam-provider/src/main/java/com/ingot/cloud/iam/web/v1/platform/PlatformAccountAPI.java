@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.account.AccountService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AccountCreateInput;
@@ -52,6 +55,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "全局账号列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_READ)
     public R<PageResponse<ResourceDetail<AccountRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
@@ -66,6 +70,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "创建全局账号")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_CREATE)
     @InCryptoHybridContext
     @InEncrypt
     public R<AccountSecret> create(@Valid @RequestBody AccountCreateInput input) {
@@ -80,6 +85,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "精确查找全局账号")
     @PostMapping("/lookup")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_LOOKUP)
     public R<ResourceDetail<AccountRecord>> lookup(@Valid @RequestBody AccountLookupInput input) {
         return ok(accounts.lookup(input));
     }
@@ -92,6 +98,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "全局账号详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_READ)
     public R<ResourceDetail<AccountRecord>> get(@PathVariable String id) {
         return ok(accounts.get(id));
     }
@@ -105,6 +112,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "更新全局账号资料")
     @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE)
     public R<ResourceDetail<AccountRecord>> update(@PathVariable String id,
                                                    @Valid @RequestBody AccountUpdateInput input) {
         return ok(accounts.update(id, input));
@@ -119,6 +127,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "删除全局账号")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_DELETE)
     public R<CreatedResource> delete(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(accounts.delete(id, input));
     }
@@ -132,6 +141,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "启用全局账号")
     @PostMapping("/{id}/enable")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_ENABLE)
     public R<CreatedResource> enable(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(accounts.enable(id, input));
     }
@@ -145,6 +155,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "停用全局账号")
     @PostMapping("/{id}/disable")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_DISABLE)
     public R<CreatedResource> disable(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(accounts.disable(id, input));
     }
@@ -158,6 +169,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "锁定全局账号")
     @PostMapping("/{id}/lock")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_LOCK)
     public R<CreatedResource> lock(@PathVariable String id, @Valid @RequestBody AccountLockInput input) {
         return ok(accounts.lock(id, input));
     }
@@ -171,6 +183,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "解锁全局账号")
     @PostMapping("/{id}/unlock")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_UNLOCK)
     public R<CreatedResource> unlock(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(accounts.unlock(id, input));
     }
@@ -184,6 +197,7 @@ public class PlatformAccountAPI implements RShortcuts {
      */
     @Operation(summary = "重置全局账号密码")
     @PostMapping("/{id}/reset-password")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACCOUNT_RESET_PASSWORD)
     @InCryptoHybridContext
     @InEncrypt
     public R<AccountSecret> resetPassword(@PathVariable String id, @Valid @RequestBody VersionInput input) {

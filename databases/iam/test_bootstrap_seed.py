@@ -13,6 +13,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+from tools.iam.generate_bootstrap import ADMIN_ROLE_CODE
 from tools.iam.database_sources import read_source, schema_files, sources
 
 
@@ -185,7 +186,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(36, self.count("iam_resource"))
         self.assertEqual(138, self.count("iam_action"))
         self.assertEqual(30, self.count("iam_menu"))
-        self.assertEqual('MASKED', self.sql("""
+        self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
                 CONCAT('$."',resource.id,'".phone.visibility')))
             FROM iam_role_revision revision JOIN iam_role_definition role ON role.id=revision.role_id
@@ -254,7 +255,7 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_governance_grants_cover_own_domain_only(self):
         self.bootstrap()
-        for role, domain, expected in (("platform-governance", "PLATFORM", 92),
+        for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 92),
                                        ("tenant-governance", "TENANT", 46)):
             covered = self.sql(f"""
                 SELECT COUNT(*) FROM iam_role_grant grant_row

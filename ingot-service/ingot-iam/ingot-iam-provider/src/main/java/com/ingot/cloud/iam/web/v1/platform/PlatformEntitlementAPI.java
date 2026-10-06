@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.catalog.EntitlementService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.EntitlementPreviewResult;
@@ -46,6 +49,7 @@ public class PlatformEntitlementAPI implements RShortcuts {
      */
     @Operation(summary = "组织开通")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ENTITLEMENT_READ)
     public R<PageResponse<ResourceDetail<EntitlementRecord>>> list(
             @PathVariable String tenantId,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -62,6 +66,7 @@ public class PlatformEntitlementAPI implements RShortcuts {
      */
     @Operation(summary = "替换组织开通")
     @PutMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ENTITLEMENT_UPDATE)
     public R<PageResponse<ResourceDetail<EntitlementRecord>>> replace(
             @PathVariable String tenantId, @Valid @RequestBody EntitlementReplaceInput input) {
         return ok(entitlements.replace(tenantId, input));
@@ -76,6 +81,7 @@ public class PlatformEntitlementAPI implements RShortcuts {
      */
     @Operation(summary = "预览开通影响")
     @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ENTITLEMENT_PREVIEW)
     public R<Preview<EntitlementPreviewResult>> preview(
             @PathVariable String tenantId, @Valid @RequestBody EntitlementReplaceInput input) {
         return ok(entitlements.preview(tenantId, input));

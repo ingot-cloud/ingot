@@ -19,6 +19,19 @@ import org.springframework.security.core.GrantedAuthority;
  */
 public class InSecurityExpression {
 
+    private final org.springframework.beans.factory.ObjectProvider<TrustedAuthoritySource> trusted;
+
+    /** 独立非 IAM 调用保留既有表达式行为。 */
+    public InSecurityExpression() { this.trusted = null; }
+
+    /**
+     * 通过构造注入取得当前服务的在线授权端口，IAM 身份禁止令牌权限兜底。
+     * @param trusted 服务本地或远程实时授权端口
+     */
+    public InSecurityExpression(org.springframework.beans.factory.ObjectProvider<TrustedAuthoritySource> trusted) {
+        this.trusted = trusted;
+    }
+
     /** Ant 子树通配后缀，例如 {@code a:**} 匹配 a 命名空间下全部权限。 */
     private static final String ANT_SUBTREE_SUFFIX = ":**";
 
@@ -95,6 +108,19 @@ public class InSecurityExpression {
             return false;
         }
 
+        var user = SecurityAuthContext.getUser(authentication);
+        if (prefix != null && user != null && user.getAuthorizationContext() != null) {
+            var source = trusted == null ? null : trusted.getIfAvailable();
+            if (source == null) throw new org.springframework.security.authorization.AuthorizationDeniedException(
+                    "IAM online authorization is unavailable");
+            Set<String> online = source.currentAuthorities();
+            return authorities.stream().filter(StrUtil::isNotEmpty)
+                    .map(value -> value.startsWith(prefix) ? value.substring(prefix.length()) : value)
+                    .filter(value -> user.getAuthorizationContext().domain() ==
+                            com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM
+                            || !RoleConstants.ROLE_ADMIN_CODE.equals(value))
+                    .anyMatch(online::contains);
+        }
         Set<String> userAuth = authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)

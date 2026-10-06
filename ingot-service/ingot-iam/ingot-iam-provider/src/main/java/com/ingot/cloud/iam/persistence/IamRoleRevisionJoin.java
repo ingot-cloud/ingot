@@ -31,6 +31,9 @@ public class IamRoleRevisionJoin {
      */
     private String name;
 
+    /** 可信角色定义编码，不接受客户端角色标记。 */
+    private String code;
+
     /**
      * 角色版本种类。
      */

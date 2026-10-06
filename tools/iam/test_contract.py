@@ -132,7 +132,7 @@ class ContractTest(unittest.TestCase):
         self.assertIn('phone', tenant_filters)
         self.assertIn('email', tenant_filters)
         platform_filters = {item['name'] for item in self.by_id['platformListMembers']['query']}
-        self.assertEqual({'page', 'pageSize'}, platform_filters)
+        self.assertEqual({'page', 'pageSize', 'name', 'status', 'ids'}, platform_filters)
         tenant_list = {item['name']: item for item in self.by_id['platformListTenants']['query']}
         self.assertEqual({'page', 'pageSize', 'name', 'status'}, set(tenant_list))
         self.assertEqual(['ENABLED', 'DISABLED'], tenant_list['status']['schema']['enum'])

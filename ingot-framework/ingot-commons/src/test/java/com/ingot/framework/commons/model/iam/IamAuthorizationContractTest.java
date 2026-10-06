@@ -50,6 +50,30 @@ class IamAuthorizationContractTest {
     }
 
     @Test
+    void memberBoundRoleFixtureUsesVersionSummaryWithoutAssignmentStatus() throws Exception {
+        try (InputStream input = getClass().getResourceAsStream("/iam/member-bound-roles.json")) {
+            var tree = mapper.readTree(input).path(R.DATA).path("items").get(0);
+            var role = mapper.treeToValue(tree, MemberBoundRole.class);
+            assertEquals("31", role.roleRevisionRef().id());
+            assertEquals(List.of(SubjectType.MEMBER, SubjectType.GROUP), role.sourceTypes());
+            assertFalse(tree.has("status"));
+            assertFalse(tree.has("groupId"));
+        }
+    }
+
+    @Test
+    void platformMemberEditKeepsExplicitNullUnknownKeysAndTypedRoleDelta() throws Exception {
+        var input = mapper.readValue("{\"expectedVersion\":\"2\",\"phone\":null,\"unknown\":null,"
+                + "\"roleChanges\":{\"additions\":[],\"updates\":[{\"assignmentId\":\"81\",\"expectedVersion\":\"3\",\"scopeBindings\":{}}],\"removals\":[]}}",
+                PlatformMemberEditInput.class);
+        assertTrue(input.profile().suppliedFields().contains("phone"));
+        assertTrue(input.profile().suppliedFields().contains("unknown"));
+        assertFalse(input.profile().suppliedFields().contains("roleChanges"));
+        assertEquals("81", input.roleChanges().updates().getFirst().assignmentId());
+        assertFalse(mapper.valueToTree(input).has("suppliedFields"));
+    }
+
+    @Test
     void examplesPassNestedBeanValidationAndRetainStringIds() throws Exception {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Object value : List.of(fixture("role-shared", RoleRevision.class),
@@ -67,6 +91,27 @@ class IamAuthorizationContractTest {
             RoleRevision role = fixture("role-shared", RoleRevision.class);
             assertTrue(mapper.valueToTree(role).get("id").isTextual());
             assertTrue(mapper.valueToTree(role).get("revision").isTextual());
+        }
+    }
+
+    @Test
+    void platformMemberContextEnvelopeKeepsFieldRulesWithoutOriginalValues() throws Exception {
+        try (InputStream input = getClass().getResourceAsStream("/iam/platform-member-context.json");
+                ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            assertNotNull(input);
+            var envelope = mapper.readTree(input);
+            PlatformMemberContext context = mapper.treeToValue(envelope.path(R.DATA), PlatformMemberContext.class);
+            R<PlatformMemberContext> response = R.ok(context);
+            assertEquals(response.getCode(), envelope.path(R.CODE).asText());
+            assertEquals(response.isSuccess(), envelope.path("success").asBoolean());
+            assertTrue(factory.getValidator().validate(context).isEmpty());
+            assertEquals(FieldVisibility.HIDDEN, context.listFieldVisibility().get(MemberFieldKey.VALUE_EMAIL));
+            assertFalse(context.createFieldAccess().get(MemberFieldKey.VALUE_DISPLAY_NAME).editable());
+            assertThrows(UnsupportedOperationException.class, () -> context.createFieldAccess().clear());
+            var tree = mapper.valueToTree(response).path("data");
+            assertTrue(tree.path("canSearchDisplayName").isBoolean());
+            assertFalse(tree.has(MemberFieldKey.VALUE_PHONE));
+            assertFalse(tree.has(MemberFieldKey.VALUE_EMAIL));
         }
     }
 
@@ -228,7 +273,7 @@ class IamAuthorizationContractTest {
                 RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
                 RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
                 FieldRule.class, DirectoryRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
-                CurrentCapabilities.class, MemberRecord.class, TenantRecord.class, DepartmentRecord.class,
+                CurrentCapabilities.class, MemberRecord.class, PlatformMemberContext.class, TenantRecord.class, DepartmentRecord.class,
                 GroupRecord.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
                 EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
                 DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
@@ -237,7 +282,7 @@ class IamAuthorizationContractTest {
                 GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
                 RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
-                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class,
+                UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
                 MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
                 TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
                 DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class, ResourceDraft.class,
@@ -268,6 +313,9 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberBoundRole>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PlatformMemberEditPreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PlatformMemberContext>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MemberRecord>>>() {
                     }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MemberRecord>>>>() {

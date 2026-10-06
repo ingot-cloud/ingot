@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import java.util.List;
 import com.ingot.cloud.iam.assignment.PlatformAuthorizationEditor;
 import com.ingot.cloud.iam.support.IamPages;
@@ -36,6 +39,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 可配置候选
      */
     @GetMapping("/assignments/candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     @Operation(summary="角色分配候选")
     public R<AuthorizationCandidatePage> assignments(@RequestParam AuthorizationCandidateKind kind,
             @RequestParam(required=false) String delegationGrantId, @RequestParam(required=false) String revisionId,
@@ -58,6 +62,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 当前层最小角色树分页
      */
     @GetMapping("/assignments/role-candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     @Operation(summary = "角色分配两级树候选")
     public R<AuthorizationRoleCandidatePage> roleCandidates(
             @RequestParam(required = false) String delegationGrantId,
@@ -82,6 +87,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 候选
      */
     @GetMapping("/delegations/candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     @Operation(summary="委派编辑候选")
     public R<AuthorizationCandidatePage> delegations(@RequestParam AuthorizationCandidateKind kind,
             @RequestParam(required=false) String actionId, @RequestParam(required=false) String keyword,
@@ -102,6 +108,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 已选候选关系页
      */
     @GetMapping("/delegations/{id}/selected-candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     @Operation(summary="委派已选实体关联分页")
     public R<AuthorizationCandidatePage> selected(@PathVariable String id,
             @RequestParam AuthorizationCandidateKind kind, @RequestParam(required=false) String actionId,
@@ -119,6 +126,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 分页角色树节点
      */
     @GetMapping("/delegations/role-candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     @Operation(summary="委派管理两级角色树候选")
     public R<AuthorizationRoleCandidatePage> delegationRoleCandidates(
             @RequestParam(required=false) String roleId, @RequestParam(required=false) String keyword,
@@ -138,6 +146,7 @@ public class PlatformAuthorizationEditorAPI implements RShortcuts {
      * @return 候选
      */
     @GetMapping("/authorization/diagnose/candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_AUTHORIZATION_DIAGNOSE)
     @Operation(summary="权限诊断候选")
     public R<AuthorizationCandidatePage> diagnose(@RequestParam AuthorizationCandidateKind kind,
             @RequestParam(required=false) String actionId, @RequestParam(required=false) String applicationId,

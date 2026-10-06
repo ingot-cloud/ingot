@@ -15,6 +15,13 @@ import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ObjectScopeClause;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.extension.RoleFieldPermissionService;
+import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.FieldMergeMode;
+import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
+import com.ingot.framework.commons.model.iam.extension.ResolvedFieldRule;
+import com.ingot.framework.commons.model.iam.extension.ScopeCondition;
 import com.ingot.cloud.iam.identity.ActiveIdentityService;
 import com.ingot.cloud.iam.identity.CurrentIdentityService;
 import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
@@ -71,6 +78,7 @@ class AccountServiceTest {
     private AccountService service;
     private IamActionAuthorizer authorizer;
     private ResourceAccess scopes;
+    private RoleFieldPermissionService memberFields;
 
     /** 整个类共用一个库与一份 MyBatis 配置，避免逐用例重建导致内存堆积。 */
     @BeforeAll
@@ -116,7 +124,7 @@ class AccountServiceTest {
         var identities = new ActiveIdentityService(IamMybatisTestAccess.identity(dataSource));
         authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         IamAccess access = new IamAccess(new CurrentIdentityService(identities),
-                (actor, action) -> authorizer.admit(actor, action), new AtomicLong(9000)::incrementAndGet);
+                (actor, action) -> authorizer.admit(actor, action), new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         scopes = mock(ResourceAccess.class);
         when(scopes.objects(any(), any())).thenReturn(ObjectScope.all());
         doAnswer(invocation -> null).when(scopes).requireVisibleObject(any(), any(), anyLong());
@@ -125,6 +133,10 @@ class AccountServiceTest {
                 List.of(IamAction.VALUE_PLATFORM_ACCOUNT_UPDATE, IamAction.VALUE_PLATFORM_ACCOUNT_DELETE),
                 List.of(), Map.of(), "1", Instant.now().plusSeconds(60)));
         when(scopes.targetAllowed(any(), any(), any(), any())).thenReturn(true);
+        memberFields = mock(RoleFieldPermissionService.class);
+        var full = new FieldAccess(FieldVisibility.FULL, true);
+        var fields = Map.of("phone", full, "email", full);
+        when(memberFields.evaluate(any(), any(), any())).thenReturn(new FieldPolicyDecision(fields, fields, List.of()));
         service = new AccountService(access, scopes, new ObjectCapabilities(evaluator, scopes),
                 IamMybatisTestAccess.accountQueries(dataSource),
                 IamMybatisTestAccess.accountWrites(dataSource, () -> 99L), IamMybatisTestAccess.accounts(dataSource),
@@ -132,7 +144,7 @@ class AccountServiceTest {
                 mock(RegisterUserUseCase.class), mock(ManageAccountStatusUseCase.class),
                 mock(LockAccountUseCase.class), mock(UnlockAccountUseCase.class),
                 mock(ChangePasswordUseCase.class), mock(InitialPasswordService.class),
-                new DataSourceTransactionManager(dataSource));
+                new DataSourceTransactionManager(dataSource), memberFields);
         authenticate();
     }
 
@@ -183,6 +195,37 @@ class AccountServiceTest {
                 AuthorizationDomain.PLATFORM));
         assertEquals("2", result.record().id());
         assertEquals("bob", result.record().username());
+    }
+
+    @Test
+    void platformCreateLookupMasksAndHidesContactsBeforeReturningThem() {
+        var hidden = new FieldAccess(FieldVisibility.HIDDEN, false);
+        var full = new FieldAccess(FieldVisibility.FULL, true);
+        var masked = new FieldAccess(FieldVisibility.MASKED, false);
+        var scope = List.of(new ScopeCondition(true, List.of(), null, List.of()));
+        when(memberFields.evaluate(any(), any(), any())).thenReturn(new FieldPolicyDecision(
+                Map.of("phone", hidden, "email", hidden), Map.of("phone", full, "email", full),
+                List.of(new ResolvedFieldRule("phone", scope, masked), new ResolvedFieldRule("email", scope, hidden)),
+                Set.of(), Set.of(), FieldMergeMode.GRANTS));
+        jdbc.update("UPDATE iam_account SET phone='13900000002',email='bob@example.com' WHERE id=2");
+        var result = service.lookup(new AccountLookupInput(AccountLookupPurpose.MEMBER_CREATE, "bob", null, null,
+                AuthorizationDomain.PLATFORM));
+        assertEquals("***", result.record().phone());
+        assertEquals(null, result.record().email());
+        assertEquals(masked, result.fieldAccess().get("phone"));
+        assertEquals(hidden, result.fieldAccess().get("email"));
+    }
+
+    @Test
+    void platformCreateLookupCannotBeUsedWithOnlyAccountLookupPermission() {
+        authorizer = (actor, action) -> {
+            if (action == IamAction.PLATFORM_MEMBER_CREATE) throw new BizException(IamReasonCode.ACTION_DENIED);
+            return new IamActionAuthorizer.Admission(true);
+        };
+        var failure = assertThrows(BizException.class, () -> service.lookup(new AccountLookupInput(
+                AccountLookupPurpose.MEMBER_CREATE, "bob", null, null, AuthorizationDomain.PLATFORM)));
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(), failure.getCode());
+        verify(memberFields, never()).evaluate(any(), any(), any());
     }
 
     @Test

@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author jy
  * @since 1.0.0
- * @param roleId 角色定义 ID，用于重验所选版本仍是最新发布版本
+ * @param roleId 角色定义 ID，用于重验所选固定版本仍属于该角色且可分配
  * @param roleRevisionRef 所选固定版本
  * @param scopeBindings 范围参数绑定
  * @param validFrom 生效瞬时，可空表示创建时立即生效

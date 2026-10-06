@@ -7,6 +7,7 @@ IAM操作由 contracts/routes.json 推导，开发者补充目录对齐现有Aut
 """
 import argparse
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,19 +31,23 @@ DEVELOPER_APPLICATION = 'platform:develop'
 DEVELOPER_PLATFORM_RESOURCES = {'id-allocation', 'social-config'}
 
 APPLICATIONS = {
-    'iam-platform': {'id': APPLICATION_BASE + 1, 'domain': 'PLATFORM', 'name': '平台治理',
+    'iam-platform': {'id': APPLICATION_BASE + 1, 'domain': 'PLATFORM', 'name': '平台治理', 'icon': 'ep:monitor',
                      'description': '平台域身份、目录与授权治理', 'sort_order': 1, 'baseline': False},
-    'iam-tenant': {'id': APPLICATION_BASE + 2, 'domain': 'TENANT', 'name': '组织治理',
+    'iam-tenant': {'id': APPLICATION_BASE + 2, 'domain': 'TENANT', 'name': '组织治理', 'icon': 'ep:office-building',
                    'description': '组织域成员、部门与授权治理', 'sort_order': 1, 'baseline': True},
-    DEVELOPER_APPLICATION: {'id': APPLICATION_BASE + 3, 'domain': 'PLATFORM', 'name': '开发者平台',
+    DEVELOPER_APPLICATION: {'id': APPLICATION_BASE + 3, 'domain': 'PLATFORM', 'name': '开发者平台', 'icon': 'ep:cpu',
                             'description': '二维码、OAuth2客户端、社交配置与业务ID管理',
                             'sort_order': 2, 'baseline': False},
 }
 
 # 治理角色：每个域恰好一个启用的 SYSTEM 角色，组织初始化依赖这一唯一性。
+ROLE_CONSTANTS = (ROOT / 'ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/constants/RoleConstants.java').read_text()
+ROLE_PREFIX = re.search(r'PLATFORM_ROLE_CODE_PREFIX\s*=\s*"([^"]+)"', ROLE_CONSTANTS).group(1)
+ADMIN_ROLE_CODE = ROLE_PREFIX + re.search(r'ROLE_ADMIN_CODE\s*=\s*PLATFORM_ROLE_CODE_PREFIX\s*\+\s*"([^"]+)"', ROLE_CONSTANTS).group(1)
+
 GOVERNANCE_ROLES = {
-    'PLATFORM': {'id': ROLE_BASE + 1, 'revision_id': REVISION_BASE + 1, 'code': 'platform-governance',
-                 'name': '平台治理', 'description': '平台域全部治理操作', 'application': 'iam-platform'},
+    'PLATFORM': {'id': ROLE_BASE + 1, 'revision_id': REVISION_BASE + 1, 'code': ADMIN_ROLE_CODE,
+                 'name': '超级管理员', 'description': '系统平台超级管理员，受控直接分配并覆盖新增平台操作', 'application': 'iam-platform'},
     'TENANT': {'id': ROLE_BASE + 2, 'revision_id': REVISION_BASE + 2, 'code': 'tenant-governance',
                'name': '组织治理', 'description': '组织所有者的全部治理操作', 'application': 'iam-tenant'},
 }
@@ -306,9 +311,9 @@ def build(check=False):
     for code, meta in APPLICATIONS.items():
         lines.append(insert(
             'iam_application',
-            ['id', 'code', 'domain', 'name', 'description', 'sort_order', 'baseline', 'enabled'],
+            ['id', 'code', 'domain', 'name', 'icon', 'description', 'sort_order', 'baseline', 'enabled'],
             [str(meta['id']), quote(code), quote(meta['domain']), quote(meta['name']),
-             quote(meta['description']), str(meta['sort_order']),
+             quote(meta['icon']), quote(meta['description']), str(meta['sort_order']),
              'TRUE' if meta['baseline'] else 'FALSE', 'TRUE'],
             f"code = {quote(code)}"))
 
@@ -420,8 +425,7 @@ def build(check=False):
             ['id', 'role_id', 'kind', 'revision', 'base_revision_id', 'metadata_overrides', 'resource_field_permissions'],
             [str(role['revision_id']), 'role.id', quote('SYSTEM'), '1', 'NULL', json_literal({}),
              "(SELECT JSON_OBJECT(CAST(resource.id AS CHAR), " + json_literal({
-                 field['key']: {'visibility': 'MASKED' if field['key'] in ('phone', 'email') else 'FULL',
-                                'editable': field['key'] not in ('phone', 'email')}
+                 field['key']: {'visibility': 'FULL', 'editable': field['editable']}
                  for field in MEMBER_FIELDS}) + ") FROM iam_resource resource JOIN iam_application app ON app.id=resource.application_id WHERE app.code='iam-platform' AND resource.code='member')"
              if domain == 'PLATFORM' else json_literal({})],
             'role_id = role.id AND revision = 1',

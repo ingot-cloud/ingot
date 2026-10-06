@@ -178,4 +178,20 @@ public class AuthorizationEvaluationRepository {
                 entitlements.entitlementForMember(tenantId, applicationId, memberId, AudienceKind.ALL);
         return row == null ? new AuthorizationEvalRows.Entitlement(0, null) : row;
     }
+
+    /**
+     * 查询平台系统超管有效直接来源；非平台身份没有超管资格。
+     * @param memberId 可信平台成员标识
+     * @return 实时来源
+     */
+    public List<com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows.Assignment> platformAdministrators(
+            String memberId) {
+        return assignments.platformAdministratorAssignments(new BigInteger(memberId),
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
+    }
+
+    /** 全部启用的平台操作。 @return 一次批量加载的目录 */
+    public List<AuthorizationEvalRows.IndexedAction> enabledPlatformActions() {
+        return actions.enabledActions(AuthorizationDomain.PLATFORM);
+    }
 }

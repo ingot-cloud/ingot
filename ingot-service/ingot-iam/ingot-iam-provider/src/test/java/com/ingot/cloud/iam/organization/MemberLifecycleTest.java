@@ -57,7 +57,7 @@ class MemberLifecycleTest {
                 new ActiveIdentityService(com.ingot.cloud.iam.persistence.IamMybatisTestAccess.identity(dataSource)),
                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.members(dataSource),
                 com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource),
-                new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()));
+                new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()), org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
     }
 
     @Test

@@ -87,7 +87,7 @@ class TenantQueryServiceTest {
         var identities = new ActiveIdentityService(IamMybatisTestAccess.identity(dataSource));
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         var access = new IamAccess(new CurrentIdentityService(identities), authorizer,
-                new AtomicLong(9000)::incrementAndGet);
+                new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         service = new TenantQueryService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> invalidations.incrementAndGet()),
                 IamMybatisTestAccess.tenants(dataSource), IamMybatisTestAccess.assignments(dataSource),

@@ -39,6 +39,7 @@ class PlatformMemberContactsTest {
     private MemberQueryService service;
     private RoleFieldPermissionService policies;
     private IamAuditWriter audits;
+    private AssignmentService assignments;
 
     @BeforeEach
     void database() {
@@ -62,8 +63,9 @@ class PlatformMemberContactsTest {
         policies = mock(RoleFieldPermissionService.class);
         policy(new FieldAccess(FieldVisibility.FULL, true));
         audits = mock(IamAuditWriter.class);
+        assignments = mock(AssignmentService.class);
         service = new MemberQueryService(access, mock(ResourceAccess.class), capabilities, fields, audits,
-                IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class), mock(AssignmentService.class),
+                IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class), assignments,
                 mock(GroupService.class), new DataSourceTransactionManager(source), policies);
     }
 
@@ -115,6 +117,39 @@ class PlatformMemberContactsTest {
         assertThrows(IllegalStateException.class, () -> service.patch(AuthorizationDomain.PLATFORM, "1001",
                 new MemberProfileInput("0", null, null, "13900000002", null)));
         assertEquals(0L, jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1001", Long.class));
+        assertEquals("13900000001", jdbc.queryForObject("SELECT phone FROM iam_platform_member WHERE id=1001", String.class));
+    }
+
+    @Test
+    void memberAndRoleDeltasCommitTogetherAndFailureRollsBackBoth() {
+        jdbc.execute("CREATE TABLE role_delta(id BIGINT PRIMARY KEY)");
+        var delta = new MemberRoleChanges(List.of(new MemberRoleAssignmentDraft("7",
+                new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "8"), Map.of(), null, null)), List.of(), List.of());
+        var input = new PlatformMemberEditInput("0", null, null, "13900000002", null, delta, java.util.Set.of("phone"));
+        doAnswer(call -> { jdbc.update("INSERT INTO role_delta VALUES(1)");
+            throw new BizException(IamReasonCode.REVISION_CONFLICT); }).when(assignments).applyMemberRoleChanges("1001", delta);
+        assertThrows(BizException.class, () -> service.patchPlatform("1001", input));
+        assertEquals("13900000001", jdbc.queryForObject("SELECT phone FROM iam_platform_member WHERE id=1001", String.class));
+        assertEquals(0L, jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1001", Long.class));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM role_delta", Integer.class));
+        doAnswer(call -> { jdbc.update("INSERT INTO role_delta VALUES(1)"); return null; })
+                .when(assignments).applyMemberRoleChanges("1001", delta);
+        assertEquals("1", service.patchPlatform("1001", input).version());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM role_delta", Integer.class));
+    }
+
+    @Test
+    void roleOnlyEditDoesNotRequireAnyWritableProfileFieldAndPreviewDoesNotWrite() {
+        policy(new FieldAccess(FieldVisibility.HIDDEN, false));
+        var delta = new MemberRoleChanges(List.of(), List.of(), List.of(new MemberRoleRemoval("81", "2")));
+        when(assignments.previewMemberRoleChanges("1001", delta)).thenReturn(List.of());
+        var input = new PlatformMemberEditInput("0", null, null, null, null, delta, java.util.Set.of("expectedVersion"));
+        var preview = service.previewPlatformEdit("1001", input);
+        assertTrue(preview.valid());
+        assertEquals(1, preview.effectiveResult().removals());
+        assertEquals(0L, jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1001", Long.class));
+        assertEquals("1", service.patchPlatform("1001", input).version());
+        verify(assignments).applyMemberRoleChanges("1001", delta);
         assertEquals("13900000001", jdbc.queryForObject("SELECT phone FROM iam_platform_member WHERE id=1001", String.class));
     }
 

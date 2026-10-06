@@ -20,6 +20,7 @@ public final class AuthorizationCandidateSql {
     private static final String PLATFORM_DOMAIN = AuthorizationDomain.PLATFORM.getValue();
     private static final String ROLE_BOUNDARY = "d.domain='" + AuthorizationDomain.PLATFORM.getValue()
             + "' AND d.tenant_id IS NULL AND d.enabled=TRUE";
+    private static final String CUSTOM_REVISION_BOUNDARY = "r.kind='" + RoleKind.PLATFORM_CUSTOM.getValue() + "'";
     private static final String REVISION_BOUNDARY = "r.kind IN ('" + RoleKind.PLATFORM_CUSTOM.getValue()
             + "','" + RoleKind.SYSTEM.getValue() + "')";
     private AuthorizationCandidateSql() { }
@@ -76,6 +77,7 @@ public final class AuthorizationCandidateSql {
     }
 
     private static String roleSource(RoleQuery q) {
+        String boundary = q.allowSystem() ? REVISION_BOUNDARY : CUSTOM_REVISION_BOUNDARY;
         String allowed = q.allowedRevisionIds() == null ? "" : q.allowedRevisionIds().isEmpty()
                 ? " AND 1=0" : " AND r.id IN <foreach collection='q.allowedRevisionIds' item='id' "
                 + "open='(' close=')' separator=','>#{id}</foreach>";
@@ -83,11 +85,11 @@ public final class AuthorizationCandidateSql {
         if (q.roleId() == null) {
             return "SELECT d.id,d.id AS role_id,d.name,NULL AS kind,NULL AS revision FROM iam_role_definition d WHERE "
                     + ROLE_BOUNDARY + " AND EXISTS(SELECT 1 FROM iam_role_revision r WHERE r.role_id=d.id AND "
-                    + REVISION_BOUNDARY + allowed + newer + ")";
+                    + boundary + allowed + newer + ")";
         }
         return "SELECT r.id,r.role_id,d.name,r.kind,r.revision FROM iam_role_revision r "
                 + "JOIN iam_role_definition d ON d.id=r.role_id WHERE " + ROLE_BOUNDARY + " AND "
-                + REVISION_BOUNDARY + " AND r.role_id=#{q.roleId}" + allowed + newer;
+                + boundary + " AND r.role_id=#{q.roleId}" + allowed + newer;
     }
 
     private static String roleFilters(RoleQuery q) {
@@ -104,12 +106,18 @@ public final class AuthorizationCandidateSql {
      * @param allowedRevisionIds 委派允许的版本；null 表示直接分配不额外收窄
      * @param offset 分页偏移
      * @param size 页大小
+     * @param allowSystem 仅服务器有效超管的直接分配入口可选择系统角色
      * @param minimumRevision 只显示更高版本；普通分配为空
      * @author jy
      * @since 1.0.0
      */
     public record RoleQuery(BigInteger roleId, String keyword, List<BigInteger> ids,
-            List<BigInteger> allowedRevisionIds, int offset, int size, BigInteger minimumRevision) {
+            List<BigInteger> allowedRevisionIds, int offset, int size, BigInteger minimumRevision, boolean allowSystem) {
+        /** 旧查询默认不提供系统超管。 */
+        public RoleQuery(BigInteger roleId, String keyword, List<BigInteger> ids,
+                List<BigInteger> allowedRevisionIds, int offset, int size, BigInteger minimumRevision) {
+            this(roleId, keyword, ids, allowedRevisionIds, offset, size, minimumRevision, false);
+        }
         /** 普通树查询保持原有候选边界。 */
         public RoleQuery(BigInteger roleId,String keyword,List<BigInteger> ids,List<BigInteger> allowedRevisionIds,int offset,int size) {
             this(roleId,keyword,ids,allowedRevisionIds,offset,size,null);
@@ -170,7 +178,7 @@ public final class AuthorizationCandidateSql {
             case ROLE_REVISION -> "SELECT r.id,d.name,r.kind,r.revision FROM iam_role_revision r "
                     + "JOIN iam_role_definition d ON d.id=r.role_id WHERE d.domain='PLATFORM' AND d.tenant_id IS NULL "
                     + (q.selectedAssignmentId() == null ? "AND d.enabled=TRUE " : "")
-                    + "AND r.kind IN ('PLATFORM_CUSTOM','SYSTEM')";
+                    + "AND " + (q.allowSystem() ? REVISION_BOUNDARY : CUSTOM_REVISION_BOUNDARY);
             case MEMBER -> "SELECT id,display_name AS name,NULL AS kind,NULL AS revision FROM iam_platform_member WHERE status='ACTIVE'";
             case GROUP -> "SELECT g.id,g.name,NULL AS kind,NULL AS revision FROM iam_platform_group g" + groupFilter(q);
             case APPLICATION -> "SELECT id,name,NULL AS kind,NULL AS revision FROM iam_application WHERE domain='PLATFORM' AND enabled=TRUE";
@@ -238,6 +246,7 @@ public final class AuthorizationCandidateSql {
      * @param selectedActionId 对象已选关系所属操作
      * @param selectedAssignmentId 已通过分配详情可见边界验证的分配 ID
      * @param selectedParameterKey 已选对象关系的固定版本参数键
+     * @param allowSystem 服务器已验证超管的直接分配入口，不适用于委派
      * @author jy
      * @since 1.0.0
      */
@@ -246,7 +255,17 @@ public final class AuthorizationCandidateSql {
                         List<BigInteger> allowedIds, int offset, int size, boolean tree,
                         BigInteger parentId, BigInteger excludeMemberId, BigInteger selectedDelegationId,
                         BigInteger selectedActionId, BigInteger selectedAssignmentId,
-                        String selectedParameterKey) {
+                        String selectedParameterKey, boolean allowSystem) {
+        /** 保持既有候选构造契约，默认排除系统角色。 */
+        public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
+                BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,
+                List<BigInteger> allowedIds, int offset, int size, boolean tree, BigInteger parentId,
+                BigInteger excludeMemberId, BigInteger selectedDelegationId, BigInteger selectedActionId,
+                BigInteger selectedAssignmentId, String selectedParameterKey) {
+            this(kind, memberId, delegationId, applicationId, objectResource, keyword, ids, allowedIds,
+                    offset, size, tree, parentId, excludeMemberId, selectedDelegationId, selectedActionId,
+                    selectedAssignmentId, selectedParameterKey, false);
+        }
         /** 保持既有委派关联候选查询的构造契约。 */
         public Query(AuthorizationCandidateKind kind, BigInteger memberId, BigInteger delegationId,
                 BigInteger applicationId, String objectResource, String keyword, List<BigInteger> ids,

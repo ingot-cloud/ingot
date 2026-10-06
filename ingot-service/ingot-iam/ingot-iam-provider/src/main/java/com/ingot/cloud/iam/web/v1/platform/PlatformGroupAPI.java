@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.group.GroupService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
 import com.ingot.cloud.iam.support.IamPages;
@@ -53,6 +56,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "用户组列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_READ)
     public R<PageResponse<ResourceDetail<GroupRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -68,6 +72,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "创建用户组")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody GroupDraft input) {
         return ok(groups.create(AuthorizationDomain.PLATFORM, input));
     }
@@ -80,6 +85,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "用户组详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_READ)
     public R<ResourceDetail<GroupRecord>> get(@PathVariable String id) {
         return ok(groups.get(AuthorizationDomain.PLATFORM, id));
     }
@@ -93,6 +99,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "替换用户组")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_UPDATE)
     public R<ResourceDetail<GroupRecord>> replace(@PathVariable String id, @Valid @RequestBody GroupUpdateInput input) {
         return ok(groups.replace(AuthorizationDomain.PLATFORM, id, input));
     }
@@ -105,6 +112,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用用户组")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(groups.delete(AuthorizationDomain.PLATFORM, id));
     }
@@ -120,6 +128,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "用户组成员列表")
     @GetMapping("/{id}/members")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_READ)
     public R<PageResponse<ResourceDetail<MemberRecord>>> listMembers(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -137,6 +146,7 @@ public class PlatformGroupAPI implements RShortcuts {
      */
     @Operation(summary = "预览组引用影响")
     @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_GROUP_PREVIEW)
     public R<Preview<ReferenceImpactPreview>> preview(@PathVariable String id,
                                                       @Valid @RequestBody GroupUpdateInput input) {
         return ok(groups.preview(AuthorizationDomain.PLATFORM, id, input));

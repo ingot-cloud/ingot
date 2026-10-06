@@ -48,6 +48,10 @@ public final class BuiltinResourceProviders {
      */
     public static final String PLATFORM_APPLICATION = "iam-platform";
 
+    /** 平台成员读写与创建查找共同使用的完整资源键。 */
+    public static final ResourceKey PLATFORM_MEMBER_RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM,
+            PLATFORM_APPLICATION, PlatformScopeObjectResource.MEMBER.getValue());
+
     private final AuthorizationCandidateMapper candidates;
 
     /**

@@ -116,7 +116,7 @@ class AuthorizationEvaluatorTest {
                         (42,'TENANT',10,'MEMBER',NULL,NULL,101,NULL,32,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00',NULL,NULL,'{}')
                         """);
         jdbc.update("INSERT INTO iam_platform_group_member VALUES (501,1001)");
-        jdbc.execute("ALTER TABLE iam_role_assignment ADD revision_kind VARCHAR(24) DEFAULT 'SYSTEM'");
+        jdbc.execute("ALTER TABLE iam_role_assignment ADD revision_kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM'");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD domain VARCHAR(16)");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD tenant_id BIGINT");
         jdbc.execute("ALTER TABLE iam_delegation_grant ADD platform_administrator_id BIGINT DEFAULT 9999");
@@ -133,6 +133,19 @@ class AuthorizationEvaluatorTest {
             jdbc.update("INSERT INTO iam_action(id,application_id,code,enabled,resource_id) VALUES (?,1,?,TRUE,5)",
                     entryId++, entry.getCode());
         }
+        jdbc.execute("ALTER TABLE iam_role_definition ADD domain VARCHAR(16) DEFAULT 'PLATFORM'");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD tenant_id BIGINT");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM'");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD code VARCHAR(64)");
+        jdbc.execute("ALTER TABLE iam_role_revision ADD kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM'");
+        jdbc.execute("ALTER TABLE iam_resource ADD application_id BIGINT DEFAULT 1");
+        jdbc.execute("ALTER TABLE iam_application ADD code VARCHAR(64)");
+        jdbc.update("UPDATE iam_application SET code='iam-platform' WHERE id=1");
+        jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,account_id BIGINT,status VARCHAR(16))");
+        jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
+        jdbc.execute("CREATE TABLE account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until TIMESTAMP)");
+        jdbc.update("INSERT INTO iam_account VALUES (1,TRUE,NULL)");
+        jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE')");
         evaluator = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource);
     }
 
@@ -566,4 +579,76 @@ class AuthorizationEvaluatorTest {
 
     }
 
+
+    private void systemRole() {
+        jdbc.update("UPDATE iam_role_definition SET code=?,kind='SYSTEM' WHERE id=21",
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
+        jdbc.update("UPDATE iam_role_revision SET kind='SYSTEM' WHERE id=31");
+        jdbc.update("UPDATE iam_role_assignment SET revision_kind='SYSTEM' WHERE revision_id=31");
+    }
+
+    @Test
+    void systemAdministratorIncludesNewPlatformActionsAndRealSourcesButNeverTenantOperations() {
+        systemRole();
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,status,valid_from,scope_bindings)"
+                + " VALUES (901,'PLATFORM','MEMBER',1001,31,'ACTIVE',TIMESTAMP '2000-01-01 00:00:00','{}')");
+        jdbc.update("UPDATE iam_role_assignment SET revision_kind='SYSTEM' WHERE id=901");
+        var view = evaluator.evaluateForExecution(PLATFORM, true);
+        assertTrue(view.platformAdministrator());
+        assertTrue(view.scope(IamAction.PLATFORM_TENANT_CREATE.getCode()).clauses().getFirst().all());
+        String newAction = "iam-ops:incident:read";
+        jdbc.update("INSERT INTO iam_application(id,domain,enabled) VALUES (3,'PLATFORM',TRUE)");
+        jdbc.update("INSERT INTO iam_resource(id,enabled,application_id) VALUES (9,TRUE,3)");
+        jdbc.update("INSERT INTO iam_action(id,application_id,code,enabled,resource_id) VALUES (901,3,?,TRUE,9)", newAction);
+        view = evaluator.evaluateForExecution(PLATFORM, true);
+        assertTrue(view.actionCodes().contains(newAction));
+        assertTrue(view.scope(newAction).clauses().getFirst().all());
+        assertEquals("901", evaluator.decisionSources(PLATFORM, "901").getFirst().assignmentId());
+        assertFalse(view.actionCodes().contains(IamAction.TENANT_MEMBER_STATUS.getCode()));
+        jdbc.update("UPDATE iam_action SET enabled=FALSE WHERE id=901");
+        assertFalse(evaluator.evaluateForExecution(PLATFORM, true).actionCodes().contains(newAction));
+        jdbc.update("UPDATE iam_role_assignment SET status='REVOKED' WHERE id=901");
+        assertFalse(evaluator.evaluateForExecution(PLATFORM, true).platformAdministrator());
+    }
+
+    @Test
+    void nameGroupsDelegationExpiredOrUnavailableAccountNeverProduceSystemPrivilege() {
+        systemRole();
+        assertFalse(evaluator.evaluateForExecution(PLATFORM, true).platformAdministrator()); // only group source
+        assertFalse(evaluator.evaluateForExecution(PLATFORM, true).actionCodes().contains(IamAction.PLATFORM_TENANT_CREATE.getCode()));
+        assertTrue(evaluator.decisionSources(PLATFORM, "11").isEmpty());
+        jdbc.update("UPDATE iam_role_assignment SET subject_type='MEMBER',platform_member_id=1001,platform_group_id=NULL WHERE id=41");
+        assertTrue(evaluator.platformAdministrator(PLATFORM));
+        jdbc.update("UPDATE iam_role_assignment SET valid_until=TIMESTAMP '2001-01-01 00:00:00' WHERE id=41");
+        assertFalse(evaluator.platformAdministrator(PLATFORM));
+        jdbc.update("UPDATE iam_role_assignment SET valid_until=NULL,delegation_grant_id=1 WHERE id=41");
+        assertFalse(evaluator.platformAdministrator(PLATFORM));
+        jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL WHERE id=41");
+        jdbc.update("INSERT INTO account_lock_state VALUES (1,'0',TRUE,NULL)");
+        assertFalse(evaluator.platformAdministrator(PLATFORM));
+        jdbc.update("DELETE FROM account_lock_state");
+        jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=1");
+        assertFalse(evaluator.platformAdministrator(PLATFORM));
+        assertFalse(evaluator.platformAdministrator(TENANT));
+    }
+
+    @Test
+    void lastPermanentAdministratorMutationRollsBackInsideAuthorizationLock() {
+        systemRole();
+        jdbc.update("UPDATE iam_role_assignment SET subject_type='MEMBER',platform_member_id=1001,platform_group_id=NULL WHERE id=41");
+        var mapper = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.mapper(dataSource,
+                com.ingot.cloud.iam.persistence.mapper.IamRoleAssignmentMapper.class);
+        var tx = new org.springframework.transaction.support.TransactionTemplate(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource));
+        assertEquals(1, mapper.availablePermanentAdministrators(com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE));
+        var guard = new com.ingot.cloud.iam.support.PlatformAdministratorGuard(
+                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.assignments(dataSource),
+                new com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier(event -> { }));
+        assertThrows(BizException.class, () -> tx.executeWithoutResult(status -> {
+            mapper.lockPlatformAuthorization();
+            jdbc.update("UPDATE iam_role_assignment SET status='REVOKED' WHERE id=41");
+            guard.requireAvailable();
+        }));
+        assertTrue(evaluator.platformAdministrator(PLATFORM));
+    }
 }

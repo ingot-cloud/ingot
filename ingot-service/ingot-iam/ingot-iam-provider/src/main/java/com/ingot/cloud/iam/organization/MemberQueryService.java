@@ -13,6 +13,7 @@ import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.extension.RoleFieldPermissionService;
 import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
 import com.ingot.framework.authorization.FieldPolicyProcessor;
+import com.ingot.framework.authorization.SdkAuthorizationException;
 import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
 import com.ingot.framework.commons.model.iam.extension.ResourceKey;
 import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
@@ -41,6 +42,8 @@ import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.PlatformMemberContext;
 import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
@@ -48,6 +51,10 @@ import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberDepartmentBinding;
 import com.ingot.framework.commons.model.iam.MemberDepartmentView;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
+import com.ingot.framework.commons.model.iam.PlatformMemberEditInput;
+import com.ingot.framework.commons.model.iam.PlatformMemberEditPreview;
+import com.ingot.framework.commons.model.iam.Preview;
+import com.ingot.framework.commons.model.iam.ImpactSummary;
 import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberRoleReplaceInput;
@@ -73,8 +80,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class MemberQueryService {
 
-    private static final ResourceKey PLATFORM_MEMBER_RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM,
-            BuiltinResourceProviders.PLATFORM_APPLICATION, "member");
+    private static final ResourceKey PLATFORM_MEMBER_RESOURCE = BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE;
+    private static final FieldAccess HIDDEN_FIELD = new FieldAccess(FieldVisibility.HIDDEN, false);
 
     private final RoleFieldPermissionService platformFields;
 
@@ -130,6 +137,45 @@ public class MemberQueryService {
         this.assignments = assignments;
         this.groupCommands = groupCommands;
         this.transaction = new TransactionTemplate(transactionManager);
+    }
+
+    /**
+     * 读取整份平台成员读策略的列可见性及新成员创建字段上下文，不依赖分页样本。
+     * @return 仅用于展示的上下文；提交与逐行展示仍使用真实目标重新校验
+     */
+    public PlatformMemberContext platformContext() {
+        ActiveIdentity actor = access.requireCurrent();
+        if (actor.context().domain() != AuthorizationDomain.PLATFORM)
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        var view = capabilities.snapshot(actor.context()).view();
+        if (!view.actionCodes().contains(IamAction.PLATFORM_MEMBER_READ.getCode())
+                && !view.actionCodes().contains(IamAction.PLATFORM_MEMBER_CREATE.getCode()))
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        var policies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_CREATE));
+        var read = policies.get(IamAction.PLATFORM_MEMBER_READ);
+        Map<String, FieldVisibility> columns = new LinkedHashMap<>();
+        read.defaults().forEach((key, ignored) -> {
+            FieldAccess visible = new FieldAccess(FieldVisibility.HIDDEN, false);
+            for (var rule : read.rules())
+                if (key.equals(rule.fieldKey()) && !rule.scope().isEmpty())
+                    visible = FieldPolicyProcessor.broader(visible, rule.access());
+            columns.put(key, read.ceilings().containsKey(key)
+                    ? FieldPolicyProcessor.stricter(visible, read.ceilings().get(key)).visibility()
+                    : FieldVisibility.HIDDEN);
+        });
+        boolean searchable = false;
+        try {
+            FieldPolicyProcessor.requireOriginalLookup(read, MemberFieldKey.VALUE_DISPLAY_NAME);
+            searchable = true;
+        }
+        catch (SdkAuthorizationException exception) {
+            if (!IamReasonCode.ACTION_DENIED.getCode().equals(exception.getCode()))
+                throw exception;
+        }
+        return new PlatformMemberContext(columns,
+                FieldPolicyProcessor.access(policies.get(IamAction.PLATFORM_MEMBER_CREATE),
+                        new ScopeTarget(null, null, null, List.of())), searchable);
     }
 
     /**
@@ -520,29 +566,14 @@ public class MemberQueryService {
             access.require(domain, domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_UPDATE
                     : IamAction.TENANT_MEMBER_UPDATE);
             BigInteger version = lock(domain, actor, id);
-            scopes.requireVisibleMember(actor.context(), domain == AuthorizationDomain.PLATFORM
-                    ? IamAction.PLATFORM_MEMBER_UPDATE : IamAction.TENANT_MEMBER_UPDATE, id);
+            if (domain == AuthorizationDomain.PLATFORM)
+                scopes.requirePlatformMemberUpdate(actor.context(), id);
+            else
+                scopes.requireVisibleMember(actor.context(), IamAction.TENANT_MEMBER_UPDATE, id);
             ResourceDetail<MemberRecord> current = load(domain, actor, id);
             IamIds.requireVersion(input.expectedVersion(), version.toString());
             if (domain == AuthorizationDomain.PLATFORM) {
-                Map<String, Object> submitted = new LinkedHashMap<>();
-                if (!Set
-                    .of("expectedVersion", MemberFieldKey.VALUE_DISPLAY_NAME, MemberFieldKey.VALUE_AVATAR,
-                            MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL)
-                    .containsAll(input.suppliedFields()))
-                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
-                    submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
-                    submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_PHONE))
-                    submitted.put(MemberFieldKey.VALUE_PHONE, input.phone());
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_EMAIL))
-                    submitted.put(MemberFieldKey.VALUE_EMAIL, input.email());
-                var writePolicy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
-                        IamAction.PLATFORM_MEMBER_UPDATE);
-                FieldPolicyProcessor.requireWritable(submitted,
-                        FieldPolicyProcessor.access(writePolicy, new ScopeTarget(memberId, memberId, null, List.of())));
+                validatePlatformProfile(actor, memberId, input);
                 requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), input.phone(),
                         input.email(), version));
             }
@@ -562,6 +593,68 @@ public class MemberQueryService {
                     Map.of(AuditField.NAME, String.valueOf(next.record().displayName())),
                     Map.of("member", next.version()));
             return next;
+        });
+    }
+
+    private void validatePlatformProfile(ActiveIdentity actor, String memberId, MemberProfileInput input) {
+        Map<String, Object> submitted = new LinkedHashMap<>();
+        if (!Set
+            .of("expectedVersion", MemberFieldKey.VALUE_DISPLAY_NAME, MemberFieldKey.VALUE_AVATAR,
+                    MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL)
+            .containsAll(input.suppliedFields()))
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
+            submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
+        if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
+            submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
+        if (input.suppliedFields().contains(MemberFieldKey.VALUE_PHONE))
+            submitted.put(MemberFieldKey.VALUE_PHONE, input.phone());
+        if (input.suppliedFields().contains(MemberFieldKey.VALUE_EMAIL))
+            submitted.put(MemberFieldKey.VALUE_EMAIL, input.email());
+        var writePolicy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                IamAction.PLATFORM_MEMBER_UPDATE);
+        FieldPolicyProcessor.requireWritable(submitted,
+                FieldPolicyProcessor.access(writePolicy, new ScopeTarget(memberId, memberId, null, List.of())));
+    }
+    /**
+     * 只读预览成员资料及角色差量，预览不替代最终事务内重验。
+     * @param memberId 成员
+     * @param input 平台编辑草稿
+     * @return 变化摘要与阻断问题
+     */
+    public Preview<PlatformMemberEditPreview>
+            previewPlatformEdit(String memberId, PlatformMemberEditInput input) {
+        var actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_UPDATE);
+        scopes.requirePlatformMemberUpdate(actor.context(), IamIds.require(memberId));
+        var current = load(AuthorizationDomain.PLATFORM, actor, IamIds.require(memberId));
+        IamIds.requireVersion(input.expectedVersion(), current.version());
+        validatePlatformProfile(actor, memberId, input.profile());
+        var errors = assignments.previewMemberRoleChanges(memberId, input.roleChanges());
+        var changes = input.roleChanges();
+        var result = new PlatformMemberEditPreview(
+                input.suppliedFields().stream().filter(key -> !"expectedVersion".equals(key)).sorted().toList(),
+                changes == null ? 0 : changes.additions().size(), changes == null ? 0 : changes.updates().size(),
+                changes == null ? 0 : changes.removals().size());
+        return new Preview<>(current.version(), errors.isEmpty(), errors,
+                List.of(), new ImpactSummary(null,
+                (long) result.additions() + result.updates() + result.removals(), null, false), result);
+    }
+
+    /**
+     * 同一事务保存资料和角色差量，失败整批回滚。
+     * @param memberId 成员
+     * @param input 平台编辑草稿
+     * @return 更新后的安全投影
+     */
+    public ResourceDetail<MemberRecord> patchPlatform(String memberId,
+            PlatformMemberEditInput input) {
+        return transaction.execute(status -> {
+            var actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_UPDATE);
+            assignments.lockAuthorization(AuthorizationDomain.PLATFORM);
+            // patch 先取得成员行锁并校验字段，所有分配写入参与此事务。
+            patch(AuthorizationDomain.PLATFORM, memberId, input.profile());
+            assignments.applyMemberRoleChanges(memberId, input.roleChanges());
+            return load(AuthorizationDomain.PLATFORM, actor, IamIds.require(memberId));
         });
     }
 
@@ -601,10 +694,8 @@ public class MemberQueryService {
                     List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
             return platformDetail(fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ),
                     fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
-                    platformMember(row,
-                            members
-                                .accountContacts(row.getAccountId() == null ? List.of() : List.of(row.getAccountId()))
-                                .get(row.getAccountId())),
+                    platformMember(row, row.getAccountId() == null ? null
+                            : members.accountContacts(List.of(row.getAccountId())).get(row.getAccountId())),
                     capabilities.platformMember(capabilities.snapshot(actor.context()), row.getId().toString()),
                     version(row.getVersion()));
         }
@@ -640,6 +731,8 @@ public class MemberQueryService {
                             && write.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL
                             && write.editable()));
         });
+        for (var key : MemberFieldKey.values())
+            fieldAccess.putIfAbsent(key.getValue(), HIDDEN_FIELD);
         return IamDetails.of(fields.project(raw, fieldAccess), fieldAccess, capabilities, version);
     }
 

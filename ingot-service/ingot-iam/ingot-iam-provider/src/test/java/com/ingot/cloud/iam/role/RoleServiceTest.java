@@ -164,7 +164,7 @@ class RoleServiceTest {
         var transactions = new DataSourceTransactionManager(dataSource);
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         ids.set(9000);
-        var access = new IamAccess(new CurrentIdentityService(identities), authorizer, ids::incrementAndGet);
+        var access = new IamAccess(new CurrentIdentityService(identities), authorizer, ids::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         service = new RoleService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> { }), new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
@@ -428,6 +428,18 @@ class RoleServiceTest {
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES (?,'TENANT',10,NULL,102)", id);
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES (?,11,?,'{}'),(?,12,?,'{}')",
                 id, ALL, id, ALL);
+    }
+
+
+    @Test
+    void platformCustomRoleCannotUseReservedAdministratorCode() {
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,status,version) VALUES (1,1,'ACTIVE',0)");
+        authenticatePlatform();
+        var input = new RoleCreateInput(com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE,
+                "自定义超管", null, null, RoleKind.PLATFORM_CUSTOM, null,
+                new RoleDefinitionDraft(List.of(), List.of(), List.of(), null));
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), assertThrows(BizException.class,
+                () -> service.create(AuthorizationDomain.PLATFORM, false, input)).getCode());
     }
 
     private static RoleCreateInput input(String baseRevisionId, RoleDefinitionDraft definition) {

@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import java.util.List;
 
 import com.ingot.cloud.iam.catalog.CatalogService;
@@ -73,6 +76,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用目录")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_READ)
     public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -96,6 +100,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "整包创建应用")
     @PostMapping("/bundles")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_CREATE)
     public R<CreatedResource> createBundle(@Valid @RequestBody ApplicationBundleDraft input) {
         return ok(catalog.createApplicationBundle(input));
     }
@@ -108,6 +113,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "创建应用")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody ApplicationDraft input) {
         return ok(catalog.createApplication(input));
     }
@@ -120,6 +126,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_READ)
     public R<ResourceDetail<ApplicationRecord>> get(@PathVariable String id) {
         return ok(catalog.getApplication(id));
     }
@@ -133,6 +140,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "更新应用")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_UPDATE)
     public R<ResourceDetail<ApplicationRecord>> update(@PathVariable String id,
                                                        @Valid @RequestBody ApplicationUpdateInput input) {
         return ok(catalog.updateApplication(id, input));
@@ -147,6 +155,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "启停应用")
     @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_STATUS)
     public R<CreatedResource> changeStatus(@PathVariable String id,
                                            @Valid @RequestBody ConfigurationStatusInput input) {
         return ok(catalog.changeApplicationStatus(id, input));
@@ -160,6 +169,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用应用")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(catalog.deleteApplication(id));
     }
@@ -173,6 +183,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "强制清除应用")
     @PostMapping("/{id}/purge")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_APPLICATION_PURGE)
     @InCryptoHybridContext
     public R<CreatedResource> purge(@PathVariable String id, @Valid @RequestBody ApplicationPurgeRequest input) {
         return ok(catalog.purgeApplication(id, input.toInput()));
@@ -190,6 +201,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用资源")
     @GetMapping("/{id}/resources")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_RESOURCE_READ)
     public R<PageResponse<ResourceDetail<ResourceRecord>>> listResources(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -208,6 +220,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "创建资源")
     @PostMapping("/{id}/resources")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_RESOURCE_CREATE)
     public R<CreatedResource> createResource(@PathVariable String id, @Valid @RequestBody ResourceDraft input) {
         return ok(catalog.createResource(id, input));
     }
@@ -222,6 +235,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "更新资源")
     @PutMapping("/{id}/resources/{resourceId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_RESOURCE_UPDATE)
     public R<ResourceDetail<ResourceRecord>> updateResource(@PathVariable String id, @PathVariable String resourceId,
                                                             @Valid @RequestBody ResourceUpdateInput input) {
         return ok(catalog.updateResource(id, resourceId, input));
@@ -236,6 +250,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用资源")
     @DeleteMapping("/{id}/resources/{resourceId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_RESOURCE_DELETE)
     public R<CreatedResource> deleteResource(@PathVariable String id, @PathVariable String resourceId) {
         return ok(catalog.deleteResource(id, resourceId));
     }
@@ -249,6 +264,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "资源操作目录")
     @GetMapping("/{id}/resources/{resourceId}/actions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
     public R<List<ActionRecord>> listResourceActions(@PathVariable String id, @PathVariable String resourceId) {
         return ok(catalog.listResourceActions(id, resourceId));
     }
@@ -261,6 +277,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用操作目录")
     @GetMapping("/{id}/action-catalog")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
     public R<ActionCatalogView> getActionCatalog(@PathVariable String id) {
         return ok(catalog.getActionCatalog(id));
     }
@@ -275,6 +292,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "授权选择目录")
     @GetMapping("/{id}/grant-catalog")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
     public R<PageResponse<GrantCatalogResource>> pageGrantCatalog(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -295,6 +313,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用操作")
     @GetMapping("/{id}/actions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_READ)
     public R<PageResponse<ResourceDetail<ActionRecord>>> listActions(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -314,6 +333,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "创建操作")
     @PostMapping("/{id}/actions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_CREATE)
     public R<CreatedResource> createAction(@PathVariable String id, @Valid @RequestBody ActionDraft input) {
         return ok(catalog.createAction(id, input));
     }
@@ -328,6 +348,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "更新操作")
     @PutMapping("/{id}/actions/{actionId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_UPDATE)
     public R<ResourceDetail<ActionRecord>> updateAction(@PathVariable String id, @PathVariable String actionId,
                                                         @Valid @RequestBody ActionUpdateInput input) {
         return ok(catalog.updateAction(id, actionId, input));
@@ -343,6 +364,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "启停操作")
     @PatchMapping("/{id}/actions/{actionId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_STATUS)
     public R<CreatedResource> changeActionStatus(@PathVariable String id, @PathVariable String actionId,
                                                  @Valid @RequestBody ConfigurationStatusInput input) {
         return ok(catalog.changeActionStatus(id, actionId, input));
@@ -357,6 +379,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用操作")
     @DeleteMapping("/{id}/actions/{actionId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ACTION_DELETE)
     public R<CreatedResource> deleteAction(@PathVariable String id, @PathVariable String actionId) {
         return ok(catalog.deleteAction(id, actionId));
     }
@@ -372,6 +395,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "应用菜单")
     @GetMapping("/{id}/menus")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MENU_READ)
     public R<?> listMenus(
             @PathVariable String id,
             @RequestParam(defaultValue = CatalogListView.VALUE_PAGE) String view,
@@ -393,6 +417,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "创建菜单")
     @PostMapping("/{id}/menus")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MENU_CREATE)
     public R<CreatedResource> createMenu(@PathVariable String id, @Valid @RequestBody MenuDraft input) {
         return ok(catalog.createMenu(id, input));
     }
@@ -407,6 +432,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "更新菜单")
     @PutMapping("/{id}/menus/{menuId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MENU_UPDATE)
     public R<ResourceDetail<MenuRecord>> updateMenu(@PathVariable String id, @PathVariable String menuId,
                                                     @Valid @RequestBody MenuUpdateInput input) {
         return ok(catalog.updateMenu(id, menuId, input));
@@ -421,6 +447,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "删除菜单")
     @DeleteMapping("/{id}/menus/{menuId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MENU_DELETE)
     public R<CreatedResource> deleteMenu(@PathVariable String id, @PathVariable String menuId) {
         return ok(catalog.deleteMenu(id, menuId));
     }
@@ -434,6 +461,7 @@ public class PlatformApplicationAPI implements RShortcuts {
      */
     @Operation(summary = "菜单关联操作")
     @GetMapping("/{id}/menus/{menuId}/actions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MENU_READ)
     public R<List<MenuActionRecord>> listMenuActions(@PathVariable String id, @PathVariable String menuId) {
         return ok(catalog.listMenuActions(id, menuId));
     }

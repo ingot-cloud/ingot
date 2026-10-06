@@ -116,7 +116,7 @@ class GroupServiceTest {
         var transactions = new DataSourceTransactionManager(dataSource);
         IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(true);
         var access = new IamAccess(new CurrentIdentityService(identities), authorizer,
-                new AtomicLong(9000)::incrementAndGet);
+                new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         service = new GroupService(access, IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> { }), IamMybatisTestAccess.groups(dataSource),
                 IamMybatisTestAccess.recipients(dataSource),

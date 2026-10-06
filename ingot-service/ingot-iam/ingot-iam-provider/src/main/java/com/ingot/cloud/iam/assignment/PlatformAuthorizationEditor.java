@@ -235,7 +235,7 @@ public class PlatformAuthorizationEditor {
     public AuthorizationRoleCandidatePage delegationRoleCandidates(String roleId, String keyword,
             List<String> ids, int page, int pageSize) {
         requireDelegationActor();
-        return rolePage(roleId, keyword, ids, page, pageSize, null);
+        return rolePage(roleId, keyword, ids, page, pageSize, null, null, false);
     }
 
     private AuthorizationRoleCandidatePage rolePage(String roleId, String keyword, List<String> ids,
@@ -244,6 +244,11 @@ public class PlatformAuthorizationEditor {
     }
     private AuthorizationRoleCandidatePage rolePage(String roleId,String keyword,List<String> ids,
             int page,int pageSize,DelegationInput basis,BigInteger minimumRevision) {
+        return rolePage(roleId, keyword, ids, page, pageSize, basis, minimumRevision,
+                basis == null && access.platformAdministrator(access.requireCurrent()));
+    }
+    private AuthorizationRoleCandidatePage rolePage(String roleId,String keyword,List<String> ids,
+            int page,int pageSize,DelegationInput basis,BigInteger minimumRevision, boolean allowSystem) {
         IamPages.require(page, pageSize);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream()
                 .map(value -> BigInteger.valueOf(IamIds.require(value))).distinct().toList();
@@ -257,7 +262,7 @@ public class PlatformAuthorizationEditor {
         String search = keyword == null ? "" : keyword.trim();
         search = "%" + search.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
         var query = new AuthorizationCandidateSql.RoleQuery(parent, search, selected, allowed,
-                Math.multiplyExact(page - 1, pageSize), pageSize, minimumRevision);
+                Math.multiplyExact(page - 1, pageSize), pageSize, minimumRevision, allowSystem);
         List<AuthorizationRoleNode> nodes = candidates.rolePage(query).stream().map(row -> {
             String id = row.id().toString();
             if (parent == null) {
@@ -306,7 +311,7 @@ public class PlatformAuthorizationEditor {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return query(actor, kind, null, null, null, null, actionId, null, keyword, ids, page, pageSize,
-                null, tree, parentId);
+                null, tree, parentId, null, null, null, false);
     }
 
     /**
@@ -328,7 +333,7 @@ public class PlatformAuthorizationEditor {
         if (!Set.of(AuthorizationCandidateKind.MEMBER, AuthorizationCandidateKind.ROLE_REVISION,
                 AuthorizationCandidateKind.OBJECT).contains(kind)) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         return query(actor, kind, null, null, null, null, actionId, null, keyword, ids, page, pageSize,
-                null, tree, parentId, excludeMemberId, null);
+                null, tree, parentId, excludeMemberId, null, null, false);
     }
 
     /**
@@ -511,6 +516,16 @@ public class PlatformAuthorizationEditor {
             String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
             boolean tree, String parentId, String excludeMemberId, String selectedDelegationId,
             String selectedAssignmentId) {
+        return query(actor, kind, source, basis, revisionId, key, actionId, applicationId, keyword, ids,
+                page, size, visibility, tree, parentId, excludeMemberId, selectedDelegationId,
+                selectedAssignmentId, true);
+    }
+
+    private AuthorizationCandidatePage query(ActiveIdentity actor, AuthorizationCandidateKind kind, String source,
+            DelegationInput basis, String revisionId, String key, String actionId, String applicationId,
+            String keyword, List<String> ids, int page, int size, List<BigInteger> visibility,
+            boolean tree, String parentId, String excludeMemberId, String selectedDelegationId,
+            String selectedAssignmentId, boolean assignmentRoles) {
         IamPages.require(page, size);
         if(kind==AuthorizationCandidateKind.OBJECT) {
             return queryObjects(actor,basis,revisionId,key,actionId,keyword,ids,page,size,
@@ -547,7 +562,9 @@ public class PlatformAuthorizationEditor {
                 excludeMemberId == null || excludeMemberId.isBlank() ? null : BigInteger.valueOf(IamIds.require(excludeMemberId)),
                 selectedDelegationId == null ? null : BigInteger.valueOf(IamIds.require(selectedDelegationId)),
                 actionId == null || actionId.isBlank() ? null : BigInteger.valueOf(IamIds.require(actionId)),
-                selectedAssignmentId == null ? null : BigInteger.valueOf(IamIds.require(selectedAssignmentId)), key);
+                selectedAssignmentId == null ? null : BigInteger.valueOf(IamIds.require(selectedAssignmentId)), key,
+                assignmentRoles && kind == AuthorizationCandidateKind.ROLE_REVISION && basis == null
+                    && selectedDelegationId == null && (selectedAssignmentId != null || access.platformAdministrator(actor)));
         var rows = candidates.page(query);
         Map<BigInteger, String> paths = hierarchical && !rows.isEmpty()
                 ? candidates.menuPaths(rows.stream().map(

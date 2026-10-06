@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.identity.TenantInitializationService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.cloud.iam.tenant.TenantQueryService;
@@ -51,6 +54,7 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      */
     @Operation(summary = "组织列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_TENANT_READ)
     public R<PageResponse<ResourceDetail<TenantRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -67,6 +71,7 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      */
     @Operation(summary = "预览组织初始化")
     @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_TENANT_PREVIEW)
     public R<Preview<TenantPreviewResult>> preview(@Valid @RequestBody TenantCreateInput input) {
         return ok(tenants.preview(input));
     }
@@ -79,6 +84,7 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      */
     @Operation(summary = "原子创建组织")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_TENANT_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody TenantCreateInput input) {
         return ok(tenants.create(input));
     }
@@ -91,6 +97,7 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      */
     @Operation(summary = "组织实体")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_TENANT_READ)
     public R<ResourceDetail<TenantRecord>> get(@PathVariable String id) {
         return ok(queries.get(id));
     }
@@ -104,6 +111,7 @@ public class PlatformTenantCommandAPI implements RShortcuts {
      */
     @Operation(summary = "更新组织实体")
     @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_TENANT_UPDATE)
     public R<ResourceDetail<TenantRecord>> patch(@PathVariable String id, @Valid @RequestBody TenantUpdateInput input) {
         return ok(queries.patch(id, input));
     }

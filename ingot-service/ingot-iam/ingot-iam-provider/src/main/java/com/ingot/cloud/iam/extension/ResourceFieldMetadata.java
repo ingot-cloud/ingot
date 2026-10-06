@@ -141,7 +141,15 @@ public class ResourceFieldMetadata {
      * @param key 注册资源键
      * @return 资源与执行能力
      */
-    public Entry require(ResourceKey key) {
+    public Entry require(ResourceKey key) { return require(key, false); }
+
+    /**
+     * 按可信系统超管事实取得注册业务字段能力；普通角色仍受目录收紧。
+     * @param key 完整资源键
+     * @param administrator 服务器求值产生的系统特权
+     * @return 启用且已注册的资源能力
+     */
+    public Entry require(ResourceKey key, boolean administrator) {
         var app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
             .eq(IamApplicationEntity::getDomain, key.domain())
             .eq(IamApplicationEntity::getCode, key.applicationCode()));
@@ -153,7 +161,7 @@ public class ResourceFieldMetadata {
         var value = row == null ? null : describe(List.of(row)).get(row.getId().toString());
         if (value == null)
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        return new Entry(row.getId().toString(), value);
+        return new Entry(row.getId().toString(), administrator ? registry.require(key).descriptor() : value);
     }
 
     /**

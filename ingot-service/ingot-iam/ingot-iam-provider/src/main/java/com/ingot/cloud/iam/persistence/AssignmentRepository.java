@@ -72,6 +72,22 @@ public class AssignmentRepository {
     private final IamRoleRevisionMapper revisions;
 
     /**
+     * 按成员有效角色关系分页。
+     * @param memberId 成员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 聚合页
+     */
+    public Page<com.ingot.cloud.iam.persistence.projection.MemberBoundRoleRow> memberBoundRoles(long memberId,
+            int page, int pageSize) {
+        var result = new Page<com.ingot.cloud.iam.persistence.projection.MemberBoundRoleRow>(page, pageSize, false);
+        result.setTotal(assignments.countMemberBoundRoles(BigInteger.valueOf(memberId)));
+        result.setRecords(assignments.memberBoundRoles(BigInteger.valueOf(memberId),
+                Math.multiplyExact(page - 1, pageSize), pageSize));
+        return result;
+    }
+
+    /**
      * 分页列出当前域分配。
      *
      * @param domain 授权域
@@ -124,7 +140,24 @@ public class AssignmentRepository {
      */
     public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
             String keyword, Long memberId, AssignmentEffectiveStatus effectiveStatus) {
+        return pagePlatform(page, pageSize, subjectType, keyword, memberId, effectiveStatus, false);
+    }
+
+    /**
+     * 成员编辑关联查询可排除委派来源，所有过滤在数据库分页前完成。
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param subjectType 主体类型
+     * @param keyword 名称
+     * @param memberId 成员
+     * @param effectiveStatus 生效状态
+     * @param directOnly 只读非委派直接分配
+     * @return 分配页
+     */
+    public Page<IamRoleAssignmentEntity> pagePlatform(int page, int pageSize, SubjectType subjectType,
+            String keyword, Long memberId, AssignmentEffectiveStatus effectiveStatus, boolean directOnly) {
         var query = scoped(AuthorizationDomain.PLATFORM, null);
+        if (directOnly) query.isNull(IamRoleAssignmentEntity::getDelegationGrantId);
         filterPlatformSubject(query, subjectType, keyword);
         filterPlatformStatus(query, effectiveStatus);
         if (memberId != null) {
@@ -581,5 +614,26 @@ public class AssignmentRepository {
             wrapper.eq(IamRoleAssignmentEntity::getTenantId, BigInteger.valueOf(tenantId));
         }
         return wrapper;
+    }
+
+    /**
+     * 查询平台系统超管有效直接来源；非平台身份没有超管资格。
+     * @param memberId 可信平台成员标识
+     * @return 实时来源
+     */
+    public List<com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows.Assignment> platformAdministrators(
+            String memberId) {
+        return assignments.platformAdministratorAssignments(new BigInteger(memberId),
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
+    }
+
+    /** 当前事务写入后保留至少一个长期可用超级管理员。 */
+    public void requireAvailableAdministrator() {
+        if (assignments.availablePermanentAdministrators(
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE) == 0) {
+            throw new com.ingot.framework.commons.error.BizException(
+                    com.ingot.framework.commons.model.iam.IamReasonCode.OBJECT_IN_USE.getCode(),
+                    "必须保留至少一个长期有效且可用的超级管理员");
+        }
     }
 }

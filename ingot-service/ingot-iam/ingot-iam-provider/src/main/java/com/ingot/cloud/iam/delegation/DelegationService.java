@@ -330,7 +330,8 @@ public class DelegationService {
         java.util.Set<String> actions = new java.util.LinkedHashSet<>();
         for (RoleRevisionRef ref : input.allowedRoleRevisionRefs()) {
             var revision = assignments.findRevision(IamIds.require(ref.id()));
-            if (revision == null || revision.getKind() != ref.kind() || !Boolean.TRUE.equals(revision.getEnabled())
+            if (com.ingot.cloud.iam.support.PlatformAdministratorGuard.isAdministrator(revision)
+                    || revision == null || revision.getKind() != ref.kind() || !Boolean.TRUE.equals(revision.getEnabled())
                     || domain == AuthorizationDomain.PLATFORM && (revision.getDomain() != domain
                         || revision.getTenantId() != null || ref.kind() != com.ingot.framework.commons.model.iam.RoleKind.PLATFORM_CUSTOM
                         && ref.kind() != com.ingot.framework.commons.model.iam.RoleKind.SYSTEM)) {

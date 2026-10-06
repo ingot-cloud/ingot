@@ -125,10 +125,13 @@ class PlatformCandidateSqlTest {
     @Test
     void delegationRoleTreeKeepsPlatformBoundarySearchAndIndependentLayerPaging() {
         var root = new AuthorizationCandidateSql.RoleQuery(null, "%平台%", List.of(), null, 0, 1);
-        assertEquals(2, mapper.roleCount(root));
+        assertEquals(1, mapper.roleCount(root));
         assertEquals(BigInteger.valueOf(400), mapper.rolePage(root).getFirst().id());
         var next = new AuthorizationCandidateSql.RoleQuery(null, "%平台%", List.of(), null, 1, 1);
-        assertEquals(BigInteger.valueOf(401), mapper.rolePage(next).getFirst().id());
+        assertTrue(mapper.rolePage(next).isEmpty());
+        var trusted = new AuthorizationCandidateSql.RoleQuery(null, "%平台%", List.of(), null, 1, 1, null, true);
+        assertEquals(2, mapper.roleCount(trusted));
+        assertEquals(BigInteger.valueOf(401), mapper.rolePage(trusted).getFirst().id());
         var versions = new AuthorizationCandidateSql.RoleQuery(BigInteger.valueOf(400), "%平台治理%",
                 List.of(), null, 0, 1);
         assertEquals(2, mapper.roleCount(versions));

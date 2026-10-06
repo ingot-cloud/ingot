@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.assignment.AssignmentService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AssignmentBatchInput;
@@ -54,6 +57,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 候选
      */
     @GetMapping("/upgrade/role-candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     public R<com.ingot.framework.commons.model.iam.AuthorizationRoleCandidatePage> upgradeRoleCandidates(
             @RequestParam String assignmentId, @RequestParam(required = false) String roleId,
             @RequestParam(required = false) String keyword, @RequestParam(required = false) java.util.List<String> ids,
@@ -78,6 +82,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 候选
      */
     @GetMapping("/upgrade/candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     public R<com.ingot.framework.commons.model.iam.AuthorizationCandidatePage> upgradeCandidates(
             @RequestParam String assignmentId,
             @RequestParam com.ingot.framework.commons.model.iam.AuthorizationCandidateKind kind,
@@ -102,6 +107,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      */
     @Operation(summary = "授权列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     public R<PageResponse<ResourceDetail<AssignmentRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -116,6 +122,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 资格与有效委派数量
      */
     @GetMapping("/context")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     @Operation(summary = "角色分配上下文")
     public R<com.ingot.framework.commons.model.iam.AssignmentContext> context() {
         return ok(assignments.context());
@@ -127,6 +134,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 分配详情与逐条能力
      */
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     @Operation(summary = "角色分配详情")
     public R<ResourceDetail<AssignmentRecord>> detail(@PathVariable String id) {
         return ok(assignments.detail(AuthorizationDomain.PLATFORM, id));
@@ -142,6 +150,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 真实关联且符合当前边界的候选页
      */
     @GetMapping("/{id}/selected-candidates")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     @Operation(summary = "角色分配已选候选")
     public R<com.ingot.framework.commons.model.iam.AuthorizationCandidatePage> selectedCandidates(
             @PathVariable String id,
@@ -158,6 +167,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 差异
      */
     @PostMapping("/upgrade/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     public R<Preview<com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult>> previewUpgrade(
             @Valid @RequestBody com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput input) {
         return ok(assignments.previewUpgrade(input));
@@ -169,6 +179,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 升级结果
      */
     @PostMapping("/upgrade")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPGRADE)
     public R<com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult> upgrade(
             @Valid @RequestBody com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput input) {
         return ok(assignments.upgrade(input));
@@ -182,6 +193,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      */
     @Operation(summary = "原子批量分配")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody AssignmentBatchInput input) {
         return ok(assignments.create(AuthorizationDomain.PLATFORM, input));
     }
@@ -194,6 +206,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      */
     @Operation(summary = "预览原子分配批次")
     @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_CREATE)
     public R<Preview<AssignmentPreviewResult>> preview(@Valid @RequestBody AssignmentBatchInput input) {
         return ok(assignments.preview(AuthorizationDomain.PLATFORM, input));
     }
@@ -205,6 +218,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      * @return 预览
      */
     @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPDATE)
     @Operation(summary = "预览分配调整")
     public R<Preview<AssignmentPreviewResult>> previewUpdate(@PathVariable String id,
             @Valid @RequestBody AssignmentUpdateInput input) {
@@ -220,6 +234,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      */
     @Operation(summary = "调整授权")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_UPDATE)
     public R<ResourceDetail<AssignmentRecord>> replace(@PathVariable String id,
                                                        @Valid @RequestBody AssignmentUpdateInput input) {
         return ok(assignments.replace(AuthorizationDomain.PLATFORM, id, input));
@@ -233,6 +248,7 @@ public class PlatformAssignmentAPI implements RShortcuts {
      */
     @Operation(summary = "撤销授权并保留审计")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(assignments.delete(AuthorizationDomain.PLATFORM, id));
     }

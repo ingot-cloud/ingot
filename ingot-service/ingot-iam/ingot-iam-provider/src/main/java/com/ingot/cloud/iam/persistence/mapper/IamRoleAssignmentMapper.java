@@ -25,6 +25,42 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 @InterceptorIgnore(tenantLine = IamPersistence.EXPLICIT_BOUNDARY, dataPermission = IamPersistence.EXPLICIT_BOUNDARY)
 public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEntity> {
+    /** 成员当前有效角色关系，组继承只披露角色摘要。 */
+    String MEMBER_BOUND_RELATION = """
+        FROM iam_role_assignment ra
+        JOIN iam_role_revision r ON r.id=ra.revision_id AND r.kind=ra.revision_kind
+        JOIN iam_role_definition d ON d.id=r.role_id AND d.domain='PLATFORM' AND d.tenant_id IS NULL
+        WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL AND ra.status='ACTIVE'
+          AND ra.valid_from&lt;=CURRENT_TIMESTAMP AND (ra.valid_until IS NULL OR ra.valid_until&gt;CURRENT_TIMESTAMP)
+          AND EXISTS(SELECT 1 FROM iam_platform_member m WHERE m.id=#{memberId} AND m.status='ACTIVE')
+          AND ((ra.subject_type='MEMBER' AND ra.platform_member_id=#{memberId})
+            OR (ra.subject_type='GROUP' AND EXISTS(SELECT 1 FROM iam_platform_group_member gm
+                  WHERE gm.group_id=ra.platform_group_id AND gm.member_id=#{memberId})))
+          AND (
+        """ + PlatformAssignmentStateSql.SOURCE_VALID + ")=TRUE ";
+
+    /**
+     * 分页当前有效角色/固定版本，以关系 SQL 聚合而非回查父列表。
+     * @param memberId 已通过成员查看范围校验的目标
+     * @param offset 偏移
+     * @param size 页大小
+     * @return 不披露组信息的摘要投影
+     */
+    @Select("<script>SELECT r.role_id,d.name,r.id AS revision_id,r.kind,r.revision AS revision_number,"
+            + "SUM(ra.subject_type='MEMBER') AS direct_count,SUM(ra.subject_type='GROUP') AS group_count "
+            + MEMBER_BOUND_RELATION + " GROUP BY r.role_id,d.name,r.id,r.kind,r.revision ORDER BY r.role_id,r.id"
+            + " LIMIT #{size} OFFSET #{offset}</script>")
+    List<com.ingot.cloud.iam.persistence.projection.MemberBoundRoleRow> memberBoundRoles(
+            @Param("memberId") BigInteger memberId, @Param("offset") int offset, @Param("size") int size);
+
+    /**
+     * 按相同有效关系计算固定版本数量。
+     * @param memberId 已校验成员
+     * @return 总数
+     */
+    @Select("<script>SELECT COUNT(DISTINCT r.id) " + MEMBER_BOUND_RELATION + "</script>")
+    long countMemberBoundRoles(@Param("memberId") BigInteger memberId);
+
     /**
      * 读取平台成员当前有效的直接分配。
      * <p>来源委派的分配持续核对委派状态、有效期、角色版本白名单与接收成员名单，任一不再成立即不返回。</p>
@@ -253,4 +289,49 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
              WHERE r.role_id=#{roleId}
             """)
     long countByRoleId(@Param("roleId") BigInteger roleId);
+
+    /**
+     * 读取真实系统超管直接分配，同时检查平台成员和账号可用性。
+     * @param memberId 平台成员
+     * @param code 服务器保留的系统角色编码
+     * @return 有效来源；不包含组或委派
+     */
+    @Select("""
+            SELECT ra.revision_id,ra.scope_bindings,ra.delegation_grant_id,ra.valid_until,
+                   NULL AS delegation_valid_until,ra.id AS assignment_id,ra.revision_kind,NULL AS group_id
+              FROM iam_role_assignment ra
+              JOIN iam_role_revision rv ON rv.id=ra.revision_id AND rv.kind='SYSTEM'
+              JOIN iam_role_definition r ON r.id=rv.role_id AND r.kind='SYSTEM' AND r.domain='PLATFORM'
+              JOIN iam_platform_member m ON m.id=ra.platform_member_id AND m.status='ACTIVE'
+              JOIN iam_account ac ON ac.id=m.account_id AND ac.enabled=TRUE AND ac.deleted_at IS NULL
+             WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL AND ra.status='ACTIVE'
+               AND ra.subject_type='MEMBER' AND ra.delegation_grant_id IS NULL AND ra.revision_kind='SYSTEM'
+               AND r.code=#{code} AND r.enabled=TRUE AND r.tenant_id IS NULL AND ra.platform_member_id=#{memberId}
+               AND ra.valid_from<=CURRENT_TIMESTAMP AND (ra.valid_until IS NULL OR ra.valid_until>CURRENT_TIMESTAMP)
+               AND NOT EXISTS (SELECT 1 FROM account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
+                 AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
+             ORDER BY ra.id
+            """)
+    List<AuthorizationEvalRows.Assignment> platformAdministratorAssignments(@Param("memberId") BigInteger memberId,
+            @Param("code") String code);
+
+    /**
+     * 在平台授权串行锁内检查仍可用的长期超管数量，读本事务写入后的状态。
+     * @param code 服务器保留编码
+     * @return 不重复的长期可用成员数
+     */
+    @Select("""
+            SELECT COUNT(DISTINCT m.id) FROM iam_role_assignment ra
+              JOIN iam_role_revision rv ON rv.id=ra.revision_id AND rv.kind='SYSTEM'
+              JOIN iam_role_definition r ON r.id=rv.role_id AND r.kind='SYSTEM' AND r.domain='PLATFORM'
+              JOIN iam_platform_member m ON m.id=ra.platform_member_id AND m.status='ACTIVE'
+              JOIN iam_account ac ON ac.id=m.account_id AND ac.enabled=TRUE AND ac.deleted_at IS NULL
+             WHERE ra.domain='PLATFORM' AND ra.tenant_id IS NULL AND ra.status='ACTIVE'
+               AND ra.subject_type='MEMBER' AND ra.delegation_grant_id IS NULL AND ra.revision_kind='SYSTEM'
+               AND r.code=#{code} AND r.enabled=TRUE AND r.tenant_id IS NULL
+               AND ra.valid_from<=CURRENT_TIMESTAMP AND ra.valid_until IS NULL
+               AND NOT EXISTS (SELECT 1 FROM account_lock_state ls WHERE ls.user_id=ac.id AND ls.user_type='0'
+                 AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
+            """)
+    long availablePermanentAdministrators(@Param("code") String code);
 }

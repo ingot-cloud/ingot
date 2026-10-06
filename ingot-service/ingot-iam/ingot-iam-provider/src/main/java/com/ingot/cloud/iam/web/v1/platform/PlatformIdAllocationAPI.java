@@ -1,12 +1,14 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.api.model.domain.BizLeafAlloc;
 import com.ingot.cloud.iam.service.domain.BizLeafAllocService;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
-import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
@@ -45,6 +47,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
      */
     @Operation(summary = "发号配置列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ID_ALLOCATION_READ)
     public R<?> list(Page<BizLeafAlloc> page, BizLeafAlloc condition) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_READ);
         return ok(allocations.page(page, Wrappers.lambdaQuery(condition)));
@@ -58,6 +61,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
      */
     @Operation(summary = "创建发号配置")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ID_ALLOCATION_CREATE)
     public R<Void> create(@RequestBody BizLeafAlloc params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_CREATE);
         params.setUpdateTime(DateUtil.now());
@@ -74,6 +78,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
      */
     @Operation(summary = "更新发号配置")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ID_ALLOCATION_UPDATE)
     public R<Void> update(@PathVariable String id, @RequestBody BizLeafAlloc params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_UPDATE);
         params.setBizTag(id);
@@ -90,6 +95,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
      */
     @Operation(summary = "删除发号配置")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ID_ALLOCATION_DELETE)
     public R<Void> remove(@PathVariable String id) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_DELETE);
         allocations.removeById(id);

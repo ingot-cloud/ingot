@@ -187,8 +187,9 @@ public class InOAuth2ResourceServerConfiguration {
     }
 
     @Bean("ingot")
-    public InSecurityExpression ingotSecurityExpression() {
-        return new InSecurityExpression();
+    public InSecurityExpression ingotSecurityExpression(
+            org.springframework.beans.factory.ObjectProvider<com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource> trusted) {
+        return new InSecurityExpression(trusted);
     }
 
     /**

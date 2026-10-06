@@ -80,7 +80,7 @@ class RoleFieldPermissionServiceTest {
                 Map.of(PHONE, MASKED), READ, false);
         when(metadata.resourceIds(anyList())).thenReturn(Set.of(BigInteger.TEN));
         when(metadata.load(anyCollection())).thenReturn(Map.of(RESOURCE, descriptor));
-        when(metadata.require(KEY)).thenReturn(new ResourceFieldMetadata.Entry(RESOURCE, descriptor));
+        when(metadata.require(eq(KEY), anyBoolean())).thenReturn(new ResourceFieldMetadata.Entry(RESOURCE, descriptor));
     }
 
     @Test
@@ -151,4 +151,15 @@ class RoleFieldPermissionServiceTest {
         return FieldPolicyProcessor.access(policy, new ScopeTarget(id, id, null, List.of())).get(PHONE);
     }
 
+
+    @Test
+    void trustedAdministratorGetsFullRegisteredFieldsWithoutBorrowingRoleSnapshot() {
+        var view = new AuthorizationEvaluator.AuthorizationView(List.of(READ, WRITE), List.of(READ, WRITE),
+                Map.of(), "administrator", Instant.now().plusSeconds(30), List.of(), true);
+        var policies = service.evaluate(KEY, ACTOR, view, List.of(READ, WRITE));
+        assertEquals(FULL, access(policies.get(READ), "any-object"));
+        assertEquals(FULL, access(policies.get(WRITE), "other-object"));
+        assertEquals(Set.of(PHONE), policies.get(READ).ceilings().keySet());
+        verify(metadata).require(KEY, true);
+    }
 }

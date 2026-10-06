@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.catalog.CatalogService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
@@ -51,6 +54,7 @@ public class PlatformPlanAPI implements RShortcuts {
      */
     @Operation(summary = "套餐目录")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_PLAN_READ)
     public R<?> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -77,6 +81,7 @@ public class PlatformPlanAPI implements RShortcuts {
      */
     @Operation(summary = "创建套餐")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_PLAN_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody PlanDraft input) {
         return ok(catalog.createPlan(input));
     }
@@ -89,6 +94,7 @@ public class PlatformPlanAPI implements RShortcuts {
      */
     @Operation(summary = "套餐详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_PLAN_READ)
     public R<ResourceDetail<PlanRecord>> get(@PathVariable String id) {
         return ok(catalog.getPlan(id));
     }
@@ -102,6 +108,7 @@ public class PlatformPlanAPI implements RShortcuts {
      */
     @Operation(summary = "更新套餐")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_PLAN_UPDATE)
     public R<ResourceDetail<PlanRecord>> update(@PathVariable String id, @Valid @RequestBody PlanUpdateInput input) {
         return ok(catalog.updatePlan(id, input));
     }

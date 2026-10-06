@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class LocalAuthorizationSnapshotLoader implements AuthorizationSnapshotLoader {
 
     private final AuthorizationEvaluator evaluator;
+    private final com.ingot.cloud.iam.identity.CurrentIdentityService identities;
 
     /**
      * {@inheritDoc}
@@ -57,11 +58,14 @@ public class LocalAuthorizationSnapshotLoader implements AuthorizationSnapshotLo
         if (requestedUserId != null && !requestedUserId.equals(user.getId())) {
             throw new AuthorizationDeniedException("AuthorizationDenied");
         }
-        AuthorizationEvaluator.AuthorizationView view = evaluator.evaluate(context);
+        identities.requireCurrent();
+        AuthorizationEvaluator.AuthorizationView view = evaluator.evaluateForExecution(context, true);
         AuthorizationSnapshotDTO snapshot = new AuthorizationSnapshotDTO();
         snapshot.setTenantId(context.tenantId() == null ? 0L : Long.parseLong(context.tenantId()));
         snapshot.setUserId(user.getId());
         snapshot.setPermissionCodes(new LinkedHashSet<>(view.actionCodes()));
+        snapshot.setPlatformAdministrator(context.domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM
+                && view.platformAdministrator());
         snapshot.setSource("REMOTE");
         snapshot.setVersion(Instant.now().toEpochMilli());
         snapshot.setGeneratedAt(Instant.now());

@@ -21,6 +21,7 @@ import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AssignmentBatchInput;
 import com.ingot.framework.commons.model.iam.AssignmentInput;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.RoleKind;
@@ -58,6 +59,7 @@ class AssignmentServiceTest {
     private AssignmentService service;
     /** 逐例设定，模拟当前操作者的 ACTION 是否来自非委派授权。 */
     private boolean governed;
+    private boolean administrator;
     private static final AuthorizationContext TENANT =
             new AuthorizationContext(AuthorizationDomain.TENANT, "10", "1", "101");
     private static final String MANAGED_DEPARTMENTS =
@@ -73,6 +75,7 @@ class AssignmentServiceTest {
 
     @BeforeEach
     void database() {
+        administrator = false;
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("DROP ALL OBJECTS");
         jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY, code VARCHAR(64), domain VARCHAR(16))");
@@ -149,9 +152,12 @@ class AssignmentServiceTest {
         var transactions = new DataSourceTransactionManager(dataSource);
         var audits = IamMybatisTestAccess.audits(dataSource);
         var changes = new AuthorizationChangeNotifier(event -> { });
-        IamActionAuthorizer authorizer = (actor, action) -> new IamActionAuthorizer.Admission(governed);
+        IamActionAuthorizer authorizer = new IamActionAuthorizer() {
+            @Override public Admission admit(AuthorizationContext actor, IamAction action) { return new Admission(governed); }
+            @Override public boolean platformAdministrator(AuthorizationContext actor) { return administrator; }
+        };
         var access = new IamAccess(new CurrentIdentityService(identities), authorizer,
-                new AtomicLong(9000)::incrementAndGet);
+                new AtomicLong(9000)::incrementAndGet, org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class));
         var roles = new RoleService(access, audits, changes, new RoleSynthesisCache(),
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
@@ -355,6 +361,59 @@ class AssignmentServiceTest {
         jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(61,'PLATFORM',NULL,1002,NULL)");
         jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES(61,55,'[{\"kind\":\"ALL\"}]','{}')");
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=61 WHERE id=81");
+    }
+
+
+    @Test
+    void onlyCurrentAdministratorMayAssignSystemRoleDirectlyToMembers() {
+        platformUpgradeFixture();
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,kind,code,name,enabled) VALUES(25,'PLATFORM','SYSTEM',?,'超级管理员',TRUE)",
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES(36,25,'SYSTEM',1)");
+        var direct = new AssignmentInput(new SubjectRef(SubjectType.MEMBER, "1002"),
+                new RoleRevisionRef(RoleKind.SYSTEM, "36"), Map.of(), null, null, null);
+        assertFalse(service.preview(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(List.of(direct))).valid());
+        assertThrows(BizException.class, () -> service.create(AuthorizationDomain.PLATFORM,
+                new AssignmentBatchInput(List.of(direct))));
+        administrator = true;
+        assertTrue(service.preview(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(List.of(direct))).valid());
+        var delegated = new AssignmentInput(direct.subject(), direct.roleRevisionRef(), Map.of(), null, null, "61");
+        assertFalse(service.preview(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(List.of(delegated))).valid());
+        var group = new AssignmentInput(new SubjectRef(SubjectType.GROUP, "1002"), direct.roleRevisionRef(),
+                Map.of(), null, null, null);
+        jdbc.execute("CREATE TABLE iam_platform_group(id BIGINT PRIMARY KEY)");
+        jdbc.execute("CREATE TABLE iam_platform_group_member(group_id BIGINT, member_id BIGINT)");
+        jdbc.update("INSERT INTO iam_platform_group VALUES(1002)");
+        jdbc.update("INSERT INTO iam_platform_group_member VALUES(1002,1002)");
+        assertFalse(service.preview(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(List.of(group))).valid());
+    }
+
+    @Test
+    void memberCreationAcceptsExplicitPublishedOlderVersionButNotWrongRole() {
+        platformUpgradeFixture();
+        jdbc.update("DELETE FROM iam_role_assignment WHERE id=81");
+        var draft = new com.ingot.framework.commons.model.iam.MemberRoleAssignmentDraft("24",
+                new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "34"), Map.of(), null, null);
+        service.grantMemberRoleAssignments("1002", List.of(draft));
+        assertEquals(34L, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment", Long.class));
+        var wrong = new com.ingot.framework.commons.model.iam.MemberRoleAssignmentDraft("22",
+                draft.roleRevisionRef(), Map.of(), null, null);
+        assertThrows(BizException.class, () -> service.grantMemberRoleAssignments("1002", List.of(wrong)));
+    }
+
+    @Test
+    void memberDeltaRejectsDelegationOnlyAndForeignOrStaleRecordWithoutWrites() {
+        platformUpgradeFixture();
+        var removal = new com.ingot.framework.commons.model.iam.MemberRoleChanges(List.of(), List.of(),
+                List.of(new com.ingot.framework.commons.model.iam.MemberRoleRemoval("81", "0")));
+        governed = false;
+        assertThrows(BizException.class, () -> service.previewMemberRoleChanges("1002", removal));
+        governed = true;
+        assertThrows(BizException.class, () -> service.previewMemberRoleChanges("1001", removal));
+        var stale = new com.ingot.framework.commons.model.iam.MemberRoleChanges(List.of(), List.of(),
+                List.of(new com.ingot.framework.commons.model.iam.MemberRoleRemoval("81", "9")));
+        assertThrows(BizException.class, () -> service.previewMemberRoleChanges("1002", stale));
+        assertEquals("ACTIVE", jdbc.queryForObject("SELECT status FROM iam_role_assignment WHERE id=81", String.class));
     }
 
     private void platformUpgradeFixture() {

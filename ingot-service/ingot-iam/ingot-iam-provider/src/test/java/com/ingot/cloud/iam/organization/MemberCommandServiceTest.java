@@ -82,7 +82,7 @@ class MemberCommandServiceTest {
         service = new MemberCommandService(new CurrentIdentityService(identities),
                 new MemberLifecycle(new DataSourceTransactionManager(dataSource), identities, members,
                         com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource),
-                        new AuthorizationChangeNotifier(event -> { })),
+                        new AuthorizationChangeNotifier(event -> { }), org.mockito.Mockito.mock(com.ingot.cloud.iam.support.PlatformAdministratorGuard.class)),
                 new GrantPresenceMemberGuard(authorizer),
                 new AtomicLong(9000)::incrementAndGet, members);
         authenticate();

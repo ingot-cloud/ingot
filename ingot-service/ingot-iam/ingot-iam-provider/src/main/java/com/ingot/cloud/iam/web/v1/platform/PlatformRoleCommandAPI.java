@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.role.RoleService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -57,6 +60,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色目录")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleSummary>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -75,6 +79,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 去重有效成员页
      */
     @GetMapping("/{id}/members")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     @Operation(summary="角色有效成员")
     public R<com.ingot.framework.commons.model.iam.RoleSubjectPage> members(@PathVariable String id,
             @RequestParam(required=false) String revisionId, @RequestParam(required=false) String keyword,
@@ -91,6 +96,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 有效用户组页
      */
     @GetMapping("/{id}/groups")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     @Operation(summary="角色有效用户组")
     public R<com.ingot.framework.commons.model.iam.RoleSubjectPage> groups(@PathVariable String id,
             @RequestParam(required=false) String revisionId, @RequestParam(required=false) String keyword,
@@ -107,6 +113,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * @return 当前有效来源页
      */
     @GetMapping("/{id}/members/{memberId}/assignments")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     @Operation(summary="角色成员有效分配来源")
     public R<PageResponse<ResourceDetail<com.ingot.framework.commons.model.iam.AssignmentRecord>>> sources(
             @PathVariable String id, @PathVariable String memberId, @RequestParam(required=false) String revisionId,
@@ -122,6 +129,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "创建角色并发布首个版本")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody RoleCreateInput input) {
         return ok(roles.create(AuthorizationDomain.PLATFORM, false, input));
     }
@@ -133,6 +141,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "预览平台角色创建")
     @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_CREATE)
     public R<Preview<RoleDefinitionDraft>> previewCreate(@Valid @RequestBody RoleCreateInput input) {
         return ok(roles.previewCreate(input));
     }
@@ -145,6 +154,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色元数据")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<ResourceDetail<RoleSummary>> get(@PathVariable String id) {
         return ok(roles.get(AuthorizationDomain.PLATFORM, false, id));
     }
@@ -157,6 +167,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色当前绑定权限")
     @GetMapping("/{id}/grants")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<RoleGrantList> grants(@PathVariable String id) {
         return ok(new RoleGrantList(roles.listCurrentGrants(AuthorizationDomain.PLATFORM, false, id)));
     }
@@ -170,6 +181,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "更新角色基本信息或启停")
     @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_STATUS)
     public R<CreatedResource> patch(@PathVariable String id, @Valid @RequestBody RoleUpdateInput input) {
         if (input.name() == null || input.name().isBlank()) {
             return ok(roles.changeStatus(
@@ -189,6 +201,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用角色")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(roles.delete(AuthorizationDomain.PLATFORM, false, id));
     }
@@ -203,6 +216,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色版本")
     @GetMapping("/{id}/revisions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleRevision>>> revisions(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -219,6 +233,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "发布新版本")
     @PostMapping("/{id}/revisions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_PUBLISH)
     public R<CreatedResource> publish(@PathVariable String id, @Valid @RequestBody RolePublishInput input) {
         return ok(roles.publish(AuthorizationDomain.PLATFORM, false, id, input));
     }
@@ -232,6 +247,7 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "预览待发布定义")
     @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_PREVIEW)
     public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input) {
         return ok(roles.preview(AuthorizationDomain.PLATFORM, false, id, input));
     }

@@ -158,11 +158,11 @@ class RoleWorkspaceMySqlHttpTest {
                 IamMybatisTestAccess.mapper(source, IamApplicationMapper.class),
                 IamMybatisTestAccess.mapper(source, IamResourceMapper.class),
                 IamMybatisTestAccess.mapper(source, IamActionMapper.class), fieldRegistry);
+        var fieldEvaluator = mock(AuthorizationEvaluator.class);
         var roleFields = new com.ingot.cloud.iam.extension.RoleFieldPermissionService(fieldMetadata,
-                IamMybatisTestAccess.roles(source), fieldCompiler, mock(AuthorizationEvaluator.class));
+                IamMybatisTestAccess.roles(source), fieldCompiler, fieldEvaluator);
         var currentIdentity = mock(com.ingot.cloud.iam.identity.CurrentIdentityService.class);
         when(currentIdentity.requireDomain(AuthorizationDomain.PLATFORM)).thenReturn(actor);
-        var fieldEvaluator = mock(AuthorizationEvaluator.class);
         var fieldCode = IamAction.PLATFORM_MEMBER_READ.getCode();
         var narrow = new com.ingot.cloud.iam.evaluation.ScopeClause(false, false, false, false, List.of(), false,
                 List.of("1"));
@@ -176,6 +176,18 @@ class RoleWorkspaceMySqlHttpTest {
                             fieldCode, List.of(narrow)),
                             new AuthorizationEvaluator.RoleFieldSource(BigInteger.valueOf(502), null, null, 32,
                                     fieldCode, List.of(com.ingot.cloud.iam.evaluation.ScopeClause.universe())))));
+        when(fieldEvaluator.evaluate(actor.context()))
+            .thenAnswer(invocation -> fieldEvaluator.evaluateForExecution(actor.context(), false));
+        var projector = mock(com.ingot.cloud.iam.policy.FieldAccessEvaluator.class);
+        when(projector.project(any(MemberRecord.class), anyMap())).thenCallRealMethod();
+        var memberQueries = new com.ingot.cloud.iam.organization.MemberQueryService(access, resources,
+                new ObjectCapabilities(fieldEvaluator, resources), projector,
+                mock(IamAuditWriter.class), IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class),
+                presenter, mock(com.ingot.cloud.iam.group.GroupService.class),
+                new DataSourceTransactionManager(source), roleFields);
+        web.registerBean(com.ingot.cloud.iam.web.v1.platform.PlatformMemberCommandAPI.class,
+                () -> new com.ingot.cloud.iam.web.v1.platform.PlatformMemberCommandAPI(
+                        mock(com.ingot.cloud.iam.organization.MemberCommandService.class), memberQueries, presenter));
         var localFields = new com.ingot.cloud.iam.extension.LocalResourceAuthorizationClient(currentIdentity,
                 fieldEvaluator, fieldRegistry, fieldCompiler, roleFields, candidates);
         web.registerBean(com.ingot.cloud.iam.web.inner.InnerResourceAuthorizationAPI.class,
@@ -495,6 +507,153 @@ class RoleWorkspaceMySqlHttpTest {
         }
     }
 
+    @Test
+    void memberContextHttpUsesRoleSourcesWithoutPageSampleOrCreatePermission() throws Exception {
+        try {
+            jdbc.update("UPDATE iam_resource SET field_capabilities=? WHERE id=340",
+                    "[{\"key\":\"phone\",\"label\":\"手机号\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":false,\"sortable\":false}]");
+            jdbc.update("UPDATE iam_role_revision SET resource_field_permissions=? WHERE id=31",
+                    "{\"340\":{\"phone\":{\"visibility\":\"FULL\",\"editable\":false}}}");
+            JsonNode context = get("/v1/platform/members/context");
+            assertEquals("FULL", context.path("listFieldVisibility").path("phone").asText());
+            assertEquals("HIDDEN", context.path("createFieldAccess").path("phone").path("visibility").asText());
+            assertFalse(context.path("createFieldAccess").path("phone").path("editable").asBoolean());
+            assertFalse(context.path("canSearchDisplayName").asBoolean());
+            assertFalse(context.has("records"));
+        }
+        finally {
+            jdbc.update("UPDATE iam_role_revision SET resource_field_permissions='{}' WHERE id=31");
+            jdbc.update("UPDATE iam_resource SET field_capabilities='[]' WHERE id=340");
+        }
+    }
+
+    @Test
+    void trustedSystemSourcesAndConcurrentLastAdministratorRemovalUseRealMySql() throws Exception {
+        jdbc.execute("CREATE TABLE IF NOT EXISTS iam_account(id BIGINT PRIMARY KEY,username VARCHAR(100),enabled BOOLEAN,deleted_at DATETIME)");
+        jdbc.execute("CREATE TABLE IF NOT EXISTS account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until DATETIME)");
+        jdbc.update("INSERT INTO iam_account(id,username,enabled) VALUES(901,'admin-one',TRUE),(902,'admin-two',TRUE)");
+        jdbc.update("INSERT INTO iam_platform_member(id,display_name,status,account_id) VALUES(901,'Admin one','ACTIVE',901),(902,'Admin two','ACTIVE',902)");
+        jdbc.update("INSERT INTO iam_role_definition(id,name,domain,enabled,code,kind) VALUES(900,'Super','PLATFORM',TRUE,?,'SYSTEM')",
+                com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE);
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES(900,900,'SYSTEM',1)");
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,status) VALUES(901,'PLATFORM','MEMBER',901,900,'SYSTEM','{}',UTC_TIMESTAMP(),'ACTIVE'),(902,'PLATFORM','MEMBER',902,900,'SYSTEM','{}',UTC_TIMESTAMP(),'ACTIVE')");
+        var repository = IamMybatisTestAccess.assignments(jdbc.getDataSource());
+        var guard = new PlatformAdministratorGuard(repository, new AuthorizationChangeNotifier(event -> {}));
+        try {
+            assertEquals(1, repository.platformAdministrators("901").size());
+            jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=60 WHERE id=901");
+            assertTrue(repository.platformAdministrators("901").isEmpty());
+            jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL,valid_until=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 SECOND) WHERE id=901");
+            assertTrue(repository.platformAdministrators("901").isEmpty());
+            jdbc.update("UPDATE iam_role_assignment SET valid_until=NULL WHERE id=901");
+            jdbc.update("INSERT INTO account_lock_state VALUES(901,'0',TRUE,NULL)");
+            assertTrue(repository.platformAdministrators("901").isEmpty());
+            jdbc.update("DELETE FROM account_lock_state WHERE user_id=901");
+            jdbc.update("UPDATE iam_account SET enabled=FALSE WHERE id=901");
+            assertTrue(repository.platformAdministrators("901").isEmpty());
+            jdbc.update("UPDATE iam_account SET enabled=TRUE WHERE id=901");
+            var transaction = new org.springframework.transaction.support.TransactionTemplate(
+                    new DataSourceTransactionManager(jdbc.getDataSource()));
+            var start = new java.util.concurrent.CountDownLatch(1);
+            var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
+            try {
+                java.util.concurrent.Callable<Boolean> first = () -> revokeAdministrator(901, start, transaction, guard);
+                java.util.concurrent.Callable<Boolean> second = () -> revokeAdministrator(902, start, transaction, guard);
+                var a = executor.submit(first); var b = executor.submit(second); start.countDown();
+                assertNotEquals(a.get(20, java.util.concurrent.TimeUnit.SECONDS), b.get(20, java.util.concurrent.TimeUnit.SECONDS));
+                assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id IN (901,902) AND status='ACTIVE'", Integer.class));
+                repository.requireAvailableAdministrator();
+            } finally { executor.shutdownNow(); }
+        } finally {
+            jdbc.update("DELETE FROM iam_role_assignment WHERE id IN (901,902)");
+            jdbc.update("DELETE FROM iam_role_revision WHERE id=900");
+            jdbc.update("DELETE FROM iam_role_definition WHERE id=900");
+            jdbc.update("DELETE FROM iam_platform_member WHERE id IN (901,902)");
+            jdbc.update("DELETE FROM iam_account WHERE id IN (901,902)");
+            jdbc.update("DELETE FROM account_lock_state WHERE user_id IN (901,902)");
+        }
+    }
+
+    @Test
+    void memberBoundRolesAreEffectivePaginatedAndDoNotRevealGroups() throws Exception {
+        when(access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ)).thenReturn(actor);
+        var page = get("/v1/platform/members/1/bound-roles?page=1&pageSize=1");
+        assertEquals(2, page.path("total").asInt());
+        assertEquals(1, page.path("items").size());
+        var role = page.path("items").get(0);
+        assertEquals("400", role.path("roleId").asText());
+        assertEquals("1", role.path("revisionNumber").asText());
+        assertEquals(2, role.path("sourceTypes").size());
+        assertFalse(role.has("groupId"));
+        assertFalse(role.has("groupName"));
+        assertEquals(0, get("/v1/platform/members/3/bound-roles").path("total").asInt());
+        doThrow(new com.ingot.framework.commons.error.BizException(IamReasonCode.OBJECT_NOT_FOUND)).when(resources)
+                .requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, 1L);
+        try {
+            var response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                    URI.create("http://127.0.0.1:" + web.getWebServer().getPort() + "/v1/platform/members/1/bound-roles")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            assertNotEquals(200, response.statusCode());
+        } finally { doNothing().when(resources).requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, 1L); }
+    }
+
+    @Test
+    void memberDirectEditPageFiltersInSqlAndScopeUpdatePreservesIdentity() throws Exception {
+        when(access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ)).thenReturn(actor);
+        when(access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_UPDATE)).thenReturn(actor);
+        when(access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPDATE)).thenReturn(new IamAdmission(actor, true));
+        when(access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_DELETE)).thenReturn(new IamAdmission(actor, true));
+        var page = get("/v1/platform/members/1/assignments?effectiveStatus=ACTIVE&directOnly=true&pageSize=1");
+        assertEquals(2, page.path("total").asInt());
+        assertEquals(1, page.path("items").size());
+        assertEquals(0, get("/v1/platform/members/99/assignments?effectiveStatus=ACTIVE&directOnly=true").path("total").asInt());
+        var before = jdbc.queryForMap("SELECT id,revision_id,created_at,valid_from,valid_until,delegation_grant_id FROM iam_role_assignment WHERE id=501");
+        var oldBindings = jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment WHERE id=501", String.class);
+        var memberVersion = jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1", Long.class);
+        var rowVersion = jdbc.queryForObject("SELECT version FROM iam_role_assignment WHERE id=501", Long.class);
+        try {
+            Map<String,Object> changes = Map.of("additions", List.of(), "updates", List.of(Map.of("assignmentId", "501", "expectedVersion", rowVersion.toString(), "scopeBindings", Map.of("objects.with.dot", Map.of("kind", "OBJECTS", "ids", List.of("100"))))), "removals", List.of());
+            var input = Map.of("expectedVersion", memberVersion.toString(), "roleChanges", changes);
+            var preview = post("/v1/platform/members/1/preview", input);
+            assertEquals(200, preview.statusCode(), preview.body());
+            assertTrue(json.readTree(preview.body()).path("data").path("valid").asBoolean(), preview.body());
+            assertEquals(oldBindings, jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment WHERE id=501", String.class));
+            var response = patch("/v1/platform/members/1", input);
+            assertEquals(200, response.statusCode(), response.body());
+            assertEquals(before, jdbc.queryForMap("SELECT id,revision_id,created_at,valid_from,valid_until,delegation_grant_id FROM iam_role_assignment WHERE id=501"));
+            assertTrue(jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment WHERE id=501", String.class).contains("100"));
+            var bindings = jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment WHERE id=501", String.class);
+            var version = jdbc.queryForObject("SELECT version FROM iam_role_assignment WHERE id=501", Long.class);
+            var conflict = patch("/v1/platform/members/1", Map.of("expectedVersion", Long.toString(memberVersion + 1), "roleChanges", changes));
+            assertNotEquals(200, conflict.statusCode());
+            assertEquals(memberVersion + 1, jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1", Long.class));
+            assertEquals(version, jdbc.queryForObject("SELECT version FROM iam_role_assignment WHERE id=501", Long.class));
+            assertEquals(bindings, jdbc.queryForObject("SELECT scope_bindings FROM iam_role_assignment WHERE id=501", String.class));
+        } finally {
+            jdbc.update("UPDATE iam_role_assignment SET scope_bindings=?,version=? WHERE id=501", oldBindings, rowVersion);
+            jdbc.update("UPDATE iam_platform_member SET version=? WHERE id=1", memberVersion);
+        }
+    }
+
+    private HttpResponse<String> patch(String path, Object body) throws Exception {
+        return HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"
+                + web.getWebServer().getPort() + path)).header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body))).build(),
+                HttpResponse.BodyHandlers.ofString());
+    }
+
+    private boolean revokeAdministrator(long id, java.util.concurrent.CountDownLatch start,
+            org.springframework.transaction.support.TransactionTemplate transaction, PlatformAdministratorGuard guard) throws Exception {
+        start.await();
+        try {
+            transaction.executeWithoutResult(status -> {
+                guard.lock();
+                jdbc.update("UPDATE iam_role_assignment SET status='REVOKED' WHERE id=?", id);
+                guard.requireAvailable();
+            });
+            return true;
+        } catch (com.ingot.framework.commons.error.BizException denied) { return false; }
+    }
+
     private void fixture() {
         jdbc.execute(
                 "CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,display_name VARCHAR(100),status VARCHAR(16))");
@@ -502,7 +661,7 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.execute(
                 "CREATE TABLE iam_platform_group_member(group_id BIGINT,member_id BIGINT,PRIMARY KEY(group_id,member_id))");
         jdbc.execute(
-                "CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),tenant_id BIGINT,enabled BOOLEAN)");
+                "CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),tenant_id BIGINT,enabled BOOLEAN,code VARCHAR(64),kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM')");
         jdbc.execute(
                 "CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY,role_id BIGINT,kind VARCHAR(32),revision BIGINT)");
         jdbc.execute(
@@ -524,7 +683,7 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.update("INSERT INTO iam_platform_group VALUES(80,'Allowed'),(81,'Self group')");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES(80,1),(80,2),(81,99),(81,3)");
         jdbc.update(
-                "INSERT INTO iam_role_definition VALUES(400,'Role','PLATFORM',NULL,TRUE),(401,'Other role','PLATFORM',NULL,TRUE)");
+                "INSERT INTO iam_role_definition(id,name,domain,tenant_id,enabled,code) VALUES(400,'Role','PLATFORM',NULL,TRUE,'custom-role'),(401,'Other role','PLATFORM',NULL,TRUE,'other-role')");
         jdbc.update(
                 "INSERT INTO iam_role_revision VALUES(31,400,'PLATFORM_CUSTOM',1),(32,400,'PLATFORM_CUSTOM',2),(33,401,'PLATFORM_CUSTOM',1)");
         jdbc.update(
@@ -558,7 +717,7 @@ class RoleWorkspaceMySqlHttpTest {
                 "ALTER TABLE iam_application ADD description VARCHAR(256), ADD icon VARCHAR(256), ADD sort_order INT, ADD baseline BOOLEAN DEFAULT FALSE, ADD version BIGINT DEFAULT 0");
         jdbc.execute("ALTER TABLE iam_resource ADD field_capabilities JSON, ADD version BIGINT DEFAULT 0");
         jdbc.execute(
-                "ALTER TABLE iam_platform_member ADD account_id BIGINT, ADD avatar VARCHAR(256), ADD version BIGINT DEFAULT 0, ADD created_at DATETIME, ADD updated_at DATETIME");
+                "ALTER TABLE iam_platform_member ADD account_id BIGINT, ADD avatar VARCHAR(256), ADD version BIGINT DEFAULT 0, ADD created_at DATETIME, ADD updated_at DATETIME, ADD phone VARCHAR(32), ADD email VARCHAR(128)");
         jdbc.execute(
                 "ALTER TABLE iam_authorization_audit ADD event_id VARCHAR(64), ADD actor_account_id BIGINT, ADD domain VARCHAR(16), ADD tenant_id BIGINT, ADD target_type VARCHAR(64), ADD target_id VARCHAR(128), ADD safe_before JSON, ADD safe_after JSON, ADD revisions JSON, ADD delegation_id BIGINT, ADD trace_id VARCHAR(128)");
         jdbc.update("UPDATE iam_resource SET field_capabilities='[]'");

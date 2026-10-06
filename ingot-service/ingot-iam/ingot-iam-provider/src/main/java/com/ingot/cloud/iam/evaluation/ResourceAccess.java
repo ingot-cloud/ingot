@@ -68,6 +68,22 @@ public class ResourceAccess {
     }
 
     /**
+     * 以最新授权校验平台成员更新；可查看但越出编辑范围返回403，不披露不可查看对象。
+     * @param actor 当前可信平台身份
+     * @param memberId 已锁定的真实成员
+     */
+    public void requirePlatformMemberUpdate(AuthorizationContext actor, long memberId) {
+        if (actor.domain() != AuthorizationDomain.PLATFORM)
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        evaluator.require(actor, IamAction.PLATFORM_MEMBER_UPDATE);
+        var view = evaluator.evaluateForExecution(actor, true);
+        if (!memberVisible(actor, view, IamAction.PLATFORM_MEMBER_READ, memberId))
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        if (!memberVisible(actor, view, IamAction.PLATFORM_MEMBER_UPDATE, memberId))
+            throw new BizException(IamReasonCode.DATA_SCOPE_DENIED);
+    }
+
+    /**
      * 确认目标部门对读操作可见。
      *
      * @param actor 当前身份

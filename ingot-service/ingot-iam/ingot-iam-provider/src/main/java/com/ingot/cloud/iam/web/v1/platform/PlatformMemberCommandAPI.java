@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import java.util.List;
 
 import com.ingot.cloud.iam.organization.MemberCommandService;
@@ -11,12 +14,17 @@ import com.ingot.framework.commons.model.iam.AssignmentRecord;
 import com.ingot.framework.commons.model.iam.CreatedResource;
 import com.ingot.framework.commons.model.iam.GroupRecord;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
-import com.ingot.framework.commons.model.iam.MemberProfileInput;
+import com.ingot.framework.commons.model.iam.PlatformMemberEditInput;
+import com.ingot.framework.commons.model.iam.PlatformMemberEditPreview;
+import com.ingot.framework.commons.model.iam.MemberBoundRole;
+import com.ingot.framework.commons.model.iam.Preview;
+import com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberRoleReplaceInput;
 import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberStatusInput;
 import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.framework.commons.model.iam.PlatformMemberContext;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.VersionInput;
 import com.ingot.framework.commons.model.support.R;
@@ -51,6 +59,17 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     private final AssignmentService assignments;
 
     /**
+     * 读取成员列可见性和创建字段上下文，不授予额外查看或写入权限。
+     * @return 当前身份的展示上下文
+     */
+    @Operation(summary = "平台成员字段上下文")
+    @GetMapping("/context")
+    @AdminOrHasAnyAuthority({IamAction.VALUE_PLATFORM_MEMBER_READ, IamAction.VALUE_PLATFORM_MEMBER_CREATE})
+    public R<PlatformMemberContext> context() {
+        return ok(queries.platformContext());
+    }
+
+    /**
      * 分页列出平台成员。
      *
      * @param page 页码
@@ -62,6 +81,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
     public R<PageResponse<ResourceDetail<MemberRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -79,6 +99,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "创建成员资格")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody MemberCreateInput input) {
         return ok(queries.create(AuthorizationDomain.PLATFORM, input));
     }
@@ -91,6 +112,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
         return ok(queries.get(AuthorizationDomain.PLATFORM, id));
     }
@@ -105,6 +127,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员所在用户组")
     @GetMapping("/{id}/groups")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
     public R<PageResponse<ResourceDetail<GroupRecord>>> groups(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -120,6 +143,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员直接角色")
     @GetMapping("/{id}/roles")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
     public R<List<MemberRoleView>> roles(@PathVariable String id) {
         return ok(queries.listDirectRoles(id));
     }
@@ -129,14 +153,49 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      * @param id 平台成员 ID
      * @param page 页码
      * @param pageSize 页大小
+     * @param effectiveStatus 计算后的生效状态，可空
+     * @param directOnly 排除来源委派的直接分配
      * @return 当前身份可见的分配页
      */
     @Operation(summary = "成员角色分配")
     @GetMapping("/{id}/assignments")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ASSIGNMENT_READ)
     public R<PageResponse<ResourceDetail<AssignmentRecord>>> assignments(@PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) AssignmentEffectiveStatus effectiveStatus,
+            @RequestParam(defaultValue = "false") boolean directOnly) {
+        return ok(assignments.listForMember(id, page, pageSize, effectiveStatus, directOnly));
+    }
+
+    /**
+     * 分页读取成员当前有效角色摘要，不包含历史记录和组名称。
+     * @param id 成员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 固定角色版本摘要
+     */
+    @Operation(summary = "成员有效绑定角色")
+    @GetMapping("/{id}/bound-roles")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
+    public R<PageResponse<MemberBoundRole>> boundRoles(@PathVariable String id,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(assignments.listForMember(id, page, pageSize));
+        return ok(assignments.boundRoles(id, page, pageSize));
+    }
+
+    /**
+     * 预览成员资料和角色差量，不持久化。
+     * @param id 成员
+     * @param input 编辑草稿
+     * @return 差量摘要和校验
+     */
+    @Operation(summary = "成员编辑预览")
+    @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_UPDATE)
+    public R<Preview<PlatformMemberEditPreview>> preview(@PathVariable String id,
+            @Valid @RequestBody PlatformMemberEditInput input) {
+        return ok(queries.previewPlatformEdit(id, input));
     }
 
     /**
@@ -148,22 +207,24 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "替换成员直接角色")
     @PutMapping("/{id}/roles")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_UPDATE)
     public R<List<MemberRoleView>> replaceRoles(@PathVariable String id,
                                                 @Valid @RequestBody MemberRoleReplaceInput input) {
         return ok(queries.replaceDirectRoles(id, input));
     }
 
     /**
-     * 更新平台成员显示资料。
+     * 原子更新平台成员资料与角色差量。
      *
      * @param id 平台成员 ID
-     * @param input 资料
+     * @param input 资料与可选角色差量
      * @return 更新后投影
      */
-    @Operation(summary = "更新成员资料")
+    @Operation(summary = "更新成员资料与角色分配")
     @PatchMapping("/{id}")
-    public R<ResourceDetail<MemberRecord>> patch(@PathVariable String id, @Valid @RequestBody MemberProfileInput input) {
-        return ok(queries.patch(AuthorizationDomain.PLATFORM, id, input));
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_UPDATE)
+    public R<ResourceDetail<MemberRecord>> patch(@PathVariable String id, @Valid @RequestBody PlatformMemberEditInput input) {
+        return ok(queries.patchPlatform(id, input));
     }
 
     /**
@@ -175,6 +236,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "暂停或恢复成员")
     @PatchMapping("/{id}/status")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_STATUS)
     public R<CreatedResource> changeStatus(@PathVariable String id, @Valid @RequestBody MemberStatusInput input) {
         return ok(members.changeStatus(AuthorizationDomain.PLATFORM, id, input));
     }
@@ -188,6 +250,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "移出当前域")
     @PostMapping("/{id}/remove")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_REMOVE)
     public R<CreatedResource> remove(@PathVariable String id, @Valid @RequestBody VersionInput input) {
         return ok(members.remove(AuthorizationDomain.PLATFORM, id, input));
     }

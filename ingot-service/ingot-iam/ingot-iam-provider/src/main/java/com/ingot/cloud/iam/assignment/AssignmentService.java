@@ -51,6 +51,9 @@ import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.ImpactSummary;
 import com.ingot.framework.commons.model.iam.MemberRoleView;
+import com.ingot.framework.commons.model.iam.MemberRoleChanges;
+import com.ingot.framework.commons.model.iam.MemberRoleScopeChange;
+import com.ingot.framework.commons.model.iam.MemberBoundRole;
 import com.ingot.framework.commons.model.iam.MemberRoleAssignmentDraft;
 import com.ingot.framework.commons.model.iam.PageResponse;
 import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput;
@@ -185,6 +188,52 @@ public class AssignmentService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
         resourceAccess.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
         return list(AuthorizationDomain.PLATFORM, page, pageSize, SubjectType.MEMBER, null, id, null);
+    }
+
+    /**
+     * 按成员关联筛选当前生效的非委派直接记录，供差量编辑使用。
+     * @param memberId 成员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param effectiveStatus 可选计算状态
+     * @param directOnly 排除委派直接分配
+     * @return 分配页
+     */
+    public PageResponse<ResourceDetail<AssignmentRecord>> listForMember(String memberId, int page, int pageSize,
+            com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus effectiveStatus, boolean directOnly) {
+        long id = IamIds.require(memberId);
+        var actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
+        resourceAccess.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
+        if (!directOnly) return list(AuthorizationDomain.PLATFORM, page, pageSize, SubjectType.MEMBER, null, id, effectiveStatus);
+        var admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_READ);
+        IamPages.require(page, pageSize);
+        if (!admission.governed()) return IamPages.details(List.of(), 0, page, pageSize);
+        var rows = assignments.pagePlatform(page, pageSize, SubjectType.MEMBER, null, id, effectiveStatus, true);
+        return IamPages.details(presentPlatformRows(actor, rows.getRecords()), rows.getTotal(), page, pageSize);
+    }
+
+    /**
+     * 成员只读视图按有效关系聚合固定角色版本，不披露组名称或标识。
+     * @param memberId 成员
+     * @param page 页码
+     * @param pageSize 页大小
+     * @return 当前有效角色摘要
+     */
+    public PageResponse<MemberBoundRole> boundRoles(String memberId,
+            int page, int pageSize) {
+        var actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
+        long id = IamIds.require(memberId);
+        resourceAccess.requireVisibleMember(actor.context(), IamAction.PLATFORM_MEMBER_READ, id);
+        IamPages.require(page, pageSize);
+        var rows = assignments.memberBoundRoles(id, page, pageSize);
+        var items = rows.getRecords().stream().map(row -> {
+            List<SubjectType> sources = new ArrayList<>();
+            if (row.getDirectCount() > 0) sources.add(SubjectType.MEMBER);
+            if (row.getGroupCount() > 0) sources.add(SubjectType.GROUP);
+            return new MemberBoundRole(row.getRoleId().toString(), row.getName(),
+                    new RoleRevisionRef(row.getKind(), row.getRevisionId().toString()), row.getRevisionNumber().toString(), sources);
+        }).toList();
+        return new PageResponse<>(items, rows.getTotal(), page, pageSize);
     }
 
     private PageResponse<ResourceDetail<AssignmentRecord>> list(AuthorizationDomain domain, int page, int pageSize,
@@ -363,8 +412,10 @@ public class AssignmentService {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             Instant from = next.validFrom() == null ? Instant.now() : next.validFrom();
+            boolean administrator = requireAdministratorMutation(actor, current);
             assignments.update(assignmentId, IamIds.require(next.roleRevisionRef().id()), next.roleRevisionRef().kind(),
                     IamJson.object(next.scopeBindings()), utc(from), utc(next.validUntil()), current.getVersion());
+            if (administrator) assignments.requireAvailableAdministrator();
             audits.write(actor.context(), access.nextId(), ASSIGNMENT, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.ROLE_REVISION, IamIds.text(current.getRevisionId().longValue())),
                     Map.of(AuditField.ROLE_REVISION, next.roleRevisionRef().id()),
@@ -532,9 +583,11 @@ public class AssignmentService {
             IamAdmission currentAdmission = access.admit(domain, action(domain, AccessKind.DELETE));
             IamRoleAssignmentEntity current = lock(domain, actor, assignmentId);
             requireRecord(domain, currentAdmission, current);
+            boolean administrator = requireAdministratorMutation(actor, current);
             if (assignments.revoke(assignmentId, current.getVersion()) != 1) {
                 throw new BizException(IamReasonCode.REVISION_CONFLICT);
             }
+            if (administrator) assignments.requireAvailableAdministrator();
             audits.write(actor.context(), access.nextId(), ASSIGNMENT, id, AuditChangeType.DISABLE,
                     Map.of(AuditField.STATUS, current.getStatus().name()),
                     Map.of(AuditField.STATUS, GrantStatus.REVOKED.name()),
@@ -584,7 +637,7 @@ public class AssignmentService {
     }
 
     /**
-     * 在成员创建事务内写入选定的最新固定版本及其全部范围参数。
+     * 在成员事务内写入明确选定的可分配固定版本及其全部范围参数。
      *
      * @param memberId 刚创建的平台成员
      * @param drafts 已配置的直接分配
@@ -593,18 +646,103 @@ public class AssignmentService {
         if (drafts == null || drafts.isEmpty()) {
             return;
         }
+        create(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(memberDrafts(memberId, drafts)));
+    }
+
+    private List<AssignmentInput> memberDrafts(String memberId, List<MemberRoleAssignmentDraft> drafts) {
+        requireGoverned(IamAction.PLATFORM_ASSIGNMENT_CREATE);
         Set<String> roleIds = new LinkedHashSet<>();
         List<AssignmentInput> items = new ArrayList<>(drafts.size());
         for (MemberRoleAssignmentDraft draft : drafts) {
-            if (draft == null || !roleIds.add(draft.roleId())
-                    || !latestPublished(AuthorizationDomain.PLATFORM, draft.roleId())
-                            .equals(draft.roleRevisionRef())) {
-                throw new BizException(IamReasonCode.REVISION_CONFLICT);
+            var revision = draft == null || draft.roleRevisionRef() == null ? null
+                    : assignments.findRevision(IamIds.require(draft.roleRevisionRef().id()));
+            if (draft == null || !roleIds.add(draft.roleId()) || revision == null
+                    || !revision.getRoleId().equals(BigInteger.valueOf(IamIds.require(draft.roleId())))
+                    || revision.getKind() != draft.roleRevisionRef().kind()) {
+                throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
             }
-            items.add(new AssignmentInput(new SubjectRef(SubjectType.MEMBER, memberId),
-                    draft.roleRevisionRef(), draft.scopeBindings(), draft.validFrom(), draft.validUntil(), null));
+            items.add(new AssignmentInput(new SubjectRef(SubjectType.MEMBER, memberId), draft.roleRevisionRef(),
+                    draft.scopeBindings(), draft.validFrom(), draft.validUntil(), null));
         }
-        create(AuthorizationDomain.PLATFORM, new AssignmentBatchInput(items));
+        return items;
+    }
+
+    private IamAdmission requireGoverned(IamAction action) {
+        var admission = access.admit(AuthorizationDomain.PLATFORM, action);
+        if (!admission.governed()) throw new BizException(IamReasonCode.ACTION_DENIED);
+        return admission;
+    }
+
+    private IamRoleAssignmentEntity memberEditableAssignment(String memberId, String assignmentId,
+            String expectedVersion, IamAction action) {
+        var admission = requireGoverned(action);
+        var row = assignments.find(AuthorizationDomain.PLATFORM, null, IamIds.require(assignmentId));
+        requireRecord(AuthorizationDomain.PLATFORM, admission, row);
+        if (row.getSubjectType() != SubjectType.MEMBER || row.getPlatformMemberId() == null
+                || !row.getPlatformMemberId().equals(BigInteger.valueOf(IamIds.require(memberId)))
+                || row.getDelegationGrantId() != null || row.getStatus() != GrantStatus.ACTIVE
+                || row.getValidFrom() != null && row.getValidFrom().isAfter(utc(Instant.now()))
+                || row.getValidUntil() != null && !row.getValidUntil().isAfter(utc(Instant.now())))
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        var revision = assignments.findRevision(row.getRevisionId().longValueExact());
+        if (revision == null || !Boolean.TRUE.equals(revision.getEnabled()))
+            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        IamIds.requireVersion(expectedVersion, version(row.getVersion()));
+        return row;
+    }
+
+    private AssignmentUpdateInput memberScopeInput(IamRoleAssignmentEntity row,
+            MemberRoleScopeChange change) {
+        return new AssignmentUpdateInput(change.expectedVersion(), new AssignmentInput(
+                new SubjectRef(SubjectType.MEMBER, row.getPlatformMemberId().toString()),
+                new RoleRevisionRef(row.getRevisionKind(), row.getRevisionId().toString()), change.scopeBindings(),
+                instant(row.getValidFrom()), instant(row.getValidUntil()), null));
+    }
+
+    /**
+     * 无写入地重验成员差量；任何一条越界、版本冲突或缺少完整治理资格均拒绝。
+     * @param memberId 成员
+     * @param changes 差量
+     * @return 共用分配校验错误
+     */
+    public List<ValidationIssue> previewMemberRoleChanges(String memberId,
+            MemberRoleChanges changes) {
+        if (changes == null) return List.of();
+        List<ValidationIssue> errors = new ArrayList<>();
+        Set<String> touched = new LinkedHashSet<>();
+        if (!changes.additions().isEmpty()) errors.addAll(preview(AuthorizationDomain.PLATFORM,
+                new AssignmentBatchInput(memberDrafts(memberId, changes.additions()))).errors());
+        for (var change : changes.updates()) {
+            if (!touched.add(change.assignmentId())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            var row = memberEditableAssignment(memberId, change.assignmentId(), change.expectedVersion(), IamAction.PLATFORM_ASSIGNMENT_UPDATE);
+            errors.addAll(previewUpdate(AuthorizationDomain.PLATFORM, change.assignmentId(), memberScopeInput(row, change)).errors());
+        }
+        for (var removal : changes.removals()) {
+            if (!touched.add(removal.assignmentId())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            memberEditableAssignment(memberId, removal.assignmentId(), removal.expectedVersion(), IamAction.PLATFORM_ASSIGNMENT_DELETE);
+        }
+        return errors;
+    }
+
+    /**
+     * 在成员外层事务及授权首锁内差量保存，新增先于撤销以检查最终超管存续。
+     * @param memberId 成员
+     * @param changes 差量
+     */
+    public void applyMemberRoleChanges(String memberId, MemberRoleChanges changes) {
+        if (changes == null) return;
+        if (!previewMemberRoleChanges(memberId, changes).isEmpty()) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        grantMemberRoleAssignments(memberId, changes.additions());
+        for (var change : changes.updates().stream().sorted(java.util.Comparator.comparing(
+                item -> new BigInteger(item.assignmentId()))).toList()) {
+            var row = memberEditableAssignment(memberId, change.assignmentId(), change.expectedVersion(), IamAction.PLATFORM_ASSIGNMENT_UPDATE);
+            replace(AuthorizationDomain.PLATFORM, change.assignmentId(), memberScopeInput(row, change));
+        }
+        for (var removal : changes.removals().stream().sorted(java.util.Comparator.comparing(
+                item -> new BigInteger(item.assignmentId()))).toList()) {
+            memberEditableAssignment(memberId, removal.assignmentId(), removal.expectedVersion(), IamAction.PLATFORM_ASSIGNMENT_DELETE);
+            delete(AuthorizationDomain.PLATFORM, removal.assignmentId());
+        }
     }
 
     /**
@@ -638,6 +776,7 @@ public class AssignmentService {
                     continue;
                 }
                 for (IamRoleAssignmentEntity row : entry.getValue()) {
+                    requireAdministratorMutation(creating.actor(), row);
                     if (assignments.revoke(row.getId().longValueExact(), row.getVersion()) != 1) {
                         throw new BizException(IamReasonCode.REVISION_CONFLICT);
                     }
@@ -649,6 +788,11 @@ public class AssignmentService {
             }
             List<String> adding = desired.stream().filter(roleId -> !current.containsKey(roleId)).toList();
             grantDirectRoles(domain, creating, id, adding);
+            if (current.values().stream().flatMap(List::stream).anyMatch(row ->
+                    com.ingot.cloud.iam.support.PlatformAdministratorGuard.isAdministrator(
+                            assignments.findRevision(row.getRevisionId().longValueExact())))) {
+                assignments.requireAvailableAdministrator();
+            }
             changes.markAll();
             return collectDirectRoles(id);
         });
@@ -884,7 +1028,14 @@ public class AssignmentService {
         } else {
             revisionUsable = true;
         }
-        if (domain == AuthorizationDomain.PLATFORM && revisionUsable) {
+        boolean administrator = domain == AuthorizationDomain.PLATFORM
+                && com.ingot.cloud.iam.support.PlatformAdministratorGuard.isAdministrator(revision);
+        if (administrator && (!access.platformAdministrator(actor) || item.subject().type() != SubjectType.MEMBER
+                || sourced(item))) {
+            errors.add(new ValidationIssue("roleRevisionRef", IamReasonCode.ACTION_DENIED,
+                    "只有有效超级管理员可以直接向平台成员分配系统超管，不允许用户组或委派"));
+        }
+        if (domain == AuthorizationDomain.PLATFORM && revisionUsable && !administrator) {
             errors.addAll(editor.validateBindings(item));
         } else if (domain == AuthorizationDomain.TENANT && revisionUsable) {
             errors.addAll(tenantScopeCandidates.validate(actor, item));
@@ -1166,5 +1317,12 @@ public class AssignmentService {
 
     private enum AccessKind {
         READ, CREATE, UPDATE, DELETE
+    }
+
+    private boolean requireAdministratorMutation(ActiveIdentity actor, IamRoleAssignmentEntity row) {
+        boolean administrator = com.ingot.cloud.iam.support.PlatformAdministratorGuard.isAdministrator(
+                assignments.findRevision(row.getRevisionId().longValueExact()));
+        if (administrator && !access.platformAdministrator(actor)) throw new BizException(IamReasonCode.ACTION_DENIED);
+        return administrator;
     }
 }

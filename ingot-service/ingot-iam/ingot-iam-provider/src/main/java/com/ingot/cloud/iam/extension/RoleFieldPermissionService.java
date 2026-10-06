@@ -150,7 +150,7 @@ public class RoleFieldPermissionService {
      */
     public Map<String, FieldPolicyDecision> evaluate(ResourceKey key, AuthorizationContext actor,
             AuthorizationView view, Collection<String> actionCodes) {
-        var entry = metadata.require(key);
+        var entry = metadata.require(key, view.platformAdministrator());
         var descriptor = entry.descriptor();
         Map<Long, Map<String, Map<String, FieldAccess>>> versions = new HashMap<>();
         var sources = view.fieldSources().stream().filter(s -> actionCodes.contains(s.actionCode())).toList();
@@ -159,7 +159,7 @@ public class RoleFieldPermissionService {
         Map<String, FieldAccess> ceilings = new LinkedHashMap<>();
         Map<String, FieldAccess> hidden = new LinkedHashMap<>();
         for (var field : descriptor.fields()) {
-            var visibility = field.visibilities()
+            var visibility = view.platformAdministrator() ? FieldVisibility.FULL : field.visibilities()
                 .stream()
                 .max(Comparator.comparingInt(Enum::ordinal))
                 .orElse(FieldVisibility.HIDDEN);
@@ -180,6 +180,11 @@ public class RoleFieldPermissionService {
         Map<String, FieldPolicyDecision> result = new LinkedHashMap<>();
         for (var action : actionCodes) {
             List<ResolvedFieldRule> rules = new ArrayList<>();
+            if (view.platformAdministrator() && view.actionCodes().contains(action)) {
+                var scope = compiler.compile(actor, List.of(com.ingot.cloud.iam.evaluation.ScopeClause.universe()));
+                descriptor.fields().forEach(field -> rules.add(new ResolvedFieldRule(field.key(), scope,
+                        new FieldAccess(FieldVisibility.FULL, field.editable()))));
+            }
             for (var source : sources) {
                 if (!source.actionCode().equals(action) || source.clauses().isEmpty())
                     continue;

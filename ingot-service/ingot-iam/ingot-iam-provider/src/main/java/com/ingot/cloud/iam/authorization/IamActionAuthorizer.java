@@ -17,6 +17,13 @@ import com.ingot.framework.commons.model.iam.IamReasonCode;
  */
 public interface IamActionAuthorizer {
     /**
+     * 读取服务器确认的有效平台系统超管事实，普通实现不得按客户端角色扩权。
+     * @param actor 可信身份
+     * @return 是否为当前有效平台超级管理员
+     */
+    default boolean platformAdministrator(AuthorizationContext actor) { return false; }
+
+    /**
      * 确认 actor 对指定 ACTION 有授权，并给出该授权是否来自完整治理资格。
      *
      * @param actor 已通过身份恢复的当前成员

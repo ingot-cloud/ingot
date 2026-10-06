@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.role.RoleService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -56,6 +59,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色目录")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleSummary>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -72,6 +76,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "创建角色并发布首个版本")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody RoleCreateInput input) {
         return ok(roles.create(AuthorizationDomain.PLATFORM, true, input));
     }
@@ -84,6 +89,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色元数据")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_READ)
     public R<ResourceDetail<RoleSummary>> get(@PathVariable String id) {
         return ok(roles.get(AuthorizationDomain.PLATFORM, true, id));
     }
@@ -96,6 +102,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色当前绑定权限")
     @GetMapping("/{id}/grants")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_READ)
     public R<RoleGrantList> grants(@PathVariable String id) {
         return ok(new RoleGrantList(roles.listCurrentGrants(AuthorizationDomain.PLATFORM, true, id)));
     }
@@ -109,6 +116,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "更新角色基本信息或启停")
     @PatchMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_STATUS)
     public R<CreatedResource> patch(@PathVariable String id, @Valid @RequestBody RoleUpdateInput input) {
         if (input.name() == null || input.name().isBlank()) {
             return ok(roles.changeStatus(
@@ -128,6 +136,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "删除未引用角色")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(roles.delete(AuthorizationDomain.PLATFORM, true, id));
     }
@@ -142,6 +151,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "角色版本")
     @GetMapping("/{id}/revisions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_READ)
     public R<PageResponse<ResourceDetail<RoleRevision>>> revisions(
             @PathVariable String id,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
@@ -158,6 +168,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "发布新版本")
     @PostMapping("/{id}/revisions")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_PUBLISH)
     public R<CreatedResource> publish(@PathVariable String id, @Valid @RequestBody RolePublishInput input) {
         return ok(roles.publish(AuthorizationDomain.PLATFORM, true, id, input));
     }
@@ -171,6 +182,7 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "预览待发布定义")
     @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_PREVIEW)
     public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input) {
         return ok(roles.preview(AuthorizationDomain.PLATFORM, true, id, input));
     }

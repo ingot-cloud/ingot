@@ -243,6 +243,10 @@ public class RoleService {
                 ? access.requireGoverned(domain, action(domain, shared, AccessKind.CREATE))
                 : access.require(domain, action(domain, shared, AccessKind.CREATE));
         RoleKind kind = requireCreatable(domain, shared, input.kind());
+        if (domain == AuthorizationDomain.PLATFORM && input.code() != null
+                && com.ingot.framework.commons.constants.RoleConstants.ROLE_ADMIN_CODE.equalsIgnoreCase(input.code().strip())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "系统超级管理员编码不可用于自定义角色");
+        }
         return transaction.execute(status -> {
             roles.lockAuthorization(domain);
             if (domain == AuthorizationDomain.PLATFORM) {

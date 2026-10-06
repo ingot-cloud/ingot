@@ -197,8 +197,37 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         return actor.domain().name() + KEY_SEPARATOR + tenant + KEY_SEPARATOR + actor.memberId();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean platformAdministrator(AuthorizationContext actor) {
+        if (actor == null || actor.domain() != AuthorizationDomain.PLATFORM) return false;
+        try {
+            return !evaluations.platformAdministrators(actor.memberId()).isEmpty();
+        } catch (DataAccessException | PersistenceException failure) {
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        }
+    }
+
+    private AuthorizationView administratorView(AuthorizationContext actor,
+            List<AuthorizationEvalRows.Assignment> assignments) {
+        var actions = evaluations.enabledPlatformActions();
+        var codes = actions.stream().map(AuthorizationEvalRows.IndexedAction::code).distinct().toList();
+        Map<String, ResolvedActionScope> scopes = new LinkedHashMap<>();
+        codes.forEach(code -> scopes.put(code, new ResolvedActionScope(List.of(ScopeClause.universe()))));
+        Deadline deadline = new Deadline();
+        assignments.forEach(row -> deadline.merge(row.validUntil()));
+        String version = "administrator" + KEY_SEPARATOR + assignments.stream()
+                .map(row -> row.assignmentId() + KEY_SEPARATOR + row.revisionId()).collect(java.util.stream.Collectors.joining(KEY_SEPARATOR))
+                + KEY_SEPARATOR + Integer.toUnsignedString(actions.hashCode());
+        return new AuthorizationView(codes, codes, scopes, version, deadline.expiresAt(Instant.now()), List.of(), true);
+    }
+
     private AuthorizationView evaluateRaw(AuthorizationContext actor) {
         try {
+            if (actor.domain() == AuthorizationDomain.PLATFORM) {
+                var administrators = evaluations.platformAdministrators(actor.memberId());
+                if (!administrators.isEmpty()) return administratorView(actor, administrators);
+            }
             List<AssignmentEval> assignments = new ArrayList<>();
             assignments.addAll(directAssignments(actor));
             assignments.addAll(groupAssignments(actor));
@@ -284,8 +313,20 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      */
     public List<com.ingot.framework.commons.model.iam.DecisionSource> decisionSources(AuthorizationContext actor,
                                                                                     String actionId) {
+        if (actor.domain() == AuthorizationDomain.PLATFORM) {
+            var administrators = evaluations.platformAdministrators(actor.memberId());
+            if (!administrators.isEmpty() && evaluations.enabledPlatformActions().stream()
+                    .anyMatch(action -> action.id().toString().equals(actionId))) {
+                return administrators.stream().map(row -> new com.ingot.framework.commons.model.iam.DecisionSource(
+                        row.assignmentId().toString(), null,
+                        new com.ingot.framework.commons.model.iam.RoleRevisionRef(com.ingot.framework.commons.model.iam.RoleKind.SYSTEM,
+                                row.revisionId().toString()),
+                        "系统超级管理员 / 分配 " + row.assignmentId() + " / 全部对象 / 注册业务字段完整可见", null)).toList();
+            }
+        }
         List<AuthorizationEvalRows.Assignment> rows = new ArrayList<>(evaluations.listDirectAssignments(actor));
         rows.addAll(evaluations.listGroupAssignments(actor));
+        rows.removeIf(row -> invalidPlatformSystemSource(actor, row));
         var fieldVersions = actor.domain() == AuthorizationDomain.PLATFORM
                 ? evaluations.fieldVersions(rows.stream().map(AuthorizationEvalRows.Assignment::revisionId).distinct().toList())
                         .stream().collect(java.util.stream.Collectors.toMap(
@@ -327,21 +368,28 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     }
 
     private List<AssignmentEval> directAssignments(AuthorizationContext actor) {
-        return mapAssignments(evaluations.listDirectAssignments(actor));
+        return mapAssignments(actor, evaluations.listDirectAssignments(actor));
     }
 
     private List<AssignmentEval> groupAssignments(AuthorizationContext actor) {
-        return mapAssignments(evaluations.listGroupAssignments(actor));
+        return mapAssignments(actor, evaluations.listGroupAssignments(actor));
     }
 
-    private List<AssignmentEval> mapAssignments(List<AuthorizationEvalRows.Assignment> rows) {
+    private List<AssignmentEval> mapAssignments(AuthorizationContext actor, List<AuthorizationEvalRows.Assignment> rows) {
         List<AssignmentEval> result = new ArrayList<>(rows.size());
         for (AuthorizationEvalRows.Assignment row : rows) {
+            // 平台SYSTEM仅由前面的可信直接超管分支贡献权限，不作为普通组或委派角色降级生效。
+            if (invalidPlatformSystemSource(actor, row)) continue;
             result.add(new AssignmentEval(row.assignmentId(), row.groupId(), row.revisionId().longValueExact(), bindings(row.scopeBindings()),
                     row.delegationGrantId() == null ? null : row.delegationGrantId().longValueExact(),
                     row.validUntil(), row.delegationValidUntil()));
         }
         return result;
+    }
+
+    private static boolean invalidPlatformSystemSource(AuthorizationContext actor, AuthorizationEvalRows.Assignment row) {
+        return actor.domain() == AuthorizationDomain.PLATFORM
+                && row.revisionKind() == com.ingot.framework.commons.model.iam.RoleKind.SYSTEM;
     }
 
     private Map<String, ScopeBinding> bindings(String json) {
@@ -430,17 +478,23 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @param actionCodes 有效操作码
      * @param governedCodes 至少来自一条非委派授权的操作码，即操作者的完整治理资格
      * @param scopes 各操作的范围并集；缺省键表示有操作无对象
+     * @param platformAdministrator 服务器有效系统直接分配产生的特权
      * @param version 参与求值的版本指纹
      * @param expiresAt 热缓存截止；取热窗口与最近授权/委派/开通边界的较早者
      * @author jy
      * @since 1.0.0
      */
     public record AuthorizationView(List<String> actionCodes, List<String> governedCodes,
-                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources) {
+                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources, boolean platformAdministrator) {
         /** 兼容旧授权快照；新模型不据此扩权。 */
         public AuthorizationView(List<String> actionCodes, List<String> governedCodes,
                 Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt) {
-            this(actionCodes, governedCodes, scopes, version, expiresAt, List.of());
+            this(actionCodes, governedCodes, scopes, version, expiresAt, List.of(), false);
+        }
+        /** 普通角色快照不产生系统特权。 */
+        public AuthorizationView(List<String> actionCodes, List<String> governedCodes,
+                Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources) {
+            this(actionCodes, governedCodes, scopes, version, expiresAt, fieldSources, false);
         }
         /**
          * 复制操作与范围集合。

@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.diagnose.DiagnoseAuditService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuditEntry;
@@ -42,6 +45,7 @@ public class PlatformAuthorizationAPI implements RShortcuts {
      */
     @Operation(summary = "受限授权诊断")
     @PostMapping("/diagnose")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_AUTHORIZATION_DIAGNOSE)
     public R<Decision> diagnose(@Valid @RequestBody DiagnoseInput input) {
         return ok(diagnoses.diagnose(AuthorizationDomain.PLATFORM, input));
     }
@@ -55,6 +59,7 @@ public class PlatformAuthorizationAPI implements RShortcuts {
      */
     @Operation(summary = "平台审计")
     @GetMapping("/audits")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_AUDIT_READ)
     public R<PageResponse<ResourceDetail<AuditEntry>>> audits(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {

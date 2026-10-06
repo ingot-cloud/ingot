@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -9,7 +12,6 @@ import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.iam.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
-import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
@@ -53,6 +55,7 @@ public class PlatformSocialConfigAPI implements RShortcuts {
      */
     @Operation(summary = "社会化登录配置列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SOCIAL_CONFIG_READ)
     public R<?> list(Page<SysSocialDetails> page, SysSocialDetails condition) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_READ);
         return ok(socials.page(page, Wrappers.lambdaQuery(condition)));
@@ -66,6 +69,7 @@ public class PlatformSocialConfigAPI implements RShortcuts {
      */
     @Operation(summary = "创建社会化登录配置")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SOCIAL_CONFIG_CREATE)
     @Transactional(rollbackFor = Exception.class)
     public R<Void> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_CREATE);
@@ -89,6 +93,7 @@ public class PlatformSocialConfigAPI implements RShortcuts {
      */
     @Operation(summary = "更新社会化登录配置")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SOCIAL_CONFIG_UPDATE)
     @Transactional(rollbackFor = Exception.class)
     public R<Void> update(@PathVariable Long id, @RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_UPDATE);
@@ -113,6 +118,7 @@ public class PlatformSocialConfigAPI implements RShortcuts {
      */
     @Operation(summary = "删除社会化登录配置")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SOCIAL_CONFIG_DELETE)
     @Transactional(rollbackFor = Exception.class)
     public R<Void> remove(@PathVariable Long id) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_DELETE);

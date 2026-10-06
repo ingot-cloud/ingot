@@ -1,5 +1,8 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
+import com.ingot.framework.commons.model.iam.IamAction;
+
 import com.ingot.cloud.iam.delegation.DelegationService;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -50,6 +53,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "委派列表")
     @GetMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     public R<PageResponse<ResourceDetail<DelegationRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -65,6 +69,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "创建委派")
     @PostMapping
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_CREATE)
     public R<CreatedResource> create(@Valid @RequestBody DelegationInput input) {
         return ok(delegations.create(AuthorizationDomain.PLATFORM, input));
     }
@@ -75,6 +80,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      * @return 校验效果
      */
     @PostMapping("/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_CREATE)
     @Operation(summary = "预览新委派")
     public R<Preview<ReferenceImpactPreview>> previewCreate(@Valid @RequestBody DelegationInput input) {
         return ok(delegations.previewCreate(AuthorizationDomain.PLATFORM, input));
@@ -88,6 +94,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "委派详情")
     @GetMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_READ)
     public R<ResourceDetail<DelegationRecord>> get(@PathVariable String id) {
         return ok(delegations.get(AuthorizationDomain.PLATFORM, id));
     }
@@ -101,6 +108,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "调整委派")
     @PutMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_UPDATE)
     public R<ResourceDetail<DelegationRecord>> replace(@PathVariable String id,
                                                        @Valid @RequestBody DelegationUpdateInput input) {
         return ok(delegations.replace(AuthorizationDomain.PLATFORM, id, input));
@@ -114,6 +122,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "撤销委派")
     @DeleteMapping("/{id}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_DELETE)
     public R<CreatedResource> delete(@PathVariable String id) {
         return ok(delegations.delete(AuthorizationDomain.PLATFORM, id));
     }
@@ -127,6 +136,7 @@ public class PlatformDelegationAPI implements RShortcuts {
      */
     @Operation(summary = "预览委派收缩影响")
     @PostMapping("/{id}/preview")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_DELEGATION_PREVIEW)
     public R<Preview<ReferenceImpactPreview>> preview(@PathVariable String id,
                                                       @Valid @RequestBody DelegationUpdateInput input) {
         return ok(delegations.preview(AuthorizationDomain.PLATFORM, id, input));

@@ -45,6 +45,12 @@ public class AuthorizationSnapshotDTO implements Serializable {
     private Set<String> permissionCodes = new LinkedHashSet<>();
 
     /**
+     * 服务器实时验证的平台系统超管事实，仅用于平台 IAM 在线接口准入。
+     * 不属于业务操作码，不能从 JWT 或客户端角色推断；租户快照必须为 false。
+     */
+    private boolean platformAdministrator;
+
+    /**
      * 按资源与操作合并后的数据范围规则。
      */
     private List<AuthorizationResourceRuleDTO> resourceRules = new ArrayList<>();

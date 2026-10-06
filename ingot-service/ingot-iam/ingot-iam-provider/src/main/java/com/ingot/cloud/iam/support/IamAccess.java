@@ -24,8 +24,25 @@ public class IamAccess {
     private final CurrentIdentityService current;
     private final IamActionAuthorizer authorizer;
     private final InitializationIdAllocator ids;
+    private final PlatformAdministratorGuard administrators;
 
+    /** 在行政状态变更事务中登记提交后的授权缓存失效。 */
+    public void authorizationChanged() { administrators.changed(); }
 
+    /** 账号行政写入前按同一顺序取得平台授权锁。 */
+    public void lockPlatformAuthorization() { administrators.lock(); }
+
+    /** 账号行政停用或锁定后保护最后一个长期可用平台超管。 */
+    public void requireAvailableAdministrator() { administrators.requireAvailable(); }
+
+    /**
+     * 读取当前服务器平台超管资格，不根据令牌角色名称放行。
+     * @param actor 当前可信身份
+     * @return 是否具备有效系统直接授权
+     */
+    public boolean platformAdministrator(ActiveIdentity actor) {
+        return authorizer.platformAdministrator(actor.context());
+    }
 
     /**
      * 限定接口管理域并确认 ACTION。

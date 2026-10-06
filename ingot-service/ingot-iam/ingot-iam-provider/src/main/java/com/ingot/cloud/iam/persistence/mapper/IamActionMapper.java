@@ -93,4 +93,19 @@ public interface IamActionMapper extends BaseMapper<IamActionEntity> {
             </script>
             """)
     List<AuthorizationEvalRows.Capability> listCapabilities(@Param("ids") Collection<BigInteger> ids);
+
+    /**
+     * 批量读取全部启用平台操作，不依赖系统角色固定版本的旧快照。
+     * @param domain 可信平台域
+     * @return 启用应用、资源、操作的投影
+     */
+    @Select("""
+            SELECT a.id,a.code,a.enabled,app.domain,app.enabled AS app_enabled,app.id AS application_id
+              FROM iam_action a JOIN iam_application app ON app.id=a.application_id
+              JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=app.id
+             WHERE app.domain=#{domain} AND app.enabled=TRUE AND r.enabled=TRUE AND a.enabled=TRUE
+             ORDER BY a.id
+            """)
+    List<AuthorizationEvalRows.IndexedAction> enabledActions(
+            @Param("domain") com.ingot.framework.commons.model.iam.AuthorizationDomain domain);
 }

@@ -9,6 +9,14 @@ import java.util.Map;
 import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
+import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
+import com.ingot.cloud.iam.extension.RoleFieldPermissionService;
+import com.ingot.framework.authorization.FieldPolicyProcessor;
+import com.ingot.framework.commons.model.iam.FieldProjection;
+import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.MemberFieldKey;
+import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.identity.AccountCredentialRepository;
 import com.ingot.cloud.iam.persistence.AccountQueryRepository;
@@ -60,6 +68,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class AccountService {
     private static final String ACCOUNT_NOT_FOUND = "账号不存在";
     private static final String MEMBERSHIP_EXISTS = "该账号已是平台成员";
+    private static final FieldAccess HIDDEN_FIELD = new FieldAccess(FieldVisibility.HIDDEN, false);
     private final IamAccess access;
     private final ResourceAccess scopes;
     private final ObjectCapabilities capabilities;
@@ -74,6 +83,7 @@ public class AccountService {
     private final UnlockAccountUseCase unlocks;
     private final ChangePasswordUseCase passwords;
     private final InitialPasswordService initialPasswords;
+    private final RoleFieldPermissionService memberFields;
     private final TransactionTemplate transaction;
 
     /**
@@ -95,6 +105,7 @@ public class AccountService {
      * @param passwords 密码用例
      * @param initialPasswords 初始密码
      * @param transactionManager 同一数据源事务
+     * @param memberFields 平台成员创建用途的字段投影
      */
     public AccountService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
                           AccountQueryRepository accounts, AccountWriteRepository writes,
@@ -102,7 +113,8 @@ public class AccountService {
                           IamAuditWriter audits, RegisterUserUseCase registerUser,
                           ManageAccountStatusUseCase statuses, LockAccountUseCase locks,
                           UnlockAccountUseCase unlocks, ChangePasswordUseCase passwords,
-                          InitialPasswordService initialPasswords, PlatformTransactionManager transactionManager) {
+                          InitialPasswordService initialPasswords, PlatformTransactionManager transactionManager,
+                          RoleFieldPermissionService memberFields) {
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -117,6 +129,7 @@ public class AccountService {
         this.unlocks = unlocks;
         this.passwords = passwords;
         this.initialPasswords = initialPasswords;
+        this.memberFields = memberFields;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -179,9 +192,22 @@ public class AccountService {
             throw exception;
         }
         if (input.purpose() == AccountLookupPurpose.MEMBER_CREATE) {
-            if (input.domain() == AuthorizationDomain.PLATFORM
-                    && members.findPlatformByAccount(accountId) != null) {
-                throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);
+            if (input.domain() == AuthorizationDomain.PLATFORM) {
+                access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_CREATE);
+                scopes.requireCreate(actor.context(), IamAction.PLATFORM_MEMBER_CREATE, java.util.Set.of());
+                var policy = memberFields.evaluate(BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE,
+                        actor.context(), IamAction.PLATFORM_MEMBER_CREATE);
+                var fields = FieldPolicyProcessor.access(policy, new ScopeTarget(null, null, null, List.of()));
+                if (members.findPlatformByAccount(accountId) != null)
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);
+                AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
+                        FieldProjection.project(row.getPhone(),
+                                fields.getOrDefault(MemberFieldKey.VALUE_PHONE, HIDDEN_FIELD).visibility()),
+                        FieldProjection.project(row.getEmail(),
+                                fields.getOrDefault(MemberFieldKey.VALUE_EMAIL, HIDDEN_FIELD).visibility()),
+                        Boolean.TRUE.equals(row.getEnabled()), credentials.locked(accountId),
+                        Boolean.TRUE.equals(row.getMustChangePassword()), null);
+                return IamDetails.of(record, fields, Map.of(), version(row));
             }
             AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
                     row.getPhone(), row.getEmail(), Boolean.TRUE.equals(row.getEnabled()),
@@ -243,6 +269,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_UPDATE);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, IamAction.PLATFORM_ACCOUNT_UPDATE, accountId,
                     input.expectedVersion());
             if (writes.updateContacts(accountId, input.phone(), input.email(),
@@ -250,6 +277,7 @@ public class AccountService {
                 throw new BizException(IamReasonCode.REVISION_CONFLICT);
             }
             IamAccountEntity next = accounts.find(accountId);
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.UPDATE, Map.of(AuditField.NAME, locked.getUsername()),
                     Map.of(AuditField.NAME, next.getUsername()), Map.of("account", version(next)));
@@ -268,6 +296,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_DELETE);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, IamAction.PLATFORM_ACCOUNT_DELETE, accountId,
                     input.expectedVersion());
             if (members.hasMembership(accountId)) {
@@ -276,6 +305,7 @@ public class AccountService {
             if (writes.delete(accountId) != 1) {
                 throw new BizException(IamReasonCode.REVISION_CONFLICT);
             }
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.REMOVE, Map.of(AuditField.NAME, locked.getUsername()), Map.of(),
                     Map.of("account", version(locked)));
@@ -316,6 +346,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_LOCK);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, IamAction.PLATFORM_ACCOUNT_LOCK, accountId,
                     input.expectedVersion());
             locks.lockManually(LockAccountUseCase.LockCommand.builder()
@@ -329,6 +360,8 @@ public class AccountService {
                     .operatorName(actor.context().memberId())
                     .source(EventSource.IAM)
                     .build());
+            access.requireAvailableAdministrator();
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.UPDATE, Map.of(AuditField.STATUS, enabled(locked)),
                     Map.of(AuditField.STATUS, "LOCKED"), Map.of("account", version(locked)));
@@ -347,6 +380,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_UNLOCK);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, IamAction.PLATFORM_ACCOUNT_UNLOCK, accountId,
                     input.expectedVersion());
             unlocks.unlockManually(UnlockAccountUseCase.UnlockCommand.builder()
@@ -356,6 +390,7 @@ public class AccountService {
                     .operatorName(actor.context().memberId())
                     .source(EventSource.IAM)
                     .build());
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.UPDATE, Map.of(AuditField.STATUS, "LOCKED"),
                     Map.of(AuditField.STATUS, enabled(locked)), Map.of("account", version(locked)));
@@ -374,6 +409,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACCOUNT_RESET_PASSWORD);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, IamAction.PLATFORM_ACCOUNT_RESET_PASSWORD, accountId,
                     input.expectedVersion());
             String password = initialPasswords.generate();
@@ -385,6 +421,7 @@ public class AccountService {
                     .operatorName(actor.context().memberId())
                     .source(EventSource.IAM)
                     .build());
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId),
                     AuditChangeType.UPDATE, Map.of(AuditField.NAME, locked.getUsername()),
                     Map.of(AuditField.NAME, locked.getUsername()), Map.of("account", version(locked)));
@@ -397,6 +434,7 @@ public class AccountService {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, action);
         long accountId = IamIds.require(id);
         return transaction.execute(status -> {
+            access.lockPlatformAuthorization();
             IamAccountEntity locked = requireLocked(actor, action, accountId, input.expectedVersion());
             ManageAccountStatusUseCase.StatusCommand command = ManageAccountStatusUseCase.StatusCommand.builder()
                     .userId(accountId)
@@ -411,7 +449,9 @@ public class AccountService {
             } else {
                 statuses.disableAccount(command);
             }
+            if (!enabled) access.requireAvailableAdministrator();
             IamAccountEntity next = accounts.find(accountId);
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), "account", IamIds.text(accountId), changeType,
                     Map.of(AuditField.STATUS, enabled(locked)), Map.of(AuditField.STATUS, enabled(next)),
                     Map.of("account", version(next)));
@@ -421,6 +461,7 @@ public class AccountService {
 
     private IamAccountEntity requireLocked(ActiveIdentity actor, IamAction action, long accountId,
                                            String expectedVersion) {
+        access.require(AuthorizationDomain.PLATFORM, action);
         scopes.requireVisibleObject(actor.context(), action, accountId);
         IamAccountEntity locked = accounts.lock(accountId);
         if (locked == null) {

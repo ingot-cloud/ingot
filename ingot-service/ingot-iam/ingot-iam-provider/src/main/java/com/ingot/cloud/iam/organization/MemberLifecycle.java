@@ -40,6 +40,7 @@ public class MemberLifecycle {
     private static final String MEMBER_VERSION = "member";
     private static final BigInteger MAX_ID = new BigInteger("18446744073709551615");
     private final TransactionTemplate transaction;
+    private final com.ingot.cloud.iam.support.PlatformAdministratorGuard administrators;
     private final ActiveIdentityService identities;
     private final MemberLifecycleRepository members;
     private final IamAuditWriter audits;
@@ -52,15 +53,17 @@ public class MemberLifecycle {
      * @param members 成员行锁与写入
      * @param audits 同事务审计
      * @param changes 授权热缓存失效
+     * @param administrators 系统管理员保留门禁
      */
     public MemberLifecycle(PlatformTransactionManager transactionManager, ActiveIdentityService identities,
                            MemberLifecycleRepository members, IamAuditWriter audits,
-                           AuthorizationChangeNotifier changes) {
+                           AuthorizationChangeNotifier changes, com.ingot.cloud.iam.support.PlatformAdministratorGuard administrators) {
         this.transaction = new TransactionTemplate(transactionManager);
         this.identities = identities;
         this.members = members;
         this.audits = audits;
         this.changes = changes;
+        this.administrators = administrators;
     }
 
     /**
@@ -174,6 +177,7 @@ public class MemberLifecycle {
                 return before.version().toString();
             }
             requireApplied(members.updateStatus(actor.domain(), tenantId, targetId, next, before.version()));
+            if (actor.domain() == AuthorizationDomain.PLATFORM && next != MemberStatus.ACTIVE) administrators.requireAvailable();
             String version = nextVersion(before);
             audit(actor, memberId, auditId, next == MemberStatus.REMOVED ? AuditChangeType.REMOVE
                             : next == MemberStatus.ACTIVE ? AuditChangeType.ENABLE : AuditChangeType.DISABLE,

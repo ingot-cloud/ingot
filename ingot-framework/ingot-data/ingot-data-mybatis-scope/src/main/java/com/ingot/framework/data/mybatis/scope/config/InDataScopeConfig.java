@@ -188,6 +188,19 @@ public class InDataScopeConfig {
         return new DataScopeAOP();
     }
 
+    /**
+     * 消费服务的在线准入端口；IAM 本地端口为 Primary，不发生自调用。
+     * @param loader 已装配的可信快照加载器
+     * @return 不缓存注解权限的查询端口
+     */
+    @Bean
+    @ConditionalOnBean(AuthorizationSnapshotLoader.class)
+    @ConditionalOnMissingBean(com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource.class)
+    public com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource trustedAuthoritySource(
+            AuthorizationSnapshotLoader loader) {
+        return new com.ingot.framework.data.mybatis.scope.authorization.RemoteTrustedAuthoritySource(loader);
+    }
+
     private static AuthorizationSnapshotDTO loadSnapshot(AuthorizationSnapshotLoader loader, String key) {
         int split = key.indexOf(':');
         if (split <= 0 || split == key.length() - 1) {
