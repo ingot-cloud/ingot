@@ -1,0 +1,42 @@
+{
+  "expectedVersion": "2",
+  "roleChanges": {
+    "additions": [
+      {
+        "roleId": "24",
+        "roleRevisionRef": {
+          "kind": "PLATFORM_CUSTOM",
+          "id": "31"
+        },
+        "scopeBindings": {
+          "objects": {
+            "kind": "OBJECTS",
+            "ids": [
+              "1001"
+            ]
+          }
+        }
+      }
+    ],
+    "updates": [
+      {
+        "assignmentId": "81",
+        "expectedVersion": "3",
+        "scopeBindings": {
+          "objects": {
+            "kind": "OBJECTS",
+            "ids": [
+              "1002"
+            ]
+          }
+        }
+      }
+    ],
+    "removals": [
+      {
+        "assignmentId": "82",
+        "expectedVersion": "1"
+      }
+    ]
+  }
+}

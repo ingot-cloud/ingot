@@ -1,5 +1,7 @@
 # Tasks
 
+2026-10-06 已完成开发及相关自动化、进入validating的成员字段展示/对象编辑修正见 [增量任务](PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md)。MF04人工验收独立保留。
+
 > 状态：implementing。2026-09-19 核对：下列 T 项为开发与验收合并的父任务；2026-09-15/16 的多数修正已落地，不能再按“全部未实施”理解。已开发子项见本文“开发完成标记”，验收证据见 IMPLEMENTATION/MANUAL-VERIFICATION。父任务未满足完整退出条件仍不勾选。
 
 ## 范围与执行顺序
@@ -312,3 +314,16 @@ RF01–RF07 开发、自动化与文档同步完成，本增量 validating；RF0
 ## 2026-10-06 平台成员联系资料独立存储
 
 任务与验收见 [平台成员联系资料增量](./PLATFORM-MEMBER-CONTACTS-REFINEMENT.md)。PC01–PC04开发/自动化已完成，PC05人工验收待执行；范围仅平台成员联系方式，不改全局账号登录资料和租户成员逻辑。
+
+## 2026-10-06 平台超级管理员与应用导航
+
+用户已批准实施，规则、任务及独立验收见 [PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION](./PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md)。本增量 implementing；仅系统超级管理员替代原治理账号默认脱敏预期，普通角色及租户行为不变。
+
+2026-10-06 系统超管与应用导航增量：SN01–SN06开发及相关自动化完成，额外全量检查既有失败和具体证据见[增量](PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md#实施结果与证据2026-10-06)。SN07目标库与实际身份人工验收未执行，主change保持implementing。
+
+
+## 平台成员角色配置闭环（2026-10-06）
+
+实施任务见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
+
+MR01–MR03 开发与自动化验证完成，增量状态 validating；MR04 人工待执行，详见 PLATFORM-MEMBER-ROLE-EDITOR.md 与 RESOURCE-EXTENSION-VERIFICATION.md。

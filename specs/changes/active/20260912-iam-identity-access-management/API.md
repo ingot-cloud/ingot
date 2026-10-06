@@ -268,7 +268,7 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 ## 2026-10-02 平台成员角色与层级候选增量
 
 - 平台应用资源创建、修改及整包创建时，`scopeCapabilities` 不得包含 `MEMBER_DEPARTMENTS` / `MANAGED_DEPARTMENTS`；租户应用保持原契约。历史平台资源仍可读取，编辑须显式移除误配值。
-- `MemberCreateInput` 新增可选 `roleAssignments:[{roleId,roleRevisionRef,scopeBindings,validFrom?,validUntil?}]`。服务端以角色定义 ID 重验固定版本仍为最新发布版本，并以新成员 ID 构造直接分配；与旧 `roleIds` 重复的角色拒绝。旧 `roleIds` 仅能分配最新无参数版本；成员、组及全部分配同事务提交。租户成员创建拒绝非空 `roleAssignments`。
+- `MemberCreateInput` 新增可选 `roleAssignments:[{roleId,roleRevisionRef,scopeBindings,validFrom?,validUntil?}]`。服务端以角色定义 ID 重验所选固定版本仍属于该角色、已经发布且可分配；不要求最新版，并以新成员 ID 构造直接分配；与旧 `roleIds` 重复的角色拒绝。旧 `roleIds` 仅能分配最新无参数版本；成员、组及全部分配同事务提交。租户成员创建拒绝非空 `roleAssignments`。
 - `GET /v1/platform/members/{id}/assignments?page=1&pageSize=20` 按关联表分页返回 `PageResponse<ResourceDetail<AssignmentRecord>>`；须有成员可见资格，并沿用平台分配的治理/本人委派来源边界及逐条能力。
 - 平台 `/assignments/candidates`、`/delegations/candidates` 与租户 `/assignments/scope-candidates` 可选 `tree=true&parentId=...`。仅真实层级资源（平台菜单、租户管理部门）返回 `hierarchical=true`；根分支省略 parentId，子分支按父节点独立分页。带 keyword 时搜索整个可见集合，带 ids 时按原权限边界回显，均不受分支限制。树节点在原 `AuthorizationOption` 增加 `parentId`、`hasChildren`、`ancestorPath`；受限平台菜单的祖先额外返回 `selectable=false`，只用于展开，不能作为已选目标。普通资源仍为列表。
 
@@ -305,3 +305,24 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 本轮替代平台独立字段策略，角色版本固化字段权限，按操作与来源范围正向合并。共享/租户保持原行为；实施与独立人工任务见 [ROLE-FIELD-AUTHORIZATION-REFINEMENT](./ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
 
 2026-10-05 用户批准测试阶段直接替换平台字段模型：删除迁移开关、旧平台独立策略及兼容契约，全部平台版本保存显式字段快照；租户保持原行为。执行及验收见[平台角色字段权限增量](ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
+
+## 2026-10-06 平台超级管理员与应用导航
+
+用户已批准实施，规则、任务及独立验收见 [PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION](./PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md)。本增量 implementing；仅系统超级管理员替代原治理账号默认脱敏预期，普通角色及租户行为不变。
+
+平台系统超管接口增量：管理面请求结构和路径不变；在线内部 `/inner/authorization/snapshot` 响应新增服务器布尔 `platformAdministrator`，不混入permissionCodes。IAM身份的AdminOrHasAnyAuthority/HasAnyAuthority走可信在线端口；非IAM旧会话沿用既有准入。平台SYSTEM只在超管直接分配候选中出现，委派候选排除；历史分配已选回显仍按详情边界读取真实版本。内部快照、v2和签名对象端点统一列在contracts/internal-openapi.json。
+
+
+## 2026-10-06 平台成员字段展示与编辑边界
+
+已批准需求、契约及任务见 [增量说明](PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md)。角色字段与租户语义不变；新增平台成员上下文，补齐隐藏/脱敏表单、默认邮箱及可查看目标的编辑范围403。
+
+
+平台成员字段上下文：`GET /v1/platform/members/context` 返回 `R<PlatformMemberContext>`；准入为成员 READ/CREATE 任一，平台可信身份必需。`listFieldVisibility` 仅为整份有效读策略的潜在列概览，`createFieldAccess` 为新对象创建字段结果，`canSearchDisplayName` 是服务器确认的原值查询资格，不返回任何成员原值。成员列表查询参数同步实际控制器的 `name/status/ids`，分页契约不变。平台 MEMBER_CREATE 账号查找额外校验创建准入/新对象范围，并按创建字段策略投影联系方式；普通全局账号查询和租户用途不变。成员资料 PATCH 的可查看目标越界返回403/DataScopeDenied，无 UPDATE 返回403/ActionDenied；不存在或不可查看目标保留404/ObjectNotFound。现有请求结构不变。
+
+
+## 平台成员角色配置闭环（2026-10-06）
+
+接口增量见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
+
+平台成员表单改用 PlatformMemberEditInput（平铺资料字段 + 可选 roleChanges）。详见 PLATFORM-MEMBER-ROLE-EDITOR.md；bound-roles 为当前有效角色/版本聚合页；assignments 可使用 effectiveStatus=ACTIVE/directOnly=true 读取可编辑的非委派直接分配；POST /members/{id}/preview 只读预览，PATCH 保持事务内重验。既有 /roles 简单替换接口保留，但新表单不使用它，不以列表第一页替换全部授权。

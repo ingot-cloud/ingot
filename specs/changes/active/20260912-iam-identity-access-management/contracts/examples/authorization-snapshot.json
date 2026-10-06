@@ -1,0 +1,20 @@
+{
+  "code": "0",
+  "message": "OK",
+  "success": true,
+  "data": {
+    "tenantId": "0",
+    "userId": "1000010",
+    "roleBindings": [],
+    "permissionCodes": [
+      "iam-platform:member:read"
+    ],
+    "platformAdministrator": true,
+    "resourceRules": [],
+    "source": "REMOTE",
+    "version": "1791230400000",
+    "generatedAt": "2026-10-05T20:00:00Z",
+    "expiresAt": "2026-10-05T20:00:30Z",
+    "emptyAuthorization": false
+  }
+}

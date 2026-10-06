@@ -1,0 +1,32 @@
+{
+  "code": "S0200",
+  "message": "Success",
+  "success": true,
+  "data": {
+    "listFieldVisibility": {
+      "displayName": "FULL",
+      "avatar": "FULL",
+      "phone": "MASKED",
+      "email": "HIDDEN"
+    },
+    "createFieldAccess": {
+      "displayName": {
+        "visibility": "FULL",
+        "editable": false
+      },
+      "avatar": {
+        "visibility": "FULL",
+        "editable": true
+      },
+      "phone": {
+        "visibility": "MASKED",
+        "editable": false
+      },
+      "email": {
+        "visibility": "HIDDEN",
+        "editable": false
+      }
+    },
+    "canSearchDisplayName": true
+  }
+}

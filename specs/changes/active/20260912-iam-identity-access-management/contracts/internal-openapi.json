@@ -1,10 +1,103 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "IAM资源内部v2契约",
+    "title": "IAM资源内部授权契约",
     "version": "2.0.0"
   },
   "paths": {
+    "/inner/authorization/snapshot": {
+      "post": {
+        "operationId": "iamAuthorizationSnapshot",
+        "description": "INNER受信任调用；在线重验原始身份和有效授权；请求身份仅可核对不能替代；platformAdministrator独立于permissionCodes，注解不能复用旧JWT或数据范围热缓存",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationSnapshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R信封；精确错误码区分拒绝和不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAuthorizationSnapshotDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inner/authorization/v2/evaluate": {
       "post": {
         "operationId": "iamEvaluateV2",
@@ -488,6 +581,133 @@
           }
         }
       },
+      "AuthorizationResourceRuleDTO": {
+        "type": "object",
+        "properties": {
+          "resourceCode": {
+            "type": "string"
+          },
+          "permissionCode": {
+            "type": "string"
+          },
+          "scopeType": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              9
+            ]
+          },
+          "deptIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          "self": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthorizationRoleBindingDTO": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "platformRole": {
+            "type": "boolean"
+          },
+          "roleCode": {
+            "type": "string"
+          },
+          "deptId": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "nullable": true
+          },
+          "filterDept": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthorizationSnapshotDTO": {
+        "type": "object",
+        "required": [
+          "platformAdministrator"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "roleBindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationRoleBindingDTO"
+            }
+          },
+          "permissionCodes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "platformAdministrator": {
+            "type": "boolean",
+            "description": "仅服务器实时有效平台系统直接分配产生；不是业务操作码，租户恒为false"
+          },
+          "resourceRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationResourceRuleDTO"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "emptyAuthorization": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        }
+      },
+      "AuthorizationSnapshotRequest": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "nullable": true
+          }
+        }
+      },
       "DelegationInput": {
         "required": [
           "actionScopeCeilings",
@@ -708,6 +928,23 @@
           },
           "success": {
             "type": "boolean"
+          }
+        }
+      },
+      "RAuthorizationSnapshotDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AuthorizationSnapshotDTO"
           }
         }
       },

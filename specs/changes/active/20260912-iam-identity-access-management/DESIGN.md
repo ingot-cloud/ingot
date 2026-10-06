@@ -291,3 +291,19 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 ## 2026-10-06 初始化菜单补齐（用户已批准）
 
 全局账号加入平台治理的“平台管理”；开发者平台恢复独立应用 `platform:develop`，包含生成二维码、客户端管理、社交管理、业务ID管理。页面注册键与现有接口权限码保持，应用/资源归属显式声明，平台新建治理版本覆盖本域全部正式应用，租户不继承。实施及人工项见 [DATABASE-SCRIPT-REFINEMENT](./DATABASE-SCRIPT-REFINEMENT.md#2026-10-06-全局账号与开发者平台初始化补齐已批准)。
+
+## 2026-10-06 平台超级管理员与应用导航
+
+用户已批准实施，规则、任务及独立验收见 [PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION](./PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md)。本增量 implementing；仅系统超级管理员替代原治理账号默认脱敏预期，普通角色及租户行为不变。
+
+本增量的线上超管事实与业务操作集合分离；role_admin作为业务操作或旧JWT文本都不能产生超管资格。角色树和普通角色候选使用相同服务器边界。平台共用授权串行锁先于账号、成员、分配锁；提交后广播失效，保留最后一名长期可用超管的检查失败会回滚整个事务。
+
+
+## 2026-10-06 平台成员字段展示与编辑边界
+
+已批准需求、契约及任务见 [增量说明](PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md)。角色字段与租户语义不变；新增平台成员上下文，补齐隐藏/脱敏表单、默认邮箱及可查看目标的编辑范围403。
+
+
+## 平台成员角色配置闭环（2026-10-06）
+
+增量设计见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。

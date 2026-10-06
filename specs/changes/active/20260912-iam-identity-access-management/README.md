@@ -158,3 +158,22 @@ SQL01–SQL05开发及自动化验证完成，增量validating；实际环境导
 ## 2026-10-06 平台成员联系资料独立存储
 
 用户批准仅调整平台成员联系方式及相关前后端接口、迁移与初始化SQL，需求、设计和任务见 [平台成员联系资料增量](./PLATFORM-MEMBER-CONTACTS-REFINEMENT.md)。主状态保持implementing，不提前更新current。
+
+## 2026-10-06 平台超级管理员与应用导航
+
+用户已批准实施，规则、任务及独立验收见 [PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION](./PLATFORM-SUPER-ADMIN-APPLICATION-NAVIGATION.md)。本增量 implementing；仅系统超级管理员替代原治理账号默认脱敏预期，普通角色及租户行为不变。
+
+
+## 2026-10-06 平台成员字段展示与编辑边界
+
+已批准需求、契约及任务见 [增量说明](PLATFORM-MEMBER-FIELD-UI-REFINEMENT.md)。角色字段与租户语义不变；新增平台成员上下文，补齐隐藏/脱敏表单、默认邮箱及可查看目标的编辑范围403。
+
+
+## 平台成员角色配置闭环（2026-10-06）
+
+文档索引见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
+
+MR01–MR03 开发与自动化验证完成，增量状态 validating；MR04 人工待执行，详见 PLATFORM-MEMBER-ROLE-EDITOR.md 与 RESOURCE-EXTENSION-VERIFICATION.md。
+
+
+2026-10-06：用户要求提交此前已完成的超级管理员、成员字段交互边界和成员角色配置闭环代码及对应 Spec。人工验收仍按 SN07、MF04、MR04 独立保留未完成；本次提交不更新 current，不归档。

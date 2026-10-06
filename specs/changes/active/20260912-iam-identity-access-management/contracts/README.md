@@ -71,3 +71,15 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 ## 2026-10-06 平台成员联系资料
 
 平台成员的phone/email改为独立联系资料，空白清空后不回退全局账号，创建时仅一次复制账号初值。MemberRecord/MemberProfileInput的字段和请求结构不变，仅更新描述；Java契约导出、OpenAPI一致性及7项契约检查通过。快照仍为129路径/196操作，迁移和人工验收见[增量说明](../PLATFORM-MEMBER-CONTACTS-REFINEMENT.md)。
+
+## 2026-10-06 平台系统超管与在线快照
+
+公开管理面路径和请求保持129/196；内部快照 `/inner/authorization/snapshot` 新增服务器产生的 `platformAdministrator`，与业务 `permissionCodes` 分离，租户恒为false。内部OpenAPI现在有3个端点，包含原v2/签名对象接口。DTO位于iam-api，快照字段描述在内部生成器独立维护；在线快照序列化、源端身份重验与消费端拒绝旧JWT由相应回归验证。`authorization-snapshot.json` 为脱离实际身份的示例，不是客户端可以提交的超管凭证。
+
+
+## 2026-10-06 平台成员字段上下文
+
+公开快照 **130路径/197操作**，新增平台成员context（READ/CREATE任一准入）。PlatformMemberContext只携带潜在列可见性、新对象创建字段与显示名原值查询资格，不能作为逐行/提交授权。`platform-member-context.json` 是R响应信封夹具，按Java类型及实际成功码验证；成员列表参数与控制器name/status/ids同步。Java契约14项、生成一致性及Python契约7项通过，成员context隔离MySQL/真实HTTP通过；真实身份/界面验收待MF04。
+
+
+2026-10-06 平台成员角色编辑：新增 PlatformMemberEditInput/MemberRoleChanges/MemberBoundRole/PlatformMemberEditPreview 与 bound-roles、preview 路由，成员 assignments 增加 effectiveStatus/directOnly；租户 MemberProfileInput 不变。member-role-edit 是差量请求夹具，member-bound-roles 是无历史状态的有效摘要夹具。固定版本创建不要求最新版。

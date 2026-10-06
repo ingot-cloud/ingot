@@ -1,0 +1,25 @@
+{
+  "code": "S0200",
+  "message": "操作成功",
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "roleId": "24",
+        "name": "测试角色",
+        "roleRevisionRef": {
+          "kind": "PLATFORM_CUSTOM",
+          "id": "31"
+        },
+        "revisionNumber": "1",
+        "sourceTypes": [
+          "MEMBER",
+          "GROUP"
+        ]
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 20
+  }
+}

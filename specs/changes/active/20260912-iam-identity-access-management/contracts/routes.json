@@ -201,6 +201,34 @@
           "maximum": 200,
           "default": 20
         }
+      },
+      {
+        "name": "name",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "显示名包含匹配，要求整份读策略允许原值搜索"
+      },
+      {
+        "name": "status",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "SUSPENDED",
+            "REMOVED"
+          ]
+        }
+      },
+      {
+        "name": "ids",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "少量已选成员ID回显，不替代关联列表"
       }
     ]
   },
@@ -232,13 +260,14 @@
     "path": "/v1/platform/members/{id}",
     "method": "patch",
     "operationId": "platformPatchMember",
-    "summary": "更新成员资料",
+    "summary": "原子编辑成员与角色差量",
     "domain": "PLATFORM",
     "action": "iam-platform:member:update",
-    "request": "MemberProfileInput",
+    "request": "PlatformMemberEditInput",
     "response": "RResourceDetailMemberRecord",
-    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
-    "implemented": true
+    "execution": "成员对象范围与字段校验；直接角色逐操作治理资格；授权首锁和成员行版本；整批事务与审计",
+    "implemented": true,
+    "example": "member-role-edit"
   },
   {
     "path": "/v1/platform/members/{id}/status",
@@ -1006,6 +1035,28 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "effectiveStatus",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "ACTIVE",
+            "EXPIRED",
+            "REVOKED",
+            "SOURCE_INVALID"
+          ]
+        }
+      },
+      {
+        "name": "directOnly",
+        "required": false,
+        "schema": {
+          "type": "boolean",
+          "default": false
         }
       }
     ]
@@ -4001,5 +4052,63 @@
     "response": "RPreviewRoleDefinitionDraft",
     "execution": "角色字段仅平台自定义；注册资源能力与目录交集；只读预览，发布重验",
     "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/context",
+    "method": "get",
+    "operationId": "platformMemberContext",
+    "summary": "平台成员字段上下文",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPlatformMemberContext",
+    "execution": "成员 READ/CREATE 任一准入；整份读策略列概览、创建字段权限与显示名原值查询资格；不替代逐对象校验",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/members/{id}/bound-roles",
+    "method": "get",
+    "operationId": "platformMemberBoundRoles",
+    "summary": "成员当前有效角色",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:read",
+    "request": null,
+    "response": "RPageResponseMemberBoundRole",
+    "execution": "成员查看与对象边界；按角色版本聚合有效关联；不披露组名称或ID",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/members/{id}/preview",
+    "method": "post",
+    "operationId": "platformMemberEditPreview",
+    "summary": "成员编辑预览",
+    "domain": "PLATFORM",
+    "action": "iam-platform:member:update",
+    "request": "PlatformMemberEditInput",
+    "response": "RPreviewPlatformMemberEditPreview",
+    "execution": "无写入；资料字段与角色差量逐项重验；最终保存重新鉴权",
+    "implemented": true,
+    "example": "member-role-edit"
   }
 ]

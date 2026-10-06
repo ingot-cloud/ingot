@@ -2545,6 +2545,36 @@
         },
         "description" : "返回操作者允许知晓的变更影响，隐藏对象数量不通过统计泄露"
       },
+      "MemberBoundRole" : {
+        "type" : "object",
+        "properties" : {
+          "roleId" : {
+            "type" : "string",
+            "description" : "角色定义 ID"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "角色名称"
+          },
+          "roleRevisionRef" : {
+            "$ref" : "#/components/schemas/RoleRevisionRef"
+          },
+          "revisionNumber" : {
+            "type" : "string",
+            "description" : "固定版本号"
+          },
+          "sourceTypes" : {
+            "type" : "array",
+            "description" : "直接或组继承来源种类",
+            "items" : {
+              "type" : "string",
+              "description" : "直接或组继承来源种类",
+              "enum" : [ "MEMBER", "GROUP" ]
+            }
+          }
+        },
+        "description" : "成员当前有效绑定的角色与版本摘要，不披露组标识或名称"
+      },
       "MemberCreateInput" : {
         "required" : [ "accountId", "departments" ],
         "type" : "object",
@@ -2743,6 +2773,49 @@
         },
         "description" : "新平台成员的固定版本角色分配"
       },
+      "MemberRoleChanges" : {
+        "required" : [ "additions", "removals", "updates" ],
+        "type" : "object",
+        "properties" : {
+          "additions" : {
+            "type" : "array",
+            "description" : "新增固定版本分配",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRoleAssignmentDraft"
+            }
+          },
+          "updates" : {
+            "type" : "array",
+            "description" : "既有分配范围更新",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRoleScopeChange"
+            }
+          },
+          "removals" : {
+            "type" : "array",
+            "description" : "撤销既有直接分配",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRoleRemoval"
+            }
+          }
+        },
+        "description" : "成员表单的角色差量，不覆盖未加载或只读分配"
+      },
+      "MemberRoleRemoval" : {
+        "required" : [ "assignmentId", "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "assignmentId" : {
+            "type" : "string",
+            "description" : "分配 ID"
+          },
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取的分配版本"
+          }
+        },
+        "description" : "按版本撤销成员直接分配"
+      },
       "MemberRoleReplaceInput" : {
         "required" : [ "roleIds" ],
         "type" : "object",
@@ -2757,6 +2830,28 @@
           }
         },
         "description" : "用角色 ID 列表替换成员的简单直接角色，空列表表示清除"
+      },
+      "MemberRoleScopeChange" : {
+        "required" : [ "assignmentId", "expectedVersion", "scopeBindings" ],
+        "type" : "object",
+        "properties" : {
+          "assignmentId" : {
+            "type" : "string",
+            "description" : "分配 ID"
+          },
+          "expectedVersion" : {
+            "type" : "string",
+            "description" : "读取的分配版本"
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            },
+            "description" : "完整范围参数"
+          }
+        },
+        "description" : "调整成员直接分配的具体对象，保持固定版本和有效期"
       },
       "MemberRoleView" : {
         "required" : [ "id", "name" ],
@@ -3079,6 +3174,30 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/GrantCatalogResource"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PageResponseMemberBoundRole" : {
+        "required" : [ "items", "page", "pageSize", "total" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberBoundRole"
             }
           },
           "total" : {
@@ -3601,6 +3720,85 @@
         },
         "description" : "整体替换套餐应用清单，不影响已开通租户"
       },
+      "PlatformMemberContext" : {
+        "required" : [ "canSearchDisplayName", "createFieldAccess", "listFieldVisibility" ],
+        "type" : "object",
+        "properties" : {
+          "listFieldVisibility" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string",
+              "description" : "仅用于列布局的整份有效读策略可见性概览",
+              "enum" : [ "HIDDEN", "MASKED", "FULL" ]
+            },
+            "description" : "仅用于列布局的整份有效读策略可见性概览"
+          },
+          "createFieldAccess" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldAccess"
+            },
+            "description" : "创建新成员时的精确字段权限"
+          },
+          "canSearchDisplayName" : {
+            "type" : "boolean",
+            "description" : "允许按显示名原值搜索"
+          }
+        }
+      },
+      "PlatformMemberEditInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "avatar" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "roleChanges" : {
+            "$ref" : "#/components/schemas/MemberRoleChanges"
+          }
+        }
+      },
+      "PlatformMemberEditPreview" : {
+        "type" : "object",
+        "properties" : {
+          "profileFields" : {
+            "type" : "array",
+            "description" : "变化的资料字段编码",
+            "items" : {
+              "type" : "string",
+              "description" : "变化的资料字段编码"
+            }
+          },
+          "additions" : {
+            "type" : "integer",
+            "description" : "新增分配数",
+            "format" : "int32"
+          },
+          "updates" : {
+            "type" : "integer",
+            "description" : "范围调整数",
+            "format" : "int32"
+          },
+          "removals" : {
+            "type" : "integer",
+            "description" : "撤销分配数",
+            "format" : "int32"
+          }
+        },
+        "description" : "成员资料与角色差量预览，不包含字段原值"
+      },
       "PolicyDraft" : {
         "required" : [ "kind" ],
         "type" : "object",
@@ -3784,6 +3982,36 @@
           },
           "effectiveResult" : {
             "$ref" : "#/components/schemas/EntitlementPreviewResult"
+          }
+        }
+      },
+      "PreviewPlatformMemberEditPreview" : {
+        "required" : [ "errors", "impactSummary", "valid", "version", "warnings" ],
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "string"
+          },
+          "valid" : {
+            "type" : "boolean"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ValidationIssue"
+            }
+          },
+          "impactSummary" : {
+            "$ref" : "#/components/schemas/ImpactSummary"
+          },
+          "effectiveResult" : {
+            "$ref" : "#/components/schemas/PlatformMemberEditPreview"
           }
         }
       },
@@ -4255,6 +4483,23 @@
           }
         }
       },
+      "RPageResponseMemberBoundRole" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResponseMemberBoundRole"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RPageResponseResourceDetailAccountRecord" : {
         "type" : "object",
         "properties" : {
@@ -4527,6 +4772,23 @@
           }
         }
       },
+      "RPlatformMemberContext" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PlatformMemberContext"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RPreviewAssignmentPreviewResult" : {
         "type" : "object",
         "properties" : {
@@ -4589,6 +4851,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/PreviewEntitlementPreviewResult"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RPreviewPlatformMemberEditPreview" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PreviewPlatformMemberEditPreview"
           },
           "success" : {
             "type" : "boolean"

@@ -953,6 +953,35 @@
               "maximum": 200,
               "default": 20
             }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED",
+                "REMOVED"
+              ]
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ]
       },
@@ -1157,7 +1186,7 @@
       },
       "patch": {
         "operationId": "platformPatchMember",
-        "summary": "更新成员资料",
+        "summary": "原子编辑成员与角色差量",
         "tags": [
           "PLATFORM"
         ],
@@ -1168,7 +1197,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:member:update",
-        "x-iam-execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+        "x-iam-execution": "成员对象范围与字段校验；直接角色逐操作治理资格；授权首锁和成员行版本；整批事务与审计",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -1247,7 +1276,49 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MemberProfileInput"
+                "$ref": "#/components/schemas/PlatformMemberEditInput"
+              },
+              "example": {
+                "expectedVersion": "2",
+                "roleChanges": {
+                  "additions": [
+                    {
+                      "roleId": "24",
+                      "roleRevisionRef": {
+                        "kind": "PLATFORM_CUSTOM",
+                        "id": "31"
+                      },
+                      "scopeBindings": {
+                        "objects": {
+                          "kind": "OBJECTS",
+                          "ids": [
+                            "1001"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "updates": [
+                    {
+                      "assignmentId": "81",
+                      "expectedVersion": "3",
+                      "scopeBindings": {
+                        "objects": {
+                          "kind": "OBJECTS",
+                          "ids": [
+                            "1002"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "removals": [
+                    {
+                      "assignmentId": "82",
+                      "expectedVersion": "1"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -6142,6 +6213,30 @@
               "minimum": 1,
               "maximum": 200,
               "default": 20
+            }
+          },
+          {
+            "name": "effectiveStatus",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACTIVE",
+                "EXPIRED",
+                "REVOKED",
+                "SOURCE_INVALID"
+              ]
+            }
+          },
+          {
+            "name": "directOnly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ]
@@ -21847,6 +21942,371 @@
           }
         }
       }
+    },
+    "/v1/platform/members/context": {
+      "get": {
+        "operationId": "platformMemberContext",
+        "summary": "平台成员字段上下文",
+        "tags": [
+          "PLATFORM"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "PLATFORM",
+        "x-iam-action": "iam-platform:member:read",
+        "x-iam-execution": "成员 READ/CREATE 任一准入；整份读策略列概览、创建字段权限与显示名原值查询资格；不替代逐对象校验",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPlatformMemberContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/platform/members/{id}/bound-roles": {
+      "get": {
+        "operationId": "platformMemberBoundRoles",
+        "summary": "成员当前有效角色",
+        "tags": [
+          "PLATFORM"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "PLATFORM",
+        "x-iam-action": "iam-platform:member:read",
+        "x-iam-execution": "成员查看与对象边界；按角色版本聚合有效关联；不披露组名称或ID",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPageResponseMemberBoundRole"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/v1/platform/members/{id}/preview": {
+      "post": {
+        "operationId": "platformMemberEditPreview",
+        "summary": "成员编辑预览",
+        "tags": [
+          "PLATFORM"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "PLATFORM",
+        "x-iam-action": "iam-platform:member:update",
+        "x-iam-execution": "无写入；资料字段与角色差量逐项重验；最终保存重新鉴权",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPreviewPlatformMemberEditPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformMemberEditInput"
+              },
+              "example": {
+                "expectedVersion": "2",
+                "roleChanges": {
+                  "additions": [
+                    {
+                      "roleId": "24",
+                      "roleRevisionRef": {
+                        "kind": "PLATFORM_CUSTOM",
+                        "id": "31"
+                      },
+                      "scopeBindings": {
+                        "objects": {
+                          "kind": "OBJECTS",
+                          "ids": [
+                            "1001"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "updates": [
+                    {
+                      "assignmentId": "81",
+                      "expectedVersion": "3",
+                      "scopeBindings": {
+                        "objects": {
+                          "kind": "OBJECTS",
+                          "ids": [
+                            "1002"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "removals": [
+                    {
+                      "assignmentId": "82",
+                      "expectedVersion": "1"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -24925,6 +25385,39 @@
         },
         "description": "返回操作者允许知晓的变更影响，隐藏对象数量不通过统计泄露"
       },
+      "MemberBoundRole": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "description": "角色定义 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "角色名称"
+          },
+          "roleRevisionRef": {
+            "$ref": "#/components/schemas/RoleRevisionRef"
+          },
+          "revisionNumber": {
+            "type": "string",
+            "description": "固定版本号"
+          },
+          "sourceTypes": {
+            "type": "array",
+            "description": "直接或组继承来源种类",
+            "items": {
+              "type": "string",
+              "description": "直接或组继承来源种类",
+              "enum": [
+                "MEMBER",
+                "GROUP"
+              ]
+            }
+          }
+        },
+        "description": "成员当前有效绑定的角色与版本摘要，不披露组标识或名称"
+      },
       "MemberCreateInput": {
         "required": [
           "accountId",
@@ -25150,6 +25643,56 @@
         },
         "description": "新平台成员的固定版本角色分配"
       },
+      "MemberRoleChanges": {
+        "required": [
+          "additions",
+          "removals",
+          "updates"
+        ],
+        "type": "object",
+        "properties": {
+          "additions": {
+            "type": "array",
+            "description": "新增固定版本分配",
+            "items": {
+              "$ref": "#/components/schemas/MemberRoleAssignmentDraft"
+            }
+          },
+          "updates": {
+            "type": "array",
+            "description": "既有分配范围更新",
+            "items": {
+              "$ref": "#/components/schemas/MemberRoleScopeChange"
+            }
+          },
+          "removals": {
+            "type": "array",
+            "description": "撤销既有直接分配",
+            "items": {
+              "$ref": "#/components/schemas/MemberRoleRemoval"
+            }
+          }
+        },
+        "description": "成员表单的角色差量，不覆盖未加载或只读分配"
+      },
+      "MemberRoleRemoval": {
+        "required": [
+          "assignmentId",
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "assignmentId": {
+            "type": "string",
+            "description": "分配 ID"
+          },
+          "expectedVersion": {
+            "type": "string",
+            "description": "读取的分配版本"
+          }
+        },
+        "description": "按版本撤销成员直接分配"
+      },
       "MemberRoleReplaceInput": {
         "required": [
           "roleIds"
@@ -25166,6 +25709,32 @@
           }
         },
         "description": "用角色 ID 列表替换成员的简单直接角色，空列表表示清除"
+      },
+      "MemberRoleScopeChange": {
+        "required": [
+          "assignmentId",
+          "expectedVersion",
+          "scopeBindings"
+        ],
+        "type": "object",
+        "properties": {
+          "assignmentId": {
+            "type": "string",
+            "description": "分配 ID"
+          },
+          "expectedVersion": {
+            "type": "string",
+            "description": "读取的分配版本"
+          },
+          "scopeBindings": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScopeBinding"
+            },
+            "description": "完整范围参数"
+          }
+        },
+        "description": "调整成员直接分配的具体对象，保持固定版本和有效期"
       },
       "MemberRoleView": {
         "required": [
@@ -25581,6 +26150,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GrantCatalogResource"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PageResponseMemberBoundRole": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberBoundRole"
             }
           },
           "total": {
@@ -26212,6 +26810,95 @@
         },
         "description": "整体替换套餐应用清单，不影响已开通租户"
       },
+      "PlatformMemberContext": {
+        "required": [
+          "canSearchDisplayName",
+          "createFieldAccess",
+          "listFieldVisibility"
+        ],
+        "type": "object",
+        "properties": {
+          "listFieldVisibility": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "仅用于列布局的整份有效读策略可见性概览",
+              "enum": [
+                "HIDDEN",
+                "MASKED",
+                "FULL"
+              ]
+            },
+            "description": "仅用于列布局的整份有效读策略可见性概览"
+          },
+          "createFieldAccess": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldAccess"
+            },
+            "description": "创建新成员时的精确字段权限"
+          },
+          "canSearchDisplayName": {
+            "type": "boolean",
+            "description": "允许按显示名原值搜索"
+          }
+        }
+      },
+      "PlatformMemberEditInput": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "roleChanges": {
+            "$ref": "#/components/schemas/MemberRoleChanges"
+          }
+        }
+      },
+      "PlatformMemberEditPreview": {
+        "type": "object",
+        "properties": {
+          "profileFields": {
+            "type": "array",
+            "description": "变化的资料字段编码",
+            "items": {
+              "type": "string",
+              "description": "变化的资料字段编码"
+            }
+          },
+          "additions": {
+            "type": "integer",
+            "description": "新增分配数",
+            "format": "int32"
+          },
+          "updates": {
+            "type": "integer",
+            "description": "范围调整数",
+            "format": "int32"
+          },
+          "removals": {
+            "type": "integer",
+            "description": "撤销分配数",
+            "format": "int32"
+          }
+        },
+        "description": "成员资料与角色差量预览，不包含字段原值"
+      },
       "PolicyDraft": {
         "required": [
           "kind"
@@ -26435,6 +27122,42 @@
           },
           "effectiveResult": {
             "$ref": "#/components/schemas/EntitlementPreviewResult"
+          }
+        }
+      },
+      "PreviewPlatformMemberEditPreview": {
+        "required": [
+          "errors",
+          "impactSummary",
+          "valid",
+          "version",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            }
+          },
+          "impactSummary": {
+            "$ref": "#/components/schemas/ImpactSummary"
+          },
+          "effectiveResult": {
+            "$ref": "#/components/schemas/PlatformMemberEditPreview"
           }
         }
       },
@@ -26936,6 +27659,23 @@
           }
         }
       },
+      "RPageResponseMemberBoundRole": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResponseMemberBoundRole"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RPageResponseResourceDetailAccountRecord": {
         "type": "object",
         "properties": {
@@ -27208,6 +27948,23 @@
           }
         }
       },
+      "RPlatformMemberContext": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PlatformMemberContext"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RPreviewAssignmentPreviewResult": {
         "type": "object",
         "properties": {
@@ -27270,6 +28027,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/PreviewEntitlementPreviewResult"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RPreviewPlatformMemberEditPreview": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PreviewPlatformMemberEditPreview"
           },
           "success": {
             "type": "boolean"
