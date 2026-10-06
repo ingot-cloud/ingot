@@ -2664,11 +2664,11 @@
           },
           "phone" : {
             "type" : "string",
-            "description" : "组织通讯录手机号，可空表示不修改"
+            "description" : "当前域联系手机号，可空表示不修改；不修改全局登录手机号"
           },
           "email" : {
             "type" : "string",
-            "description" : "组织通讯录邮箱，可空表示不修改"
+            "description" : "当前域联系邮箱，可空表示不修改；不修改全局账号邮箱"
           }
         },
         "description" : "更新当前域成员资料，禁止携带凭证、状态或其它组织身份"
@@ -2691,11 +2691,11 @@
           },
           "phone" : {
             "type" : "string",
-            "description" : "允许输出的手机号字符串；可能已脱敏，隐藏时省略"
+            "description" : "当前域联系手机号；可能已脱敏，隐藏时省略"
           },
           "email" : {
             "type" : "string",
-            "description" : "允许输出的邮箱字符串；可能已脱敏，隐藏时省略"
+            "description" : "当前域联系邮箱；可能已脱敏，隐藏时省略"
           },
           "username" : {
             "type" : "string",

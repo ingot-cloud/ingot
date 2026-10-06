@@ -67,3 +67,7 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 平台旧独立策略API、枚举和夹具已删除，不保留deprecated兼容端点；租户FieldPolicyInput/FieldRule及通讯录契约保持原行为。资源执行能力由角色权限目录提供，不再由独立平台策略入口查询。创建和修改成员隐藏的suppliedFields只用于服务端校验，不进入传输模型。当前无部署开关或迁移期；自动化与人工状态见[增量任务](../ROLE-FIELD-AUTHORIZATION-REFINEMENT.md)。
 
 上文资源扩展增量中的独立平台策略夹具及133/201快照仅记录历史，不能用于当前调用。
+
+## 2026-10-06 平台成员联系资料
+
+平台成员的phone/email改为独立联系资料，空白清空后不回退全局账号，创建时仅一次复制账号初值。MemberRecord/MemberProfileInput的字段和请求结构不变，仅更新描述；Java契约导出、OpenAPI一致性及7项契约检查通过。快照仍为129路径/196操作，迁移和人工验收见[增量说明](../PLATFORM-MEMBER-CONTACTS-REFINEMENT.md)。
