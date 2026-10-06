@@ -1,7 +1,10 @@
 package com.ingot.framework.commons.model.iam;
 
 /**
- * <p>分页授权配置候选，固定版本携带参数与操作，委派携带可披露的完整限制。</p>
+ * <p>
+ * 分页授权配置候选，固定版本携带参数与操作，委派携带可披露的完整限制。
+ * </p>
+ *
  * @param id 候选实际标识
  * @param name 可披露名称
  * @param summary 候选上下文摘要；委派为授权依据，诊断操作为所属资源名称
@@ -18,15 +21,34 @@ package com.ingot.framework.commons.model.iam;
  * @since 1.0.0
  */
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-public record AuthorizationOption(@jakarta.validation.constraints.NotBlank String id, @jakarta.validation.constraints.NotBlank String name, String summary, RoleRevisionRef roleRevisionRef, java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants, java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId, Boolean hasChildren, String ancestorPath, Boolean selectable) {
+public record AuthorizationOption(@jakarta.validation.constraints.NotBlank String id,
+        @jakarta.validation.constraints.NotBlank String name, String summary, RoleRevisionRef roleRevisionRef,
+        java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
+        java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId,
+        Boolean hasChildren, String ancestorPath, Boolean selectable,
+        java.util.Map<String, java.util.Map<String, FieldAccess>> resourceFieldPermissions) {
+    /** 兼容既有树及普通候选。 */
+    public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
+            java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
+            java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId,
+            Boolean hasChildren, String ancestorPath, Boolean selectable) {
+        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation, parentId,
+                hasChildren, ancestorPath, selectable, null);
+    }
+
+    /** 复制固定版本字段快照。 */
+    public AuthorizationOption {
+        resourceFieldPermissions = ResourceFieldPermissions.copy(resourceFieldPermissions);
+    }
+
     /**
      * 保持非树形候选构造契约。
      */
     public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
             java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
             java.util.List<AuthorizationActionOption> actions, DelegationInput delegation) {
-        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation,
-                null, null, null, null);
+        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation, null, null, null,
+                null);
     }
 
     /**
@@ -34,9 +56,9 @@ public record AuthorizationOption(@jakarta.validation.constraints.NotBlank Strin
      */
     public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
             java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
-            java.util.List<AuthorizationActionOption> actions, DelegationInput delegation,
-            String parentId, Boolean hasChildren, String ancestorPath) {
-        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation,
-                parentId, hasChildren, ancestorPath, null);
+            java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId,
+            Boolean hasChildren, String ancestorPath) {
+        this(id, name, summary, roleRevisionRef, parameterDefinitions, grants, actions, delegation, parentId,
+                hasChildren, ancestorPath, null);
     }
 }

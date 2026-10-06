@@ -395,6 +395,8 @@ public enum IamAction {
      * 契约字面量 {@code iam-platform:assignment:delete}。
      */
     PLATFORM_ASSIGNMENT_DELETE("iam-platform:assignment:delete"),
+    /** 显式升级已有分配的固定版本。 */
+    PLATFORM_ASSIGNMENT_UPGRADE("iam-platform:assignment:upgrade"),
     /**
      * 契约字面量 {@code iam-platform:delegation:read}。
      */
@@ -980,6 +982,8 @@ public enum IamAction {
      * 契约字面量 {@code iam-platform:assignment:delete}。
      */
     public static final String VALUE_PLATFORM_ASSIGNMENT_DELETE = "iam-platform:assignment:delete";
+    /** 升级操作契约常量。 */
+    public static final String VALUE_PLATFORM_ASSIGNMENT_UPGRADE = "iam-platform:assignment:upgrade";
     /**
      * 契约字面量 {@code iam-platform:delegation:read}。
      */

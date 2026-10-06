@@ -45,6 +45,15 @@ public class RoleRepository {
     private final IamActionMapper actions;
 
     /**
+     * 批量读取不可变角色版本，供字段求值保持一次查询。
+     * @param ids 固定版本 ID
+     * @return 存在的版本
+     */
+    public List<IamRoleRevisionEntity> findRevisions(Collection<BigInteger> ids) {
+        return ids.isEmpty() ? List.of() : revisions.selectBatchIds(ids);
+    }
+
+    /**
      * 平台角色写入先锁治理应用，防止预览后停用或撤权并发绕过分配校验。
      * @param domain 管理域
      */

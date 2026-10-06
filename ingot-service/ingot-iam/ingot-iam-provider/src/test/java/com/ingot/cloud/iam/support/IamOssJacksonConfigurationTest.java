@@ -18,6 +18,7 @@ import com.ingot.framework.commons.model.iam.ApplicationSummary;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.ConfigurationStatus;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
+import com.ingot.framework.commons.model.iam.MemberProfileInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
 import com.ingot.framework.commons.model.iam.MemberStatus;
 import com.ingot.framework.commons.oss.OssService;
@@ -39,6 +40,12 @@ class IamOssJacksonConfigurationTest {
                 {"accountId":"1","avatar":"https://minio.local/ingot/user/avatar/a.png?X-Amz-Expires=3600","departments":[]}
                 """, MemberCreateInput.class);
         assertEquals("ingot/user/avatar/a.png", input.avatar());
+        MemberProfileInput profile = mapper.readValue("""
+                {"expectedVersion":"1","avatar":"https://minio.local/ingot/user/avatar/a.png?X-Amz-Expires=3600","phone":null,"unknown":null}
+                """, MemberProfileInput.class);
+        assertEquals("ingot/user/avatar/a.png", profile.avatar());
+        assertTrue(profile.suppliedFields().contains("phone"));
+        assertTrue(profile.suppliedFields().contains("unknown"));
     }
 
     @Test

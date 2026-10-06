@@ -4,20 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[3]
-DDL_DIRECTORY = ROOT / "databases" / "iam"
-FRAMEWORK_LOCK_DDL = (
-    ROOT / "ingot-framework/ingot-security/ingot-security-account"
-    / "ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql"
-)
-FRAMEWORK_PASSWORD_DDL = (
-    ROOT / "ingot-framework/ingot-security/ingot-security-credential-data"
-    / "src/main/resources/sql/add_password_history.sql"
-)
+sys.path.insert(0, str(ROOT))
+from tools.iam.database_sources import initialization_files
+
 REQUIRED_CONFIG = (
     "environmentId",
     "registered",
@@ -40,11 +35,8 @@ class ConfigError(ValueError):
 
 
 def ddl_files():
-    """权威初始化顺序：001–005 → 007 → 框架 DDL → 006。不含人工种子。"""
-    numbered = sorted(DDL_DIRECTORY.glob("[0-9][0-9][0-9]_*.sql"))
-    identity = [item for item in numbered if item.name not in {"006_bootstrap.sql", "008_platform_accounts_menu.sql", "009_tenant_plan.sql"}]
-    bootstrap = DDL_DIRECTORY / "006_bootstrap.sql"
-    return identity + [FRAMEWORK_LOCK_DDL, FRAMEWORK_PASSWORD_DDL, bootstrap]
+    """权威清单顺序：001–005 → 框架DDL → 006；不含历史ALTER或人工种子。"""
+    return initialization_files()
 
 
 def load_config(path: Path) -> dict:

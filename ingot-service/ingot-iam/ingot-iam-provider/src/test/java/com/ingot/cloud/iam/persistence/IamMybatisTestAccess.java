@@ -77,15 +77,23 @@ import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * <p>为数据库夹具装配真实 MyBatis Plus/MPJ Mapper，复用生产拦截器并参与 Spring 数据源事务。</p>
- * <p>测试允许直接 JDBC 准备数据；被测业务通过此处 Mapper 执行，不增加生产 DataSource 便利构造器。
- * 默认枚举处理器与 Nacos 生产配置一致，使用 {@code CompositeEnumTypeHandler}。</p>
+ * <p>
+ * 为数据库夹具装配真实 MyBatis Plus/MPJ Mapper，复用生产拦截器并参与 Spring 数据源事务。
+ * </p>
+ * <p>
+ * 测试允许直接 JDBC 准备数据；被测业务通过此处 Mapper 执行，不增加生产 DataSource 便利构造器。 默认枚举处理器与 Nacos 生产配置一致，使用
+ * {@code CompositeEnumTypeHandler}。
+ * </p>
+ *
  * @author jy
  * @since 1.0.0
  */
 public final class IamMybatisTestAccess {
+
     private static final Map<DataSource, SqlSessionTemplate> SESSIONS = new ConcurrentHashMap<>();
-    private IamMybatisTestAccess() { }
+
+    private IamMybatisTestAccess() {
+    }
 
     /** 在当前夹具数据源上建立身份 Repository。 */
     public static IdentityRepository identity(DataSource source) {
@@ -94,15 +102,13 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立组织设置 Repository。 */
     public static TenantRepository tenants(DataSource source) {
-        return new TenantRepository(mapper(source, IamTenantMapper.class),
-                mapper(source, IamTenantMemberMapper.class));
+        return new TenantRepository(mapper(source, IamTenantMapper.class), mapper(source, IamTenantMemberMapper.class));
     }
 
     /** 在当前夹具数据源上建立账号与任职查询 Repository，锁定态走安全框架适配器。 */
     public static AccountCredentialRepository accounts(DataSource source) {
-        return new AccountCredentialRepository(mapper(source, IamAccountMapper.class),
-                lockStates(source), mapper(source, IamTenantMemberMapper.class),
-                mapper(source, IamMemberDepartmentMapper.class));
+        return new AccountCredentialRepository(mapper(source, IamAccountMapper.class), lockStates(source),
+                mapper(source, IamTenantMemberMapper.class), mapper(source, IamMemberDepartmentMapper.class));
     }
 
     /** 在当前夹具数据源上建立安全框架锁定态端口，不使用 IAM 自有锁定实现。 */
@@ -149,7 +155,7 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立账号写入 Repository。 */
     public static AccountWriteRepository accountWrites(DataSource source,
-                                                      com.ingot.cloud.iam.identity.InitializationIdAllocator ids) {
+            com.ingot.cloud.iam.identity.InitializationIdAllocator ids) {
         return new AccountWriteRepository(mapper(source, IamAccountMapper.class), ids);
     }
 
@@ -238,10 +244,10 @@ public final class IamMybatisTestAccess {
 
     /** 在当前夹具数据源上建立通讯录与字段策略 Repository。 */
     public static com.ingot.cloud.iam.policy.PolicyWriteRepository policies(DataSource source) {
-        return new com.ingot.cloud.iam.policy.PolicyWriteRepository(
-                mapper(source, IamDirectoryPolicyMapper.class), mapper(source, IamFieldPolicyMapper.class),
-                mapper(source, IamDirectoryRuleMapper.class), mapper(source, IamFieldRuleMapper.class),
-                mapper(source, IamPolicySelectorMapper.class), mapper(source, IamPolicySelectorMemberMapper.class),
+        return new com.ingot.cloud.iam.policy.PolicyWriteRepository(mapper(source, IamDirectoryPolicyMapper.class),
+                mapper(source, IamFieldPolicyMapper.class), mapper(source, IamDirectoryRuleMapper.class),
+                mapper(source, IamFieldRuleMapper.class), mapper(source, IamPolicySelectorMapper.class),
+                mapper(source, IamPolicySelectorMemberMapper.class),
                 mapper(source, IamPolicySelectorDepartmentMapper.class), mapper(source, IamTenantMemberMapper.class),
                 mapper(source, IamMemberDepartmentMapper.class), mapper(source, IamDepartmentMapper.class),
                 mapper(source, IamDefaultPolicyRevisionMapper.class));
@@ -268,8 +274,7 @@ public final class IamMybatisTestAccess {
     }
 
     /** 在当前夹具数据源上建立读取指定热缓存的授权求值器。 */
-    public static AuthorizationEvaluator evaluator(
-            DataSource source,
+    public static AuthorizationEvaluator evaluator(DataSource source,
             LayeredCache<String, AuthorizationEvaluator.AuthorizationView> cache) {
         return new AuthorizationEvaluator(evaluations(source), new SingletonProvider<>(cache), null);
     }
@@ -284,7 +289,7 @@ public final class IamMybatisTestAccess {
     public static com.ingot.cloud.iam.evaluation.ResourceAccess resourceAccess(DataSource source) {
         return new com.ingot.cloud.iam.evaluation.ResourceAccess(evaluator(source), objectScopes(source),
                 memberQueries(source), new DepartmentQueryRepository(mapper(source, IamDepartmentMapper.class),
-                mapper(source, IamMemberDepartmentMapper.class)));
+                        mapper(source, IamMemberDepartmentMapper.class)));
     }
 
     /** 在当前夹具数据源上建立对象展示能力。 */
@@ -315,15 +320,30 @@ public final class IamMybatisTestAccess {
         }
     }
 
+    /** 无注册字段资源的测试执行能力。 */
+    public static com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata(DataSource source) {
+        return new com.ingot.cloud.iam.extension.ResourceFieldMetadata(mapper(source, IamApplicationMapper.class),
+                mapper(source, IamResourceMapper.class), mapper(source, IamActionMapper.class),
+                new com.ingot.framework.authorization.ResourceRegistry(java.util.List.of()));
+    }
+
+    /** 无注册字段资源的角色快照服务。 */
+    public static com.ingot.cloud.iam.extension.RoleFieldPermissionService roleFields(DataSource source) {
+        return new com.ingot.cloud.iam.extension.RoleFieldPermissionService(fieldMetadata(source), roles(source),
+                new com.ingot.cloud.iam.extension.ScopeTransportCompiler(
+                        new DepartmentClosure(mapper(source, IamDepartmentMapper.class)),
+                        mapper(source, IamMemberDepartmentMapper.class)),
+                org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.AuthorizationEvaluator.class));
+    }
+
     /** 在当前夹具数据源上建立只读解析用的目录服务。 */
     public static com.ingot.cloud.iam.catalog.CatalogService catalogService(
             com.ingot.cloud.iam.support.IamAccess access, DataSource source,
             org.springframework.transaction.PlatformTransactionManager transactions) {
         return new com.ingot.cloud.iam.catalog.CatalogService(access, audits(source),
-                new com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier(event -> { }),
-                catalogs(source),
-                new com.ingot.cloud.iam.support.SensitiveConfirmationGuard(command -> { }),
-                transactions);
+                new com.ingot.cloud.iam.authorization.snapshot.AuthorizationChangeNotifier(event -> {
+                }), catalogs(source), new com.ingot.cloud.iam.support.SensitiveConfirmationGuard(command -> {
+                }), fieldMetadata(source), transactions);
     }
 
     /** 在当前夹具数据源上建立目录 Repository。 */
@@ -356,38 +376,40 @@ public final class IamMybatisTestAccess {
             factory.setConfiguration(configuration);
             factory.setGlobalConfig(global);
             factory.setTransactionFactory(new SpringManagedTransactionFactory());
-            factory.setPlugins(new MybatisPlusConfig().mybatisPlusInterceptor(new TenantProperties(), new DataScopeProperties()),
+            factory.setPlugins(
+                    new MybatisPlusConfig().mybatisPlusInterceptor(new TenantProperties(), new DataScopeProperties()),
                     new MPJInterceptor());
             factory.setMapperLocations(new ClassPathResource("mapper/IamIdentityMapper.xml"),
                     new ClassPathResource("sdk/mapper/AccountLockStateMapper.xml"));
             factory.afterPropertiesSet();
             SqlSessionFactory sessions = factory.getObject();
-            for (Class<?> mapper : new Class<?>[]{
-                    IamAccountMapper.class, AccountLockStateMapper.class, IamTenantMapper.class,
-                    IamTenantMemberMapper.class, IamPlatformMemberMapper.class, IamMemberDepartmentMapper.class,
-                    IamDepartmentMapper.class, IamAuthorizationAuditMapper.class, IamApplicationMapper.class,
-                    IamRoleDefinitionMapper.class, IamRoleRevisionMapper.class, IamDefaultPolicyRevisionMapper.class,
-                    IamPlanMapper.class, IamPlanApplicationMapper.class, IamRoleAssignmentMapper.class,
-                    IamTenantAppEntitlementMapper.class, IamAppAudienceMapper.class, IamAudienceMemberMapper.class,
-                    IamAudienceDepartmentMapper.class, IamAudienceGroupMapper.class, IamTenantGroupMapper.class,
-                    IamDirectoryPolicyMapper.class, IamFieldPolicyMapper.class, IamActionMapper.class,
-                    IamMenuMapper.class, IamMenuActionMapper.class, IamRoleGrantMapper.class, IamFieldRuleMapper.class,
-                    IamPolicySelectorMemberMapper.class, IamPolicySelectorDepartmentMapper.class,
-                    IamDelegationGrantMapper.class, IamDelegationRoleRevisionMapper.class,
-                    IamDelegationRecipientMemberMapper.class, IamDelegationRecipientDepartmentMapper.class,
-                    IamDelegationActionCeilingMapper.class, IamPlatformGroupMapper.class,
-                    IamPlatformGroupMemberMapper.class, IamTenantGroupMemberMapper.class,
+            for (Class<?> mapper : new Class<?>[] { IamAccountMapper.class, AccountLockStateMapper.class,
+                    IamTenantMapper.class, IamTenantMemberMapper.class, IamPlatformMemberMapper.class,
+                    IamMemberDepartmentMapper.class, IamDepartmentMapper.class, IamAuthorizationAuditMapper.class,
+                    IamApplicationMapper.class, IamRoleDefinitionMapper.class, IamRoleRevisionMapper.class,
+                    IamDefaultPolicyRevisionMapper.class, IamPlanMapper.class, IamPlanApplicationMapper.class,
+                    IamRoleAssignmentMapper.class, IamTenantAppEntitlementMapper.class, IamAppAudienceMapper.class,
+                    IamAudienceMemberMapper.class, IamAudienceDepartmentMapper.class, IamAudienceGroupMapper.class,
+                    IamTenantGroupMapper.class, IamDirectoryPolicyMapper.class, IamFieldPolicyMapper.class,
+                    IamActionMapper.class, IamMenuMapper.class, IamMenuActionMapper.class, IamRoleGrantMapper.class,
+                    IamFieldRuleMapper.class, IamPolicySelectorMemberMapper.class,
+                    IamPolicySelectorDepartmentMapper.class, IamDelegationGrantMapper.class,
+                    IamDelegationRoleRevisionMapper.class, IamDelegationRecipientMemberMapper.class,
+                    IamDelegationRecipientDepartmentMapper.class, IamDelegationActionCeilingMapper.class,
+                    IamPlatformGroupMapper.class, IamPlatformGroupMemberMapper.class, IamTenantGroupMemberMapper.class,
                     IamRoleDeltaMapper.class, IamRoleParameterMapper.class, IamTenantGroupDepartmentMapper.class,
                     IamDirectoryRuleMapper.class, IamPolicySelectorMapper.class, IamResourceMapper.class,
-                    IamMemberExportMapper.class, com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class,
+                    IamMemberExportMapper.class,
+                    com.ingot.cloud.iam.persistence.mapper.AuthorizationCandidateMapper.class,
                     com.ingot.cloud.iam.persistence.mapper.TenantScopeCandidateMapper.class,
-                    com.ingot.cloud.iam.persistence.mapper.RoleWorkspaceMapper.class
-            }) {
+                    com.ingot.cloud.iam.persistence.mapper.RoleWorkspaceMapper.class }) {
                 sessions.getConfiguration().addMapper(mapper);
             }
             return new SqlSessionTemplate(sessions);
-        } catch (Exception exception) {
+        }
+        catch (Exception exception) {
             throw new IllegalStateException("无法装配 IAM MyBatis 测试夹具", exception);
         }
     }
+
 }

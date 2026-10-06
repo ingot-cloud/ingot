@@ -46,25 +46,31 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * <p>验证创建应用目录项不会隐式写入开通。</p>
+ * <p>
+ * 验证创建应用目录项不会隐式写入开通。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 class CatalogServiceTest {
+
     private JdbcTemplate jdbc;
+
     private CatalogService catalog;
 
     @BeforeEach
     void database() {
-        var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
+        var dataSource = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa",
+                "");
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("""
                 CREATE TABLE iam_application(id BIGINT PRIMARY KEY, code VARCHAR(64), domain VARCHAR(16),
                   name VARCHAR(128), description VARCHAR(512), icon VARCHAR(512), sort_order INT,
                   baseline BOOLEAN, enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
-        jdbc.execute("CREATE TABLE iam_tenant_app_entitlement(id BIGINT PRIMARY KEY, tenant_id BIGINT, application_id BIGINT)");
+        jdbc.execute(
+                "CREATE TABLE iam_tenant_app_entitlement(id BIGINT PRIMARY KEY, tenant_id BIGINT, application_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_plan_application(plan_id BIGINT, application_id BIGINT)");
         jdbc.execute("""
                 CREATE TABLE iam_resource(id BIGINT PRIMARY KEY, application_id BIGINT, code VARCHAR(192),
@@ -83,7 +89,8 @@ class CatalogServiceTest {
                 """);
         jdbc.execute("CREATE TABLE iam_menu_action(application_id BIGINT, menu_id BIGINT, action_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(4096))");
-        jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32), scopes VARCHAR(4096))");
+        jdbc.execute(
+                "CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32), scopes VARCHAR(4096))");
         jdbc.execute("""
                 CREATE TABLE iam_app_audience(tenant_id BIGINT, application_id BIGINT, enabled BOOLEAN,
                   audience_kind VARCHAR(16), version BIGINT DEFAULT 0)
@@ -94,12 +101,13 @@ class CatalogServiceTest {
                 CREATE TABLE iam_audience_department(tenant_id BIGINT, application_id BIGINT, department_id BIGINT,
                   include_descendants BOOLEAN)
                 """);
-        jdbc.execute("""
-                CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY,event_id VARCHAR(64),actor_account_id BIGINT,
-                  actor_member_id BIGINT,domain VARCHAR(16),tenant_id BIGINT,target_type VARCHAR(64),target_id VARCHAR(128),
-                  change_type VARCHAR(64),safe_before VARCHAR(4096),safe_after VARCHAR(4096),revisions VARCHAR(4096),
-                  delegation_id BIGINT,assignment_id BIGINT,trace_id VARCHAR(128),occurred_at TIMESTAMP)
-                """);
+        jdbc.execute(
+                """
+                        CREATE TABLE iam_authorization_audit(id BIGINT PRIMARY KEY,event_id VARCHAR(64),actor_account_id BIGINT,
+                          actor_member_id BIGINT,domain VARCHAR(16),tenant_id BIGINT,target_type VARCHAR(64),target_id VARCHAR(128),
+                          change_type VARCHAR(64),safe_before VARCHAR(4096),safe_after VARCHAR(4096),revisions VARCHAR(4096),
+                          delegation_id BIGINT,assignment_id BIGINT,trace_id VARCHAR(128),occurred_at TIMESTAMP)
+                        """);
         IamAccess access = mock(IamAccess.class);
         ActiveIdentity actor = new ActiveIdentity(
                 new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "1001"), "0", "0", null);
@@ -108,18 +116,19 @@ class CatalogServiceTest {
         when(access.nextId()).thenAnswer(invocation -> ids.incrementAndGet());
         ConfirmPasswordUseCase passwords = mock(ConfirmPasswordUseCase.class);
         doThrow(new ConfirmPasswordFailedException()).when(passwords)
-                .confirm(argThat(command -> command != null && "wrong".equals(command.getPassword())));
+            .confirm(argThat(command -> command != null && "wrong".equals(command.getPassword())));
         catalog = new CatalogService(access, com.ingot.cloud.iam.persistence.IamMybatisTestAccess.audits(dataSource),
                 new AuthorizationChangeNotifier(event -> {
                 }), com.ingot.cloud.iam.persistence.IamMybatisTestAccess.catalogs(dataSource),
                 new SensitiveConfirmationGuard(passwords),
+                com.ingot.cloud.iam.persistence.IamMybatisTestAccess.fieldMetadata(dataSource),
                 new DataSourceTransactionManager(dataSource));
     }
 
     @Test
     void createApplicationDoesNotInsertEntitlement() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
-                "演示", null, null, 1, true));
+        CreatedResource created = catalog
+            .createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_tenant_app_entitlement", Integer.class));
         assertEquals("0", created.version());
@@ -127,17 +136,17 @@ class CatalogServiceTest {
 
     @Test
     void platformResourceRejectsDepartmentScopesWhileTenantCatalogCanDeclareThem() {
-        CreatedResource platform = catalog.createApplication(new ApplicationDraft("platform", AuthorizationDomain.PLATFORM,
-                "平台", null, null, 1, false));
+        CreatedResource platform = catalog.createApplication(
+                new ApplicationDraft("platform", AuthorizationDomain.PLATFORM, "平台", null, null, 1, false));
         BizException denied = assertThrows(BizException.class, () -> catalog.createResource(platform.id(),
                 new ResourceDraft("application", "应用", List.of(ScopeKind.MANAGED_DEPARTMENTS), List.of())));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), denied.getCode());
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
 
-        CreatedResource tenant = catalog.createApplication(new ApplicationDraft("tenant", AuthorizationDomain.TENANT,
-                "租户", null, null, 1, true));
-        catalog.createResource(tenant.id(), new ResourceDraft("member", "成员",
-                List.of(ScopeKind.MANAGED_DEPARTMENTS), List.of()));
+        CreatedResource tenant = catalog
+            .createApplication(new ApplicationDraft("tenant", AuthorizationDomain.TENANT, "租户", null, null, 1, true));
+        catalog.createResource(tenant.id(),
+                new ResourceDraft("member", "成员", List.of(ScopeKind.MANAGED_DEPARTMENTS), List.of()));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_resource", Integer.class));
     }
 
@@ -147,9 +156,8 @@ class CatalogServiceTest {
                 new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
                 List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
                         List.of(new ApplicationBundleAction("a1", "read", "查看")))),
-                List.of(
-                        new ApplicationBundleMenu("m1", null, "组织", MenuKind.DIRECTORY, null, null, null, null,
-                                MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 1),
+                List.of(new ApplicationBundleMenu("m1", null, "组织", MenuKind.DIRECTORY, null, null, null, null,
+                        MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 1),
                         new ApplicationBundleMenu("m2", "m1", "成员", MenuKind.PAGE, "/members", "members", null, null,
                                 MenuAccessMode.ACTION, ActionMatchMode.ANY, List.of("a1"), 1))));
         assertEquals("0", created.version());
@@ -165,8 +173,8 @@ class CatalogServiceTest {
 
     @Test
     void createApplicationBundleRollsBackWhenMenuActionIsUnknown() {
-        BizException invalid = assertThrows(BizException.class, () -> catalog.createApplicationBundle(
-                new ApplicationBundleDraft(
+        BizException invalid = assertThrows(BizException.class,
+                () -> catalog.createApplicationBundle(new ApplicationBundleDraft(
                         new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true),
                         List.of(new ApplicationBundleResource("r1", "account", "账号", List.of(ScopeKind.ALL), List.of(),
                                 List.of(new ApplicationBundleAction("a1", "read", "查看")))),
@@ -194,8 +202,8 @@ class CatalogServiceTest {
 
     @Test
     void deleteApplicationExplainsEntitlementAndPlan() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
-                "演示", null, null, 1, true));
+        CreatedResource created = catalog
+            .createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true));
         jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
                 Long.parseLong(created.id()));
         jdbc.update("INSERT INTO iam_plan_application(plan_id,application_id) VALUES (3,?)",
@@ -207,8 +215,8 @@ class CatalogServiceTest {
 
     @Test
     void purgeApplicationRejectsMissingConfirmation() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
-                "演示", null, null, 1, true));
+        CreatedResource created = catalog
+            .createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true));
         jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
                 Long.parseLong(created.id()));
         BizException denied = assertThrows(BizException.class,
@@ -220,12 +228,12 @@ class CatalogServiceTest {
 
     @Test
     void purgeApplicationRejectsWrongPassword() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
-                "演示", null, null, 1, true));
+        CreatedResource created = catalog
+            .createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true));
         jdbc.update("INSERT INTO iam_tenant_app_entitlement(id,tenant_id,application_id) VALUES (1,9,?)",
                 Long.parseLong(created.id()));
-        BizException denied = assertThrows(BizException.class, () -> catalog.purgeApplication(created.id(),
-                new ApplicationPurgeInput("0",
+        BizException denied = assertThrows(BizException.class,
+                () -> catalog.purgeApplication(created.id(), new ApplicationPurgeInput("0",
                         new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "wrong"))));
         assertEquals(IamReasonCode.STEP_UP_FAILED.getCode(), denied.getCode());
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
@@ -251,8 +259,7 @@ class CatalogServiceTest {
                 + " VALUES (9,?,TRUE,'ALL',0)", applicationId);
         jdbc.update("INSERT INTO iam_audience_member(tenant_id,application_id,member_id) VALUES (9,?,11)",
                 applicationId);
-        jdbc.update("INSERT INTO iam_audience_group(tenant_id,application_id,group_id) VALUES (9,?,12)",
-                applicationId);
+        jdbc.update("INSERT INTO iam_audience_group(tenant_id,application_id,group_id) VALUES (9,?,12)", applicationId);
         jdbc.update("INSERT INTO iam_audience_department(tenant_id,application_id,department_id,include_descendants)"
                 + " VALUES (9,?,13,FALSE)", applicationId);
 
@@ -276,10 +283,10 @@ class CatalogServiceTest {
 
     @Test
     void purgeApplicationRejectsGovernanceEvenWithPassword() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("iam-platform",
-                AuthorizationDomain.PLATFORM, "平台治理", null, null, 1, false));
-        BizException denied = assertThrows(BizException.class, () -> catalog.purgeApplication(created.id(),
-                new ApplicationPurgeInput("0",
+        CreatedResource created = catalog.createApplication(
+                new ApplicationDraft("iam-platform", AuthorizationDomain.PLATFORM, "平台治理", null, null, 1, false));
+        BizException denied = assertThrows(BizException.class,
+                () -> catalog.purgeApplication(created.id(), new ApplicationPurgeInput("0",
                         new SensitiveConfirmation(SensitiveConfirmationKind.LOGIN_PASSWORD, "ok"))));
         assertEquals(IamReasonCode.ACTION_DENIED.getCode(), denied.getCode());
         assertEquals("治理应用不可强制清除", denied.getMessage());
@@ -288,8 +295,8 @@ class CatalogServiceTest {
 
     @Test
     void deleteEmptyApplicationStillUsesOrdinaryDelete() {
-        CreatedResource created = catalog.createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT,
-                "演示", null, null, 1, true));
+        CreatedResource created = catalog
+            .createApplication(new ApplicationDraft("demo", AuthorizationDomain.TENANT, "演示", null, null, 1, true));
         CreatedResource deleted = catalog.deleteApplication(created.id());
         assertEquals("0", deleted.version());
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
@@ -298,8 +305,7 @@ class CatalogServiceTest {
     @Test
     void listApplicationsFiltersByNameAndStatus() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
-                + " VALUES (1,'gov','PLATFORM','平台治理',1,FALSE,TRUE,0),"
-                + " (2,'demo','TENANT','演示应用',2,TRUE,TRUE,0),"
+                + " VALUES (1,'gov','PLATFORM','平台治理',1,FALSE,TRUE,0)," + " (2,'demo','TENANT','演示应用',2,TRUE,TRUE,0),"
                 + " (3,'off','TENANT','停用应用',3,FALSE,FALSE,0)");
 
         var byName = catalog.listApplications(1, 20, "TENANT", "演示", null, null);
@@ -354,10 +360,8 @@ class CatalogServiceTest {
                 CREATE TABLE iam_plan(id BIGINT PRIMARY KEY, name VARCHAR(128), description VARCHAR(512),
                   enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
-        jdbc.update("INSERT INTO iam_plan(id,name,enabled,version)"
-                + " VALUES (1,'基础套餐',TRUE,0),"
-                + " (2,'演示套餐',TRUE,0),"
-                + " (3,'停用套餐',FALSE,0)");
+        jdbc.update("INSERT INTO iam_plan(id,name,enabled,version)" + " VALUES (1,'基础套餐',TRUE,0),"
+                + " (2,'演示套餐',TRUE,0)," + " (3,'停用套餐',FALSE,0)");
 
         var byName = catalog.listPlans(1, 20, "演示", null);
         assertEquals(1, byName.items().size());
@@ -374,8 +378,7 @@ class CatalogServiceTest {
         var none = catalog.listPlans(1, 20, "不存在", null);
         assertEquals(0, none.items().size());
 
-        BizException invalid = assertThrows(BizException.class,
-                () -> catalog.listPlans(1, 20, null, "ENABLE"));
+        BizException invalid = assertThrows(BizException.class, () -> catalog.listPlans(1, 20, null, "ENABLE"));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
     }
 
@@ -383,10 +386,10 @@ class CatalogServiceTest {
     void listResourcesFiltersByNameAndCode() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'account','全局账号','[]','[]',TRUE,0),"
-                + " (22,1,'action','操作','[]','[]',TRUE,0),"
-                + " (23,1,'group','用户组','[]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'account','全局账号','[]','[]',TRUE,0),"
+                        + " (22,1,'action','操作','[]','[]',TRUE,0)," + " (23,1,'group','用户组','[]','[]',TRUE,0)");
 
         var byName = catalog.listResources("1", 1, 20, "用户", null);
         assertEquals(1, byName.items().size());
@@ -404,8 +407,9 @@ class CatalogServiceTest {
     void createActionComposesApplicationAndResourceCode() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'account','全局账号','[]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'account','全局账号','[]','[]',TRUE,0)");
 
         CreatedResource created = catalog.createAction("1", new ActionDraft("21", "read", "查看账号"));
         assertEquals("0", created.version());
@@ -423,8 +427,7 @@ class CatalogServiceTest {
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
         jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
                 + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0),"
-                + " (12,1,21,'demo:member:update','编辑成员',TRUE,0),"
-                + " (13,1,22,'demo:dept:read','查看部门',TRUE,0)");
+                + " (12,1,21,'demo:member:update','编辑成员',TRUE,0)," + " (13,1,22,'demo:dept:read','查看部门',TRUE,0)");
 
         var byResource = catalog.listActions("1", 1, 20, "21", null, null);
         assertEquals(2, byResource.items().size());
@@ -439,8 +442,7 @@ class CatalogServiceTest {
         assertEquals("12", byIds.items().getFirst().record().id());
         assertEquals("13", byIds.items().get(1).record().id());
 
-        BizException invalid = assertThrows(BizException.class,
-                () -> catalog.listActions("1", 1, 20, "x", null, null));
+        BizException invalid = assertThrows(BizException.class, () -> catalog.listActions("1", 1, 20, "x", null, null));
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), invalid.getCode());
     }
 
@@ -448,9 +450,10 @@ class CatalogServiceTest {
     void listMenuTreeNestsChildren() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_menu(id,application_id,parent_id,name,kind,match_mode,access_mode,sort_order,enabled,version)"
-                + " VALUES (31,1,NULL,'组织','DIRECTORY','ANY','OPEN',1,TRUE,0),"
-                + " (32,1,31,'成员','PAGE','ANY','ACTION',1,TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_menu(id,application_id,parent_id,name,kind,match_mode,access_mode,sort_order,enabled,version)"
+                        + " VALUES (31,1,NULL,'组织','DIRECTORY','ANY','OPEN',1,TRUE,0),"
+                        + " (32,1,31,'成员','PAGE','ANY','ACTION',1,TRUE,0)");
         jdbc.update("INSERT INTO iam_menu_action(application_id,menu_id,action_id) VALUES (1,32,11)");
 
         var tree = catalog.listMenuTree("1");
@@ -465,15 +468,13 @@ class CatalogServiceTest {
     void pageGrantCatalogNestsEnabledActionsAndSkipsDisabled() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0),"
-                + "(22,1,'hidden','隐藏','[]','[]',FALSE,0),"
-                + "(23,1,'dept','部门','[]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0),"
+                        + "(22,1,'hidden','隐藏','[]','[]',FALSE,0)," + "(23,1,'dept','部门','[]','[]',TRUE,0)");
         jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
-                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0),"
-                + "(12,1,21,'demo:member:off','停用查看',FALSE,0),"
-                + "(13,1,22,'demo:hidden:read','查看隐藏',TRUE,0),"
-                + "(14,1,23,'demo:dept:read','查看部门',TRUE,0)");
+                + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)," + "(12,1,21,'demo:member:off','停用查看',FALSE,0),"
+                + "(13,1,22,'demo:hidden:read','查看隐藏',TRUE,0)," + "(14,1,23,'demo:dept:read','查看部门',TRUE,0)");
 
         var first = catalog.pageGrantCatalog("1", 1, 1);
         assertEquals(2, first.total());
@@ -491,8 +492,9 @@ class CatalogServiceTest {
     void getActionCatalogGroupsResourcesAndActions() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'member','成员','[]','[]',TRUE,0),(22,1,'dept','部门','[]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'member','成员','[]','[]',TRUE,0),(22,1,'dept','部门','[]','[]',TRUE,0)");
         jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
                 + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0),(13,1,22,'demo:dept:read','查看部门',TRUE,0)");
 
@@ -507,12 +509,14 @@ class CatalogServiceTest {
     void listMenuActionsReturnsBoundActionsWithResourceNames() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'member','成员','[]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'member','成员','[]','[]',TRUE,0)");
         jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
                 + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)");
-        jdbc.update("INSERT INTO iam_menu(id,application_id,parent_id,name,kind,match_mode,access_mode,sort_order,enabled,version)"
-                + " VALUES (32,1,NULL,'成员','PAGE','ANY','ACTION',1,TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_menu(id,application_id,parent_id,name,kind,match_mode,access_mode,sort_order,enabled,version)"
+                        + " VALUES (32,1,NULL,'成员','PAGE','ANY','ACTION',1,TRUE,0)");
         jdbc.update("INSERT INTO iam_menu_action(application_id,menu_id,action_id) VALUES (1,32,11)");
 
         var actions = catalog.listMenuActions("1", "32");
@@ -525,8 +529,9 @@ class CatalogServiceTest {
     void lookupActionsResolvesApplicationAndResource() {
         jdbc.update("INSERT INTO iam_application(id,code,domain,name,sort_order,baseline,enabled,version)"
                 + " VALUES (1,'demo','TENANT','演示',1,FALSE,TRUE,0)");
-        jdbc.update("INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
-                + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0)");
+        jdbc.update(
+                "INSERT INTO iam_resource(id,application_id,code,name,scope_capabilities,field_capabilities,enabled,version)"
+                        + " VALUES (21,1,'member','成员','[\"ALL\"]','[]',TRUE,0)");
         jdbc.update("INSERT INTO iam_action(id,application_id,resource_id,code,name,enabled,version)"
                 + " VALUES (11,1,21,'demo:member:read','查看成员',TRUE,0)");
 
@@ -536,4 +541,5 @@ class CatalogServiceTest {
         assertEquals("成员", found.getFirst().resourceName());
         assertEquals("demo:member:read", found.getFirst().code());
     }
+
 }

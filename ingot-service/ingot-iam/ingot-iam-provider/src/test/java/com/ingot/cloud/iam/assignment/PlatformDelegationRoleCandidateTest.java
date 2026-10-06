@@ -37,7 +37,7 @@ class PlatformDelegationRoleCandidateTest {
     private final AuthorizationCandidateMapper candidates = mock(AuthorizationCandidateMapper.class);
     private final PlatformAuthorizationEditor editor = new PlatformAuthorizationEditor(access,
             mock(AuthorizationEvaluator.class), mock(AssignmentRepository.class), mock(DelegationRepository.class),
-            mock(RoleRepository.class), mock(RoleService.class), candidates);
+            mock(RoleRepository.class), mock(RoleService.class), candidates, new com.ingot.cloud.iam.extension.BuiltinResourceProviders(candidates).registry(List.of()));
 
     @Test
     void governanceCanQueryVersionWithoutAssignmentRead() {

@@ -75,6 +75,8 @@ class AssignmentServiceTest {
     void database() {
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("DROP ALL OBJECTS");
+        jdbc.execute("CREATE TABLE iam_application(id BIGINT PRIMARY KEY, code VARCHAR(64), domain VARCHAR(16))");
+        jdbc.update("INSERT INTO iam_application VALUES (1,'iam-platform','PLATFORM')");
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY, enabled BOOLEAN, deleted_at TIMESTAMP,"
                 + " version BIGINT)");
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, status VARCHAR(16),"
@@ -96,7 +98,7 @@ class AssignmentServiceTest {
                 + " kind VARCHAR(24), code VARCHAR(64), name VARCHAR(128), description VARCHAR(256),"
                 + " group_name VARCHAR(64), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT, kind VARCHAR(24),"
-                + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024),"
+                + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024), resource_field_permissions VARCHAR(16384) DEFAULT '{}',"
                 + " published_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(512))");
         jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32),"
@@ -154,7 +156,7 @@ class AssignmentServiceTest {
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
-                transactions);
+                IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
         service = new AssignmentService(access, audits, changes, roles, IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),
                 org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class),
@@ -286,6 +288,88 @@ class AssignmentServiceTest {
         assertFalse(missingSource.valid());
         assertTrue(withinCeiling.valid());
         assertEquals(0, count());
+    }
+
+    @Test
+    void platformUpgradePreservesIdentityValidityAndCreationTime() {
+        platformUpgradeFixture();
+        var before=jdbc.queryForMap("SELECT id,platform_member_id,valid_from,valid_until,created_at FROM iam_role_assignment WHERE id=81");
+        var input=upgradeInput("0");
+        assertTrue(service.previewUpgrade(input).valid());
+        service.upgrade(input);
+        assertEquals(before,jdbc.queryForMap("SELECT id,platform_member_id,valid_from,valid_until,created_at FROM iam_role_assignment WHERE id=81"));
+        assertEquals(35L,jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81",Long.class));
+        assertEquals(1L,jdbc.queryForObject("SELECT version FROM iam_role_assignment WHERE id=81",Long.class));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id=81 AND change_type='UPDATE'",Integer.class));
+        assertEquals(IamReasonCode.REVISION_CONFLICT.getCode(),assertThrows(BizException.class,()->service.upgrade(input)).getCode());
+    }
+
+    @Test
+    void platformUpgradeRejectsExpiredAndRevokedAssignmentsWithoutRestoringThem() {
+        platformUpgradeFixture();
+        jdbc.update("UPDATE iam_role_assignment SET valid_until=TIMESTAMP '2000-01-01 00:00:00' WHERE id=81");
+        assertFalse(service.previewUpgrade(upgradeInput("0")).valid());
+        assertThrows(BizException.class,()->service.upgrade(upgradeInput("0")));
+        jdbc.update("UPDATE iam_role_assignment SET valid_until=NULL,status='REVOKED' WHERE id=81");
+        assertFalse(service.previewUpgrade(upgradeInput("0")).valid());
+        assertEquals(34L,jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81",Long.class));
+    }
+
+    @Test
+    void platformUpgradeRollsBackWholeBatchOnConcurrentVersionConflict() {
+        platformUpgradeFixture();
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,status,source,version) VALUES(82,'PLATFORM','MEMBER',1002,34,'PLATFORM_CUSTOM','{}','ACTIVE','MANUAL',2)");
+        var input=new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput(new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM,"35"),List.of(
+                new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("81","0",null),
+                new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("82","0",null)));
+        assertEquals(IamReasonCode.REVISION_CONFLICT.getCode(),assertThrows(BizException.class,()->service.upgrade(input)).getCode());
+        assertEquals(2,jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE revision_id=34",Integer.class));
+        assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit",Integer.class));
+    }
+
+    @Test
+    void restrictedUpgradeRequiresTargetAlreadyAllowedBySameDelegation() {
+        platformUpgradeFixture();platformUpgradeDelegation();governed=false;
+        assertFalse(service.previewUpgrade(upgradeInput("0")).valid());
+        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES(61,35,'PLATFORM_CUSTOM')");
+        assertTrue(service.previewUpgrade(upgradeInput("0")).valid());
+        service.upgrade(upgradeInput("0"));
+        assertEquals(61L,jdbc.queryForObject("SELECT delegation_grant_id FROM iam_role_assignment WHERE id=81",Long.class));
+    }
+
+    @Test
+    void restrictedUpgradeRechecksSourceAfterPreviewAndCannotUpgradeDirectRecords() {
+        platformUpgradeFixture();platformUpgradeDelegation();governed=false;
+        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES(61,35,'PLATFORM_CUSTOM')");
+        assertTrue(service.previewUpgrade(upgradeInput("0")).valid());
+        jdbc.update("UPDATE iam_delegation_grant SET status='REVOKED' WHERE id=61");
+        assertThrows(BizException.class,()->service.upgrade(upgradeInput("0")));
+        assertEquals(34L,jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81",Long.class));
+        jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL WHERE id=81");
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(),assertThrows(BizException.class,()->service.previewUpgrade(upgradeInput("0"))).getCode());
+    }
+
+    private void platformUpgradeDelegation() {
+        jdbc.update("INSERT INTO iam_delegation_grant(id,domain,platform_administrator_id,assignment_duration_mode,max_assignment_duration_seconds,max_assignment_duration_nanos,status,version) VALUES(61,'PLATFORM',1001,'UNLIMITED',NULL,0,'ACTIVE',0)");
+        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES(61,34,'PLATFORM_CUSTOM')");
+        jdbc.update("INSERT INTO iam_delegation_recipient_member VALUES(61,'PLATFORM',NULL,1002,NULL)");
+        jdbc.update("INSERT INTO iam_delegation_action_ceiling VALUES(61,55,'[{\"kind\":\"ALL\"}]','{}')");
+        jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=61 WHERE id=81");
+    }
+
+    private void platformUpgradeFixture() {
+        jdbc.update("INSERT INTO iam_platform_member VALUES(1002,2,'ACTIVE',0,NULL)");
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,kind,code,name,enabled,version) VALUES(24,'PLATFORM','PLATFORM_CUSTOM','ops','运维',TRUE,0)");
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES(34,24,'PLATFORM_CUSTOM',1),(35,24,'PLATFORM_CUSTOM',2)");
+        jdbc.update("INSERT INTO iam_role_grant VALUES(34,55,'[{\"kind\":\"ALL\"}]'),(35,55,'[{\"kind\":\"ALL\"}]')");
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,valid_from,status,source,created_at,version) VALUES(81,'PLATFORM','MEMBER',1002,34,'PLATFORM_CUSTOM','{}',TIMESTAMP '2000-01-01 00:00:00','ACTIVE','MANUAL',TIMESTAMP '2000-01-02 00:00:00',0)");
+        var context=new AuthorizationContext(AuthorizationDomain.PLATFORM,null,"1","1001");
+        var user=InUser.stateless(1L,null,"web","standard",UserTypeEnum.ADMIN.getValue(),"account",List.of(),List.of(),Map.of()).toBuilder().authorizationContext(context).build();
+        SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user,null,List.of()));
+    }
+    private com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput upgradeInput(String version) {
+        return new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput(new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM,"35"),
+                List.of(new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("81",version,null)));
     }
 
     /**

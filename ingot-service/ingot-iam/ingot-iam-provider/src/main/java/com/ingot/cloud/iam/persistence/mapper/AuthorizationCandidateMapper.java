@@ -64,6 +64,18 @@ public interface AuthorizationCandidateMapper {
             """)
     List<ActionRow> actions(@Param("ids") List<BigInteger> ids);
 
+    /** 精确编码批量关联目录，不从码格式推断资源。 @param codes 精确编码 @return 可信元数据 */
+    @Select("""
+        <script>SELECT a.code,app.domain,app.code AS application_code,r.code AS resource_code
+        FROM iam_action a JOIN iam_application app ON app.id=a.application_id
+        JOIN iam_resource r ON r.id=a.resource_id AND r.application_id=app.id
+        WHERE a.enabled=TRUE AND app.enabled=TRUE AND r.enabled=TRUE AND a.code IN
+        <foreach collection="codes" item="code" open="(" close=")" separator=",">#{code}</foreach></script>
+        """)
+    List<ActionMetadata> actionMetadata(@Param("codes") List<String> codes);
+    /** <p>服务器目录元数据。</p> @param code 操作 @param domain 域 @param applicationCode 应用 @param resourceCode 资源 @author jy @since 1.0.0 */
+    record ActionMetadata(String code,com.ingot.framework.commons.model.iam.AuthorizationDomain domain,String applicationCode,String resourceCode) { }
+
     /**
      * 为已过滤的菜单候选批量读取祖先路径，不用于扩大候选集合。
      * @param ids 当前页可披露菜单 ID

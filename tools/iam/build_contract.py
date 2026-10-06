@@ -59,6 +59,8 @@ def build(schemas):
             'responses': {'200': {'description': '成功；使用既有 R 信封',
                                   'content': {MEDIA_TYPE: {'schema': ref(route['response'])}}}},
         }
+        if route.get('deprecated'):
+            operation['deprecated'] = True
         if route.get('request'):
             operation['requestBody'] = {'required': True, 'content': {
                 MEDIA_TYPE: {'schema': ref(route['request'])}}}

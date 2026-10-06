@@ -47,6 +47,13 @@ def sample_config(state_dir: Path, **overrides) -> dict:
 
 
 class TestDataToolTest(unittest.TestCase):
+    def test_initialization_uses_the_manifest_without_existing_database_patches(self):
+        files = lib.ddl_files()
+        self.assertEqual(8, len(files))
+        self.assertEqual('006_bootstrap.sql', files[-1].name)
+        self.assertFalse(any('migrations' in file.parts for file in files))
+        self.assertNotIn('011_delegation_duration_mode.sql', [file.name for file in files])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.state = Path(self.temp.name) / "runs"

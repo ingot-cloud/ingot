@@ -8,7 +8,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>映射已发布角色版本的持久化字段，不写入数据库生成列。</p>
+ * <p>
+ * 映射已发布角色版本的持久化字段，不写入数据库生成列。
+ * </p>
+ *
  * @author jy
  * @since 1.0.0
  */
@@ -16,6 +19,7 @@ import lombok.Setter;
 @Setter
 @TableName(value = "iam_role_revision", autoResultMap = true)
 public class IamRoleRevisionEntity {
+
     /** 记录 ID。 */
     @TableId(value = "id", type = IdType.INPUT)
     private BigInteger id;
@@ -39,6 +43,10 @@ public class IamRoleRevisionEntity {
     /** 元数据覆盖 JSON 对象。 */
     @TableField("metadata_overrides")
     private String metadataOverrides;
+
+    /** 平台角色固定字段快照；非空 JSON 对象，未声明字段不授予权限。 */
+    @TableField("resource_field_permissions")
+    private String resourceFieldPermissions;
 
     /** 发布时间，使用 UTC。 */
     @TableField("published_at")

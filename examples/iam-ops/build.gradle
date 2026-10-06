@@ -1,0 +1,11 @@
+apply from: "${project.getRootDir().path}/config/library-base.gradle"
+dependencies {
+    implementation project(ingot.framework_authorization)
+    implementation project(ingot.iam_api)
+    implementation project(ingot.framework_feign)
+    implementation(deps.spring.spring_boot.web_starter)
+    implementation(deps.spring.spring_boot.jdbc_starter)
+    implementation(deps.mybatis.plus_starter)
+    implementation(deps.spring.spring_cloud.openfeign_starter)
+
+}

@@ -3,6 +3,7 @@ package com.ingot.framework.commons.model.iam;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +12,9 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * <p>提交待发布的角色定义内容，不含服务器分配的版本标识。</p>
+ * <p>
+ * 提交待发布的角色定义内容，不含服务器分配的版本标识。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
@@ -19,22 +22,29 @@ import jakarta.validation.constraints.NotNull;
  * @param deltas 租户定制差异；完整版本必须为空
  * @param parameterDefinitions 命名参数定义，键及类型须一致
  * @param metadataOverrides 定制元数据覆盖，完整版本为空
+ * @param resourceFieldPermissions 资源字段固定快照；未声明字段不授予权限
  */
 @Schema(description = "提交待发布的角色定义内容，不含服务器分配的版本标识")
 public record RoleDefinitionDraft(
-        @NotNull @Schema(description = "完整定义的逐操作范围；定制差异版本必须为空", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid ActionGrant> grants,
-        @NotNull @Schema(description = "租户定制差异；完整版本必须为空", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid RoleDelta> deltas,
-        @NotNull @Schema(description = "命名参数定义，键及类型须一致", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
-        @Valid @Schema(description = "定制元数据覆盖，完整版本为空")
-        RoleMetadataOverrides metadataOverrides) {
+        @NotNull @Schema(description = "完整定义的逐操作范围；定制差异版本必须为空",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid ActionGrant> grants,
+        @NotNull @Schema(description = "租户定制差异；完整版本必须为空",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid RoleDelta> deltas,
+        @NotNull @Schema(description = "命名参数定义，键及类型须一致",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
+        @Valid @Schema(description = "定制元数据覆盖，完整版本为空") RoleMetadataOverrides metadataOverrides,
+        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, Map<String, @Valid FieldAccess>> resourceFieldPermissions) {
+    /** 兼容没有字段快照的历史定义。 */
+    public RoleDefinitionDraft(List<ActionGrant> grants, List<RoleDelta> deltas,
+            List<RoleParameterDefinition> parameterDefinitions, RoleMetadataOverrides metadataOverrides) {
+        this(grants, deltas, parameterDefinitions, metadataOverrides, null);
+    }
 
     /**
      * 复制输入集合，防止校验与消费之间被外部修改；必填空引用由 Bean Validation 拒绝。
      */
     public RoleDefinitionDraft {
+        resourceFieldPermissions = ResourceFieldPermissions.copy(resourceFieldPermissions);
         if (grants != null) {
             grants = Collections.unmodifiableList(new ArrayList<>(grants));
         }
@@ -48,7 +58,6 @@ public record RoleDefinitionDraft(
 
     /**
      * 完整版本只保存授权，定制版本只保存差异，二者不能同时出现。
-     *
      * @return 是否满足结构约束
      */
     @JsonIgnore
@@ -60,26 +69,26 @@ public record RoleDefinitionDraft(
 
     /**
      * 同版本操作与参数定义不得重复。
-     *
      * @return 是否满足结构约束
      */
     @JsonIgnore
     @AssertTrue(message = "同版本操作与参数定义不得重复")
     @Schema(hidden = true)
     public boolean isDefinitionUnique() {
-        if (grants == null || deltas == null || parameterDefinitions == null
-                || grants.contains(null) || deltas.contains(null) || parameterDefinitions.contains(null)) {
+        if (grants == null || deltas == null || parameterDefinitions == null || grants.contains(null)
+                || deltas.contains(null) || parameterDefinitions.contains(null)) {
             return true;
         }
         return grants.stream().map(ActionGrant::actionId).distinct().count() == grants.size()
                 && deltas.stream().map(RoleDelta::actionId).distinct().count() == deltas.size()
-                && parameterDefinitions.stream().map(RoleParameterDefinition::key).distinct().count()
-                == parameterDefinitions.size();
+                && parameterDefinitions.stream()
+                    .map(RoleParameterDefinition::key)
+                    .distinct()
+                    .count() == parameterDefinitions.size();
     }
 
     /**
      * 是否为固定基础版本上的差异定义。
-     *
      * @return 仅包含差异且不含完整授权时为 true
      */
     @JsonIgnore

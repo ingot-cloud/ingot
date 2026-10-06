@@ -127,6 +127,17 @@ public class PlatformRoleCommandAPI implements RShortcuts {
     }
 
     /**
+     * 只读预览新平台角色，不创建角色或版本。
+     * @param input 创建草稿
+     * @return 定义校验及字段默认值
+     */
+    @Operation(summary = "预览平台角色创建")
+    @PostMapping("/preview")
+    public R<Preview<RoleDefinitionDraft>> previewCreate(@Valid @RequestBody RoleCreateInput input) {
+        return ok(roles.previewCreate(input));
+    }
+
+    /**
      * 读取角色元数据。
      *
      * @param id 角色 ID

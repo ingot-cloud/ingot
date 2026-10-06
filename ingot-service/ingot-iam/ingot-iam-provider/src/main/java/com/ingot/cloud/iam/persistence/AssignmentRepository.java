@@ -328,7 +328,7 @@ public class AssignmentRepository {
      */
     public void update(long id, long revisionId, RoleKind revisionKind, String bindings, LocalDateTime validFrom,
                        LocalDateTime validUntil, BigInteger currentVersion) {
-        assignments.update(Wrappers.<IamRoleAssignmentEntity>lambdaUpdate()
+        int changed = assignments.update(Wrappers.<IamRoleAssignmentEntity>lambdaUpdate()
                 .eq(IamRoleAssignmentEntity::getId, BigInteger.valueOf(id))
                 .eq(IamRoleAssignmentEntity::getVersion, currentVersion)
                 .set(IamRoleAssignmentEntity::getRevisionId, BigInteger.valueOf(revisionId))
@@ -337,6 +337,7 @@ public class AssignmentRepository {
                 .set(IamRoleAssignmentEntity::getValidFrom, validFrom)
                 .set(IamRoleAssignmentEntity::getValidUntil, validUntil)
                 .set(IamRoleAssignmentEntity::getVersion, currentVersion.add(BigInteger.ONE)));
+        if (changed != 1) throw new com.ingot.framework.commons.error.BizException(com.ingot.framework.commons.model.iam.IamReasonCode.REVISION_CONFLICT);
     }
 
     /**

@@ -1,0 +1,38 @@
+{
+  "id": "31",
+  "roleId": "21",
+  "revision": "2",
+  "kind": "PLATFORM_CUSTOM",
+  "baseRevisionId": null,
+  "grants": [
+    {
+      "actionId": "11",
+      "scopes": [
+        {
+          "kind": "OBJECT_SET",
+          "parameterKey": "objects_10"
+        }
+      ]
+    }
+  ],
+  "deltas": [],
+  "parameterDefinitions": [
+    {
+      "key": "objects_10",
+      "kind": "OBJECTS"
+    }
+  ],
+  "metadataOverrides": null,
+  "resourceFieldPermissions": {
+    "10": {
+      "phone": {
+        "visibility": "FULL",
+        "editable": false
+      },
+      "email": {
+        "visibility": "MASKED",
+        "editable": false
+      }
+    }
+  }
+}

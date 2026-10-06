@@ -25,4 +25,13 @@ public interface RemoteIamAuthorizationService {
      */
     @PostMapping("/inner/authorization/snapshot")
     R<AuthorizationSnapshotDTO> snapshot(@RequestBody(required = false) AuthorizationSnapshotRequest request);
+
+    /**
+     * 求值当前认证中的 IAM 身份，不接受请求替代成员或管理域。
+     * @param request 已注册资源和精确操作
+     * @return 完整操作、对象范围与字段执行策略
+     */
+    @PostMapping("/inner/authorization/v2/evaluate")
+    R<com.ingot.framework.commons.model.iam.extension.AuthorizationDecision> evaluate(
+            @RequestBody com.ingot.framework.commons.model.iam.extension.AuthorizationRequest request);
 }

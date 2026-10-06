@@ -133,8 +133,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         }
         try {
             // 改写状态的操作按最新事实求值，不接受任何热缓存快照放行。
-            AuthorizationView view = action.getOperation().isMutating()
-                    ? evaluateRaw(actor) : evaluate(actor);
+            AuthorizationView view = evaluateForExecution(actor, action.getOperation().isMutating());
             if (!view.actionCodes().contains(action.getCode())) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
             }
@@ -154,6 +153,11 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @param actor 已验证身份
      * @return 操作码、范围与版本
      */
+    public AuthorizationView evaluateForExecution(AuthorizationContext actor, boolean mutating) {
+        return mutating ? evaluateRaw(actor) : evaluate(actor);
+    }
+
+    /** 读取未过期授权视图。 @param actor 可信身份 @return 授权视图 */
     public AuthorizationView evaluate(AuthorizationContext actor) {
         if (actor == null) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
@@ -202,6 +206,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             Set<String> governed = new LinkedHashSet<>();
             Map<String, List<ScopeClause>> scopes = new LinkedHashMap<>();
             Set<String> sources = new LinkedHashSet<>();
+            List<RoleFieldSource> fieldSources = new ArrayList<>();
             EvaluationScope scope = new EvaluationScope();
             Deadline deadline = scope.deadline;
             Map<Long, List<ActionGrant>> revisionGrants = new HashMap<>();
@@ -234,6 +239,9 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
                     }
                     List<ScopeClause> clauses = ScopeBinder.constrain(
                             ScopeBinder.bind(grant, assignment.bindings()), ceiling);
+                    var contributed = clauses.stream().filter(clause -> !clause.empty()).toList();
+                    fieldSources.add(new RoleFieldSource(assignment.assignmentId(), assignment.groupId(),
+                            assignment.delegationId(), assignment.revisionId(), code, contributed));
                     codes.add(code);
                     if (!delegated) {
                         // 非委派来源即完整治理资格，受限方只能凭自己的委派派生授权。
@@ -248,7 +256,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             if (!effectiveDelegations.isEmpty()) {
                 codes.addAll(evaluations.enabledPlatformEntries(List.of(IamAction.PLATFORM_ASSIGNMENT_READ.getCode(),
                         IamAction.PLATFORM_ASSIGNMENT_CREATE.getCode(), IamAction.PLATFORM_ASSIGNMENT_UPDATE.getCode(),
-                        IamAction.PLATFORM_ASSIGNMENT_DELETE.getCode())));
+                        IamAction.PLATFORM_ASSIGNMENT_DELETE.getCode(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE.getCode())));
             }
             for (var delegation : effectiveDelegations) {
                 sources.add("delegation" + KEY_SEPARATOR + delegation.getId() + KEY_SEPARATOR + delegation.getVersion());
@@ -260,7 +268,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             }
             String version = sources.isEmpty() ? "0" : String.join(KEY_SEPARATOR, sources);
             return new AuthorizationView(List.copyOf(codes), List.copyOf(governed), Map.copyOf(resolved), version,
-                    deadline.expiresAt(Instant.now()));
+                    deadline.expiresAt(Instant.now()), fieldSources);
         } catch (DataAccessException | PersistenceException exception) {
             var failure = new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
             failure.initCause(exception);
@@ -278,6 +286,11 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
                                                                                     String actionId) {
         List<AuthorizationEvalRows.Assignment> rows = new ArrayList<>(evaluations.listDirectAssignments(actor));
         rows.addAll(evaluations.listGroupAssignments(actor));
+        var fieldVersions = actor.domain() == AuthorizationDomain.PLATFORM
+                ? evaluations.fieldVersions(rows.stream().map(AuthorizationEvalRows.Assignment::revisionId).distinct().toList())
+                        .stream().collect(java.util.stream.Collectors.toMap(
+                                com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity::getId, v -> v))
+                : Map.<BigInteger, com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity>of();
         List<com.ingot.framework.commons.model.iam.DecisionSource> result = new ArrayList<>();
         for (var row : rows) {
             for (ActionGrant grant : synthesized(row.revisionId().longValueExact())) {
@@ -295,7 +308,9 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
                 result.add(new com.ingot.framework.commons.model.iam.DecisionSource(row.assignmentId().toString(),
                         row.delegationGrantId() == null ? null : row.delegationGrantId().toString(),
                         row.revisionKind() == null ? null : new com.ingot.framework.commons.model.iam.RoleRevisionRef(
-                                row.revisionKind(), row.revisionId().toString()), summary));
+                                row.revisionKind(), row.revisionId().toString()), summary,
+                        fieldVersions.containsKey(row.revisionId()) ? com.ingot.cloud.iam.extension.RoleFieldPermissionService
+                                .snapshot(fieldVersions.get(row.revisionId()).getResourceFieldPermissions()) : null));
             }
         }
         return List.copyOf(result);
@@ -322,7 +337,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     private List<AssignmentEval> mapAssignments(List<AuthorizationEvalRows.Assignment> rows) {
         List<AssignmentEval> result = new ArrayList<>(rows.size());
         for (AuthorizationEvalRows.Assignment row : rows) {
-            result.add(new AssignmentEval(row.revisionId().longValueExact(), bindings(row.scopeBindings()),
+            result.add(new AssignmentEval(row.assignmentId(), row.groupId(), row.revisionId().longValueExact(), bindings(row.scopeBindings()),
                     row.delegationGrantId() == null ? null : row.delegationGrantId().longValueExact(),
                     row.validUntil(), row.delegationValidUntil()));
         }
@@ -421,11 +436,17 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
      * @since 1.0.0
      */
     public record AuthorizationView(List<String> actionCodes, List<String> governedCodes,
-                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt) {
+                                    Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt, List<RoleFieldSource> fieldSources) {
+        /** 兼容旧授权快照；新模型不据此扩权。 */
+        public AuthorizationView(List<String> actionCodes, List<String> governedCodes,
+                Map<String, ResolvedActionScope> scopes, String version, Instant expiresAt) {
+            this(actionCodes, governedCodes, scopes, version, expiresAt, List.of());
+        }
         /**
          * 复制操作与范围集合。
          */
         public AuthorizationView {
+            fieldSources = fieldSources == null ? List.of() : List.copyOf(fieldSources);
             actionCodes = actionCodes == null ? List.of() : List.copyOf(actionCodes);
             governedCodes = governedCodes == null ? List.of() : List.copyOf(governedCodes);
             scopes = scopes == null ? Map.of() : Map.copyOf(scopes);
@@ -456,7 +477,24 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         }
     }
 
-    private record AssignmentEval(long revisionId, Map<String, ScopeBinding> bindings, Long delegationId,
+    /**
+     * <p>一条有效分配对精确操作的字段贡献，范围已经施加来源委派上限。</p>
+     * @param assignmentId 真实分配
+     * @param groupId 组来源
+     * @param delegationId 委派来源
+     * @param revisionId 固定角色版本
+     * @param actionCode 精确操作码
+     * @param clauses 本贡献独立范围
+     * @author jy
+     * @since 1.0.0
+     */
+    public record RoleFieldSource(BigInteger assignmentId, BigInteger groupId, Long delegationId,
+            long revisionId, String actionCode, List<ScopeClause> clauses) {
+        /** 复制贡献范围。 */
+        public RoleFieldSource { clauses = List.copyOf(clauses); }
+    }
+
+    private record AssignmentEval(BigInteger assignmentId, BigInteger groupId, long revisionId, Map<String, ScopeBinding> bindings, Long delegationId,
                                   LocalDateTime validUntil, LocalDateTime delegationValidUntil) {
     }
 

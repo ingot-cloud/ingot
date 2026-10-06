@@ -30,7 +30,7 @@ class PlatformAssignmentSelectionTest {
     private final RoleService roles = mock(RoleService.class);
     private final AuthorizationCandidateMapper candidates = mock(AuthorizationCandidateMapper.class);
     private final PlatformAuthorizationEditor editor = new PlatformAuthorizationEditor(access,
-            mock(AuthorizationEvaluator.class), assignments, delegations, mock(RoleRepository.class), roles, candidates);
+            mock(AuthorizationEvaluator.class), assignments, delegations, mock(RoleRepository.class), roles, candidates, new com.ingot.cloud.iam.extension.BuiltinResourceProviders(candidates).registry(List.of()));
     private final ActiveIdentity actor = new ActiveIdentity(
             new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1", "99"), "0", "0", "0");
 

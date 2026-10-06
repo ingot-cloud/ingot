@@ -1,5 +1,13 @@
 package com.ingot.framework.commons.model.iam;
 
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput;
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationDecision;
+import com.ingot.framework.commons.model.iam.extension.AuthorizationRequest;
+import com.ingot.framework.commons.model.iam.extension.ResourceDescriptor;
+import com.ingot.framework.commons.model.iam.extension.ResourceObjectInvocation;
+import com.ingot.framework.commons.model.iam.extension.ResourceObjectResult;
+import com.ingot.framework.commons.model.iam.extension.SignedResourceObjectRequest;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,12 +31,15 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * <p>验证角色、分配、委派及字段的可消费 JSON 契约，并输出真实类型生成的 schemas。</p>
+ * <p>
+ * 验证角色、分配、委派及字段的可消费 JSON 契约，并输出真实类型生成的 schemas。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 class IamAuthorizationContractTest {
+
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private <T> T fixture(String name, Class<T> type) throws Exception {
@@ -42,10 +53,14 @@ class IamAuthorizationContractTest {
     void examplesPassNestedBeanValidationAndRetainStringIds() throws Exception {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Object value : List.of(fixture("role-shared", RoleRevision.class),
-                    fixture("role-delta", RoleRevision.class), fixture("assignment", AssignmentInput.class),
+                    fixture("role-platform-fields", RoleRevision.class), fixture("role-delta", RoleRevision.class),
+                    fixture("assignment", AssignmentInput.class),
                     fixture("assignment-multi-role", AssignmentBatchInput.class),
                     fixture("assignment-selected-candidates", AuthorizationCandidatePage.class),
-                    fixture("delegation", DelegationInput.class), fixture("delegation-unlimited", DelegationInput.class),
+                    fixture("assignment-upgrade", AssignmentUpgradeInput.class),
+                    fixture("authorization-v2-request", AuthorizationRequest.class),
+                    fixture("delegation", DelegationInput.class),
+                    fixture("delegation-unlimited", DelegationInput.class),
                     fixture("role-subject-page", RoleSubjectPage.class), fixture("field-readonly", FieldRule.class))) {
                 assertTrue(factory.getValidator().validate(value).isEmpty(), value.getClass().getSimpleName());
             }
@@ -72,12 +87,37 @@ class IamAuthorizationContractTest {
     }
 
     @Test
+    void fixedFieldSnapshotRoundTripsAndProfileRetainsExplicitNullAndUnknownKeys() throws Exception {
+        var role = fixture("role-platform-fields", RoleRevision.class);
+        assertEquals(FieldVisibility.FULL, role.resourceFieldPermissions().get("10").get("phone").visibility());
+        assertThrows(UnsupportedOperationException.class, () -> role.resourceFieldPermissions().get("10").clear());
+        var copy = mapper.readValue(mapper.writeValueAsBytes(role), RoleRevision.class);
+        assertEquals(role.resourceFieldPermissions(), copy.resourceFieldPermissions());
+        var profile = mapper.readValue("{\"expectedVersion\":\"1\",\"phone\":null,\"unknown\":null}",
+                MemberProfileInput.class);
+        assertTrue(profile.suppliedFields().contains("phone"));
+        assertTrue(profile.suppliedFields().contains("unknown"));
+        assertFalse(mapper.valueToTree(profile).has("suppliedFields"));
+        var create = mapper.readValue("{\"accountId\":\"1\",\"displayName\":null,\"departments\":[],\"unknown\":null}",
+                MemberCreateInput.class);
+        assertTrue(create.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME));
+        assertTrue(create.hasUnknownFields());
+        assertFalse(mapper.valueToTree(create).has("suppliedFields"));
+
+        assertEquals(List.of("iam-ops:incident:read", "iam-ops:incident:update"),
+                fixture("authorization-v2-request", AuthorizationRequest.class).actionCodes());
+
+    }
+
+    @Test
     void rejectEmptyOrReverseAssignmentIntervals() throws Exception {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             AssignmentInput input = fixture("assignment", AssignmentInput.class);
             for (var until : List.of(input.validFrom(), input.validFrom().minusSeconds(1))) {
-                assertFalse(factory.getValidator().validate(new AssignmentInput(input.subject(), input.roleRevisionRef(),
-                        input.scopeBindings(), input.validFrom(), until, input.delegationGrantId())).isEmpty());
+                assertFalse(factory.getValidator()
+                    .validate(new AssignmentInput(input.subject(), input.roleRevisionRef(), input.scopeBindings(),
+                            input.validFrom(), until, input.delegationGrantId()))
+                    .isEmpty());
             }
         }
     }
@@ -89,9 +129,11 @@ class IamAuthorizationContractTest {
         assertEquals("2026-09-13T00:00:00Z", mapper.valueToTree(input).get("validFrom").asText());
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Duration duration : List.of(Duration.ZERO, Duration.ofSeconds(-1))) {
-                assertFalse(factory.getValidator().validate(new DelegationInput(input.administratorMemberId(),
-                        input.allowedRoleRevisionRefs(), input.recipientSelection(), input.actionScopeCeilings(),
-                        input.validFrom(), input.validUntil(), duration)).isEmpty());
+                assertFalse(factory.getValidator()
+                    .validate(new DelegationInput(input.administratorMemberId(), input.allowedRoleRevisionRefs(),
+                            input.recipientSelection(), input.actionScopeCeilings(), input.validFrom(),
+                            input.validUntil(), duration))
+                    .isEmpty());
             }
         }
     }
@@ -120,9 +162,8 @@ class IamAuthorizationContractTest {
             for (Object value : List.of(new ScopeExpression(ScopeKind.ALL, "unexpected", null),
                     new ScopeExpression(ScopeKind.OBJECT_SET, "objects", true),
                     new ScopeExpression(ScopeKind.MANAGED_DEPARTMENTS, null, true),
-                    new RoleDelta("read", RoleDeltaOperation.ADD, null),
-                    new RoleDelta("read", RoleDeltaOperation.REMOVE,
-                            List.of(new ScopeExpression(ScopeKind.ALL, null, null))))) {
+                    new RoleDelta("read", RoleDeltaOperation.ADD, null), new RoleDelta("read",
+                            RoleDeltaOperation.REMOVE, List.of(new ScopeExpression(ScopeKind.ALL, null, null))))) {
                 assertFalse(factory.getValidator().validate(value).isEmpty());
             }
         }
@@ -133,8 +174,9 @@ class IamAuthorizationContractTest {
         RoleRevision input = fixture("role-delta", RoleRevision.class);
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             RoleRevision duplicate = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
-                    input.baseRevisionId(), input.grants(), List.of(input.deltas().getFirst(), input.deltas().getFirst()),
-                    input.parameterDefinitions(), input.metadataOverrides(), input.displayDeltas());
+                    input.baseRevisionId(), input.grants(),
+                    List.of(input.deltas().getFirst(), input.deltas().getFirst()), input.parameterDefinitions(),
+                    input.metadataOverrides(), input.displayDeltas());
             assertFalse(factory.getValidator().validate(duplicate).isEmpty());
             RoleRevision copied = new RoleRevision(input.id(), input.roleId(), input.revision(), input.kind(),
                     input.baseRevisionId(), fixture("role-shared", RoleRevision.class).grants(), input.deltas(),
@@ -171,108 +213,149 @@ class IamAuthorizationContractTest {
         var unlimited = new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(),
                 List.of(), null, null, null, AssignmentDurationMode.UNLIMITED);
         assertTrue(unlimited.isPositiveDuration());
-        assertFalse(new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(),
-                List.of(), null, null, Duration.ofDays(1), AssignmentDurationMode.UNLIMITED).isPositiveDuration());
+        assertFalse(new DelegationInput("1", limited.allowedRoleRevisionRefs(), limited.recipientSelection(), List.of(),
+                null, null, Duration.ofDays(1), AssignmentDurationMode.UNLIMITED)
+            .isPositiveDuration());
     }
 
     @Test
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
-        for (Class<?> type : List.of(AuthorizationContext.class, SubjectRef.class, Selection.class,
-                RoleSubjectSummary.class, RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class, RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class,
-                FieldAccess.class, FieldRule.class, DirectoryRule.class,
-                CreatedResource.class, ObjectCapability.class,
-                Bootstrap.class, CurrentCapabilities.class, MemberRecord.class, TenantRecord.class,
-                DepartmentRecord.class, GroupRecord.class, ApplicationRecord.class, ResourceRecord.class,
-                ActionRecord.class, MenuRecord.class, EffectiveRole.class, Decision.class, UpgradePreview.class,
-                AuditEntry.class, AssignmentRecord.class, DelegationRecord.class, PlanRecord.class, PlanApplication.class,
-                EntitlementRecord.class,
+        for (Class<?> type : List.of(ResourceDescriptor.class, AssignmentUpgradeInput.class,
+                AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
+                ResourceObjectInvocation.class, SignedResourceObjectRequest.class, ResourceObjectResult.class,
+                AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
+                RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
+                RoleDisplayDelta.class, AssignmentBatchInput.class, DelegationInput.class, FieldAccess.class,
+                FieldRule.class, DirectoryRule.class, CreatedResource.class, ObjectCapability.class, Bootstrap.class,
+                CurrentCapabilities.class, MemberRecord.class, TenantRecord.class, DepartmentRecord.class,
+                GroupRecord.class, ApplicationRecord.class, ResourceRecord.class, ActionRecord.class, MenuRecord.class,
+                EffectiveRole.class, Decision.class, UpgradePreview.class, AuditEntry.class, AssignmentRecord.class,
+                DelegationRecord.class, PlanRecord.class, PlanApplication.class, EntitlementRecord.class,
                 DirectoryPolicyInput.class, FieldPolicyInput.class, PolicyPreviewInput.class, PolicyPreviewResult.class,
                 DiagnoseInput.class, ConfigurationStatusInput.class, MemberStatusInput.class, VersionInput.class,
                 GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
                 RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
                 UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class,
-                MemberRoleView.class, MemberRoleReplaceInput.class,
-                MemberDepartmentInput.class, TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class,
-                DepartmentDraft.class, DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class,
-                ResourceDraft.class, ResourceUpdateInput.class, ApplicationPurgeInput.class, ActionDraft.class, ActionUpdateInput.class,
+                MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
+                TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
+                DepartmentUpdateInput.class, ApplicationDraft.class, ApplicationUpdateInput.class, ResourceDraft.class,
+                ResourceUpdateInput.class, ApplicationPurgeInput.class, ActionDraft.class, ActionUpdateInput.class,
                 MenuDraft.class, MenuUpdateInput.class, PlanDraft.class, PlanUpdateInput.class,
                 EntitlementReplaceInput.class, TenantPreviewResult.class, EntitlementPreviewResult.class,
-                EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class,
-                ReferenceImpactPreview.class, RoleSummary.class, ApplicationSummary.class,
-                AccountCreateInput.class, AccountUpdateInput.class, AccountLockInput.class,
-                AccountLookupInput.class, AccountRecord.class, AccountSecret.class,
+                EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class, ReferenceImpactPreview.class,
+                RoleSummary.class, ApplicationSummary.class, AccountCreateInput.class, AccountUpdateInput.class,
+                AccountLockInput.class, AccountLookupInput.class, AccountRecord.class, AccountSecret.class,
                 AccountSelfProfile.class, AccountSelfProfileInput.class, CurrentPasswordInput.class,
-                ApplicationBundleDraft.class, ActionLookupInput.class, ExportTask.class, SelectionPurpose.class, AccountLookupPurpose.class)) {
+                ApplicationBundleDraft.class, ActionLookupInput.class, ExportTask.class, SelectionPurpose.class,
+                AccountLookupPurpose.class)) {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
         }
-        for (java.lang.reflect.Type type : List.of(
-                new com.fasterxml.jackson.core.type.TypeReference<ResourceDetail<MemberRecord>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Bootstrap>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PolicyPreviewResult>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DirectoryPolicyDraft>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MemberRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MemberRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EffectiveRole>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<UpgradePreview>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<TenantPreviewResult>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EntitlementPreviewResult>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Preview<ReferenceImpactPreview>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<GroupRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DepartmentRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ApplicationRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ResourceRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ActionRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MenuRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<PlanRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<EntitlementRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleSummary>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AssignmentRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberRoleView>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<List<MenuActionRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionLookupRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ActionCatalogView>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GrantCatalogResource>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentContext>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationCandidatePage>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationRoleCandidatePage>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DelegationRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceDraft>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<GroupRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DepartmentRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ApplicationRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ResourceRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ActionRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MenuRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<PlanRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<EntitlementRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleSummary>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleRevision>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<RoleSubjectPage>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<RoleGrantList>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AssignmentRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AuditEntry>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ExportTask>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<AccountSelfProfile>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<AccountSecret>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AccountRecord>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AccountRecord>>>>() {}.getType(),
-                new com.fasterxml.jackson.core.type.TypeReference<R<Void>>() {}.getType())) {
-            schemas.putAll(ModelConverters.getInstance().resolveAsResolvedSchema(
-                    new io.swagger.v3.core.converter.AnnotatedType(type)).referencedSchemas);
+        for (java.lang.reflect.Type type : List
+            .of(new com.fasterxml.jackson.core.type.TypeReference<ResourceDetail<MemberRecord>>() {
+            }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Bootstrap>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PolicyPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DirectoryPolicyDraft>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<FieldPolicyDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CreatedResource>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<CurrentCapabilities>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MemberRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MemberRecord>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EffectiveRole>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<RoleDefinitionDraft>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<UpgradePreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<TenantPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<EntitlementPreviewResult>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<ReferenceImpactPreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<TenantRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<GroupRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DepartmentRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ApplicationRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ResourceRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<ActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MenuRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<PlanRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<EntitlementRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleSummary>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AssignmentRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<MemberRoleView>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<MenuActionRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<List<ActionLookupRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ActionCatalogView>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<GrantCatalogResource>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentContext>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationCandidatePage>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationRoleCandidatePage>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<DelegationRecord>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AudienceDraft>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<TenantRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<GroupRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DepartmentRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ApplicationRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ResourceRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<ActionRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<MenuRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<PlanRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<EntitlementRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleSummary>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<RoleRevision>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<RoleSubjectPage>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<RoleGrantList>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AssignmentRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<DelegationRecord>>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AuditEntry>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ExportTask>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSelfProfile>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AccountSecret>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<AccountRecord>>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<ResourceDetail<AccountRecord>>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDescriptor>>() {
+                    }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<Preview<AssignmentUpgradeResult>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AssignmentUpgradeResult>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<AuthorizationDecision>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceObjectResult>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Void>>() {
+                    }.getType())) {
+            schemas.putAll(ModelConverters.getInstance()
+                .resolveAsResolvedSchema(new io.swagger.v3.core.converter.AnnotatedType(type)).referencedSchemas);
         }
         Schema<?> page = schemas.get("PageResponseResourceDetailMemberRecord");
         assertTrue(page.getRequired().containsAll(List.of("items", "total", "page", "pageSize")));
@@ -291,14 +374,18 @@ class IamAuthorizationContractTest {
         Schema<?> duration = (Schema<?>) schemas.get("DelegationInput").getProperties().get("maxAssignmentDuration");
         assertEquals("string", duration.getType());
         assertEquals("duration", duration.getFormat());
-        assertTrue(schemas.get("RoleCreateInput").getRequired().containsAll(List.of("code", "name", "kind", "definition")));
-        assertTrue(schemas.get("UpgradeInput").getRequired().containsAll(
-                List.of("expectedVersion", "newBaseRevisionId", "resolutions", "assignmentIds")));
+        assertTrue(schemas.get("RoleCreateInput")
+            .getRequired()
+            .containsAll(List.of("code", "name", "kind", "definition")));
+        assertTrue(schemas.get("UpgradeInput")
+            .getRequired()
+            .containsAll(List.of("expectedVersion", "newBaseRevisionId", "resolutions", "assignmentIds")));
         assertTrue(schemas.get("TenantCreateInput").getRequired().containsAll(List.of("name", "ownerAccountId")));
         assertFalse(schemas.get("RoleDefinitionDraft").getProperties().containsKey("customized"));
         assertNotNull(schemas.get("RPreviewTenantPreviewResult"));
         assertNotNull(schemas.get("RPreviewUpgradePreview"));
-        assertTrue(schemas.get("ExportTask").getRequired().containsAll(List.of("id", "status", "version", "expiresAt")));
+        assertTrue(
+                schemas.get("ExportTask").getRequired().containsAll(List.of("id", "status", "version", "expiresAt")));
         assertFalse(schemas.get("ExportTask").getRequired().contains("failureCode"));
         assertTrue(schemas.get("AccountLookupInput").getRequired().contains("purpose"));
         assertFalse(schemas.get("AccountLookupInput").getRequired().contains("domain"));
@@ -322,4 +409,5 @@ class IamAuthorizationContractTest {
         Files.createDirectories(output.getParent());
         Files.writeString(output, Json.pretty(Map.of("components", Map.of("schemas", schemas))));
     }
+
 }

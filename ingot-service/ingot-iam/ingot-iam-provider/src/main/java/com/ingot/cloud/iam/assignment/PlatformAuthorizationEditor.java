@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.assignment;
 
 import java.math.BigInteger;
+import com.ingot.cloud.iam.persistence.entity.IamRoleAssignmentEntity;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -18,6 +19,12 @@ import com.ingot.cloud.iam.support.*;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.*;
 import lombok.RequiredArgsConstructor;
+import com.ingot.framework.authorization.*;
+import com.ingot.framework.commons.model.iam.extension.ObjectAssociation;
+import com.ingot.framework.commons.model.iam.extension.ObjectAssociationKind;
+import com.ingot.framework.commons.model.iam.extension.ObjectQueryPurpose;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import com.ingot.framework.commons.model.iam.extension.ResourceObjectQuery;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,7 +35,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PlatformAuthorizationEditor {
-    private static final String CORE_APPLICATION = "iam-platform";
     private static final int ACTION_METADATA_BATCH_SIZE = 500;
     private static final String VERSION_LABEL_PREFIX = "v";
     private static final TypeReference<List<ScopeExpression>> SCOPES = new TypeReference<>() { };
@@ -41,6 +47,7 @@ public class PlatformAuthorizationEditor {
     private final RoleRepository roleStore;
     private final RoleService roles;
     private final AuthorizationCandidateMapper candidates;
+    private final ResourceRegistry registry;
 
     /**
      * 查询分配候选，包括已选 ID 回显；未携带依据时只允许完整直接分配资格。
@@ -128,6 +135,95 @@ public class PlatformAuthorizationEditor {
     }
 
     /**
+     * 升级专用角色树，由分配记录确定角色，不能借用他人委派查询候选。
+     * @param assignmentId 当前分配
+     * @param roleId 展开角色
+     * @param keyword 搜索
+     * @param ids 少量回显
+     * @param page 页码
+     * @param size 页大小
+     * @return 同角色、同来源允许版本
+     */
+    public AuthorizationRoleCandidatePage upgradeRoleCandidates(String assignmentId, String roleId, String keyword,
+            List<String> ids, int page, int size) {
+        var admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        var row = upgradeRecord(admission, assignmentId);
+        var role = assignments.findRevision(row.getRevisionId().longValueExact());
+        if (role == null)
+            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        if (roleId != null && !roleId.equals(role.getRoleId().toString()))
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var permissions = access.capabilities(admission.actor(), List.of(IamAction.PLATFORM_ASSIGNMENT_UPGRADE));
+        var basis = row.getDelegationGrantId() == null ? null
+                : source(admission.actor(), row.getDelegationGrantId().longValueExact(), permissions);
+        var published = roleStore.findRevision(row.getRevisionId().longValueExact());
+        if (published == null)
+            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        var pageResult = rolePage(roleId, keyword, roleId == null ? List.of(role.getRoleId().toString()) : ids, page,
+                size, basis, published.getRevision());
+        return pageResult;
+    }
+
+    /**
+     * 升级专用完整版本及范围候选，资格独立于新增/调整。
+     * @param assignmentId 当前分配
+     * @param kind 固定版本或对象
+     * @param revisionId 目标版本
+     * @param key 参数
+     * @param keyword 搜索
+     * @param ids 少量回显
+     * @param page 页码
+     * @param size 页大小
+     * @param tree 树
+     * @param parentId 父
+     * @return 同角色候选
+     */
+    public AuthorizationCandidatePage upgradeCandidates(String assignmentId, AuthorizationCandidateKind kind,
+            String revisionId, String key, String keyword, List<String> ids, int page, int size, boolean tree,
+            String parentId) {
+        if (kind != AuthorizationCandidateKind.ROLE_REVISION && kind != AuthorizationCandidateKind.OBJECT)
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        var row = upgradeRecord(admission, assignmentId);
+        var old = assignments.findRevision(row.getRevisionId().longValueExact());
+        if (kind == AuthorizationCandidateKind.ROLE_REVISION && (ids == null || ids.isEmpty())
+                || kind == AuthorizationCandidateKind.OBJECT && (revisionId == null || revisionId.isBlank()))
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var selected = kind == AuthorizationCandidateKind.ROLE_REVISION ? ids : List.of(revisionId);
+        for (var id : selected) {
+            var target = assignments.findRevision(IamIds.require(id));
+            if (target == null || old == null || !target.getRoleId().equals(old.getRoleId()))
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        var permissions = access.capabilities(admission.actor(), List.of(IamAction.PLATFORM_ASSIGNMENT_UPGRADE));
+        var basis = row.getDelegationGrantId() == null ? null
+                : source(admission.actor(), row.getDelegationGrantId().longValueExact(), permissions);
+        return query(admission.actor(), kind, null, basis, revisionId, key, null, null, keyword, ids, page, size, null,
+                tree, parentId);
+    }
+
+    private IamRoleAssignmentEntity upgradeRecord(com.ingot.cloud.iam.support.IamAdmission admission, String id) {
+        var row = assignments.find(AuthorizationDomain.PLATFORM, null, IamIds.require(id));
+        if (row == null)
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        if (admission.governed()) {
+            var scope = evaluator.evaluateForExecution(admission.actor().context(), true)
+                .scope(IamAction.PLATFORM_ASSIGNMENT_UPGRADE.getCode());
+            var visible = stringVisibility(scope, admission.actor().context().memberId());
+            if (visible != null && !visible.contains(id))
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        else {
+            var source = row.getDelegationGrantId() == null ? null : assignments
+                .findDelegation(AuthorizationDomain.PLATFORM, null, row.getDelegationGrantId().longValueExact());
+            if (source == null || source.getPlatformAdministratorId() == null
+                    || !source.getPlatformAdministratorId().toString().equals(admission.actor().context().memberId()))
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        }
+        return row;
+    }
+
+    /**
      * 查询委派管理专用的角色与固定版本树，不要求角色分配资格。
      * @param roleId 指定角色时只查询其版本
      * @param keyword 角色名称搜索
@@ -144,6 +240,10 @@ public class PlatformAuthorizationEditor {
 
     private AuthorizationRoleCandidatePage rolePage(String roleId, String keyword, List<String> ids,
             int page, int pageSize, DelegationInput basis) {
+        return rolePage(roleId,keyword,ids,page,pageSize,basis,null);
+    }
+    private AuthorizationRoleCandidatePage rolePage(String roleId,String keyword,List<String> ids,
+            int page,int pageSize,DelegationInput basis,BigInteger minimumRevision) {
         IamPages.require(page, pageSize);
         List<BigInteger> selected = ids == null ? List.of() : ids.stream()
                 .map(value -> BigInteger.valueOf(IamIds.require(value))).distinct().toList();
@@ -157,7 +257,7 @@ public class PlatformAuthorizationEditor {
         String search = keyword == null ? "" : keyword.trim();
         search = "%" + search.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
         var query = new AuthorizationCandidateSql.RoleQuery(parent, search, selected, allowed,
-                Math.multiplyExact(page - 1, pageSize), pageSize);
+                Math.multiplyExact(page - 1, pageSize), pageSize, minimumRevision);
         List<AuthorizationRoleNode> nodes = candidates.rolePage(query).stream().map(row -> {
             String id = row.id().toString();
             if (parent == null) {
@@ -311,14 +411,15 @@ public class PlatformAuthorizationEditor {
         List<BigInteger> visible = kind == AuthorizationCandidateKind.MEMBER
                 ? visibleIds(view.scope(IamAction.PLATFORM_AUTHORIZATION_DIAGNOSE.getCode()), actor.context().memberId())
                 : null;
-        if (kind == AuthorizationCandidateKind.OBJECT) {
-            PlatformScopeObjectResource adapter = objectResource(objectActions(null, null, actionId, null));
-            if (adapter == null) { return unsupported(page, pageSize); }
-            IamAction read = adapter.getReadAction();
-            visible = view.actionCodes().contains(read.getCode())
-                    ? visibleIds(view.scope(read.getCode()), adapter == PlatformScopeObjectResource.MEMBER
-                            ? actor.context().memberId() : null)
-                    : List.of();
+        if(kind==AuthorizationCandidateKind.OBJECT) {
+            var provider=objectResource(objectActions(null,null,actionId,null));
+            if(provider==null)return unsupported(page,pageSize);
+            String read=provider.descriptor().readAction();
+            var scope=view.scope(read);
+            List<String> allowed=view.actionCodes().contains(read)
+                    ? stringVisibility(scope,actor.context().memberId()):List.of();
+            return queryObjects(actor,null,null,null,actionId,keyword,ids,page,pageSize,allowed,false,null,
+                    null,null,ObjectQueryPurpose.DIAGNOSE);
         }
         return query(actor, kind, null, null, null, null, actionId, applicationId, keyword, ids, page, pageSize,
                 visible);
@@ -411,6 +512,11 @@ public class PlatformAuthorizationEditor {
             boolean tree, String parentId, String excludeMemberId, String selectedDelegationId,
             String selectedAssignmentId) {
         IamPages.require(page, size);
+        if(kind==AuthorizationCandidateKind.OBJECT) {
+            return queryObjects(actor,basis,revisionId,key,actionId,keyword,ids,page,size,
+                    visibility==null?null:visibility.stream().map(BigInteger::toString).toList(),tree,parentId,
+                    selectedDelegationId,selectedAssignmentId,ObjectQueryPurpose.ASSIGNMENT);
+        }
         List<BigInteger> selected = ids == null ? List.of() : ids.stream().map(value ->
                 BigInteger.valueOf(IamIds.require(value))).distinct().toList();
         if (selected.size() > IamPages.MAX_SIZE) { throw new BizException(IamReasonCode.INVALID_ARGUMENT); }
@@ -423,26 +529,6 @@ public class PlatformAuthorizationEditor {
                     .map(BigInteger::new).toList();
         }
         String resource = null;
-        if (kind == AuthorizationCandidateKind.OBJECT) {
-            var actions = objectActions(revisionId, key, actionId, basis);
-            PlatformScopeObjectResource adapter = objectResource(actions);
-            if (adapter == null) { return unsupported(page, size); }
-            resource = adapter.getValue();
-            if (basis != null) {
-                for (var boundedAction : actions) {
-                    ActionScopeCeiling ceiling = basis.actionScopeCeilings().stream()
-                            .filter(value -> value.actionId().equals(boundedAction.id().toString())).findFirst()
-                            .orElseThrow(() -> new BizException(IamReasonCode.DELEGATION_EXCEEDED));
-                    var clauses = com.ingot.cloud.iam.evaluation.ScopeBinder.bind(ceiling);
-                    if (clauses.stream().noneMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all)) {
-                        List<BigInteger> bounded = clauses.stream().filter(clause -> !clause.self()
-                                && !clause.memberDepartments() && clause.departmentIds().isEmpty())
-                                .flatMap(value -> value.objectIds().stream()).distinct().map(BigInteger::new).toList();
-                        allowed = allowed == null ? bounded : allowed.stream().filter(bounded::contains).toList();
-                    }
-                }
-            }
-        }
         String search = keyword == null ? "" : keyword.trim();
         search = "%" + search.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
         boolean hierarchical = kind == AuthorizationCandidateKind.OBJECT
@@ -481,6 +567,10 @@ public class PlatformAuthorizationEditor {
         if (kind == AuthorizationCandidateKind.ROLE_REVISION) {
             rows.forEach(row -> revisionGrants.put(row.id(), roles.synthesizedGrants(row.id().longValueExact())));
         }
+        Map<BigInteger, com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity> fieldVersions =
+                kind == AuthorizationCandidateKind.ROLE_REVISION ? roleStore.findRevisions(rows.stream().map(
+                        com.ingot.cloud.iam.persistence.projection.AuthorizationCandidateRow::id).toList()).stream()
+                        .collect(java.util.stream.Collectors.toMap(com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity::getId, v -> v)) : Map.of();
         List<AuthorizationActionOption> operationOptions = actionOptions(revisionGrants.values().stream()
                 .flatMap(Collection::stream).map(ActionGrant::actionId).distinct().toList());
         List<BigInteger> selectableIds = allowed;
@@ -501,7 +591,9 @@ public class PlatformAuthorizationEditor {
                         .map(value -> new RoleParameterDefinition(value.getParameterKey(), value.getBindingKind())).toList();
                 return new AuthorizationOption(id, row.name() + " · v" + row.revision(), null,
                         new RoleRevisionRef(row.kind(), id), parameters, grants,
-                        operationOptions.stream().filter(option -> operationIds.contains(option.id())).toList(), null);
+                        operationOptions.stream().filter(option -> operationIds.contains(option.id())).toList(), null,
+                        null, null, null, null, fieldVersions.containsKey(row.id())
+                                ? com.ingot.cloud.iam.extension.RoleFieldPermissionService.snapshot(fieldVersions.get(row.id()).getResourceFieldPermissions()) : null);
             }
             return new AuthorizationOption(id, row.name(),
                     kind == AuthorizationCandidateKind.ACTION ? row.resourceName() : null,
@@ -514,16 +606,15 @@ public class PlatformAuthorizationEditor {
                 null, hierarchical);
     }
 
-    private PlatformScopeObjectResource objectResource(List<AuthorizationCandidateMapper.ActionRow> actions) {
-        // 只信任关联目录元数据，整组操作必须指向同一已接入资源。
-        PlatformScopeObjectResource resource = null;
-        for (var action : actions) {
-            if (!CORE_APPLICATION.equals(action.applicationCode())) { return null; }
-            PlatformScopeObjectResource current = PlatformScopeObjectResource.find(action.resourceCode());
-            if (current == null || resource != null && resource != current) { return null; }
-            resource = current;
+    private ResourceObjectProvider objectResource(List<AuthorizationCandidateMapper.ActionRow> actions) {
+        ResourceObjectProvider provider=null;
+        for(var action:actions) {
+            var key=new ResourceKey(AuthorizationDomain.PLATFORM,action.applicationCode(),action.resourceCode());
+            var next=registry.find(key);
+            if(next==null || provider!=null && provider!=next)return null;
+            provider=next;
         }
-        return resource;
+        return provider;
     }
 
     private List<AuthorizationCandidateMapper.ActionRow> objectActions(String revisionId, String key, String actionId,
@@ -590,6 +681,7 @@ public class PlatformAuthorizationEditor {
             return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT,
                     "固定角色版本的范围参数必须全部配置"));
         }
+        var context=bindings.isEmpty()?null:access.requireCurrent().context();
         for (var entry : bindings.entrySet()) {
             var parameter = definitions.stream().filter(value -> value.getParameterKey().equals(entry.getKey())).findFirst().orElse(null);
             if (parameter == null || entry.getValue().kind() != parameter.getBindingKind()) {
@@ -597,7 +689,7 @@ public class PlatformAuthorizationEditor {
             }
             var resource = objectResource(objectActions(input.roleRevisionRef().id(), entry.getKey(), null, null));
             if (entry.getValue() == null || entry.getValue().ids() == null
-                    || entry.getValue().ids().isEmpty() || !objectsExist(resource, entry.getValue())) {
+                    || entry.getValue().ids().isEmpty() || !objectsExist(resource, entry.getValue(),context)) {
                 return List.of(new ValidationIssue("scopeBindings", IamReasonCode.INVALID_ARGUMENT, "资源不支持对象查询或包含无效对象"));
             }
         }
@@ -611,16 +703,64 @@ public class PlatformAuthorizationEditor {
      */
     public boolean validCeilingObjects(ActionScopeCeiling ceiling) {
         var resource = objectResource(objectActions(null, null, ceiling.actionId(), null));
-        return ceiling.scopeBindings().values().stream().allMatch(value -> objectsExist(resource, value));
+        var context=access.requireCurrent().context();
+        return ceiling.scopeBindings().values().stream().allMatch(value -> objectsExist(resource, value,context));
     }
 
-    private boolean objectsExist(PlatformScopeObjectResource resource, ScopeBinding binding) {
-        if (resource == null || binding.kind() != ScopeBindingKind.OBJECTS) { return false; }
-        if (binding.ids().isEmpty()) { return true; }
-        List<BigInteger> ids = binding.ids().stream().map(value -> BigInteger.valueOf(IamIds.require(value))).distinct().toList();
-        var query = new AuthorizationCandidateSql.Query(AuthorizationCandidateKind.OBJECT, null, null,
-                null, resource.getValue(), "%", ids, null, 0, IamPages.DEFAULT_SIZE);
-        return candidates.count(query) == ids.size();
+    private boolean objectsExist(ResourceObjectProvider provider,ScopeBinding binding,AuthorizationContext context) {
+        if(provider==null || binding==null || binding.kind()!=ScopeBindingKind.OBJECTS)return false;
+        return provider.objectsExist(context,binding.ids());
+    }
+
+    private AuthorizationCandidatePage queryObjects(ActiveIdentity actor,DelegationInput basis,String revisionId,
+            String key,String actionId,String keyword,List<String> ids,int page,int size,List<String> visibility,
+            boolean tree,String parentId,String selectedDelegationId,String selectedAssignmentId,ObjectQueryPurpose purpose) {
+        var actions=objectActions(revisionId,key,actionId,basis);
+        var provider=objectResource(actions);
+        if(provider==null)return unsupported(page,size);
+        if(ids!=null && ids.size()>IamPages.MAX_SIZE)throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        List<String> allowed=visibility;
+        if(basis!=null)for(var action:actions) {
+            var ceiling=basis.actionScopeCeilings().stream().filter(c->c.actionId().equals(action.id().toString()))
+                    .findFirst().orElseThrow(()->new BizException(IamReasonCode.DELEGATION_EXCEEDED));
+            var bounded=stringVisibility(com.ingot.cloud.iam.evaluation.ScopeBinder.bind(ceiling),actor.context().memberId());
+            if(bounded!=null)allowed=allowed==null?bounded:allowed.stream().filter(bounded::contains).toList();
+        }
+        ObjectAssociation relation=selectedAssignmentId!=null
+                ?new ObjectAssociation(ObjectAssociationKind.ASSIGNMENT,selectedAssignmentId,key,null)
+                :selectedDelegationId!=null?new ObjectAssociation(ObjectAssociationKind.DELEGATION,selectedDelegationId,null,actionId):null;
+        if(relation!=null && !provider.nativeAssociations()) {
+            Map<String,ScopeBinding> bindings;
+            if(selectedAssignmentId!=null) {
+                var row=assignments.find(AuthorizationDomain.PLATFORM,null,IamIds.require(selectedAssignmentId));
+                if(row==null)throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                bindings=IamJson.read(row.getScopeBindings(),BINDINGS);
+            } else {
+                var children=delegations.children(AuthorizationDomain.PLATFORM,List.of(new BigInteger(selectedDelegationId))).get(new BigInteger(selectedDelegationId));
+                var ceiling=children==null?null:children.ceilings().stream().filter(c->c.getActionId().toString().equals(actionId)).findFirst().orElse(null);
+                if(ceiling==null)throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+                bindings=IamJson.read(ceiling.getScopeBindings(),BINDINGS);
+            }
+            var selected=selectedAssignmentId!=null?bindings.get(key):null;
+            var values=selectedAssignmentId!=null?(selected==null?List.<String>of():selected.ids())
+                    :bindings.values().stream().flatMap(binding->binding.ids().stream()).distinct().toList();
+            allowed=allowed==null?values:allowed.stream().filter(values::contains).toList();
+            relation=null;
+        }
+        return provider.candidates(new ResourceObjectQuery(provider.descriptor().key(),actor.context(),purpose,
+                keyword,ids,allowed,page,size,tree,parentId,relation));
+    }
+
+    private static List<String> stringVisibility(com.ingot.cloud.iam.evaluation.ResolvedActionScope scope,String memberId) {
+        return stringVisibility(scope.clauses(),memberId);
+    }
+    private static List<String> stringVisibility(List<com.ingot.cloud.iam.evaluation.ScopeClause> clauses,String memberId) {
+        if(clauses.stream().anyMatch(com.ingot.cloud.iam.evaluation.ScopeClause::all))return null;
+        return clauses.stream().filter(c->!c.memberDepartments() && c.departmentIds().isEmpty()).flatMap(c-> {
+            var values=new ArrayList<>(c.objectIds());
+            if(c.self() && memberId!=null)values.add(memberId);
+            return values.stream();
+        }).distinct().toList();
     }
 
     private DelegationInput source(ActiveIdentity actor, long id, IamCapabilities permissions) {
@@ -640,7 +780,8 @@ public class PlatformAuthorizationEditor {
         Instant now = Instant.now();
         if (source == null || source.getPlatformAdministratorId() == null
                 || !source.getPlatformAdministratorId().toString().equals(actor.context().memberId())
-                    && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true) && !visibleRecord
+                    && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPDATE, true)
+                    && !permissions.allows(IamAction.PLATFORM_ASSIGNMENT_UPGRADE, true) && !visibleRecord
                 || source.getStatus() != GrantStatus.ACTIVE
                 || source.getValidFrom() != null && now.isBefore(source.getValidFrom().toInstant(ZoneOffset.UTC))
                 || source.getValidUntil() != null && !now.isBefore(source.getValidUntil().toInstant(ZoneOffset.UTC))) {

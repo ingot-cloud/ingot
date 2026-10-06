@@ -49,11 +49,15 @@ class PlatformObjectResourceResolutionTest {
     private final RoleService roles = mock(RoleService.class);
     private final AuthorizationCandidateMapper candidates = mock(AuthorizationCandidateMapper.class);
     private final PlatformAuthorizationEditor editor = new PlatformAuthorizationEditor(access, evaluator,
-            assignments, delegations, roleStore, roles, candidates);
+            assignments, delegations, roleStore, roles, candidates, new com.ingot.cloud.iam.extension.BuiltinResourceProviders(candidates).registry(List.of()));
+
+    @org.junit.jupiter.api.BeforeEach
+    void currentIdentity() { when(access.requireCurrent()).thenReturn(actor); }
 
     @ParameterizedTest
     @ValueSource(strings = {"aaaa", "iam-platform:application:create", "iam-platform:role:read"})
     void replayDiagnosisAndWritesResolveRealResourceInsteadOfActionCode(String code) {
+        when(access.requireCurrent()).thenReturn(actor);
         var action = row("331", code, "iam-platform", "application");
         prepareVersion(List.of(action));
         assertTrue(replay(null).supported());

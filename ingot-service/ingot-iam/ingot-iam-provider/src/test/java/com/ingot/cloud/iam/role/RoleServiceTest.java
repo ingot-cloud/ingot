@@ -97,7 +97,7 @@ class RoleServiceTest {
                 + " kind VARCHAR(24), code VARCHAR(64), name VARCHAR(128), description VARCHAR(256),"
                 + " group_name VARCHAR(64), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT, kind VARCHAR(24),"
-                + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024),"
+                + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024), resource_field_permissions VARCHAR(16384) DEFAULT '{}',"
                 + " published_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(512))");
         jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32),"
@@ -170,7 +170,7 @@ class RoleServiceTest {
                 new RoleGrantValidator(IamMybatisTestAccess.roles(dataSource)),
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
-                transactions);
+                IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
         authenticate();
     }
 

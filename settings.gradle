@@ -1,6 +1,8 @@
 rootProject.name = 'ingot'
 
 // Framework
+include 'ingot-framework:ingot-authorization'
+findProject(':ingot-framework:ingot-authorization')?.name = 'ingot-authorization'
 include 'ingot-framework:ingot-cache'
 findProject(':ingot-framework:ingot-cache')?.name = 'ingot-cache'
 include 'ingot-framework:ingot-commons'
@@ -113,3 +115,5 @@ include 'ingot-plugin:ingot-mybatisplus-plugin'
 findProject(':ingot-plugin:ingot-mybatisplus-plugin')?.name = 'ingot-mybatisplus-plugin'
 include 'ingot-plugin:ingot-assemble-plugin'
 findProject(':ingot-plugin:ingot-assemble-plugin')?.name = 'ingot-assemble-plugin'
+
+include ':examples:iam-ops'

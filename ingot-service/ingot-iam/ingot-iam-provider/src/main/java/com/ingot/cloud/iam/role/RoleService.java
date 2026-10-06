@@ -80,34 +80,54 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>维护不可变角色版本与租户差异，发布不自动升级既有授权。</p>
+ * <p>
+ * 维护不可变角色版本与租户差异，发布不自动升级既有授权。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Service
 public class RoleService {
+
     private static final TypeReference<List<ScopeExpression>> SCOPES = new TypeReference<>() {
     };
+
     private static final TypeReference<RoleMetadataOverrides> METADATA = new TypeReference<>() {
     };
+
     private static final TypeReference<Map<String, ScopeBinding>> BINDINGS = new TypeReference<>() {
     };
+
     private static final String ROLE = "role";
+
     private final IamAccess access;
+
     private final IamAuditWriter audits;
+
     private final AuthorizationChangeNotifier changes;
+
     private final RoleSynthesisCache synthesis;
+
     private final RoleGrantValidator validator;
+
     private final DelegationAdmission delegations;
+
     private final RoleRepository roles;
+
     private final CatalogService catalog;
+
     private final TransactionTemplate transaction;
+
+    private final com.ingot.cloud.iam.extension.RoleFieldPermissionService roleFields;
+
+    private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
 
     /**
      * 绑定身份、审计、失效通知、合成缓存、目录解析与角色表。
-     * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
-     *
+     * <p>
+     * TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。
+     * </p>
      * @param access 当前身份
      * @param audits 同事务审计
      * @param changes 授权热缓存失效
@@ -119,9 +139,13 @@ public class RoleService {
      * @param transactionManager 同一数据源事务
      */
     public RoleService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-                           RoleSynthesisCache synthesis, RoleGrantValidator validator,
-                           DelegationAdmission delegations, RoleRepository roles, CatalogService catalog,
-                           PlatformTransactionManager transactionManager) {
+            RoleSynthesisCache synthesis, RoleGrantValidator validator, DelegationAdmission delegations,
+            RoleRepository roles, CatalogService catalog,
+            com.ingot.cloud.iam.extension.RoleFieldPermissionService roleFields,
+            com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata,
+            PlatformTransactionManager transactionManager) {
+        this.roleFields = roleFields;
+        this.fieldMetadata = fieldMetadata;
         this.access = access;
         this.audits = audits;
         this.changes = changes;
@@ -135,21 +159,19 @@ public class RoleService {
 
     /**
      * 列出当前路径可见的角色目录。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param page 页码
      * @param pageSize 页大小
      * @return 角色页，不按名称或状态筛选
      */
-    public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared,
-                                                          int page, int pageSize) {
+    public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared, int page,
+            int pageSize) {
         return list(domain, shared, page, pageSize, null, null);
     }
 
     /**
      * 列出当前路径可见的角色目录，可按名称包含匹配和启停状态筛选。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param page 页码
@@ -159,22 +181,23 @@ public class RoleService {
      * @return 角色页
      * @throws BizException 状态字面量非法时为 {@link IamReasonCode#INVALID_ARGUMENT}
      */
-    public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared,
-                                                          int page, int pageSize, String name, String status) {
+    public PageResponse<ResourceDetail<RoleSummary>> list(AuthorizationDomain domain, boolean shared, int page,
+            int pageSize, String name, String status) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         IamPages.require(page, pageSize);
         Page<IamRoleDefinitionEntity> rows = roles.pageDefinitions(domain, shared, tenantId(domain, actor), page,
                 pageSize, name, IamFilters.enabledOf(status));
         IamCapabilities permissions = rows.getRecords().isEmpty() ? new IamCapabilities(Map.of())
                 : summaryCapabilities(domain, shared, actor);
-        List<ResourceDetail<RoleSummary>> items = rows.getRecords().stream()
-                .map(row -> summaryDetail(domain, shared, row, permissions)).toList();
+        List<ResourceDetail<RoleSummary>> items = rows.getRecords()
+            .stream()
+            .map(row -> summaryDetail(domain, shared, row, permissions))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 读取角色元数据。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -187,7 +210,6 @@ public class RoleService {
 
     /**
      * 读取角色最新已发布版本的当前绑定权限，带目录展示内容。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -206,12 +228,11 @@ public class RoleService {
         if (grants.isEmpty() && based(data.baseRevisionId())) {
             grants = synthesizedGrants(latest.getId().longValue());
         }
-        return toGrantRecords(grants);
+        return toGrantRecords(grants, data.fields());
     }
 
     /**
      * 创建角色并发布首个不可变版本，不能创建系统治理角色。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param input 创建命令
@@ -231,8 +252,8 @@ public class RoleService {
             Long tenantId = kind == RoleKind.TENANT_CUSTOM ? IamIds.require(actor.context().tenantId()) : null;
             IamRoleDefinitionEntity entity = new IamRoleDefinitionEntity();
             entity.setId(BigInteger.valueOf(id));
-            entity.setDomain(kind == RoleKind.PLATFORM_CUSTOM
-                    ? AuthorizationDomain.PLATFORM : AuthorizationDomain.TENANT);
+            entity.setDomain(
+                    kind == RoleKind.PLATFORM_CUSTOM ? AuthorizationDomain.PLATFORM : AuthorizationDomain.TENANT);
             entity.setTenantId(tenantId == null ? null : BigInteger.valueOf(tenantId));
             entity.setKind(kind);
             entity.setCode(input.code());
@@ -242,19 +263,19 @@ public class RoleService {
             entity.setEnabled(true);
             try {
                 roles.insertDefinition(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色编码已存在");
             }
             publishRevision(id, kind, 1, input.baseRevisionId(), input.definition());
-            audits.write(actor.context(), access.nextId(), ROLE, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(ROLE, "0"));
+            audits.write(actor.context(), access.nextId(), ROLE, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, input.name()), Map.of(ROLE, "0"));
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
 
     /**
      * 启停角色，停用约束所有旧版本。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -262,7 +283,7 @@ public class RoleService {
      * @return 提交后版本
      */
     public CreatedResource changeStatus(AuthorizationDomain domain, boolean shared, String id,
-                                        ConfigurationStatusInput input) {
+            ConfigurationStatusInput input) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
@@ -286,15 +307,13 @@ public class RoleService {
 
     /**
      * 更新角色名称、说明、分组与启停，编码与已发布版本不变。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
      * @param input 待写入的基本信息
      * @return 提交后版本
      */
-    public CreatedResource updateProfile(AuthorizationDomain domain, boolean shared, String id,
-                                         RoleUpdateInput input) {
+    public CreatedResource updateProfile(AuthorizationDomain domain, boolean shared, String id, RoleUpdateInput input) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
         long roleId = IamIds.require(id);
         return transaction.execute(status -> {
@@ -320,7 +339,6 @@ public class RoleService {
 
     /**
      * 删除未被授权引用的非系统角色。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -349,7 +367,6 @@ public class RoleService {
 
     /**
      * 列出角色不可变版本。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -358,7 +375,7 @@ public class RoleService {
      * @return 版本页
      */
     public PageResponse<ResourceDetail<RoleRevision>> listRevisions(AuthorizationDomain domain, boolean shared,
-                                                                    String id, int page, int pageSize) {
+            String id, int page, int pageSize) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         long roleId = IamIds.require(id);
         loadSummary(domain, shared, actor, roleId);
@@ -382,7 +399,7 @@ public class RoleService {
         for (int index = 0; index < revisions.size(); index++) {
             RoleRevision current = revisions.get(index);
             RoleRevision previous = index + 1 < revisions.size() ? revisions.get(index + 1) : older;
-            items.add(IamDetails.of(withDisplayDeltas(current, displayDeltas(current, previous, actions)),
+            items.add(IamDetails.of(withDisplayDeltas(current, previous, displayDeltas(current, previous, actions)),
                     version(records.get(index).getRevision())));
         }
         return IamPages.details(items, rows.getTotal(), page, pageSize);
@@ -390,7 +407,6 @@ public class RoleService {
 
     /**
      * 发布新版本，不改写既有授权引用。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -421,7 +437,6 @@ public class RoleService {
 
     /**
      * 预览待发布定义的合成结果，无写入。
-     *
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
@@ -429,7 +444,7 @@ public class RoleService {
      * @return 合成预览
      */
     public Preview<EffectiveRole> preview(AuthorizationDomain domain, boolean shared, String id,
-                                          RoleDefinitionDraft input) {
+            RoleDefinitionDraft input) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.PREVIEW));
         ResourceDetail<RoleSummary> role = loadSummary(domain, shared, actor, IamIds.require(id));
         List<ValidationIssue> errors = new ArrayList<>();
@@ -441,8 +456,10 @@ public class RoleService {
             effective = new EffectiveRole(role.record(), new RoleRevisionRef(role.record().kind(), role.record().id()),
                     synthesized.grants(), synthesized.origins(),
                     input.parameterDefinitions() == null ? List.of() : input.parameterDefinitions(),
-                    new UsageSummary(0L, 0L, false));
-        } catch (BizException exception) {
+                    new UsageSummary(0L, 0L, false),
+                    roleFields.freeze(role.record().kind(), synthesized.grants(), input.resourceFieldPermissions()));
+        }
+        catch (BizException exception) {
             errors.add(new ValidationIssue("definition", IamReasonCode.POLICY_CONFLICT, exception.getMessage()));
         }
         return new Preview<>(role.version(), errors.isEmpty(), errors, List.of(),
@@ -450,8 +467,34 @@ public class RoleService {
     }
 
     /**
+     * 创建角色前只读校验完整定义，包括资源字段能力，不分配版本 ID。
+     * @param input 平台角色创建草稿
+     * @return 固化默认值后的预览
+     */
+    public Preview<RoleDefinitionDraft> previewCreate(RoleCreateInput input) {
+        access.require(AuthorizationDomain.PLATFORM, action(AuthorizationDomain.PLATFORM, false, AccessKind.CREATE));
+        List<ValidationIssue> issues = new ArrayList<>();
+        RoleDefinitionDraft result = null;
+        try {
+            if (input.kind() != RoleKind.PLATFORM_CUSTOM)
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            requireShape(input.kind(), based(input.baseRevisionId()), input.definition());
+            var definition = input.definition();
+            issues.addAll(validator.validate(AuthorizationDomain.PLATFORM, definition.grants(),
+                    definition.parameterDefinitions()));
+            var snapshot = roleFields.freeze(input.kind(), definition.grants(), definition.resourceFieldPermissions());
+            result = new RoleDefinitionDraft(definition.grants(), definition.deltas(),
+                    definition.parameterDefinitions(), definition.metadataOverrides(), snapshot);
+        }
+        catch (BizException exception) {
+            issues.add(new ValidationIssue("definition", IamReasonCode.INVALID_ARGUMENT, exception.getMessage()));
+        }
+        return new Preview<>("0", issues.isEmpty(), issues, List.of(), new ImpactSummary(null, null, null, false),
+                result);
+    }
+
+    /**
      * 预览共享基础升级，不写入引用。
-     *
      * @param id 角色 ID
      * @param input 目标基础
      * @return 三方比较
@@ -468,9 +511,10 @@ public class RoleService {
         RevisionData newBase = loadRevision(IamIds.require(input.newBaseRevisionId()));
         RoleSynthesis.UpgradePlan plan = RoleSynthesis.upgrade(oldBase.grants(), newBase.grants(), current.deltas(),
                 input.resolutions());
-        List<ValidationIssue> errors = plan.conflicts().stream()
-                .map(conflict -> new ValidationIssue(conflict.key(), conflict.reasonCode(), conflict.message()))
-                .toList();
+        List<ValidationIssue> errors = plan.conflicts()
+            .stream()
+            .map(conflict -> new ValidationIssue(conflict.key(), conflict.reasonCode(), conflict.message()))
+            .toList();
         UpgradePreview preview = new UpgradePreview(role.version(), current.baseRevisionId(), input.newBaseRevisionId(),
                 plan.changes(), plan.conflicts(), null, List.of(), new ImpactSummary(null, 0L, null, false));
         return new Preview<>(role.version(), errors.isEmpty(), errors, List.of(), preview.impactSummary(), preview);
@@ -478,7 +522,6 @@ public class RoleService {
 
     /**
      * 提交共享基础升级；未解决冲突整次回滚。
-     *
      * @param id 角色 ID
      * @param input 处置与要改写的授权
      * @return 新版本 ID
@@ -501,14 +544,15 @@ public class RoleService {
                 throw new BizException(IamReasonCode.POLICY_CONFLICT);
             }
             long last = roles.maxRevision(roleId);
-            RoleDefinitionDraft definition = new RoleDefinitionDraft(List.of(), plan.nextDeltas(),
-                    latest.parameters(), latest.metadata());
-            long revisionId = publishRevision(roleId, RoleKind.TENANT_CUSTOM, last + 1,
-                    input.newBaseRevisionId(), definition);
+            RoleDefinitionDraft definition = new RoleDefinitionDraft(List.of(), plan.nextDeltas(), latest.parameters(),
+                    latest.metadata());
+            long revisionId = publishRevision(roleId, RoleKind.TENANT_CUSTOM, last + 1, input.newBaseRevisionId(),
+                    definition);
             moveAssignments(actor, roleId, revisionId, input.assignmentIds());
             roles.incrementVersion(roleId, current.version());
             audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.ROLE_REVISION, latest.id()), Map.of(AuditField.ROLE_REVISION, IamIds.text(revisionId)),
+                    Map.of(AuditField.ROLE_REVISION, latest.id()),
+                    Map.of(AuditField.ROLE_REVISION, IamIds.text(revisionId)),
                     Map.of(ROLE, nextVersion(current.version())));
             changes.markAll();
             return new CreatedResource(IamIds.text(revisionId), Long.toString(last + 1));
@@ -517,7 +561,6 @@ public class RoleService {
 
     /**
      * 合成指定版本的有效授权，供求值引擎复用。
-     *
      * @param revisionId 版本 ID
      * @return 合成后的操作范围
      */
@@ -526,16 +569,17 @@ public class RoleService {
         RoleRevisionSnapshot snapshot;
         if (revision.baseRevisionId() == null) {
             snapshot = new RoleRevisionSnapshot(revisionId, null, revision.grants(), List.of());
-        } else {
+        }
+        else {
             RevisionData base = loadRevision(IamIds.require(revision.baseRevisionId()));
-            snapshot = new RoleRevisionSnapshot(revisionId, IamIds.require(revision.baseRevisionId()),
-                    base.grants(), revision.deltas());
+            snapshot = new RoleRevisionSnapshot(revisionId, IamIds.require(revision.baseRevisionId()), base.grants(),
+                    revision.deltas());
         }
         return synthesis.grants(snapshot);
     }
 
     private long publishRevision(long roleId, RoleKind kind, long revision, String baseRevisionId,
-                                 RoleDefinitionDraft definition) {
+            RoleDefinitionDraft definition) {
         boolean based = based(baseRevisionId);
         requireShape(kind, based, definition);
         List<ActionGrant> synthesized = based
@@ -547,16 +591,18 @@ public class RoleService {
             ValidationIssue first = errors.getFirst();
             throw new BizException(first.code().getCode(), first.message());
         }
+        var fieldSnapshot = roleFields.freeze(kind, synthesized, definition.resourceFieldPermissions());
         long id = access.nextId();
         IamRoleRevisionEntity entity = new IamRoleRevisionEntity();
         entity.setId(BigInteger.valueOf(id));
         entity.setRoleId(BigInteger.valueOf(roleId));
         entity.setKind(kind);
         entity.setRevision(BigInteger.valueOf(revision));
-        entity.setBaseRevisionId(baseRevisionId == null || baseRevisionId.isBlank()
-                ? null : BigInteger.valueOf(IamIds.require(baseRevisionId)));
-        entity.setMetadataOverrides(IamJson.object(definition.metadataOverrides() == null
-                ? Map.of() : definition.metadataOverrides()));
+        entity.setBaseRevisionId(baseRevisionId == null || baseRevisionId.isBlank() ? null
+                : BigInteger.valueOf(IamIds.require(baseRevisionId)));
+        entity.setMetadataOverrides(
+                IamJson.object(definition.metadataOverrides() == null ? Map.of() : definition.metadataOverrides()));
+        entity.setResourceFieldPermissions(IamJson.object(fieldSnapshot));
         entity.setPublishedAt(LocalDateTime.now(ZoneOffset.UTC));
         roles.insertRevision(entity);
         if (definition.parameterDefinitions() != null) {
@@ -577,7 +623,8 @@ public class RoleService {
                 row.setScopes(IamJson.array(delta.scopes()));
                 roles.insertDelta(row);
             }
-        } else {
+        }
+        else {
             for (ActionGrant grant : definition.grants()) {
                 IamRoleGrantEntity row = new IamRoleGrantEntity();
                 row.setRevisionId(BigInteger.valueOf(id));
@@ -594,8 +641,7 @@ public class RoleService {
      */
     private RoleSynthesis.Result synthesize(RoleSummary role, RoleDefinitionDraft input) {
         String base = currentBase(IamIds.require(role.id()));
-        return based(base)
-                ? RoleSynthesis.synthesize(baseGrants(base), input.deltas())
+        return based(base) ? RoleSynthesis.synthesize(baseGrants(base), input.deltas())
                 : RoleSynthesis.synthesize(input.grants(), List.of());
     }
 
@@ -708,7 +754,7 @@ public class RoleService {
     }
 
     private ResourceDetail<RoleSummary> loadSummary(AuthorizationDomain domain, boolean shared, ActiveIdentity actor,
-                                                    long id) {
+            long id) {
         IamRoleDefinitionEntity row = roles.findDefinition(domain, shared, tenantId(domain, actor), id);
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
@@ -717,9 +763,10 @@ public class RoleService {
     }
 
     private IamCapabilities summaryCapabilities(AuthorizationDomain domain, boolean shared, ActiveIdentity actor) {
-        return domain == AuthorizationDomain.PLATFORM && !shared ? access.capabilities(actor, List.of(
-                IamAction.PLATFORM_ROLE_READ, IamAction.PLATFORM_ROLE_STATUS, IamAction.PLATFORM_ROLE_DELETE,
-                IamAction.PLATFORM_ROLE_PUBLISH, IamAction.PLATFORM_ROLE_PREVIEW)) : new IamCapabilities(Map.of());
+        return domain == AuthorizationDomain.PLATFORM && !shared ? access.capabilities(actor,
+                List.of(IamAction.PLATFORM_ROLE_READ, IamAction.PLATFORM_ROLE_STATUS, IamAction.PLATFORM_ROLE_DELETE,
+                        IamAction.PLATFORM_ROLE_PUBLISH, IamAction.PLATFORM_ROLE_PREVIEW))
+                : new IamCapabilities(Map.of());
     }
 
     private ResourceDetail<RoleSummary> summaryDetail(AuthorizationDomain domain, boolean shared,
@@ -728,12 +775,13 @@ public class RoleService {
             return IamDetails.of(summary(row), version(row.getVersion()));
         }
         Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities = new LinkedHashMap<>();
-        for (AccessKind kind : List.of(AccessKind.READ, AccessKind.STATUS, AccessKind.DELETE, AccessKind.PUBLISH, AccessKind.PREVIEW)) {
+        for (AccessKind kind : List.of(AccessKind.READ, AccessKind.STATUS, AccessKind.DELETE, AccessKind.PUBLISH,
+                AccessKind.PREVIEW)) {
             IamAction operation = action(domain, false, kind);
             boolean allowed = (kind == AccessKind.READ || row.getKind() != RoleKind.SYSTEM)
                     && permissions.allows(operation, false);
-            capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
-                    allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前角色不可执行此操作"));
+            capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(allowed,
+                    allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前角色不可执行此操作"));
         }
         return IamDetails.of(summary(row), capabilities, version(row.getVersion()));
     }
@@ -766,25 +814,29 @@ public class RoleService {
         if (row == null) {
             throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
         }
-        List<ActionGrant> grantRows = roles.listGrants(revisionId).stream()
-                .map(item -> new ActionGrant(text(item.getActionId()), IamJson.read(item.getScopes(), SCOPES)))
-                .toList();
-        List<RoleDelta> deltaRows = roles.listDeltas(revisionId).stream()
-                .map(item -> new RoleDelta(text(item.getActionId()), item.getOperation(),
-                        IamJson.read(item.getScopes(), SCOPES)))
-                .toList();
-        List<RoleParameterDefinition> parameterRows = roles.listParameters(revisionId).stream()
-                .map(item -> new RoleParameterDefinition(item.getParameterKey(), item.getBindingKind()))
-                .toList();
-        return new RevisionData(text(row.getId()), text(row.getBaseRevisionId()), grantRows, deltaRows,
-                parameterRows, IamJson.read(row.getMetadataOverrides(), METADATA));
+        List<ActionGrant> grantRows = roles.listGrants(revisionId)
+            .stream()
+            .map(item -> new ActionGrant(text(item.getActionId()), IamJson.read(item.getScopes(), SCOPES)))
+            .toList();
+        List<RoleDelta> deltaRows = roles.listDeltas(revisionId)
+            .stream()
+            .map(item -> new RoleDelta(text(item.getActionId()), item.getOperation(),
+                    IamJson.read(item.getScopes(), SCOPES)))
+            .toList();
+        List<RoleParameterDefinition> parameterRows = roles.listParameters(revisionId)
+            .stream()
+            .map(item -> new RoleParameterDefinition(item.getParameterKey(), item.getBindingKind()))
+            .toList();
+        return new RevisionData(text(row.getId()), text(row.getBaseRevisionId()), grantRows, deltaRows, parameterRows,
+                IamJson.read(row.getMetadataOverrides(), METADATA),
+                com.ingot.cloud.iam.extension.RoleFieldPermissionService.snapshot(row.getResourceFieldPermissions()));
     }
 
     private RoleRevision revision(IamRoleRevisionEntity row) {
         RevisionData data = loadRevision(row.getId().longValue());
-        return new RoleRevision(text(row.getId()), text(row.getRoleId()), version(row.getRevision()),
-                row.getKind(), text(row.getBaseRevisionId()), data.grants(), data.deltas(), data.parameters(),
-                data.metadata(), List.of());
+        return new RoleRevision(text(row.getId()), text(row.getRoleId()), version(row.getRevision()), row.getKind(),
+                text(row.getBaseRevisionId()), data.grants(), data.deltas(), data.parameters(), data.metadata(),
+                List.of(), data.fields());
     }
 
     private RoleRevision olderRevision(long roleId, List<IamRoleRevisionEntity> records) {
@@ -796,27 +848,32 @@ public class RoleService {
         return previous == null ? null : revision(previous);
     }
 
-    private List<RoleGrantRecord> toGrantRecords(List<ActionGrant> grants) {
+    private List<RoleGrantRecord> toGrantRecords(List<ActionGrant> grants,
+            Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> fields) {
         if (grants == null || grants.isEmpty()) {
             return List.of();
         }
         Map<String, ActionLookupRecord> actions = indexActions(catalog.resolveActions(grants.stream()
-                .map(ActionGrant::actionId).filter(id -> id != null && !id.isBlank()).distinct().toList()));
+            .map(ActionGrant::actionId)
+            .filter(id -> id != null && !id.isBlank())
+            .distinct()
+            .toList()));
+        var descriptors = fieldMetadata
+            .load(actions.values().stream().map(a -> new BigInteger(a.resourceId())).distinct().toList());
         List<RoleGrantRecord> result = new ArrayList<>();
         for (ActionGrant grant : grants) {
             ActionLookupRecord action = actions.get(grant.actionId());
-            result.add(new RoleGrantRecord(grant.actionId(),
-                    action == null ? "" : action.code(),
+            var descriptor = action == null ? null : descriptors.get(action.resourceId());
+            result.add(new RoleGrantRecord(grant.actionId(), action == null ? "" : action.code(),
                     action == null ? "" : blankToEmpty(action.name(), action.code()),
-                    action == null ? "" : action.applicationId(),
-                    action == null ? "" : action.applicationCode(),
-                    action == null ? "" : action.applicationName(),
-                    action == null ? "" : action.resourceId(),
-                    action == null ? "" : action.resourceCode(),
-                    action == null ? "" : action.resourceName(),
+                    action == null ? "" : action.applicationId(), action == null ? "" : action.applicationCode(),
+                    action == null ? "" : action.applicationName(), action == null ? "" : action.resourceId(),
+                    action == null ? "" : action.resourceCode(), action == null ? "" : action.resourceName(),
                     grant.scopes() == null ? List.of() : grant.scopes(),
                     action == null || action.scopeCapabilities() == null ? List.of() : action.scopeCapabilities(),
-                    action == null ? null : action.status()));
+                    action == null ? null : action.status(), descriptor == null ? List.of() : descriptor.fields(),
+                    descriptor == null ? Map.of() : descriptor.defaults(),
+                    fields == null || action == null ? Map.of() : fields.getOrDefault(action.resourceId(), Map.of())));
         }
         return result;
     }
@@ -832,13 +889,12 @@ public class RoleService {
     }
 
     private static List<RoleDisplayDelta> displayDeltas(RoleRevision current, RoleRevision previous,
-                                                        Map<String, ActionLookupRecord> actions) {
+            Map<String, ActionLookupRecord> actions) {
         List<RoleDisplayDelta> result = new ArrayList<>();
         for (RoleDelta delta : rawDisplayDeltas(current, previous)) {
             ActionLookupRecord action = actions.get(delta.actionId());
             result.add(new RoleDisplayDelta(delta.actionId(),
-                    action == null ? "" : blankToEmpty(action.name(), action.code()),
-                    delta.operation(),
+                    action == null ? "" : blankToEmpty(action.name(), action.code()), delta.operation(),
                     delta.scopes() == null ? List.of() : delta.scopes()));
         }
         return result;
@@ -885,10 +941,12 @@ public class RoleService {
         return result;
     }
 
-    private static RoleRevision withDisplayDeltas(RoleRevision revision, List<RoleDisplayDelta> deltas) {
+    private static RoleRevision withDisplayDeltas(RoleRevision revision, RoleRevision previous,
+            List<RoleDisplayDelta> deltas) {
         return new RoleRevision(revision.id(), revision.roleId(), revision.revision(), revision.kind(),
                 revision.baseRevisionId(), revision.grants(), revision.deltas(), revision.parameterDefinitions(),
-                revision.metadataOverrides(), deltas);
+                revision.metadataOverrides(), deltas, revision.resourceFieldPermissions(),
+                previous == null ? null : previous.resourceFieldPermissions());
     }
 
     private static String scopeFingerprint(List<ScopeExpression> scopes) {
@@ -896,12 +954,12 @@ public class RoleService {
             return "";
         }
         return scopes.stream()
-                .map(scope -> (scope.kind() == null ? "" : scope.kind().name())
-                        + "|" + (scope.parameterKey() == null ? "" : scope.parameterKey())
-                        + "|" + Boolean.TRUE.equals(scope.includeDescendants()))
-                .sorted()
-                .reduce((left, right) -> left + ";" + right)
-                .orElse("");
+            .map(scope -> (scope.kind() == null ? "" : scope.kind().name()) + "|"
+                    + (scope.parameterKey() == null ? "" : scope.parameterKey()) + "|"
+                    + Boolean.TRUE.equals(scope.includeDescendants()))
+            .sorted()
+            .reduce((left, right) -> left + ";" + right)
+            .orElse("");
     }
 
     private static String blankToEmpty(String value, String fallback) {
@@ -941,18 +999,18 @@ public class RoleService {
 
     private static IamAction action(AuthorizationDomain domain, boolean shared, AccessKind kind) {
         return switch (kind) {
-            case READ -> shared ? IamAction.PLATFORM_SHARED_ROLE_READ
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_READ : IamAction.TENANT_ROLE_READ;
-            case CREATE -> shared ? IamAction.PLATFORM_SHARED_ROLE_CREATE
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_CREATE : IamAction.TENANT_ROLE_CREATE;
-            case STATUS -> shared ? IamAction.PLATFORM_SHARED_ROLE_STATUS
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_STATUS : IamAction.TENANT_ROLE_STATUS;
-            case DELETE -> shared ? IamAction.PLATFORM_SHARED_ROLE_DELETE
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_DELETE : IamAction.TENANT_ROLE_DELETE;
-            case PUBLISH -> shared ? IamAction.PLATFORM_SHARED_ROLE_PUBLISH
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_PUBLISH : IamAction.TENANT_ROLE_PUBLISH;
-            case PREVIEW -> shared ? IamAction.PLATFORM_SHARED_ROLE_PREVIEW
-                    : domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_ROLE_PREVIEW : IamAction.TENANT_ROLE_PREVIEW;
+            case READ -> shared ? IamAction.PLATFORM_SHARED_ROLE_READ : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_READ : IamAction.TENANT_ROLE_READ;
+            case CREATE -> shared ? IamAction.PLATFORM_SHARED_ROLE_CREATE : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_CREATE : IamAction.TENANT_ROLE_CREATE;
+            case STATUS -> shared ? IamAction.PLATFORM_SHARED_ROLE_STATUS : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_STATUS : IamAction.TENANT_ROLE_STATUS;
+            case DELETE -> shared ? IamAction.PLATFORM_SHARED_ROLE_DELETE : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_DELETE : IamAction.TENANT_ROLE_DELETE;
+            case PUBLISH -> shared ? IamAction.PLATFORM_SHARED_ROLE_PUBLISH : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_PUBLISH : IamAction.TENANT_ROLE_PUBLISH;
+            case PREVIEW -> shared ? IamAction.PLATFORM_SHARED_ROLE_PREVIEW : domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_ROLE_PREVIEW : IamAction.TENANT_ROLE_PREVIEW;
         };
     }
 
@@ -977,13 +1035,17 @@ public class RoleService {
     }
 
     private enum AccessKind {
+
         READ, CREATE, STATUS, DELETE, PUBLISH, PREVIEW
+
     }
 
     private record RoleRow(String name, RoleKind kind, boolean enabled, BigInteger version) {
     }
 
     private record RevisionData(String id, String baseRevisionId, List<ActionGrant> grants, List<RoleDelta> deltas,
-                                List<RoleParameterDefinition> parameters, RoleMetadataOverrides metadata) {
+            List<RoleParameterDefinition> parameters, RoleMetadataOverrides metadata,
+            Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> fields) {
     }
+
 }

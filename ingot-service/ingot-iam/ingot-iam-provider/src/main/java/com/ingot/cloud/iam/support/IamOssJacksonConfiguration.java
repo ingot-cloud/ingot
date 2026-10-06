@@ -41,7 +41,9 @@ public class IamOssJacksonConfiguration {
             builder.mixIn(ApplicationRecord.class, ReadIcon.class);
             builder.mixIn(ApplicationSummary.class, ReadIcon.class);
             builder.mixIn(MemberCreateInput.class, SaveAvatar.class);
+            builder.mixIn(MemberCreateInput.JacksonInput.class, SaveAvatar.class);
             builder.mixIn(MemberProfileInput.class, SaveAvatar.class);
+            builder.mixIn(MemberProfileInput.JacksonInput.class, SaveAvatar.class);
             builder.mixIn(TenantCreateInput.class, SaveAvatar.class);
             builder.mixIn(TenantUpdateInput.class, SaveAvatar.class);
             builder.mixIn(TenantSettingsInput.class, SaveAvatar.class);

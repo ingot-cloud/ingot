@@ -40,6 +40,15 @@ public class AuthorizationEvaluationRepository {
     private final IamDelegationActionCeilingMapper ceilings;
 
     /**
+     * 批量关联真实诊断来源的固定字段快照，不逐分配查询。
+     * @param ids 可披露来源的版本 ID
+     * @return 存在的版本行
+     */
+    public List<com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity> fieldVersions(Collection<BigInteger> ids) {
+        return ids.isEmpty() ? List.of() : revisions.selectBatchIds(ids);
+    }
+
+    /**
      * 读取当前成员仍然有效的直接分配。
      *
      * @param actor 已验证身份

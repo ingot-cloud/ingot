@@ -4,6 +4,7 @@ apply from: 'ingot-mybatis.gradle'
 apply from: 'ingot-assemble.gradle'
 
 dependencies {
+    implementation project(ingot.framework_authorization)
     testRuntimeOnly("com.h2database:h2")
     implementation(deps.spring.spring_boot.web_starter)
     implementation(deps.spring.spring_boot.actuator_starter)

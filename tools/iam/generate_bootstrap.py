@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """生成 IAM 正式冷启动种子 databases/iam/006_bootstrap.sql。
 
-应用、资源与 ACTION 目录由 contracts/routes.json 推导，菜单树按 change 的
-FRONTEND.md 第 1 节维护在本文件；治理角色授予本域全部 ACTION。种子不含任何
+IAM操作由 contracts/routes.json 推导，开发者补充目录对齐现有Auth契约及页面；
+菜单树按 change 的 FRONTEND.md 第 1 节维护；治理角色授予本域全部 ACTION。种子不含任何
 凭证，平台首个账号由 provider 侧的冷启动器经安全框架用例创建。
 """
+import argparse
 import json
 from pathlib import Path
 
@@ -24,12 +25,18 @@ MENU_BASE = 130000
 ROLE_BASE = 140000
 REVISION_BASE = 141000
 POLICY_BASE = 150000
+DIRECTORY_VIEW_PATH = 'layout.main'
+DEVELOPER_APPLICATION = 'platform:develop'
+DEVELOPER_PLATFORM_RESOURCES = {'id-allocation', 'social-config'}
 
 APPLICATIONS = {
     'iam-platform': {'id': APPLICATION_BASE + 1, 'domain': 'PLATFORM', 'name': '平台治理',
                      'description': '平台域身份、目录与授权治理', 'sort_order': 1, 'baseline': False},
     'iam-tenant': {'id': APPLICATION_BASE + 2, 'domain': 'TENANT', 'name': '组织治理',
                    'description': '组织域成员、部门与授权治理', 'sort_order': 1, 'baseline': True},
+    DEVELOPER_APPLICATION: {'id': APPLICATION_BASE + 3, 'domain': 'PLATFORM', 'name': '开发者平台',
+                            'description': '二维码、OAuth2客户端、社交配置与业务ID管理',
+                            'sort_order': 2, 'baseline': False},
 }
 
 # 治理角色：每个域恰好一个启用的 SYSTEM 角色，组织初始化依赖这一唯一性。
@@ -95,6 +102,22 @@ RESOURCES = {
     'session': ('在线会话', SINGLETON_SCOPES, []),
     'session-policy': ('会话并发策略', SINGLETON_SCOPES, []),
     'security-policy': ('安全策略', SINGLETON_SCOPES, []),
+    'client': ('客户端', SINGLETON_SCOPES, []),
+    'qrcode': ('二维码', SINGLETON_SCOPES, []),
+}
+
+# Auth注解与原页面使用的精确码；不得改码或用通配码代替。
+# 社交/发号的IAM操作仍保留现有API码，但目录归属由元数据显式指定。
+DEVELOPER_ACTIONS = {
+    'client': {
+        'platform:develop:client:query': '查看客户端',
+        'platform:develop:client:detail': '查看客户端详情',
+        'platform:develop:client:create': '创建客户端',
+        'platform:develop:client:update': '编辑客户端',
+        'platform:develop:client:delete': '删除客户端',
+        'platform:develop:client:reset': '重置客户端密钥',
+    },
+    'qrcode': {'platform:develop:qrcode': '生成二维码'},
 }
 
 # ACTION 展示名由动词加资源名合成，保证同一操作码在两个域下命名一致。
@@ -123,6 +146,7 @@ VERBS = {
 }
 
 # 无宾语动词直接作为展示名，避免出现「转交所有者组织设置」这类拼接。
+
 STANDALONE_VERBS = {'owner-transfer', 'departments', 'diagnose', 'reset-password', 'revoke'}
 
 # 菜单树按 change 的 FRONTEND.md 第 1 节：平台与组织各最多四个一级目录。
@@ -138,6 +162,7 @@ PLATFORM_MENUS = [
         ('共享角色', 'platform.iam.shared.roles', ['iam-platform:shared-role:read']),
     ]),
     ('平台管理', 'platform.iam.manage', [
+        ('全局账号', 'platform.iam.accounts', ['iam-platform:account:read']),
         ('平台人员', 'platform.iam.personnel', ['iam-platform:member:read']),
         ('角色与授权', 'platform.iam.authorization',
          ['iam-platform:role:read', 'iam-platform:assignment:read', 'iam-platform:delegation:read']),
@@ -169,7 +194,17 @@ TENANT_MENUS = [
     ]),
 ]
 
-MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS}
+DEVELOPER_MENUS = [
+    ('开发者平台', 'platform.develop', [
+        ('生成二维码', 'platform.develop.qrcode', ['platform:develop:qrcode']),
+        ('客户端管理', 'platform.develop.client', ['platform:develop:client:query']),
+        ('社交管理', 'platform.develop.social', ['iam-platform:social-config:read']),
+        ('业务ID管理', 'platform.develop.id', ['iam-platform:id-allocation:read']),
+    ]),
+]
+
+MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS,
+         DEVELOPER_APPLICATION: DEVELOPER_MENUS}
 
 
 def quote(value):
@@ -194,6 +229,9 @@ def route_name(view_key):
 
 def action_name(code):
     """由操作码合成展示名，例如 iam-tenant:member:read → 查看成员。"""
+    for actions in DEVELOPER_ACTIONS.values():
+        if code in actions:
+            return actions[code]
     _, resource, suffix = code.split(':', 2)
     verb = VERBS[suffix]
     if suffix in STANDALONE_VERBS:
@@ -202,18 +240,22 @@ def action_name(code):
 
 
 def collect(routes):
-    """从契约推导 (应用 → 资源 → 操作) 目录，操作码全局唯一。"""
+    """从现有执行契约推导归属，独立开发者目录不改写接口精确码。"""
     catalog = {code: {} for code in APPLICATIONS}
     for item in routes:
         code = item.get('action')
         if not code:
             continue
         application, resource, _ = code.split(':', 2)
+        if application == 'iam-platform' and resource in DEVELOPER_PLATFORM_RESOURCES:
+            application = DEVELOPER_APPLICATION
         if application not in catalog:
             raise SystemExit(f'未登记的应用命名空间 {application}')
         if resource not in RESOURCES:
             raise SystemExit(f'未登记的资源 {resource}，请补充 RESOURCES')
         catalog[application].setdefault(resource, set()).add(code)
+    for resource, actions in DEVELOPER_ACTIONS.items():
+        catalog[DEVELOPER_APPLICATION].setdefault(resource, set()).update(actions)
     return catalog
 
 
@@ -242,13 +284,13 @@ def insert(table, columns, values, exists, source='DUAL', where=None):
             f"WHERE {' AND '.join(conditions)};\n")
 
 
-def build():
+def build(check=False):
     routes = json.loads(ROUTES.read_text())
     catalog = collect(routes)
 
     lines = [
         '-- IAM 正式冷启动种子：先按顺序执行 001–005 再执行本文件，可重复执行。',
-        '-- 由 tools/iam/generate_bootstrap.py 从 contracts/routes.json 生成，不要手工编辑。',
+        '-- 由 tools/iam/generate_bootstrap.py 从IAM契约及现有开发者目录生成，不要手工编辑。',
         '-- 全部语句存在即跳过，不覆盖任何人工或业务修改；不含账号与凭证，',
         '-- 新建行的保留号若已被占用，则落到所属区间内下一个空号。',
         '-- 平台首个账号由 provider 冷启动器经安全框架注册用例创建。',
@@ -317,7 +359,7 @@ def build():
                  'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
                 [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
                  'app.id', 'NULL', quote(directory_name),
-                 quote(menu_path(directory_key)), 'NULL', quote(directory_key),
+                 quote(menu_path(directory_key)), quote(DIRECTORY_VIEW_PATH), quote(directory_key),
                  quote('DIRECTORY'), quote('ANY'), quote('ACTION'), str(order), 'TRUE'],
                 f"application_id = app.id AND route_name = {quote(directory_key)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
@@ -339,11 +381,18 @@ def build():
                 menu_links += [(application, view_key, code) for code in sorted(set(codes))]
 
     lines.append('-- 菜单与操作关联：ACTION 访问模式下缺少关联的菜单一律不可见。')
-    known = {code for application in catalog for codes in catalog[application].values()
-             for code in codes}
+    known = {}
+    for application in catalog:
+        for codes in catalog[application].values():
+            for code in codes:
+                if code in known:
+                    raise SystemExit(f'重复操作码 {code}')
+                known[code] = application
     for application, menu_key, code in menu_links:
         if code not in known:
             raise SystemExit(f'菜单引用了目录中不存在的操作 {code}')
+        if known[code] != application:
+            raise SystemExit(f'菜单 {menu_key} 跨应用引用操作 {code}')
         lines.append(insert(
             'iam_menu_action',
             ['application_id', 'menu_id', 'action_id'],
@@ -354,6 +403,10 @@ def build():
             where=f"app.code = {quote(application)} AND menu.route_name = {quote(menu_key)} "
                   f"AND action.code = {quote(code)}"))
 
+    lines.append('CREATE TEMPORARY TABLE IF NOT EXISTS iam_bootstrap_new_revision (domain VARCHAR(16) PRIMARY KEY);')
+    lines.append('DELETE FROM iam_bootstrap_new_revision;')
+    for domain, role in GOVERNANCE_ROLES.items():
+        lines.append(f"INSERT INTO iam_bootstrap_new_revision(domain) SELECT {quote(domain)} FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM iam_role_revision v JOIN iam_role_definition r ON r.id=v.role_id WHERE r.domain={quote(domain)} AND r.code={quote(role['code'])} AND r.tenant_key=0 AND v.revision=1);")
     lines.append('-- 治理角色：每个域恰好一个启用的 SYSTEM 角色，组织初始化依赖这一唯一性。')
     for domain, role in GOVERNANCE_ROLES.items():
         lines.append(insert(
@@ -364,8 +417,13 @@ def build():
             f"domain = {quote(domain)} AND tenant_key = 0 AND code = {quote(role['code'])}"))
         lines.append(insert(
             'iam_role_revision',
-            ['id', 'role_id', 'kind', 'revision', 'base_revision_id', 'metadata_overrides'],
-            [str(role['revision_id']), 'role.id', quote('SYSTEM'), '1', 'NULL', json_literal({})],
+            ['id', 'role_id', 'kind', 'revision', 'base_revision_id', 'metadata_overrides', 'resource_field_permissions'],
+            [str(role['revision_id']), 'role.id', quote('SYSTEM'), '1', 'NULL', json_literal({}),
+             "(SELECT JSON_OBJECT(CAST(resource.id AS CHAR), " + json_literal({
+                 field['key']: {'visibility': 'MASKED' if field['key'] in ('phone', 'email') else 'FULL',
+                                'editable': field['key'] not in ('phone', 'email')}
+                 for field in MEMBER_FIELDS}) + ") FROM iam_resource resource JOIN iam_application app ON app.id=resource.application_id WHERE app.code='iam-platform' AND resource.code='member')"
+             if domain == 'PLATFORM' else json_literal({})],
             'role_id = role.id AND revision = 1',
             source='iam_role_definition role',
             where=f"role.domain = {quote(domain)} AND role.tenant_key = 0 "
@@ -373,9 +431,8 @@ def build():
 
     lines.append('-- 治理授权：治理角色覆盖本域全部操作，范围为全域。')
     for domain, role in GOVERNANCE_ROLES.items():
-        application = role['application']
-        codes = sorted(code for resource in catalog[application]
-                       for code in catalog[application][resource])
+        codes = sorted(code for application in catalog if APPLICATIONS[application]['domain'] == domain
+                       for resource in catalog[application] for code in catalog[application][resource])
         for code in codes:
             lines.append(insert(
                 'iam_role_grant',
@@ -384,10 +441,12 @@ def build():
                 'revision_id = revision.id AND action_id = action.id',
                 source='iam_role_revision revision '
                        'JOIN iam_role_definition role ON role.id = revision.role_id '
-                       'JOIN iam_action action',
+                       'JOIN iam_action action '
+                       'JOIN iam_application app ON app.id = action.application_id',
                 where=f"role.domain = {quote(domain)} AND role.tenant_key = 0 "
                       f"AND role.code = {quote(role['code'])} AND revision.revision = 1 "
-                      f"AND action.code = {quote(code)}"))
+                      f"AND app.domain = role.domain AND action.code = {quote(code)} "
+                      f"AND EXISTS(SELECT 1 FROM iam_bootstrap_new_revision n WHERE n.domain=role.domain)"))
 
     lines.append('-- 默认策略版本：固定版本被租户策略引用；通讯录默认全组织，字段默认脱敏手机邮箱，上限缺省不额外收紧。')
     field_default = {
@@ -410,10 +469,18 @@ def build():
             [str(policy_id), quote(kind), '1', json_literal(definitions[kind])],
             f"kind = {quote(kind)} AND revision = 1"))
 
-    TARGET.write_text('\n'.join(lines))
+    content = '\n'.join(lines)
+    if check:
+        if not TARGET.is_file() or TARGET.read_text() != content:
+            raise SystemExit('006_bootstrap.sql differs; run python3 tools/iam/generate_database.py')
+    else:
+        TARGET.write_text(content)
     print(f'{len(APPLICATIONS)} applications, {resource_count} resources, {action_count} actions, '
-          f'{menu_count} menus, {len(menu_links)} menu actions, {len(known)} grants')
+          f'{menu_count} menus, {len(menu_links)} menu actions, '
+          f'{sum(1 for app in catalog for resource in catalog[app] for _ in catalog[app][resource])} grants')
 
 
 if __name__ == '__main__':
-    build()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true', help='只读核对正式种子')
+    build(check=parser.parse_args().check)

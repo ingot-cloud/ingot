@@ -9,7 +9,7 @@ CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY, domain VARCHAR(16), tena
     code VARCHAR(128), name VARCHAR(128), description VARCHAR(512), enabled BOOLEAN DEFAULT TRUE,
     version BIGINT DEFAULT 0);
 CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT REFERENCES iam_role_definition(id),
-    kind VARCHAR(24), revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024));
+    kind VARCHAR(24), revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024), resource_field_permissions VARCHAR(16384) DEFAULT '{}');
 CREATE TABLE iam_role_assignment(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT,
     subject_type VARCHAR(16), platform_member_id BIGINT REFERENCES iam_platform_member(id), platform_group_id BIGINT,
     tenant_member_id BIGINT, tenant_group_id BIGINT, revision_id BIGINT REFERENCES iam_role_revision(id),

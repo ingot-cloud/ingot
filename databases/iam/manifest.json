@@ -1,0 +1,15 @@
+{
+  "schemas": [
+    "databases/iam/001_identity.sql",
+    "databases/iam/002_catalog_role.sql",
+    "databases/iam/003_assignment_delegation.sql",
+    "databases/iam/004_policy_audit_migration.sql",
+    "databases/iam/005_auxiliary.sql"
+  ],
+  "frameworkSchemas": [
+    "ingot-framework/ingot-security/ingot-security-account/ingot-security-account-adapter/src/main/resources/sql/account_lock_state.sql",
+    "ingot-framework/ingot-security/ingot-security-credential-data/src/main/resources/sql/add_password_history.sql"
+  ],
+  "bootstrap": "databases/iam/006_bootstrap.sql",
+  "bundle": "databases/ingot_iam.sql"
+}

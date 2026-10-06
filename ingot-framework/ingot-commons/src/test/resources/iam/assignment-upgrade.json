@@ -1,0 +1,20 @@
+{
+  "targetRevisionRef": {
+    "kind": "PLATFORM_CUSTOM",
+    "id": "1003602"
+  },
+  "items": [
+    {
+      "id": "1004701",
+      "expectedVersion": "0",
+      "scopeBindings": {
+        "targets": {
+          "kind": "OBJECTS",
+          "ids": [
+            "incident-uuid-a"
+          ]
+        }
+      }
+    }
+  ]
+}

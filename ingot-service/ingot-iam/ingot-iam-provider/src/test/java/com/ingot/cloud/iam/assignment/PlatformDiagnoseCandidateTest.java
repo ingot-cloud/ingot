@@ -44,7 +44,7 @@ class PlatformDiagnoseCandidateTest {
     private final AuthorizationCandidateMapper candidates = mock(AuthorizationCandidateMapper.class);
     private final PlatformAuthorizationEditor editor = new PlatformAuthorizationEditor(access, evaluator,
             mock(AssignmentRepository.class), mock(DelegationRepository.class), mock(RoleRepository.class),
-            mock(RoleService.class), candidates);
+            mock(RoleService.class), candidates, new com.ingot.cloud.iam.extension.BuiltinResourceProviders(candidates).registry(List.of()));
 
     @Test
     void targetCandidatesUseResourceReadScopeInsteadOfDiagnosableMemberIds() {

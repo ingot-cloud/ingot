@@ -53,6 +53,10 @@ import com.ingot.framework.commons.model.iam.ImpactSummary;
 import com.ingot.framework.commons.model.iam.MemberRoleView;
 import com.ingot.framework.commons.model.iam.MemberRoleAssignmentDraft;
 import com.ingot.framework.commons.model.iam.PageResponse;
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput;
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem;
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradePreviewItem;
+import com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult;
 import com.ingot.framework.commons.model.iam.Preview;
 import com.ingot.framework.commons.model.iam.ResourceDetail;
 import com.ingot.framework.commons.model.iam.RoleKind;
@@ -372,6 +376,148 @@ public class AssignmentService {
     }
 
     /**
+     * 预览同角色分配的版本升级，主体、期限与委派来源全部保留。
+     * @param input 目标固定版本与记录
+     * @return 逐条差异及参数问题
+     */
+    public Preview<AssignmentUpgradeResult> previewUpgrade(AssignmentUpgradeInput input) {
+        var admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        var result = upgradePlan(admission, input, false);
+        var errors = result.items().stream().flatMap(item -> item.issues().stream()).toList();
+        return new Preview<>(input.targetRevisionRef().id(), errors.isEmpty(), errors, List.of(),
+                new com.ingot.framework.commons.model.iam.ImpactSummary(null, (long) result.items().size(), null,
+                        false),
+                result);
+    }
+
+    /**
+     * 原子升级同角色分配；事务内重验权限、版本和全部范围，不撤销重建记录。
+     * @param input 目标与逐条草稿
+     * @return 保存结果
+     */
+    public AssignmentUpgradeResult upgrade(AssignmentUpgradeInput input) {
+        access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        return transaction.execute(status -> {
+            assignments.lockAuthorization(AuthorizationDomain.PLATFORM);
+            var target = assignments.findRevision(IamIds.require(input.targetRevisionRef().id()));
+            if (target == null)
+                throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+            roleStore.lockDefinition(AuthorizationDomain.PLATFORM, false, null, target.getRoleId().longValueExact());
+            var admission = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+            var result = upgradePlan(admission, input, true);
+            if (result.items().stream().anyMatch(item -> !item.allowed()))
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            for (var item : result.items()) {
+                var current = assignments.find(AuthorizationDomain.PLATFORM, null, IamIds.require(item.id()));
+                assignments.update(IamIds.require(item.id()), IamIds.require(input.targetRevisionRef().id()),
+                        input.targetRevisionRef().kind(), IamJson.object(item.scopeBindings()), current.getValidFrom(),
+                        current.getValidUntil(), current.getVersion());
+                audits.write(admission.actor().context(), access.nextId(), ASSIGNMENT, item.id(),
+                        AuditChangeType.UPDATE,
+                        Map.of(AuditField.ROLE_REVISION, item.previousRevisionRef().id(), AuditField.SCOPE,
+                                current.getScopeBindings()),
+                        Map.of(AuditField.ROLE_REVISION, input.targetRevisionRef().id(), AuditField.SCOPE,
+                                IamJson.object(item.scopeBindings())),
+                        Map.of(ASSIGNMENT, nextVersion(current.getVersion())), text(current.getDelegationGrantId()),
+                        item.id());
+            }
+            changes.markAll();
+            return result;
+        });
+    }
+
+    private AssignmentUpgradeResult upgradePlan(IamAdmission admission, AssignmentUpgradeInput input, boolean locked) {
+        if (input.items().isEmpty() || input.items().size() > AssignmentUpgradeInput.MAX_ITEMS
+                || input.items().stream().map(AssignmentUpgradeItem::id).distinct().count() != input.items().size())
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var target = assignments.findRevision(IamIds.require(input.targetRevisionRef().id()));
+        var published = roleStore.findRevision(IamIds.require(input.targetRevisionRef().id()));
+        if (target == null || published == null || target.getKind() != input.targetRevisionRef().kind()
+                || !revisionAssignable(AuthorizationDomain.PLATFORM, admission.actor(), target)
+                || !Boolean.TRUE.equals(target.getEnabled()))
+            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        var after = roles.synthesizedGrants(IamIds.require(input.targetRevisionRef().id()));
+        List<AssignmentUpgradePreviewItem> items = new ArrayList<>();
+        List<AssignmentInput> drafts = new ArrayList<>();
+        // Numeric order preserves the existing global authorization -> role -> assignment
+        // lock order.
+        for (var requested : input.items()
+            .stream()
+            .sorted(java.util.Comparator.comparing(i -> new BigInteger(i.id())))
+            .toList()) {
+            var row = locked ? assignments.lock(AuthorizationDomain.PLATFORM, null, IamIds.require(requested.id()))
+                    : assignments.find(AuthorizationDomain.PLATFORM, null, IamIds.require(requested.id()));
+            requireRecord(AuthorizationDomain.PLATFORM, admission, row);
+            if (admission.governed())
+                resourceAccess.requireVisibleObject(admission.actor().context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE,
+                        row.getId().longValueExact());
+            IamIds.requireVersion(requested.expectedVersion(), version(row.getVersion()));
+            var old = assignments.findRevision(row.getRevisionId().longValueExact());
+            var oldPublished = roleStore.findRevision(row.getRevisionId().longValueExact());
+            if (old == null || oldPublished == null || !old.getRoleId().equals(target.getRoleId()))
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            var original = record(row).assignment();
+            var bindings = requested.scopeBindings() == null ? reusableBindings(original, input.targetRevisionRef())
+                    : requested.scopeBindings();
+            var next = new AssignmentInput(original.subject(), input.targetRevisionRef(), bindings,
+                    original.validFrom(), original.validUntil(), original.delegationGrantId());
+            List<ValidationIssue> issues = new ArrayList<>();
+            if (row.getStatus() != GrantStatus.ACTIVE
+                    || original.validUntil() != null && !Instant.now().isBefore(original.validUntil()))
+                issues.add(new ValidationIssue("items", IamReasonCode.INVALID_ARGUMENT, "已撤销或到期分配不能升级"));
+            if (published.getRevision().compareTo(oldPublished.getRevision()) <= 0)
+                issues
+                    .add(new ValidationIssue("targetRevisionRef", IamReasonCode.INVALID_ARGUMENT, "目标必须是同角色更高的已发布版本"));
+            issues.addAll(validate(AuthorizationDomain.PLATFORM, admission, next, row.getId().longValueExact()));
+            drafts.add(next);
+            items.add(new AssignmentUpgradePreviewItem(row.getId().toString(), original.subject(),
+                    original.roleRevisionRef(), bindings, roles.synthesizedGrants(row.getRevisionId().longValueExact()),
+                    after, issues.isEmpty(), List.copyOf(issues),
+                    com.ingot.cloud.iam.extension.RoleFieldPermissionService.snapshot(oldPublished.getResourceFieldPermissions()),
+                    com.ingot.cloud.iam.extension.RoleFieldPermissionService.snapshot(published.getResourceFieldPermissions())));
+        }
+        var sourceIssues = batchSource(admission, new AssignmentBatchInput(drafts));
+        if (!sourceIssues.isEmpty())
+            return new AssignmentUpgradeResult(input.targetRevisionRef(),
+                    items.stream()
+                        .map(i -> new AssignmentUpgradePreviewItem(i.id(), i.subject(), i.previousRevisionRef(),
+                                i.scopeBindings(), i.before(), i.after(), false, sourceIssues))
+                        .toList());
+        return new AssignmentUpgradeResult(input.targetRevisionRef(), List.copyOf(items));
+    }
+
+    private Map<String, ScopeBinding> reusableBindings(AssignmentInput old, RoleRevisionRef target) {
+        var previous = roleStore.listParameters(IamIds.require(old.roleRevisionRef().id()));
+        Map<String, ScopeBinding> result = new LinkedHashMap<>();
+        for (var parameter : roleStore.listParameters(IamIds.require(target.id()))) {
+            var same = previous.stream()
+                .anyMatch(p -> p.getParameterKey().equals(parameter.getParameterKey())
+                        && p.getBindingKind() == parameter.getBindingKind());
+            if (same && old.scopeBindings().containsKey(parameter.getParameterKey())
+                    && !parameterResource(old.roleRevisionRef(), parameter.getParameterKey()).isEmpty()
+                    && parameterResource(old.roleRevisionRef(), parameter.getParameterKey())
+                        .equals(parameterResource(target, parameter.getParameterKey())))
+                result.put(parameter.getParameterKey(), old.scopeBindings().get(parameter.getParameterKey()));
+        }
+        return Map.copyOf(result);
+    }
+
+    private java.util.Set<String> parameterResource(RoleRevisionRef revision, String key) {
+        var ids = roles.synthesizedGrants(IamIds.require(revision.id()))
+            .stream()
+            .filter(g -> g.scopes().stream().anyMatch(s -> key.equals(s.parameterKey())))
+            .map(ActionGrant::actionId)
+            .distinct()
+            .toList();
+        var actions = editor.actionOptions(ids);
+        if (actions.size() != ids.size())
+            return java.util.Set.of();
+        return actions.stream()
+            .map(a -> a.applicationId() + ":" + a.resourceId())
+            .collect(java.util.stream.Collectors.toSet());
+    }
+
+    /**
      * 撤销授权并保留审计行。
      *
      * @param domain 接口管理域
@@ -601,13 +747,13 @@ public class AssignmentService {
     private IamCapabilities recordCapabilities(AuthorizationDomain domain, ActiveIdentity actor) {
         return domain == AuthorizationDomain.PLATFORM ? access.capabilities(actor, List.of(
                 IamAction.PLATFORM_ASSIGNMENT_READ, IamAction.PLATFORM_ASSIGNMENT_UPDATE,
-                IamAction.PLATFORM_ASSIGNMENT_DELETE)) : new IamCapabilities(Map.of());
+                IamAction.PLATFORM_ASSIGNMENT_DELETE, IamAction.PLATFORM_ASSIGNMENT_UPGRADE)) : new IamCapabilities(Map.of());
     }
 
     private Map<BigInteger, IamDelegationGrantEntity> recordSources(AuthorizationDomain domain, ActiveIdentity actor,
             List<IamRoleAssignmentEntity> rows, IamCapabilities permissions) {
         if (domain != AuthorizationDomain.PLATFORM || List.of(IamAction.PLATFORM_ASSIGNMENT_READ,
-                IamAction.PLATFORM_ASSIGNMENT_UPDATE, IamAction.PLATFORM_ASSIGNMENT_DELETE).stream()
+                IamAction.PLATFORM_ASSIGNMENT_UPDATE, IamAction.PLATFORM_ASSIGNMENT_DELETE, IamAction.PLATFORM_ASSIGNMENT_UPGRADE).stream()
                 .allMatch(action -> permissions.allows(action, true))) {
             return Map.of();
         }
@@ -633,6 +779,13 @@ public class AssignmentService {
             capabilities.put(operation.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
                     allowed, allowed ? null : IamReasonCode.ACTION_DENIED, allowed ? null : "当前身份不可操作该分配"));
         }
+        var upgrade = IamAction.PLATFORM_ASSIGNMENT_UPGRADE;
+        boolean canUpgrade = row.getStatus() == GrantStatus.ACTIVE
+                && (row.getValidUntil() == null || Instant.now().isBefore(instant(row.getValidUntil())))
+                && (presentation == null || presentation.sourceValid())
+                && permissions.allows(upgrade, false) && (permissions.allows(upgrade, true) || owned);
+        capabilities.put(upgrade.getCode(), new com.ingot.framework.commons.model.iam.ObjectCapability(
+                canUpgrade, canUpgrade ? null : IamReasonCode.ACTION_DENIED, canUpgrade ? null : "当前分配不可升级"));
         AssignmentRecord basic = record(row);
         if (domain == AuthorizationDomain.PLATFORM && presentation != null) {
             var state = com.ingot.framework.commons.model.iam.AssignmentEffectiveStatus.ACTIVE;

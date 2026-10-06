@@ -10,21 +10,16 @@ import re
 import time
 import unittest
 import uuid
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from tools.iam.database_sources import schema_files
 
 
 IMAGE = "mysql:8.4"
 SCHEMA_DIRECTORY = Path(__file__).parent
 STARTUP_TIMEOUT_SECONDS = 60
-# Numbered data seeds carry rows, not structure; loading them would collide with these fixtures.
-DATA_SEEDS = {"006_bootstrap.sql", "008_platform_accounts_menu.sql"}
-# Existing-database patch: the canonical 001 already contains plan_id.
-UPGRADE_ONLY = {"009_tenant_plan.sql", "011_delegation_duration_mode.sql"}
-
-
-def schema_files():
-    """Ordered DDL files only, so fixture identifiers stay free of seeded catalog rows."""
-    return [item for item in sorted(SCHEMA_DIRECTORY.glob("[0-9][0-9][0-9]_*.sql"))
-            if item.name not in DATA_SEEDS | UPGRADE_ONLY]
 
 
 class IdentitySchemaTest(unittest.TestCase):
@@ -229,6 +224,19 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_role_revision (id, role_id, kind, revision, metadata_overrides) VALUES (4, 1, 'SHARED', 2, '{}')")
         self.assertEqual("1", self.sql("SELECT base_revision_id FROM iam_role_revision WHERE id = 2"))
 
+    def test_role_field_snapshot_is_explicit_object_and_rejects_null_or_other_shapes(self):
+        self.assertEqual("{}", self.sql("SELECT resource_field_permissions FROM iam_role_revision WHERE id=3"))
+        self.sql("UPDATE iam_role_revision SET resource_field_permissions=NULL WHERE id=3", error=1048)
+        self.sql("UPDATE iam_role_revision SET resource_field_permissions='{\"1\":{\"phone\":{\"visibility\":\"MASKED\",\"editable\":false}}}' WHERE id=3")
+        self.assertEqual('MASKED', self.sql("SELECT JSON_UNQUOTE(JSON_EXTRACT(resource_field_permissions,'$.\"1\".phone.visibility')) FROM iam_role_revision WHERE id=3"))
+        self.sql("UPDATE iam_role_revision SET resource_field_permissions='[]' WHERE id=3", error=3819)
+        self.sql("UPDATE iam_role_revision SET resource_field_permissions='null' WHERE id=3", error=3819)
+
+    def test_no_old_platform_policy_table_but_tenant_field_rules_remain(self):
+        tables = self.sql("SHOW TABLES").splitlines()
+        self.assertNotIn("iam_resource_field_policy", tables)
+        self.assertIn("iam_field_rule", tables)
+
     def test_single_delta_per_action_and_remove_has_no_scope(self):
         self.sql("INSERT INTO iam_role_delta VALUES (2, 2, 'REMOVE', '[]')")
         self.sql("INSERT INTO iam_role_delta VALUES (2, 2, 'ADD', '[]')", error=1062)
@@ -268,7 +276,7 @@ class IdentitySchemaTest(unittest.TestCase):
     def test_existing_database_duration_upgrade_preserves_limited_records(self):
         self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,max_assignment_duration_seconds) VALUES (710,'PLATFORM',1001,86400)")
         self.sql("ALTER TABLE iam_delegation_grant DROP CHECK ck_iam_delegation_duration, DROP COLUMN assignment_duration_mode, MODIFY COLUMN max_assignment_duration_seconds BIGINT UNSIGNED NOT NULL, ADD CONSTRAINT ck_iam_delegation_duration CHECK (max_assignment_duration_seconds > 0 OR max_assignment_duration_nanos > 0)")
-        self.sql((SCHEMA_DIRECTORY / "011_delegation_duration_mode.sql").read_text())
+        self.sql((SCHEMA_DIRECTORY / "migrations/011_delegation_duration_mode.sql").read_text())
         self.assertEqual('LIMITED\t86400', self.sql("SELECT assignment_duration_mode,max_assignment_duration_seconds FROM iam_delegation_grant WHERE id=710"))
         self.sql("INSERT INTO iam_delegation_grant (id,domain,platform_administrator_id,assignment_duration_mode) VALUES (711,'PLATFORM',1001,'UNLIMITED')")
         self.sql("UPDATE iam_delegation_grant SET max_assignment_duration_seconds=NULL WHERE id=710", error=3819)

@@ -41,6 +41,54 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatformAssignmentAPI implements RShortcuts {
     private final AssignmentService assignments;
+    private final com.ingot.cloud.iam.assignment.PlatformAuthorizationEditor editor;
+
+    /**
+     * 升级专用角色树。
+     * @param assignmentId 分配
+     * @param roleId 展开角色
+     * @param keyword 搜索
+     * @param ids 回显
+     * @param page 页码
+     * @param pageSize 大小
+     * @return 候选
+     */
+    @GetMapping("/upgrade/role-candidates")
+    public R<com.ingot.framework.commons.model.iam.AuthorizationRoleCandidatePage> upgradeRoleCandidates(
+            @RequestParam String assignmentId, @RequestParam(required = false) String roleId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) java.util.List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
+        return ok(editor.upgradeRoleCandidates(assignmentId, roleId, keyword, ids == null ? java.util.List.of() : ids,
+                page, pageSize));
+    }
+
+    /**
+     * 升级专用版本详情及对象。
+     * @param assignmentId 分配
+     * @param kind 类型
+     * @param revisionId 目标版本
+     * @param parameterKey 参数
+     * @param keyword 搜索
+     * @param ids 回显
+     * @param page 页码
+     * @param pageSize 大小
+     * @param tree 树
+     * @param parentId 父
+     * @return 候选
+     */
+    @GetMapping("/upgrade/candidates")
+    public R<com.ingot.framework.commons.model.iam.AuthorizationCandidatePage> upgradeCandidates(
+            @RequestParam String assignmentId,
+            @RequestParam com.ingot.framework.commons.model.iam.AuthorizationCandidateKind kind,
+            @RequestParam(required = false) String revisionId, @RequestParam(required = false) String parameterKey,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) java.util.List<String> ids,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(defaultValue = "false") boolean tree, @RequestParam(required = false) String parentId) {
+        return ok(editor.upgradeCandidates(assignmentId, kind, revisionId, parameterKey, keyword,
+                ids == null ? java.util.List.of() : ids, page, pageSize, tree, parentId));
+    }
 
     /**
      * 分页列出平台授权。
@@ -102,6 +150,28 @@ public class PlatformAssignmentAPI implements RShortcuts {
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
         return ok(assignments.selectedCandidates(id, kind, parameterKey, page, pageSize));
+    }
+
+    /**
+     * 预览已有分配的固定版本升级。
+     * @param input 目标与草稿
+     * @return 差异
+     */
+    @PostMapping("/upgrade/preview")
+    public R<Preview<com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult>> previewUpgrade(
+            @Valid @RequestBody com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput input) {
+        return ok(assignments.previewUpgrade(input));
+    }
+
+    /**
+     * 原子升级既有记录，保留主体、来源与期限。
+     * @param input 目标与版本
+     * @return 升级结果
+     */
+    @PostMapping("/upgrade")
+    public R<com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeResult> upgrade(
+            @Valid @RequestBody com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput input) {
+        return ok(assignments.upgrade(input));
     }
 
     /**

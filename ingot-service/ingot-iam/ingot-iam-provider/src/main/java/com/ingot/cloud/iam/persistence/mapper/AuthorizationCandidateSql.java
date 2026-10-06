@@ -79,14 +79,15 @@ public final class AuthorizationCandidateSql {
         String allowed = q.allowedRevisionIds() == null ? "" : q.allowedRevisionIds().isEmpty()
                 ? " AND 1=0" : " AND r.id IN <foreach collection='q.allowedRevisionIds' item='id' "
                 + "open='(' close=')' separator=','>#{id}</foreach>";
+        String newer = q.minimumRevision() == null ? "" : " AND r.revision &gt; #{q.minimumRevision}";
         if (q.roleId() == null) {
             return "SELECT d.id,d.id AS role_id,d.name,NULL AS kind,NULL AS revision FROM iam_role_definition d WHERE "
                     + ROLE_BOUNDARY + " AND EXISTS(SELECT 1 FROM iam_role_revision r WHERE r.role_id=d.id AND "
-                    + REVISION_BOUNDARY + allowed + ")";
+                    + REVISION_BOUNDARY + allowed + newer + ")";
         }
         return "SELECT r.id,r.role_id,d.name,r.kind,r.revision FROM iam_role_revision r "
                 + "JOIN iam_role_definition d ON d.id=r.role_id WHERE " + ROLE_BOUNDARY + " AND "
-                + REVISION_BOUNDARY + " AND r.role_id=#{q.roleId}" + allowed;
+                + REVISION_BOUNDARY + " AND r.role_id=#{q.roleId}" + allowed + newer;
     }
 
     private static String roleFilters(RoleQuery q) {
@@ -103,11 +104,17 @@ public final class AuthorizationCandidateSql {
      * @param allowedRevisionIds 委派允许的版本；null 表示直接分配不额外收窄
      * @param offset 分页偏移
      * @param size 页大小
+     * @param minimumRevision 只显示更高版本；普通分配为空
      * @author jy
      * @since 1.0.0
      */
     public record RoleQuery(BigInteger roleId, String keyword, List<BigInteger> ids,
-            List<BigInteger> allowedRevisionIds, int offset, int size) { }
+            List<BigInteger> allowedRevisionIds, int offset, int size, BigInteger minimumRevision) {
+        /** 普通树查询保持原有候选边界。 */
+        public RoleQuery(BigInteger roleId,String keyword,List<BigInteger> ids,List<BigInteger> allowedRevisionIds,int offset,int size) {
+            this(roleId,keyword,ids,allowedRevisionIds,offset,size,null);
+        }
+    }
     private static String filters(Query q) {
         String sql = q.kind() == AuthorizationCandidateKind.ACTION
                 ? "(x.name LIKE #{q.keyword} ESCAPE '!' OR x.resource_name LIKE #{q.keyword} ESCAPE '!')"

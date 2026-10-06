@@ -81,36 +81,57 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>维护应用、资源、操作、菜单和套餐目录，不把启停或套餐变更写成隐式开通。</p>
+ * <p>
+ * 维护应用、资源、操作、菜单和套餐目录，不把启停或套餐变更写成隐式开通。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Service
 public class CatalogService {
+
     private static final TypeReference<List<ScopeKind>> SCOPES = new TypeReference<>() {
     };
+
     private static final TypeReference<List<FieldCapability>> FIELDS = new TypeReference<>() {
     };
+
     private static final String APPLICATION = "application";
+
     private static final String RESOURCE = "resource";
+
     private static final String ACTION = "action";
+
     private static final String MENU = "menu";
+
     private static final String PLAN = "plan";
+
     private static final String GOVERNANCE_PLATFORM_CODE = "iam-platform";
+
     private static final String GOVERNANCE_TENANT_CODE = "iam-tenant";
+
     private static final String GOVERNANCE_PURGE_DENIED = "治理应用不可强制清除";
+
     private final IamAccess access;
+
     private final IamAuditWriter audits;
+
     private final AuthorizationChangeNotifier changes;
+
     private final CatalogRepository catalog;
+
     private final SensitiveConfirmationGuard confirmations;
+
     private final TransactionTemplate transaction;
+
+    private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
 
     /**
      * 绑定身份、审计、确认、目录库与事务。
-     * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
-     *
+     * <p>
+     * TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。
+     * </p>
      * @param access 当前身份与 ACTION
      * @param audits 同事务审计
      * @param changes 应用/操作启停后的授权失效
@@ -119,8 +140,10 @@ public class CatalogService {
      * @param transactionManager 同一数据源事务
      */
     public CatalogService(IamAccess access, IamAuditWriter audits, AuthorizationChangeNotifier changes,
-                              CatalogRepository catalog, SensitiveConfirmationGuard confirmations,
-                              PlatformTransactionManager transactionManager) {
+            CatalogRepository catalog, SensitiveConfirmationGuard confirmations,
+            com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata,
+            PlatformTransactionManager transactionManager) {
+        this.fieldMetadata = fieldMetadata;
         this.access = access;
         this.audits = audits;
         this.changes = changes;
@@ -131,7 +154,6 @@ public class CatalogService {
 
     /**
      * 分页列出应用目录。
-     *
      * @param page 从 1 开始
      * @param pageSize 页大小
      * @param domain {@link AuthorizationDomain} 稳定字面量，必填
@@ -141,20 +163,20 @@ public class CatalogService {
      * @return 应用详情页
      */
     public PageResponse<ResourceDetail<ApplicationRecord>> listApplications(int page, int pageSize, String domain,
-                                                                            String name, String status,
-                                                                            Boolean baseline) {
+            String name, String status, Boolean baseline) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_READ);
         IamPages.require(page, pageSize);
         Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, IamFilters.requireDomain(domain),
                 name, IamFilters.enabledOf(status), baseline);
-        List<ResourceDetail<ApplicationRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(application(row), version(row.getVersion()))).toList();
+        List<ResourceDetail<ApplicationRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(application(row), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 分页列出开通选择器所需的应用摘要。
-     *
      * @param page 从 1 开始的页码
      * @param pageSize 每页条数
      * @param domain 管理域，必填 PLATFORM 或 TENANT
@@ -164,20 +186,20 @@ public class CatalogService {
      * @return 应用摘要页
      */
     public PageResponse<ResourceDetail<ApplicationSummary>> listApplicationSummaries(int page, int pageSize,
-                                                                                     String domain, String name,
-                                                                                     String status, Boolean baseline) {
+            String domain, String name, String status, Boolean baseline) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_APPLICATION_READ);
         IamPages.require(page, pageSize);
         Page<IamApplicationEntity> rows = catalog.pageApplications(page, pageSize, IamFilters.requireDomain(domain),
                 name, IamFilters.enabledOf(status), baseline);
-        List<ResourceDetail<ApplicationSummary>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(applicationSummary(row), version(row.getVersion()))).toList();
+        List<ResourceDetail<ApplicationSummary>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(applicationSummary(row), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 读取单个应用。
-     *
      * @param id 应用 ID
      * @return 应用详情
      */
@@ -188,7 +210,6 @@ public class CatalogService {
 
     /**
      * 创建应用目录项，不自动为任何租户开通。
-     *
      * @param input 创建草稿
      * @return 新应用 ID 与版本
      */
@@ -211,7 +232,8 @@ public class CatalogService {
             entity.setEnabled(true);
             try {
                 catalog.insertApplication(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             audits.write(actor.context(), access.nextId(), APPLICATION, IamIds.text(id), AuditChangeType.CREATE,
@@ -222,7 +244,6 @@ public class CatalogService {
 
     /**
      * 一次创建应用及其资源、操作与菜单；任一步失败整单回滚。
-     *
      * @param input 应用、资源与菜单草稿
      * @return 新应用 ID 与版本
      */
@@ -249,13 +270,14 @@ public class CatalogService {
             entity.setEnabled(true);
             try {
                 catalog.insertApplication(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             audits.write(actor.context(), access.nextId(), APPLICATION, IamIds.text(appId), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, application.name()), Map.of(APPLICATION, "0"));
-            Map<String, Long> actionIds = persistBundleCatalog(actor, appId, application.code(),
-                    application.domain(), input.resources());
+            Map<String, Long> actionIds = persistBundleCatalog(actor, appId, application.code(), application.domain(),
+                    input.resources());
             persistBundleMenus(actor, appId, input.menus(), actionIds);
             return new CreatedResource(IamIds.text(appId), "0");
         });
@@ -263,7 +285,6 @@ public class CatalogService {
 
     /**
      * 更新展示信息与基础开通标记，不能改写命名空间或管理域。
-     *
      * @param id 应用 ID
      * @param input 更新命令
      * @return 更新后详情
@@ -290,7 +311,6 @@ public class CatalogService {
 
     /**
      * 全局启停应用，停用后该应用全部操作失败关闭。
-     *
      * @param id 应用 ID
      * @param input 目标状态与版本
      * @return 提交后版本
@@ -318,7 +338,6 @@ public class CatalogService {
 
     /**
      * 删除未被资源、菜单、开通或套餐引用的应用；被拒时说明具体引用。
-     *
      * @param id 应用 ID
      * @return 删除前版本
      */
@@ -340,7 +359,6 @@ public class CatalogService {
 
     /**
      * 确认当前账号后，同一事务清除该应用全部关联并删除应用行。
-     *
      * @param id 应用 ID
      * @param input 版本与内嵌确认
      * @return 删除前版本
@@ -366,7 +384,6 @@ public class CatalogService {
 
     /**
      * 列出应用内资源。
-     *
      * @param applicationId 应用 ID
      * @param page 页码
      * @param pageSize 页大小
@@ -375,20 +392,21 @@ public class CatalogService {
      * @return 资源页
      */
     public PageResponse<ResourceDetail<ResourceRecord>> listResources(String applicationId, int page, int pageSize,
-                                                                     String name, String code) {
+            String name, String code) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_READ);
         long id = IamIds.require(applicationId);
         requireApplication(id);
         IamPages.require(page, pageSize);
         Page<IamResourceEntity> rows = catalog.pageResources(id, page, pageSize, name, code);
-        List<ResourceDetail<ResourceRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(resource(row), version(row.getVersion()))).toList();
+        List<ResourceDetail<ResourceRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(resource(row), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 在指定应用下创建资源。
-     *
      * @param applicationId 应用 ID
      * @param input 资源草稿
      * @return 新资源 ID
@@ -410,25 +428,25 @@ public class CatalogService {
             entity.setEnabled(true);
             try {
                 catalog.insertResource(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
-            audits.write(actor.context(), access.nextId(), RESOURCE, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(RESOURCE, "0"));
+            audits.write(actor.context(), access.nextId(), RESOURCE, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, input.name()), Map.of(RESOURCE, "0"));
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
 
     /**
      * 更新资源名称与能力，不能改写编码或所属应用。
-     *
      * @param applicationId 应用 ID
      * @param resourceId 资源 ID
      * @param input 更新命令
      * @return 更新后详情
      */
     public ResourceDetail<ResourceRecord> updateResource(String applicationId, String resourceId,
-                                                         ResourceUpdateInput input) {
+            ResourceUpdateInput input) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_UPDATE);
         long appId = IamIds.require(applicationId);
         long id = IamIds.require(resourceId);
@@ -449,7 +467,6 @@ public class CatalogService {
 
     /**
      * 删除未被操作引用的资源。
-     *
      * @param applicationId 应用 ID
      * @param resourceId 资源 ID
      * @return 删除前版本
@@ -471,7 +488,6 @@ public class CatalogService {
 
     /**
      * 列出应用内精确操作。
-     *
      * @param applicationId 应用 ID
      * @param page 页码
      * @param pageSize 页大小
@@ -481,21 +497,22 @@ public class CatalogService {
      * @return 操作页
      */
     public PageResponse<ResourceDetail<ActionRecord>> listActions(String applicationId, int page, int pageSize,
-                                                                 String resourceId, String name, String ids) {
+            String resourceId, String name, String ids) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ACTION_READ);
         long appId = IamIds.require(applicationId);
         requireApplication(appId);
         IamPages.require(page, pageSize);
         Page<IamActionEntity> rows = catalog.pageActions(appId, page, pageSize, IamIds.optional(resourceId), name,
                 IamIds.optionalList(ids));
-        List<ResourceDetail<ActionRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(action(row), version(row.getVersion()))).toList();
+        List<ResourceDetail<ActionRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(action(row), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 一次返回应用内资源及操作树，供菜单选择操作。
-     *
      * @param applicationId 应用 ID
      * @return 操作目录
      */
@@ -512,16 +529,14 @@ public class CatalogService {
             actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
         }
         List<ActionCatalogResource> nodes = resources.stream()
-                .map(resource -> new ActionCatalogResource(text(resource.getId()), resource.getCode(),
-                        resource.getName(), actions.getOrDefault(resource.getId(), List.of()).stream()
-                                .map(this::catalogItem).toList()))
-                .toList();
+            .map(resource -> new ActionCatalogResource(text(resource.getId()), resource.getCode(), resource.getName(),
+                    actions.getOrDefault(resource.getId(), List.of()).stream().map(this::catalogItem).toList()))
+            .toList();
         return new ActionCatalogView(text(application.getId()), application.getCode(), application.getName(), nodes);
     }
 
     /**
      * 按资源分页返回启用资源及其启用操作，供角色权限选择器组树。
-     *
      * @param applicationId 应用 ID
      * @param page 从 1 开始的页码
      * @param pageSize 每页资源数
@@ -538,18 +553,22 @@ public class CatalogService {
         for (IamActionEntity row : catalog.listEnabledActionsByResourceIds(appId, resourceIds)) {
             actions.computeIfAbsent(row.getResourceId(), key -> new ArrayList<>()).add(row);
         }
-        List<GrantCatalogResource> items = rows.getRecords().stream()
-                .map(resource -> new GrantCatalogResource(text(resource.getId()), resource.getCode(),
-                        resource.getName(), scopesOf(resource),
-                        actions.getOrDefault(resource.getId(), List.of()).stream()
-                                .map(this::grantCatalogAction).toList()))
-                .toList();
+        var descriptors = fieldMetadata.describe(rows.getRecords());
+        List<GrantCatalogResource> items = rows.getRecords()
+            .stream()
+            .map(resource -> new GrantCatalogResource(text(resource.getId()), resource.getCode(), resource.getName(),
+                    scopesOf(resource),
+                    actions.getOrDefault(resource.getId(), List.of()).stream().map(this::grantCatalogAction).toList(),
+                    descriptors.containsKey(text(resource.getId())) ? descriptors.get(text(resource.getId())).fields()
+                            : List.of(),
+                    descriptors.containsKey(text(resource.getId())) ? descriptors.get(text(resource.getId())).defaults()
+                            : Map.of()))
+            .toList();
         return IamPages.of(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 一次返回指定资源下的全部操作，供权限树展开。
-     *
      * @param applicationId 应用 ID
      * @param resourceId 资源 ID
      * @return 操作列表
@@ -566,7 +585,6 @@ public class CatalogService {
 
     /**
      * 一次返回菜单已绑定操作及资源名称，供详情回显。
-     *
      * @param applicationId 应用 ID
      * @param menuId 菜单 ID
      * @return 已关联操作
@@ -584,12 +602,12 @@ public class CatalogService {
         }
         List<IamActionEntity> rows = catalog.listActionsByIds(actionIds.stream().map(BigInteger::longValue).toList());
         Map<BigInteger, IamResourceEntity> resources = new LinkedHashMap<>();
-        for (IamResourceEntity resource : catalog.listResourcesByIds(rows.stream()
-                .map(row -> row.getResourceId().longValue()).distinct().toList())) {
+        for (IamResourceEntity resource : catalog
+            .listResourcesByIds(rows.stream().map(row -> row.getResourceId().longValue()).distinct().toList())) {
             resources.put(resource.getId(), resource);
         }
         Map<BigInteger, IamActionEntity> byId = rows.stream()
-                .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
+            .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
         List<MenuActionRecord> result = new ArrayList<>();
         for (BigInteger actionId : actionIds) {
             IamActionEntity row = byId.get(actionId);
@@ -597,16 +615,14 @@ public class CatalogService {
                 continue;
             }
             IamResourceEntity resource = resources.get(row.getResourceId());
-            result.add(new MenuActionRecord(text(row.getId()), row.getCode(), row.getName(),
-                    text(row.getResourceId()), resource == null ? "" : resource.getCode(),
-                    resource == null ? "" : resource.getName()));
+            result.add(new MenuActionRecord(text(row.getId()), row.getCode(), row.getName(), text(row.getResourceId()),
+                    resource == null ? "" : resource.getCode(), resource == null ? "" : resource.getName()));
         }
         return result;
     }
 
     /**
      * 按操作 ID 批量解析名称、应用与资源，供权限回显。
-     *
      * @param input 操作 ID
      * @return 解析结果；未命中的 ID 省略
      */
@@ -617,7 +633,6 @@ public class CatalogService {
 
     /**
      * 按操作 ID 解析目录内容，不校验 ACTION；调用方须已完成自身读授权。
-     *
      * @param ids 操作 ID
      * @return 解析结果；未命中的 ID 省略
      */
@@ -628,17 +643,17 @@ public class CatalogService {
         }
         List<IamActionEntity> rows = catalog.listActionsByIds(wanted);
         Map<BigInteger, IamApplicationEntity> applications = new LinkedHashMap<>();
-        for (IamApplicationEntity application : catalog.listApplicationsByIds(rows.stream()
-                .map(row -> row.getApplicationId().longValue()).distinct().toList())) {
+        for (IamApplicationEntity application : catalog
+            .listApplicationsByIds(rows.stream().map(row -> row.getApplicationId().longValue()).distinct().toList())) {
             applications.put(application.getId(), application);
         }
         Map<BigInteger, IamResourceEntity> resources = new LinkedHashMap<>();
-        for (IamResourceEntity resource : catalog.listResourcesByIds(rows.stream()
-                .map(row -> row.getResourceId().longValue()).distinct().toList())) {
+        for (IamResourceEntity resource : catalog
+            .listResourcesByIds(rows.stream().map(row -> row.getResourceId().longValue()).distinct().toList())) {
             resources.put(resource.getId(), resource);
         }
         Map<BigInteger, IamActionEntity> byId = rows.stream()
-                .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
+            .collect(Collectors.toMap(IamActionEntity::getId, row -> row, (left, right) -> left, LinkedHashMap::new));
         List<ActionLookupRecord> result = new ArrayList<>();
         for (Long id : wanted) {
             IamActionEntity row = byId.get(BigInteger.valueOf(id));
@@ -647,7 +662,8 @@ public class CatalogService {
             }
             IamApplicationEntity application = applications.get(row.getApplicationId());
             IamResourceEntity resource = resources.get(row.getResourceId());
-            List<ScopeKind> scopes = resource == null ? List.of() : IamJson.read(resource.getScopeCapabilities(), SCOPES);
+            List<ScopeKind> scopes = resource == null ? List.of()
+                    : IamJson.read(resource.getScopeCapabilities(), SCOPES);
             result.add(new ActionLookupRecord(text(row.getId()), row.getCode(), row.getName(),
                     text(row.getApplicationId()), application == null ? "" : application.getCode(),
                     application == null ? "" : application.getName(), text(row.getResourceId()),
@@ -659,7 +675,6 @@ public class CatalogService {
 
     /**
      * 创建绑定资源的精确操作，操作码不得含通配符。
-     *
      * @param applicationId 应用 ID
      * @param input 操作草稿
      * @return 新操作 ID
@@ -687,18 +702,18 @@ public class CatalogService {
             entity.setEnabled(true);
             try {
                 catalog.insertAction(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
-            audits.write(actor.context(), access.nextId(), ACTION, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(ACTION, "0"));
+            audits.write(actor.context(), access.nextId(), ACTION, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, input.name()), Map.of(ACTION, "0"));
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
 
     /**
      * 更新操作名称，不能改写操作码或所属资源。
-     *
      * @param applicationId 应用 ID
      * @param actionId 操作 ID
      * @param input 更新命令
@@ -722,7 +737,6 @@ public class CatalogService {
 
     /**
      * 全局启停操作。
-     *
      * @param applicationId 应用 ID
      * @param actionId 操作 ID
      * @param input 目标状态
@@ -752,7 +766,6 @@ public class CatalogService {
 
     /**
      * 删除未被菜单或角色引用的操作。
-     *
      * @param applicationId 应用 ID
      * @param actionId 操作 ID
      * @return 删除前版本
@@ -776,7 +789,6 @@ public class CatalogService {
 
     /**
      * 列出应用菜单。
-     *
      * @param applicationId 应用 ID
      * @param page 页码
      * @param pageSize 页大小
@@ -790,15 +802,16 @@ public class CatalogService {
         Page<IamMenuEntity> rows = catalog.pageMenus(appId, page, pageSize);
         java.util.Map<BigInteger, List<BigInteger>> actions = catalog.menuActionIds(appId,
                 rows.getRecords().stream().map(IamMenuEntity::getId).toList());
-        List<ResourceDetail<MenuRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(menu(row, texts(actions.getOrDefault(row.getId(), List.of()))),
-                        version(row.getVersion()))).toList();
+        List<ResourceDetail<MenuRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(menu(row, texts(actions.getOrDefault(row.getId(), List.of()))),
+                    version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 返回应用菜单树，不带分页。
-     *
      * @param applicationId 应用 ID
      * @return 根节点
      */
@@ -824,7 +837,6 @@ public class CatalogService {
 
     /**
      * 创建菜单并绑定本应用精确操作。
-     *
      * @param applicationId 应用 ID
      * @param input 菜单草稿
      * @return 新菜单 ID
@@ -838,15 +850,14 @@ public class CatalogService {
             long id = access.nextId();
             catalog.insertMenu(menuEntity(id, appId, parentId, input, true));
             replaceMenuActions(appId, id, input.actionIds());
-            audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(MENU, "0"));
+            audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, input.name()), Map.of(MENU, "0"));
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
 
     /**
      * 整体更新菜单并重验本应用操作引用。
-     *
      * @param applicationId 应用 ID
      * @param menuId 菜单 ID
      * @param input 更新命令
@@ -881,7 +892,6 @@ public class CatalogService {
 
     /**
      * 删除没有子菜单的菜单。
-     *
      * @param applicationId 应用 ID
      * @param menuId 菜单 ID
      * @return 删除前版本
@@ -895,15 +905,13 @@ public class CatalogService {
             CatalogInUse.requireUnused(catalog.countChildMenus(appId, id), CatalogInUse.MENU_HAS_CHILDREN);
             catalog.deleteMenu(appId, id);
             audits.write(actor.context(), access.nextId(), MENU, menuId, AuditChangeType.REMOVE,
-                    Map.of(AuditField.NAME, current.getName()), Map.of(),
-                    Map.of(MENU, version(current.getVersion())));
+                    Map.of(AuditField.NAME, current.getName()), Map.of(), Map.of(MENU, version(current.getVersion())));
             return new CreatedResource(menuId, version(current.getVersion()));
         });
     }
 
     /**
      * 分页列出套餐。
-     *
      * @param page 页码
      * @param pageSize 页大小
      * @param name 套餐名称包含匹配，空白表示不限制
@@ -925,7 +933,6 @@ public class CatalogService {
 
     /**
      * 分页列出套餐选择器所需的最小标识，不附带应用清单。
-     *
      * @param page 页码
      * @param pageSize 页大小
      * @param name 套餐名称包含匹配，空白表示不限制
@@ -933,19 +940,19 @@ public class CatalogService {
      * @return 套餐摘要页
      */
     public PageResponse<ResourceDetail<PlanSummary>> listPlanSummaries(int page, int pageSize, String name,
-                                                                       String status) {
+            String status) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_PLAN_READ);
         IamPages.require(page, pageSize);
         Page<IamPlanEntity> rows = catalog.pagePlans(page, pageSize, name, IamFilters.enabledOf(status));
-        List<ResourceDetail<PlanSummary>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(new PlanSummary(text(row.getId()), row.getName()), version(row.getVersion())))
-                .toList();
+        List<ResourceDetail<PlanSummary>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(new PlanSummary(text(row.getId()), row.getName()), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 读取套餐详情。
-     *
      * @param id 套餐 ID
      * @return 套餐详情
      */
@@ -956,7 +963,6 @@ public class CatalogService {
 
     /**
      * 创建套餐。修改套餐不会改变既有租户开通。
-     *
      * @param input 套餐草稿
      * @return 新套餐 ID
      */
@@ -971,15 +977,14 @@ public class CatalogService {
             entity.setEnabled(input.status() != ConfigurationStatus.DISABLED);
             catalog.insertPlan(entity);
             replacePlanApplications(id, input.applicationIds());
-            audits.write(actor.context(), access.nextId(), PLAN, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, input.name()), Map.of(PLAN, "0"));
+            audits.write(actor.context(), access.nextId(), PLAN, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, input.name()), Map.of(PLAN, "0"));
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
 
     /**
      * 整体替换套餐应用清单，不影响已开通租户。
-     *
      * @param id 套餐 ID
      * @param input 更新命令
      * @return 更新后详情
@@ -990,14 +995,15 @@ public class CatalogService {
         return transaction.execute(status -> {
             IamPlanEntity current = requireLocked(catalog.lockPlan(planId));
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
-            ConfigurationStatus nextStatus = input.plan().status() == null
-                    ? statusOf(current.getEnabled()) : input.plan().status();
+            ConfigurationStatus nextStatus = input.plan().status() == null ? statusOf(current.getEnabled())
+                    : input.plan().status();
             catalog.updatePlan(planId, input.plan().name(), nullable(input.plan().description()),
                     nextStatus == ConfigurationStatus.ENABLED, current.getVersion());
             replacePlanApplications(planId, input.plan().applicationIds());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), PLAN, id, AuditChangeType.UPDATE,
-                    Map.of(AuditField.NAME, current.getName(), AuditField.STATUS, statusOf(current.getEnabled()).name()),
+                    Map.of(AuditField.NAME, current.getName(), AuditField.STATUS,
+                            statusOf(current.getEnabled()).name()),
                     Map.of(AuditField.NAME, input.plan().name(), AuditField.STATUS, nextStatus.name()),
                     Map.of(PLAN, next));
             return loadPlan(planId);
@@ -1042,7 +1048,8 @@ public class CatalogService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         List<BigInteger> applicationIds = catalog.planApplicationIds(id);
-        return IamDetails.of(plan(row, texts(applicationIds), planApplications(applicationIds)), version(row.getVersion()));
+        return IamDetails.of(plan(row, texts(applicationIds), planApplications(applicationIds)),
+                version(row.getVersion()));
     }
 
     private void requireApplication(long id) {
@@ -1052,8 +1059,8 @@ public class CatalogService {
     }
 
     private static void requireResourceScopes(AuthorizationDomain domain, List<ScopeKind> scopes) {
-        if (domain == AuthorizationDomain.PLATFORM && scopes != null && scopes.stream().anyMatch(scope ->
-                scope == ScopeKind.MEMBER_DEPARTMENTS || scope == ScopeKind.MANAGED_DEPARTMENTS)) {
+        if (domain == AuthorizationDomain.PLATFORM && scopes != null && scopes.stream()
+            .anyMatch(scope -> scope == ScopeKind.MEMBER_DEPARTMENTS || scope == ScopeKind.MANAGED_DEPARTMENTS)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "平台应用不支持部门范围");
         }
     }
@@ -1081,12 +1088,12 @@ public class CatalogService {
     }
 
     private Map<String, Long> persistBundleCatalog(ActiveIdentity actor, long appId, String applicationCode,
-                                                   AuthorizationDomain domain,
-                                                   List<ApplicationBundleResource> resources) {
+            AuthorizationDomain domain, List<ApplicationBundleResource> resources) {
         Map<String, Long> actionIds = new LinkedHashMap<>();
         Set<String> resourceCodes = new HashSet<>();
         Set<String> tempIds = new HashSet<>();
-        for (ApplicationBundleResource resource : resources == null ? List.<ApplicationBundleResource>of() : resources) {
+        for (ApplicationBundleResource resource : resources == null ? List.<ApplicationBundleResource>of()
+                : resources) {
             requireResourceScopes(domain, resource.scopeCapabilities());
             String resourceTempId = requireTempId(resource.tempId());
             if (!tempIds.add(resourceTempId) || !resourceCodes.add(resource.code())) {
@@ -1103,14 +1110,15 @@ public class CatalogService {
             entity.setEnabled(true);
             try {
                 catalog.insertResource(entity);
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             audits.write(actor.context(), access.nextId(), RESOURCE, IamIds.text(resourceId), AuditChangeType.CREATE,
                     Map.of(), Map.of(AuditField.NAME, resource.name()), Map.of(RESOURCE, "0"));
             Set<String> actionCodes = new HashSet<>();
-            for (ApplicationBundleAction action : resource.actions() == null
-                    ? List.<ApplicationBundleAction>of() : resource.actions()) {
+            for (ApplicationBundleAction action : resource.actions() == null ? List.<ApplicationBundleAction>of()
+                    : resource.actions()) {
                 String actionTempId = requireTempId(action.tempId());
                 if (!tempIds.add(actionTempId) || !actionCodes.add(action.code())) {
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -1125,7 +1133,8 @@ public class CatalogService {
                 row.setEnabled(true);
                 try {
                     catalog.insertAction(row);
-                } catch (DuplicateKeyException exception) {
+                }
+                catch (DuplicateKeyException exception) {
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
                 }
                 audits.write(actor.context(), access.nextId(), ACTION, IamIds.text(actionId), AuditChangeType.CREATE,
@@ -1137,7 +1146,7 @@ public class CatalogService {
     }
 
     private void persistBundleMenus(ActiveIdentity actor, long appId, List<ApplicationBundleMenu> menus,
-                                    Map<String, Long> actionIds) {
+            Map<String, Long> actionIds) {
         Map<String, Long> menuIds = new LinkedHashMap<>();
         for (ApplicationBundleMenu menu : orderBundleMenus(menus)) {
             Long parentId = null;
@@ -1148,8 +1157,7 @@ public class CatalogService {
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
                 }
             }
-            List<String> bound = menu.accessMode() == MenuAccessMode.OPEN
-                    ? List.of()
+            List<String> bound = menu.accessMode() == MenuAccessMode.OPEN ? List.of()
                     : resolveBundleActionIds(menu.actionTempIds(), actionIds);
             long id = access.nextId();
             MenuDraft draft = new MenuDraft(parentId == null ? null : IamIds.text(parentId), menu.name(), menu.kind(),
@@ -1157,8 +1165,8 @@ public class CatalogService {
                     bound, menu.sortOrder());
             catalog.insertMenu(menuEntity(id, appId, parentId, draft, true));
             replaceMenuActions(appId, id, bound);
-            audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, menu.name()), Map.of(MENU, "0"));
+            audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, menu.name()), Map.of(MENU, "0"));
             menuIds.put(requireTempId(menu.tempId()), id);
         }
     }
@@ -1198,10 +1206,8 @@ public class CatalogService {
         return ordered;
     }
 
-    private static void visitBundleMenu(ApplicationBundleMenu menu,
-                                        Map<String, List<ApplicationBundleMenu>> children,
-                                        Set<String> visiting, Set<String> visited,
-                                        List<ApplicationBundleMenu> ordered) {
+    private static void visitBundleMenu(ApplicationBundleMenu menu, Map<String, List<ApplicationBundleMenu>> children,
+            Set<String> visiting, Set<String> visited, List<ApplicationBundleMenu> ordered) {
         String tempId = menu.tempId();
         if (visited.contains(tempId)) {
             return;
@@ -1270,7 +1276,7 @@ public class CatalogService {
     }
 
     private static IamMenuEntity menuEntity(long id, long applicationId, Long parentId, MenuDraft input,
-                                            boolean enabled) {
+            boolean enabled) {
         IamMenuEntity entity = new IamMenuEntity();
         entity.setId(BigInteger.valueOf(id));
         entity.setApplicationId(BigInteger.valueOf(applicationId));
@@ -1339,18 +1345,20 @@ public class CatalogService {
     }
 
     private MenuTreeNode menuTree(IamMenuEntity row, Map<BigInteger, List<IamMenuEntity>> children,
-                                 Map<BigInteger, List<BigInteger>> actions) {
-        List<MenuTreeNode> nodes = children.getOrDefault(row.getId(), List.of()).stream()
-                .map(child -> menuTree(child, children, actions)).toList();
+            Map<BigInteger, List<BigInteger>> actions) {
+        List<MenuTreeNode> nodes = children.getOrDefault(row.getId(), List.of())
+            .stream()
+            .map(child -> menuTree(child, children, actions))
+            .toList();
         return MenuTreeNode.of(IamDetails.of(menu(row, texts(actions.getOrDefault(row.getId(), List.of()))),
                 version(row.getVersion())), nodes);
     }
 
     private static MenuRecord menu(IamMenuEntity row, List<String> actionIds) {
         return new MenuRecord(text(row.getId()), text(row.getApplicationId()),
-                row.getParentId() == null ? null : text(row.getParentId()), row.getName(), row.getKind(),
-                row.getPath(), row.getViewPath(), row.getRouteName(), row.getIcon(), row.getAccessMode(),
-                row.getMatchMode(), actionIds == null ? List.of() : new ArrayList<>(actionIds),
+                row.getParentId() == null ? null : text(row.getParentId()), row.getName(), row.getKind(), row.getPath(),
+                row.getViewPath(), row.getRouteName(), row.getIcon(), row.getAccessMode(), row.getMatchMode(),
+                actionIds == null ? List.of() : new ArrayList<>(actionIds),
                 row.getSortOrder() == null ? 0 : row.getSortOrder(), statusOf(row.getEnabled()));
     }
 
@@ -1359,8 +1367,8 @@ public class CatalogService {
             return List.of();
         }
         Map<String, IamApplicationEntity> byId = new LinkedHashMap<>();
-        for (IamApplicationEntity row : catalog.listApplicationsByIds(
-                applicationIds.stream().map(BigInteger::longValue).toList())) {
+        for (IamApplicationEntity row : catalog
+            .listApplicationsByIds(applicationIds.stream().map(BigInteger::longValue).toList())) {
             byId.putIfAbsent(text(row.getId()), row);
         }
         List<PlanApplication> result = new ArrayList<>();
@@ -1402,4 +1410,5 @@ public class CatalogService {
     private static String nullable(String value) {
         return value == null || value.isBlank() ? null : value;
     }
+
 }

@@ -1,13 +1,18 @@
 package com.ingot.framework.commons.model.iam;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * <p>返回角色固定版本的合成定义及受限使用统计，不将合成副本作为持久化来源。</p>
+ * <p>
+ * 返回角色固定版本的合成定义及受限使用统计，不将合成副本作为持久化来源。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
@@ -17,27 +22,34 @@ import jakarta.validation.constraints.*;
  * @param origins 逐操作来源，含本角色移除项
  * @param parameterDefinitions 合成后参数定义
  * @param usage 允许披露的使用统计
+ * @param resourceFieldPermissions 资源字段固定快照；未声明字段不授予权限
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "返回角色固定版本的合成定义及受限使用统计，不将合成副本作为持久化来源")
 public record EffectiveRole(
-        @NotNull @Valid @Schema(description = "角色元数据", requiredMode = Schema.RequiredMode.REQUIRED)
-        RoleSummary role,
-        @NotNull @Valid @Schema(description = "固定版本引用", requiredMode = Schema.RequiredMode.REQUIRED)
-        RoleRevisionRef revision,
-        @NotNull @Schema(description = "合成后的逐操作允许范围", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid ActionGrant> grants,
-        @NotNull @Schema(description = "逐操作来源，含本角色移除项", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid ActionOrigin> origins,
-        @NotNull @Schema(description = "合成后参数定义", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
-        @NotNull @Valid @Schema(description = "允许披露的使用统计", requiredMode = Schema.RequiredMode.REQUIRED)
-        UsageSummary usage) {
+        @NotNull @Valid @Schema(description = "角色元数据", requiredMode = Schema.RequiredMode.REQUIRED) RoleSummary role,
+        @NotNull @Valid @Schema(description = "固定版本引用",
+                requiredMode = Schema.RequiredMode.REQUIRED) RoleRevisionRef revision,
+        @NotNull @Schema(description = "合成后的逐操作允许范围",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid ActionGrant> grants,
+        @NotNull @Schema(description = "逐操作来源，含本角色移除项",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid ActionOrigin> origins,
+        @NotNull @Schema(description = "合成后参数定义",
+                requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
+        @NotNull @Valid @Schema(description = "允许披露的使用统计",
+                requiredMode = Schema.RequiredMode.REQUIRED) UsageSummary usage,
+        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, Map<String, @Valid FieldAccess>> resourceFieldPermissions) {
+    /** 兼容没有字段快照的历史合成定义。 */
+    public EffectiveRole(RoleSummary role, RoleRevisionRef revision, List<ActionGrant> grants,
+            List<ActionOrigin> origins, List<RoleParameterDefinition> parameterDefinitions, UsageSummary usage) {
+        this(role, revision, grants, origins, parameterDefinitions, usage, null);
+    }
 
     /**
      * 复制输出集合，避免外部修改改变已经计算的响应视图；必填空引用由校验拒绝。
      */
     public EffectiveRole {
+        resourceFieldPermissions = ResourceFieldPermissions.copy(resourceFieldPermissions);
         if (grants != null) {
             grants = Collections.unmodifiableList(new ArrayList<>(grants));
         }

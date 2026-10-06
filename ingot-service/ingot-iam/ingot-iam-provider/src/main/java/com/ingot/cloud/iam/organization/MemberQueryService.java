@@ -10,6 +10,12 @@ import java.util.Set;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.assignment.AssignmentService;
+import com.ingot.cloud.iam.extension.RoleFieldPermissionService;
+import com.ingot.cloud.iam.extension.BuiltinResourceProviders;
+import com.ingot.framework.authorization.FieldPolicyProcessor;
+import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
+import com.ingot.framework.commons.model.iam.extension.ResourceKey;
+import com.ingot.framework.commons.model.iam.extension.ScopeTarget;
 import com.ingot.cloud.iam.evaluation.ObjectCapabilities;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
 import com.ingot.cloud.iam.evaluation.ResourceAccess;
@@ -57,28 +63,46 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>查询并维护当前域成员资格，按字段策略投影资料并拒绝不可编辑字段写入。</p>
+ * <p>
+ * 查询并维护当前域成员资格，按字段策略投影资料并拒绝不可编辑字段写入。
+ * </p>
  *
  * @author jy
  * @since 1.0.0
  */
 @Service
 public class MemberQueryService {
+
+    private static final ResourceKey PLATFORM_MEMBER_RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM,
+            BuiltinResourceProviders.PLATFORM_APPLICATION, "member");
+
+    private final RoleFieldPermissionService platformFields;
+
     private final IamAccess access;
+
     private final ResourceAccess scopes;
+
     private final ObjectCapabilities capabilities;
+
     private final FieldAccessEvaluator fields;
+
     private final IamAuditWriter audits;
+
     private final MemberQueryRepository members;
+
     private final GroupRepository groups;
+
     private final AssignmentService assignments;
+
     private final GroupService groupCommands;
+
     private final TransactionTemplate transaction;
 
     /**
      * 绑定身份、范围、字段策略与成员表。
-     * <p>TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。</p>
-     *
+     * <p>
+     * TransactionTemplate 无法由 Lombok 从 PlatformTransactionManager 直接生成，保留显式构造器。
+     * </p>
      * @param access 当前身份
      * @param scopes 对象范围
      * @param capabilities 对象展示能力
@@ -88,12 +112,14 @@ public class MemberQueryService {
      * @param groups 用户组持久化
      * @param assignments 直接角色写入
      * @param groupCommands 用户组加入
+     * @param platformFields 平台资源字段策略
      * @param transactionManager 同一数据源事务
      */
     public MemberQueryService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
-                              FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members,
-                              GroupRepository groups, AssignmentService assignments, GroupService groupCommands,
-                              PlatformTransactionManager transactionManager) {
+            FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members, GroupRepository groups,
+            AssignmentService assignments, GroupService groupCommands, PlatformTransactionManager transactionManager,
+            RoleFieldPermissionService platformFields) {
+        this.platformFields = platformFields;
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -108,7 +134,6 @@ public class MemberQueryService {
 
     /**
      * 分页列出当前域成员。
-     *
      * @param domain 接口管理域
      * @param page 页码
      * @param pageSize 页大小
@@ -120,7 +145,6 @@ public class MemberQueryService {
 
     /**
      * 分页列出平台成员。显示名按包含匹配，资格按稳定字面量精确匹配。
-     *
      * @param page 页码
      * @param pageSize 页大小
      * @param name 显示名包含匹配，可空
@@ -129,7 +153,7 @@ public class MemberQueryService {
      * @return 成员页
      */
     public PageResponse<ResourceDetail<MemberRecord>> listPlatform(int page, int pageSize, String name, String status,
-                                                                  String ids) {
+            String ids) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_READ);
         return listProjected(actor, IamAction.PLATFORM_MEMBER_READ, page, pageSize, null, null,
                 IamFilters.containsName(name), IamFilters.memberStatusOf(status), IamIds.optionalList(ids));
@@ -137,7 +161,6 @@ public class MemberQueryService {
 
     /**
      * 分页列出当前域成员；原值筛选仅在字段完整可见时允许。
-     *
      * @param domain 接口管理域
      * @param page 页码
      * @param pageSize 页大小
@@ -146,9 +169,9 @@ public class MemberQueryService {
      * @return 成员页
      */
     public PageResponse<ResourceDetail<MemberRecord>> list(AuthorizationDomain domain, int page, int pageSize,
-                                                           String phone, String email) {
-        IamAction action = domain == AuthorizationDomain.PLATFORM
-                ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ;
+            String phone, String email) {
+        IamAction action = domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ
+                : IamAction.TENANT_MEMBER_READ;
         ActiveIdentity actor = access.require(domain, action);
         if (domain == AuthorizationDomain.PLATFORM && (phone != null || email != null)) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -158,7 +181,6 @@ public class MemberQueryService {
 
     /**
      * 已通过 ACTION 校验后按范围与字段策略列出成员，供导出下载重验复用。
-     *
      * @param actor 当前身份
      * @param action 列表或导出操作
      * @param page 页码
@@ -167,15 +189,13 @@ public class MemberQueryService {
      * @param email 邮箱精确筛选，可空
      * @return 投影后的成员页
      */
-    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
-                                                                    int page, int pageSize, String phone,
-                                                                    String email) {
+    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
+            int pageSize, String phone, String email) {
         return listProjected(actor, action, page, pageSize, phone, email, null, null, List.of());
     }
 
     /**
      * 已通过 ACTION 校验后按范围、显示名与资格列出成员。
-     *
      * @param actor 当前身份
      * @param action 列表或导出操作
      * @param page 页码
@@ -186,15 +206,13 @@ public class MemberQueryService {
      * @param status 平台成员资格，可空；租户列表忽略
      * @return 投影后的成员页
      */
-    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
-                                                                    int page, int pageSize, String phone,
-                                                                    String email, String name, MemberStatus status) {
+    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
+            int pageSize, String phone, String email, String name, MemberStatus status) {
         return listProjected(actor, action, page, pageSize, phone, email, name, status, List.of());
     }
 
     /**
      * 已通过 ACTION 校验后按范围、显示名、资格与成员 ID 列出成员。
-     *
      * @param actor 当前身份
      * @param action 列表或导出操作
      * @param page 页码
@@ -206,22 +224,28 @@ public class MemberQueryService {
      * @param ids 平台成员 ID，空表示不按 ID 限制
      * @return 投影后的成员页
      */
-    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action,
-                                                                    int page, int pageSize, String phone,
-                                                                    String email, String name, MemberStatus status,
-                                                                    List<Long> ids) {
+    public PageResponse<ResourceDetail<MemberRecord>> listProjected(ActiveIdentity actor, IamAction action, int page,
+            int pageSize, String phone, String email, String name, MemberStatus status, List<Long> ids) {
         IamPages.require(page, pageSize);
         AuthorizationDomain domain = actor.context().domain();
         ObjectScope scope = scopes.memberRead(actor.context(), action);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         if (domain == AuthorizationDomain.PLATFORM) {
+            var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                    List.of(action, IamAction.PLATFORM_MEMBER_UPDATE));
+            FieldPolicyDecision policy = fieldPolicies.get(action);
+            if (name != null && !name.isBlank()) {
+                FieldPolicyProcessor.requireOriginalLookup(policy, MemberFieldKey.VALUE_DISPLAY_NAME);
+            }
             Page<IamPlatformMemberEntity> result = members.pagePlatform(scope, page, pageSize, name, status, ids);
-            Map<BigInteger, IamAccountEntity> contacts = members.accountContacts(result.getRecords().stream()
-                    .map(IamPlatformMemberEntity::getAccountId).toList());
-            List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
-                    .map(row -> IamDetails.of(platformMember(row, contacts.get(row.getAccountId())),
-                            capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
-                    .toList();
+            Map<BigInteger, IamAccountEntity> contacts = members
+                .accountContacts(result.getRecords().stream().map(IamPlatformMemberEntity::getAccountId).toList());
+            List<ResourceDetail<MemberRecord>> items = result.getRecords()
+                .stream()
+                .map(row -> platformDetail(policy, fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
+                        platformMember(row, contacts.get(row.getAccountId())),
+                        capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
+                .toList();
             return IamPages.details(items, result.getTotal(), page, pageSize);
         }
         long tenantId = IamIds.require(actor.context().tenantId());
@@ -232,24 +256,23 @@ public class MemberQueryService {
         Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email, page, pageSize);
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
-        List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
-                .map(row -> detail(snapshot, caps, viewerId,
-                        tenantMember(row, departments.getOrDefault(row.getId(), List.of())),
-                        version(row.getVersion())))
-                .toList();
+        List<ResourceDetail<MemberRecord>> items = result.getRecords()
+            .stream()
+            .map(row -> detail(snapshot, caps, viewerId,
+                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
     /**
      * 按导出快照 ID 重验范围与字段策略，返回当前仍可见的完整投影。
-     *
      * @param actor 当前身份
      * @param action 导出操作
      * @param memberIds 快照成员 ID
      * @return 完整投影结果
      */
     public PageResponse<ResourceDetail<MemberRecord>> listProjectedByIds(ActiveIdentity actor, IamAction action,
-                                                                         List<String> memberIds) {
+            List<String> memberIds) {
         if (actor.context().domain() != AuthorizationDomain.TENANT) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
@@ -265,7 +288,8 @@ public class MemberQueryService {
             }
             try {
                 ids.add(BigInteger.valueOf(IamIds.require(memberId)));
-            } catch (BizException ignored) {
+            }
+            catch (BizException ignored) {
                 // 损坏的快照 ID 不能扩大当前可见集合。
             }
         }
@@ -290,22 +314,20 @@ public class MemberQueryService {
                 continue;
             }
             items.add(detail(snapshot, caps, viewerId,
-                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())),
-                    version(row.getVersion())));
+                    tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())));
         }
         return IamPages.complete(items);
     }
 
     /**
      * 读取当前域成员详情。
-     *
      * @param domain 接口管理域
      * @param memberId 成员 ID
      * @return 安全投影
      */
     public ResourceDetail<MemberRecord> get(AuthorizationDomain domain, String memberId) {
-        ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
-                ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ);
+        ActiveIdentity actor = access.require(domain,
+                domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ);
         long id = IamIds.require(memberId);
         scopes.requireVisibleMember(actor.context(),
                 domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_READ : IamAction.TENANT_MEMBER_READ,
@@ -315,7 +337,6 @@ public class MemberQueryService {
 
     /**
      * 分页列出平台用户组的直接成员，按组成员关系过滤，不接受调用方传入成员 ID。
-     *
      * @param groupId 平台组 ID
      * @param page 页码
      * @param pageSize 页大小
@@ -323,7 +344,7 @@ public class MemberQueryService {
      * @return 成员页
      */
     public PageResponse<ResourceDetail<MemberRecord>> listPlatformGroupMembers(String groupId, int page, int pageSize,
-                                                                               String name) {
+            String name) {
         ActiveIdentity actor = access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_GROUP_READ);
         IamPages.require(page, pageSize);
         long id = IamIds.require(groupId);
@@ -331,20 +352,27 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
+        var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
+        FieldPolicyDecision policy = fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ);
+        if (name != null && !name.isBlank()) {
+            FieldPolicyProcessor.requireOriginalLookup(policy, MemberFieldKey.VALUE_DISPLAY_NAME);
+        }
         Page<IamPlatformMemberEntity> result = members.pagePlatformByGroup(ObjectScope.all(), id, page, pageSize,
                 IamFilters.containsName(name));
-        Map<BigInteger, IamAccountEntity> contacts = members.accountContacts(result.getRecords().stream()
-                .map(IamPlatformMemberEntity::getAccountId).toList());
-        List<ResourceDetail<MemberRecord>> items = result.getRecords().stream()
-                .map(row -> IamDetails.of(platformMember(row, contacts.get(row.getAccountId())),
-                        capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
-                .toList();
+        Map<BigInteger, IamAccountEntity> contacts = members
+            .accountContacts(result.getRecords().stream().map(IamPlatformMemberEntity::getAccountId).toList());
+        List<ResourceDetail<MemberRecord>> items = result.getRecords()
+            .stream()
+            .map(row -> platformDetail(policy, fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
+                    platformMember(row, contacts.get(row.getAccountId())),
+                    capabilities.platformMember(caps, row.getId().toString()), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
 
     /**
      * 分页列出平台成员所在的静态用户组，只返回组名，不展开成员选择。
-     *
      * @param memberId 平台成员 ID
      * @param page 页码
      * @param pageSize 页大小
@@ -359,16 +387,16 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         Page<IamPlatformGroupEntity> rows = groups.pagePlatformByMember(id, page, pageSize);
-        List<ResourceDetail<GroupRecord>> items = rows.getRecords().stream()
-                .map(row -> IamDetails.of(new GroupRecord(row.getId().toString(), row.getName(), row.getDescription(),
-                        new Selection(List.of(), List.of()), null), version(row.getVersion())))
-                .toList();
+        List<ResourceDetail<GroupRecord>> items = rows.getRecords()
+            .stream()
+            .map(row -> IamDetails.of(new GroupRecord(row.getId().toString(), row.getName(), row.getDescription(),
+                    new Selection(List.of(), List.of()), null), version(row.getVersion())))
+            .toList();
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
     /**
      * 列出平台成员的简单直接角色。
-     *
      * @param memberId 平台成员 ID
      * @return 按名称排序的直接角色
      */
@@ -381,7 +409,6 @@ public class MemberQueryService {
 
     /**
      * 替换平台成员的简单直接角色。
-     *
      * @param memberId 平台成员 ID
      * @param input 目标角色 ID
      * @return 替换后的直接角色
@@ -395,7 +422,6 @@ public class MemberQueryService {
 
     /**
      * 把已有账号关联为当前域成员。
-     *
      * @param domain 接口管理域
      * @param input 账号与任职
      * @return 新成员 ID
@@ -403,17 +429,15 @@ public class MemberQueryService {
     public CreatedResource create(AuthorizationDomain domain, MemberCreateInput input) {
         ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_MEMBER_CREATE : IamAction.TENANT_MEMBER_CREATE);
-        if (domain == AuthorizationDomain.PLATFORM && !input.departments().isEmpty()) {
+        if (domain == AuthorizationDomain.PLATFORM && (input.hasUnknownFields() || !input.departments().isEmpty())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         if (domain != AuthorizationDomain.PLATFORM
-                && (!input.roleIds().isEmpty() || !input.groupIds().isEmpty()
-                    || !input.roleAssignments().isEmpty())) {
+                && (!input.roleIds().isEmpty() || !input.groupIds().isEmpty() || !input.roleAssignments().isEmpty())) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         Set<String> selectedRoleIds = new LinkedHashSet<>(input.roleIds());
-        if (input.roleAssignments().stream().anyMatch(draft ->
-                draft == null || !selectedRoleIds.add(draft.roleId()))) {
+        if (input.roleAssignments().stream().anyMatch(draft -> draft == null || !selectedRoleIds.add(draft.roleId()))) {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色不能重复选择");
         }
         Set<String> departmentIds = new LinkedHashSet<>();
@@ -427,31 +451,43 @@ public class MemberQueryService {
         long accountId = IamIds.require(input.accountId());
         return transaction.execute(status -> {
             assignments.lockAuthorization(domain);
-            access.require(domain, domain == AuthorizationDomain.PLATFORM
-                    ? IamAction.PLATFORM_MEMBER_CREATE : IamAction.TENANT_MEMBER_CREATE);
-            scopes.requireCreate(actor.context(),
-                    domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_CREATE
-                            : IamAction.TENANT_MEMBER_CREATE, departmentIds);
+            access.require(domain, domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_CREATE
+                    : IamAction.TENANT_MEMBER_CREATE);
+            scopes.requireCreate(actor.context(), domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_MEMBER_CREATE : IamAction.TENANT_MEMBER_CREATE, departmentIds);
             if (!members.activeAccount(accountId)) {
                 throw new BizException(IamReasonCode.IDENTITY_INVALID);
             }
             long id = access.nextId();
-            String displayName = input.displayName() == null || input.displayName().isBlank()
-                    ? "成员" : input.displayName().trim();
+            if (domain == AuthorizationDomain.PLATFORM) {
+                Map<String, Object> submitted = new LinkedHashMap<>();
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
+                    submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
+                    submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
+                var policy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                        IamAction.PLATFORM_MEMBER_CREATE);
+                FieldPolicyProcessor.requireWritable(submitted, FieldPolicyProcessor.access(policy,
+                        new ScopeTarget(String.valueOf(id), String.valueOf(id), null, List.of())));
+            }
+            String displayName = input.displayName() == null || input.displayName().isBlank() ? "成员"
+                    : input.displayName().trim();
             String avatar = input.avatar() == null || input.avatar().isBlank() ? null : input.avatar().trim();
             try {
                 if (domain == AuthorizationDomain.PLATFORM) {
                     members.insertPlatform(id, accountId, displayName, avatar);
-                } else {
+                }
+                else {
                     long tenantId = IamIds.require(actor.context().tenantId());
                     members.insertTenant(id, tenantId, accountId, displayName, avatar);
                     replaceDepartments(tenantId, id, departmentBindings);
                 }
-            } catch (DuplicateKeyException exception) {
+            }
+            catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "成员资格已存在");
             }
-            audits.write(actor.context(), access.nextId(), "member", IamIds.text(id), AuditChangeType.CREATE,
-                    Map.of(), Map.of(AuditField.NAME, displayName), Map.of("member", "0"));
+            audits.write(actor.context(), access.nextId(), "member", IamIds.text(id), AuditChangeType.CREATE, Map.of(),
+                    Map.of(AuditField.NAME, displayName), Map.of("member", "0"));
             if (domain == AuthorizationDomain.PLATFORM) {
                 if (!input.roleIds().isEmpty()) {
                     assignments.grantDirectRoles(domain, IamIds.text(id), input.roleIds());
@@ -470,7 +506,6 @@ public class MemberQueryService {
 
     /**
      * 更新当前域显示资料，不修改凭证或成员资格。平台成员的手机号和邮箱写入关联全局账号的登录联系方式，空引用表示不修改，空白表示清空。租户侧不可编辑字段仍拒绝写入。
-     *
      * @param domain 接口管理域
      * @param memberId 成员 ID
      * @param input 资料
@@ -481,13 +516,33 @@ public class MemberQueryService {
                 ? IamAction.PLATFORM_MEMBER_UPDATE : IamAction.TENANT_MEMBER_UPDATE);
         long id = IamIds.require(memberId);
         return transaction.execute(status -> {
+            assignments.lockAuthorization(domain);
+            access.require(domain, domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_UPDATE
+                    : IamAction.TENANT_MEMBER_UPDATE);
             BigInteger version = lock(domain, actor, id);
-            scopes.requireVisibleMember(actor.context(),
-                    domain == AuthorizationDomain.PLATFORM ? IamAction.PLATFORM_MEMBER_UPDATE
-                            : IamAction.TENANT_MEMBER_UPDATE, id);
+            scopes.requireVisibleMember(actor.context(), domain == AuthorizationDomain.PLATFORM
+                    ? IamAction.PLATFORM_MEMBER_UPDATE : IamAction.TENANT_MEMBER_UPDATE, id);
             ResourceDetail<MemberRecord> current = load(domain, actor, id);
             IamIds.requireVersion(input.expectedVersion(), version.toString());
             if (domain == AuthorizationDomain.PLATFORM) {
+                Map<String, Object> submitted = new LinkedHashMap<>();
+                if (!Set
+                    .of("expectedVersion", MemberFieldKey.VALUE_DISPLAY_NAME, MemberFieldKey.VALUE_AVATAR,
+                            MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL)
+                    .containsAll(input.suppliedFields()))
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
+                    submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
+                    submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_PHONE))
+                    submitted.put(MemberFieldKey.VALUE_PHONE, input.phone());
+                if (input.suppliedFields().contains(MemberFieldKey.VALUE_EMAIL))
+                    submitted.put(MemberFieldKey.VALUE_EMAIL, input.email());
+                var writePolicy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                        IamAction.PLATFORM_MEMBER_UPDATE);
+                FieldPolicyProcessor.requireWritable(submitted,
+                        FieldPolicyProcessor.access(writePolicy, new ScopeTarget(memberId, memberId, null, List.of())));
                 requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), version));
                 IamPlatformMemberEntity row = members.findPlatform(id);
                 if (row == null || row.getAccountId() == null) {
@@ -495,7 +550,8 @@ public class MemberQueryService {
                 }
                 requireApplied(members.updateAccountContacts(row.getAccountId().longValueExact(), input.phone(),
                         input.email()));
-            } else {
+            }
+            else {
                 long tenantId = IamIds.require(actor.context().tenantId());
                 long viewerId = IamIds.require(actor.context().memberId());
                 fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
@@ -518,8 +574,7 @@ public class MemberQueryService {
      * 在事务内锁定成员行，后续可见性、字段策略与条件更新都基于这一份状态。
      */
     private BigInteger lock(AuthorizationDomain domain, ActiveIdentity actor, long memberId) {
-        BigInteger version = domain == AuthorizationDomain.PLATFORM
-                ? version(members.lockPlatform(memberId))
+        BigInteger version = domain == AuthorizationDomain.PLATFORM ? version(members.lockPlatform(memberId))
                 : version(members.lockTenant(IamIds.require(actor.context().tenantId()), memberId));
         if (version == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
@@ -547,9 +602,14 @@ public class MemberQueryService {
             if (row == null) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
-            return IamDetails.of(platformMember(row, members.accountContacts(
-                            row.getAccountId() == null ? List.of() : List.of(row.getAccountId()))
-                    .get(row.getAccountId())),
+            var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                    List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
+            return platformDetail(fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ),
+                    fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
+                    platformMember(row,
+                            members
+                                .accountContacts(row.getAccountId() == null ? List.of() : List.of(row.getAccountId()))
+                                .get(row.getAccountId())),
                     capabilities.platformMember(capabilities.snapshot(actor.context()), row.getId().toString()),
                     version(row.getVersion()));
         }
@@ -560,22 +620,38 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         List<MemberDepartmentView> departments = members.departmentViews(tenantId, List.of(row.getId()))
-                .getOrDefault(row.getId(), List.of());
+            .getOrDefault(row.getId(), List.of());
         return detail(fields.snapshot(tenantId, PolicyScenario.MANAGEMENT), capabilities.snapshot(actor.context()),
                 viewerId, tenantMember(row, departments), version(row.getVersion()));
     }
 
     private ResourceDetail<MemberRecord> detail(FieldPolicySnapshot snapshot, ObjectCapabilities.Snapshot caps,
-                                                long viewerId, MemberRecord raw, String version) {
+            long viewerId, MemberRecord raw, String version) {
         Map<String, FieldAccess> access = fields.memberAccess(snapshot, viewerId, IamIds.require(raw.id()));
         return IamDetails.of(fields.project(raw, access), access, capabilities.tenantMember(caps, raw), version);
+    }
+
+    private ResourceDetail<MemberRecord> platformDetail(FieldPolicyDecision policy, FieldPolicyDecision writePolicy,
+            MemberRecord raw, Map<String, com.ingot.framework.commons.model.iam.ObjectCapability> capabilities,
+            String version) {
+        var target = new ScopeTarget(raw.id(), raw.id(), null, List.of());
+        var readable = FieldPolicyProcessor.access(policy, target);
+        var writable = FieldPolicyProcessor.access(writePolicy, target);
+        Map<String, com.ingot.framework.commons.model.iam.FieldAccess> fieldAccess = new LinkedHashMap<>();
+        readable.forEach((key, value) -> {
+            var write = writable.get(key);
+            fieldAccess.put(key, new com.ingot.framework.commons.model.iam.FieldAccess(value.visibility(),
+                    value.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL && write != null
+                            && write.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL
+                            && write.editable()));
+        });
+        return IamDetails.of(fields.project(raw, fieldAccess), fieldAccess, capabilities, version);
     }
 
     private static MemberRecord platformMember(IamPlatformMemberEntity row, IamAccountEntity account) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
                 account == null ? null : account.getPhone(), account == null ? null : account.getEmail(),
-                account == null ? null : account.getUsername(),
-                row.getStatus(), List.of());
+                account == null ? null : account.getUsername(), row.getStatus(), List.of());
     }
 
     private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
@@ -595,4 +671,5 @@ public class MemberQueryService {
     private static String version(BigInteger version) {
         return version == null ? "0" : version.toString();
     }
+
 }

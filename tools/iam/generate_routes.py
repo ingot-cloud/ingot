@@ -506,6 +506,15 @@ def build():
             {'name': 'kind', 'required': True, 'schema': {'type': 'string', 'enum': ['ROLE_REVISION', 'OBJECT']}},
             {'name': 'parameterKey', 'required': False, 'schema': {'type': 'string'}},
         ]))
+    upgrade_exec='独立精确升级资格或本人单条有效委派；同角色更高已发布版本；保留ID主体期限来源；整批锁定重验与回滚；审计与缓存失效'
+    routes += [route('/v1/platform/assignments/upgrade/preview','post','platformPreviewAssignmentUpgrade','预览分配版本升级','PLATFORM','iam-platform:assignment:upgrade','AssignmentUpgradeInput','RPreviewAssignmentUpgradeResult',upgrade_exec),route('/v1/platform/assignments/upgrade','post','platformAssignmentUpgrade','升级分配版本','PLATFORM','iam-platform:assignment:upgrade','AssignmentUpgradeInput','RAssignmentUpgradeResult',upgrade_exec,example='assignment-upgrade')]
+    upgrade_query=PAGE+[{'name':'assignmentId','required':True,'schema':{'type':'string'}},{'name':'keyword','schema':{'type':'string'}},{'name':'ids','schema':{'type':'array','items':{'type':'string'}}}]
+    routes.append(route('/v1/platform/assignments/upgrade/role-candidates','get','platformAssignmentUpgradeRoles','升级目标角色版本候选','PLATFORM','iam-platform:assignment:upgrade',None,'RAuthorizationRoleCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'roleId','schema':{'type':'string'}}]))
+    routes.append(route('/v1/platform/assignments/upgrade/candidates','get','platformAssignmentUpgradeCandidates','升级版本与对象候选','PLATFORM','iam-platform:assignment:upgrade',None,'RAuthorizationCandidatePage',upgrade_exec,query=upgrade_query+[{'name':'kind','required':True,'schema':{'type':'string','enum':['ROLE_REVISION','OBJECT']}},{'name':'revisionId','schema':{'type':'string'}},{'name':'parameterKey','schema':{'type':'string'}},{'name':'tree','schema':{'type':'boolean'}},{'name':'parentId','schema':{'type':'string'}}]))
+    routes.append(route('/v1/platform/roles/preview', 'post', 'platformPreviewRoleCreate',
+                        '预览平台角色创建与字段权限', 'PLATFORM', 'iam-platform:role:create',
+                        'RoleCreateInput', 'RPreviewRoleDefinitionDraft',
+                        '角色字段仅平台自定义；注册资源能力与目录交集；只读预览，发布重验'))
     for item in routes:
         item['implemented'] = True
     seen = set()
