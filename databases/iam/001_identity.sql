@@ -29,6 +29,8 @@ CREATE TABLE iam_platform_member (
     account_id BIGINT UNSIGNED NOT NULL,
     display_name VARCHAR(128) NOT NULL,
     avatar VARCHAR(512) NULL,
+    phone VARCHAR(32) NULL COMMENT '平台联系资料，不修改全局登录手机号',
+    email VARCHAR(128) NULL COMMENT '平台联系资料，不修改全局账号邮箱',
     status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'ACTIVE',
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),

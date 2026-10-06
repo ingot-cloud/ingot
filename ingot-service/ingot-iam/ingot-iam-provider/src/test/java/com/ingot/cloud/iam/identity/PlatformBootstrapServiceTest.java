@@ -127,6 +127,8 @@ class PlatformBootstrapServiceTest {
         assertEquals("ops-admin", jdbc.queryForObject("SELECT username FROM iam_account", String.class));
         assertEquals("13800000001", jdbc.queryForObject("SELECT phone FROM iam_account", String.class));
         assertEquals("ops@example.com", jdbc.queryForObject("SELECT email FROM iam_account", String.class));
+        assertEquals("13800000001", jdbc.queryForObject("SELECT phone FROM iam_platform_member", String.class));
+        assertEquals("ops@example.com", jdbc.queryForObject("SELECT email FROM iam_platform_member", String.class));
         assertEquals("运维治理",
                 jdbc.queryForObject("SELECT display_name FROM iam_platform_member", String.class));
     }

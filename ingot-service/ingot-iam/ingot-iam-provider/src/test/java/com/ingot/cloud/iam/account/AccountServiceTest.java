@@ -88,7 +88,7 @@ class AccountServiceTest {
                   password_changed_at TIMESTAMP, last_login_at TIMESTAMP, version BIGINT, created_at TIMESTAMP,
                   updated_at TIMESTAMP, deleted_at TIMESTAMP)
                 """);
-        jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, display_name VARCHAR(128), avatar VARCHAR(256), status VARCHAR(16), version BIGINT, created_at TIMESTAMP, updated_at TIMESTAMP)");
+        jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT, display_name VARCHAR(128), avatar VARCHAR(256), phone VARCHAR(32), email VARCHAR(128), status VARCHAR(16), version BIGINT, created_at TIMESTAMP, updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant(id BIGINT PRIMARY KEY, name VARCHAR(128), enabled BOOLEAN, deleted_at TIMESTAMP, version BIGINT)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY, account_id BIGINT, tenant_id BIGINT, display_name VARCHAR(128), status VARCHAR(16), version BIGINT)");
         jdbc.execute("CREATE TABLE iam_department(id BIGINT PRIMARY KEY, tenant_id BIGINT, name VARCHAR(128))");
@@ -110,7 +110,7 @@ class AccountServiceTest {
                 VALUES (1,'alice','hash','13800000000','alice@example.com',TRUE,FALSE,0),
                        (2,'bob','hash',NULL,NULL,TRUE,FALSE,0)
                 """);
-        jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'管理者',NULL,'ACTIVE',0,NULL,NULL)");
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,display_name,avatar,status,version,created_at,updated_at) VALUES (1001,1,'管理者',NULL,'ACTIVE',0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_tenant VALUES (10,'组织A',TRUE,NULL,1)");
         jdbc.update("INSERT INTO iam_tenant_member VALUES (101,2,10,'成员','ACTIVE',0)");
         var identities = new ActiveIdentityService(IamMybatisTestAccess.identity(dataSource));

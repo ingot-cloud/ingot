@@ -505,7 +505,7 @@ public class MemberQueryService {
     }
 
     /**
-     * 更新当前域显示资料，不修改凭证或成员资格。平台成员的手机号和邮箱写入关联全局账号的登录联系方式，空引用表示不修改，空白表示清空。租户侧不可编辑字段仍拒绝写入。
+     * 更新当前域成员资料，不修改全局账号或成员资格。手机号和邮箱写入当前域成员的联系字段，空引用表示不修改，空白表示清空。不可编辑字段仍拒绝写入。
      * @param domain 接口管理域
      * @param memberId 成员 ID
      * @param input 资料
@@ -543,13 +543,8 @@ public class MemberQueryService {
                         IamAction.PLATFORM_MEMBER_UPDATE);
                 FieldPolicyProcessor.requireWritable(submitted,
                         FieldPolicyProcessor.access(writePolicy, new ScopeTarget(memberId, memberId, null, List.of())));
-                requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), version));
-                IamPlatformMemberEntity row = members.findPlatform(id);
-                if (row == null || row.getAccountId() == null) {
-                    throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-                }
-                requireApplied(members.updateAccountContacts(row.getAccountId().longValueExact(), input.phone(),
-                        input.email()));
+                requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), input.phone(),
+                        input.email(), version));
             }
             else {
                 long tenantId = IamIds.require(actor.context().tenantId());
@@ -650,7 +645,7 @@ public class MemberQueryService {
 
     private static MemberRecord platformMember(IamPlatformMemberEntity row, IamAccountEntity account) {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
-                account == null ? null : account.getPhone(), account == null ? null : account.getEmail(),
+                row.getPhone(), row.getEmail(),
                 account == null ? null : account.getUsername(), row.getStatus(), List.of());
     }
 

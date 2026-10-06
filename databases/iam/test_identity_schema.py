@@ -312,6 +312,30 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("UPDATE iam_field_rule SET editable = 1 WHERE id = 1", error=3819)
         self.sql("UPDATE iam_field_rule SET visibility = 'HIDDEN', editable = 1 WHERE id = 1", error=3819)
 
+    def test_platform_member_contacts_migrate_once_and_remain_independent(self):
+        self.sql("UPDATE iam_account SET phone='13800000001',email='login@example.com' WHERE id=1")
+        self.sql("UPDATE iam_account SET phone='13800000003',email='deleted@example.com',deleted_at=UTC_TIMESTAMP() WHERE id=2")
+        self.sql("INSERT INTO iam_platform_member(id,account_id,display_name) VALUES (1002,2,'Deleted account member')")
+        self.sql("UPDATE iam_tenant_member SET phone='13700000001',email='tenant@example.com' WHERE id=101")
+        self.sql("ALTER TABLE iam_platform_member DROP COLUMN phone, DROP COLUMN email")
+        migration = (SCHEMA_DIRECTORY / 'migrations/014_platform_member_contacts.sql').read_text()
+        self.sql(migration)
+        self.assertEqual('13800000001\tlogin@example.com', self.sql(
+            "SELECT phone,email FROM iam_platform_member WHERE id=1001"))
+        self.assertEqual('NULL\tNULL', self.sql(
+            "SELECT phone,email FROM iam_platform_member WHERE id=1002"))
+        self.sql("UPDATE iam_platform_member SET phone='13900000001',email='platform@example.com' WHERE id=1001")
+        self.assertEqual('13800000001\tlogin@example.com', self.sql(
+            "SELECT phone,email FROM iam_account WHERE id=1"))
+        self.assertEqual('13700000001\ttenant@example.com', self.sql(
+            "SELECT phone,email FROM iam_tenant_member WHERE id=101"))
+        self.sql("UPDATE iam_account SET phone='13800000002',email='changed@example.com' WHERE id=1")
+        self.assertEqual('13900000001\tplatform@example.com', self.sql(
+            "SELECT phone,email FROM iam_platform_member WHERE id=1001"))
+        self.sql(migration, error=1060)
+        self.assertEqual('13900000001\tplatform@example.com', self.sql(
+            "SELECT phone,email FROM iam_platform_member WHERE id=1001"))
+
     def test_migration_batch_requires_verification_metadata_and_explicit_resolution(self):
         self.sql("INSERT INTO iam_migration_batch (id, source_fingerprint, target_identifier, rules_version) VALUES ('batch', REPEAT('a', 64), 'isolated-fixture', '1')")
         self.sql("UPDATE iam_migration_batch SET status = 'VERIFIED' WHERE id = 'batch'", error=3819)

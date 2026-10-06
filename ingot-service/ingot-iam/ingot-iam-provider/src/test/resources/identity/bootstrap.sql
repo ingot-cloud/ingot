@@ -4,7 +4,7 @@ CREATE TABLE iam_account(id BIGINT PRIMARY KEY, username VARCHAR(64) UNIQUE, pas
     password_changed_at TIMESTAMP, last_login_at TIMESTAMP, version BIGINT DEFAULT 0,
     created_at TIMESTAMP, updated_at TIMESTAMP, deleted_at TIMESTAMP);
 CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY, account_id BIGINT REFERENCES iam_account(id) UNIQUE,
-    display_name VARCHAR(128), avatar VARCHAR(512), status VARCHAR(16), version BIGINT DEFAULT 0);
+    display_name VARCHAR(128), avatar VARCHAR(512), phone VARCHAR(32), email VARCHAR(128), status VARCHAR(16), version BIGINT DEFAULT 0);
 CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY, domain VARCHAR(16), tenant_id BIGINT, kind VARCHAR(24),
     code VARCHAR(128), name VARCHAR(128), description VARCHAR(512), enabled BOOLEAN DEFAULT TRUE,
     version BIGINT DEFAULT 0);

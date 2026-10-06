@@ -32,6 +32,14 @@ public class IamPlatformMemberEntity {
     @TableField("avatar")
     private String avatar;
 
+    /** 平台联系手机号，可空；不修改全局登录手机号。 */
+    @TableField("phone")
+    private String phone;
+
+    /** 平台联系邮箱，可空；不修改全局账号邮箱。 */
+    @TableField("email")
+    private String email;
+
     /** 平台成员资格。 */
     @TableField("status")
     private MemberStatus status;

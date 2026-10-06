@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
@@ -142,37 +141,6 @@ public class MemberQueryRepository {
             indexed.put(row.getId(), row);
         }
         return indexed;
-    }
-
-    /**
-     * 在调用方事务中按当前版本更新全局账号登录联系方式。空白写成空引用。
-     *
-     * @param accountId 全局账号 ID
-     * @param phone 登录手机号，空引用表示不修改
-     * @param email 登录邮箱，空引用表示不修改
-     * @return 受影响行数
-     */
-    public int updateAccountContacts(long accountId, String phone, String email) {
-        if (phone == null && email == null) {
-            return 1;
-        }
-        IamAccountEntity locked = accounts.lock(BigInteger.valueOf(accountId));
-        if (locked == null || locked.getVersion() == null) {
-            return 0;
-        }
-        LambdaUpdateWrapper<IamAccountEntity> update = Wrappers.<IamAccountEntity>lambdaUpdate()
-                .eq(IamAccountEntity::getId, locked.getId())
-                .isNull(IamAccountEntity::getDeletedAt)
-                .eq(IamAccountEntity::getVersion, locked.getVersion())
-                .set(IamAccountEntity::getVersion, locked.getVersion().add(BigInteger.ONE))
-                .set(IamAccountEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC));
-        if (phone != null) {
-            update.set(IamAccountEntity::getPhone, phone.isBlank() ? null : phone);
-        }
-        if (email != null) {
-            update.set(IamAccountEntity::getEmail, email.isBlank() ? null : email);
-        }
-        return accounts.update(update);
     }
 
     /**
@@ -369,7 +337,7 @@ public class MemberQueryRepository {
     }
 
     /**
-     * 新增平台成员资格。
+     * 新增平台成员资格，一次复制账号联系方式为平台联系资料，后续不自动同步。
      *
      * @param id 新成员 ID
      * @param accountId 全局账号 ID
@@ -382,6 +350,9 @@ public class MemberQueryRepository {
         row.setAccountId(BigInteger.valueOf(accountId));
         row.setDisplayName(displayName);
         row.setAvatar(IamOssPaths.store(avatar));
+        IamAccountEntity account = accountContacts(List.of(row.getAccountId())).get(row.getAccountId());
+        row.setPhone(account == null ? null : account.getPhone());
+        row.setEmail(account == null ? null : account.getEmail());
         row.setStatus(MemberStatus.ACTIVE);
         platformMembers.insert(row);
     }
@@ -466,20 +437,25 @@ public class MemberQueryRepository {
     }
 
     /**
-     * 按读取时的版本条件更新平台显示资料并递增版本，空引用表示保持原值。
+     * 按成员版本更新平台资料并递增版本，联系资料不修改全局账号；空引用保持原值，空白清空。
      *
      * @param memberId 平台成员 ID
      * @param displayName 显示名称，可空
      * @param avatar 头像引用，可空表示不修改；入库只保存 {@code bucket/objectName}
+     * @param phone 平台联系手机号，可空表示不修改，空白清空
+     * @param email 平台联系邮箱，可空表示不修改，空白清空
      * @param version 读取时的版本
      * @return 受影响行数；为 0 表示版本已被并发改写
      */
-    public int updatePlatform(long memberId, String displayName, String avatar, BigInteger version) {
+    public int updatePlatform(long memberId, String displayName, String avatar, String phone, String email,
+            BigInteger version) {
         return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamPlatformMemberEntity::getVersion, version)
                 .set(displayName != null, IamPlatformMemberEntity::getDisplayName, displayName)
                 .set(avatar != null, IamPlatformMemberEntity::getAvatar, IamOssPaths.store(avatar))
+                .set(phone != null, IamPlatformMemberEntity::getPhone, phone == null || phone.isBlank() ? null : phone)
+                .set(email != null, IamPlatformMemberEntity::getEmail, email == null || email.isBlank() ? null : email)
                 .set(IamPlatformMemberEntity::getVersion, version.add(BigInteger.ONE))
                 .set(IamPlatformMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
     }

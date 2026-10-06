@@ -22,8 +22,8 @@ import jakarta.validation.constraints.NotBlank;
  * @param expectedVersion 成员读取版本
  * @param displayName 显示名，可空表示不修改
  * @param avatar 头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径
- * @param phone 组织通讯录手机号，可空表示不修改；不可编辑或脱敏占位由服务拒绝
- * @param email 组织通讯录邮箱，可空表示不修改；不可编辑或脱敏占位由服务拒绝
+ * @param phone 当前域联系手机号，可空表示不修改；不修改登录信息，不可编辑或脱敏占位由服务拒绝
+ * @param email 当前域联系邮箱，可空表示不修改；不修改账号信息，不可编辑或脱敏占位由服务拒绝
  * @param suppliedFields 实际提交的键，仅服务端校验使用；平台显式 null 同样校验字段权限
  */
 @JsonDeserialize(using = MemberProfileInput.Deserializer.class)
@@ -32,7 +32,8 @@ public record MemberProfileInput(
         @NotBlank @Schema(description = "成员读取版本", requiredMode = Schema.RequiredMode.REQUIRED) String expectedVersion,
         @Schema(description = "显示名，可空表示不修改") String displayName,
         @Schema(description = "头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径") String avatar,
-        @Schema(description = "组织通讯录手机号，可空表示不修改") String phone, @Schema(description = "组织通讯录邮箱，可空表示不修改") String email,
+        @Schema(description = "当前域联系手机号，可空表示不修改；不修改全局登录手机号") String phone,
+        @Schema(description = "当前域联系邮箱，可空表示不修改；不修改全局账号邮箱") String email,
         @com.fasterxml.jackson.annotation.JsonIgnore @Schema(hidden = true) java.util.Set<String> suppliedFields) {
 
     /** 保留既有 Java 调用的空值不修改语义。 */
