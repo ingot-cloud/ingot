@@ -11,6 +11,194 @@
     }
   ],
   "paths": {
+    "/v1/me/password": {
+      "get": {
+        "operationId": "currentPasswordState",
+        "summary": "当前账号改密状态",
+        "tags": [
+          "CURRENT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "CURRENT",
+        "x-iam-action": null,
+        "x-iam-execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPasswordChangeState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "currentPutPassword",
+        "summary": "当前账号改密",
+        "tags": [
+          "CURRENT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "CURRENT",
+        "x-iam-action": null,
+        "x-iam-execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密；账号真实状态决定强制改密；确认密码必须一致；事务提交后撤销既有会话",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPasswordInput"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/bootstrap": {
       "get": {
         "operationId": "currentBootstrap",
@@ -25,7 +213,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "认证当前身份；身份及账号同时有效；固定域；一致快照",
+        "x-iam-execution": "认证当前身份；身份及账号同时有效；固定域；一致快照；必须改密时 HTTP 403 PasswordChangeRequired",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -115,7 +303,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503",
+        "x-iam-execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503；必须改密时 HTTP 403 PasswordChangeRequired",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -205,7 +393,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份",
+        "x-iam-execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份；必须改密时 HTTP 403 PasswordChangeRequired",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -293,7 +481,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段",
+        "x-iam-execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段；必须改密时 HTTP 403 PasswordChangeRequired",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -373,106 +561,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AccountSelfProfileInput"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/me/password": {
-      "put": {
-        "operationId": "currentPutPassword",
-        "summary": "当前账号改密",
-        "tags": [
-          "CURRENT"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "x-iam-domain": "CURRENT",
-        "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密",
-        "x-runtime-implemented": true,
-        "responses": {
-          "200": {
-            "description": "成功；使用既有 R 信封",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CurrentPasswordInput"
               }
             }
           }
@@ -24324,6 +24412,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",
@@ -24453,11 +24542,11 @@
           "assignmentDurationMode": {
             "type": "string",
             "description": "单次期限模式，省略按 LIMITED",
-            "default": "LIMITED",
             "enum": [
               "LIMITED",
               "UNLIMITED"
-            ]
+            ],
+            "default": "LIMITED"
           }
         },
         "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -26100,6 +26189,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",
@@ -26656,6 +26746,17 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PasswordChangeState": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AuthorizationContext"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
           }
         }
       },
@@ -27942,6 +28043,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/PageResponseResourceDetailTenantRecord"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RPasswordChangeState": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PasswordChangeState"
           },
           "success": {
             "type": "boolean"
@@ -30449,6 +30567,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",
@@ -30650,6 +30769,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",
@@ -30718,6 +30838,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",

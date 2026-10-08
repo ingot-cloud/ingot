@@ -1672,7 +1672,7 @@
           "reasonCode" : {
             "type" : "string",
             "description" : "拒绝原因，允许时可空",
-            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
+            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "PasswordChangeRequired", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
           },
           "message" : {
             "type" : "string",
@@ -1784,8 +1784,8 @@
           "assignmentDurationMode" : {
             "type" : "string",
             "description" : "单次期限模式，省略按 LIMITED",
-            "default" : "LIMITED",
-            "enum" : [ "LIMITED", "UNLIMITED" ]
+            "enum" : [ "LIMITED", "UNLIMITED" ],
+            "default" : "LIMITED"
           }
         },
         "description" : "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -3142,7 +3142,7 @@
           "reasonCode" : {
             "type" : "string",
             "description" : "拒绝或受限原因，允许时可空",
-            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
+            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "PasswordChangeRequired", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
           },
           "message" : {
             "type" : "string",
@@ -3595,6 +3595,17 @@
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }
+      },
+      "PasswordChangeState" : {
+        "type" : "object",
+        "properties" : {
+          "context" : {
+            "$ref" : "#/components/schemas/AuthorizationContext"
+          },
+          "mustChangePassword" : {
+            "type" : "boolean"
           }
         }
       },
@@ -4766,6 +4777,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/PageResponseResourceDetailTenantRecord"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RPasswordChangeState" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PasswordChangeState"
           },
           "success" : {
             "type" : "boolean"
@@ -6936,7 +6964,7 @@
           "reasonCode" : {
             "type" : "string",
             "description" : "冲突原因码",
-            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
+            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "PasswordChangeRequired", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
           },
           "message" : {
             "type" : "string",
@@ -7095,7 +7123,7 @@
           "code" : {
             "type" : "string",
             "description" : "稳定业务错误码",
-            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
+            "enum" : [ "InvalidArgument", "IdentityInvalid", "ActionDenied", "PasswordChangeRequired", "DataScopeDenied", "DelegationExceeded", "RoleRevisionUnavailable", "ApplicationUnavailable", "ObjectNotFound", "PolicyConflict", "RevisionConflict", "ObjectInUse", "StepUpFailed", "AuthorizationUnavailable" ]
           },
           "message" : {
             "type" : "string",

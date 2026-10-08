@@ -1,5 +1,17 @@
 [
   {
+    "path": "/v1/me/password",
+    "method": "get",
+    "operationId": "currentPasswordState",
+    "summary": "当前账号改密状态",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RPasswordChangeState",
+    "execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
+    "implemented": true
+  },
+  {
     "path": "/v1/me/bootstrap",
     "method": "get",
     "operationId": "currentBootstrap",
@@ -8,7 +20,7 @@
     "action": null,
     "request": null,
     "response": "RBootstrap",
-    "execution": "认证当前身份；身份及账号同时有效；固定域；一致快照",
+    "execution": "认证当前身份；身份及账号同时有效；固定域；一致快照；必须改密时 HTTP 403 PasswordChangeRequired",
     "implemented": true
   },
   {
@@ -20,7 +32,7 @@
     "action": null,
     "request": null,
     "response": "RCurrentCapabilities",
-    "execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503",
+    "execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503；必须改密时 HTTP 403 PasswordChangeRequired",
     "implemented": true
   },
   {
@@ -32,7 +44,7 @@
     "action": null,
     "request": null,
     "response": "RAccountSelfProfile",
-    "execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份",
+    "execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份；必须改密时 HTTP 403 PasswordChangeRequired",
     "implemented": true
   },
   {
@@ -44,7 +56,7 @@
     "action": null,
     "request": "AccountSelfProfileInput",
     "response": "RAccountSelfProfile",
-    "execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段",
+    "execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段；必须改密时 HTTP 403 PasswordChangeRequired",
     "implemented": true
   },
   {
@@ -56,7 +68,7 @@
     "action": null,
     "request": "CurrentPasswordInput",
     "response": "RVoid",
-    "execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密",
+    "execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密；账号真实状态决定强制改密；确认密码必须一致；事务提交后撤销既有会话",
     "implemented": true
   },
   {

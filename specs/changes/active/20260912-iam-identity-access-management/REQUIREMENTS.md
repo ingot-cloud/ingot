@@ -192,3 +192,7 @@
 ## 平台成员角色配置闭环（2026-10-06）
 
 增量需求见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
+
+## 强制改密闭环（2026-10-06）
+
+已批准并开始实施；规则、契约、FP01–FP05 任务及验收见 [强制改密增量](./FORCED-PASSWORD-CHANGE.md)。开发、自动化与人工验收分别记录。

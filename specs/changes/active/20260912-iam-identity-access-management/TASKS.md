@@ -327,3 +327,13 @@ RF01–RF07 开发、自动化与文档同步完成，本增量 validating；RF0
 实施任务见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
 
 MR01–MR03 开发与自动化验证完成，增量状态 validating；MR04 人工待执行，详见 PLATFORM-MEMBER-ROLE-EDITOR.md 与 RESOURCE-EXTENSION-VERIFICATION.md。
+
+## 强制改密闭环（2026-10-06）
+
+已批准并开始实施；规则、契约、FP01–FP05 任务及验收见 [强制改密增量](./FORCED-PASSWORD-CHANGE.md)。开发、自动化与人工验收分别记录。
+
+FP01–FP04 开发及限定自动化已完成，增量 validating；FP05 人工验收未执行。扩展全量检查的已有 InUser 列表测试失败单独记录，不宣称全仓库回归通过。证据见 [FORCED-PASSWORD-CHANGE](./FORCED-PASSWORD-CHANGE.md)。
+
+FP06 用户验收发现密码整包解密缺失，按已批准契约补齐实现并补充真实加密 MVC 回归；不得去掉必填验证或改为明文传输。任务和证据仍记录在同一增量。
+
+FP06 开发与 28 项限定回归通过；实际浏览器重测、重新登录与旧会话失效仍属于未完成的 FP05 人工验收。

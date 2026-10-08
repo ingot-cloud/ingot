@@ -638,7 +638,8 @@
       "AuthorizationSnapshotDTO": {
         "type": "object",
         "required": [
-          "platformAdministrator"
+          "platformAdministrator",
+          "passwordChangeRequired"
         ],
         "properties": {
           "tenantId": {
@@ -661,6 +662,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "passwordChangeRequired": {
+            "type": "boolean",
+            "description": "账号即时改密状态；缺失时消费方拒绝授权，为true时无业务或管理员资格"
           },
           "platformAdministrator": {
             "type": "boolean",
@@ -756,11 +761,11 @@
           "assignmentDurationMode": {
             "type": "string",
             "description": "单次期限模式，省略按 LIMITED",
-            "default": "LIMITED",
             "enum": [
               "LIMITED",
               "UNLIMITED"
-            ]
+            ],
+            "default": "LIMITED"
           }
         },
         "description": "描述单条不可拼接的委派限制，角色、人群、范围与期限共同生效"
@@ -863,6 +868,7 @@
               "InvalidArgument",
               "IdentityInvalid",
               "ActionDenied",
+              "PasswordChangeRequired",
               "DataScopeDenied",
               "DelegationExceeded",
               "RoleRevisionUnavailable",

@@ -92,7 +92,7 @@ T01 补充字段精确定义：RoleParameterDefinition 为 `{key,kind}`，kind �
 | /v1/me/bootstrap | GET 当前身份、应用、菜单、操作及版本 |
 | /v1/me/capabilities | GET 刷新当前操作、版本、expiresAt |
 | /v1/me/profile | GET/PATCH 当前认证账号联系资料；AUTHENTICATED_SELF，禁止提交其他账号 ID |
-| /v1/me/password | PUT 当前账号改密；`CurrentPasswordInput`；请求体加密；不臆造密码策略 |
+| /v1/me/password | GET 最小改密状态；PUT 当前账号改密，`CurrentPasswordInput` 请求体加密；不臆造密码策略 |
 | /v1/platform/accounts | GET 列表（page/pageSize）；POST 创建，一次性返回 `AccountSecret`，`data` 走 HYBRID 信封加密，不得再被列表或详情读取 |
 | /v1/platform/accounts/lookup | POST `AccountLookupInput`，必填 `purpose`：`MEMBER_CREATE` 返回 id、登录名与登录联系方式，`ACCOUNT_MANAGE` 仍不返回组织关系；未命中或不可见返回 `ObjectNotFound`，说明为「账号不存在」。可选 `domain`：`MEMBER_CREATE` 且 `domain=PLATFORM` 时，该账号已有平台成员资格（含暂停、已移出，因账号唯一）返回 `InvalidArgument`，说明为「该账号已是平台成员」；不传 `domain` 或用于组织创建时不检查成员资格，避免误伤租户向导 |
 | /v1/platform/accounts/{id} | GET/PATCH 资料；DELETE 仍有成员资格时 ObjectInUse |
@@ -326,3 +326,13 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 接口增量见 [PLATFORM-MEMBER-ROLE-EDITOR.md](PLATFORM-MEMBER-ROLE-EDITOR.md)，用户批准后实施，MR04 人工独立验收。
 
 平台成员表单改用 PlatformMemberEditInput（平铺资料字段 + 可选 roleChanges）。详见 PLATFORM-MEMBER-ROLE-EDITOR.md；bound-roles 为当前有效角色/版本聚合页；assignments 可使用 effectiveStatus=ACTIVE/directOnly=true 读取可编辑的非委派直接分配；POST /members/{id}/preview 只读预览，PATCH 保持事务内重验。既有 /roles 简单替换接口保留，但新表单不使用它，不以列表第一页替换全部授权。
+
+## 强制改密当前账号接口（2026-10-06）
+
+新增 `GET /v1/me/password` → `R<PasswordChangeState>`：仅包含可信当前 `context` 和 `mustChangePassword`，没有 profile、角色、应用、菜单或业务 ACTION。GET 与现有 PUT 密码端点使用精确 HTTP 方法标记并继续要求认证及在线 sid。
+
+必须改密的账号登录初始权限仅为 `in:init_pwd`。除已声明的公开入口和当前密码 GET/PUT 外，所有保护请求（含 bootstrap/capabilities/profile、仅登录和系统管理员接口）返回 403 `PasswordChangeRequired`；安全状态不可确定时 503，不使用旧授权放行。PUT 在账号真实状态上判定强制改密，校验确认密码；成功事务提交后撤销既有会话，必须重新登录。参数及加密要求沿用现有密码接口。
+
+内部快照 `AuthorizationSnapshotDTO.passwordChangeRequired` 为显式必需布尔事实；为 true 时无业务或平台管理员资格。旧消费节点与旧快照不能执行新闭环，缺失状态时拒绝。公共契约本次为 132 路径 / 200 操作。
+
+密码 PUT 沿用 HYBRID whole 模式：`{data: 密文}` 配合 In-Crypto-* 协议头；控制器须同时建立 Hybrid 上下文与整包解密，再绑定 `CurrentPasswordInput` 并执行必填校验。仅 `@InCryptoHybridContext` 不执行解密。前端字段、密文格式与密码策略不变。
