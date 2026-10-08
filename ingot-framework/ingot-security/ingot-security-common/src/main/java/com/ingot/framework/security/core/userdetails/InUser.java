@@ -3,7 +3,7 @@ package com.ingot.framework.security.core.userdetails;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -13,6 +13,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ingot.framework.commons.jackson.ApiTime;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.security.TokenAuthTypeEnum;
@@ -193,10 +194,16 @@ public class InUser extends User implements InUserDetails {
         }
         if (clazz == LocalDateTime.class) {
             if (value instanceof CharSequence cs) {
-                return LocalDateTime.parse(cs);
+                String text = cs.toString();
+                try {
+                    return ApiTime.parseUtc(text);
+                } catch (java.time.DateTimeException exception) {
+                    // 内部 Redis/JWT 元数据的旧编码没有偏移量，其值明确为 UTC。
+                    return LocalDateTime.parse(text);
+                }
             }
             if (value instanceof Number n) {
-                return LocalDateTime.ofInstant(Instant.ofEpochMilli(n.longValue()), ZoneId.systemDefault());
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli(n.longValue()), ZoneOffset.UTC);
             }
             throw unsupported(value, clazz);
         }

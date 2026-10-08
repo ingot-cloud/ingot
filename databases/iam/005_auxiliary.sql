@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：保留辅助领域结构，仅提取源结构定义，不包含数据、DROP 或 USE。
 -- 这些旧列名继续表示新 Account/Tenant/Application/Plan 的映射 ID；真实映射在迁移阶段验证。
 --

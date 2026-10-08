@@ -6,14 +6,14 @@ import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.enums.MemberErrorCode;
 import com.ingot.cloud.member.mapper.MemberUserMapper;
 import com.ingot.cloud.member.service.domain.MemberUserService;
-import com.ingot.framework.security.account.domain.model.UserAccount;
-import com.ingot.framework.security.account.domain.model.enums.EventSource;
-import com.ingot.framework.security.account.domain.port.inbound.DeleteAccountUseCase;
-import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.data.mybatis.common.service.BaseServiceImpl;
+import com.ingot.framework.security.account.domain.model.UserAccount;
+import com.ingot.framework.security.account.domain.model.enums.EventSource;
+import com.ingot.framework.security.account.domain.port.inbound.DeleteAccountUseCase;
+import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +69,7 @@ public class MemberUserServiceImpl extends BaseServiceImpl<MemberUserMapper, Mem
 
         checkUserUniqueField(user, current);
 
-        user.setUpdatedAt(DateUtil.now());
+        user.setUpdatedAt(DateUtil.utc());
         assertionChecker.checkOperation(updateById(user),
                 "MemberUserServiceImpl.UpdateFailed");
     }

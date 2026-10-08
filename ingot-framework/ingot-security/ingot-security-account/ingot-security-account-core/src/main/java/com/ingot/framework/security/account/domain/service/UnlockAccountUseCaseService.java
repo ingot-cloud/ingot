@@ -1,6 +1,7 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -107,7 +108,7 @@ public class UnlockAccountUseCaseService implements UnlockAccountUseCase {
         log.info("开始自动解锁过期的临时锁定");
 
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         long lastId = 0L;
         int totalUnlocked = 0;
         int totalFailed = 0;

@@ -1,6 +1,7 @@
 package com.ingot.framework.security.credential.data.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.framework.security.credential.data.mapper.PasswordExpirationMapper;
@@ -39,7 +40,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
     public void initExpiration(Long userId, int maxDays, int graceLoginCount, int warningDaysBefore) {
         log.info("初始化密码过期信息 - userId: {}, maxDays: {}", userId, maxDays);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime expiresAt = maxDays > 0 ? now.plusDays(maxDays) : null;
 
         PasswordExpiration expiration = new PasswordExpiration();
@@ -61,7 +62,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
         log.info("更新密码修改时间 - userId: {}, maxDays: {}", userId, maxDays);
 
         PasswordExpiration expiration = getByUserId(userId);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
         if (expiration == null) {
             // 不存在则初始化
@@ -90,7 +91,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
             return;
         }
         expiration.setForceChange(forceChange);
-        expiration.setUpdatedAt(LocalDateTime.now());
+        expiration.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
         mapper.updateById(expiration);
     }
 
@@ -107,7 +108,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
 
         int remaining = Math.max(0, expiration.getGraceLoginRemaining() - 1);
         expiration.setGraceLoginRemaining(remaining);
-        expiration.setUpdatedAt(LocalDateTime.now());
+        expiration.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
         mapper.updateById(expiration);
 
         log.debug("剩余宽限登录次数 - userId: {}, remaining: {}", userId, remaining);
@@ -123,7 +124,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
             return false;
         }
 
-        boolean expired = LocalDateTime.now().isAfter(expiration.getExpiresAt());
+        boolean expired = !LocalDateTime.now(ZoneOffset.UTC).isBefore(expiration.getExpiresAt());
         log.debug("密码过期检查结果 - userId: {}, expired: {}", userId, expired);
         return expired;
     }
@@ -137,7 +138,7 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
             return false;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime warningStartAt = expiration.getExpiresAt().minusDays(warningDaysBefore);
 
         // 已经过了警告开始时间，但还没过期
@@ -160,8 +161,8 @@ public class PasswordExpirationServiceImpl implements PasswordExpirationService 
         PasswordExpiration expiration = getByUserId(userId);
         if (expiration != null) {
             // 24小时后再次提醒
-            expiration.setNextWarningAt(LocalDateTime.now().plusHours(24));
-            expiration.setUpdatedAt(LocalDateTime.now());
+            expiration.setNextWarningAt(LocalDateTime.now(ZoneOffset.UTC).plusHours(24));
+            expiration.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
             mapper.updateById(expiration);
         }
     }

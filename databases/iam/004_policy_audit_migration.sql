@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：策略引用、审计事实与迁移记录，不初始化或授予任何默认权限。
 CREATE TABLE iam_default_policy_revision (
     id BIGINT UNSIGNED NOT NULL,

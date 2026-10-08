@@ -30,11 +30,11 @@ public final class DateUtil {
      * 当前UTC时间
      */
     public static LocalDateTime utc(){
-        return now(ZoneId.of(ZoneOffset.UTC.getId()));
+        return now(ZoneOffset.UTC);
     }
 
     /**
-     * 当前默认时区时间
+     * 当前默认时区日历时间；时间点入库与到期判断使用 {@link #utc()}
      */
     public static LocalDateTime now(){
         return now(ZoneId.systemDefault());

@@ -1,5 +1,9 @@
 package com.ingot.framework.security.recording.store.mysql;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+
 import com.ingot.framework.security.recording.config.SecurityEventProperties;
 import com.ingot.framework.security.recording.runtime.MemoryRecordQueue;
 import com.ingot.framework.security.recording.spi.SecurityEventRetentionHandler;
@@ -8,9 +12,6 @@ import com.ingot.framework.security.recording.store.mysql.internal.SecurityEvent
 import com.ingot.framework.security.recording.store.mysql.mapper.SecurityEventStoreMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * <p>MySQL 安全事件 retention：命名锁、分批删除、时间预算与队列积压让步。</p>
@@ -70,7 +71,7 @@ public final class MySqlSecurityEventRetentionHandler implements SecurityEventRe
     }
 
     private int purgeExpired(SecurityEventProperties.Retention retention) {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(retention.getDays());
+        LocalDateTime cutoff = LocalDateTime.now(ZoneOffset.UTC).minusDays(retention.getDays());
         int batchSize = Math.max(retention.getBatchSize(), 1);
         int maxRounds = Math.max(retention.getMaxRounds(), 1);
         long deadline = System.currentTimeMillis() + retention.getMaxDurationSeconds() * 1000L;

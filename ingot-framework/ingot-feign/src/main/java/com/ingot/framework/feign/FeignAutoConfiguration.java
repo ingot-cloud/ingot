@@ -1,19 +1,24 @@
 package com.ingot.framework.feign;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ingot.framework.commons.jackson.ApiTimeFormatterRegistrar;
+import com.ingot.framework.commons.jackson.InApiTimeModule;
 import com.ingot.framework.feign.codec.InErrorDecoder;
 import com.ingot.framework.feign.reactive.FeignReactiveContextWebFilter;
 import com.ingot.framework.feign.reactive.ReactiveOAuth2FeignRequestInterceptor;
 import feign.Feign;
 import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
-import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.cloud.openfeign.FeignFormatterRegistrar;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -28,6 +33,12 @@ import org.springframework.web.server.ServerWebExchange;
 @AutoConfiguration
 @ConditionalOnClass(Feign.class)
 public class FeignAutoConfiguration {
+
+    /** Feign query/path 参数与 HTTP JSON 使用同一时间点契约。 */
+    @Bean
+    public FeignFormatterRegistrar apiTimeFeignFormatterRegistrar() {
+        return registry -> new ApiTimeFormatterRegistrar().registerFormatters(registry);
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -75,7 +86,8 @@ public class FeignAutoConfiguration {
             ObjectProvider<ObjectMapper> objectMappers) {
         List<HttpMessageConverter<?>> messageConverters = converters.orderedStream().toList();
         if (messageConverters.isEmpty()) {
-            ObjectMapper objectMapper = objectMappers.getIfAvailable(ObjectMapper::new);
+            ObjectMapper objectMapper = objectMappers.getIfAvailable(() -> new ObjectMapper()
+                    .registerModule(new JavaTimeModule()).registerModule(new InApiTimeModule()));
             return new HttpMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper));
         }
         return new HttpMessageConverters(messageConverters);

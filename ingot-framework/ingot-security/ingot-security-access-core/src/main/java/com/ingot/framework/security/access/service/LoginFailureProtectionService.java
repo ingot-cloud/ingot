@@ -1,22 +1,23 @@
 package com.ingot.framework.security.access.service;
 
-import com.ingot.framework.commons.constants.RedisKeyConstants;
-import com.ingot.cloud.security.api.model.enums.LoginFailureDimension;
-import com.ingot.cloud.security.api.model.enums.SecurityEventCategory;
-import com.ingot.cloud.security.api.model.enums.SecurityEventType;
-import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
-import com.ingot.framework.security.access.model.LoginFailureContext;
-import com.ingot.framework.security.access.model.LoginFailurePolicy;
-import cn.hutool.core.util.StrUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
+import com.ingot.cloud.security.api.model.enums.LoginFailureDimension;
+import com.ingot.cloud.security.api.model.enums.SecurityEventCategory;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
+import com.ingot.framework.commons.constants.RedisKeyConstants;
+import com.ingot.framework.security.access.model.LoginFailureContext;
+import com.ingot.framework.security.access.model.LoginFailurePolicy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 登录失败保护执行服务。
@@ -110,7 +111,7 @@ public class LoginFailureProtectionService {
         SecurityEventReportDTO dto = SecurityEventReportDTO.builder()
                 .eventType(type.getCode())
                 .eventCategory(SecurityEventCategory.ACCESS.getCode())
-                .occurredAt(LocalDateTime.now())
+                .occurredAt(LocalDateTime.now(ZoneOffset.UTC))
                 .account(ctx.username())
                 .userType(ctx.userType())
                 .clientId(ctx.clientId())

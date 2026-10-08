@@ -47,7 +47,7 @@ public class PlatformAppServiceImpl extends BaseServiceImpl<PlatformAppMapper, P
             params.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        params.setCreatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
         params.setUpdatedAt(params.getCreatedAt());
         save(params);
     }

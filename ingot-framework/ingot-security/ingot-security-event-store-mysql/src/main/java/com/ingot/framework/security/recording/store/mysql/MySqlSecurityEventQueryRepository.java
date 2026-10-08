@@ -1,5 +1,13 @@
 package com.ingot.framework.security.recording.store.mysql;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.recording.model.CursorPage;
 import com.ingot.framework.security.recording.model.CursorPageRequest;
@@ -10,13 +18,6 @@ import com.ingot.framework.security.recording.store.mysql.internal.SecurityEvent
 import com.ingot.framework.security.recording.store.mysql.mapper.SecurityEventStoreMapper;
 import com.ingot.framework.security.recording.store.mysql.model.CanonicalSecurityEventEntity;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * <p>MySQL 安全事件游标查询实现。</p>
  *
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public final class MySqlSecurityEventQueryRepository implements SecurityEventQueryRepository {
 
-    private static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final ZoneId ZONE = ZoneOffset.UTC;
     private static final long DEFAULT_RANGE_HOURS = 24;
 
     private final SecurityEventStoreMapper mapper;
@@ -39,7 +40,7 @@ public final class MySqlSecurityEventQueryRepository implements SecurityEventQue
     @Override
     public CursorPage<SecurityEventRecord> query(SecurityEventQuery query, CursorPageRequest page) {
         LocalDateTime receivedTo = query.receivedTo() == null
-                ? LocalDateTime.now()
+                ? LocalDateTime.now(ZoneOffset.UTC)
                 : LocalDateTime.ofInstant(query.receivedTo(), ZONE);
         LocalDateTime receivedFrom = query.receivedFrom() == null
                 ? receivedTo.minusHours(DEFAULT_RANGE_HOURS)

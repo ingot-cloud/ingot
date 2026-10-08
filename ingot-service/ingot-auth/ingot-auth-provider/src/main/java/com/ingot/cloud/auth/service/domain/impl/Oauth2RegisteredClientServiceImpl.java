@@ -113,7 +113,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         client.setId(id);
         client.setClientId(id);
-        client.setClientIdIssuedAt(DateUtil.now());
+        client.setClientIdIssuedAt(DateUtil.utc());
         client.setClientSecret(passwordEncoder.encode(secret));
 
         ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
@@ -126,7 +126,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
 
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
-        client.setUpdatedAt(DateUtil.now());
+        client.setUpdatedAt(DateUtil.utc());
 
         assertI18nService.checkOperation(save(client),
                 "Oauth2RegisteredClientServiceImpl.CreateFailed");
@@ -151,7 +151,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         client.setClientSecret(null);
         client.setClientSettings(clientSettingsBuilder.build());
         client.setTokenSettings(tokenSettingsBuilder.build());
-        client.setUpdatedAt(DateUtil.now());
+        client.setUpdatedAt(DateUtil.utc());
 
         assertI18nService.checkOperation(updateById(client),
                 "Oauth2RegisteredClientServiceImpl.UpdateFailed");
@@ -177,7 +177,7 @@ public class Oauth2RegisteredClientServiceImpl extends BaseServiceImpl<Oauth2Reg
         result.setAppSecret(secret);
 
         current.setClientSecret(passwordEncoder.encode(secret));
-        current.setUpdatedAt(DateUtil.now());
+        current.setUpdatedAt(DateUtil.utc());
         current.updateById();
         return result;
     }

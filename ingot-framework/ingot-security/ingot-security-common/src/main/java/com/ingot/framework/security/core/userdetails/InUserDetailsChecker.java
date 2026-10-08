@@ -2,6 +2,7 @@ package com.ingot.framework.security.core.userdetails;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import com.ingot.framework.security.core.InSecurityMessageSource;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +76,7 @@ public class InUserDetailsChecker implements UserDetailsChecker {
             LocalDateTime lockedUntil = inUser.getMetaValue(InUserMetaKeys.LOCKED_UNTIL, LocalDateTime.class);
             if (lockedUntil != null) {
                 long remainingMinutes = Math.max(1L,
-                        Duration.between(LocalDateTime.now(), lockedUntil).toMinutes());
+                        Duration.between(LocalDateTime.now(ZoneOffset.UTC), lockedUntil).toMinutes());
                 return messages.getMessage(
                         "InUserDetailsChecker.lockedTemporary",
                         new Object[]{remainingMinutes},

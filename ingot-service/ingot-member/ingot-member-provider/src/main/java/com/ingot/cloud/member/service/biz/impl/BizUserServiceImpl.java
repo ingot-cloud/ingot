@@ -17,6 +17,11 @@ import com.ingot.cloud.member.api.model.dto.user.MemberUserPasswordDTO;
 import com.ingot.cloud.member.api.model.vo.user.MemberUserProfileVO;
 import com.ingot.cloud.member.service.biz.BizUserService;
 import com.ingot.cloud.member.service.domain.*;
+import com.ingot.framework.commons.model.security.ResetPwdVO;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.commons.utils.UUIDUtil;
+import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import com.ingot.framework.security.account.domain.model.enums.LockReason;
@@ -25,17 +30,12 @@ import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCa
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.account.domain.port.inbound.UnlockAccountUseCase;
-import com.ingot.framework.commons.model.security.ResetPwdVO;
-import org.springframework.lang.Nullable;
-import com.ingot.framework.commons.model.security.UserTypeEnum;
-import com.ingot.framework.commons.utils.DateUtil;
-import com.ingot.framework.commons.utils.UUIDUtil;
-import com.ingot.framework.core.utils.validation.AssertionChecker;
 import com.ingot.framework.security.core.context.SecurityAuthContext;
 import com.ingot.framework.security.core.userdetails.InUser;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
 import com.ingot.framework.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,7 +125,7 @@ public class BizUserServiceImpl implements BizUserService {
                     "MemberUserServiceImpl.EmailExist");
         }
 
-        user.setUpdatedAt(DateUtil.now());
+        user.setUpdatedAt(DateUtil.utc());
         assertionChecker.checkOperation(userService.updateById(user),
                 "MemberUserServiceImpl.UpdateFailed");
     }

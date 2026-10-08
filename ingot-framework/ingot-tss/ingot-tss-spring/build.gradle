@@ -1,6 +1,9 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.web_starter)
+    testRuntimeOnly(deps.junit.platform_launcher)
     // 依赖 common 模块
     api project(ingot.framework_tss_common)
     
@@ -13,4 +16,8 @@ dependencies {
     
     // Servlet API（可选）
     compileOnly(deps.jakarta_servlet_api)
+}
+
+test {
+    useJUnitPlatform()
 }

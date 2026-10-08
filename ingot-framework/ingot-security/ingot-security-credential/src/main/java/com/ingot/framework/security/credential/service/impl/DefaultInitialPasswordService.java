@@ -1,6 +1,7 @@
 package com.ingot.framework.security.credential.service.impl;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import cn.hutool.core.util.RandomUtil;
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties.InitialPasswordPolicy;
@@ -44,7 +45,7 @@ public class DefaultInitialPasswordService implements InitialPasswordService {
         if (validHours <= 0 || issuedAt == null) {
             return false;
         }
-        return LocalDateTime.now().isAfter(issuedAt.plusHours(validHours));
+        return !LocalDateTime.now(ZoneOffset.UTC).isBefore(issuedAt.plusHours(validHours));
     }
 
     @Override

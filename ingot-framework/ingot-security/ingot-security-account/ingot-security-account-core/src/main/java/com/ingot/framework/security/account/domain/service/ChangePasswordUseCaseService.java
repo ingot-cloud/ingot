@@ -1,20 +1,21 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
+import com.ingot.framework.commons.utils.AssertionUtil;
 import com.ingot.framework.security.account.domain.config.AccountMessageSource;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
-import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ChangePasswordUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserCredentialPort;
 import com.ingot.framework.security.account.domain.support.AfterCommitActions;
-import com.ingot.framework.commons.utils.AssertionUtil;
 import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
@@ -83,7 +84,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 command.getUserId(),
                 command.getUserType(),
                 newPasswordHash,
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 account.getVersion(),
                 false
         );
@@ -116,7 +117,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 command.getUserId(),
                 command.getUserType(),
                 newPasswordHash,
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 account.getVersion(),
                 true
         );
@@ -136,7 +137,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 .source(command.getSource())
                 .operatorId(command.getOperatorId())
                 .operatorName(command.getOperatorName())
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build());
 
         // 4. 重置与自助改密同一口径：旧密码签发的会话全部下线
@@ -173,7 +174,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 command.getUserId(),
                 command.getUserType(),
                 newPasswordHash,
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 account.getVersion(),
                 false
         );
@@ -187,7 +188,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 .eventType(SecurityEventType.FORCE_CHANGE_PASSWORD)
                 .result(true)
                 .source(command.getSource())
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build());
 
         revokeSessionsAfterCommit(command.getUserId(), command.getUserId());

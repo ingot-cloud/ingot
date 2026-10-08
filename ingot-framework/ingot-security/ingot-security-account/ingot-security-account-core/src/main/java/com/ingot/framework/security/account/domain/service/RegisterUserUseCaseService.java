@@ -1,12 +1,13 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.config.AccountMessageSource;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
-import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.RegisterUserUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
@@ -86,7 +87,7 @@ public class RegisterUserUseCaseService implements RegisterUserUseCase {
             mustChangePwd = Boolean.TRUE;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         UserAccount account = UserAccount.builder()
                 .userType(command.getUserType())
                 .username(command.getUsername())

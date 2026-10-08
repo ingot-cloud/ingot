@@ -1,14 +1,15 @@
 package com.ingot.framework.security.recording.transport.feign;
 
-import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
-import com.ingot.framework.security.recording.model.RecordPriority;
-import com.ingot.framework.security.recording.model.SecurityEventRecord;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
+
+import com.ingot.cloud.security.api.model.dto.SecurityEventReportDTO;
+import com.ingot.framework.security.recording.model.RecordPriority;
+import com.ingot.framework.security.recording.model.SecurityEventRecord;
 
 /**
  * <p>{@link SecurityEventReportDTO} 与 {@link SecurityEventRecord} 互转。</p>
@@ -18,7 +19,7 @@ import java.util.Locale;
  */
 public final class SecurityEventReportMapper {
 
-    private static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final ZoneId ZONE = ZoneOffset.UTC;
 
     private SecurityEventReportMapper() {
     }

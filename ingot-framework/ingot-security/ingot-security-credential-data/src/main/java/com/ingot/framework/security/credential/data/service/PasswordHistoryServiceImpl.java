@@ -1,6 +1,7 @@
 package com.ingot.framework.security.credential.data.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import cn.hutool.core.collection.CollUtil;
@@ -69,7 +70,7 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
         if (existing != null) {
             // 更新现有记录（覆盖最旧的）
             existing.setPasswordHash(passwordEncoder.encode(password));
-            existing.setUpdatedAt(LocalDateTime.now());
+            existing.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
             existing.setVersion(version);
             mapper.updateById(existing);
             log.debug("更新密码历史记录 - id: {}, seq: {}", existing.getId(), nextSeq);
@@ -80,8 +81,8 @@ public class PasswordHistoryServiceImpl implements PasswordHistoryService {
             history.setPasswordHash(passwordEncoder.encode(password));
             history.setSequenceNumber(nextSeq);
             history.setVersion(version);
-            history.setCreatedAt(LocalDateTime.now());
-            history.setUpdatedAt(LocalDateTime.now());
+            history.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+            history.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
             mapper.insert(history);
             log.debug("插入密码历史记录 - seq: {}", nextSeq);
         }

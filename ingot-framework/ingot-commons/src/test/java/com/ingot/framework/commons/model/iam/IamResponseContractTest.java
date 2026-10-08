@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class IamResponseContractTest {
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
-            .registerModule(new InModule());
+            .registerModule(new InModule()).registerModule(new com.ingot.framework.commons.jackson.InApiTimeModule());
 
     private <T> T fixture(String name, TypeReference<T> type) throws Exception {
         try (InputStream input = getClass().getResourceAsStream("/iam/" + name + ".json")) {
@@ -74,13 +74,13 @@ class IamResponseContractTest {
     }
 
     @Test
-    void assignmentCreationUsesClientWallClockWhileValidityRemainsAnInstant() {
+    void assignmentCreationAndValidityStayUtcRegardlessOfMapperTimeZone() {
         var instant = java.time.Instant.parse("2026-09-28T08:00:00Z");
         var input = new AssignmentInput(new SubjectRef(SubjectType.MEMBER, "1002"),
                 new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "31"), Map.of(), instant, null, null);
         var record = new AssignmentRecord("90", input, GrantStatus.ACTIVE, AssignmentSource.MANUAL,
                 "接收人", "角色", "1", "直接分配", instant, new AssignmentAuthor(null, "未知"), AssignmentEffectiveStatus.ACTIVE);
-        for (var sample : Map.of("Asia/Shanghai", "2026-09-28 16:00:00", "America/New_York", "2026-09-28 04:00:00").entrySet()) {
+        for (var sample : Map.of("Asia/Shanghai", "2026-09-28T08:00:00Z", "America/New_York", "2026-09-28T08:00:00Z").entrySet()) {
             var json = mapper.copy().setTimeZone(java.util.TimeZone.getTimeZone(sample.getKey())).valueToTree(record);
             assertEquals(sample.getValue(), json.get("createdAt").asText());
             assertEquals("2026-09-28T08:00:00Z", json.at("/assignment/validFrom").asText());

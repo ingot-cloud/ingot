@@ -1,17 +1,16 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
-import com.ingot.framework.commons.model.iam.IamAction;
-
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.cloud.iam.api.model.domain.BizLeafAlloc;
 import com.ingot.cloud.iam.service.domain.BizLeafAllocService;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +63,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ID_ALLOCATION_CREATE)
     public R<Void> create(@RequestBody BizLeafAlloc params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_CREATE);
-        params.setUpdateTime(DateUtil.now());
+        params.setUpdateTime(DateUtil.utc());
         allocations.save(params);
         return ok();
     }
@@ -82,7 +81,7 @@ public class PlatformIdAllocationAPI implements RShortcuts {
     public R<Void> update(@PathVariable String id, @RequestBody BizLeafAlloc params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ID_ALLOCATION_UPDATE);
         params.setBizTag(id);
-        params.setUpdateTime(DateUtil.now());
+        params.setUpdateTime(DateUtil.utc());
         allocations.updateById(params);
         return ok();
     }

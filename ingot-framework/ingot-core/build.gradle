@@ -1,6 +1,9 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.spring.spring_boot.web_starter)
+    testRuntimeOnly(deps.junit.platform_launcher)
 
     api(deps.rx_java)
     api(deps.aspectj.aspectjweaver)
@@ -33,4 +36,8 @@ dependencies {
     compileOnly(deps.jakarta_servlet_api)
     compileOnly(deps.spring.framework_spring_webflux)
     compileOnly(deps.spring.framework_webmvc)
+}
+
+test {
+    useJUnitPlatform()
 }

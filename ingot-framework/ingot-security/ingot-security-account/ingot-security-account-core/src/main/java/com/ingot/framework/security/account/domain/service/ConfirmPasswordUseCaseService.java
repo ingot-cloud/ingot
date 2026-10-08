@@ -1,8 +1,10 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import cn.hutool.core.util.StrUtil;
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.ConfirmPasswordFailedException;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
@@ -16,7 +18,6 @@ import com.ingot.framework.security.account.domain.port.inbound.LockAccountUseCa
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
-import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,7 +70,7 @@ public class ConfirmPasswordUseCaseService implements ConfirmPasswordUseCase {
             int windowMinutes = lockout.attemptWindowMinutes();
             lockStatePort.findByUser(userId, userType).ifPresent(state -> {
                 if (state.getLastFailedAt() != null
-                        && state.getLastFailedAt().plusMinutes(windowMinutes).isBefore(LocalDateTime.now())) {
+                        && !state.getLastFailedAt().plusMinutes(windowMinutes).isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
                     lockStatePort.resetFailCount(userId, userType);
                 }
             });
@@ -91,7 +92,7 @@ public class ConfirmPasswordUseCaseService implements ConfirmPasswordUseCase {
                 .result(false)
                 .reasonDetail(STEP_UP_FAILURE)
                 .source(EventSource.IAM)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build());
     }
 

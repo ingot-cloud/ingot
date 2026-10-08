@@ -1,6 +1,7 @@
 package com.ingot.framework.gateway.rule.client.blacklist.internal;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -50,7 +51,7 @@ public class CompiledIpList {
         if (items == null || items.isEmpty()) {
             return compiled;
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         for (IpListItem item : items) {
             if (!isActive(item, now)) {
                 continue;
@@ -179,7 +180,7 @@ public class CompiledIpList {
         if (item.getEffectiveAt() != null && item.getEffectiveAt().isAfter(now)) {
             return false;
         }
-        return item.getExpiresAt() == null || !item.getExpiresAt().isBefore(now);
+        return item.getExpiresAt() == null || item.getExpiresAt().isAfter(now);
     }
 
     private static boolean notBlank(String s) {

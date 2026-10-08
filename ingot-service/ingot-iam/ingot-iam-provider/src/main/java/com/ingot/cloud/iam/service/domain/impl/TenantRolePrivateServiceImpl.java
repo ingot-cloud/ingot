@@ -80,7 +80,7 @@ public class TenantRolePrivateServiceImpl extends BaseServiceImpl<TenantRolePriv
             role.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        role.setCreatedAt(DateUtil.now());
+        role.setCreatedAt(DateUtil.utc());
         role.setUpdatedAt(role.getCreatedAt());
 
         save(role);
@@ -96,7 +96,7 @@ public class TenantRolePrivateServiceImpl extends BaseServiceImpl<TenantRolePriv
         role.setType(null);
         // 组织类型不可修改
         role.setOrgType(null);
-        role.setUpdatedAt(DateUtil.now());
+        role.setUpdatedAt(DateUtil.utc());
         updateById(role);
     }
 

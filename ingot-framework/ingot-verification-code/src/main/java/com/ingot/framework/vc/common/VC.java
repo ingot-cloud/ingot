@@ -1,14 +1,9 @@
 package com.ingot.framework.vc.common;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 
 /**
@@ -32,12 +27,9 @@ public class VC implements Serializable {
      */
     private int expireIn;
     /**
-     * 到期时间
+     * 到期时间点（UTC），不随 JVM 时区变化
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    private LocalDateTime expireTime;
+    private Instant expireTime;
 
     /**
      * 实例化
@@ -58,7 +50,7 @@ public class VC implements Serializable {
         this.type = type;
         this.value = value;
         this.expireIn = expireIn;
-        this.expireTime = LocalDateTime.now().plusSeconds(expireIn);
+        this.expireTime = Instant.now().plusSeconds(expireIn);
     }
 
     /**
@@ -68,7 +60,7 @@ public class VC implements Serializable {
      */
     @JsonIgnore
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expireTime);
+        return !Instant.now().isBefore(expireTime);
     }
 
     /**

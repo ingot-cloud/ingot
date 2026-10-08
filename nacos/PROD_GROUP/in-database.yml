@@ -117,4 +117,3 @@ mybatis-plus:
       # 字段策略
       insert-strategy: not_null
       update-strategy: not_null
-

@@ -72,7 +72,7 @@ public class MemberPermissionServiceImpl extends BaseServiceImpl<MemberPermissio
             authority.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        authority.setCreatedAt(DateUtil.now());
+        authority.setCreatedAt(DateUtil.utc());
         authority.setUpdatedAt(authority.getCreatedAt());
 
         save(authority);
@@ -84,7 +84,7 @@ public class MemberPermissionServiceImpl extends BaseServiceImpl<MemberPermissio
     public void update(MemberPermission authority) {
         // 权限编码不可更新
         authority.setCode(null);
-        authority.setUpdatedAt(DateUtil.now());
+        authority.setUpdatedAt(DateUtil.utc());
         updateById(authority);
     }
 

@@ -18,7 +18,7 @@ import jakarta.validation.constraints.*;
  * @param roleName 角色名称
  * @param revisionNumber 固定版本号
  * @param delegationSummary 授权依据摘要
- * @param createdAt 请求当地时间的授权时间
+ * @param createdAt UTC 授权时间
  * @param grantedBy 创建审计授权人
  * @param effectiveStatus 计算状态
  */
@@ -37,11 +37,7 @@ public record AssignmentRecord(
         @Schema(description = "角色名称") String roleName,
         @Schema(description = "固定版本号") String revisionNumber,
         @Schema(description = "授权依据摘要") String delegationSummary,
-        @com.fasterxml.jackson.databind.annotation.JsonSerialize(
-                using = com.ingot.framework.commons.jackson.WallClockInstantSerializer.class)
-        @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-                using = com.ingot.framework.commons.jackson.WallClockInstantDeserializer.class)
-        @Schema(description = "授权创建时间，按请求当地时区返回", type = "string", example = "2026-09-28 16:00:00")
+        @Schema(description = "授权创建时间，ISO-8601 UTC", type = "string", format = "date-time", example = "2026-09-28T08:00:00Z")
         java.time.Instant createdAt,
         @Schema(description = "实际创建审计授权人") AssignmentAuthor grantedBy,
         @Schema(description = "计算后的生效状态") AssignmentEffectiveStatus effectiveStatus) {

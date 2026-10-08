@@ -1,6 +1,7 @@
 package com.ingot.framework.security.credential.policy;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
@@ -89,10 +90,10 @@ public class PasswordExpirationPolicy implements PasswordPolicy {
 
         // 计算过期时间
         LocalDateTime expiresAt = lastChangedAt.plusDays(maxDays);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
         // 检查是否过期
-        if (now.isAfter(expiresAt)) {
+        if (!now.isBefore(expiresAt)) {
             // 已过期
             Integer graceRemaining = context.getGraceLoginRemaining();
             if (graceRemaining != null && graceRemaining > 0) {

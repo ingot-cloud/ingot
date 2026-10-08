@@ -23,6 +23,8 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
  */
 public class InJavaTimeModule extends SimpleModule {
 
+    // 内部 Redis/OAuth 编码；HTTP/Feign 使用独立 InApiTimeModule，不在此改变存储格式。
+
     public InJavaTimeModule() {
         super(InJavaTimeModule.class.getName(), PackageVersion.VERSION);
 

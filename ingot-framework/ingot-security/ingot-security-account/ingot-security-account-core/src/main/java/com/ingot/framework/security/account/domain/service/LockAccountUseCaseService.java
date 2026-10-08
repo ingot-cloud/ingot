@@ -1,6 +1,7 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
@@ -96,7 +97,7 @@ public class LockAccountUseCaseService implements LockAccountUseCase {
         // 计算锁定到期时间
         LocalDateTime lockedUntil = null;
         if (durationMinutes != null && durationMinutes > 0) {
-            lockedUntil = LocalDateTime.now().plusMinutes(durationMinutes);
+            lockedUntil = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(durationMinutes);
         }
 
         // 1. 更新锁定状态

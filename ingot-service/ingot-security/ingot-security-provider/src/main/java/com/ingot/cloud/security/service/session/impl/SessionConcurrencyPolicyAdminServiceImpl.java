@@ -60,8 +60,8 @@ public class SessionConcurrencyPolicyAdminServiceImpl implements SessionConcurre
         normalize(policy);
         checkUnique(policy, null);
         policy.setId(null);
-        policy.setCreatedAt(DateUtil.now());
-        policy.setUpdatedAt(DateUtil.now());
+        policy.setCreatedAt(DateUtil.utc());
+        policy.setUpdatedAt(DateUtil.utc());
         policyMapper.insert(policy);
         publishChanged();
         return policy;
@@ -75,7 +75,7 @@ public class SessionConcurrencyPolicyAdminServiceImpl implements SessionConcurre
         normalize(policy);
         checkUnique(policy, policy.getId());
         policy.setCreatedAt(existing.getCreatedAt());
-        policy.setUpdatedAt(DateUtil.now());
+        policy.setUpdatedAt(DateUtil.utc());
         policyMapper.updateById(policy);
         publishChanged();
         return policy;

@@ -68,7 +68,8 @@ class RoleWorkspaceMySqlHttpTest {
 
     private IamAccess access;
 
-    private final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
+    private final ObjectMapper json = new ObjectMapper().findAndRegisterModules()
+            .registerModule(new com.ingot.framework.commons.jackson.InApiTimeModule());
 
     private final ActiveIdentity actor = new ActiveIdentity(
             new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "9", "99"), "0", "0", "0");
@@ -81,7 +82,7 @@ class RoleWorkspaceMySqlHttpTest {
                 "MYSQL_PASSWORD=fixture", "mysql:8.4");
         String address = command("docker", "port", container, "3306/tcp").trim();
         DataSource source = new DriverManagerDataSource(
-                "jdbc:mysql://" + address + "/fixture?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false",
+                "jdbc:mysql://" + address + "/fixture?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false",
                 "fixture", "fixture");
         jdbc = new JdbcTemplate(source);
         long deadline = System.nanoTime() + Duration.ofSeconds(60).toNanos();
@@ -771,7 +772,8 @@ class RoleWorkspaceMySqlHttpTest {
         /** 使用真实时间及契约类型进行响应序列化。 */
         @Override
         public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-            converters.add(new MappingJackson2HttpMessageConverter(new ObjectMapper().findAndRegisterModules()));
+            converters.add(new MappingJackson2HttpMessageConverter(new ObjectMapper().findAndRegisterModules()
+                    .registerModule(new com.ingot.framework.commons.jackson.InApiTimeModule())));
         }
 
     }

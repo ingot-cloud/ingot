@@ -9,7 +9,7 @@ spring:
     servlet:
       content-type: text/html
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_auth}?useUnicode=true&characterEncoding=UTF8&useSSL=${MYSQL_SSL:false}&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=${MYSQL_PREP_STMT_CACHE_SIZE:250}&prepStmtCacheSqlLimit=${MYSQL_PREP_STMT_SQL_LIMIT:2048}&cacheResultSetMetadata=true&cacheServerConfiguration=true&maintainTimeStats=false&useLocalSessionState=true&elideSetAutoCommits=true&socketTimeout=${MYSQL_SOCKET_TIMEOUT:30000}&connectTimeout=${MYSQL_CONNECT_TIMEOUT:10000}
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_auth}?useUnicode=true&characterEncoding=UTF8&useSSL=${MYSQL_SSL:false}&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=${MYSQL_PREP_STMT_CACHE_SIZE:250}&prepStmtCacheSqlLimit=${MYSQL_PREP_STMT_SQL_LIMIT:2048}&cacheResultSetMetadata=true&cacheServerConfiguration=true&maintainTimeStats=false&useLocalSessionState=true&elideSetAutoCommits=true&socketTimeout=${MYSQL_SOCKET_TIMEOUT:30000}&connectTimeout=${MYSQL_CONNECT_TIMEOUT:10000}
 
 ingot:
   security:

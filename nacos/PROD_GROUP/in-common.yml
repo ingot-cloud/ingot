@@ -35,8 +35,8 @@ spring:
       enabled: true
       resolve-lazily: true  # 延迟解析，提高性能
   jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
+    time-zone: UTC
     default-property-inclusion: non_null
     serialization:
       write-dates-as-timestamps: false

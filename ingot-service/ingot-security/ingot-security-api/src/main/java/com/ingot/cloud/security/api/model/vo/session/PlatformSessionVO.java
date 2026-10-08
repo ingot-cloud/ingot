@@ -16,7 +16,7 @@ import lombok.Data;
  * @author jy
  * @since 1.0.0
  * @apiNote 时间字段为 ISO-8601 UTC 瞬时（如 {@code 2026-08-19T03:21:00Z}），
- * 与库表 {@code yyyy-MM-dd HH:mm:ss} 的口径不同，前端需按时区转换后展示。
+ * 与框架公共接口的时间点契约一致，前端按当地时区格式化展示，数据库按 UTC 存储。
  */
 @Data
 public class PlatformSessionVO implements Serializable {

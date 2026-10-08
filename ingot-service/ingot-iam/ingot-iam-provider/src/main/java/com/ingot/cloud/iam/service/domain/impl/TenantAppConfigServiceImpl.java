@@ -21,14 +21,14 @@ public class TenantAppConfigServiceImpl extends BaseServiceImpl<TenantAppConfigM
 
     @Override
     public void create(TenantAppConfig params) {
-        params.setCreatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
         params.setUpdatedAt(params.getCreatedAt());
         save(params);
     }
 
     @Override
     public void update(TenantAppConfig params) {
-        params.setUpdatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.utc());
         updateById(params);
     }
 

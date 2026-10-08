@@ -1,12 +1,13 @@
 package com.ingot.framework.security.account.domain.model;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * 账号安全事件领域模型
@@ -129,7 +130,7 @@ public class AccountSecurityEvent {
                 .userAgent(userAgent)
                 .tenantId(tenantId)
                 .source(EventSource.AUTH)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
@@ -147,7 +148,7 @@ public class AccountSecurityEvent {
                 .reasonDetail(failureReason)
                 .clientIp(clientIp)
                 .source(EventSource.AUTH)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
@@ -169,7 +170,7 @@ public class AccountSecurityEvent {
                 .source(source)
                 .operatorId(operatorId)
                 .operatorName(operatorName)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
@@ -189,7 +190,7 @@ public class AccountSecurityEvent {
                 .source(source)
                 .operatorId(operatorId)
                 .operatorName(operatorName)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
@@ -208,7 +209,7 @@ public class AccountSecurityEvent {
                 .source(source)
                 .operatorId(operatorId)
                 .operatorName(operatorName)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
@@ -222,7 +223,7 @@ public class AccountSecurityEvent {
                 .eventType(SecurityEventType.PASSWORD_CHANGED)
                 .result(true)
                 .source(EventSource.SYSTEM)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 }

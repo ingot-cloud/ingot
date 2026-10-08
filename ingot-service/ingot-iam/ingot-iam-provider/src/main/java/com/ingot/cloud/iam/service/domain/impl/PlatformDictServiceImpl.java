@@ -144,7 +144,7 @@ public class PlatformDictServiceImpl extends BaseServiceImpl<PlatformDictMapper,
             params.setScopeType(DictScopeEnum.PLATFORM);
         }
 
-        params.setCreatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
         params.setUpdatedAt(params.getCreatedAt());
         save(params);
 
@@ -188,7 +188,7 @@ public class PlatformDictServiceImpl extends BaseServiceImpl<PlatformDictMapper,
             validateUniqueness(current.getId(), probe);
         }
 
-        params.setUpdatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.utc());
         updateById(params);
 
         String dictCode = params.getCode() != null ? params.getCode() : current.getCode();
@@ -224,7 +224,7 @@ public class PlatformDictServiceImpl extends BaseServiceImpl<PlatformDictMapper,
         PlatformDict update = new PlatformDict();
         update.setId(id);
         update.setStatus(status);
-        update.setUpdatedAt(DateUtil.now());
+        update.setUpdatedAt(DateUtil.utc());
         updateById(update);
 
         applicationEventPublisher.publishEvent(DictChangedSpringEvent.of(this, current.getCode()));
@@ -241,7 +241,7 @@ public class PlatformDictServiceImpl extends BaseServiceImpl<PlatformDictMapper,
             PlatformDict update = new PlatformDict();
             update.setId(item.getId());
             update.setSort(item.getSort());
-            update.setUpdatedAt(DateUtil.now());
+            update.setUpdatedAt(DateUtil.utc());
             updateById(update);
         }
 

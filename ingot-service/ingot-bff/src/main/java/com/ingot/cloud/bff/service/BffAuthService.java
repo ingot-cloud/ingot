@@ -24,6 +24,7 @@ import com.ingot.cloud.bff.error.BffAuthException;
 import com.ingot.cloud.bff.model.AuthBinding;
 import com.ingot.cloud.bff.model.LoginTransaction;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
+import com.ingot.cloud.bff.model.dto.BffTransactionView;
 import com.ingot.framework.commons.constants.BffConstants;
 import com.ingot.framework.commons.constants.InJwtClaimNames;
 import com.ingot.framework.commons.constants.InOAuth2ParameterNames;
@@ -128,22 +129,28 @@ public class BffAuthService {
                 "loginUrl", appRegistry.loginUrl(app, transaction.getTransactionId()));
     }
 
-    public Map<String, Object> readTransaction(String entry, String transactionId, HttpServletRequest request) {
+    /**
+     * 返回登录事务的公开视图；截止时间使用 API 时间点，内部事务仍保存 epoch seconds。
+     * @param entry 登录入口
+     * @param transactionId 事务 ID
+     * @param request 当前浏览器请求
+     * @return 通过既有浏览器绑定校验后的事务视图
+     */
+    public BffTransactionView readTransaction(String entry, String transactionId, HttpServletRequest request) {
         BffAppRegistration app = requireEntryApp(entry, request);
         appRegistry.requireLogin(request, app);
         LoginTransaction transaction = requireTransaction(transactionId, app);
         bindLoginBrowser(transaction, request, app);
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("transactionId", transaction.getTransactionId());
-        data.put("stage", transaction.getStage());
-        data.put("expiresAt", transaction.getExpiresAt());
+        List<Map<String, String>> allows = null;
+        String completionUrl = null;
         if (STAGE_SELECT_TENANT.equals(transaction.getStage()) && transaction.getAllows() != null) {
-            data.put("allows", summarizeAllows(transaction.getAllows()));
+            allows = summarizeAllows(transaction.getAllows());
         }
         if (STAGE_READY.equals(transaction.getStage()) && StrUtil.isNotBlank(transaction.getTicket())) {
-            data.put("completionUrl", appRegistry.completionUrl(app, transaction.getTicket()));
+            completionUrl = appRegistry.completionUrl(app, transaction.getTicket());
         }
-        return data;
+        return new BffTransactionView(transaction.getTransactionId(), transaction.getStage(),
+                Instant.ofEpochSecond(transaction.getExpiresAt()), allows, completionUrl);
     }
 
     public R<?> login(String entry, BffLoginDTO dto, HttpServletRequest request, HttpServletResponse response) {

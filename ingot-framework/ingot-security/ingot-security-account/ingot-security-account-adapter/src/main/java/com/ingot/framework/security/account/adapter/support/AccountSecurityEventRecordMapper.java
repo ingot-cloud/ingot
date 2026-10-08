@@ -1,5 +1,11 @@
 package com.ingot.framework.security.account.adapter.support;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
@@ -7,11 +13,6 @@ import com.ingot.framework.security.recording.config.SecurityEventProperties;
 import com.ingot.framework.security.recording.model.SecurityEventRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * {@link AccountSecurityEvent} → {@link SecurityEventRecord} 映射。
@@ -22,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AccountSecurityEventRecordMapper {
 
-    private static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final ZoneId ZONE = ZoneOffset.UTC;
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
 

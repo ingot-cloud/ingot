@@ -1,16 +1,17 @@
 package com.ingot.framework.security.recording.store.mysql.internal;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.framework.security.recording.model.RecordPriority;
 import com.ingot.framework.security.recording.model.SecurityEventRecord;
 import com.ingot.framework.security.recording.store.mysql.model.CanonicalSecurityEventEntity;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>{@link SecurityEventRecord} 与 canonical 实体互转。</p>
@@ -20,13 +21,13 @@ import java.util.Map;
  */
 public final class SecurityEventRecordConverter {
 
-    private static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final ZoneId ZONE = ZoneOffset.UTC;
 
     private SecurityEventRecordConverter() {
     }
 
     public static CanonicalSecurityEventEntity toEntity(SecurityEventRecord record, ObjectMapper objectMapper) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         CanonicalSecurityEventEntity entity = new CanonicalSecurityEventEntity();
         entity.setEventId(record.getEventId());
         entity.setEventType(record.getEventType());

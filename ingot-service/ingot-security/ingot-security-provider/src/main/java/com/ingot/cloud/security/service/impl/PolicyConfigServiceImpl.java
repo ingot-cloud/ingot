@@ -42,7 +42,7 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
     public CredentialPolicyConfig savePolicyConfig(CredentialPolicyConfig config) {
         assertionChecker.checkOperation(config.getPolicyType() != null, "PolicyConfigServiceImpl.TypeNotNull");
 
-        config.setCreatedAt(DateUtil.now());
+        config.setCreatedAt(DateUtil.utc());
         config.setUpdatedAt(config.getCreatedAt());
         policyConfigMapper.insert(config);
 
@@ -62,7 +62,7 @@ public class PolicyConfigServiceImpl implements PolicyConfigService {
         assertionChecker.checkOperation(current.getPolicyType() == config.getPolicyType(),
                 "PolicyConfigServiceImpl.TypeCantModified");
 
-        config.setUpdatedAt(DateUtil.now());
+        config.setUpdatedAt(DateUtil.utc());
         policyConfigMapper.updateById(config);
 
         publishChanged();

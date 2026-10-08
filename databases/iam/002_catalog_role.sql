@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：先执行 001_identity.sql。无源库写入或授权默认数据。
 CREATE TABLE iam_application (
     id BIGINT UNSIGNED NOT NULL,

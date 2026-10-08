@@ -73,7 +73,7 @@ public class PlatformPermissionServiceImpl extends BaseServiceImpl<PlatformPermi
             authority.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        authority.setCreatedAt(DateUtil.now());
+        authority.setCreatedAt(DateUtil.utc());
         authority.setUpdatedAt(authority.getCreatedAt());
 
         save(authority);
@@ -87,7 +87,7 @@ public class PlatformPermissionServiceImpl extends BaseServiceImpl<PlatformPermi
         if (!SecurityAuthContext.isAdmin()) {
             authority.setCode(null);
         }
-        authority.setUpdatedAt(DateUtil.now());
+        authority.setUpdatedAt(DateUtil.utc());
         updateById(authority);
     }
 

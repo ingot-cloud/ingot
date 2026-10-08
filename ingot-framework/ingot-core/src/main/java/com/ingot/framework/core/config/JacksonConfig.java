@@ -6,13 +6,12 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.ingot.framework.commons.jackson.ClientWallClock;
+import com.ingot.framework.commons.constants.TimeConstants;
+import com.ingot.framework.commons.jackson.InApiTimeModule;
 import com.ingot.framework.commons.jackson.InJackson2ObjectMapperBuilderCustomizer;
 import com.ingot.framework.commons.jackson.InJacksonModule;
-import com.ingot.framework.commons.jackson.InJavaTimeModule;
 import com.ingot.framework.commons.jackson.InModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -42,13 +41,12 @@ public class JacksonConfig {
                                                             List<InJacksonModule> modules) {
         return builder -> {
             builder.locale(Locale.getDefault());
-            builder.timeZone(TimeZone.getTimeZone(ClientWallClock.FALLBACK_ZONE));
-            builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
-            // IngotJavaTimeModule 覆盖 JavaTimeModule 中部分Class Type
+            builder.timeZone(TimeZone.getTimeZone(TimeConstants.UTC_ZONE_ID));
+            // API 模块独立于 Redis 存储模块，统一时间点的 UTC 契约
             builder.modules((list) -> {
                 list.add(new InModule());
                 list.add(new JavaTimeModule());
-                list.add(new InJavaTimeModule());
+                list.add(new InApiTimeModule());
                 if (CollUtil.isNotEmpty(modules)) {
                     list.addAll(modules.stream()
                             .sorted(Comparator.comparingInt(InJacksonModule::getOrder))

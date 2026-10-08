@@ -1,11 +1,12 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
+import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.commons.model.security.SessionRevokeReason;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.UserAccount;
-import com.ingot.cloud.security.api.model.enums.SecurityEventType;
 import com.ingot.framework.security.account.domain.port.inbound.ManageAccountStatusUseCase;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.SessionRevocationPort;
@@ -53,7 +54,7 @@ public class ManageAccountStatusUseCaseService implements ManageAccountStatusUse
                 .source(command.getSource())
                 .operatorId(command.getOperatorId())
                 .operatorName(command.getOperatorName())
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
         securityEventPort.publishEvent(event);
 
@@ -82,7 +83,7 @@ public class ManageAccountStatusUseCaseService implements ManageAccountStatusUse
                 .source(command.getSource())
                 .operatorId(command.getOperatorId())
                 .operatorName(command.getOperatorName())
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneOffset.UTC))
                 .build();
         securityEventPort.publishEvent(event);
 

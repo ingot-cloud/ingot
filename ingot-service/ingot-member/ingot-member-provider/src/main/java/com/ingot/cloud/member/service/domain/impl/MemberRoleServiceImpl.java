@@ -80,7 +80,7 @@ public class MemberRoleServiceImpl extends BaseServiceImpl<MemberRoleMapper, Mem
             role.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        role.setCreatedAt(DateUtil.now());
+        role.setCreatedAt(DateUtil.utc());
         role.setUpdatedAt(role.getCreatedAt());
 
         save(role);
@@ -93,7 +93,7 @@ public class MemberRoleServiceImpl extends BaseServiceImpl<MemberRoleMapper, Mem
         // 角色编码不可修改
         role.setCode(null);
         role.setBuiltIn(null);
-        role.setUpdatedAt(DateUtil.now());
+        role.setUpdatedAt(DateUtil.utc());
         updateById(role);
     }
 

@@ -86,7 +86,7 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
                     "PlatformMenuServiceImpl.ViewPathNotNull");
         }
 
-        params.setCreatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
         params.setUpdatedAt(params.getCreatedAt());
 
         save(params);
@@ -119,7 +119,7 @@ public class PlatformMenuServiceImpl extends BaseServiceImpl<PlatformMenuMapper,
             params.setProps(current.getProps());
         }
 
-        params.setUpdatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.utc());
         updateById(params);
     }
 

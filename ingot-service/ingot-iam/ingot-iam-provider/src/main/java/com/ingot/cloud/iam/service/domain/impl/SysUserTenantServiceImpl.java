@@ -42,7 +42,7 @@ public class SysUserTenantServiceImpl extends BaseServiceImpl<SysUserTenantMappe
         userTenant.setMain(CollUtil.isEmpty(joinedOrgList));
         userTenant.setName(tenant.getName());
         userTenant.setAvatar(tenant.getAvatar());
-        userTenant.setCreatedAt(DateUtil.now());
+        userTenant.setCreatedAt(DateUtil.utc());
         save(userTenant);
     }
 

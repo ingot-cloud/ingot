@@ -107,7 +107,7 @@ public class AccessTokenAuthenticationSuccessHandler implements AuthenticationSu
         payload.setIp(WebUtil.getClientIP(request));
         payload.setUsername(username);
         payload.setOrg(org);
-        payload.setTime(DateUtil.now());
+        payload.setTime(DateUtil.utc());
         payload.setUserId(userId);
         payload.setUserType(userType);
         SpringContextHolder.publishEvent(new LoginSuccessEvent(payload));

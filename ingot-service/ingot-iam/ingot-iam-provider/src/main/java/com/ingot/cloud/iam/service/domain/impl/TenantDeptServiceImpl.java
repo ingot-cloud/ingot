@@ -67,7 +67,7 @@ public class TenantDeptServiceImpl extends BaseServiceImpl<TenantDeptMapper, Ten
 
     @Override
     public void create(TenantDept params) {
-        params.setCreatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
         if (params.getStatus() == null) {
             params.setStatus(CommonStatusEnum.ENABLE);
         }
@@ -76,7 +76,7 @@ public class TenantDeptServiceImpl extends BaseServiceImpl<TenantDeptMapper, Ten
 
     @Override
     public void update(TenantDept params) {
-        params.setUpdatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.utc());
         updateById(params);
     }
 

@@ -1,11 +1,11 @@
 package com.ingot.cloud.member.identity.social;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.cloud.member.api.model.domain.MemberUser;
 import com.ingot.cloud.member.api.model.domain.MemberUserSocial;
 import com.ingot.cloud.member.service.domain.MemberUserService;
 import com.ingot.cloud.member.service.domain.MemberUserSocialService;
-import com.ingot.cloud.iam.api.rpc.RemoteIamSocialDetailsService;
 import com.ingot.framework.commons.model.enums.SocialTypeEnum;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.security.core.identity.social.UserSocialResolver;
@@ -63,7 +63,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberU
         // 如果当前存在绑定关系，那么更新绑定关系
         if (current != null) {
             current.setUserId(user.getId());
-            current.setBindAt(DateUtil.now());
+            current.setBindAt(DateUtil.utc());
             userSocialService.updateById(current);
             return;
         }
@@ -72,7 +72,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<MemberU
         userSocial.setUserId(user.getId());
         userSocial.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
-        userSocial.setBindAt(DateUtil.now());
+        userSocial.setBindAt(DateUtil.utc());
         userSocialService.save(userSocial);
     }
 }

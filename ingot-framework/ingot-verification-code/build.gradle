@@ -1,6 +1,9 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation project(ingot.framework_data_redis)
+    testRuntimeOnly(deps.junit.platform_launcher)
     implementation project(ingot.framework_core)
     api(deps.aj_captcha)
 
@@ -12,3 +15,5 @@ dependencies {
     compileOnly(deps.spring.framework_webmvc)
     compileOnly(deps.jakarta_servlet_api)
 }
+
+test { useJUnitPlatform() }

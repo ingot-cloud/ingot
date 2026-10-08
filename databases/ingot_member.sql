@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 /*
  Navicat Premium Dump SQL
 

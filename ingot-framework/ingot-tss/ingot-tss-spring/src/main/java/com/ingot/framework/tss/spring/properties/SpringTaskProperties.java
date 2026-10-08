@@ -1,7 +1,12 @@
 package com.ingot.framework.tss.spring.properties;
 
+import java.time.ZoneId;
+
+import com.ingot.framework.commons.constants.TimeConstants;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * <p>Description  : Spring 任务调度配置属性.</p>
@@ -10,8 +15,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Time         : 10:00.</p>
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ingot.tss.spring")
 public class SpringTaskProperties {
+
+    /** Cron 业务时区，缺省 Asia/Shanghai；与数据库 UTC 无关，必须为有效的 ZoneId。 */
+    @NotNull
+    private ZoneId timeZone = TimeConstants.DEFAULT_BUSINESS_ZONE;
 
     /**
      * 线程池配置

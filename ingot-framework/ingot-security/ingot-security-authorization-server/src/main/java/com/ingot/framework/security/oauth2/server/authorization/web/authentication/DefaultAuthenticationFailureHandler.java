@@ -72,7 +72,7 @@ public class DefaultAuthenticationFailureHandler implements AuthenticationFailur
             payload.setIp(WebUtil.getClientIP(request));
             payload.setClientId(request.getParameter(OAuth2ParameterNames.CLIENT_ID));
             payload.setDeviceId(request.getHeader(HeaderConstants.BFF_DEVICE_FINGERPRINT_HEADER));
-            payload.setTime(DateUtil.now());
+            payload.setTime(DateUtil.utc());
             payload.setErrorCode(error.getErrorCode());
             payload.setErrorMessage(error.getDescription());
             SpringContextHolder.publishEvent(new LoginFailureEvent(payload));

@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：先执行 001、002。跨域关系由复合外键约束；权限上限仍由事务服务校验。
 CREATE TABLE iam_delegation_grant (
     id BIGINT UNSIGNED NOT NULL,

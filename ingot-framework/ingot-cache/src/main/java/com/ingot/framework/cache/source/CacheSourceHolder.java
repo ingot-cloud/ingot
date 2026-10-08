@@ -1,6 +1,7 @@
 package com.ingot.framework.cache.source;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,11 +32,11 @@ public class CacheSourceHolder {
         switch (source) {
             case LAST_KNOWN_GOOD -> {
                 lastKnownGoodCount.incrementAndGet();
-                lastDegradeAt.set(LocalDateTime.now());
+                lastDegradeAt.set(LocalDateTime.now(ZoneOffset.UTC));
             }
             case LOCAL_FLOOR -> {
                 localFloorCount.incrementAndGet();
-                lastDegradeAt.set(LocalDateTime.now());
+                lastDegradeAt.set(LocalDateTime.now(ZoneOffset.UTC));
             }
             default -> {
                 // REMOTE 为正常态，不计数

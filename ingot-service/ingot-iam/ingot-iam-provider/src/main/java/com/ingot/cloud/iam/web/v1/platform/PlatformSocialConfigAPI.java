@@ -1,8 +1,5 @@
 package com.ingot.cloud.iam.web.v1.platform;
 
-import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
-import com.ingot.framework.commons.model.iam.IamAction;
-
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.config.impl.WxMaDefaultConfigImpl;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -12,10 +9,12 @@ import com.ingot.cloud.iam.api.model.domain.SysSocialDetails;
 import com.ingot.cloud.iam.service.domain.SysSocialDetailsService;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
+import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.Group;
+import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.tenant.TenantContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,8 +73,8 @@ public class PlatformSocialConfigAPI implements RShortcuts {
     public R<Void> create(@RequestBody @Validated(Group.Create.class) SysSocialDetails params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_CREATE);
         params.setTenantId(TenantContextHolder.get());
-        params.setCreatedAt(DateUtil.now());
-        params.setUpdatedAt(DateUtil.now());
+        params.setCreatedAt(DateUtil.utc());
+        params.setUpdatedAt(DateUtil.utc());
         socials.save(params);
         WxMaDefaultConfigImpl config = new WxMaDefaultConfigImpl();
         config.setAppid(params.getAppId());
@@ -98,7 +97,7 @@ public class PlatformSocialConfigAPI implements RShortcuts {
     public R<Void> update(@PathVariable Long id, @RequestBody @Validated(Group.Update.class) SysSocialDetails params) {
         access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_SOCIAL_CONFIG_UPDATE);
         params.setId(id);
-        params.setUpdatedAt(DateUtil.now());
+        params.setUpdatedAt(DateUtil.utc());
         socials.updateById(params);
         if (StringUtils.isNotEmpty(params.getAppSecret())) {
             SysSocialDetails current = socials.getById(id);

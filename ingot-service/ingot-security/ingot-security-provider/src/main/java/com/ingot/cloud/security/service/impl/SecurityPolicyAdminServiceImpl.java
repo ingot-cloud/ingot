@@ -1,5 +1,8 @@
 package com.ingot.cloud.security.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.cloud.security.api.event.SecurityPolicyInvalidationEvent;
@@ -30,9 +33,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 安全策略管理面 Service 实现。
@@ -67,7 +67,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public GatewayEndpointGroup saveGroup(GatewayEndpointGroup group) {
         assertionChecker.checkOperation(group.getCode() != null, "SecurityPolicy.CodeNotNull");
-        LocalDateTime now = DateUtil.now();
+        LocalDateTime now = DateUtil.utc();
         group.setCreatedAt(now);
         group.setUpdatedAt(now);
         groupMapper.insert(group);
@@ -79,7 +79,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public GatewayEndpointGroup updateGroup(GatewayEndpointGroup group) {
         assertionChecker.checkOperation(group.getId() != null, "SecurityPolicy.IdNotNull");
-        group.setUpdatedAt(DateUtil.now());
+        group.setUpdatedAt(DateUtil.utc());
         groupMapper.updateById(group);
         publishChanged(SecurityPolicyDomain.ENDPOINT_GROUP);
         return group;
@@ -104,7 +104,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public GatewayRateLimitRule saveRule(GatewayRateLimitRule rule) {
         assertionChecker.checkOperation(rule.getCode() != null, "SecurityPolicy.CodeNotNull");
-        LocalDateTime now = DateUtil.now();
+        LocalDateTime now = DateUtil.utc();
         rule.setCreatedAt(now);
         rule.setUpdatedAt(now);
         ruleMapper.insert(rule);
@@ -116,7 +116,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public GatewayRateLimitRule updateRule(GatewayRateLimitRule rule) {
         assertionChecker.checkOperation(rule.getId() != null, "SecurityPolicy.IdNotNull");
-        rule.setUpdatedAt(DateUtil.now());
+        rule.setUpdatedAt(DateUtil.utc());
         ruleMapper.updateById(rule);
         publishChanged(SecurityPolicyDomain.RATE_LIMIT_RULE);
         return rule;
@@ -144,7 +144,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
                         && item.getKeyType() != null
                         && item.getKeyValue() != null,
                 "SecurityPolicy.IpListFieldNotNull");
-        LocalDateTime now = DateUtil.now();
+        LocalDateTime now = DateUtil.utc();
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         ipListMapper.insert(item);
@@ -156,7 +156,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Transactional(rollbackFor = Exception.class)
     public GatewayIpList updateIpList(GatewayIpList item) {
         assertionChecker.checkOperation(item.getId() != null, "SecurityPolicy.IdNotNull");
-        item.setUpdatedAt(DateUtil.now());
+        item.setUpdatedAt(DateUtil.utc());
         ipListMapper.updateById(item);
         publishChanged(SecurityPolicyDomain.IP_LIST);
         return item;
@@ -182,7 +182,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void recordEvent(GatewayBlacklistEvent event) {
-        event.setCreatedAt(DateUtil.now());
+        event.setCreatedAt(DateUtil.utc());
         eventMapper.insert(event);
     }
 
@@ -199,7 +199,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     public SecurityChallengePolicy saveChallengePolicy(SecurityChallengePolicy policy) {
         assertionChecker.checkOperation(policy.getCode() != null, "SecurityPolicy.CodeNotNull");
         validateChallengePolicy(policy);
-        LocalDateTime now = DateUtil.now();
+        LocalDateTime now = DateUtil.utc();
         policy.setCreatedAt(now);
         policy.setUpdatedAt(now);
         challengeMapper.insert(policy);
@@ -212,7 +212,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     public SecurityChallengePolicy updateChallengePolicy(SecurityChallengePolicy policy) {
         assertionChecker.checkOperation(policy.getId() != null, "SecurityPolicy.IdNotNull");
         validateChallengePolicy(policy);
-        policy.setUpdatedAt(DateUtil.now());
+        policy.setUpdatedAt(DateUtil.utc());
         challengeMapper.updateById(policy);
         publishChanged(com.ingot.cloud.security.api.event.SecurityPolicyDomain.CHALLENGE_POLICY);
         return policy;
@@ -242,7 +242,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     public GatewayViolationEscalation saveViolationEscalation(GatewayViolationEscalation config) {
         validateViolationEscalation(config);
         config.setId(GatewayViolationEscalation.SINGLETON_ID);
-        LocalDateTime now = DateUtil.now();
+        LocalDateTime now = DateUtil.utc();
         GatewayViolationEscalation existing = violationEscalationMapper.selectById(config.getId());
         if (existing == null) {
             config.setCreatedAt(now);
@@ -330,7 +330,7 @@ public class SecurityPolicyAdminServiceImpl implements SecurityPolicyAdminServic
     }
 
     private static long toMillis(LocalDateTime t) {
-        return t == null ? 0L : t.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return t == null ? 0L : t.atZone(java.time.ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
     private void validateChallengePolicy(SecurityChallengePolicy policy) {

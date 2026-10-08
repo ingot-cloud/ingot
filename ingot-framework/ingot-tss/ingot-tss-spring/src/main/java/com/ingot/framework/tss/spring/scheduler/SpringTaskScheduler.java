@@ -62,7 +62,7 @@ public class SpringTaskScheduler implements TaskScheduler, DisposableBean {
         }
         
         // 使用 Spring 的 TaskScheduler 调度任务
-        CronTrigger trigger = new CronTrigger(taskDefinition.getCron());
+        CronTrigger trigger = new CronTrigger(taskDefinition.getCron(), properties.getTimeZone());
         ScheduledFuture<?> future = springScheduler.schedule(
             () -> executeTask(taskDefinition),
             trigger

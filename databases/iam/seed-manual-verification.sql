@@ -1,3 +1,6 @@
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- 人工认证夹具，不是生产数据，不进入迁移导入。
 -- 先在选定的隔离空库导入 databases/ingot_iam.sql，再执行本文件一次。默认口令均为 password。
 -- Spring BCrypt 示例哈希对应明文 password。

@@ -5,11 +5,11 @@ import java.util.Objects;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.cloud.iam.api.model.domain.SysTenant;
+import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
 import com.ingot.cloud.member.api.model.domain.MemberUserTenant;
 import com.ingot.cloud.member.mapper.MemberUserTenantMapper;
 import com.ingot.cloud.member.service.domain.MemberUserTenantService;
-import com.ingot.cloud.iam.api.model.domain.SysTenant;
-import com.ingot.cloud.iam.api.rpc.RemoteIamTenantDetailsService;
 import com.ingot.framework.commons.model.common.TenantBaseDTO;
 import com.ingot.framework.commons.utils.DateUtil;
 import com.ingot.framework.core.utils.validation.AssertionChecker;
@@ -55,7 +55,7 @@ public class MemberUserTenantServiceImpl extends BaseServiceImpl<MemberUserTenan
         userTenant.setMain(CollUtil.isEmpty(joinedOrgList));
         userTenant.setName(tenant.getName());
         userTenant.setAvatar(tenant.getAvatar());
-        userTenant.setCreatedAt(DateUtil.now());
+        userTenant.setCreatedAt(DateUtil.utc());
         save(userTenant);
     }
 

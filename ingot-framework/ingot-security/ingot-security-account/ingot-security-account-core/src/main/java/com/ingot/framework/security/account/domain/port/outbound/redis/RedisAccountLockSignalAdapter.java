@@ -2,6 +2,7 @@ package com.ingot.framework.security.account.domain.port.outbound.redis;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
@@ -81,9 +82,7 @@ public class RedisAccountLockSignalAdapter implements AccountLockSignalPort {
             return false;
         }
         try {
-            Boolean has = redisTemplate.hasKey(
-                    RedisKeyConstants.AccountLock.uidKey(userType.getValue(), userId));
-            return Boolean.TRUE.equals(has);
+            return isLocked(RedisKeyConstants.AccountLock.uidKey(userType.getValue(), userId));
         } catch (Exception ex) {
             log.warn("[AccountLockSignal] isLockedByUserId fail-open userId={}: {}",
                     userId, ex.toString());
@@ -97,9 +96,7 @@ public class RedisAccountLockSignalAdapter implements AccountLockSignalPort {
             return false;
         }
         try {
-            Boolean has = redisTemplate.hasKey(
-                    RedisKeyConstants.AccountLock.nameKey(userType.getValue(), username));
-            return Boolean.TRUE.equals(has);
+            return isLocked(RedisKeyConstants.AccountLock.nameKey(userType.getValue(), username));
         } catch (Exception ex) {
             log.warn("[AccountLockSignal] isLockedByUsername fail-open username={}: {}",
                     username, ex.toString());
@@ -107,12 +104,25 @@ public class RedisAccountLockSignalAdapter implements AccountLockSignalPort {
         }
     }
 
+    private boolean isLocked(String key) {
+        String value = redisTemplate.opsForValue().get(key);
+        if (!StringUtils.hasText(value)) {
+            return false;
+        }
+        return PERMANENT_VALUE.equals(value)
+                || LocalDateTime.parse(value, ISO).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    }
+
     private long resolveTtlSeconds(LocalDateTime lockedUntil) {
         if (lockedUntil == null) {
             int days = Math.max(properties.getPermanentLockTtlDays(), 1);
             return Duration.ofDays(days).getSeconds();
         }
-        long seconds = Duration.between(LocalDateTime.now(), lockedUntil).getSeconds();
-        return Math.max(seconds, 1L);
+        Duration remaining = Duration.between(LocalDateTime.now(ZoneOffset.UTC), lockedUntil);
+        if (remaining.isNegative() || remaining.isZero()) {
+            return 0;
+        }
+        // 秒 TTL 向上取整避免提前删除；读信号时仍按 UTC 截止时刻精确判断。
+        return remaining.getSeconds() + (remaining.getNano() == 0 ? 0 : 1);
     }
 }

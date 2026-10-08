@@ -1,6 +1,8 @@
 package com.ingot.framework.security.account.domain.port.outbound.redis;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import com.ingot.framework.commons.constants.RedisKeyConstants;
@@ -19,6 +21,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +48,7 @@ class RedisAccountLockSignalAdapterTest {
 
     @Test
     void writeLocked_writesUidAndNameKeys() {
-        LocalDateTime until = LocalDateTime.now().plusMinutes(30);
+        LocalDateTime until = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(30);
         adapter.writeLocked(new AccountLockSignal(1L, UserTypeEnum.ADMIN, "admin", until));
 
         String uidKey = RedisKeyConstants.AccountLock.uidKey("0", 1L);
@@ -63,12 +66,43 @@ class RedisAccountLockSignalAdapterTest {
     }
 
     @Test
-    void isLocked_readsHasKey() {
-        when(redisTemplate.hasKey(RedisKeyConstants.AccountLock.uidKey("0", 1L))).thenReturn(true);
-        when(redisTemplate.hasKey(RedisKeyConstants.AccountLock.nameKey("0", "admin"))).thenReturn(false);
+    void isLocked_readsPermanentValueAndMissingSignal() {
+        when(valueOps.get(RedisKeyConstants.AccountLock.uidKey("0", 1L))).thenReturn("1");
+        when(valueOps.get(RedisKeyConstants.AccountLock.nameKey("0", "admin"))).thenReturn(null);
 
         assertTrue(adapter.isLockedByUserId(UserTypeEnum.ADMIN, 1L));
         assertFalse(adapter.isLockedByUsername(UserTypeEnum.ADMIN, "admin"));
+    }
+
+    @Test
+    void exactUtcDeadlineControlsSignalAndTtlRoundsUpAcrossJvmZones() {
+        TimeZone original = TimeZone.getDefault();
+        LocalDateTime cutoff = LocalDateTime.of(2026, 10, 8, 1, 0, 0);
+        LocalDateTime before = cutoff.minusNanos(1);
+        LocalDateTime after = cutoff.plusNanos(1);
+        LocalDateTime writeAt = cutoff.minusSeconds(1).minusNanos(500_000_000);
+        String uidKey = RedisKeyConstants.AccountLock.uidKey("0", 1L);
+        when(valueOps.get(uidKey)).thenReturn(cutoff.toString());
+        try {
+            for (String zone : new String[]{"UTC", "Asia/Shanghai", "America/New_York"}) {
+                TimeZone.setDefault(TimeZone.getTimeZone(zone));
+                try (var clock = mockStatic(LocalDateTime.class, org.mockito.Mockito.CALLS_REAL_METHODS)) {
+                    clock.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(before);
+                    clock.when(() -> LocalDateTime.parse(cutoff.toString(), java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                            .thenReturn(cutoff);
+                    assertTrue(adapter.isLockedByUserId(UserTypeEnum.ADMIN, 1L));
+                    clock.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(cutoff);
+                    assertFalse(adapter.isLockedByUserId(UserTypeEnum.ADMIN, 1L));
+                    clock.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(after);
+                    assertFalse(adapter.isLockedByUserId(UserTypeEnum.ADMIN, 1L));
+                    clock.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(writeAt);
+                    adapter.writeLocked(new AccountLockSignal(1L, UserTypeEnum.ADMIN, null, cutoff));
+                }
+            }
+            verify(valueOps, org.mockito.Mockito.times(3)).set(eq(uidKey), anyString(), eq(2L), eq(TimeUnit.SECONDS));
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 
     @Test

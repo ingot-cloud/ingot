@@ -1,18 +1,26 @@
 package com.ingot.framework.core.error;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.status.BaseErrorCode;
 import com.ingot.framework.commons.model.support.R;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,6 +30,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -55,10 +64,11 @@ public class GlobalExceptionHandlerResolver {
         return R.error(e.getCode(), e.getLocalizedMessage());
     }
 
+    /** 请求体时间点格式错误返回 400；业务解码异常和其他 JSON 错误保留既有错误契约。 */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public R<?> httpMessageNotReadableException(HttpMessageNotReadableException e) {
+    public R<?> httpMessageNotReadableException(HttpMessageNotReadableException e, HttpServletResponse response) {
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         // 请求体读取/反序列化阶段抛出的业务异常（如字段级 HYBRID 完整性校验失败）会被
         // Jackson 包装，这里还原根因中的 BizException 以透出其错误码
         BizException biz = findBizException(e);
@@ -67,9 +77,42 @@ public class GlobalExceptionHandlerResolver {
                     biz.getLocalizedMessage());
             return R.error(biz.getCode(), biz.getLocalizedMessage());
         }
+        for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+            if (cause instanceof MismatchedInputException input && isTimePoint(input.getTargetType())) {
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(), input.getOriginalMessage());
+            }
+        }
         log.error("[GlobalExceptionHandlerResolver] - HttpMessageNotReadableException - message={}",
                 e.getLocalizedMessage(), e);
         return R.error(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), e.getLocalizedMessage());
+    }
+
+    /** 时间点 query/path 转换失败返回 400，其他参数沿用既有异常语义。 */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public R<?> timePointParameterMismatch(MethodArgumentTypeMismatchException exception,
+                                           HttpServletResponse response) {
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        if (isTimePoint(exception.getRequiredType()) || hasTimePointConversionFailure(exception)) {
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            return R.error(BaseErrorCode.ILLEGAL_REQUEST_PARAMS.getCode(), exception.getLocalizedMessage());
+        }
+        return exception(exception);
+    }
+
+    private static boolean isTimePoint(Class<?> type) {
+        return type != null && (type == Instant.class || type == LocalDateTime.class
+                || type == OffsetDateTime.class || type == ZonedDateTime.class || Date.class.isAssignableFrom(type));
+    }
+
+    private static boolean hasTimePointConversionFailure(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConversionFailedException conversion
+                    && isTimePoint(conversion.getTargetType().getObjectType())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private BizException findBizException(Throwable throwable) {

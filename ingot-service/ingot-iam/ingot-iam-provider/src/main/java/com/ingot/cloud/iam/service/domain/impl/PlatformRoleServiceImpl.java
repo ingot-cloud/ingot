@@ -89,7 +89,7 @@ public class PlatformRoleServiceImpl extends BaseServiceImpl<PlatformRoleMapper,
             role.setStatus(CommonStatusEnum.ENABLE);
         }
 
-        role.setCreatedAt(DateUtil.now());
+        role.setCreatedAt(DateUtil.utc());
         role.setUpdatedAt(role.getCreatedAt());
 
         save(role);
@@ -105,7 +105,7 @@ public class PlatformRoleServiceImpl extends BaseServiceImpl<PlatformRoleMapper,
         role.setType(null);
         // 组织类型不可修改
         role.setOrgType(null);
-        role.setUpdatedAt(DateUtil.now());
+        role.setUpdatedAt(DateUtil.utc());
         updateById(role);
     }
 

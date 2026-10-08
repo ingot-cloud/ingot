@@ -3,6 +3,7 @@ package com.ingot.framework.core.config;
 import java.time.format.DateTimeFormatter;
 
 import cn.hutool.core.date.DatePattern;
+import com.ingot.framework.commons.jackson.ApiTimeFormatterRegistrar;
 import com.ingot.framework.core.convert.IntegerToEnumConverterFactory;
 import com.ingot.framework.core.convert.StringToEnumConverterFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -24,7 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * <ul>
-     * <li>yyyy-MM-dd HH:mm:ss -> LocalDateTime</li>
+     * <li>带 Z 或偏移量的 ISO 时间点 -> Instant / UTC LocalDateTime / Date</li>
      * <li>yyyy-MM-dd -> LocalDate</li>
      * <li>HH:mm:ss -> LocalTime</li>
      * </ul>
@@ -34,8 +35,8 @@ public class WebConfig implements WebMvcConfigurer {
         DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
         registrar.setTimeFormatter(DateTimeFormatter.ofPattern(DatePattern.NORM_TIME_PATTERN));
         registrar.setDateFormatter(DateTimeFormatter.ofPattern(DatePattern.NORM_DATE_PATTERN));
-        registrar.setDateTimeFormatter(DateTimeFormatter.ofPattern(DatePattern.NORM_DATETIME_PATTERN));
         registrar.registerFormatters(registry);
+        new ApiTimeFormatterRegistrar().registerFormatters(registry);
 
         // 注册枚举转换器
         registry.addConverterFactory(new StringToEnumConverterFactory());

@@ -8,7 +8,7 @@ import java.util.TimeZone;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingot.cloud.iam.api.model.dto.auth.LoginRecordDTO;
 import com.ingot.cloud.iam.web.inner.InnerLoginRecordAPI;
-import com.ingot.framework.commons.jackson.ClientWallClock;
+import com.ingot.framework.commons.constants.TimeConstants;
 import com.ingot.framework.commons.jackson.InJackson2ObjectMapperBuilderCustomizer;
 import com.ingot.framework.commons.model.iam.MemberCreateInput;
 import com.ingot.framework.commons.model.iam.MemberRecord;
@@ -59,7 +59,7 @@ class LoginRecordJacksonConfigurationTest {
             String json = callbackJson(success);
             LoginRecordDTO dto = mapper.readValue(json, LoginRecordDTO.class);
             assertEquals(LocalDateTime.of(2026, 10, 3, 20, 38, 24), dto.getLoginAt());
-            assertEquals("2026-10-03 20:38:24", mapper.readTree(mapper.writeValueAsString(dto))
+            assertEquals("2026-10-03T20:38:24Z", mapper.readTree(mapper.writeValueAsString(dto))
                     .get("loginAt").asText());
             assertEquals("1001700", mapper.readTree(mapper.writeValueAsString(dto)).get("userId").asText());
 
@@ -86,7 +86,7 @@ class LoginRecordJacksonConfigurationTest {
             com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO dto = mapper.readValue(callbackJson(true),
                     com.ingot.cloud.member.api.model.dto.auth.LoginRecordDTO.class);
             assertEquals(LocalDateTime.of(2026, 10, 3, 20, 38, 24), dto.getLoginAt());
-            assertEquals("2026-10-03 20:38:24", mapper.readTree(mapper.writeValueAsString(dto))
+            assertEquals("2026-10-03T20:38:24Z", mapper.readTree(mapper.writeValueAsString(dto))
                     .get("loginAt").asText());
         });
     }
@@ -111,34 +111,34 @@ class LoginRecordJacksonConfigurationTest {
     }
 
     @Test
-    void frameworkTimeFormatAndShanghaiFallbackApplyWithoutBusinessExtensions() {
+    void frameworkUtcContractAppliesWithoutBusinessExtensions() {
         runner.run(context -> {
             ObjectMapper mapper = context.getBean(ObjectMapper.class);
-            assertEquals(ClientWallClock.ZONE_SHANGHAI, mapper.getSerializationConfig().getTimeZone().getID());
-            assertEquals("\"1970-01-01 08:00:00\"", mapper.writeValueAsString(new Date(0)));
+            assertEquals(TimeConstants.UTC_ZONE_ID, mapper.getSerializationConfig().getTimeZone().getID());
+            assertEquals("\"1970-01-01T00:00:00Z\"", mapper.writeValueAsString(new Date(0)));
             assertEquals(LocalDateTime.of(2026, 10, 3, 20, 38, 24),
-                    mapper.readValue("\"2026-10-03 20:38:24\"", LocalDateTime.class));
+                    mapper.readValue("\"2026-10-03T20:38:24Z\"", LocalDateTime.class));
         });
     }
 
     @Test
-    void explicitBusinessTimeZoneCanOverrideTheFallback() {
+    void explicitMapperTimeZoneCannotChangeTimePointEncoding() {
         runner.withUserConfiguration(IamOssJacksonConfiguration.class, ExplicitTimeZoneConfiguration.class)
                 .run(context -> {
                     ObjectMapper mapper = context.getBean(ObjectMapper.class);
                     assertEquals("America/New_York", mapper.getSerializationConfig().getTimeZone().getID());
-                    assertEquals("\"1969-12-31 19:00:00\"", mapper.writeValueAsString(new Date(0)));
+                    assertEquals("\"1970-01-01T00:00:00Z\"", mapper.writeValueAsString(new Date(0)));
                 });
     }
 
     private static String callbackJson(boolean success) {
         return """
-                {"success":%s,"userId":"1001700","username":"tester","loginAt":"2026-10-03 20:38:24"}
+                {"success":%s,"userId":"1001700","username":"tester","loginAt":"2026-10-03T20:38:24Z"}
                 """.formatted(success);
     }
 
     /**
-     * <p>模拟业务定制器显式指定接口时区。</p>
+     * <p>模拟业务定制器指定 mapper 时区，验证时间点契约仍为 UTC。</p>
      *
      * @author jy
      * @since 1.0.0
@@ -147,7 +147,7 @@ class LoginRecordJacksonConfigurationTest {
     static class ExplicitTimeZoneConfiguration {
 
         /**
-         * 显式接口时区应覆盖框架缺省值。
+         * mapper 时区定制不改变时间点的 UTC 输出。
          */
         @Bean
         InJackson2ObjectMapperBuilderCustomizer explicitTimeZone() {

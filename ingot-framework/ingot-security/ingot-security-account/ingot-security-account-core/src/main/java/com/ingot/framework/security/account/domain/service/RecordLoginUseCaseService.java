@@ -1,7 +1,9 @@
 package com.ingot.framework.security.account.domain.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.AccountSecurityEvent;
 import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.LockoutPolicy;
@@ -11,7 +13,6 @@ import com.ingot.framework.security.account.domain.port.inbound.RecordLoginUseCa
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.SecurityEventPort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
-import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
         userAccountPort.updateLastLogin(
                 command.getUserId(),
                 command.getUserType(),
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 command.getClientIp()
         );
 
@@ -95,7 +96,7 @@ public class RecordLoginUseCaseService implements RecordLoginUseCase {
             int windowMinutes = lockout.attemptWindowMinutes();
             lockStatePort.findByUser(command.getUserId(), command.getUserType()).ifPresent(state -> {
                 if (state.getLastFailedAt() != null
-                        && state.getLastFailedAt().plusMinutes(windowMinutes).isBefore(LocalDateTime.now())) {
+                        && !state.getLastFailedAt().plusMinutes(windowMinutes).isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
                     lockStatePort.resetFailCount(command.getUserId(), command.getUserType());
                 }
             });

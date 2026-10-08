@@ -1,11 +1,12 @@
 package com.ingot.framework.security.account.domain.model;
 
-import com.ingot.framework.security.account.domain.model.enums.LockType;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 import com.ingot.framework.commons.model.security.UserTypeEnum;
+import com.ingot.framework.security.account.domain.model.enums.LockType;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * 账号锁定状态领域模型
@@ -119,6 +120,6 @@ public class LockState {
         if (!isLocked() || lockedUntil == null) {
             return false;
         }
-        return LocalDateTime.now().isAfter(lockedUntil);
+        return !LocalDateTime.now(ZoneOffset.UTC).isBefore(lockedUntil);
     }
 }

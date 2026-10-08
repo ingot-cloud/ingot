@@ -1,21 +1,22 @@
 package com.ingot.framework.security.account.adapter.port;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.adapter.entity.AccountLockStateEntity;
 import com.ingot.framework.security.account.adapter.mapper.AccountLockStateMapper;
 import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.enums.LockType;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
-import com.ingot.framework.commons.model.security.UserTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 锁定状态端口默认实现（基于 account_lock_state 表）
@@ -48,8 +49,8 @@ public class DefaultLockStatePortAdapter implements LockStatePort {
         entity.setUserType(userType != null ? userType.getValue() : null);
         entity.setLocked(false);
         entity.setFailedLoginCount(0);
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
 
         lockStateMapper.insert(entity);
         return toModel(entity);
@@ -67,7 +68,7 @@ public class DefaultLockStatePortAdapter implements LockStatePort {
     @Transactional(rollbackFor = Exception.class)
     public int incrementFailCount(Long userId, UserTypeEnum userType) {
         String userTypeValue = userType != null ? userType.getValue() : null;
-        lockStateMapper.upsertIncrementFailCount(userId, userTypeValue, LocalDateTime.now());
+        lockStateMapper.upsertIncrementFailCount(userId, userTypeValue, LocalDateTime.now(ZoneOffset.UTC));
 
         AccountLockStateEntity entity = lockStateMapper.selectOne(buildUserQuery(userId, userType));
         return entity != null ? entity.getFailedLoginCount() : 1;
@@ -80,7 +81,7 @@ public class DefaultLockStatePortAdapter implements LockStatePort {
     @Transactional(rollbackFor = Exception.class)
     public void resetFailCount(Long userId, UserTypeEnum userType) {
         String userTypeValue = userType != null ? userType.getValue() : null;
-        lockStateMapper.resetFailCountDirect(userId, userTypeValue, LocalDateTime.now());
+        lockStateMapper.resetFailCountDirect(userId, userTypeValue, LocalDateTime.now(ZoneOffset.UTC));
     }
 
     @Override
@@ -100,7 +101,7 @@ public class DefaultLockStatePortAdapter implements LockStatePort {
         entity.setLocked(locked);
         entity.setLockType(lockType != null ? lockType.getCode() : null);
         entity.setLockReasonCode(reasonCode);
-        entity.setLockedAt(locked ? LocalDateTime.now() : null);
+        entity.setLockedAt(locked ? LocalDateTime.now(ZoneOffset.UTC) : null);
         entity.setLockedUntil(lockedUntil);
         entity.setOperatorId(operatorId);
         entity.setOperatorName(operatorName);

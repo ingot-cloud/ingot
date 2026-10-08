@@ -1,5 +1,7 @@
 package com.ingot.cloud.security.service.access.impl;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ingot.cloud.security.api.event.SecurityPolicyDomain;
 import com.ingot.cloud.security.api.model.enums.LoginFailureDimension;
@@ -13,8 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * 登录失败保护策略管理面 Service 实现。
@@ -49,13 +49,13 @@ public class LoginFailureProtectionAdminServiceImpl implements LoginFailureProte
         validate(policy);
         LoginFailureProtectionPolicy existing = getByDimension(policy.getDimension());
         if (existing == null) {
-            policy.setCreatedAt(DateUtil.now());
-            policy.setUpdatedAt(DateUtil.now());
+            policy.setCreatedAt(DateUtil.utc());
+            policy.setUpdatedAt(DateUtil.utc());
             policyMapper.insert(policy);
         } else {
             policy.setId(existing.getId());
             policy.setCreatedAt(existing.getCreatedAt());
-            policy.setUpdatedAt(DateUtil.now());
+            policy.setUpdatedAt(DateUtil.utc());
             policyMapper.updateById(policy);
         }
         eventPublisher.publishEvent(new SecurityPolicyChangedSpringEvent(this, SecurityPolicyDomain.LOGIN_FAILURE_PROTECTION));

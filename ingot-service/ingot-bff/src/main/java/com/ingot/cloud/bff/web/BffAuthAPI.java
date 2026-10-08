@@ -5,6 +5,7 @@ import java.util.Map;
 import com.ingot.cloud.bff.model.dto.BffCompleteDTO;
 import com.ingot.cloud.bff.model.dto.BffLoginDTO;
 import com.ingot.cloud.bff.model.dto.BffTenantSelectDTO;
+import com.ingot.cloud.bff.model.dto.BffTransactionView;
 import com.ingot.cloud.bff.service.BffAuthService;
 import com.ingot.framework.commons.constants.BffConstants;
 import com.ingot.framework.commons.model.support.R;
@@ -53,16 +54,18 @@ public class BffAuthAPI implements RShortcuts {
         return ok(authService.createTransaction(BffConstants.ENTRY_TENANT, request, response));
     }
 
+    /** 返回平台登录事务及 ISO-8601 UTC 截止时间。 */
     @Permit
     @GetMapping("/platform/transactions/{id}")
-    public R<Map<String, Object>> readPlatformTransaction(@PathVariable("id") String id,
+    public R<BffTransactionView> readPlatformTransaction(@PathVariable("id") String id,
             HttpServletRequest request) {
         return ok(authService.readTransaction(BffConstants.ENTRY_PLATFORM, id, request));
     }
 
+    /** 返回组织登录事务及 ISO-8601 UTC 截止时间。 */
     @Permit
     @GetMapping("/tenant/transactions/{id}")
-    public R<Map<String, Object>> readTenantTransaction(@PathVariable("id") String id,
+    public R<BffTransactionView> readTenantTransaction(@PathVariable("id") String id,
             HttpServletRequest request) {
         return ok(authService.readTransaction(BffConstants.ENTRY_TENANT, id, request));
     }

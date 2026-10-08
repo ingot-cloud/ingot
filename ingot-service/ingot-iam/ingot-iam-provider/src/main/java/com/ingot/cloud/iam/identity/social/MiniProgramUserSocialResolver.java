@@ -76,7 +76,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
         // 如果当前存在绑定关系，那么更新绑定关系
         if (current != null) {
             current.setUserId(user.getId());
-            current.setBindAt(DateUtil.now());
+            current.setBindAt(DateUtil.utc());
             sysUserSocialService.updateById(current);
             return;
         }
@@ -85,7 +85,7 @@ public class MiniProgramUserSocialResolver implements UserSocialResolver<SysUser
         userSocial.setUserId(user.getId());
         userSocial.setType(SocialTypeEnum.WECHAT_MINI_PROGRAM);
         userSocial.setUniqueId(uniqueID);
-        userSocial.setBindAt(DateUtil.now());
+        userSocial.setBindAt(DateUtil.utc());
         sysUserSocialService.save(userSocial);
     }
 }

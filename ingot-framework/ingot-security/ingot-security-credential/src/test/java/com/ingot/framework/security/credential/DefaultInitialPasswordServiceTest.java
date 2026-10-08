@@ -1,6 +1,7 @@
 package com.ingot.framework.security.credential;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import com.ingot.framework.security.credential.config.CredentialSecurityProperties.InitialPasswordPolicy.Generation;
@@ -56,7 +57,7 @@ class DefaultInitialPasswordServiceTest {
     @Test
     void isExpired_validHoursZero_neverExpires() {
         assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 0, true, true))
-                .isExpired(LocalDateTime.now().minusDays(365)));
+                .isExpired(LocalDateTime.now(ZoneOffset.UTC).minusDays(365)));
     }
 
     @Test
@@ -68,13 +69,13 @@ class DefaultInitialPasswordServiceTest {
     @Test
     void isExpired_beyondValidHours_returnsTrue() {
         assertTrue(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
-                .isExpired(LocalDateTime.now().minusHours(100)));
+                .isExpired(LocalDateTime.now(ZoneOffset.UTC).minusHours(100)));
     }
 
     @Test
     void isExpired_withinValidHours_returnsFalse() {
         assertFalse(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
-                .isExpired(LocalDateTime.now().minusHours(1)));
+                .isExpired(LocalDateTime.now(ZoneOffset.UTC).minusHours(1)));
     }
 
     @Test
@@ -84,4 +85,18 @@ class DefaultInitialPasswordServiceTest {
         assertTrue(service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true))
                 .isForceChangeOnFirstLogin());
     }
+    @Test
+    void initialPasswordExpiresAtTheExactUtcCutoff() {
+        LocalDateTime issuedAt = LocalDateTime.of(2026, 10, 8, 1, 0);
+        LocalDateTime cutoff = issuedAt.plusHours(72);
+        LocalDateTime before = cutoff.minusNanos(1);
+        var initial = service(new InitialPasswordConfig(Generation.RANDOM, 10, "x", 72, true, true));
+        try (var dates = org.mockito.Mockito.mockStatic(LocalDateTime.class)) {
+            dates.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(before);
+            assertFalse(initial.isExpired(issuedAt));
+            dates.when(() -> LocalDateTime.now(ZoneOffset.UTC)).thenReturn(cutoff);
+            assertTrue(initial.isExpired(issuedAt));
+        }
+    }
+
 }
