@@ -217,6 +217,31 @@ class RoleWorkspaceMySqlHttpTest {
     }
 
     @Test
+    void passwordChangeStateUsesLiveAccountInPlatformAndTenantMysqlBoundaries() {
+        jdbc.execute("CREATE TABLE IF NOT EXISTS iam_account(id BIGINT PRIMARY KEY,username VARCHAR(100),enabled BOOLEAN,deleted_at DATETIME,must_change_password BOOLEAN NOT NULL DEFAULT FALSE)");
+        jdbc.execute("CREATE TABLE IF NOT EXISTS iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,status VARCHAR(16))");
+        jdbc.update("INSERT INTO iam_account(id,username,enabled,must_change_password) VALUES(1901,'password-check',TRUE,TRUE)");
+        jdbc.update("INSERT INTO iam_platform_member(id,display_name,status,account_id) VALUES(1901,'Password check','ACTIVE',1901)");
+        jdbc.update("INSERT INTO iam_tenant_member(id,tenant_id,account_id,status) VALUES(1901,1901,1901,'ACTIVE')");
+        var repository = IamMybatisTestAccess.evaluations(jdbc.getDataSource());
+        var platform = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, "1901", "1901");
+        var tenant = new AuthorizationContext(AuthorizationDomain.TENANT, "1901", "1901", "1901");
+        try {
+            assertTrue(repository.passwordChangeRequired(platform));
+            assertTrue(repository.passwordChangeRequired(tenant));
+            jdbc.update("UPDATE iam_account SET must_change_password=FALSE WHERE id=1901");
+            assertFalse(repository.passwordChangeRequired(platform));
+            assertFalse(repository.passwordChangeRequired(tenant));
+            assertThrows(com.ingot.framework.commons.error.BizException.class, () -> repository.passwordChangeRequired(
+                    new AuthorizationContext(AuthorizationDomain.TENANT, "1902", "1901", "1901")));
+        } finally {
+            jdbc.update("DELETE FROM iam_tenant_member WHERE id=1901");
+            jdbc.update("DELETE FROM iam_platform_member WHERE id=1901");
+            jdbc.update("DELETE FROM iam_account WHERE id=1901");
+        }
+    }
+
+    @Test
     void membersDeduplicateDirectAndGroupSourcesAndIncludeOldFixedVersions() throws Exception {
         JsonNode data = get("/v1/platform/roles/400/members?page=1&pageSize=1");
         assertEquals(2, data.path("total").asInt());
@@ -529,7 +554,7 @@ class RoleWorkspaceMySqlHttpTest {
 
     @Test
     void trustedSystemSourcesAndConcurrentLastAdministratorRemovalUseRealMySql() throws Exception {
-        jdbc.execute("CREATE TABLE IF NOT EXISTS iam_account(id BIGINT PRIMARY KEY,username VARCHAR(100),enabled BOOLEAN,deleted_at DATETIME)");
+        jdbc.execute("CREATE TABLE IF NOT EXISTS iam_account(id BIGINT PRIMARY KEY,username VARCHAR(100),enabled BOOLEAN,deleted_at DATETIME,must_change_password BOOLEAN NOT NULL DEFAULT FALSE)");
         jdbc.execute("CREATE TABLE IF NOT EXISTS account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until DATETIME)");
         jdbc.update("INSERT INTO iam_account(id,username,enabled) VALUES(901,'admin-one',TRUE),(902,'admin-two',TRUE)");
         jdbc.update("INSERT INTO iam_platform_member(id,display_name,status,account_id) VALUES(901,'Admin one','ACTIVE',901),(902,'Admin two','ACTIVE',902)");

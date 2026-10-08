@@ -26,10 +26,11 @@ def build():
         'resourceCode': {'type': 'string'}, 'permissionCode': {'type': 'string'},
         'scopeType': {'type': 'integer', 'enum': [0, 1, 2, 3, 9]},
         'deptIds': {'type': 'array', 'items': identifier}, 'self': {'type': 'boolean'}}}
-    schemas['AuthorizationSnapshotDTO'] = {'type': 'object', 'required': ['platformAdministrator'], 'properties': {
+    schemas['AuthorizationSnapshotDTO'] = {'type': 'object', 'required': ['platformAdministrator', 'passwordChangeRequired'], 'properties': {
         'tenantId': identifier, 'userId': identifier,
         'roleBindings': {'type': 'array', 'items': {'$ref': '#/components/schemas/AuthorizationRoleBindingDTO'}},
         'permissionCodes': {'type': 'array', 'uniqueItems': True, 'items': {'type': 'string'}},
+        'passwordChangeRequired': {'type': 'boolean', 'description': '账号即时改密状态；缺失时消费方拒绝授权，为true时无业务或管理员资格'},
         'platformAdministrator': {'type': 'boolean', 'description': '仅服务器实时有效平台系统直接分配产生；不是业务操作码，租户恒为false'},
         'resourceRules': {'type': 'array', 'items': {'$ref': '#/components/schemas/AuthorizationResourceRuleDTO'}},
         'source': {'type': 'string'}, 'version': identifier, 'generatedAt': instant, 'expiresAt': instant,

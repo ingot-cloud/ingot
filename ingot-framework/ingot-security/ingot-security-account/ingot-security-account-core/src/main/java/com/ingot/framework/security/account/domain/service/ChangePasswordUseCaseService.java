@@ -145,7 +145,9 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
         log.info("用户 {} 密码重置成功", command.getUserId());
     }
 
+    /** {@inheritDoc} */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void forceChangePassword(ForceChangePasswordCommand command) {
         log.info("用户 {} 强制修改密码", command.getUserId());
 
@@ -188,6 +190,7 @@ public class ChangePasswordUseCaseService implements ChangePasswordUseCase {
                 .createdAt(LocalDateTime.now())
                 .build());
 
+        revokeSessionsAfterCommit(command.getUserId(), command.getUserId());
         log.info("用户 {} 密码强制修改成功", command.getUserId());
     }
 

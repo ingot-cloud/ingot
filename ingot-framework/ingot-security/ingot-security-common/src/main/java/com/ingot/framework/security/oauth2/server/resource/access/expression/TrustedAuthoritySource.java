@@ -10,4 +10,9 @@ import java.util.Set;
 public interface TrustedAuthoritySource {
     /** @return 当前可信身份的实时精确操作及服务器系统角色资格 */
     Set<String> currentAuthorities();
+
+    /** @return 当前可信账号是否必须改密；不能从角色名称推断 */
+    default boolean requiresPasswordChange() {
+        return currentAuthorities().contains(com.ingot.framework.commons.constants.PermissionConstants.INIT_PASSWORD);
+    }
 }

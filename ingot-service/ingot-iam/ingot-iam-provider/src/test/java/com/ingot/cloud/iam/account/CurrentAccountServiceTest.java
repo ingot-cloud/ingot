@@ -63,6 +63,26 @@ class CurrentAccountServiceTest {
         assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), failure.getCode());
     }
 
+    @Test
+    void forcedPasswordRequiresMatchingConfirmationAndExposesOnlyMinimalState() {
+        var access = mock(IamAccess.class);
+        var accounts = mock(AccountQueryRepository.class);
+        var passwords = mock(ChangePasswordUseCase.class);
+        var sessions = mock(SessionRepository.class);
+        when(access.requireCurrent()).thenReturn(new ActiveIdentity(PLATFORM, "0", "0", null));
+        var row = account(); row.setMustChangePassword(true);
+        when(accounts.find(1L)).thenReturn(row);
+        var service = new CurrentAccountService(access, accounts, mock(AccountWriteRepository.class), sessions, passwords);
+        assertEquals(PLATFORM, service.passwordState().context());
+        assertEquals(true, service.passwordState().mustChangePassword());
+        assertThrows(BizException.class, () -> service.updatePassword(new CurrentPasswordInput(null, "new-pass", "different")));
+        org.mockito.Mockito.verifyNoInteractions(passwords, sessions);
+        service.updatePassword(new CurrentPasswordInput(null, "new-pass", "new-pass"));
+        org.mockito.Mockito.verify(passwords).forceChangePassword(org.mockito.ArgumentMatchers.argThat(command ->
+                command.getUserId().equals(1L) && command.getNewPassword().equals("new-pass")));
+        org.mockito.Mockito.verify(passwords, org.mockito.Mockito.never()).changePassword(org.mockito.ArgumentMatchers.any());
+    }
+
     private static IamAccountEntity account() {
         IamAccountEntity row = new IamAccountEntity();
         row.setId(BigInteger.ONE);

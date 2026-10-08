@@ -1,1 +1,2 @@
 com.ingot.cloud.iam.api.EnableAPIConfiguration
+com.ingot.cloud.iam.api.authorization.OnlineAuthorityConfiguration

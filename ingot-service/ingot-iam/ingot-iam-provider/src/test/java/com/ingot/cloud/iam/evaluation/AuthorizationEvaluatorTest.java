@@ -143,10 +143,34 @@ class AuthorizationEvaluatorTest {
         jdbc.update("UPDATE iam_application SET code='iam-platform' WHERE id=1");
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,account_id BIGINT,status VARCHAR(16))");
         jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,enabled BOOLEAN,deleted_at TIMESTAMP)");
+        jdbc.execute("ALTER TABLE iam_account ADD COLUMN must_change_password BOOLEAN DEFAULT FALSE NOT NULL");
         jdbc.execute("CREATE TABLE account_lock_state(user_id BIGINT,user_type VARCHAR(16),locked BOOLEAN,locked_until TIMESTAMP)");
-        jdbc.update("INSERT INTO iam_account VALUES (1,TRUE,NULL)");
+        jdbc.update("INSERT INTO iam_account(id,enabled,deleted_at) VALUES (1,TRUE,NULL)");
         jdbc.update("INSERT INTO iam_platform_member VALUES (1001,1,'ACTIVE')");
+        jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,status VARCHAR(16))");
+        jdbc.update("INSERT INTO iam_tenant_member VALUES (101,10,1,'ACTIVE')");
         evaluator = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void passwordChangeSuppressesHotBusinessPermissionsAndAdministratorInBothDomains() {
+        systemRole();
+        jdbc.update("UPDATE iam_role_assignment SET subject_type='MEMBER',platform_member_id=1001,platform_group_id=NULL WHERE id=41");
+        var hot = evaluator.evaluate(PLATFORM);
+        assertTrue(hot.platformAdministrator());
+        LayeredCache<String, AuthorizationEvaluator.AuthorizationView> cache = org.mockito.Mockito.mock(LayeredCache.class);
+        org.mockito.Mockito.when(cache.get(org.mockito.ArgumentMatchers.anyString())).thenReturn(hot);
+        var cached = com.ingot.cloud.iam.persistence.IamMybatisTestAccess.evaluator(dataSource, cache);
+        jdbc.update("UPDATE iam_account SET must_change_password=TRUE WHERE id=1");
+        assertTrue(cached.evaluate(PLATFORM).actionCodes().isEmpty());
+        org.mockito.Mockito.verify(cache, org.mockito.Mockito.never()).get(org.mockito.ArgumentMatchers.anyString());
+        assertTrue(evaluator.evaluateForExecution(TENANT, true).actionCodes().isEmpty());
+        assertFalse(evaluator.platformAdministrator(PLATFORM));
+        var failure = assertThrows(BizException.class, () -> evaluator.admit(PLATFORM, IamAction.PLATFORM_TENANT_CREATE));
+        assertEquals(IamReasonCode.PASSWORD_CHANGE_REQUIRED.getCode(), failure.getCode());
+        jdbc.update("UPDATE iam_account SET must_change_password=FALSE WHERE id=1");
+        assertEquals(hot.actionCodes(), evaluator.evaluate(PLATFORM).actionCodes());
     }
 
     @Test

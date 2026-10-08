@@ -51,6 +51,11 @@ public class AuthorizationSnapshotDTO implements Serializable {
     private boolean platformAdministrator;
 
     /**
+     * 在线账号是否必须改密。源端必须显式返回；缺失表示契约不兼容，消费方拒绝授权。
+     */
+    private Boolean passwordChangeRequired;
+
+    /**
      * 按资源与操作合并后的数据范围规则。
      */
     private List<AuthorizationResourceRuleDTO> resourceRules = new ArrayList<>();

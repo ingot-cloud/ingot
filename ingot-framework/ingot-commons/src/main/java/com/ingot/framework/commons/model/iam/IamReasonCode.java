@@ -22,6 +22,7 @@ public enum IamReasonCode implements ErrorCode {
     INVALID_ARGUMENT("InvalidArgument", "请求参数不合法", 400),
     IDENTITY_INVALID("IdentityInvalid", "当前身份无效，请重新认证", 401),
     ACTION_DENIED("ActionDenied", "没有执行该操作的权限", 403),
+    PASSWORD_CHANGE_REQUIRED("PasswordChangeRequired", "请先修改密码后再使用其他功能", 403),
     DATA_SCOPE_DENIED("DataScopeDenied", "目标不在允许的操作范围内", 403),
     DELEGATION_EXCEEDED("DelegationExceeded", "超出来源委派的允许范围", 403),
     ROLE_REVISION_UNAVAILABLE("RoleRevisionUnavailable", "角色版本不可用", 403),

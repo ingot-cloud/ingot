@@ -79,6 +79,15 @@ class AccountIdentityServiceTest {
     }
 
     @Test
+    void forcedPasswordLoginNeverAddsRoleOrAdministratorActions() {
+        jdbc.update("UPDATE iam_account SET must_change_password=TRUE WHERE id=1");
+        for (Long tenant : java.util.Arrays.asList(null, 10L)) {
+            assertEquals(List.of(com.ingot.framework.commons.constants.PermissionConstants.INIT_PASSWORD),
+                    service.load(request("alice", tenant)).orElseThrow().getScopes());
+        }
+    }
+
+    @Test
     void usernameLoginSelectsPlatformIdentityWithoutLegacyScopes() {
         UserDetailsRequest request = request("alice", null);
         var response = service.load(request).orElseThrow();

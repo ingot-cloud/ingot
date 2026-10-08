@@ -37,6 +37,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
+import org.springframework.beans.factory.ObjectProvider;
+import com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -65,10 +67,21 @@ public class InOAuth2ResourceServerConfiguration {
 
     public static final String SECURITY_FILTER_CHAIN_NAME = "resourceServerSecurityFilterChain";
 
+    /**
+     * 装配资源认证、在线会话及强制改密门禁。
+     * @param httpConfigurersAdapter 业务安全配置
+     * @param permitResolver 公开及精确改密端点解析
+     * @param onlineTokenService 在线会话
+     * @param sessionStoreAvailability 会话存储可用性
+     * @param trustedAuthorities 即时账号状态来源；IAM 身份缺少来源时拒绝
+     * @param http 安全构建器
+     * @throws Exception 配置失败
+     */
     public static void applyDefaultSecurity(InHttpConfigurersAdapter httpConfigurersAdapter,
                                             PermitResolver permitResolver,
                                             OnlineTokenService onlineTokenService,
                                             SessionStoreAvailability sessionStoreAvailability,
+                                            ObjectProvider<TrustedAuthoritySource> trustedAuthorities,
                                             HttpSecurity http) throws Exception {
         if (httpConfigurersAdapter != null) {
             httpConfigurersAdapter.apply(http);
@@ -80,7 +93,8 @@ public class InOAuth2ResourceServerConfiguration {
                 .csrf(csrf -> csrf.ignoringRequestMatchers(permitResolver.publicRequestMatcher()))
                 .oauth2ResourceServer(new OAuth2ResourceServerCustomizer(
                         permitResolver, onlineTokenService, sessionStoreAvailability))
-                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher()),
+                .with(new InTokenAuthConfigurer(permitResolver.publicRequestMatcher(),
+                        permitResolver.passwordChangeRequestMatcher(), trustedAuthorities),
                         Customizer.withDefaults());
         http.addFilterBefore(new ClientContextAwareFilter(), UsernamePasswordAuthenticationFilter.class);
     }
@@ -91,9 +105,10 @@ public class InOAuth2ResourceServerConfiguration {
                                                                  PermitResolver permitResolver,
                                                                  OnlineTokenService onlineTokenService,
                                                                  SessionStoreAvailability sessionStoreAvailability,
+                                                                 ObjectProvider<TrustedAuthoritySource> trustedAuthorities,
                                                                  HttpSecurity http) throws Exception {
         applyDefaultSecurity(httpConfigurersAdapter, permitResolver,
-                onlineTokenService, sessionStoreAvailability, http);
+                onlineTokenService, sessionStoreAvailability, trustedAuthorities, http);
         return http.build();
     }
 

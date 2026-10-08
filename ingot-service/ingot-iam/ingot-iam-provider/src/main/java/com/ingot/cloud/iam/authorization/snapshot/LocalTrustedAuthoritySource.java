@@ -5,6 +5,7 @@ import java.util.Set;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
 import com.ingot.cloud.iam.identity.CurrentIdentityService;
 import com.ingot.framework.commons.constants.RoleConstants;
+import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
@@ -24,8 +25,16 @@ public class LocalTrustedAuthoritySource implements TrustedAuthoritySource {
 
     /** {@inheritDoc} */
     @Override
+    public boolean requiresPasswordChange() {
+        return evaluator.passwordChangeRequired(identities.requireCurrent().context());
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Set<String> currentAuthorities() {
         var actor = identities.requireCurrent();
+        if (evaluator.passwordChangeRequired(actor.context()))
+            return Set.of(PermissionConstants.INIT_PASSWORD);
         var view = evaluator.evaluateForExecution(actor.context(), true);
         Set<String> result = new LinkedHashSet<>(view.actionCodes());
         result.remove(RoleConstants.ROLE_ADMIN_CODE);

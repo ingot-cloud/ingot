@@ -17,4 +17,5 @@ dependencies {
     implementation project(ingot.framework_security_crypto)
     implementation project(ingot.framework_security_account_core)
     implementation project(ingot.auth_api)
+    implementation project(ingot.iam_api)
 }

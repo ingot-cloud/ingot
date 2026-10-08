@@ -63,8 +63,10 @@ public class LocalAuthorizationSnapshotLoader implements AuthorizationSnapshotLo
         AuthorizationSnapshotDTO snapshot = new AuthorizationSnapshotDTO();
         snapshot.setTenantId(context.tenantId() == null ? 0L : Long.parseLong(context.tenantId()));
         snapshot.setUserId(user.getId());
-        snapshot.setPermissionCodes(new LinkedHashSet<>(view.actionCodes()));
-        snapshot.setPlatformAdministrator(context.domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM
+        boolean passwordRequired = evaluator.passwordChangeRequired(context);
+        snapshot.setPasswordChangeRequired(passwordRequired);
+        snapshot.setPermissionCodes(passwordRequired ? new LinkedHashSet<>() : new LinkedHashSet<>(view.actionCodes()));
+        snapshot.setPlatformAdministrator(!passwordRequired && context.domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM
                 && view.platformAdministrator());
         snapshot.setSource("REMOTE");
         snapshot.setVersion(Instant.now().toEpochMilli());

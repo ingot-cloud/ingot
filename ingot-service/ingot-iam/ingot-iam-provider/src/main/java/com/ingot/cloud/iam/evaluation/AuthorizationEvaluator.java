@@ -82,6 +82,25 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     }
 
     /**
+     * 读取账号最新改密状态，不接受授权热缓存或管理员资格替代。
+     * @param actor 可信成员身份
+     * @return 是否必须改密
+     */
+    public boolean passwordChangeRequired(AuthorizationContext actor) {
+        if (actor == null) throw new BizException(IamReasonCode.IDENTITY_INVALID);
+        try {
+            return evaluations.passwordChangeRequired(actor);
+        } catch (DataAccessException | PersistenceException failure) {
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        }
+    }
+
+    private AuthorizationView passwordRestrictedView() {
+        return new AuthorizationView(List.of(), List.of(), Map.of(),
+                IamReasonCode.PASSWORD_CHANGE_REQUIRED.getCode(), Instant.now().plus(MAX_HOT_WINDOW), List.of(), false);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -132,6 +151,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
         try {
+            if (passwordChangeRequired(actor)) throw new BizException(IamReasonCode.PASSWORD_CHANGE_REQUIRED);
             // 改写状态的操作按最新事实求值，不接受任何热缓存快照放行。
             AuthorizationView view = evaluateForExecution(actor, action.getOperation().isMutating());
             if (!view.actionCodes().contains(action.getCode())) {
@@ -162,6 +182,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
         if (actor == null) {
             throw new BizException(IamReasonCode.IDENTITY_INVALID);
         }
+        if (passwordChangeRequired(actor)) return passwordRestrictedView();
         LayeredCache<String, AuthorizationView> layered = cache == null ? null : cache.getIfAvailable();
         String key = cacheKey(actor);
         if (layered == null) {
@@ -202,7 +223,11 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
     public boolean platformAdministrator(AuthorizationContext actor) {
         if (actor == null || actor.domain() != AuthorizationDomain.PLATFORM) return false;
         try {
+            if (passwordChangeRequired(actor)) return false;
             return !evaluations.platformAdministrators(actor.memberId()).isEmpty();
+        } catch (BizException failure) {
+            if (IamReasonCode.IDENTITY_INVALID.getCode().equals(failure.getCode())) return false;
+            throw failure;
         } catch (DataAccessException | PersistenceException failure) {
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         }
@@ -224,6 +249,7 @@ public class AuthorizationEvaluator implements IamActionAuthorizer {
 
     private AuthorizationView evaluateRaw(AuthorizationContext actor) {
         try {
+            if (passwordChangeRequired(actor)) return passwordRestrictedView();
             if (actor.domain() == AuthorizationDomain.PLATFORM) {
                 var administrators = evaluations.platformAdministrators(actor.memberId());
                 if (!administrators.isEmpty()) return administratorView(actor, administrators);

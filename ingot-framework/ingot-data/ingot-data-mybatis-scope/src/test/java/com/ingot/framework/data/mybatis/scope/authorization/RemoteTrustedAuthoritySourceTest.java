@@ -58,8 +58,36 @@ class RemoteTrustedAuthoritySourceTest {
                         .currentAuthorities());
     }
 
+    @Test void forcedAndMissingPasswordStateNeverAllowBusinessOrAdministratorAndRequestSharesSnapshot() {
+        authenticate(AuthorizationDomain.PLATFORM);
+        var snapshot = snapshot(0);
+        snapshot.setPlatformAdministrator(true);
+        snapshot.setPermissionCodes(Set.of("iam-platform:member:read"));
+        snapshot.setPasswordChangeRequired(true);
+        var calls = new java.util.concurrent.atomic.AtomicInteger();
+        var source = new RemoteTrustedAuthoritySource((tenant, user) -> { calls.incrementAndGet(); return snapshot; });
+        var request = org.mockito.Mockito.mock(jakarta.servlet.http.HttpServletRequest.class);
+        var attributes = new java.util.HashMap<String, Object>();
+        org.mockito.Mockito.when(request.getAttribute(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(call -> attributes.get(call.getArgument(0)));
+        org.mockito.Mockito.doAnswer(call -> { attributes.put(call.getArgument(0), call.getArgument(1)); return null; })
+                .when(request).setAttribute(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(request));
+        try {
+            assertTrue(source.requiresPasswordChange());
+            assertEquals(Set.of(com.ingot.framework.commons.constants.PermissionConstants.INIT_PASSWORD), source.currentAuthorities());
+            assertEquals(1, calls.get());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+        snapshot.setPasswordChangeRequired(null);
+        assertThrows(AuthorizationDeniedException.class, source::currentAuthorities);
+    }
+
     private AuthorizationSnapshotDTO snapshot(long tenant) {
         var snapshot = new AuthorizationSnapshotDTO();
+        snapshot.setPasswordChangeRequired(false);
         snapshot.setUserId(1L); snapshot.setTenantId(tenant);
         snapshot.setExpiresAt(Instant.now().plusSeconds(30));
         return snapshot;

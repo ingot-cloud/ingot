@@ -25,6 +25,32 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 @InterceptorIgnore(tenantLine = IamPersistence.EXPLICIT_BOUNDARY, dataPermission = IamPersistence.EXPLICIT_BOUNDARY)
 public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEntity> {
+    /**
+     * 读取可信成员对应账号的即时改密状态，供求值器在缓存及管理员捷径前收紧资格。
+     * @param domain 可信管理域
+     * @param tenantId 租户域必填
+     * @param memberId 当前可信成员
+     * @return 账号改密状态；身份不存在时为空
+     */
+    @Select("""
+        <script>
+        SELECT a.must_change_password FROM iam_account a
+        <choose>
+          <when test="domain.name() == 'PLATFORM'">
+            JOIN iam_platform_member m ON m.account_id=a.id
+            WHERE m.id=#{memberId} AND m.status='ACTIVE'
+          </when>
+          <otherwise>
+            JOIN iam_tenant_member m ON m.account_id=a.id
+            WHERE m.id=#{memberId} AND m.tenant_id=#{tenantId} AND m.status='ACTIVE'
+          </otherwise>
+        </choose>
+        AND a.enabled=TRUE AND a.deleted_at IS NULL
+        </script>
+        """)
+    Boolean passwordChangeRequired(@Param("domain") AuthorizationDomain domain,
+            @Param("tenantId") BigInteger tenantId, @Param("memberId") BigInteger memberId);
+
     /** 成员当前有效角色关系，组继承只披露角色摘要。 */
     String MEMBER_BOUND_RELATION = """
         FROM iam_role_assignment ra

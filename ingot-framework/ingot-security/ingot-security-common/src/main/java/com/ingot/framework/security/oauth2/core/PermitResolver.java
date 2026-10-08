@@ -11,6 +11,7 @@ import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ingot.framework.security.config.annotation.web.configuration.Permit;
 import com.ingot.framework.security.config.annotation.web.configuration.PermitMode;
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordChangeAccess;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,6 +42,13 @@ public class PermitResolver implements InitializingBean {
 
     private final WebApplicationContext applicationContext;
     private final InOAuth2ResourceProperties properties;
+    private final List<String> passwordChangeUrls = new ArrayList<>();
+
+    /** @return 精确到 HTTP 方法的改密端点，不授予公开访问资格 */
+    public RequestMatcher passwordChangeRequestMatcher() {
+        var matchers = getMatchers(passwordChangeUrls);
+        return request -> matchers.stream().anyMatch(matcher -> matcher.matches(request));
+    }
 
     /**
      * permit all public url
@@ -101,6 +109,15 @@ public class PermitResolver implements InitializingBean {
 
         for (RequestMappingInfo info : map.keySet()) {
             HandlerMethod handlerMethod = map.get(info);
+            if (AnnotationUtils.findAnnotation(handlerMethod.getMethod(), PasswordChangeAccess.class) != null) {
+                // 必须显式声明方法，防止无方法约束的映射意外扩展受限入口。
+                if (info.getMethodsCondition().getMethods().isEmpty()) {
+                    throw new IllegalStateException("PasswordChangeAccess requires explicit HTTP methods");
+                }
+                Optional.ofNullable(info.getPathPatternsCondition()).ifPresent(condition ->
+                        condition.getPatterns().forEach(path -> info.getMethodsCondition().getMethods().forEach(method ->
+                                passwordChangeUrls.add(path.getPatternString() + StrUtil.COMMA + method.name()))));
+            }
 
             // 获取类上的 @Permit
             Permit controller = AnnotationUtils.findAnnotation(handlerMethod.getBeanType(), Permit.class);

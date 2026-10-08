@@ -7,18 +7,16 @@ import com.ingot.cloud.iam.persistence.SessionRepository;
 import com.ingot.cloud.iam.persistence.entity.IamAccountEntity;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamIds;
-import com.ingot.framework.commons.constants.PermissionConstants;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AccountSelfProfile;
 import com.ingot.framework.commons.model.iam.AccountSelfProfileInput;
 import com.ingot.framework.commons.model.iam.CurrentPasswordInput;
+import com.ingot.framework.commons.model.iam.PasswordChangeState;
 import com.ingot.framework.commons.model.iam.CurrentProfile;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.enums.EventSource;
 import com.ingot.framework.security.account.domain.port.inbound.ChangePasswordUseCase;
-import com.ingot.framework.security.core.context.SecurityAuthContext;
-import com.ingot.framework.security.core.userdetails.InUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +35,13 @@ public class CurrentAccountService {
     private final AccountWriteRepository writes;
     private final SessionRepository sessions;
     private final ChangePasswordUseCase passwords;
+
+    /** @return 当前身份最小改密状态，不查询成员资料或业务权限 */
+    public PasswordChangeState passwordState() {
+        ActiveIdentity actor = access.requireCurrent();
+        return new PasswordChangeState(actor.context(),
+                Boolean.TRUE.equals(requireAccount(actor).getMustChangePassword()));
+    }
 
     /**
      * 读取当前认证账号联系资料与成员最小资料。
@@ -80,10 +85,10 @@ public class CurrentAccountService {
         ActiveIdentity actor = access.requireCurrent();
         IamAccountEntity row = requireAccount(actor);
         long accountId = row.getId().longValueExact();
-        InUser user = SecurityAuthContext.getUser();
-        boolean force = Boolean.TRUE.equals(row.getMustChangePassword())
-                || (user != null && user.getAuthorities().stream()
-                .anyMatch(authority -> PermissionConstants.INIT_PASSWORD.equals(authority.getAuthority())));
+        if (!java.util.Objects.equals(input.newPassword(), input.confirmPassword())) {
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
+        boolean force = Boolean.TRUE.equals(row.getMustChangePassword());
         if (force) {
             passwords.forceChangePassword(ChangePasswordUseCase.ForceChangePasswordCommand.builder()
                     .userId(accountId)

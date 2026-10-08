@@ -131,10 +131,10 @@ public class AccountIdentityService {
 
     private List<String> initialScopes(AccountCredentialRepository.AccountCredentials account,
                                        AuthorizationContext context) {
-        List<String> scopes = new ArrayList<>();
         if (account.mustChangePassword()) {
-            scopes.add(PermissionConstants.INIT_PASSWORD);
+            return List.of(PermissionConstants.INIT_PASSWORD);
         }
+        List<String> scopes = new ArrayList<>();
         if (context != null) {
             scopes.addAll(evaluator.evaluate(context).actionCodes());
         }

@@ -7,9 +7,13 @@ import com.ingot.framework.commons.model.iam.AccountSelfProfileInput;
 import com.ingot.framework.commons.model.iam.Bootstrap;
 import com.ingot.framework.commons.model.iam.CurrentCapabilities;
 import com.ingot.framework.commons.model.iam.CurrentPasswordInput;
+import com.ingot.framework.commons.model.iam.PasswordChangeState;
 import com.ingot.framework.commons.model.support.R;
 import com.ingot.framework.commons.model.support.RShortcuts;
 import com.ingot.framework.security.crypto.annotation.InCryptoHybridContext;
+import com.ingot.framework.security.crypto.annotation.InDecrypt;
+import com.ingot.framework.security.crypto.model.CryptoType;
+import com.ingot.framework.security.config.annotation.web.configuration.PasswordChangeAccess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -80,15 +84,25 @@ public class CurrentSessionAPI implements RShortcuts {
         return ok(accounts.updateProfile(input));
     }
 
+    /** @return 当前认证身份最小改密状态 */
+    @Operation(summary = "当前账号改密状态")
+    @GetMapping("/password")
+    @PasswordChangeAccess
+    public R<PasswordChangeState> passwordState() {
+        return ok(accounts.passwordState());
+    }
+
     /**
      * 修改当前认证账号密码。
      *
-     * @param input 新旧密码
+     * @param input HYBRID 整包解密并校验后的新旧密码
      * @return 空成功
      */
     @Operation(summary = "当前账号改密")
     @PutMapping("/password")
+    @PasswordChangeAccess
     @InCryptoHybridContext
+    @InDecrypt(CryptoType.HYBRID)
     public R<Void> updatePassword(@Valid @RequestBody CurrentPasswordInput input) {
         accounts.updatePassword(input);
         return ok();

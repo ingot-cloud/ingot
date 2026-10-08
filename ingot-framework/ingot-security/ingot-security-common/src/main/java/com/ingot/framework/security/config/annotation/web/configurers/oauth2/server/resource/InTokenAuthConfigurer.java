@@ -2,6 +2,8 @@ package com.ingot.framework.security.config.annotation.web.configurers.oauth2.se
 
 import com.ingot.framework.security.web.InTokenAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -17,10 +19,12 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class InTokenAuthConfigurer
         extends AbstractHttpConfigurer<InTokenAuthConfigurer, HttpSecurity> {
     private final RequestMatcher ignoreRequestMatcher;
+    private final RequestMatcher passwordChangeRequestMatcher;
+    private final ObjectProvider<TrustedAuthoritySource> trustedAuthorities;
 
     @Override
     public void configure(HttpSecurity builder) {
-        InTokenAuthFilter filter = new InTokenAuthFilter(this.ignoreRequestMatcher);
+        InTokenAuthFilter filter = new InTokenAuthFilter(this.ignoreRequestMatcher, this.passwordChangeRequestMatcher, this.trustedAuthorities);
         builder.addFilterAfter(postProcess(filter), BearerTokenAuthenticationFilter.class);
     }
 }

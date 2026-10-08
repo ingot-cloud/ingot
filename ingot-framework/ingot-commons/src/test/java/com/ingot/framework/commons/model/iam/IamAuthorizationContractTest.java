@@ -50,6 +50,17 @@ class IamAuthorizationContractTest {
     }
 
     @Test
+    void passwordStateFixtureContainsNoBusinessData() throws Exception {
+        var tree = mapper.readTree(getClass().getResourceAsStream("/iam/password-change-state.json")).path(R.DATA);
+        var state = mapper.treeToValue(tree, PasswordChangeState.class);
+        assertTrue(state.mustChangePassword());
+        assertEquals(AuthorizationDomain.PLATFORM, state.context().domain());
+        assertEquals(2, tree.size());
+        assertFalse(tree.has("profile"));
+        assertFalse(tree.has("actionCodes"));
+    }
+
+    @Test
     void memberBoundRoleFixtureUsesVersionSummaryWithoutAssignmentStatus() throws Exception {
         try (InputStream input = getClass().getResourceAsStream("/iam/member-bound-roles.json")) {
             var tree = mapper.readTree(input).path(R.DATA).path("items").get(0);
@@ -292,7 +303,7 @@ class IamAuthorizationContractTest {
                 EntitlementPreviewItem.class, PlanSummary.class, CatalogRecordView.class, ReferenceImpactPreview.class,
                 RoleSummary.class, ApplicationSummary.class, AccountCreateInput.class, AccountUpdateInput.class,
                 AccountLockInput.class, AccountLookupInput.class, AccountRecord.class, AccountSecret.class,
-                AccountSelfProfile.class, AccountSelfProfileInput.class, CurrentPasswordInput.class,
+                AccountSelfProfile.class, AccountSelfProfileInput.class, CurrentPasswordInput.class, PasswordChangeState.class,
                 ApplicationBundleDraft.class, ActionLookupInput.class, ExportTask.class, SelectionPurpose.class,
                 AccountLookupPurpose.class)) {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
@@ -302,6 +313,7 @@ class IamAuthorizationContractTest {
             }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PasswordChangeState>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Bootstrap>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PolicyPreviewResult>>>() {
                     }.getType(),

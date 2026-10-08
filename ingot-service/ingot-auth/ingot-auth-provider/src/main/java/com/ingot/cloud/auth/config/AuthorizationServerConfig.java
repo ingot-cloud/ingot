@@ -19,6 +19,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
+import com.ingot.framework.security.oauth2.server.resource.access.expression.TrustedAuthoritySource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
@@ -57,9 +59,10 @@ public class AuthorizationServerConfig {
                                                                  PermitResolver permitResolver,
                                                                  OnlineTokenService onlineTokenService,
                                                                  SessionStoreAvailability sessionStoreAvailability,
+                                                                 ObjectProvider<TrustedAuthoritySource> trustedAuthorities,
                                                                  HttpSecurity http) throws Exception {
         InOAuth2ResourceServerConfiguration.applyDefaultSecurity(httpConfigurersAdapter,
-                permitResolver, onlineTokenService, sessionStoreAvailability, http);
+                permitResolver, onlineTokenService, sessionStoreAvailability, trustedAuthorities, http);
         http.csrf(new CsrfCustomizer(permitResolver))
                 .formLogin(new FormLoginCustomizer())
                 .logout(new LogoutCustomizer());

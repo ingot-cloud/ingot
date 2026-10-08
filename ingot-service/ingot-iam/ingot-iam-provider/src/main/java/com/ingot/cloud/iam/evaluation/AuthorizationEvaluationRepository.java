@@ -15,8 +15,10 @@ import com.ingot.cloud.iam.persistence.mapper.IamTenantAppEntitlementMapper;
 import com.ingot.cloud.iam.persistence.projection.AuthorizationEvalRows;
 import com.ingot.framework.commons.model.iam.AudienceKind;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
+import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
 import com.ingot.framework.commons.model.iam.GrantStatus;
+import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.SubjectType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -38,6 +40,19 @@ public class AuthorizationEvaluationRepository {
     private final IamActionMapper actions;
     private final IamTenantAppEntitlementMapper entitlements;
     private final IamDelegationActionCeilingMapper ceilings;
+
+    /**
+     * 读取当前成员账号的即时安全状态。
+     * @param actor 可信身份
+     * @return 即时改密状态；身份不存在时拒绝
+     */
+    public boolean passwordChangeRequired(AuthorizationContext actor) {
+        Boolean required = assignments.passwordChangeRequired(actor.domain(),
+                actor.tenantId() == null ? null : new BigInteger(actor.tenantId()), new BigInteger(actor.memberId()));
+        if (required == null) throw new BizException(
+                IamReasonCode.IDENTITY_INVALID);
+        return required;
+    }
 
     /**
      * 批量关联真实诊断来源的固定字段快照，不逐分配查询。

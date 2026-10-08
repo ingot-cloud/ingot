@@ -49,7 +49,7 @@ class LocalAuthorizationSnapshotLoaderTest {
         assertTrue(json.path("userId").isTextual());
         assertTrue(json.path("platformAdministrator").isBoolean());
         assertTrue(json.path("platformAdministrator").asBoolean());
-        assertEquals(List.of("emptyAuthorization", "expiresAt", "generatedAt", "permissionCodes", "platformAdministrator",
+        assertEquals(List.of("emptyAuthorization", "expiresAt", "generatedAt", "passwordChangeRequired", "permissionCodes", "platformAdministrator",
                 "resourceRules", "roleBindings", "source", "tenantId", "userId", "version"),
                 java.util.stream.StreamSupport.stream(java.util.Spliterators.spliteratorUnknownSize(json.fieldNames(), 0), false).sorted().toList());
     }
@@ -69,6 +69,20 @@ class LocalAuthorizationSnapshotLoaderTest {
         when(evaluator.evaluateForExecution(context, true)).thenReturn(new AuthorizationEvaluator.AuthorizationView(
                 List.of(RoleConstants.ROLE_ADMIN_CODE), List.of(), Map.of(), "version", Instant.now().plusSeconds(30)));
         assertFalse(new LocalTrustedAuthoritySource(identities, evaluator).currentAuthorities().contains(RoleConstants.ROLE_ADMIN_CODE));
+    }
+
+    @Test void forcedPasswordOverridesEvenAnAdministratorViewAndLocalAuthorities() {
+        authenticate();
+        when(identities.requireCurrent()).thenReturn(new ActiveIdentity(context, "0", "0", "0"));
+        when(evaluator.passwordChangeRequired(context)).thenReturn(true);
+        when(evaluator.evaluateForExecution(context, true)).thenReturn(new AuthorizationEvaluator.AuthorizationView(
+                List.of("iam-platform:member:read"), List.of(), Map.of(), "v", Instant.now().plusSeconds(30), List.of(), true));
+        var snapshot = loader.assemble(0L, 1L);
+        assertTrue(snapshot.getPasswordChangeRequired());
+        assertFalse(snapshot.isPlatformAdministrator());
+        assertTrue(snapshot.getPermissionCodes().isEmpty());
+        assertEquals(java.util.Set.of(com.ingot.framework.commons.constants.PermissionConstants.INIT_PASSWORD),
+                new LocalTrustedAuthoritySource(identities, evaluator).currentAuthorities());
     }
 
     private void authenticate() {

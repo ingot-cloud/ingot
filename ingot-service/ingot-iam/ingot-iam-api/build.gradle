@@ -1,6 +1,9 @@
 apply from: "${project.getRootDir().path}/config/library-base.gradle"
 
 dependencies {
+    implementation project(ingot.framework_security_common)
+    compileOnly(deps.jakarta_servlet_api)
+    implementation(deps.spring.framework_spring_web)
     implementation project(ingot.framework_feign)
     implementation project(ingot.framework_core)
     implementation project(ingot.framework_security_crypto)
@@ -8,8 +11,15 @@ dependencies {
     implementation project(ingot.framework_oss_common)
     implementation project(ingot.framework_security_account_core)
 
+    testImplementation(deps.spring.spring_boot.test)
+    testImplementation(deps.jakarta_servlet_api)
+
     //mapstruct
     implementation(deps.mapstruct.library)
     annotationProcessor(deps.mapstruct.processor)
 
+}
+
+test {
+    useJUnitPlatform()
 }
