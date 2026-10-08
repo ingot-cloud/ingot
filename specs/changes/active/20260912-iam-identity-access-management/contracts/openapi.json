@@ -23615,8 +23615,9 @@
           },
           "createdAt": {
             "type": "string",
-            "description": "授权创建时间，按请求当地时区返回",
-            "example": "2026-09-28 16:00:00"
+            "description": "授权创建时间，ISO-8601 UTC",
+            "example": "2026-09-28T08:00:00Z",
+            "format": "date-time"
           },
           "grantedBy": {
             "$ref": "#/components/schemas/AssignmentAuthor"
@@ -24883,12 +24884,12 @@
           },
           "validFrom": {
             "type": "string",
-            "description": "开始墙钟，可空；按请求时区解释后存 UTC",
+            "description": "ISO-8601 生效时间点，可空；按 UTC 存储",
             "format": "date-time"
           },
           "validUntil": {
             "type": "string",
-            "description": "结束墙钟，不包含，可空；按请求时区解释后存 UTC",
+            "description": "ISO-8601 失效时间点，不包含，可空；按 UTC 存储",
             "format": "date-time"
           }
         },
@@ -24934,12 +24935,12 @@
           },
           "validFrom": {
             "type": "string",
-            "description": "开始墙钟，可空",
+            "description": "ISO-8601 生效时间点，可空",
             "format": "date-time"
           },
           "validUntil": {
             "type": "string",
-            "description": "结束墙钟，不包含，可空",
+            "description": "ISO-8601 失效时间点，不包含，可空",
             "format": "date-time"
           }
         },
@@ -25010,12 +25011,12 @@
           },
           "validFrom": {
             "type": "string",
-            "description": "开始墙钟，可空",
+            "description": "ISO-8601 生效时间点，可空",
             "format": "date-time"
           },
           "validUntil": {
             "type": "string",
-            "description": "结束墙钟，不包含，可空",
+            "description": "ISO-8601 失效时间点，不包含，可空",
             "format": "date-time"
           }
         },

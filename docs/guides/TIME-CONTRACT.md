@@ -33,3 +33,60 @@ Cron 时区和存储时区分别配置：TSS Spring 的 ingot.tss.spring.time-zo
 ## 新服务接入
 
 引入 ingot-core 及所需数据模块，自动继承 API mapper 和 MVC 转换；Feign 同一契约。数据源使用标准 UTC 配置，业务代码遵守 UTC 语义。自建 ObjectMapper 需保留业务模块并显式装配 InApiTimeModule；自建 data source 单独配 UTC。接入示例见 docs/guides/TIME-CONTRACT.md，完整变更验收记录见关联 time-contract active change。
+
+## 独立业务服务示例
+
+```groovy
+dependencies {
+    implementation project(ingot.framework_core)
+    implementation project(ingot.framework_data_mybatis)
+}
+```
+
+数据源模板（不用覆盖中间件、自定义连接池）：
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/${BUSINESS_DATABASE}?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+```
+
+时间点 DTO 和持久化边界：
+
+```java
+/** 接口时间点 DTO，无需 IAM 即可继承框架编码。 */
+public record BusinessTimeInput(Instant paidAt, Instant validUntil) {}
+
+// HTTP 接收 2026-10-08T09:00:00+08:00，DTO 得到 2026-10-08T01:00:00Z。
+LocalDateTime databaseValue = LocalDateTime.ofInstant(paidAt, ZoneOffset.UTC);
+Instant deadline = entity.getValidUntil().toInstant(ZoneOffset.UTC);
+boolean expired = !Instant.now().isBefore(deadline);
+```
+
+前端展示与选择（不修改未编辑的模型）：
+
+```ts
+import { formatDateTime, parseInstantDate, toApiInstant } from "@ingot/shared";
+formatDateTime(record.paidAt);
+formatDateTime(record.paidAt, { timeZone: "Asia/Shanghai" });
+const picker = computed({
+  get: () => parseInstantDate(record.paidAt),
+  set: (value: Date | null) => { record.paidAt = toApiInstant(value); },
+});
+```
+
+独立自动配置验证：ApiTimeAutoConfigurationTest 不依赖 IAM，覆盖真实 MVC JSON/query/form、长整型、日期/时长和 400；MySQL/JDBC 验证 UtcJdbcContractTest 使用独立连接临时表，不触碰业务表。接入时运行这些契约测试及自身截止场景。
+
+## 发布与回退
+
+前后端、相关服务、Nacos 数据源配置作为同一发布单元，在全新环境同步切换；不保留旧墙钟格式兼容入口，不迁移历史数据库、Redis 或队列数据。回退必须成套恢复对应版本和配置，不能混用新旧时间契约；已有数据环境升级不属于本次兼容承诺。
+
+## 可复用验证
+
+- `ApiTimeAutoConfigurationTest`：没有 IAM 的自动配置、JSON/query/form 与 400。
+- `FeignTimeContractTest`：参数编码和独立 WebFlux mapper。
+- `UtcJdbcContractTest`：设置 TIME_TEST_MYSQL_URL/USER/PASSWORD 后，使用临时表验证真实 Connector/J、MyBatis-Plus 实体和 OAuth JDBC 密钥期限；测试账号仅需该测试库的临时表权限。
+- `RedisAuthorizationTimeContractTest` / `VerificationCodeUtcTest`：设置 TIME_TEST_REDIS_HOST/PORT/PASSWORD 后，用独立随机测试键验证内部编码、刷新/撤销和 TTL，并自动清理。
+- 前端 `pnpm test:time-browser`：需要 Playwright Chromium，覆盖三个浏览器时区、日期选择提交与夏令时。
+
+完成记录见 [时间变更验收](../../specs/changes/active/20261008-framework-time-contract/ACCEPTANCE.md)。

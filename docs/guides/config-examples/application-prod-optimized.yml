@@ -42,7 +42,7 @@ spring:
   # ========== 数据源配置 ==========
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_iam}?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ingot_iam}?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:root}
     type: com.alibaba.druid.pool.DruidDataSource
@@ -109,7 +109,7 @@ spring:
         session-stat-max-count: 1000
       
       # ========== 连接参数 ==========
-      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+      connection-properties: connectionTimeZone=UTC;forceConnectionTimeZoneToSession=true;druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
       connect-properties:
         socketTimeout: 30000
         connectTimeout: 10000
@@ -120,7 +120,8 @@ spring:
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
         tcpKeepAlive: true
-        serverTimezone: Asia/Shanghai
+        connectionTimeZone: UTC
+        forceConnectionTimeZoneToSession: true
 
   # ========== Redis 配置 ==========
   redis:

@@ -311,3 +311,7 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 ## 强制改密闭环（2026-10-06）
 
 已批准并开始实施；规则、契约、FP01–FP05 任务及验收见 [强制改密增量](./FORCED-PASSWORD-CHANGE.md)。开发、自动化与人工验收分别记录。
+
+# 2026-10-08 框架时间契约统一（approved）
+
+用户批准 `20261008-framework-time-contract`。其 API ISO-8601 UTC 契约替代前述本地墙钟时间规则；共享模块自动装配、Redis 编码隔离、安全时间计算同步实施。全新环境配套前后端发布，无历史数据迁移。

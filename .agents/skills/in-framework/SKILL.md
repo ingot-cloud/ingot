@@ -1,8 +1,7 @@
 ---
 name: in-framework
 description: >-
-  Enforces Ingot backend framework coding rules: API wall-clock time in the
-  client timezone with UTC storage, business enums, JavaDoc, OSS object paths,
+  Enforces Ingot backend framework coding rules: ISO-8601 API instants with UTC processing and storage, business enums, JavaDoc, OSS object paths,
   constructor injection, named constants, and association-list queries. Use when
   writing or changing Java business code, time fields, createdAt/updatedAt,
   enums, JavaDoc, OSS/avatar/attachment fields, Spring Bean injection, magic
@@ -18,7 +17,7 @@ description: >-
 读多写少、来自远端的参考数据（策略、配置、字典、租户参数）走 [layered-cache](../layered-cache/SKILL.md)。提交信息走 [conventional-commits](../conventional-commits/SKILL.md)。
 
 ```
-- [ ] 时间：接口墙钟按请求前端时区；识别不到用 Asia/Shanghai；库存 UTC；定时与到期判断走 Instant / UTC
+- [ ] 时间：API 带偏移 ISO，响应 UTC Z，无偏移输入 400；存储和到期判断 UTC；前端本地展示；Cron 显式业务时区
 - [ ] 枚举：@Getter + @RequiredArgsConstructor，@JsonValue/@EnumValue，getEnum 走 EnumUtils
 - [ ] 魔法值：条件、装配、YAML、跨类比较不裸写字面量
 - [ ] OSS：入库 bucket/objectName，响应 @OssUrl
@@ -44,4 +43,4 @@ description: >-
 
 新增租户状态枚举：按 [业务枚举](references/enum.md) 用 `EnumUtils` 建索引，不要手写 `HashMap`。
 
-接口返回 `createdAt`：按 [接口时间](references/time.md) 转成请求前端当地时间；识别不到时区用 `Asia/Shanghai`。到期判断用 `Instant`，不要拿请求时区去比。
+接口返回 `createdAt`：按 [接口时间](references/time.md) 输出 ISO-8601 UTC，前端本地格式化。到期判断用 `Instant` / UTC，日期、日内时间和 Cron 单独表达业务语义。
