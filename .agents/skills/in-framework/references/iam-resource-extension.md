@@ -4,7 +4,7 @@
 
 ## 资源和操作
 
-- 使用 `ingot-authorization` 的 ResourceKey(domain, applicationCode, resourceCode)，不能只按资源编码、IamAction 枚举、操作编码前缀或集合第一项猜归属。
+- 使用 `ingot-access-control` 的 ResourceKey(domain, applicationCode, resourceCode)，不能只按资源编码、IamAction 枚举、操作编码前缀或集合第一项猜归属。
 - 目录的 application_id/resource_id 关联必须与注册描述一致。业务精确操作可用编译期常量，不必扩充 IAM 核心枚举。
 - ResourceObjectProvider 注册实际对象ID（可UUID）、可信读写模式、可靠支持的范围、树能力、实际DTO字段及默认策略。候选/回显/存在性与执行接口使用同一ID；未知或未接入能力明确拒绝，不回退ALL。
 - 同一参数跨操作共享时必须同应用、同资源、同类型。操作新增后独立发布固定版本，不修改已发布版本。

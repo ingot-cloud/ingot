@@ -195,3 +195,9 @@ MT01–MT03 开发与定向自动化完成，时间增量进入 validating；用
 ## 2026-10-09 菜单高级配置与步骤编辑
 
 用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。
+
+## 2026-10-09 公共访问控制模块命名
+
+用户已授权选择并修改更明确的公共模块名称，需求、兼容范围和任务见 [ACCESS-CONTROL-MODULE-NAMING](./ACCESS-CONTROL-MODULE-NAMING.md)。模块更名为 `ingot-access-control`，Java 与运行时契约保持；本轮只实施命名调整，主 change 保持 implementing。
+
+ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示例编译、新名称 JAR 及两仓库格式检查通过；此前产品验收待办保持。

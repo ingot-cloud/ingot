@@ -56,7 +56,7 @@
 
 ```sh
 IAM_MYSQL_HTTP_TEST=true ./gradlew -I /tmp/iam-role-field-test.init.gradle :ingot-service:ingot-iam:ingot-iam-provider:test
-./gradlew :ingot-framework:ingot-authorization:test :ingot-framework:ingot-data:ingot-data-mybatis-scope:test
+./gradlew :ingot-framework:ingot-access-control:test :ingot-framework:ingot-data:ingot-data-mybatis-scope:test
 ./gradlew :ingot-framework:ingot-security:ingot-security-common:test --tests '*InSecurityExpressionTest'
 python3 databases/iam/test_bootstrap_seed.py
 PYTHONPATH=tools/iam python3 -m unittest test_contract test_database_sources test_generate_bootstrap

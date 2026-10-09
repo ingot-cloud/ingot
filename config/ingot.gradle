@@ -1,7 +1,7 @@
 def ingot = [:]
 
 // framework
-ingot.framework_authorization = ":ingot-framework:ingot-authorization"
+ingot.framework_access_control = ":ingot-framework:ingot-access-control"
 ingot.framework_cache = ":ingot-framework:ingot-cache"
 ingot.framework_security_event_codes = ":ingot-framework:ingot-security:ingot-security-event-codes"
 ingot.framework_security_recording = ":ingot-framework:ingot-security:ingot-security-recording"

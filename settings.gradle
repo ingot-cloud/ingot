@@ -1,8 +1,8 @@
 rootProject.name = 'ingot'
 
 // Framework
-include 'ingot-framework:ingot-authorization'
-findProject(':ingot-framework:ingot-authorization')?.name = 'ingot-authorization'
+include 'ingot-framework:ingot-access-control'
+findProject(':ingot-framework:ingot-access-control')?.name = 'ingot-access-control'
 include 'ingot-framework:ingot-cache'
 findProject(':ingot-framework:ingot-cache')?.name = 'ingot-cache'
 include 'ingot-framework:ingot-commons'

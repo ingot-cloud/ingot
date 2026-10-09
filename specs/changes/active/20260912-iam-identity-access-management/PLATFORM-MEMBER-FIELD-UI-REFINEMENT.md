@@ -40,7 +40,7 @@
 cat > /tmp/iam-member-test-memory.gradle <<'GRADLE'
 allprojects { tasks.withType(Test).configureEach { maxHeapSize = '1g'; maxParallelForks = 1 } }
 GRADLE
-IAM_MYSQL_HTTP_TEST=true ./gradlew -I /tmp/iam-member-test-memory.gradle :ingot-service:ingot-iam:ingot-iam-provider:test :ingot-framework:ingot-authorization:test --offline --tests '*PlatformMemberFieldContextTest' --tests '*PlatformMemberUpdateAccessTest' --tests '*AccountServiceTest' --tests '*PlatformMemberContactsTest' --tests '*MemberCreationAssignmentTest' --tests '*RoleFieldAuthorizationTest' --tests '*RoleWorkspaceMySqlHttpTest'
+IAM_MYSQL_HTTP_TEST=true ./gradlew -I /tmp/iam-member-test-memory.gradle :ingot-service:ingot-iam:ingot-iam-provider:test :ingot-framework:ingot-access-control:test --offline --tests '*PlatformMemberFieldContextTest' --tests '*PlatformMemberUpdateAccessTest' --tests '*AccountServiceTest' --tests '*PlatformMemberContactsTest' --tests '*MemberCreationAssignmentTest' --tests '*RoleFieldAuthorizationTest' --tests '*RoleWorkspaceMySqlHttpTest'
 ./gradlew :ingot-framework:ingot-commons:test --offline --tests '*IamAuthorizationContractTest'
 python3 tools/iam/build_contract.py --check
 python3 tools/iam/test_contract.py

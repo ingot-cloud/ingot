@@ -5,7 +5,7 @@
 ## 接入步骤
 
 1. 在应用目录创建 PLATFORM 应用 `iam-ops`、资源 `incident`、三个精确操作 `iam-ops:incident:read/update/export`（每项是完整编码，目录关联决定归属）。配置资源能力 ALL/SELF/OBJECT_SET；字段 title/contact 能力与 IncidentProvider 一致。
-2. 业务服务依赖 `ingot-authorization`、`ingot-iam-api`、框架 Feign、安全与标准 Web 启动配置。注册 `IncidentProvider` Bean。启用 `RemoteIamAuthorizationService` Feign，并沿用项目线上认证恢复、Feign 原始身份头转发、服务发现和异常转换；不能匿名启用示例接口。
+2. 业务服务依赖 `ingot-access-control`、`ingot-iam-api`、框架 Feign、安全与标准 Web 启动配置。注册 `IncidentProvider` Bean。启用 `RemoteIamAuthorizationService` Feign，并沿用项目线上认证恢复、Feign 原始身份头转发、服务发现和异常转换；不能匿名启用示例接口。
 3. IAM 端以受控配置白名单注册完整 descriptor 和服务发现名 `iam-ops`，业务端配置同一专用密钥（环境变量/密钥系统提供，不提交值）。模板见 [resource-registration.example.yml](resource-registration.example.yml)。不得由请求提交 URL 或服务名。
 4. 创建平台角色并显式分配固定版本；指定对象使用业务 UUID。角色字段权限步骤选择 incident 的 title/contact 可见性和可编辑性；字段随该固定版本和其操作范围继承，不另设查看者覆盖。
 5. 编译：`./gradlew :examples:iam-ops:compileJava`。启动前由业务部署环境补齐数据源、服务发现、安全和 Redis/失效总线配置；本模块不提供绕过登录的演示模式。

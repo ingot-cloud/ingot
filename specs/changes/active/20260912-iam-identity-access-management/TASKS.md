@@ -347,3 +347,9 @@ MT01–MT04 的实施、契约/定向验证和人工验收在 [PLATFORM-MEMBER-T
 ## 2026-10-09 菜单高级配置与步骤编辑
 
 用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。
+
+## 2026-10-09 公共访问控制模块命名
+
+ACN01–ACN03 的命名决策、构建/文档调整与限定验证见 [ACCESS-CONTROL-MODULE-NAMING](./ACCESS-CONTROL-MODULE-NAMING.md)。本轮用户授权覆盖模块命名，不包含字段公共处理功能实施。
+
+ACN01–ACN03 已完成：25 个原有文件完整移动，17 项公共模块测试、两个消费模块编译和新名称 JAR 验证通过；详细证据见增量文档。

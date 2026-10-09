@@ -79,7 +79,7 @@
 cat > /tmp/iam-role-field-test.init.gradle <<'GRADLE'
 allprojects { tasks.withType(Test).configureEach { maxHeapSize = '1536m'; forkEvery = 40 } }
 GRADLE
-IAM_MYSQL_HTTP_TEST=true ./gradlew -I /tmp/iam-role-field-test.init.gradle :ingot-framework:ingot-authorization:test :ingot-framework:ingot-commons:test :ingot-service:ingot-iam:ingot-iam-provider:test :examples:iam-ops:compileJava
+IAM_MYSQL_HTTP_TEST=true ./gradlew -I /tmp/iam-role-field-test.init.gradle :ingot-framework:ingot-access-control:test :ingot-framework:ingot-commons:test :ingot-service:ingot-iam:ingot-iam-provider:test :examples:iam-ops:compileJava
 python3 databases/iam/test_identity_schema.py
 python3 databases/iam/test_bootstrap_seed.py
 python3 tools/iam/build_contract.py --check
