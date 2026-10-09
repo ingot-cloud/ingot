@@ -315,3 +315,8 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 # 2026-10-08 框架时间契约统一（approved）
 
 用户批准 `20261008-framework-time-contract`。其 API ISO-8601 UTC 契约替代前述本地墙钟时间规则；共享模块自动装配、Redis 编码隔离、安全时间计算同步实施。全新环境配套前后端发布，无历史数据迁移。
+
+
+## 2026-10-08 平台成员详情只读时间
+
+平台详情响应增加可选 joinedAt/lastLoginAt/updatedAt，按成员查看与对象范围开放固定只读元数据，存储 UTC 转 Instant。列表与租户不填，写入仍拒绝时间字段；不新增 DDL。决策、兼容与验收见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。

@@ -1,6 +1,7 @@
 package com.ingot.cloud.iam.policy;
 
 import java.util.List;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -80,6 +81,23 @@ class FieldAccessEvaluatorTest {
         jdbc.update("DELETE FROM iam_field_rule");
         jdbc.update("DELETE FROM iam_policy_selector_member");
         jdbc.update("DELETE FROM iam_default_policy_revision WHERE id <> 22");
+    }
+
+    @Test
+    void memberMetadataSurvivesHiddenAndMaskedProfileProjection() {
+        var joined = Instant.parse("2026-10-01T01:00:00Z");
+        var login = Instant.parse("2026-10-08T02:00:00Z");
+        var updated = Instant.parse("2026-10-08T03:00:00Z");
+        var raw = new MemberRecord("102", "成员", null, "13800000000", "a@b.c", "alice",
+                MemberStatus.ACTIVE, List.of(), joined, login, updated);
+        var projected = evaluator.project(raw, Map.of(
+                MemberFieldKey.VALUE_PHONE, new FieldAccess(FieldVisibility.HIDDEN, false),
+                MemberFieldKey.VALUE_EMAIL, new FieldAccess(FieldVisibility.MASKED, false)));
+        assertNull(projected.phone());
+        assertEquals(FieldProjection.MASKED_PLACEHOLDER, projected.email());
+        assertEquals(joined, projected.joinedAt());
+        assertEquals(login, projected.lastLoginAt());
+        assertEquals(updated, projected.updatedAt());
     }
 
     @Test

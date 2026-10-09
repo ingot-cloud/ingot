@@ -424,6 +424,14 @@ class IamAuthorizationContractTest {
                 ((Schema<?>) page.getProperties().get("items")).getItems().get$ref());
         assertEquals("#/components/schemas/MemberRecord",
                 ((Schema<?>) schemas.get("ResourceDetailMemberRecord").getProperties().get("record")).get$ref());
+        Schema<?> member = schemas.get("MemberRecord");
+        for (var field : List.of("joinedAt", "lastLoginAt", "updatedAt")) {
+            Schema<?> time = (Schema<?>) member.getProperties().get(field);
+            assertEquals("string", time.getType());
+            assertEquals("date-time", time.getFormat());
+            assertEquals(Boolean.TRUE, time.getReadOnly());
+            assertFalse(member.getRequired().contains(field));
+        }
         assertEquals("#/components/schemas/EffectiveRole",
                 ((Schema<?>) schemas.get("PreviewEffectiveRole").getProperties().get("effectiveResult")).get$ref());
         assertFalse(schemas.get("PreviewEffectiveRole").getProperties().containsKey("consistent"));

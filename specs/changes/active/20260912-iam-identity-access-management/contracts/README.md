@@ -85,3 +85,6 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 2026-10-06 平台成员角色编辑：新增 PlatformMemberEditInput/MemberRoleChanges/MemberBoundRole/PlatformMemberEditPreview 与 bound-roles、preview 路由，成员 assignments 增加 effectiveStatus/directOnly；租户 MemberProfileInput 不变。member-role-edit 是差量请求夹具，member-bound-roles 是无历史状态的有效摘要夹具。固定版本创建不要求最新版。
 
 2026-10-06：新增密码 GET 最小状态与 PasswordChangeRequired 403；内部快照必需 passwordChangeRequired。生成管理面 132 路径/200 操作，内部 3 操作；示例 password-change-state.json。规则及共同部署见 [强制改密](../FORCED-PASSWORD-CHANGE.md)。
+
+
+2026-10-08：MemberRecord 的 joinedAt/lastLoginAt/updatedAt 为可选只读 UTC 时间点，仅平台详情/编辑成功响应填写；详见 [平台成员时间增量](../PLATFORM-MEMBER-TIMES.md)。路径/操作数保持132/200。

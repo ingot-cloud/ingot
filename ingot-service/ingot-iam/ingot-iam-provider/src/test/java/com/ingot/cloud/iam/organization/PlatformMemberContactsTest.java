@@ -1,5 +1,7 @@
 package com.ingot.cloud.iam.organization;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,6 +12,7 @@ import com.ingot.cloud.iam.evaluation.ResourceAccess;
 import com.ingot.cloud.iam.extension.RoleFieldPermissionService;
 import com.ingot.cloud.iam.group.GroupService;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
+import com.ingot.cloud.iam.persistence.MemberQueryRepository;
 import com.ingot.cloud.iam.persistence.GroupRepository;
 import com.ingot.cloud.iam.persistence.IamMybatisTestAccess;
 import com.ingot.cloud.iam.policy.FieldAccessEvaluator;
@@ -19,6 +22,8 @@ import com.ingot.framework.authorization.SdkAuthorizationException;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.*;
 import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingot.framework.commons.jackson.InApiTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,7 +35,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * <p>使用真实成员持久化验证平台联系资料来源、账号隔离、字段写入门禁及事务回滚。</p>
+ * <p>使用真实成员持久化验证平台资料与详情时间来源、账号隔离、字段写入门禁及事务回滚。</p>
  * @author jy
  * @since 1.0.0
  */
@@ -40,15 +45,17 @@ class PlatformMemberContactsTest {
     private RoleFieldPermissionService policies;
     private IamAuditWriter audits;
     private AssignmentService assignments;
+    private MemberQueryRepository members;
+    private ResourceAccess scopes;
 
     @BeforeEach
     void database() {
         var source = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
         jdbc = new JdbcTemplate(source);
-        jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,username VARCHAR(64),phone VARCHAR(32),email VARCHAR(128),version BIGINT,deleted_at TIMESTAMP)");
+        jdbc.execute("CREATE TABLE iam_account(id BIGINT PRIMARY KEY,username VARCHAR(64),phone VARCHAR(32),email VARCHAR(128),version BIGINT,deleted_at TIMESTAMP,last_login_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_platform_member(id BIGINT PRIMARY KEY,account_id BIGINT,display_name VARCHAR(128),avatar VARCHAR(512),phone VARCHAR(32),email VARCHAR(128),status VARCHAR(16),version BIGINT,created_at TIMESTAMP,updated_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_tenant_member(id BIGINT PRIMARY KEY,tenant_id BIGINT,account_id BIGINT,phone VARCHAR(32),email VARCHAR(128))");
-        jdbc.update("INSERT INTO iam_account VALUES(1,'alice','13800000001','login@example.com',7,NULL)");
+        jdbc.update("INSERT INTO iam_account VALUES(1,'alice','13800000001','login@example.com',7,NULL,NULL)");
         jdbc.update("INSERT INTO iam_platform_member VALUES(1001,1,'平台成员',NULL,'13900000001','contact@example.com','ACTIVE',0,NULL,NULL)");
         jdbc.update("INSERT INTO iam_tenant_member VALUES(101,10,1,'13700000001','tenant@example.com')");
         var access = mock(IamAccess.class);
@@ -64,13 +71,69 @@ class PlatformMemberContactsTest {
         policy(new FieldAccess(FieldVisibility.FULL, true));
         audits = mock(IamAuditWriter.class);
         assignments = mock(AssignmentService.class);
-        service = new MemberQueryService(access, mock(ResourceAccess.class), capabilities, fields, audits,
-                IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class), assignments,
+        scopes = mock(ResourceAccess.class);
+        members = spy(IamMybatisTestAccess.memberQueries(source));
+        service = new MemberQueryService(access, scopes, capabilities, fields, audits,
+                members, mock(GroupRepository.class), assignments,
                 mock(GroupService.class), new DataSourceTransactionManager(source), policies);
     }
 
     @Test
-    void readsMemberContactsAndOnlyUsesAccountForLoginName() {
+    void detailUsesMemberTimesAndGlobalAccountLoginAsUtcInstants() throws Exception {
+        jdbc.update("UPDATE iam_platform_member SET created_at=?,updated_at=? WHERE id=1001",
+                LocalDateTime.parse("2026-10-01T01:02:03"), LocalDateTime.parse("2026-10-08T04:05:06"));
+        jdbc.update("UPDATE iam_account SET last_login_at=? WHERE id=1", LocalDateTime.parse("2026-09-30T07:08:09"));
+        var member = service.get(AuthorizationDomain.PLATFORM, "1001").record();
+        assertEquals(Instant.parse("2026-10-01T01:02:03Z"), member.joinedAt());
+        assertEquals(Instant.parse("2026-10-08T04:05:06Z"), member.updatedAt());
+        assertEquals(Instant.parse("2026-09-30T07:08:09Z"), member.lastLoginAt());
+        var json = new ObjectMapper().registerModule(new InApiTimeModule()).valueToTree(member);
+        assertEquals("2026-10-01T01:02:03Z", json.path("joinedAt").asText());
+        assertEquals("2026-09-30T07:08:09Z", json.path("lastLoginAt").asText());
+        assertEquals("2026-10-08T04:05:06Z", json.path("updatedAt").asText());
+        var changed = service.patch(AuthorizationDomain.PLATFORM, "1001",
+                new MemberProfileInput("0", null, null, "13900000002", null)).record();
+        assertEquals(member.joinedAt(), changed.joinedAt());
+        assertEquals(member.lastLoginAt(), changed.lastLoginAt());
+        assertTrue(changed.updatedAt().isAfter(member.updatedAt()));
+    }
+
+    @Test
+    void missingLoginIsOmittedAndDeletedAccountDoesNotExposeLoginInformation() {
+        var mapper = new ObjectMapper().registerModule(new InApiTimeModule());
+        var member = service.get(AuthorizationDomain.PLATFORM, "1001").record();
+        assertNull(member.lastLoginAt());
+        assertFalse(mapper.valueToTree(member).has("lastLoginAt"));
+        jdbc.update("UPDATE iam_account SET last_login_at=?,deleted_at=? WHERE id=1",
+                LocalDateTime.parse("2026-10-08T01:00:00"), LocalDateTime.parse("2026-10-08T02:00:00"));
+        var removed = service.get(AuthorizationDomain.PLATFORM, "1001").record();
+        assertNull(removed.username());
+        assertNull(removed.lastLoginAt());
+    }
+
+    @Test
+    void invisibleMemberCannotReadMemberOrAccountTimes() {
+        doThrow(new BizException(IamReasonCode.OBJECT_NOT_FOUND)).when(scopes)
+                .requireVisibleMember(any(), eq(IamAction.PLATFORM_MEMBER_READ), eq(1001L));
+        assertThrows(BizException.class, () -> service.get(AuthorizationDomain.PLATFORM, "1001"));
+        verifyNoInteractions(members);
+    }
+
+    @Test
+    void timeFieldsAreRejectedEvenWhenExplicitlyNull() throws Exception {
+        var mapper = new ObjectMapper();
+        for (var field : List.of("joinedAt", "lastLoginAt", "updatedAt")) {
+            var input = mapper.readValue("{\"expectedVersion\":\"0\",\"" + field + "\":null}", MemberProfileInput.class);
+            var rejected = assertThrows(BizException.class,
+                    () -> service.patch(AuthorizationDomain.PLATFORM, "1001", input));
+            assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), rejected.getCode());
+        }
+        assertEquals(0L, jdbc.queryForObject("SELECT version FROM iam_platform_member WHERE id=1001", Long.class));
+        verifyNoInteractions(audits);
+    }
+
+    @Test
+    void readsMemberContactsIndependentlyOfAccountLoginInformation() {
         var member = service.get(AuthorizationDomain.PLATFORM, "1001").record();
         assertEquals("13900000001", member.phone());
         assertEquals("contact@example.com", member.email());

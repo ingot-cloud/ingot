@@ -183,3 +183,10 @@ MR01–MR03 开发与自动化验证完成，增量状态 validating；MR04 人�
 已批准并开始实施；规则、契约、FP01–FP05 任务及验收见 [强制改密增量](./FORCED-PASSWORD-CHANGE.md)。开发、自动化与人工验收分别记录。
 
 FP01–FP04 开发及限定自动化已完成，增量 validating；FP05 人工验收未执行。扩展全量检查的已有 InUser 列表测试失败单独记录，不宣称全仓库回归通过。证据见 [FORCED-PASSWORD-CHANGE](./FORCED-PASSWORD-CHANGE.md)。
+
+
+## 2026-10-08 平台成员详情只读时间
+
+用户已批准实施三项详情只读时间，增量决策与任务见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。主 change 保持 implementing，真实页面验收独立记录。
+
+MT01–MT03 开发与定向自动化完成，时间增量进入 validating；用户本轮明确要求实施已分析的前后端展示，两端均在原 active change 内维护。MT04 真实页面/身份验收待执行，主状态保持 implementing。

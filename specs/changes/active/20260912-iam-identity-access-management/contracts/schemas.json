@@ -1001,8 +1001,8 @@
           "createdAt" : {
             "type" : "string",
             "description" : "授权创建时间，ISO-8601 UTC",
-            "example" : "2026-09-28T08:00:00Z",
-            "format" : "date-time"
+            "format" : "date-time",
+            "example" : "2026-09-28T08:00:00Z"
           },
           "grantedBy" : {
             "$ref" : "#/components/schemas/AssignmentAuthor"
@@ -2743,6 +2743,24 @@
             "items" : {
               "$ref" : "#/components/schemas/MemberDepartmentView"
             }
+          },
+          "joinedAt" : {
+            "type" : "string",
+            "description" : "平台成员首次加入时间，UTC；仅平台详情填写",
+            "format" : "date-time",
+            "readOnly" : true
+          },
+          "lastLoginAt" : {
+            "type" : "string",
+            "description" : "账号最近成功登录时间，UTC；包含平台及组织身份，仅平台详情填写",
+            "format" : "date-time",
+            "readOnly" : true
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "description" : "成员记录更新时间，UTC；仅平台详情填写，不代表最后活跃时间",
+            "format" : "date-time",
+            "readOnly" : true
           }
         },
         "description" : "返回经字段策略处理的成员资料，隐藏字段以空引用省略，脱敏字段只携带脱敏值"

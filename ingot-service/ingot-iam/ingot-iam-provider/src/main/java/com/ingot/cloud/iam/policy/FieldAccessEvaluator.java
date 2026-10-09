@@ -201,7 +201,7 @@ public class FieldAccessEvaluator {
     }
 
     /**
-     * 按访问说明投影成员资料，隐藏字段省略。
+     * 按访问说明投影成员资料，隐藏字段省略；保留已由成员对象范围校验的只读元数据。
      *
      * @param raw 含存储原值的记录
      * @param access 字段访问
@@ -222,7 +222,7 @@ public class FieldAccessEvaluator {
                 FieldProjection.project(raw.phone(), phone.visibility()),
                 FieldProjection.project(raw.email(), email.visibility()),
                 raw.username(),
-                raw.status(), raw.departments());
+                raw.status(), raw.departments(), raw.joinedAt(), raw.lastLoginAt(), raw.updatedAt());
     }
 
     /**

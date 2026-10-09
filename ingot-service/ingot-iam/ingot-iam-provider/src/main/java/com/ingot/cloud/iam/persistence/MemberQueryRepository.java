@@ -122,6 +122,19 @@ public class MemberQueryRepository {
     }
 
     /**
+     * 为已通过对象范围校验的平台成员详情读取未删除账号的登录信息白名单。
+     *
+     * @param accountId 该成员关联的全局账号 ID
+     * @return 仅包含账号 ID、登录名与最近登录时间；账号不存在或已删除时为空
+     */
+    public IamAccountEntity accountLoginInfo(BigInteger accountId) {
+        return accounts.selectOne(Wrappers.<IamAccountEntity>lambdaQuery()
+                .select(IamAccountEntity::getId, IamAccountEntity::getUsername, IamAccountEntity::getLastLoginAt)
+                .eq(IamAccountEntity::getId, accountId)
+                .isNull(IamAccountEntity::getDeletedAt));
+    }
+
+    /**
      * 按账号 ID 读取未删除账号的联系资料。
      *
      * @param accountIds 全局账号 ID

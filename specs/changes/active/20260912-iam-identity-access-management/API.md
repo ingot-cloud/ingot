@@ -336,3 +336,8 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 内部快照 `AuthorizationSnapshotDTO.passwordChangeRequired` 为显式必需布尔事实；为 true 时无业务或平台管理员资格。旧消费节点与旧快照不能执行新闭环，缺失状态时拒绝。公共契约本次为 132 路径 / 200 操作。
 
 密码 PUT 沿用 HYBRID whole 模式：`{data: 密文}` 配合 In-Crypto-* 协议头；控制器须同时建立 Hybrid 上下文与整包解密，再绑定 `CurrentPasswordInput` 并执行必填校验。仅 `@InCryptoHybridContext` 不执行解密。前端字段、密文格式与密码策略不变。
+
+
+## 平台成员详情只读时间（2026-10-08）
+
+`MemberRecord` 新增可选只读 `joinedAt`、`lastLoginAt`、`updatedAt`，类型为 ISO-8601 UTC Z 时间点。仅 `GET /v1/platform/members/{id}` 和平台成员编辑成功响应填写，列表/租户省略。joinedAt 为平台成员创建时间，updatedAt 为成员记录更新时间，lastLoginAt 为账号最近成功登录（平台/组织共用），无记录省略。三项是当前成员 read/update 操作及真实目标范围保护的固定元数据，非可配置资料字段；PATCH/preview 不接受它们。不新增接口或账号管理权限依赖。完整边界见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。

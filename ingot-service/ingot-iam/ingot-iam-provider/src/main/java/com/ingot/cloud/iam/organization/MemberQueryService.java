@@ -1,6 +1,9 @@
 package com.ingot.cloud.iam.organization;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -694,8 +697,8 @@ public class MemberQueryService {
                     List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
             return platformDetail(fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ),
                     fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
-                    platformMember(row, row.getAccountId() == null ? null
-                            : members.accountContacts(List.of(row.getAccountId())).get(row.getAccountId())),
+                    platformMemberDetail(row, row.getAccountId() == null ? null
+                            : members.accountLoginInfo(row.getAccountId())),
                     capabilities.platformMember(capabilities.snapshot(actor.context()), row.getId().toString()),
                     version(row.getVersion()));
         }
@@ -740,6 +743,17 @@ public class MemberQueryService {
         return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
                 row.getPhone(), row.getEmail(),
                 account == null ? null : account.getUsername(), row.getStatus(), List.of());
+    }
+
+    private static MemberRecord platformMemberDetail(IamPlatformMemberEntity row, IamAccountEntity account) {
+        return new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
+                row.getPhone(), row.getEmail(), account == null ? null : account.getUsername(), row.getStatus(),
+                List.of(), utcInstant(row.getCreatedAt()),
+                account == null ? null : utcInstant(account.getLastLoginAt()), utcInstant(row.getUpdatedAt()));
+    }
+
+    private static Instant utcInstant(LocalDateTime value) {
+        return value == null ? null : value.toInstant(ZoneOffset.UTC);
     }
 
     private static MemberRecord tenantMember(IamTenantMemberEntity row, List<MemberDepartmentView> departments) {
