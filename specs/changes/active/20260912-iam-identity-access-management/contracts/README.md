@@ -88,3 +88,9 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 
 
 2026-10-08：MemberRecord 的 joinedAt/lastLoginAt/updatedAt 为可选只读 UTC 时间点，仅平台详情/编辑成功响应填写；详见 [平台成员时间增量](../PLATFORM-MEMBER-TIMES.md)。路径/操作数保持132/200。
+
+## 2026-10-09 菜单高级配置
+
+公开快照仍为 **132 路径 / 200 操作**。MenuDraft、ApplicationBundleMenu 增加可省略的 hidden/isCache/props 与有序 routeParams；创建取默认值，更新省略时保留原值，显式 props=false 清空声明。MenuRecord 返回归一化开关/参数数组及只读 resolvedPath；Bootstrap MenuNode.path 为完整模板，并返回三个布尔开关。参数名和跨字段规则由 Bean Validation 与菜单业务校验共同约束；备注只用于配置回显。
+
+Java 契约导出、OpenAPI 一致性及 Python 契约检查已通过；真实服务验收状态见 [菜单验证记录](../MENU-ADVANCED-VERIFICATION.md)。

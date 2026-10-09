@@ -623,6 +623,25 @@
             "type" : "integer",
             "description" : "展示顺序",
             "format" : "int32"
+          },
+          "hidden" : {
+            "type" : "boolean",
+            "description" : "是否隐藏导航入口"
+          },
+          "isCache" : {
+            "type" : "boolean",
+            "description" : "是否缓存页面状态"
+          },
+          "props" : {
+            "type" : "boolean",
+            "description" : "是否将路径参数传给页面"
+          },
+          "routeParams" : {
+            "type" : "array",
+            "description" : "有序路径参数声明，省略时默认为空",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuRouteParam"
+            }
           }
         },
         "description" : "整包创建时的菜单，父级与关联操作用本次请求的临时 ID"
@@ -2991,12 +3010,31 @@
             "type" : "integer",
             "description" : "展示顺序",
             "format" : "int32"
+          },
+          "hidden" : {
+            "type" : "boolean",
+            "description" : "是否隐藏导航入口"
+          },
+          "isCache" : {
+            "type" : "boolean",
+            "description" : "是否缓存页面状态"
+          },
+          "props" : {
+            "type" : "boolean",
+            "description" : "是否将路径参数传给页面"
+          },
+          "routeParams" : {
+            "type" : "array",
+            "description" : "有序路径参数声明，更新省略时保留原值",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuRouteParam"
+            }
           }
         },
         "description" : "提交应用菜单及关联操作，按钮权限仍由独立操作目录表达"
       },
       "MenuNode" : {
-        "required" : [ "applicationId", "children", "id", "kind", "name", "sortOrder" ],
+        "required" : [ "applicationId", "children", "hidden", "id", "isCache", "kind", "name", "props", "sortOrder" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3043,12 +3081,24 @@
             "items" : {
               "$ref" : "#/components/schemas/MenuNode"
             }
+          },
+          "hidden" : {
+            "type" : "boolean",
+            "description" : "是否隐藏导航入口"
+          },
+          "isCache" : {
+            "type" : "boolean",
+            "description" : "是否缓存页面状态"
+          },
+          "props" : {
+            "type" : "boolean",
+            "description" : "是否将路径参数传给页面"
           }
         },
         "description" : "返回经同一授权视图筛选后的导航节点，不包含按钮权限伪菜单"
       },
       "MenuRecord" : {
-        "required" : [ "accessMode", "actionIds", "applicationId", "id", "kind", "matchMode", "name", "sortOrder", "status" ],
+        "required" : [ "accessMode", "actionIds", "applicationId", "hidden", "id", "isCache", "kind", "matchMode", "name", "props", "routeParams", "sortOrder", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3115,9 +3165,49 @@
             "type" : "string",
             "description" : "菜单状态",
             "enum" : [ "ENABLED", "DISABLED" ]
+          },
+          "hidden" : {
+            "type" : "boolean",
+            "description" : "是否隐藏导航入口"
+          },
+          "isCache" : {
+            "type" : "boolean",
+            "description" : "是否缓存页面状态"
+          },
+          "props" : {
+            "type" : "boolean",
+            "description" : "是否将路径参数传给页面"
+          },
+          "routeParams" : {
+            "type" : "array",
+            "description" : "有序路径参数声明，默认空数组",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuRouteParam"
+            }
+          },
+          "resolvedPath" : {
+            "type" : "string",
+            "description" : "完整路由模板，仅由服务端生成",
+            "readOnly" : true
           }
         },
         "description" : "返回应用菜单配置及独立的操作可见性关联"
+      },
+      "MenuRouteParam" : {
+        "required" : [ "name" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "pattern" : "[A-Za-z_][A-Za-z0-9_]*",
+            "type" : "string",
+            "description" : "参数名称"
+          },
+          "remark" : {
+            "type" : "string",
+            "description" : "参数备注，可空"
+          }
+        },
+        "description" : "必填路径参数声明"
       },
       "MenuUpdateInput" : {
         "required" : [ "expectedVersion", "menu" ],

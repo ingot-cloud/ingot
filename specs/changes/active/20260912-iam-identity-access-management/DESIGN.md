@@ -320,3 +320,8 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 ## 2026-10-08 平台成员详情只读时间
 
 平台详情响应增加可选 joinedAt/lastLoginAt/updatedAt，按成员查看与对象范围开放固定只读元数据，存储 UTC 转 Instant。列表与租户不填，写入仍拒绝时间字段；不新增 DDL。决策、兼容与验收见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。
+
+
+## 2026-10-09 菜单高级配置与步骤编辑
+
+用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。

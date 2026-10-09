@@ -201,3 +201,8 @@
 ## 2026-10-08 平台成员详情只读时间
 
 平台人员详情“其他”显示加入平台时间、账号最后登录时间和成员更新时间；账号登录包括平台/组织身份，时间只读且按当地时区展示。具体验收见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。
+
+
+## 2026-10-09 菜单高级配置与步骤编辑
+
+用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。

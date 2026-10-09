@@ -342,3 +342,8 @@ FP06 开发与 28 项限定回归通过；实际浏览器重测、重新登录�
 ## 2026-10-08 平台成员详情只读时间
 
 MT01–MT04 的实施、契约/定向验证和人工验收在 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md) 单独跟踪；开发与自动化不代替 MT04。
+
+
+## 2026-10-09 菜单高级配置与步骤编辑
+
+用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。

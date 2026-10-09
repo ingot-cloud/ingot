@@ -341,3 +341,8 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 ## 平台成员详情只读时间（2026-10-08）
 
 `MemberRecord` 新增可选只读 `joinedAt`、`lastLoginAt`、`updatedAt`，类型为 ISO-8601 UTC Z 时间点。仅 `GET /v1/platform/members/{id}` 和平台成员编辑成功响应填写，列表/租户省略。joinedAt 为平台成员创建时间，updatedAt 为成员记录更新时间，lastLoginAt 为账号最近成功登录（平台/组织共用），无记录省略。三项是当前成员 read/update 操作及真实目标范围保护的固定元数据，非可配置资料字段；PATCH/preview 不接受它们。不新增接口或账号管理权限依赖。完整边界见 [PLATFORM-MEMBER-TIMES](./PLATFORM-MEMBER-TIMES.md)。
+
+
+## 2026-10-09 菜单高级配置与步骤编辑
+
+用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。
