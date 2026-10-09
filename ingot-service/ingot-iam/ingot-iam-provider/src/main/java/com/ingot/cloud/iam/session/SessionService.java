@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
+import com.ingot.cloud.iam.catalog.MenuConfiguration;
 import com.ingot.cloud.iam.identity.ActiveIdentity;
 import com.ingot.cloud.iam.persistence.SessionRepository;
 import com.ingot.cloud.iam.persistence.entity.IamMenuEntity;
@@ -79,7 +80,9 @@ public class SessionService {
                     row.getId().longValueExact(), row.getApplicationId().longValueExact(),
                     row.getParentId() == null ? null : row.getParentId().longValueExact(), row.getName(),
                     row.getKind(), row.getPath(), row.getViewPath(), row.getRouteName(), row.getIcon(),
-                    row.getSortOrder() == null ? 0 : row.getSortOrder(), row.getMatchMode(), row.getAccessMode());
+                    row.getSortOrder() == null ? 0 : row.getSortOrder(), row.getMatchMode(), row.getAccessMode(),
+                    Boolean.TRUE.equals(row.getHidden()), Boolean.TRUE.equals(row.getIsCache()),
+                    Boolean.TRUE.equals(row.getProps()), MenuConfiguration.parameters(row));
             rows.add(snapshot);
             menuIds.add(snapshot.id());
         }

@@ -294,6 +294,9 @@ def build(check=False):
     catalog = collect(routes)
 
     lines = [
+        '-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。',
+        "SET time_zone = '+00:00';",
+        '',
         '-- IAM 正式冷启动种子：先按顺序执行 001–005 再执行本文件，可重复执行。',
         '-- 由 tools/iam/generate_bootstrap.py 从IAM契约及现有开发者目录生成，不要手工编辑。',
         '-- 全部语句存在即跳过，不覆盖任何人工或业务修改；不含账号与凭证，',

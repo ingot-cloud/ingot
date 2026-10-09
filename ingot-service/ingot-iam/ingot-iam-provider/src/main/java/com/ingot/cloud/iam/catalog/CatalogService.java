@@ -61,6 +61,7 @@ import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuActionRecord;
 import com.ingot.framework.commons.model.iam.MenuDraft;
+import com.ingot.framework.commons.model.iam.MenuRoutePaths;
 import com.ingot.framework.commons.model.iam.MenuRecord;
 import com.ingot.framework.commons.model.iam.MenuTreeNode;
 import com.ingot.framework.commons.model.iam.MenuUpdateInput;
@@ -848,7 +849,7 @@ public class CatalogService {
             requireLocked(catalog.lockApplication(appId));
             Long parentId = requireMenuParent(appId, input.parentId());
             long id = access.nextId();
-            catalog.insertMenu(menuEntity(id, appId, parentId, input, true));
+            catalog.insertMenu(menuEntity(id, appId, parentId, MenuConfiguration.normalize(input, null), true));
             replaceMenuActions(appId, id, input.actionIds());
             audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
                     Map.of(AuditField.NAME, input.name()), Map.of(MENU, "0"));
@@ -877,10 +878,11 @@ public class CatalogService {
             if (parentId != null && catalog.isMenuAncestor(appId, parentId, id)) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
-            MenuDraft draft = input.menu();
+            MenuDraft draft = MenuConfiguration.normalize(input.menu(), current);
             catalog.updateMenu(appId, id, parentId, draft.name(), nullable(draft.path()), nullable(draft.viewPath()),
                     nullable(draft.routeName()), nullable(draft.icon()), draft.kind(), draft.matchMode(),
-                    draft.accessMode(), draft.sortOrder(), current.getVersion());
+                    draft.accessMode(), draft.sortOrder(), current.getVersion(), draft.hidden(), draft.isCache(),
+                    draft.props(), IamJson.array(draft.routeParams()));
             replaceMenuActions(appId, id, draft.actionIds());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), MENU, menuId, AuditChangeType.UPDATE,
@@ -1162,7 +1164,8 @@ public class CatalogService {
             long id = access.nextId();
             MenuDraft draft = new MenuDraft(parentId == null ? null : IamIds.text(parentId), menu.name(), menu.kind(),
                     menu.path(), menu.viewPath(), menu.routeName(), menu.icon(), menu.accessMode(), menu.matchMode(),
-                    bound, menu.sortOrder());
+                    bound, menu.sortOrder(), menu.hidden(), menu.isCache(), menu.props(), menu.routeParams());
+            draft = MenuConfiguration.normalize(draft, null);
             catalog.insertMenu(menuEntity(id, appId, parentId, draft, true));
             replaceMenuActions(appId, id, bound);
             audits.write(actor.context(), access.nextId(), MENU, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
@@ -1286,6 +1289,10 @@ public class CatalogService {
         entity.setViewPath(nullable(input.viewPath()));
         entity.setRouteName(nullable(input.routeName()));
         entity.setIcon(nullable(input.icon()));
+        entity.setHidden(input.hidden());
+        entity.setIsCache(input.isCache());
+        entity.setProps(input.props());
+        entity.setRouteParams(IamJson.array(input.routeParams()));
         entity.setKind(input.kind());
         entity.setMatchMode(input.matchMode());
         entity.setAccessMode(input.accessMode());
@@ -1359,7 +1366,10 @@ public class CatalogService {
                 row.getParentId() == null ? null : text(row.getParentId()), row.getName(), row.getKind(), row.getPath(),
                 row.getViewPath(), row.getRouteName(), row.getIcon(), row.getAccessMode(), row.getMatchMode(),
                 actionIds == null ? List.of() : new ArrayList<>(actionIds),
-                row.getSortOrder() == null ? 0 : row.getSortOrder(), statusOf(row.getEnabled()));
+                row.getSortOrder() == null ? 0 : row.getSortOrder(), statusOf(row.getEnabled()),
+                Boolean.TRUE.equals(row.getHidden()), Boolean.TRUE.equals(row.getIsCache()),
+                Boolean.TRUE.equals(row.getProps()), MenuConfiguration.parameters(row),
+                MenuRoutePaths.resolve(row.getPath(), MenuConfiguration.parameters(row)));
     }
 
     private List<PlanApplication> planApplications(List<BigInteger> applicationIds) {

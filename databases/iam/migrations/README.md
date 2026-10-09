@@ -9,6 +9,7 @@
 | 009_tenant_plan.sql | iam_tenant尚无plan_id列；一次ALTER。 | 001 |
 | 010_assignment_audit_index.sql | 分配审计索引缺失；重复执行会检查并跳过。 | 004 |
 | 011_delegation_duration_mode.sql | 委派表仍是旧LIMITED结构、尚无assignment_duration_mode列；一次ALTER。 | 003 |
+| 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |
 
 014执行顺序为迁移→后端→前端；仅用于缺少两列的已有库，不能重复执行或用于新建库。DDL自动提交；若在DDL后中断，保持服务停止，确认列已新增后单独完成脚本回填语句。回退应用前冻结平台成员联系资料编辑，保留新增列和备份，不将独立联系资料写回账号。已有库禁止用完整初始化SQL替代迁移。
@@ -20,3 +21,5 @@
 ## 平台字段模型直接替换
 
 平台资源字段策略专用012/013迁移已删除。框架尚未投产，平台角色字段结构只维护最新权威DDL及正式初始化，测试库按上级README由用户重建；不保留旧平台模型兼容。上述其他补丁与租户字段策略不受此决策影响。
+
+015 发布顺序：增量 DDL → IAM 节点 → 管理台。已有路径不改写，旧菜单默认不隐藏、不缓存、不透传；回退应用时保留新增列。该脚本仅执行一次，不用于新建库。

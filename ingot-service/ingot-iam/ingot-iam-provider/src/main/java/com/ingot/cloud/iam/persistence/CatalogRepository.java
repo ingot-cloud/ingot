@@ -741,10 +741,15 @@ public class CatalogRepository {
      * @param accessMode 访问方式
      * @param sortOrder 排序
      * @param currentVersion 锁定后的当前版本
+     * @param hidden 是否隐藏导航
+     * @param isCache 是否缓存页面
+     * @param props 是否透传路径参数
+     * @param routeParams 有序参数 JSON
      */
     public void updateMenu(long applicationId, long id, Long parentId, String name, String path, String viewPath,
                            String routeName, String icon, MenuKind kind, ActionMatchMode matchMode,
-                           MenuAccessMode accessMode, int sortOrder, BigInteger currentVersion) {
+                           MenuAccessMode accessMode, int sortOrder, BigInteger currentVersion,
+                           boolean hidden, boolean isCache, boolean props, String routeParams) {
         menus.update(Wrappers.<IamMenuEntity>lambdaUpdate()
                 .eq(IamMenuEntity::getApplicationId, BigInteger.valueOf(applicationId))
                 .eq(IamMenuEntity::getId, BigInteger.valueOf(id))
@@ -758,6 +763,10 @@ public class CatalogRepository {
                 .set(IamMenuEntity::getMatchMode, matchMode)
                 .set(IamMenuEntity::getAccessMode, accessMode)
                 .set(IamMenuEntity::getSortOrder, sortOrder)
+                .set(IamMenuEntity::getHidden, hidden)
+                .set(IamMenuEntity::getIsCache, isCache)
+                .set(IamMenuEntity::getProps, props)
+                .set(IamMenuEntity::getRouteParams, routeParams)
                 .set(IamMenuEntity::getVersion, currentVersion.add(BigInteger.ONE)));
     }
 

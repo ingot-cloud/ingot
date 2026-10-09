@@ -1,0 +1,6 @@
+-- 2026-10-09 菜单高级配置：已有 IAM 库执行一次；保留既有路径、菜单及授权关联。
+ALTER TABLE iam_menu
+    ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN is_cache BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN props BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN route_params JSON NULL;

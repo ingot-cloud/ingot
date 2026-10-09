@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,10 @@ import jakarta.validation.constraints.Size;
  * @param matchMode 操作匹配方式
  * @param actionIds 关联的本应用精确操作 ID
  * @param sortOrder 展示顺序
+ * @param hidden 是否隐藏导航入口
+ * @param isCache 是否缓存页面状态
+ * @param props 是否将路径参数传给页面
+ * @param routeParams 有序路径参数声明，更新省略时保留原值
  */
 @Schema(description = "提交应用菜单及关联操作，按钮权限仍由独立操作目录表达")
 public record MenuDraft(
@@ -49,12 +54,41 @@ public record MenuDraft(
         @NotNull @Schema(description = "关联的本应用精确操作 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotBlank String> actionIds,
         @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
-        int sortOrder) {
+        int sortOrder,
+        @Schema(description = "是否隐藏导航入口")
+        Boolean hidden,
+        @Schema(description = "是否缓存页面状态")
+        Boolean isCache,
+        @Schema(description = "是否将路径参数传给页面")
+        Boolean props,
+        @Schema(description = "有序路径参数声明，更新省略时保留原值")
+        List<@Valid MenuRouteParam> routeParams) {
+
+    /**
+     * 保留既有 Java 调用方，新字段使用默认值。
+     */
+    public MenuDraft(
+            String parentId,
+            String name,
+            MenuKind kind,
+            String path,
+            String viewPath,
+            String routeName,
+            String icon,
+            MenuAccessMode accessMode,
+            ActionMatchMode matchMode,
+            List<String> actionIds,
+            int sortOrder) {
+        this(parentId, name, kind, path, viewPath, routeName, icon, accessMode, matchMode, actionIds, sortOrder, null, null, null, null);
+    }
 
     /**
      * 复制操作关联。
      */
     public MenuDraft {
+        if (routeParams != null) {
+            routeParams = Collections.unmodifiableList(new ArrayList<>(routeParams));
+        }
         if (actionIds != null) {
             actionIds = Collections.unmodifiableList(new ArrayList<>(actionIds));
         }

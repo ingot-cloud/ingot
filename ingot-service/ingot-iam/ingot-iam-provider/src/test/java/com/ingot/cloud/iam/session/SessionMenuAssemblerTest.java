@@ -8,6 +8,7 @@ import com.ingot.framework.commons.model.iam.ActionMatchMode;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuKind;
 import com.ingot.framework.commons.model.iam.MenuNode;
+import com.ingot.framework.commons.model.iam.MenuRouteParam;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,6 +21,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @since 1.0.0
  */
 class SessionMenuAssemblerTest {
+
+    @Test
+    void hiddenParameterizedPageRemainsAuthorizedAndReceivesStableRouteName() {
+        var row = new SessionMenuAssembler.MenuRow(4, 2, null, "详情", MenuKind.PAGE, "/orders/", "orders.detail",
+                null, null, 0, ActionMatchMode.ANY, MenuAccessMode.ACTION, true, true, true,
+                List.of(new MenuRouteParam("a", "编号"), new MenuRouteParam("b", "类型")));
+        assertTrue(SessionMenuAssembler.assemble(List.of(row), Set.of(2L), Set.of(),
+                Map.of(4L, List.of("orders:read"))).isEmpty());
+        var granted = SessionMenuAssembler.assemble(List.of(row), Set.of(2L), Set.of("orders:read"),
+                Map.of(4L, List.of("orders:read"))).getFirst();
+        assertEquals("/orders/:a/:b", granted.path());
+        assertEquals("iam-menu-4", granted.routeName());
+        assertTrue(granted.hidden()); assertTrue(granted.isCache()); assertTrue(granted.props());
+    }
 
     @Test
     void openPageOfInaccessibleAppIsHidden() {

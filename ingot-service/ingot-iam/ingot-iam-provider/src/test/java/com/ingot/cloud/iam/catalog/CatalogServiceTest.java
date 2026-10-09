@@ -29,6 +29,9 @@ import com.ingot.framework.security.account.domain.ConfirmPasswordFailedExceptio
 import com.ingot.framework.security.account.domain.port.inbound.ConfirmPasswordUseCase;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuKind;
+import com.ingot.framework.commons.model.iam.MenuDraft;
+import com.ingot.framework.commons.model.iam.MenuRouteParam;
+import com.ingot.framework.commons.model.iam.MenuUpdateInput;
 import com.ingot.framework.commons.model.iam.ResourceDraft;
 import com.ingot.framework.commons.model.iam.ScopeKind;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +57,51 @@ import static org.mockito.Mockito.when;
  * @since 1.0.0
  */
 class CatalogServiceTest {
+
+    @Test
+    void menuConfigurationRoundTripPreservesOmittedFieldsAndClearsExplicitlyDisabledParameters() {
+        CreatedResource app = catalog.createApplication(new ApplicationDraft("orders", AuthorizationDomain.TENANT,
+                "订单", null, null, 0, false));
+        var params = List.of(new MenuRouteParam("a", "订单编号"), new MenuRouteParam("b", "类型"));
+        var draft = new MenuDraft(null, "详情", MenuKind.PAGE, "/orders/", "orders.detail", null, null,
+                MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 0, true, true, true, params);
+        CreatedResource menu = catalog.createMenu(app.id(), draft);
+        var row = catalog.listMenuTree(app.id()).getFirst().record();
+        assertEquals("/orders/", row.path());
+        assertEquals("/orders/:a/:b", row.resolvedPath());
+        assertEquals(params, row.routeParams());
+        var old = new MenuDraft(null, "详情改名", MenuKind.PAGE, "/orders/", "orders.detail", null, null,
+                MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 0);
+        var update = catalog.updateMenu(app.id(), menu.id(), new MenuUpdateInput("0", old));
+        assertEquals(true, update.record().hidden());
+        assertEquals(true, update.record().isCache());
+        assertEquals(true, update.record().props());
+        assertEquals(params, update.record().routeParams());
+        assertThrows(BizException.class, () -> catalog.updateMenu(app.id(), menu.id(), new MenuUpdateInput("0", old)));
+        var disable = new MenuDraft(null, "详情", MenuKind.PAGE, "/orders/", "orders.detail", null, null,
+                MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 0, null, null, false, params);
+        var disabled = catalog.updateMenu(app.id(), menu.id(), new MenuUpdateInput("1", disable));
+        assertEquals(List.of(), disabled.record().routeParams());
+        assertEquals("/orders/", disabled.record().resolvedPath());
+    }
+
+    @Test
+    void bundlePersistsAdvancedMenuAndRollsBackInvalidParameters() {
+        var params = List.of(new MenuRouteParam("a", "编号"));
+        var menu = new ApplicationBundleMenu("m", null, "详情", MenuKind.PAGE, "/orders", "orders.detail", null,
+                null, MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 0, true, true, true, params);
+        CreatedResource app = catalog.createApplicationBundle(new ApplicationBundleDraft(
+                new ApplicationDraft("orders", AuthorizationDomain.TENANT, "订单", null, null, 0, false),
+                List.of(), List.of(menu)));
+        assertEquals("/orders/:a", catalog.listMenuTree(app.id()).getFirst().record().resolvedPath());
+        var invalid = new ApplicationBundleMenu("m", null, "详情", MenuKind.PAGE, "/orders", "orders.detail", null,
+                null, MenuAccessMode.OPEN, ActionMatchMode.ANY, List.of(), 0, false, true, true, params);
+        assertThrows(BizException.class, () -> catalog.createApplicationBundle(new ApplicationBundleDraft(
+                new ApplicationDraft("invalid", AuthorizationDomain.TENANT, "错误", null, null, 0, false),
+                List.of(), List.of(invalid))));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_application", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_menu", Integer.class));
+    }
 
     private JdbcTemplate jdbc;
 
@@ -85,7 +133,8 @@ class CatalogServiceTest {
                 CREATE TABLE iam_menu(id BIGINT PRIMARY KEY, application_id BIGINT, parent_id BIGINT,
                   name VARCHAR(128), path VARCHAR(256), view_path VARCHAR(256), route_name VARCHAR(128),
                   icon VARCHAR(128), kind VARCHAR(16), match_mode VARCHAR(16), access_mode VARCHAR(16),
-                  sort_order INT, enabled BOOLEAN, version BIGINT DEFAULT 0)
+                  sort_order INT, hidden BOOLEAN DEFAULT FALSE, is_cache BOOLEAN DEFAULT FALSE,
+                  props BOOLEAN DEFAULT FALSE, route_params VARCHAR(4096), enabled BOOLEAN, version BIGINT DEFAULT 0)
                 """);
         jdbc.execute("CREATE TABLE iam_menu_action(application_id BIGINT, menu_id BIGINT, action_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(4096))");

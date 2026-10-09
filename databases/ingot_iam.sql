@@ -71,6 +71,9 @@ SET SESSION FOREIGN_KEY_CHECKS = 1;
 -- ====================================================================
 -- Source: databases/iam/001_identity.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：身份与组织结构。MySQL 8.0.16+；连接时区须为 UTC。
 -- 仅在显式选择的全新目标库执行，不包含 USE、DROP、源库修改或默认数据。
 -- 不是存量库升级脚本。组织创建事务须在提交前补齐有效 owner_member_id。
@@ -250,6 +253,9 @@ CREATE TABLE iam_tenant_group_department (
 -- ====================================================================
 -- Source: databases/iam/002_catalog_role.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：先执行 001_identity.sql。无源库写入或授权默认数据。
 CREATE TABLE iam_application (
     id BIGINT UNSIGNED NOT NULL,
@@ -318,6 +324,10 @@ CREATE TABLE iam_menu (
     match_mode VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'ANY',
     access_mode VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'ACTION',
     sort_order INT NOT NULL DEFAULT 0,
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
+    is_cache BOOLEAN NOT NULL DEFAULT FALSE,
+    props BOOLEAN NOT NULL DEFAULT FALSE,
+    route_params JSON NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
@@ -501,6 +511,9 @@ CREATE TABLE iam_role_delta (
 -- ====================================================================
 -- Source: databases/iam/003_assignment_delegation.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：先执行 001、002。跨域关系由复合外键约束；权限上限仍由事务服务校验。
 CREATE TABLE iam_delegation_grant (
     id BIGINT UNSIGNED NOT NULL,
@@ -633,6 +646,9 @@ CREATE TABLE iam_role_assignment (
 -- ====================================================================
 -- Source: databases/iam/004_policy_audit_migration.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：策略引用、审计事实与迁移记录，不初始化或授予任何默认权限。
 CREATE TABLE iam_default_policy_revision (
     id BIGINT UNSIGNED NOT NULL,
@@ -833,6 +849,9 @@ CREATE TABLE iam_migration_issue (
 -- ====================================================================
 -- Source: databases/iam/005_auxiliary.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 独立目标库：保留辅助领域结构，仅提取源结构定义，不包含数据、DROP 或 USE。
 -- 这些旧列名继续表示新 Account/Tenant/Application/Plan 的映射 ID；真实映射在迁移阶段验证。
 --
@@ -1025,6 +1044,9 @@ CREATE TABLE IF NOT EXISTS `password_expiration` (
 -- ====================================================================
 -- Source: databases/iam/006_bootstrap.sql
 -- ====================================================================
+-- 业务时间点统一 UTC；初始化连接也必须明确会话时区。
+SET time_zone = '+00:00';
+
 -- IAM 正式冷启动种子：先按顺序执行 001–005 再执行本文件，可重复执行。
 -- 由 tools/iam/generate_bootstrap.py 从IAM契约及现有开发者目录生成，不要手工编辑。
 -- 全部语句存在即跳过，不覆盖任何人工或业务修改；不含账号与凭证，

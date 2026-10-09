@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,6 +27,10 @@ import jakarta.validation.constraints.Size;
  * @param matchMode 操作匹配方式
  * @param actionTempIds 关联操作的临时 ID
  * @param sortOrder 展示顺序
+ * @param hidden 是否隐藏导航入口
+ * @param isCache 是否缓存页面状态
+ * @param props 是否将路径参数传给页面
+ * @param routeParams 有序路径参数声明，省略时默认为空
  */
 @Schema(description = "整包创建时的菜单，父级与关联操作用本次请求的临时 ID")
 public record ApplicationBundleMenu(
@@ -52,12 +57,42 @@ public record ApplicationBundleMenu(
         @NotNull @Schema(description = "关联操作的临时 ID", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotBlank String> actionTempIds,
         @Schema(description = "展示顺序", requiredMode = Schema.RequiredMode.REQUIRED)
-        int sortOrder) {
+        int sortOrder,
+        @Schema(description = "是否隐藏导航入口")
+        Boolean hidden,
+        @Schema(description = "是否缓存页面状态")
+        Boolean isCache,
+        @Schema(description = "是否将路径参数传给页面")
+        Boolean props,
+        @Schema(description = "有序路径参数声明，省略时默认为空")
+        List<@Valid MenuRouteParam> routeParams) {
+
+    /**
+     * 保留既有 Java 调用方，新字段使用默认值。
+     */
+    public ApplicationBundleMenu(
+            String tempId,
+            String parentTempId,
+            String name,
+            MenuKind kind,
+            String path,
+            String viewPath,
+            String routeName,
+            String icon,
+            MenuAccessMode accessMode,
+            ActionMatchMode matchMode,
+            List<String> actionTempIds,
+            int sortOrder) {
+        this(tempId, parentTempId, name, kind, path, viewPath, routeName, icon, accessMode, matchMode, actionTempIds, sortOrder, null, null, null, null);
+    }
 
     /**
      * 复制操作临时 ID 列表。
      */
     public ApplicationBundleMenu {
+        if (routeParams != null) {
+            routeParams = Collections.unmodifiableList(new ArrayList<>(routeParams));
+        }
         if (actionTempIds != null) {
             actionTempIds = Collections.unmodifiableList(new ArrayList<>(actionTempIds));
         }

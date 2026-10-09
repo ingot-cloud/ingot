@@ -63,6 +63,22 @@ public class IamMenuEntity {
     @TableField("sort_order")
     private Integer sortOrder;
 
+    /** 是否隐藏导航入口，授权路由仍保留。 */
+    @TableField("hidden")
+    private Boolean hidden;
+
+    /** 是否缓存页面状态，仅页面适用。 */
+    @TableField("is_cache")
+    private Boolean isCache;
+
+    /** 是否透传已匹配路径参数。 */
+    @TableField("props")
+    private Boolean props;
+
+    /** 有序路径参数声明 JSON，空列表示无声明。 */
+    @TableField("route_params")
+    private String routeParams;
+
     /** 是否启用。 */
     @TableField("enabled")
     private Boolean enabled;

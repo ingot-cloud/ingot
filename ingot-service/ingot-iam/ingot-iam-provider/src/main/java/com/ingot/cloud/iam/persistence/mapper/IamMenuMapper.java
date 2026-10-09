@@ -25,6 +25,6 @@ public interface IamMenuMapper extends BaseMapper<IamMenuEntity> {
      * @param id 菜单 ID
      * @return 命中行；不存在时为空
      */
-    @Select("SELECT name,version FROM iam_menu WHERE application_id=#{applicationId} AND id=#{id} FOR UPDATE")
+    @Select("SELECT name,version,hidden,is_cache,props,route_params FROM iam_menu WHERE application_id=#{applicationId} AND id=#{id} FOR UPDATE")
     IamMenuEntity lockRow(@Param("applicationId") BigInteger applicationId, @Param("id") BigInteger id);
 }

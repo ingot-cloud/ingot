@@ -14,6 +14,8 @@ import com.ingot.framework.commons.model.iam.ActionMatchMode;
 import com.ingot.framework.commons.model.iam.MenuAccessMode;
 import com.ingot.framework.commons.model.iam.MenuKind;
 import com.ingot.framework.commons.model.iam.MenuNode;
+import com.ingot.framework.commons.model.iam.MenuRouteParam;
+import com.ingot.framework.commons.model.iam.MenuRoutePaths;
 
 /**
  * <p>按应用边界与菜单 ACTION 组装导航树，开放页仍受应用有效性约束，空目录不展示。</p>
@@ -79,7 +81,9 @@ public final class SessionMenuAssembler {
         List<MenuNode> nested = children.getOrDefault(row.id(), List.of()).stream()
                 .map(child -> node(child, children)).toList();
         return new MenuNode(IamIds.text(row.id()), IamIds.text(row.applicationId()), row.name(), row.kind(),
-                row.path(), row.viewPath(), row.routeName(), row.icon(), row.sortOrder(), nested);
+                MenuRoutePaths.resolve(row.path(), row.routeParams()), row.viewPath(),
+                MenuRoutePaths.name(row.routeName(), IamIds.text(row.id())), row.icon(), row.sortOrder(), nested,
+                row.hidden(), row.isCache(), row.props());
     }
 
     private static boolean pageVisible(MenuRow row, Set<String> actionCodes, List<String> required) {
@@ -113,12 +117,29 @@ public final class SessionMenuAssembler {
      * @param icon 图标
      * @param sortOrder 排序值
      * @param matchMode 关联操作匹配方式
+     * @param hidden 隐藏导航但保留授权路由
+     * @param isCache 页面缓存
+     * @param props 参数透传
+     * @param routeParams 有序路径参数
      * @param accessMode 开放或按操作保护
      * @author jy
      * @since 1.0.0
      */
     public record MenuRow(long id, long applicationId, Long parentId, String name, MenuKind kind, String path,
                           String viewPath, String routeName, String icon, int sortOrder, ActionMatchMode matchMode,
-                          MenuAccessMode accessMode) {
+                          MenuAccessMode accessMode, boolean hidden, boolean isCache, boolean props,
+                          List<MenuRouteParam> routeParams) {
+        /** 保留既有调用方，新增配置取默认值。 */
+        public MenuRow(long id, long applicationId, Long parentId, String name, MenuKind kind, String path,
+                       String viewPath, String routeName, String icon, int sortOrder, ActionMatchMode matchMode,
+                       MenuAccessMode accessMode) {
+            this(id, applicationId, parentId, name, kind, path, viewPath, routeName, icon, sortOrder, matchMode,
+                    accessMode, false, false, false, List.of());
+        }
+
+        /** 固化声明集合，不保留外部可变引用。 */
+        public MenuRow {
+            routeParams = routeParams == null ? List.of() : List.copyOf(routeParams);
+        }
     }
 }
