@@ -19,3 +19,7 @@
 `HasAnyAuthority` 仍用于旧安全框架的 authority 门禁。`IamAccess` 是 IAM 服务内门面，包含在线身份、完整治理/委派准入和发号等 IAM 能力。新业务服务使用 `AuthorizationAccess` / `@RequireIamAction`；注解只证明精确操作准入，SQL/对象范围和字段读写仍必须显式执行，不会由注解自动完成。
 
 验收清单见 [资源扩展验收](../../specs/changes/active/20260912-iam-identity-access-management/RESOURCE-EXTENSION-VERIFICATION.md)。
+
+字段执行通过 `IncidentViews` 的声明统一接入。详情 JSON `contactPhone`（Java `aphone`）和列表 `contact` 共用逻辑键 `contact`，使用资源当前 `MaskSpec`。PATCH 保留实际 JSON 键，缺键不改、null 清空，在锁定记录后的事务中调用 `FieldWriteExecutor`；标题筛选在分页和 count 前验证完整范围。`/context` 提供全局交互能力。
+
+跨服务纯清单需要独立 `IAM_OPS_FIELD_MANIFEST_SECRET`（至少32字符），两端分别配置 `manifest-secret` 与 `field-manifest.secret`；不能复用资源候选查询密钥。启动清单不需要用户登录。

@@ -17,6 +17,8 @@
 
 原007–011统一归入 [migrations](./migrations/README.md)，只按已有库实际缺项选择执行。旧平台独立策略及012/013已删除。新建库不能再遍历历史ALTER补丁；编排和测试统一读取manifest，不按目录glob猜顺序。
 
+本次公共字段契约的已有库升级使用 [016_field_access_control.sql](./migrations/016_field_access_control.sql)，保留现有数据，转换字段能力/角色/默认策略JSON并补表结构。单独重跑006不会更新已有JSON；执行前提、旧目标范围编辑的保守转换及回退见 [迁移说明](./migrations/README.md#016-公共字段契约升级)。
+
 生成及只读检查：
 
 ```sh

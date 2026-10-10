@@ -195,6 +195,8 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [公共字段访问控制](./changes/archive/2026/20261010-framework-field-access-control/README.md)
+
 - [多租户 RBAC、菜单解耦与数据权限](./changes/archive/2026/20260910-pms-rbac-data-authorization/README.md)
 - [OSS 预签名失败回退原始路径](./changes/archive/2026/20260908-framework-oss-presign-fallback/README.md)
 - [菜单 view_path 编码化与 customViewPath 下线](./changes/archive/2026/20260903-pms-menu-view-path/README.md)
@@ -222,6 +224,8 @@ current/<domain>/<capability>/
 - [PMS 应用授权旧字段破坏性清理（发布 B）](./changes/archive/2026/20260622-pms-authorization-ddl-cleanup/README.md)
 
 对应 current 能力：
+
+- [framework/field-access-control](./current/framework/field-access-control/README.md)
 
 - [framework/oss](./current/framework/oss/README.md)
 - [framework/layered-cache](./current/framework/layered-cache/README.md)
