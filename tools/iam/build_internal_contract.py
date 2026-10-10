@@ -44,6 +44,10 @@ def build():
          'INNER受信任调用；在线重验原始身份和有效授权；请求身份仅可核对不能替代；platformAdministrator独立于permissionCodes，注解不能复用旧JWT或数据范围热缓存'),
         ('/inner/authorization/v2/evaluate', 'iamEvaluateV2', 'AuthorizationRequest', 'RAuthorizationDecision',
          'INNER受信任调用及在线原始身份；请求不能替代用户；注册操作模式决定fresh或读热缓存'),
+        ('/inner/authorization/v2/preview', 'iamPreviewV2', 'AuthorizationRequest', 'RAuthorizationDecision',
+         '交互预览可使用短期读缓存；不能代替业务事务中的evaluate最终写校验'),
+        ('/inner/iam/field-bindings/manifest', 'fieldBindingManifest', 'SignedResourceObjectRequest', 'RFieldBindingManifest',
+         '固定服务白名单及专用HMAC密钥；固定purpose与调用服务；不需要用户身份，不包含业务原值'),
         ('/inner/iam/resource-objects/query', 'resourceObjectQuery', 'SignedResourceObjectRequest', 'RResourceObjectResult',
          '固定资源服务白名单；HMAC覆盖payload及短时间窗；payload.context与原认证身份完全一致；只返回最小候选或存在性'),
     ]:
@@ -79,7 +83,7 @@ def build():
 
     for name in ['AuthorizationRequest', 'RAuthorizationDecision', 'SignedResourceObjectRequest',
                  'ResourceObjectInvocation', 'RResourceObjectResult', 'IamErrorEnvelope',
-                 'AuthorizationSnapshotRequest', 'RAuthorizationSnapshotDTO']:
+                 'AuthorizationSnapshotRequest', 'RAuthorizationSnapshotDTO', 'RFieldBindingManifest', 'FieldManifestInvocation']:
         add(name)
     document = {
         'openapi': '3.0.3', 'info': {'title': 'IAM资源内部授权契约', 'version': '2.0.0'}, 'paths': paths,
@@ -101,4 +105,4 @@ if __name__ == '__main__':
             raise SystemExit('internal OpenAPI needs regeneration')
     else:
         path.write_text(output)
-    print('3 internal operations verified')
+    print('5 internal operations verified')

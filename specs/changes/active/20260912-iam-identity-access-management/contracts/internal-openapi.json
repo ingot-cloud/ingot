@@ -191,6 +191,192 @@
         }
       }
     },
+    "/inner/authorization/v2/preview": {
+      "post": {
+        "operationId": "iamPreviewV2",
+        "description": "交互预览可使用短期读缓存；不能代替业务事务中的evaluate最终写校验",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R信封；精确错误码区分拒绝和不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAuthorizationDecision"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inner/iam/field-bindings/manifest": {
+      "post": {
+        "operationId": "fieldBindingManifest",
+        "description": "固定服务白名单及专用HMAC密钥；固定purpose与调用服务；不需要用户身份，不包含业务原值",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedResourceObjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R信封；精确错误码区分拒绝和不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RFieldBindingManifest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时data为空",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inner/iam/resource-objects/query": {
       "post": {
         "operationId": "resourceObjectQuery",
@@ -553,10 +739,7 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              }
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             }
           }
         }
@@ -713,6 +896,34 @@
           }
         }
       },
+      "Binding": {
+        "type": "object",
+        "properties": {
+          "actionCode": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "READ",
+              "WRITE",
+              "FILTER"
+            ]
+          },
+          "valueType": {
+            "type": "string"
+          },
+          "property": {
+            "type": "string"
+          },
+          "fieldKey": {
+            "type": "string"
+          },
+          "textual": {
+            "type": "boolean"
+          }
+        }
+      },
       "DelegationInput": {
         "required": [
           "actionScopeCeilings",
@@ -804,10 +1015,52 @@
           },
           "editable": {
             "type": "boolean",
-            "description": "是否允许编辑，非 FULL 必须为 false"
+            "description": "是否允许编辑，HIDDEN 必须为 false"
           }
         },
         "description": "描述服务端计算后的字段输出与编辑能力，不独立授予对象或写操作权限"
+      },
+      "FieldBindingManifest": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "version": {
+            "type": "string"
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Binding"
+            }
+          }
+        }
+      },
+      "FieldManifestInvocation": {
+        "type": "object",
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "callerService": {
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          }
+        }
+      },
+      "FieldOperations": {
+        "type": "object",
+        "properties": {
+          "editable": {
+            "type": "boolean"
+          },
+          "filterable": {
+            "type": "boolean"
+          }
+        }
       },
       "FieldPolicyDecision": {
         "type": "object",
@@ -830,18 +1083,16 @@
               "$ref": "#/components/schemas/ResolvedFieldRule"
             }
           },
-          "filterableFields": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
+          "operations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldOperations"
             }
           },
-          "sortableFields": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
+          "masks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MaskSpec"
             }
           },
           "mergeMode": {
@@ -850,6 +1101,10 @@
               "RESTRICTIONS",
               "GRANTS"
             ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -896,6 +1151,40 @@
             "enum": [
               false
             ]
+          }
+        }
+      },
+      "MaskSpec": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PHONE",
+              "EMAIL",
+              "ALL",
+              "KEEP_EDGES",
+              "RANGE"
+            ]
+          },
+          "prefix": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "suffix": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "end": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -954,6 +1243,23 @@
           }
         }
       },
+      "RFieldBindingManifest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FieldBindingManifest"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RResourceObjectResult": {
         "type": "object",
         "properties": {
@@ -985,6 +1291,32 @@
           },
           "access": {
             "$ref": "#/components/schemas/FieldAccess"
+          }
+        }
+      },
+      "ResourceFieldDefinition": {
+        "required": [
+          "operations",
+          "visibility"
+        ],
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "HIDDEN",
+                "MASKED",
+                "FULL"
+              ]
+            }
+          },
+          "operations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldOperations"
+            }
           }
         }
       },

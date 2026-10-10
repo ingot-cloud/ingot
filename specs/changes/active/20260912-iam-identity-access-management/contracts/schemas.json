@@ -1125,19 +1125,13 @@
           "beforeFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              }
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             }
           },
           "afterFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              }
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             }
           }
         }
@@ -1464,10 +1458,7 @@
           "resourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              }
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             }
           }
         }
@@ -1543,6 +1534,30 @@
           }
         },
         "description" : "角色分配树的最小展示节点"
+      },
+      "Binding" : {
+        "type" : "object",
+        "properties" : {
+          "actionCode" : {
+            "type" : "string"
+          },
+          "use" : {
+            "type" : "string",
+            "enum" : [ "READ", "WRITE", "FILTER" ]
+          },
+          "valueType" : {
+            "type" : "string"
+          },
+          "property" : {
+            "type" : "string"
+          },
+          "fieldKey" : {
+            "type" : "string"
+          },
+          "textual" : {
+            "type" : "boolean"
+          }
+        }
       },
       "Bootstrap" : {
         "required" : [ "actionCodes", "applications", "context", "expiresAt", "menus", "profile", "version" ],
@@ -1750,11 +1765,7 @@
           "resourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              },
-              "description" : "可披露固定版本字段快照；空引用表示历史安全默认"
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "可披露固定版本字段快照；空引用表示历史安全默认"
           }
@@ -2058,11 +2069,7 @@
           "resourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              },
-              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
@@ -2256,13 +2263,30 @@
           },
           "editable" : {
             "type" : "boolean",
-            "description" : "是否允许编辑，非 FULL 必须为 false"
+            "description" : "是否允许编辑，HIDDEN 必须为 false"
           }
         },
         "description" : "描述服务端计算后的字段输出与编辑能力，不独立授予对象或写操作权限"
       },
+      "FieldBindingManifest" : {
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "bindings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Binding"
+            }
+          }
+        }
+      },
       "FieldCapability" : {
-        "required" : [ "editable", "filterable", "key", "label", "sortable", "visibilities" ],
+        "required" : [ "editable", "filterable", "key", "label", "visibilities" ],
         "type" : "object",
         "properties" : {
           "key" : {
@@ -2290,12 +2314,61 @@
             "type" : "boolean",
             "description" : "完整可见时是否支持筛选"
           },
-          "sortable" : {
-            "type" : "boolean",
-            "description" : "完整可见时是否支持排序"
+          "mask" : {
+            "$ref" : "#/components/schemas/MaskSpec"
           }
         },
         "description" : "描述资源字段允许配置的可见性与编辑能力，不能代替对象级计算结果"
+      },
+      "FieldManifestInvocation" : {
+        "type" : "object",
+        "properties" : {
+          "purpose" : {
+            "type" : "string"
+          },
+          "callerService" : {
+            "type" : "string"
+          },
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          }
+        }
+      },
+      "FieldOperationRule" : {
+        "required" : [ "actionCode", "fieldKey", "operations", "resource", "scenario", "viewerSelection" ],
+        "type" : "object",
+        "properties" : {
+          "resource" : {
+            "$ref" : "#/components/schemas/ResourceKey"
+          },
+          "scenario" : {
+            "type" : "string",
+            "enum" : [ "MANAGEMENT", "DIRECTORY" ]
+          },
+          "actionCode" : {
+            "type" : "string"
+          },
+          "fieldKey" : {
+            "type" : "string"
+          },
+          "viewerSelection" : {
+            "$ref" : "#/components/schemas/Selection"
+          },
+          "operations" : {
+            "$ref" : "#/components/schemas/FieldOperations"
+          }
+        }
+      },
+      "FieldOperations" : {
+        "type" : "object",
+        "properties" : {
+          "editable" : {
+            "type" : "boolean"
+          },
+          "filterable" : {
+            "type" : "boolean"
+          }
+        }
       },
       "FieldPolicyDecision" : {
         "type" : "object",
@@ -2318,28 +2391,30 @@
               "$ref" : "#/components/schemas/ResolvedFieldRule"
             }
           },
-          "filterableFields" : {
-            "uniqueItems" : true,
-            "type" : "array",
-            "items" : {
-              "type" : "string"
+          "operations" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldOperations"
             }
           },
-          "sortableFields" : {
-            "uniqueItems" : true,
-            "type" : "array",
-            "items" : {
-              "type" : "string"
+          "masks" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/MaskSpec"
             }
           },
           "mergeMode" : {
             "type" : "string",
             "enum" : [ "RESTRICTIONS", "GRANTS" ]
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
       "FieldPolicyDraft" : {
-        "required" : [ "defaultRevisionId", "rules" ],
+        "required" : [ "defaultRevisionId", "operationRules", "rules" ],
         "type" : "object",
         "properties" : {
           "defaultRevisionId" : {
@@ -2351,6 +2426,12 @@
             "description" : "完整字段规则；空数组恢复固定默认策略",
             "items" : {
               "$ref" : "#/components/schemas/FieldRule"
+            }
+          },
+          "operationRules" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldOperationRule"
             }
           }
         },
@@ -2404,10 +2485,6 @@
             "type" : "string",
             "description" : "字段可见程度",
             "enum" : [ "HIDDEN", "MASKED", "FULL" ]
-          },
-          "editable" : {
-            "type" : "boolean",
-            "description" : "编辑上限，仍受对象、操作和平台规则限制"
           }
         },
         "description" : "描述场景、字段、查看者和目标范围对应的字段限制"
@@ -2564,6 +2641,32 @@
           }
         },
         "description" : "返回操作者允许知晓的变更影响，隐藏对象数量不通过统计泄露"
+      },
+      "MaskSpec" : {
+        "required" : [ "kind" ],
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHONE", "EMAIL", "ALL", "KEEP_EDGES", "RANGE" ]
+          },
+          "prefix" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "suffix" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "start" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "end" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
       },
       "MemberBoundRole" : {
         "type" : "object",
@@ -3841,7 +3944,7 @@
         "description" : "整体替换套餐应用清单，不影响已开通租户"
       },
       "PlatformMemberContext" : {
-        "required" : [ "canSearchDisplayName", "createFieldAccess", "listFieldVisibility" ],
+        "required" : [ "canSearchDisplayName", "createFieldAccess", "fieldOperations", "listFieldVisibility", "masks" ],
         "type" : "object",
         "properties" : {
           "listFieldVisibility" : {
@@ -3863,6 +3966,21 @@
           "canSearchDisplayName" : {
             "type" : "boolean",
             "description" : "允许按显示名原值搜索"
+          },
+          "fieldOperations" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldOperations"
+              }
+            }
+          },
+          "masks" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/MaskSpec"
+            }
           }
         }
       },
@@ -4500,6 +4618,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/ExportTask"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RFieldBindingManifest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FieldBindingManifest"
           },
           "success" : {
             "type" : "boolean"
@@ -5419,6 +5554,23 @@
           }
         }
       },
+      "RResourceFieldContext" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/ResourceFieldContext"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RResourceObjectResult" : {
         "type" : "object",
         "properties" : {
@@ -6053,6 +6205,52 @@
         },
         "description" : "声明应用内资源及其允许配置的范围和字段能力"
       },
+      "ResourceFieldContext" : {
+        "type" : "object",
+        "properties" : {
+          "fieldVisibility" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string",
+              "enum" : [ "HIDDEN", "MASKED", "FULL" ]
+            }
+          },
+          "fieldOperations" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "$ref" : "#/components/schemas/FieldOperations"
+              }
+            }
+          },
+          "masks" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/MaskSpec"
+            }
+          }
+        }
+      },
+      "ResourceFieldDefinition" : {
+        "required" : [ "operations", "visibility" ],
+        "type" : "object",
+        "properties" : {
+          "visibility" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string",
+              "enum" : [ "HIDDEN", "MASKED", "FULL" ]
+            }
+          },
+          "operations" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/FieldOperations"
+            }
+          }
+        }
+      },
       "ResourceKey" : {
         "required" : [ "applicationCode", "domain", "resourceCode" ],
         "type" : "object",
@@ -6282,11 +6480,7 @@
           "resourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              },
-              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
@@ -6433,11 +6627,7 @@
             "description" : "资源安全默认值"
           },
           "fieldPermissions" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/FieldAccess"
-            },
-            "description" : "本版本资源字段快照；未声明字段不授予权限"
+            "$ref" : "#/components/schemas/ResourceFieldDefinition"
           }
         },
         "description" : "角色当前绑定权限，带操作、应用与资源展示内容"
@@ -6549,22 +6739,14 @@
           "resourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              },
-              "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           },
           "previousResourceFieldPermissions" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "$ref" : "#/components/schemas/FieldAccess"
-              },
-              "description" : "相对上一版本的字段比较基线；仅版本历史读填充"
+              "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "相对上一版本的字段比较基线；仅版本历史读填充"
           }

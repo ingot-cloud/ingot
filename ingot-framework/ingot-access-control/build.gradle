@@ -13,6 +13,8 @@ dependencies {
     implementation(deps.spring.spring_boot.spring_boot_autoconfigure)
     implementation(deps.spring.framework_webmvc)
     implementation project(ingot.framework_core)
+    compileOnly(deps.jakarta_servlet_api)
+    testRuntimeOnly(deps.jakarta_servlet_api)
     testImplementation(deps.junit.jupiter)
     testRuntimeOnly(deps.junit.platform_launcher)
 }

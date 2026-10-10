@@ -145,8 +145,8 @@ class IamAuthorizationContractTest {
     @Test
     void fixedFieldSnapshotRoundTripsAndProfileRetainsExplicitNullAndUnknownKeys() throws Exception {
         var role = fixture("role-platform-fields", RoleRevision.class);
-        assertEquals(FieldVisibility.FULL, role.resourceFieldPermissions().get("10").get("phone").visibility());
-        assertThrows(UnsupportedOperationException.class, () -> role.resourceFieldPermissions().get("10").clear());
+        assertEquals(FieldVisibility.FULL, role.resourceFieldPermissions().get("10").visibility().get("phone"));
+        assertThrows(UnsupportedOperationException.class, () -> role.resourceFieldPermissions().get("10").visibility().clear());
         var copy = mapper.readValue(mapper.writeValueAsBytes(role), RoleRevision.class);
         assertEquals(role.resourceFieldPermissions(), copy.resourceFieldPermissions());
         var profile = mapper.readValue("{\"expectedVersion\":\"1\",\"phone\":null,\"unknown\":null}",
@@ -203,12 +203,13 @@ class IamAuthorizationContractTest {
     }
 
     @Test
-    void fieldsCannotBeEditableUnlessFull() {
+    void hiddenCannotBeEditableAndMaskedMayBeEditable() {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-            for (FieldVisibility visibility : List.of(FieldVisibility.HIDDEN, FieldVisibility.MASKED)) {
+            for (FieldVisibility visibility : List.of(FieldVisibility.HIDDEN)) {
                 assertFalse(factory.getValidator().validate(new FieldAccess(visibility, true)).isEmpty());
             }
             assertTrue(factory.getValidator().validate(new FieldAccess(FieldVisibility.FULL, false)).isEmpty());
+            assertTrue(factory.getValidator().validate(new FieldAccess(FieldVisibility.MASKED, true)).isEmpty());
         }
     }
 
@@ -278,7 +279,7 @@ class IamAuthorizationContractTest {
     void exportSchemasFromPublicTypesAndCheckRequiredFields() throws Exception {
         Map<String, Schema> schemas = new TreeMap<>();
         for (Class<?> type : List.of(ResourceDescriptor.class, AssignmentUpgradeInput.class,
-                AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
+                ResourceFieldContext.class, com.ingot.framework.commons.model.iam.extension.FieldManifestInvocation.class, com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.class, AssignmentUpgradeResult.class, AuthorizationRequest.class, AuthorizationDecision.class,
                 ResourceObjectInvocation.class, SignedResourceObjectRequest.class, ResourceObjectResult.class,
                 AuthorizationContext.class, SubjectRef.class, Selection.class, RoleSubjectSummary.class,
                 RoleSubjectPage.class, RoleRevision.class, RoleGrantRecord.class, RoleGrantList.class,
@@ -327,6 +328,8 @@ class IamAuthorizationContractTest {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Decision>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<MemberBoundRole>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<Preview<PlatformMemberEditPreview>>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceFieldContext>>() {
+                    }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<com.ingot.framework.commons.model.iam.extension.FieldBindingManifest>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<PlatformMemberContext>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<MemberRecord>>>() {
                     }.getType(),

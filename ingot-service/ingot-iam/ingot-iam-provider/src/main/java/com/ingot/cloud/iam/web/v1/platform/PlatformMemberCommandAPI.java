@@ -2,6 +2,11 @@ package com.ingot.cloud.iam.web.v1.platform;
 
 import com.ingot.framework.security.access.AdminOrHasAnyAuthority;
 import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.annotation.field.*;
+import com.ingot.framework.commons.model.iam.MemberResources;
+import com.ingot.framework.commons.model.iam.MemberProfileInput;
+import com.ingot.framework.commons.model.iam.PlatformMemberFilter;
+import com.ingot.framework.commons.model.iam.TenantMemberFilter;
 
 import java.util.List;
 
@@ -82,6 +87,8 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @Operation(summary = "成员列表")
     @GetMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_READ, valueType = MemberRecord.class)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_READ, use = FieldUse.FILTER, valueType = PlatformMemberFilter.class)
     public R<PageResponse<ResourceDetail<MemberRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -100,6 +107,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @Operation(summary = "创建成员资格")
     @PostMapping
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_CREATE)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_CREATE, use = FieldUse.WRITE, valueType = MemberCreateInput.class)
     public R<CreatedResource> create(@Valid @RequestBody MemberCreateInput input) {
         return ok(queries.create(AuthorizationDomain.PLATFORM, input));
     }
@@ -113,6 +121,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @Operation(summary = "成员详情")
     @GetMapping("/{id}")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_READ)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_READ, valueType = MemberRecord.class)
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
         return ok(queries.get(AuthorizationDomain.PLATFORM, id));
     }
@@ -223,6 +232,7 @@ public class PlatformMemberCommandAPI implements RShortcuts {
     @Operation(summary = "更新成员资料与角色分配")
     @PatchMapping("/{id}")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_MEMBER_UPDATE)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = MemberResources.PLATFORM_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_PLATFORM_MEMBER_UPDATE, use = FieldUse.WRITE, valueType = MemberProfileInput.class)
     public R<ResourceDetail<MemberRecord>> patch(@PathVariable String id, @Valid @RequestBody PlatformMemberEditInput input) {
         return ok(queries.patchPlatform(id, input));
     }

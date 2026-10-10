@@ -54,11 +54,11 @@ class DirectoryVisibilityEvaluatorTest {
                   department_id BIGINT, include_descendants BOOLEAN)
                 """);
         jdbc.execute("CREATE TABLE iam_field_policy(tenant_id BIGINT PRIMARY KEY, default_revision_id BIGINT,"
-                + " default_kind VARCHAR(16), version BIGINT)");
+                + " default_kind VARCHAR(16), version BIGINT, operation_rules VARCHAR(4096) DEFAULT '[]')");
         jdbc.execute("""
                 CREATE TABLE iam_field_rule(id BIGINT, tenant_id BIGINT, scenario VARCHAR(32), field_key VARCHAR(64),
                   viewer_selector_id BIGINT, target_scope VARCHAR(512), scope_bindings VARCHAR(512),
-                  visibility VARCHAR(16), editable BOOLEAN)
+                  visibility VARCHAR(16))
                 """);
         jdbc.update("INSERT INTO iam_default_policy_revision VALUES (21,'DIRECTORY',1,'{\"scope\":\"ALL\"}')");
         jdbc.update("INSERT INTO iam_tenant_member VALUES (101,10,'查看者',NULL,NULL,NULL,'ACTIVE',0),"

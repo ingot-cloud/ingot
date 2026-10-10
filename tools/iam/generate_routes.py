@@ -161,7 +161,11 @@ def build():
               'RPageResponseResourceDetailDepartmentRecord', '必要祖先仅为导航骨架，不提供隐藏分支人数',
               query=[purpose('DIRECTORY')] + PAGE),
     ]
-    routes += member_routes('PLATFORM', '/v1/platform', 'iam-platform')
+    routes += member_routes('PLATFORM', '/v1/platform', 'iam-platform', PAGE + [
+        {'name': 'name', 'required': False, 'schema': {'type': 'string'}, 'description': '显示名包含匹配，要求有效查询范围完整可见'},
+        {'name': 'status', 'required': False, 'schema': {'type': 'string', 'enum': ['ACTIVE', 'SUSPENDED', 'REMOVED']}},
+        {'name': 'ids', 'required': False, 'schema': {'type': 'string'}, 'description': '少量已选成员ID回显，不替代关联列表'},
+    ])
     routes += group_routes('PLATFORM', '/v1/platform', 'iam-platform')
     routes += [
         route('/v1/platform/tenants', 'get', 'platformListTenants', '组织列表', 'PLATFORM', 'iam-platform:tenant:read', None,
@@ -515,6 +519,19 @@ def build():
                         '预览平台角色创建与字段权限', 'PLATFORM', 'iam-platform:role:create',
                         'RoleCreateInput', 'RPreviewRoleDefinitionDraft',
                         '角色字段仅平台自定义；注册资源能力与目录交集；只读预览，发布重验'))
+    routes += [
+        route('/v1/me/password', 'get', 'currentPasswordState', '当前账号改密状态', 'CURRENT', None, None,
+              'RPasswordChangeState', 'AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料'),
+        route('/v1/platform/members/context', 'get', 'platformMemberContext', '平台成员字段上下文', 'PLATFORM', 'iam-platform:member:read', None,
+              'RPlatformMemberContext', '成员 READ/CREATE 任一准入；全局操作与潜在可见列；不替代逐对象校验'),
+        route('/v1/platform/members/{id}/bound-roles', 'get', 'platformMemberBoundRoles', '成员当前有效角色', 'PLATFORM', 'iam-platform:member:read', None,
+              'RPageResponseMemberBoundRole', '成员查看与对象边界；按角色版本聚合有效关联；不披露组名称或ID', query=PAGE),
+        route('/v1/platform/members/{id}/preview', 'post', 'platformMemberEditPreview', '成员编辑预览', 'PLATFORM', 'iam-platform:member:update',
+              'PlatformMemberEditInput', 'RPreviewPlatformMemberEditPreview', '无写入；资料字段与角色差量逐项重验；最终保存重新鉴权', example='member-role-edit'),
+        route('/v1/tenant/members/context', 'get', 'tenantMemberFieldContext', '租户成员字段能力', 'TENANT', 'iam-tenant:member:read', None, 'RResourceFieldContext', '可信身份；全局操作与完整查询范围FULL证明'),
+        route('/v1/directory/context', 'get', 'directoryFieldContext', '通讯录字段能力', 'TENANT', 'iam-tenant:directory:read', None, 'RResourceFieldContext', '可信身份；与实际通讯录查询范围相同'),
+        route('/v1/platform/applications/{id}/resources/{resourceId}/field-bindings', 'get', 'platformResourceBindings', '资源字段绑定清单', 'PLATFORM', 'iam-platform:resource:read', None, 'RFieldBindingManifest', '固定服务清单；目录读取权；不包含业务原值'),
+    ]
     for item in routes:
         item['implemented'] = True
     seen = set()

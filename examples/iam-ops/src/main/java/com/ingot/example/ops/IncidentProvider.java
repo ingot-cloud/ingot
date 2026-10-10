@@ -34,7 +34,11 @@ public class IncidentProvider implements ResourceObjectProvider {
     /**
      * 完整资源键。
      */
-    public static final ResourceKey KEY = new ResourceKey(AuthorizationDomain.PLATFORM, "iam-ops", "incident");
+    public static final String APPLICATION = "iam-ops";
+    /** 资源编码。 */
+    public static final String RESOURCE = "incident";
+    /** 完整资源身份。 */
+    public static final ResourceKey KEY = new ResourceKey(AuthorizationDomain.PLATFORM, APPLICATION, RESOURCE);
 
     /**
      * 读取工单。
@@ -72,8 +76,8 @@ public class IncidentProvider implements ResourceObjectProvider {
                         new ActionDescriptor(UPDATE, ExecutionMode.MUTATING),
                         new ActionDescriptor(EXPORT, ExecutionMode.READ_ONLY)),
                 List.of(ScopeKind.ALL, ScopeKind.SELF, ScopeKind.OBJECT_SET),
-                List.of(new FieldCapability(TITLE, "标题", List.of(FieldVisibility.values()), true, true, false),
-                        new FieldCapability(CONTACT, "联系方式", List.of(FieldVisibility.values()), true, false, false)),
+                List.of(new FieldCapability(TITLE, "标题", List.of(FieldVisibility.values()), true, true, com.ingot.framework.commons.model.iam.MaskSpec.ALL),
+                        new FieldCapability(CONTACT, "联系方式", List.of(FieldVisibility.values()), true, false, com.ingot.framework.commons.model.iam.MaskSpec.EMAIL)),
                 Map.of(TITLE, new FieldAccess(FieldVisibility.FULL, true), CONTACT,
                         new FieldAccess(FieldVisibility.MASKED, false)),
                 READ, false);

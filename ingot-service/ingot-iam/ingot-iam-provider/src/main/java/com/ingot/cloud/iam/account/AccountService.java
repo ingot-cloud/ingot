@@ -84,6 +84,7 @@ public class AccountService {
     private final ChangePasswordUseCase passwords;
     private final InitialPasswordService initialPasswords;
     private final RoleFieldPermissionService memberFields;
+    private final com.ingot.framework.authorization.field.MaskStrategy masks;
     private final TransactionTemplate transaction;
 
     /**
@@ -106,6 +107,7 @@ public class AccountService {
      * @param initialPasswords 初始密码
      * @param transactionManager 同一数据源事务
      * @param memberFields 平台成员创建用途的字段投影
+     * @param masks 公共脱敏执行策略
      */
     public AccountService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
                           AccountQueryRepository accounts, AccountWriteRepository writes,
@@ -114,7 +116,7 @@ public class AccountService {
                           ManageAccountStatusUseCase statuses, LockAccountUseCase locks,
                           UnlockAccountUseCase unlocks, ChangePasswordUseCase passwords,
                           InitialPasswordService initialPasswords, PlatformTransactionManager transactionManager,
-                          RoleFieldPermissionService memberFields) {
+                          RoleFieldPermissionService memberFields, com.ingot.framework.authorization.field.MaskStrategy masks) {
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -130,6 +132,7 @@ public class AccountService {
         this.passwords = passwords;
         this.initialPasswords = initialPasswords;
         this.memberFields = memberFields;
+        this.masks = masks;
         this.transaction = new TransactionTemplate(transactionManager);
     }
 
@@ -169,6 +172,16 @@ public class AccountService {
         return detail(capabilities.snapshot(actor.context()), row);
     }
 
+    private String projectContact(String value, String key, Map<String, FieldAccess> fields,
+            com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision policy) {
+        var access = fields.getOrDefault(key, HIDDEN_FIELD);
+        if (access.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.HIDDEN) return null;
+        if (access.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL) return value;
+        var mask = policy.masks().get(key);
+        if (mask == null) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        return masks.mask(value, mask);
+    }
+
     /**
      * 按用途精确查找一个账号，未命中或不可见时按账号不存在处理。
      *
@@ -195,16 +208,14 @@ public class AccountService {
             if (input.domain() == AuthorizationDomain.PLATFORM) {
                 access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_MEMBER_CREATE);
                 scopes.requireCreate(actor.context(), IamAction.PLATFORM_MEMBER_CREATE, java.util.Set.of());
-                var policy = memberFields.evaluate(BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE,
-                        actor.context(), IamAction.PLATFORM_MEMBER_CREATE);
+                var policy = memberFields.previewAll(BuiltinResourceProviders.PLATFORM_MEMBER_RESOURCE,
+                        actor.context(), List.of(IamAction.PLATFORM_MEMBER_CREATE)).get(IamAction.PLATFORM_MEMBER_CREATE);
                 var fields = FieldPolicyProcessor.access(policy, new ScopeTarget(null, null, null, List.of()));
                 if (members.findPlatformByAccount(accountId) != null)
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), MEMBERSHIP_EXISTS);
                 AccountRecord record = new AccountRecord(IamIds.text(accountId), row.getUsername(),
-                        FieldProjection.project(row.getPhone(),
-                                fields.getOrDefault(MemberFieldKey.VALUE_PHONE, HIDDEN_FIELD).visibility()),
-                        FieldProjection.project(row.getEmail(),
-                                fields.getOrDefault(MemberFieldKey.VALUE_EMAIL, HIDDEN_FIELD).visibility()),
+                        projectContact(row.getPhone(), MemberFieldKey.VALUE_PHONE, fields, policy),
+                        projectContact(row.getEmail(), MemberFieldKey.VALUE_EMAIL, fields, policy),
                         Boolean.TRUE.equals(row.getEnabled()), credentials.locked(accountId),
                         Boolean.TRUE.equals(row.getMustChangePassword()), null);
                 return IamDetails.of(record, fields, Map.of(), version(row));

@@ -68,11 +68,11 @@ class RoleFieldAuthorizationTest {
         var narrow = new ScopeCondition(false, List.of("A"), null, List.of());
         assertEquals(HIDDEN, access(policy(List.of(rule(narrow, FULL))), "B"));
         var lowered = new FieldPolicyDecision(Map.of(PHONE, HIDDEN), Map.of(PHONE, MASKED), List.of(rule(ALL, FULL)),
-                Set.of(), Set.of(), FieldMergeMode.GRANTS);
+                Map.of(), Map.of(), FieldMergeMode.GRANTS);
         assertEquals(MASKED, access(lowered, "A"));
         var empty = policy(List.of());
         assertEquals(HIDDEN, access(empty, "A"));
-        assertThrows(SdkAuthorizationException.class, () -> FieldPolicyProcessor.requireOriginalSort(empty, PHONE));
+        assertThrows(SdkAuthorizationException.class, () -> FieldPolicyProcessor.requireOriginalLookup(empty, PHONE));
     }
 
     @Test
@@ -101,7 +101,7 @@ class RoleFieldAuthorizationTest {
     }
 
     private static FieldPolicyDecision policy(List<ResolvedFieldRule> rules) {
-        return new FieldPolicyDecision(Map.of(PHONE, HIDDEN), Map.of(PHONE, FULL), rules, Set.of(PHONE), Set.of(PHONE),
+        return new FieldPolicyDecision(Map.of(PHONE, HIDDEN), Map.of(PHONE, FULL), rules, Map.of(PHONE, new com.ingot.framework.commons.model.iam.FieldOperations(true, true)), Map.of(),
                 FieldMergeMode.GRANTS);
     }
 

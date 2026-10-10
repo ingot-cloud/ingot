@@ -87,6 +87,8 @@ public class MemberQueryService {
     private static final FieldAccess HIDDEN_FIELD = new FieldAccess(FieldVisibility.HIDDEN, false);
 
     private final RoleFieldPermissionService platformFields;
+    private final com.ingot.framework.authorization.field.FieldProjectionEngine projection;
+    private final com.ingot.framework.authorization.field.FieldWriteExecutor fieldWrites;
 
     private final IamAccess access;
 
@@ -128,8 +130,11 @@ public class MemberQueryService {
     public MemberQueryService(IamAccess access, ResourceAccess scopes, ObjectCapabilities capabilities,
             FieldAccessEvaluator fields, IamAuditWriter audits, MemberQueryRepository members, GroupRepository groups,
             AssignmentService assignments, GroupService groupCommands, PlatformTransactionManager transactionManager,
-            RoleFieldPermissionService platformFields) {
+            RoleFieldPermissionService platformFields, com.ingot.framework.authorization.field.FieldProjectionEngine projection,
+            com.ingot.framework.authorization.field.FieldWriteExecutor fieldWrites) {
         this.platformFields = platformFields;
+        this.projection = projection;
+        this.fieldWrites = fieldWrites;
         this.access = access;
         this.scopes = scopes;
         this.capabilities = capabilities;
@@ -154,8 +159,8 @@ public class MemberQueryService {
         if (!view.actionCodes().contains(IamAction.PLATFORM_MEMBER_READ.getCode())
                 && !view.actionCodes().contains(IamAction.PLATFORM_MEMBER_CREATE.getCode()))
             throw new BizException(IamReasonCode.ACTION_DENIED);
-        var policies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
-                List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_CREATE));
+        var policies = platformFields.previewAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_CREATE, IamAction.PLATFORM_MEMBER_UPDATE));
         var read = policies.get(IamAction.PLATFORM_MEMBER_READ);
         Map<String, FieldVisibility> columns = new LinkedHashMap<>();
         read.defaults().forEach((key, ignored) -> {
@@ -178,7 +183,29 @@ public class MemberQueryService {
         }
         return new PlatformMemberContext(columns,
                 FieldPolicyProcessor.access(policies.get(IamAction.PLATFORM_MEMBER_CREATE),
-                        new ScopeTarget(null, null, null, List.of())), searchable);
+                        new ScopeTarget(null, null, null, List.of())), searchable,
+                policies.entrySet().stream().collect(java.util.stream.Collectors.toMap(entry -> entry.getKey().getCode(),
+                        entry -> FieldPolicyProcessor.operations(entry.getValue()))), read.masks());
+    }
+
+    /** 返回成员资源的全局操作能力，列表空页也有相同结果。 */
+    public com.ingot.framework.commons.model.iam.ResourceFieldContext tenantContext() {
+        var actor = access.requireCurrent();
+        if (actor.context().domain() != AuthorizationDomain.TENANT) throw new BizException(IamReasonCode.ACTION_DENIED);
+        var authorization = capabilities.snapshot(actor.context()).view();
+        if (!authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_READ)
+                && !authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_CREATE))
+            throw new BizException(IamReasonCode.ACTION_DENIED);
+        long tenantId = IamIds.require(actor.context().tenantId()), viewerId = IamIds.require(actor.context().memberId());
+        var snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
+        var scope = authorization.actionCodes().contains(IamAction.VALUE_TENANT_MEMBER_READ)
+                ? scopes.memberRead(actor.context(), IamAction.TENANT_MEMBER_READ) : ObjectScope.none();
+        Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldOperations>> operations = new LinkedHashMap<>();
+        for (var action : List.of(IamAction.TENANT_MEMBER_READ, IamAction.TENANT_MEMBER_CREATE, IamAction.TENANT_MEMBER_UPDATE))
+            operations.put(action.getCode(), authorization.actionCodes().contains(action.getCode())
+                    ? fields.operations(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, action.getCode(), scope)
+                    : snapshot.baseline().keySet().stream().collect(java.util.stream.Collectors.toMap(key -> key, key -> com.ingot.framework.commons.model.iam.FieldOperations.NONE)));
+        return new com.ingot.framework.commons.model.iam.ResourceFieldContext(fields.contextVisibility(snapshot, viewerId), operations, snapshot.masks());
     }
 
     /**
@@ -280,7 +307,7 @@ public class MemberQueryService {
         ObjectScope scope = scopes.memberRead(actor.context(), action);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
         if (domain == AuthorizationDomain.PLATFORM) {
-            var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+            var fieldPolicies = platformFields.previewAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
                     List.of(action, IamAction.PLATFORM_MEMBER_UPDATE));
             FieldPolicyDecision policy = fieldPolicies.get(action);
             if (name != null && !name.isBlank()) {
@@ -300,14 +327,17 @@ public class MemberQueryService {
         long tenantId = IamIds.require(actor.context().tenantId());
         long viewerId = IamIds.require(actor.context().memberId());
         FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
-        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_PHONE, phone, scope);
-        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_EMAIL, email, scope);
+        Map<String, String> submitted = new LinkedHashMap<>();
+        if (phone != null && !phone.isBlank()) submitted.put(MemberFieldKey.VALUE_PHONE, phone);
+        if (email != null && !email.isBlank()) submitted.put(MemberFieldKey.VALUE_EMAIL, email);
+        fields.requireFilters(snapshot, viewerId, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, action.getCode(), scope, submitted);
         Page<IamTenantMemberEntity> result = members.pageTenant(tenantId, scope, phone, email, page, pageSize);
         Map<BigInteger, List<MemberDepartmentView>> departments = members.departmentViews(tenantId,
                 result.getRecords().stream().map(IamTenantMemberEntity::getId).toList());
+        var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
         List<ResourceDetail<MemberRecord>> items = result.getRecords()
             .stream()
-            .map(row -> detail(snapshot, caps, viewerId,
+            .map(row -> detail(batch, caps,
                     tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())))
             .toList();
         return IamPages.details(items, result.getTotal(), page, pageSize);
@@ -356,13 +386,14 @@ public class MemberQueryService {
                 rows.stream().map(IamTenantMemberEntity::getId).toList());
         FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.MANAGEMENT);
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
+        var batch = fields.prepare(snapshot, viewerId, rows.stream().map(row -> row.getId().longValueExact()).toList());
         List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
         for (String memberId : order) {
             IamTenantMemberEntity row = byId.get(memberId);
             if (row == null) {
                 continue;
             }
-            items.add(detail(snapshot, caps, viewerId,
+            items.add(detail(batch, caps,
                     tenantMember(row, departments.getOrDefault(row.getId(), List.of())), version(row.getVersion())));
         }
         return IamPages.complete(items);
@@ -401,7 +432,7 @@ public class MemberQueryService {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
         ObjectCapabilities.Snapshot caps = capabilities.snapshot(actor.context());
-        var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+        var fieldPolicies = platformFields.previewAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
                 List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
         FieldPolicyDecision policy = fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ);
         if (name != null && !name.isBlank()) {
@@ -508,17 +539,10 @@ public class MemberQueryService {
                 throw new BizException(IamReasonCode.IDENTITY_INVALID);
             }
             long id = access.nextId();
-            if (domain == AuthorizationDomain.PLATFORM) {
-                Map<String, Object> submitted = new LinkedHashMap<>();
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
-                    submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
-                if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
-                    submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
-                var policy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
-                        IamAction.PLATFORM_MEMBER_CREATE);
-                FieldPolicyProcessor.requireWritable(submitted, FieldPolicyProcessor.access(policy,
-                        new ScopeTarget(String.valueOf(id), String.valueOf(id), null, List.of())));
-            }
+            var resource = domain == AuthorizationDomain.PLATFORM ? PLATFORM_MEMBER_RESOURCE : BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
+            var submitted = projection.submitted(input, input.suppliedFields(), resource).getOrDefault(resource, Map.of());
+            fieldWrites.require(resource, domain == AuthorizationDomain.PLATFORM ? IamAction.VALUE_PLATFORM_MEMBER_CREATE : IamAction.VALUE_TENANT_MEMBER_CREATE,
+                    new ScopeTarget(IamIds.text(id), IamIds.text(id), actor.context().tenantId(), List.copyOf(departmentIds)), submitted);
             String displayName = input.displayName() == null || input.displayName().isBlank() ? "成员"
                     : input.displayName().trim();
             String avatar = input.avatar() == null || input.avatar().isBlank() ? null : input.avatar().trim();
@@ -575,20 +599,27 @@ public class MemberQueryService {
                 scopes.requireVisibleMember(actor.context(), IamAction.TENANT_MEMBER_UPDATE, id);
             ResourceDetail<MemberRecord> current = load(domain, actor, id);
             IamIds.requireVersion(input.expectedVersion(), version.toString());
+            var resource = domain == AuthorizationDomain.PLATFORM ? PLATFORM_MEMBER_RESOURCE
+                    : BuiltinResourceProviders.TENANT_MEMBER_RESOURCE;
+            var submitted = projection.submitted(input, input.suppliedFields(), resource).getOrDefault(resource, Map.of());
+            if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME)
+                    && (input.displayName() == null || input.displayName().isBlank()))
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+            var actualDepartments = domain == AuthorizationDomain.PLATFORM ? List.<String>of()
+                    : members.departmentViews(IamIds.require(actor.context().tenantId()), List.of(BigInteger.valueOf(id)))
+                        .getOrDefault(BigInteger.valueOf(id), List.of()).stream().map(MemberDepartmentView::id).toList();
+            fieldWrites.require(resource, domain == AuthorizationDomain.PLATFORM ? IamAction.VALUE_PLATFORM_MEMBER_UPDATE
+                    : IamAction.VALUE_TENANT_MEMBER_UPDATE,
+                    new ScopeTarget(memberId, memberId, actor.context().tenantId(), actualDepartments), submitted);
             if (domain == AuthorizationDomain.PLATFORM) {
-                validatePlatformProfile(actor, memberId, input);
                 requireApplied(members.updatePlatform(id, input.displayName(), input.avatar(), input.phone(),
-                        input.email(), version));
+                        input.email(), version, input.suppliedFields()));
             }
             else {
                 long tenantId = IamIds.require(actor.context().tenantId());
                 long viewerId = IamIds.require(actor.context().memberId());
-                fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
-                fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_AVATAR, input.avatar());
-                fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_PHONE, input.phone());
-                fields.requireWritable(tenantId, viewerId, id, MemberFieldKey.VALUE_EMAIL, input.email());
                 requireApplied(members.updateTenant(tenantId, id, input.displayName(), input.avatar(), input.phone(),
-                        input.email(), version));
+                        input.email(), version, input.suppliedFields()));
             }
             ResourceDetail<MemberRecord> next = load(domain, actor, id);
             audits.write(actor.context(), access.nextId(), "member", memberId, AuditChangeType.UPDATE,
@@ -600,22 +631,10 @@ public class MemberQueryService {
     }
 
     private void validatePlatformProfile(ActiveIdentity actor, String memberId, MemberProfileInput input) {
-        Map<String, Object> submitted = new LinkedHashMap<>();
-        if (!Set
-            .of("expectedVersion", MemberFieldKey.VALUE_DISPLAY_NAME, MemberFieldKey.VALUE_AVATAR,
-                    MemberFieldKey.VALUE_PHONE, MemberFieldKey.VALUE_EMAIL)
-            .containsAll(input.suppliedFields()))
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        if (input.suppliedFields().contains(MemberFieldKey.VALUE_DISPLAY_NAME))
-            submitted.put(MemberFieldKey.VALUE_DISPLAY_NAME, input.displayName());
-        if (input.suppliedFields().contains(MemberFieldKey.VALUE_AVATAR))
-            submitted.put(MemberFieldKey.VALUE_AVATAR, input.avatar());
-        if (input.suppliedFields().contains(MemberFieldKey.VALUE_PHONE))
-            submitted.put(MemberFieldKey.VALUE_PHONE, input.phone());
-        if (input.suppliedFields().contains(MemberFieldKey.VALUE_EMAIL))
-            submitted.put(MemberFieldKey.VALUE_EMAIL, input.email());
-        var writePolicy = platformFields.evaluate(PLATFORM_MEMBER_RESOURCE, actor.context(),
-                IamAction.PLATFORM_MEMBER_UPDATE);
+        var submitted = projection.submitted(input, input.suppliedFields(), PLATFORM_MEMBER_RESOURCE)
+                .getOrDefault(PLATFORM_MEMBER_RESOURCE, Map.of());
+        var writePolicy = platformFields.previewAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+                List.of(IamAction.PLATFORM_MEMBER_UPDATE)).get(IamAction.PLATFORM_MEMBER_UPDATE);
         FieldPolicyProcessor.requireWritable(submitted,
                 FieldPolicyProcessor.access(writePolicy, new ScopeTarget(memberId, memberId, null, List.of())));
     }
@@ -693,7 +712,7 @@ public class MemberQueryService {
             if (row == null) {
                 throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
             }
-            var fieldPolicies = platformFields.evaluateAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
+            var fieldPolicies = platformFields.previewAll(PLATFORM_MEMBER_RESOURCE, actor.context(),
                     List.of(IamAction.PLATFORM_MEMBER_READ, IamAction.PLATFORM_MEMBER_UPDATE));
             return platformDetail(fieldPolicies.get(IamAction.PLATFORM_MEMBER_READ),
                     fieldPolicies.get(IamAction.PLATFORM_MEMBER_UPDATE),
@@ -716,8 +735,18 @@ public class MemberQueryService {
 
     private ResourceDetail<MemberRecord> detail(FieldPolicySnapshot snapshot, ObjectCapabilities.Snapshot caps,
             long viewerId, MemberRecord raw, String version) {
-        Map<String, FieldAccess> access = fields.memberAccess(snapshot, viewerId, IamIds.require(raw.id()));
-        return IamDetails.of(fields.project(raw, access), access, capabilities.tenantMember(caps, raw), version);
+        return detail(fields.prepare(snapshot, viewerId, List.of(IamIds.require(raw.id()))), caps, raw, version);
+    }
+
+    private ResourceDetail<MemberRecord> detail(FieldAccessEvaluator.FieldBatch batch, ObjectCapabilities.Snapshot caps,
+            MemberRecord raw, String version) {
+        var targetCapabilities = capabilities.tenantMember(caps, raw);
+        var update = targetCapabilities.get(IamAction.VALUE_TENANT_MEMBER_UPDATE);
+        var access = fields.memberAccess(batch, IamIds.require(raw.id())).entrySet().stream().collect(java.util.stream.Collectors.toMap(
+                Map.Entry::getKey, entry -> new com.ingot.framework.commons.model.iam.FieldAccess(entry.getValue().visibility(),
+                        entry.getValue().editable() && update != null && update.allowed())));
+        return IamDetails.of(fields.project(raw, access, BuiltinResourceProviders.TENANT_MEMBER_RESOURCE, batch.snapshot().masks()),
+                access, targetCapabilities, version);
     }
 
     private ResourceDetail<MemberRecord> platformDetail(FieldPolicyDecision policy, FieldPolicyDecision writePolicy,
@@ -730,13 +759,13 @@ public class MemberQueryService {
         readable.forEach((key, value) -> {
             var write = writable.get(key);
             fieldAccess.put(key, new com.ingot.framework.commons.model.iam.FieldAccess(value.visibility(),
-                    value.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL && write != null
-                            && write.visibility() == com.ingot.framework.commons.model.iam.FieldVisibility.FULL
+                    value.visibility() != com.ingot.framework.commons.model.iam.FieldVisibility.HIDDEN && write != null
+                            && write.visibility() != com.ingot.framework.commons.model.iam.FieldVisibility.HIDDEN
                             && write.editable()));
         });
         for (var key : MemberFieldKey.values())
             fieldAccess.putIfAbsent(key.getValue(), HIDDEN_FIELD);
-        return IamDetails.of(fields.project(raw, fieldAccess), fieldAccess, capabilities, version);
+        return IamDetails.of(fields.project(raw, fieldAccess, PLATFORM_MEMBER_RESOURCE, policy.masks()), fieldAccess, capabilities, version);
     }
 
     private static MemberRecord platformMember(IamPlatformMemberEntity row, IamAccountEntity account) {

@@ -41,9 +41,16 @@ public class LocalResourceAuthorizationClient implements AuthorizationClient {
     private final RoleFieldPermissionService roleFields;
 
     private final AuthorizationCandidateMapper candidates;
+    private final com.ingot.cloud.iam.policy.FieldAccessEvaluator tenantFields;
+    private final com.ingot.cloud.iam.evaluation.ObjectScopeCompiler objectScopes;
 
     @Override
-    public AuthorizationDecision evaluate(AuthorizationRequest request) {
+    public AuthorizationDecision evaluate(AuthorizationRequest request) { return evaluate(request, false); }
+
+    @Override
+    public AuthorizationDecision preview(AuthorizationRequest request) { return evaluate(request, true); }
+
+    private AuthorizationDecision evaluate(AuthorizationRequest request, boolean preview) {
         var actor = identities.requireDomain(request.resource().domain());
         var descriptor = registry.require(request.resource()).descriptor();
         Map<String, ExecutionMode> modes = new LinkedHashMap<>();
@@ -59,16 +66,23 @@ public class LocalResourceAuthorizationClient implements AuthorizationClient {
                     || a.domain() != request.resource().domain()))
             throw new BizException(IamReasonCode.ACTION_DENIED);
         var view = evaluator.evaluateForExecution(actor.context(),
-                request.actionCodes().stream().anyMatch(c -> modes.get(c) == ExecutionMode.MUTATING));
-        if (actor.context().domain() != com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM)
-            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        var fieldDecisions = roleFields.evaluate(request.resource(), actor.context(), view, request.actionCodes());
+                !preview && request.actionCodes().stream().anyMatch(c -> modes.get(c) == ExecutionMode.MUTATING));
+        Map<String, com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision> fieldDecisions = new LinkedHashMap<>();
+        if (actor.context().domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM)
+            fieldDecisions.putAll(roleFields.evaluate(request.resource(), actor.context(), view, request.actionCodes(),
+                    !preview && request.actionCodes().stream().anyMatch(code -> modes.get(code) == ExecutionMode.MUTATING)));
+        else for (var code : request.actionCodes()) {
+            // 对象范围由同次可信授权视图提供；租户字段规则不独立开放对象。
+            fieldDecisions.put(code, tenantFields.decision(actor.context(), request.resource(), code,
+                    objectScopes.members(actor.context(), view.scope(code)), !preview && modes.get(code) == ExecutionMode.MUTATING));
+        }
         Map<String, ActionDecision> actions = new LinkedHashMap<>();
         for (var code : request.actionCodes())
             actions.put(code, new ActionDecision(view.actionCodes().contains(code), view.governedCodes().contains(code),
                     compiler.compile(actor.context(), view.scope(code).clauses()), fieldDecisions.get(code)));
         return new AuthorizationDecision(request.resource(), actor.context(), actions, view.version(),
-                view.expiresAt());
+                fieldDecisions.values().stream().map(com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision::expiresAt)
+                        .reduce(view.expiresAt(), com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime::earliest));
     }
 
 }

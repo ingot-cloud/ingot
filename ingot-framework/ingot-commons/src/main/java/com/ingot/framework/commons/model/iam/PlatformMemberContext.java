@@ -10,13 +10,16 @@ import jakarta.validation.constraints.NotNull;
  * @param listFieldVisibility 有效读策略中潜在可见的字段，仅用于列设置；每行仍使用自己的字段结果
  * @param createFieldAccess 创建新成员时的字段权限，不用于已有成员编辑
  * @param canSearchDisplayName 整份读策略是否允许按显示名原值搜索
+ * @param fieldOperations 精确操作到字段的全局能力，不依赖当前页
+ * @param masks 当前资源版本的脱敏规则
  * @author jy
  * @since 1.0.0
  */
 public record PlatformMemberContext(
         @NotNull @Schema(description = "仅用于列布局的整份有效读策略可见性概览") Map<String, FieldVisibility> listFieldVisibility,
         @NotNull @Schema(description = "创建新成员时的精确字段权限") Map<String, FieldAccess> createFieldAccess,
-        @Schema(description = "允许按显示名原值搜索", requiredMode = Schema.RequiredMode.REQUIRED) boolean canSearchDisplayName) {
+        @Schema(description = "允许按显示名原值搜索", requiredMode = Schema.RequiredMode.REQUIRED) boolean canSearchDisplayName,
+        @NotNull Map<String, Map<String, FieldOperations>> fieldOperations, @NotNull Map<String, MaskSpec> masks) {
 
     /**
      * 固化展示上下文，防止调用方修改授权结果。
@@ -24,5 +27,8 @@ public record PlatformMemberContext(
     public PlatformMemberContext {
         listFieldVisibility = Map.copyOf(listFieldVisibility);
         createFieldAccess = Map.copyOf(createFieldAccess);
+        fieldOperations = fieldOperations.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(
+                Map.Entry::getKey, entry -> Map.copyOf(entry.getValue())));
+        masks = Map.copyOf(masks);
     }
 }

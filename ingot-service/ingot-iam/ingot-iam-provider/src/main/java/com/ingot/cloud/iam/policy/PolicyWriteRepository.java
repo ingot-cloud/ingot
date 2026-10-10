@@ -101,7 +101,7 @@ public class PolicyWriteRepository {
      */
     public IamFieldPolicyEntity findField(long tenantId) {
         return fieldPolicies.selectOne(Wrappers.<IamFieldPolicyEntity>lambdaQuery()
-                .select(IamFieldPolicyEntity::getDefaultRevisionId, IamFieldPolicyEntity::getVersion)
+                .select(IamFieldPolicyEntity::getDefaultRevisionId, IamFieldPolicyEntity::getVersion, IamFieldPolicyEntity::getOperationRules)
                 .eq(IamFieldPolicyEntity::getTenantId, id(tenantId)));
     }
 
@@ -115,8 +115,7 @@ public class PolicyWriteRepository {
         return fieldRules.selectList(Wrappers.<IamFieldRuleEntity>lambdaQuery()
                 .select(IamFieldRuleEntity::getScenario, IamFieldRuleEntity::getFieldKey,
                         IamFieldRuleEntity::getViewerSelectorId, IamFieldRuleEntity::getTargetScope,
-                        IamFieldRuleEntity::getScopeBindings, IamFieldRuleEntity::getVisibility,
-                        IamFieldRuleEntity::getEditable)
+                        IamFieldRuleEntity::getScopeBindings, IamFieldRuleEntity::getVisibility)
                 .eq(IamFieldRuleEntity::getTenantId, id(tenantId))
                 .orderByAsc(IamFieldRuleEntity::getId));
     }
@@ -175,13 +174,14 @@ public class PolicyWriteRepository {
     }
 
     /**
-     * 插入或整体替换字段策略引用并递增版本。
+     * 插入或整体替换字段策略引用及全局操作规则并递增版本。
+     * @param operationRules 全局操作规则 JSON 数组
      *
      * @param tenantId 已授权租户 ID
      * @param revisionId 默认策略版本 ID
      */
-    public void upsertField(long tenantId, long revisionId) {
-        fieldPolicies.upsert(id(tenantId), id(revisionId), DefaultPolicyKind.FIELD);
+    public void upsertField(long tenantId, long revisionId, String operationRules) {
+        fieldPolicies.upsert(id(tenantId), id(revisionId), DefaultPolicyKind.FIELD, operationRules);
     }
 
     /**
@@ -195,10 +195,9 @@ public class PolicyWriteRepository {
      * @param targetScope 目标范围 JSON
      * @param scopeBindings 范围绑定 JSON
      * @param visibility 可见程度
-     * @param editable 是否允许写入
      */
     public void insertFieldRule(long id, long tenantId, PolicyScenario scenario, String fieldKey, long viewerSelectorId,
-                                String targetScope, String scopeBindings, FieldVisibility visibility, boolean editable) {
+                                String targetScope, String scopeBindings, FieldVisibility visibility) {
         IamFieldRuleEntity row = new IamFieldRuleEntity();
         row.setId(id(id));
         row.setTenantId(id(tenantId));
@@ -208,7 +207,6 @@ public class PolicyWriteRepository {
         row.setTargetScope(targetScope);
         row.setScopeBindings(scopeBindings);
         row.setVisibility(visibility);
-        row.setEditable(editable);
         fieldRules.insert(row);
     }
 

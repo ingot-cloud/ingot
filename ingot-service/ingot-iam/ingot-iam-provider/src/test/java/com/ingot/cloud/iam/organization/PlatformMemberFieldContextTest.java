@@ -49,7 +49,7 @@ class PlatformMemberFieldContextTest {
         authorize(List.of(IamAction.VALUE_PLATFORM_MEMBER_READ, IamAction.VALUE_PLATFORM_MEMBER_CREATE));
         service = new MemberQueryService(access, mock(ResourceAccess.class), capabilities,
                 mock(FieldAccessEvaluator.class), mock(IamAuditWriter.class), members, mock(GroupRepository.class),
-                mock(AssignmentService.class), mock(GroupService.class), mock(PlatformTransactionManager.class), fields);
+                mock(AssignmentService.class), mock(GroupService.class), mock(PlatformTransactionManager.class), fields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
     }
 
     @Test
@@ -60,11 +60,11 @@ class PlatformMemberFieldContextTest {
         var all = List.of(new ScopeCondition(true, List.of(), null, List.of()));
         var read = new FieldPolicyDecision(defaults, ceiling,
                 List.of(new ResolvedFieldRule("displayName", all, full), new ResolvedFieldRule("email", object, full)),
-                Set.of("displayName"), Set.of(), FieldMergeMode.GRANTS);
+                Map.of("displayName", new com.ingot.framework.commons.model.iam.FieldOperations(false, true)), Map.of(), FieldMergeMode.GRANTS);
         var create = new FieldPolicyDecision(defaults, ceiling,
                 List.of(new ResolvedFieldRule("phone", all, new FieldAccess(FieldVisibility.MASKED, false))),
-                Set.of(), Set.of(), FieldMergeMode.GRANTS);
-        when(fields.evaluateAll(any(), any(), anyList())).thenReturn(Map.of(
+                Map.of(), Map.of(), FieldMergeMode.GRANTS);
+        when(fields.previewAll(any(), any(), anyList())).thenReturn(Map.of(
                 IamAction.PLATFORM_MEMBER_READ, read, IamAction.PLATFORM_MEMBER_CREATE, create));
         var result = service.platformContext();
         assertEquals(FieldVisibility.FULL, result.listFieldVisibility().get("email"));
@@ -83,8 +83,8 @@ class PlatformMemberFieldContextTest {
                 List.of(new ResolvedFieldRule("displayName", object, full),
                         new ResolvedFieldRule("displayName", all, new FieldAccess(FieldVisibility.MASKED, false)),
                         new ResolvedFieldRule("email", all, full)),
-                Set.of("displayName"), Set.of(), FieldMergeMode.GRANTS);
-        when(fields.evaluateAll(any(), any(), anyList())).thenReturn(Map.of(
+                Map.of("displayName", new com.ingot.framework.commons.model.iam.FieldOperations(false, true)), Map.of(), FieldMergeMode.GRANTS);
+        when(fields.previewAll(any(), any(), anyList())).thenReturn(Map.of(
                 IamAction.PLATFORM_MEMBER_READ, read, IamAction.PLATFORM_MEMBER_CREATE, read));
         var result = service.platformContext();
         assertFalse(result.canSearchDisplayName());

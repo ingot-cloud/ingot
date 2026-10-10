@@ -16,7 +16,7 @@ import jakarta.validation.constraints.*;
  * @param visibilities 支持的可见程度
  * @param editable 资源是否支持编辑此字段
  * @param filterable 完整可见时是否支持筛选
- * @param sortable 完整可见时是否支持排序
+ * @param mask 当前资源版本使用的文本脱敏规则
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "描述资源字段允许配置的可见性与编辑能力，不能代替对象级计算结果")
@@ -31,8 +31,7 @@ public record FieldCapability(
         boolean editable,
          @Schema(description = "完整可见时是否支持筛选", requiredMode = Schema.RequiredMode.REQUIRED)
         boolean filterable,
-         @Schema(description = "完整可见时是否支持排序", requiredMode = Schema.RequiredMode.REQUIRED)
-        boolean sortable) {
+        @Valid @Schema(description = "文本脱敏规则，支持 MASKED 时必填") MaskSpec mask) {
 
     /**
      * 复制输出集合，避免外部修改改变已经计算的响应视图；必填空引用由校验拒绝。
@@ -40,6 +39,9 @@ public record FieldCapability(
     public FieldCapability {
         if (visibilities != null) {
             visibilities = Collections.unmodifiableList(new ArrayList<>(visibilities));
+            if (visibilities.isEmpty() || new HashSet<>(visibilities).size() != visibilities.size()
+                    || visibilities.contains(FieldVisibility.MASKED) != (mask != null))
+                throw new IllegalArgumentException("字段可见性和脱敏规则不一致");
         }
     }
 }

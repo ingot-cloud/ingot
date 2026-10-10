@@ -35,7 +35,7 @@ class DefaultPolicyDefinitionsTest {
         assertEquals(FieldVisibility.FULL, ceiling.get(MemberFieldKey.VALUE_PHONE).visibility());
         assertTrue(ceiling.get(MemberFieldKey.VALUE_PHONE).editable());
         var capped = DefaultPolicyDefinitions.fieldCeiling(
-                "{\"ceiling\":{\"phone\":{\"visibility\":\"MASKED\",\"editable\":false}}}");
+                "{\"ceiling\":{\"phone\":\"MASKED\"}}");
         assertEquals(FieldVisibility.MASKED, capped.get(MemberFieldKey.VALUE_PHONE).visibility());
         assertEquals(FieldVisibility.FULL, capped.get(MemberFieldKey.VALUE_DISPLAY_NAME).visibility());
     }
@@ -48,7 +48,7 @@ class DefaultPolicyDefinitionsTest {
         assertEquals(FieldVisibility.HIDDEN, hidden.visibility());
         assertFalse(hidden.editable());
         Map<String, com.ingot.framework.commons.model.iam.FieldAccess> parsed = DefaultPolicyDefinitions.fieldAccess(
-                "{\"fields\":{\"phone\":{\"visibility\":\"FULL\",\"editable\":true}}}");
+                "{\"fields\":{\"phone\":\"FULL\"}}");
         assertEquals(FieldVisibility.FULL, parsed.get(MemberFieldKey.VALUE_PHONE).visibility());
         assertTrue(parsed.get(MemberFieldKey.VALUE_PHONE).editable());
     }

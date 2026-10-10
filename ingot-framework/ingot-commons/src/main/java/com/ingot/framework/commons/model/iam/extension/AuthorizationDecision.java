@@ -24,5 +24,10 @@ public record AuthorizationDecision(ResourceKey resource, AuthorizationContext c
      */
     public AuthorizationDecision {
         actions = Map.copyOf(actions);
+        if (expiresAt != null) {
+            for (var action : actions.values()) {
+                if (action.fields() != null) expiresAt = FieldPolicyLifetime.earliest(expiresAt, action.fields().expiresAt());
+            }
+        }
     }
 }

@@ -60,31 +60,30 @@ class ResourceFieldMetadataTest {
         var provider = mock(ResourceObjectProvider.class);
         when(provider.descriptor()).thenReturn(new ResourceDescriptor(KEY,
                 List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY)), List.of(ScopeKind.ALL),
-                List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, true, true)),
+                List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, true, com.ingot.framework.commons.model.iam.MaskSpec.PHONE)),
                 Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, false)), READ, false));
         var apps = mock(IamApplicationMapper.class);
         when(apps.selectBatchIds(anyCollection())).thenReturn(List.of(app));
         var service = new ResourceFieldMetadata(apps, mock(IamResourceMapper.class), mock(IamActionMapper.class),
-                new ResourceRegistry(List.of(provider)));
+                new ResourceRegistry(List.of(provider)), com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
         row.setFieldCapabilities("[]");
         assertEquals(FieldVisibility.HIDDEN,
                 service.describe(List.of(row)).get("10").defaults().get(PHONE).visibility());
         row.setFieldCapabilities(
                 """
-                        [{"key":"phone","label":"手机号","visibilities":["FULL"],"editable":true,"filterable":true,"sortable":true}]
+                        [{"key":"phone","label":"手机号","visibilities":["FULL"],"editable":true,"filterable":true}]
                         """);
         var safe = service.describe(List.of(row)).get("10");
         assertEquals(List.of(FieldVisibility.HIDDEN), safe.fields().getFirst().visibilities());
         assertFalse(safe.fields().getFirst().editable());
         row.setFieldCapabilities(
                 """
-                        [{"key":"phone","label":"手机号","visibilities":["HIDDEN","MASKED","FULL"],"editable":true,"filterable":false,"sortable":false}]
+                        [{"key":"phone","label":"手机号","visibilities":["HIDDEN","MASKED","FULL"],"editable":true,"filterable":false,"mask":{"kind":"PHONE"}}]
                         """);
         var supported = service.describe(List.of(row)).get("10");
         assertEquals(FieldVisibility.MASKED, supported.defaults().get(PHONE).visibility());
         assertTrue(supported.fields().getFirst().editable());
         assertFalse(supported.fields().getFirst().filterable());
-        assertFalse(supported.fields().getFirst().sortable());
         app.setEnabled(false);
         assertTrue(service.describe(List.of(row)).isEmpty());
     }

@@ -52,14 +52,14 @@ public record RoleGrantRecord(
         @Schema(description = "操作启停；目录缺失时省略") ConfigurationStatus status,
         @Schema(description = "资源字段能力") List<FieldCapability> fieldCapabilities,
         @Schema(description = "资源安全默认值") Map<String, FieldAccess> fieldDefaults,
-        @Schema(description = "本版本资源字段快照；未声明字段不授予权限") Map<String, FieldAccess> fieldPermissions) {
+        @Schema(description = "本版本资源字段快照；未声明字段不授予权限") ResourceFieldDefinition fieldPermissions) {
 
     /** 无字段能力资源的绑定记录。 */
     public RoleGrantRecord(String actionId, String actionCode, String actionName, String applicationId,
             String applicationCode, String applicationName, String resourceId, String resourceCode, String resourceName,
             List<ScopeExpression> scopes, List<ScopeKind> scopeCapabilities, ConfigurationStatus status) {
         this(actionId, actionCode, actionName, applicationId, applicationCode, applicationName, resourceId,
-                resourceCode, resourceName, scopes, scopeCapabilities, status, List.of(), Map.of(), Map.of());
+                resourceCode, resourceName, scopes, scopeCapabilities, status, List.of(), Map.of(), ResourceFieldDefinition.EMPTY);
     }
 
     /**
@@ -68,7 +68,7 @@ public record RoleGrantRecord(
     public RoleGrantRecord {
         fieldCapabilities = List.copyOf(fieldCapabilities);
         fieldDefaults = Map.copyOf(fieldDefaults);
-        fieldPermissions = fieldPermissions == null ? null : Map.copyOf(fieldPermissions);
+        fieldPermissions = fieldPermissions == null ? ResourceFieldDefinition.EMPTY : fieldPermissions;
         if (scopes != null) {
             scopes = Collections.unmodifiableList(new ArrayList<>(scopes));
         }

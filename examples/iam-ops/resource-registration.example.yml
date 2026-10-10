@@ -5,6 +5,7 @@ ingot:
       registrations:
         - service-name: iam-ops
           secret: ${IAM_OPS_RESOURCE_RPC_SECRET}
+          manifest-secret: ${IAM_OPS_FIELD_MANIFEST_SECRET}
           descriptor:
             key: {domain: PLATFORM, application-code: iam-ops, resource-code: incident}
             read-action: iam-ops:incident:read
@@ -15,8 +16,8 @@ ingot:
               - {code: 'iam-ops:incident:export', mode: READ_ONLY}
             scope-capabilities: [ALL, SELF, OBJECT_SET]
             fields:
-              - {key: title, label: 标题, visibilities: [HIDDEN, MASKED, FULL], editable: true, filterable: true, sortable: false}
-              - {key: contact, label: 联系方式, visibilities: [HIDDEN, MASKED, FULL], editable: true, filterable: false, sortable: false}
+              - {key: title, label: 标题, visibilities: [HIDDEN, MASKED, FULL], editable: true, filterable: true, mask: {kind: ALL}}
+              - {key: contact, label: 联系方式, visibilities: [HIDDEN, MASKED, FULL], editable: true, filterable: false, mask: {kind: EMAIL}}
             defaults:
               title: {visibility: FULL, editable: true}
               contact: {visibility: MASKED, editable: false}
@@ -32,6 +33,9 @@ ingot:
   iam:
     resource-rpc:
       secret: ${IAM_OPS_RESOURCE_RPC_SECRET}
+    field-manifest:
+      secret: ${IAM_OPS_FIELD_MANIFEST_SECRET}
+      callers: [ingot-iam]
     authorization:
       ttl: 30s
       maximum-size: 1000

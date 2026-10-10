@@ -80,7 +80,7 @@ class MemberQueryRepositoryTest {
     @Test
     void platformContactWritesDoNotModifyLoginContacts() {
         jdbc.update("UPDATE iam_account SET phone='13800000001',email='login@example.com' WHERE id=1");
-        assertEquals(1, members.updatePlatform(1001, null, null, "13900000001", "contact@example.com", BigInteger.ZERO));
+        assertEquals(1, members.updatePlatform(1001, null, null, "13900000001", "contact@example.com", BigInteger.ZERO, java.util.Set.of("phone", "email")));
         assertEquals("13900000001", members.findPlatform(1001).getPhone());
         assertEquals("contact@example.com", members.findPlatform(1001).getEmail());
         assertEquals("13800000001", jdbc.queryForObject("SELECT phone FROM iam_account WHERE id=1", String.class));
@@ -98,12 +98,12 @@ class MemberQueryRepositoryTest {
 
     @Test
     void nullKeepsContactsBlankClearsAndStaleVersionDoesNotWrite() {
-        members.updatePlatform(1001, null, null, "13900000001", "contact@example.com", BigInteger.ZERO);
-        assertEquals(1, members.updatePlatform(1001, "新显示名", null, null, null, BigInteger.ONE));
+        members.updatePlatform(1001, null, null, "13900000001", "contact@example.com", BigInteger.ZERO, java.util.Set.of("phone", "email"));
+        assertEquals(1, members.updatePlatform(1001, "新显示名", null, null, null, BigInteger.ONE, java.util.Set.of("displayName")));
         assertEquals("13900000001", members.findPlatform(1001).getPhone());
-        assertEquals(0, members.updatePlatform(1001, null, null, "other", "other", BigInteger.ZERO));
+        assertEquals(0, members.updatePlatform(1001, null, null, "other", "other", BigInteger.ZERO, java.util.Set.of("phone", "email")));
         assertEquals("contact@example.com", members.findPlatform(1001).getEmail());
-        assertEquals(1, members.updatePlatform(1001, null, null, "", " ", BigInteger.TWO));
+        assertEquals(1, members.updatePlatform(1001, null, null, "", " ", BigInteger.TWO, java.util.Set.of("phone", "email")));
         assertNull(members.findPlatform(1001).getPhone());
         assertNull(members.findPlatform(1001).getEmail());
     }

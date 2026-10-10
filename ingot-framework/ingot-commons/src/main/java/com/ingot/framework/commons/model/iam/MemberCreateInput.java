@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import com.ingot.framework.commons.annotation.field.*;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -40,14 +41,14 @@ import jakarta.validation.constraints.NotNull;
 @JsonDeserialize(using = MemberCreateInput.Deserializer.class)
 @Schema(description = "把已有全局账号关联为当前域成员，不创建或改写登录凭证")
 public record MemberCreateInput(
-        @NotBlank @Schema(description = "已存在的全局账号 ID", requiredMode = Schema.RequiredMode.REQUIRED) String accountId,
-        @Schema(description = "当前域显示名，可空") String displayName,
-        @Schema(description = "当前域头像，可空；可提交时效链接或对象路径，入库只保存路径") String avatar,
-        @NotNull @Schema(description = "租户任职；平台必须为空且最多一个主部门",
+        @PublicField @NotBlank @Schema(description = "已存在的全局账号 ID", requiredMode = Schema.RequiredMode.REQUIRED) String accountId,
+        @FieldBinding(key = MemberFieldKey.VALUE_DISPLAY_NAME, uses = FieldUse.WRITE) @Schema(description = "当前域显示名，可空") String displayName,
+        @FieldBinding(key = MemberFieldKey.VALUE_AVATAR, uses = FieldUse.WRITE) @Schema(description = "当前域头像，可空；可提交时效链接或对象路径，入库只保存路径") String avatar,
+        @PublicField @NotNull @Schema(description = "租户任职；平台必须为空且最多一个主部门",
                 requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid MemberDepartmentBinding> departments,
-        @Schema(description = "选填的直接角色定义 ID，默认为空") List<String> roleIds,
-        @Schema(description = "选填的用户组 ID，默认为空") List<String> groupIds,
-        @Schema(description = "选填的固定版本直接分配") List<@NotNull @Valid MemberRoleAssignmentDraft> roleAssignments,
+        @PublicField @Schema(description = "选填的直接角色定义 ID，默认为空") List<String> roleIds,
+        @PublicField @Schema(description = "选填的用户组 ID，默认为空") List<String> groupIds,
+        @PublicField @Schema(description = "选填的固定版本直接分配") List<@NotNull @Valid MemberRoleAssignmentDraft> roleAssignments,
         @JsonIgnore @Schema(hidden = true) Set<String> suppliedFields) {
 
     private static final Set<String> KNOWN_PROPERTIES = Set.of("accountId", MemberFieldKey.VALUE_DISPLAY_NAME,

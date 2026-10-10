@@ -158,19 +158,21 @@ class RoleWorkspaceMySqlHttpTest {
         var fieldMetadata = new com.ingot.cloud.iam.extension.ResourceFieldMetadata(
                 IamMybatisTestAccess.mapper(source, IamApplicationMapper.class),
                 IamMybatisTestAccess.mapper(source, IamResourceMapper.class),
-                IamMybatisTestAccess.mapper(source, IamActionMapper.class), fieldRegistry);
+                IamMybatisTestAccess.mapper(source, IamActionMapper.class), fieldRegistry, com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
         var fieldEvaluator = mock(AuthorizationEvaluator.class);
         var roleFields = new com.ingot.cloud.iam.extension.RoleFieldPermissionService(fieldMetadata,
-                IamMybatisTestAccess.roles(source), fieldCompiler, fieldEvaluator);
+                IamMybatisTestAccess.roles(source), fieldCompiler, fieldEvaluator, com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
         var currentIdentity = mock(com.ingot.cloud.iam.identity.CurrentIdentityService.class);
         when(currentIdentity.requireDomain(AuthorizationDomain.PLATFORM)).thenReturn(actor);
         var fieldCode = IamAction.PLATFORM_MEMBER_READ.getCode();
         var narrow = new com.ingot.cloud.iam.evaluation.ScopeClause(false, false, false, false, List.of(), false,
                 List.of("1"));
         when(fieldEvaluator.evaluateForExecution(eq(actor.context()), anyBoolean()))
-            .thenReturn(new AuthorizationEvaluator.AuthorizationView(List.of(fieldCode), List.of(),
+            .thenReturn(new AuthorizationEvaluator.AuthorizationView(List.of(fieldCode, IamAction.VALUE_PLATFORM_MEMBER_UPDATE), List.of(),
                     Map.of(fieldCode,
                             new com.ingot.cloud.iam.evaluation.ResolvedActionScope(
+                                    List.of(com.ingot.cloud.iam.evaluation.ScopeClause.universe())),
+                            IamAction.VALUE_PLATFORM_MEMBER_UPDATE, new com.ingot.cloud.iam.evaluation.ResolvedActionScope(
                                     List.of(com.ingot.cloud.iam.evaluation.ScopeClause.universe()))),
                     "31:32", java.time.Instant.now().plusSeconds(1800),
                     List.of(new AuthorizationEvaluator.RoleFieldSource(BigInteger.valueOf(501), null, null, 31,
@@ -180,17 +182,20 @@ class RoleWorkspaceMySqlHttpTest {
         when(fieldEvaluator.evaluate(actor.context()))
             .thenAnswer(invocation -> fieldEvaluator.evaluateForExecution(actor.context(), false));
         var projector = mock(com.ingot.cloud.iam.policy.FieldAccessEvaluator.class);
-        when(projector.project(any(MemberRecord.class), anyMap())).thenCallRealMethod();
+        when(projector.project(any(MemberRecord.class), anyMap(), any(), anyMap())).thenAnswer(invocation -> com.ingot.cloud.iam.persistence.FieldTestSupport.projection().projectRecord(invocation.getArgument(0), invocation.getArgument(2), new com.ingot.framework.authorization.field.FieldReadSnapshot(Map.of(invocation.getArgument(2), invocation.getArgument(1)), Map.of(invocation.getArgument(2), invocation.getArgument(3)))));
+        var localFields = new com.ingot.cloud.iam.extension.LocalResourceAuthorizationClient(currentIdentity,
+                fieldEvaluator, fieldRegistry, fieldCompiler, roleFields, candidates, mock(com.ingot.cloud.iam.policy.FieldAccessEvaluator.class), mock(com.ingot.cloud.iam.evaluation.ObjectScopeCompiler.class));
         var memberQueries = new com.ingot.cloud.iam.organization.MemberQueryService(access, resources,
                 new ObjectCapabilities(fieldEvaluator, resources), projector,
                 mock(IamAuditWriter.class), IamMybatisTestAccess.memberQueries(source), mock(GroupRepository.class),
                 presenter, mock(com.ingot.cloud.iam.group.GroupService.class),
-                new DataSourceTransactionManager(source), roleFields);
+                new DataSourceTransactionManager(source), roleFields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), new com.ingot.framework.authorization.field.FieldWriteExecutor(
+                        new com.ingot.framework.authorization.field.ClientFieldPolicyProvider(
+                                new com.ingot.framework.authorization.AuthorizationAccess(localFields), fieldRegistry)));
         web.registerBean(com.ingot.cloud.iam.web.v1.platform.PlatformMemberCommandAPI.class,
                 () -> new com.ingot.cloud.iam.web.v1.platform.PlatformMemberCommandAPI(
                         mock(com.ingot.cloud.iam.organization.MemberCommandService.class), memberQueries, presenter));
-        var localFields = new com.ingot.cloud.iam.extension.LocalResourceAuthorizationClient(currentIdentity,
-                fieldEvaluator, fieldRegistry, fieldCompiler, roleFields, candidates);
+
         web.registerBean(com.ingot.cloud.iam.web.inner.InnerResourceAuthorizationAPI.class,
                 () -> new com.ingot.cloud.iam.web.inner.InnerResourceAuthorizationAPI(localFields));
         web.registerBean(PlatformRoleCommandAPI.class, () -> new PlatformRoleCommandAPI(roles, workspace));
@@ -198,8 +203,29 @@ class RoleWorkspaceMySqlHttpTest {
                 () -> new PlatformAssignmentAPI(presenter, mock(PlatformAuthorizationEditor.class)));
         web.registerBean(DispatcherServletRegistrationBean.class,
                 () -> new DispatcherServletRegistrationBean(new DispatcherServlet(web), "/"));
+        web.registerBean(com.ingot.framework.authorization.field.FieldBindingRegistry.class,
+                () -> new com.ingot.framework.authorization.field.FieldBindingRegistry(json));
+        web.registerBean(com.ingot.framework.authorization.field.FieldBindingRegistrar.class,
+                () -> new com.ingot.framework.authorization.field.FieldBindingRegistrar(
+                        web.getBean(org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.class),
+                        web.getBean(com.ingot.framework.authorization.field.FieldBindingRegistry.class)));
+        web.registerBean(com.ingot.framework.authorization.field.FieldInputAdvice.class,
+                () -> new com.ingot.framework.authorization.field.FieldInputAdvice(json,
+                        web.getBean(com.ingot.framework.authorization.field.FieldBindingRegistry.class)));
         web.register(Mvc.class);
         web.refresh();
+    }
+
+    @Test
+    void startupCompilesActualHttpFieldBindingsForReadWriteAndFilter() {
+        var manifest = web.getBean(com.ingot.framework.authorization.field.FieldBindingRegistry.class)
+                .manifest(com.ingot.framework.commons.model.iam.MemberResources.PLATFORM_MEMBER);
+        assertTrue(manifest.bindings().stream().anyMatch(binding -> binding.fieldKey().equals("joinedAt")
+                && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ));
+        assertTrue(manifest.bindings().stream().anyMatch(binding -> binding.fieldKey().equals("phone")
+                && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE));
+        assertTrue(manifest.bindings().stream().anyMatch(binding -> binding.property().equals("name")
+                && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.FILTER));
     }
 
     @AfterAll
@@ -481,9 +507,9 @@ class RoleWorkspaceMySqlHttpTest {
         var read = IamAction.PLATFORM_MEMBER_READ.getCode();
         try {
             jdbc.update("UPDATE iam_resource SET field_capabilities=? WHERE id=340",
-                    "[{\"key\":\"phone\",\"label\":\"手机号\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":false,\"sortable\":false}]");
+                    "[{\"key\":\"phone\",\"label\":\"手机号\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":false,\"mask\":{\"kind\":\"PHONE\"}}]");
             jdbc.update("UPDATE iam_role_revision SET resource_field_permissions=? WHERE id=31",
-                    "{\"340\":{\"phone\":{\"visibility\":\"FULL\",\"editable\":false}}}");
+                    "{\"340\":{\"visibility\":{\"phone\":\"FULL\"},\"operations\":{\"phone\":{\"editable\":true,\"filterable\":false}}}}");
             var response = post("/inner/authorization/v2/evaluate",
                     new com.ingot.framework.commons.model.iam.extension.AuthorizationRequest(key, List.of(read)));
             assertEquals(200, response.statusCode(), response.body());
@@ -528,7 +554,7 @@ class RoleWorkspaceMySqlHttpTest {
         finally {
             jdbc.update("UPDATE iam_role_revision SET resource_field_permissions='{}' WHERE id=31");
             jdbc.update(
-                    "UPDATE iam_role_revision SET resource_field_permissions='{\"340\":{\"phone\":{\"visibility\":\"MASKED\",\"editable\":false}}}' WHERE id=32");
+                    "UPDATE iam_role_revision SET resource_field_permissions='{\"340\":{\"visibility\":{\"phone\":\"MASKED\"},\"operations\":{\"phone\":{\"editable\":false,\"filterable\":false}}}}' WHERE id=32");
             jdbc.update("UPDATE iam_resource SET field_capabilities='[]' WHERE id=340");
         }
     }
@@ -537,9 +563,9 @@ class RoleWorkspaceMySqlHttpTest {
     void memberContextHttpUsesRoleSourcesWithoutPageSampleOrCreatePermission() throws Exception {
         try {
             jdbc.update("UPDATE iam_resource SET field_capabilities=? WHERE id=340",
-                    "[{\"key\":\"phone\",\"label\":\"手机号\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":false,\"sortable\":false}]");
+                    "[{\"key\":\"phone\",\"label\":\"手机号\",\"visibilities\":[\"HIDDEN\",\"MASKED\",\"FULL\"],\"editable\":true,\"filterable\":false,\"mask\":{\"kind\":\"PHONE\"}}]");
             jdbc.update("UPDATE iam_role_revision SET resource_field_permissions=? WHERE id=31",
-                    "{\"340\":{\"phone\":{\"visibility\":\"FULL\",\"editable\":false}}}");
+                    "{\"340\":{\"visibility\":{\"phone\":\"FULL\"},\"operations\":{\"phone\":{\"editable\":true,\"filterable\":false}}}}");
             JsonNode context = get("/v1/platform/members/context");
             assertEquals("FULL", context.path("listFieldVisibility").path("phone").asText());
             assertEquals("HIDDEN", context.path("createFieldAccess").path("phone").path("visibility").asText());
@@ -752,8 +778,8 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.execute(
                 "ALTER TABLE iam_role_revision ADD base_revision_id BIGINT, ADD metadata_overrides JSON, ADD resource_field_permissions JSON NOT NULL DEFAULT (JSON_OBJECT()), ADD published_at DATETIME");
         jdbc.update(
-                "UPDATE iam_role_revision SET resource_field_permissions='{\"340\":{\"phone\":{\"visibility\":\"MASKED\",\"editable\":false}}}' WHERE id=32");
-        jdbc.update("INSERT INTO iam_action VALUES(341,100,340,'查看成员','iam-platform:member:read',TRUE)");
+                "UPDATE iam_role_revision SET resource_field_permissions='{\"340\":{\"visibility\":{\"phone\":\"MASKED\"},\"operations\":{\"phone\":{\"editable\":false,\"filterable\":false}}}}' WHERE id=32");
+        jdbc.update("INSERT INTO iam_action VALUES(341,100,340,'查看成员','iam-platform:member:read',TRUE),(342,100,340,'更新成员','iam-platform:member:update',TRUE)");
     }
 
     /**

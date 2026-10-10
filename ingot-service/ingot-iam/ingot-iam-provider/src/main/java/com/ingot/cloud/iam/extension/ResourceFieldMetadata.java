@@ -52,6 +52,13 @@ public class ResourceFieldMetadata {
     private final IamActionMapper actions;
 
     private final ResourceRegistry registry;
+    private final FieldManifestService manifests;
+    private final org.springframework.beans.factory.ObjectProvider<com.ingot.framework.cache.spi.LayeredCache<String, Entry>> cache;
+
+    /** 返回完整资源标识的实际绑定状态，不包含任何业务原值。 */
+    public com.ingot.framework.commons.model.iam.extension.FieldBindingManifest bindings(ResourceKey key) {
+        return manifests.require(key);
+    }
 
     /**
      * 批量返回角色操作实际所属的资源 ID。
@@ -93,29 +100,46 @@ public class ResourceFieldMetadata {
         Map<String, ResourceDescriptor> result = new LinkedHashMap<>();
         for (var row : rows) {
             var app = apps.get(row.getApplicationId());
-            if (app == null || app.getDomain() != AuthorizationDomain.PLATFORM || !Boolean.TRUE.equals(app.getEnabled())
+            if (app == null || !Boolean.TRUE.equals(app.getEnabled())
                     || !Boolean.TRUE.equals(row.getEnabled()))
                 continue;
             var provider = registry.find(new ResourceKey(app.getDomain(), app.getCode(), row.getCode()));
             if (provider == null)
                 continue;
             var descriptor = provider.descriptor();
+            var manifest = manifests.require(descriptor.key());
+            var readable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            var writable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            var filterable = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.FILTER)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
             Map<String, FieldCapability> catalog = new HashMap<>();
             IamJson.read(row.getFieldCapabilities(), FIELDS).forEach(f -> catalog.put(f.key(), f));
-            var fields = descriptor.fields().stream().map(f -> {
+            Map<String, FieldCapability> supported = new LinkedHashMap<>();
+            descriptor.fields().forEach(field -> supported.put(field.key(), field));
+            for (var entry : catalog.entrySet()) {
+                if (supported.containsKey(entry.getKey()) || !readable.contains(entry.getKey())) continue;
+                boolean textual = manifest.bindings().stream().filter(binding -> binding.fieldKey().equals(entry.getKey()))
+                        .allMatch(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::textual);
+                supported.put(entry.getKey(), new FieldCapability(entry.getKey(), entry.getValue().label(),
+                        textual ? List.of(FieldVisibility.values()) : List.of(FieldVisibility.HIDDEN, FieldVisibility.FULL),
+                        writable.contains(entry.getKey()), filterable.contains(entry.getKey()), textual ? com.ingot.framework.commons.model.iam.MaskSpec.ALL : null));
+            }
+            var fields = supported.values().stream().map(f -> {
                 var upper = catalog.get(f.key());
-                if (upper == null)
+                if (upper == null || !readable.contains(f.key()))
                     return new FieldCapability(f.key(), f.label(), List.of(FieldVisibility.HIDDEN), false, false,
-                            false);
+                            null);
                 var visible = f.visibilities().stream().filter(upper.visibilities()::contains).toList();
-                var baseline = descriptor.defaults().get(f.key()).visibility();
+                var baseline = descriptor.defaults().getOrDefault(f.key(), new FieldAccess(FieldVisibility.HIDDEN, false)).visibility();
                 if (visible.stream().noneMatch(value -> value.ordinal() <= baseline.ordinal()))
                     return new FieldCapability(f.key(), upper.label(), List.of(FieldVisibility.HIDDEN), false, false,
-                            false);
+                            null);
                 return new FieldCapability(f.key(), upper.label(),
                         visible.isEmpty() ? List.of(FieldVisibility.HIDDEN) : visible,
-                        f.editable() && upper.editable() && visible.contains(FieldVisibility.FULL),
-                        f.filterable() && upper.filterable(), f.sortable() && upper.sortable());
+                        f.editable() && upper.editable() && writable.contains(f.key()) && visible.stream().anyMatch(value -> value != FieldVisibility.HIDDEN),
+                        f.filterable() && upper.filterable() && filterable.contains(f.key()), visible.contains(FieldVisibility.MASKED) ? upper.mask() : null);
             }).toList();
             Map<String, FieldAccess> defaults = new LinkedHashMap<>();
             for (var field : fields) {
@@ -127,7 +151,7 @@ public class ResourceFieldMetadata {
                             .min(Comparator.comparingInt(Enum::ordinal))
                             .orElse(FieldVisibility.HIDDEN);
                 defaults.put(field.key(), new FieldAccess(visibility,
-                        visibility == FieldVisibility.FULL && field.editable() && original.editable()));
+                        visibility != FieldVisibility.HIDDEN && field.editable() && original.editable()));
             }
             result.put(row.getId().toString(),
                     new ResourceDescriptor(descriptor.key(), descriptor.actions(), descriptor.scopeCapabilities(),
@@ -150,6 +174,23 @@ public class ResourceFieldMetadata {
      * @return 启用且已注册的资源能力
      */
     public Entry require(ResourceKey key, boolean administrator) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            return requireFresh(key, administrator);
+        var configured = cache.getIfAvailable();
+        if (configured == null) return requireFresh(key, administrator);
+        var cacheKey = IamJson.object(new Lookup(key, administrator));
+        var value = configured.get(cacheKey);
+        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt())) {
+            configured.evict(cacheKey);
+            value = configured.get(cacheKey);
+        }
+        if (value == null || !java.time.Instant.now().isBefore(value.expiresAt()))
+            throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        return value;
+    }
+
+    /** 读取当前资源目录上限，写事务不接受预览缓存。 */
+    public Entry requireFresh(ResourceKey key, boolean administrator) {
         var app = applications.selectOne(Wrappers.<IamApplicationEntity>lambdaQuery()
             .eq(IamApplicationEntity::getDomain, key.domain())
             .eq(IamApplicationEntity::getCode, key.applicationCode()));
@@ -161,8 +202,33 @@ public class ResourceFieldMetadata {
         var value = row == null ? null : describe(List.of(row)).get(row.getId().toString());
         if (value == null)
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
-        return new Entry(row.getId().toString(), administrator ? registry.require(key).descriptor() : value);
+        if (administrator) {
+            var original = registry.require(key).descriptor();
+            var manifest = manifests.require(key);
+            var read = manifest.bindings().stream().filter(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            Map<String, FieldCapability> fields = new LinkedHashMap<>();
+            original.fields().forEach(field -> fields.put(field.key(), read.contains(field.key()) ? field
+                    : new FieldCapability(field.key(), field.label(), List.of(FieldVisibility.HIDDEN), false, false, null)));
+            value.fields().forEach(field -> fields.putIfAbsent(field.key(), field));
+            Map<String, FieldAccess> defaults = new LinkedHashMap<>();
+            fields.forEach((field, capability) -> defaults.put(field, read.contains(field)
+                    ? original.defaults().getOrDefault(field, new FieldAccess(FieldVisibility.HIDDEN, false))
+                    : new FieldAccess(FieldVisibility.HIDDEN, false)));
+            value = new ResourceDescriptor(key, original.actions(), original.scopeCapabilities(), List.copyOf(fields.values()),
+                    defaults, original.readAction(), original.hierarchical());
+        }
+        return new Entry(row.getId().toString(), value);
     }
+
+    /**
+     * <p>资源能力缓存键，管理员资格必须由服务器授权视图产生。</p>
+     * @param resource 完整资源
+     * @param administrator 当前可信系统资格
+     * @author jy
+     * @since 1.0.0
+     */
+    public record Lookup(ResourceKey resource, boolean administrator) { }
 
     /**
      * <p>
@@ -171,10 +237,17 @@ public class ResourceFieldMetadata {
      *
      * @param id 资源 ID
      * @param descriptor 执行描述
+     * @param expiresAt 来源目录绝对有效期
      * @author jy
      * @since 1.0.0
      */
-    public record Entry(String id, ResourceDescriptor descriptor) {
+    public record Entry(String id, ResourceDescriptor descriptor, java.time.Instant expiresAt) {
+        /** 从当前目录事实构造来源。 */
+        public Entry(String id, ResourceDescriptor descriptor) {
+            this(id, descriptor, com.ingot.framework.commons.model.iam.extension.FieldPolicyLifetime.deadline());
+        }
+        /** 缓存恢复时必须保留来源期限。 */
+        public Entry { java.util.Objects.requireNonNull(expiresAt); }
     }
 
 }

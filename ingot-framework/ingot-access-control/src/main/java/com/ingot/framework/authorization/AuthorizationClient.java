@@ -19,4 +19,7 @@ public interface AuthorizationClient {
      */
     AuthorizationDecision evaluate(AuthorizationRequest request);
 
+    /** 交互预览，可复用读缓存；不能代替事务最终写门禁。 */
+    default AuthorizationDecision preview(AuthorizationRequest request) { return evaluate(request); }
+
 }

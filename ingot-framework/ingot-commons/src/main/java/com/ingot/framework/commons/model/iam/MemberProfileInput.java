@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.NotBlank;
+import com.ingot.framework.commons.annotation.field.*;
 
 /**
  * <p>
@@ -29,11 +30,11 @@ import jakarta.validation.constraints.NotBlank;
 @JsonDeserialize(using = MemberProfileInput.Deserializer.class)
 @Schema(description = "更新当前域成员资料，禁止携带凭证、状态或其它组织身份")
 public record MemberProfileInput(
-        @NotBlank @Schema(description = "成员读取版本", requiredMode = Schema.RequiredMode.REQUIRED) String expectedVersion,
-        @Schema(description = "显示名，可空表示不修改") String displayName,
-        @Schema(description = "头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径") String avatar,
-        @Schema(description = "当前域联系手机号，可空表示不修改；不修改全局登录手机号") String phone,
-        @Schema(description = "当前域联系邮箱，可空表示不修改；不修改全局账号邮箱") String email,
+        @PublicField @NotBlank @Schema(description = "成员读取版本", requiredMode = Schema.RequiredMode.REQUIRED) String expectedVersion,
+        @Schema(description = "显示名，可空表示不修改") @FieldBinding(key = MemberFieldKey.VALUE_DISPLAY_NAME, uses = FieldUse.WRITE) String displayName,
+        @Schema(description = "头像，可空表示不修改；可提交时效链接或对象路径，入库只保存路径") @FieldBinding(key = MemberFieldKey.VALUE_AVATAR, uses = FieldUse.WRITE) String avatar,
+        @Schema(description = "当前域联系手机号，可空表示不修改；不修改全局登录手机号") @FieldBinding(key = MemberFieldKey.VALUE_PHONE, uses = FieldUse.WRITE) String phone,
+        @Schema(description = "当前域联系邮箱，可空表示不修改；不修改全局账号邮箱") @FieldBinding(key = MemberFieldKey.VALUE_EMAIL, uses = FieldUse.WRITE) String email,
         @com.fasterxml.jackson.annotation.JsonIgnore @Schema(hidden = true) java.util.Set<String> suppliedFields) {
 
     /** 保留既有 Java 调用的空值不修改语义。 */

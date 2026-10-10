@@ -26,7 +26,7 @@ public record AuthorizationOption(@jakarta.validation.constraints.NotBlank Strin
         java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,
         java.util.List<AuthorizationActionOption> actions, DelegationInput delegation, String parentId,
         Boolean hasChildren, String ancestorPath, Boolean selectable,
-        java.util.Map<String, java.util.Map<String, FieldAccess>> resourceFieldPermissions) {
+        java.util.Map<String, ResourceFieldDefinition> resourceFieldPermissions) {
     /** 兼容既有树及普通候选。 */
     public AuthorizationOption(String id, String name, String summary, RoleRevisionRef roleRevisionRef,
             java.util.List<RoleParameterDefinition> parameterDefinitions, java.util.List<ActionGrant> grants,

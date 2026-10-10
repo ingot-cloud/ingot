@@ -34,4 +34,8 @@ public class IamFieldPolicyEntity {
     /** 递增配置版本。 */
     @TableField("version")
     private BigInteger version;
+
+    /** 按资源、场景、查看者及精确操作配置的全局字段操作规则 JSON 数组。 */
+    @TableField("operation_rules")
+    private String operationRules;
 }

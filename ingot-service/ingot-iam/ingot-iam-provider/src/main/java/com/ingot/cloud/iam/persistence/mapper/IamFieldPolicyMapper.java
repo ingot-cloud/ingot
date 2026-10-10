@@ -26,13 +26,14 @@ public interface IamFieldPolicyMapper extends BaseMapper<IamFieldPolicyEntity> {
      * @param tenantId 已授权租户 ID
      * @param revisionId 默认策略版本 ID
      * @param kind 固定为字段类别
+     * @param operationRules 全局操作规则 JSON 数组
      * @return 受影响行数
      */
     @Insert("""
-            INSERT INTO iam_field_policy(tenant_id,default_revision_id,default_kind)
-            VALUES (#{tenantId},#{revisionId},#{kind})
-            ON DUPLICATE KEY UPDATE default_revision_id=#{revisionId},version=version+1
+            INSERT INTO iam_field_policy(tenant_id,default_revision_id,default_kind,operation_rules)
+            VALUES (#{tenantId},#{revisionId},#{kind},#{operationRules})
+            ON DUPLICATE KEY UPDATE default_revision_id=#{revisionId},operation_rules=#{operationRules},version=version+1
             """)
     int upsert(@Param("tenantId") BigInteger tenantId, @Param("revisionId") BigInteger revisionId,
-               @Param("kind") DefaultPolicyKind kind);
+               @Param("kind") DefaultPolicyKind kind, @Param("operationRules") String operationRules);
 }

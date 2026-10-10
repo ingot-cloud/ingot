@@ -72,11 +72,11 @@ class RemoteAuthorizationTest {
         var read = new FieldPolicyDecision(Map.of("phone", hidden), Map.of("phone", full), List.of(
                 new com.ingot.framework.commons.model.iam.extension.ResolvedFieldRule("phone", List.of(narrow), full),
                 new com.ingot.framework.commons.model.iam.extension.ResolvedFieldRule("phone", List.of(all), masked)),
-                java.util.Set.of(), java.util.Set.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS);
+                Map.of(), Map.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS);
         var write = new FieldPolicyDecision(Map.of("phone", hidden), Map.of("phone", full),
                 List.of(new com.ingot.framework.commons.model.iam.extension.ResolvedFieldRule("phone", List.of(all),
                         masked)),
-                java.util.Set.of(), java.util.Set.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS);
+                Map.of(), Map.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS);
         var local = new AuthorizationDecision(KEY, actor,
                 Map.of(READ, new ActionDecision(true, true, List.of(all), read), WRITE,
                         new ActionDecision(true, true, List.of(all), write)),
@@ -254,8 +254,8 @@ class RemoteAuthorizationTest {
         request.actionCodes()
             .forEach(code -> actions.put(code,
                     new ActionDecision(true, true, List.of(new ScopeCondition(true, List.of(), null, List.of())),
-                            new FieldPolicyDecision(Map.of(), Map.of(), List.of(), java.util.Set.of(),
-                                    java.util.Set.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS))));
+                            new FieldPolicyDecision(Map.of(), Map.of(), List.of(), Map.of(),
+                                    Map.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.GRANTS))));
         return new AuthorizationDecision(KEY, actor, actions, "1", expires);
     }
 
@@ -265,6 +265,8 @@ class RemoteAuthorizationTest {
             public R<AuthorizationSnapshotDTO> snapshot(AuthorizationSnapshotRequest request) {
                 throw new UnsupportedOperationException();
             }
+
+            public R<AuthorizationDecision> preview(AuthorizationRequest request) { return evaluate.apply(request); }
 
             public R<AuthorizationDecision> evaluate(AuthorizationRequest request) {
                 return evaluate.apply(request);

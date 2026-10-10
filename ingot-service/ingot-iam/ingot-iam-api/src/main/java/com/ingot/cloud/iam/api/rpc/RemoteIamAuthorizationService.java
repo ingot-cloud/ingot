@@ -34,4 +34,8 @@ public interface RemoteIamAuthorizationService {
     @PostMapping("/inner/authorization/v2/evaluate")
     R<com.ingot.framework.commons.model.iam.extension.AuthorizationDecision> evaluate(
             @RequestBody com.ingot.framework.commons.model.iam.extension.AuthorizationRequest request);
+    /** 仅提供交互能力，最终写入必须调用 evaluate。 */
+    @PostMapping("/inner/authorization/v2/preview")
+    R<com.ingot.framework.commons.model.iam.extension.AuthorizationDecision> preview(
+            @RequestBody com.ingot.framework.commons.model.iam.extension.AuthorizationRequest request);
 }

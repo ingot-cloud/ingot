@@ -71,30 +71,31 @@ class RoleFieldPermissionServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new RoleFieldPermissionService(metadata, roles, compiler, mock(AuthorizationEvaluator.class));
+        service = new RoleFieldPermissionService(metadata, roles, compiler, mock(AuthorizationEvaluator.class), com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
         var descriptor = new ResourceDescriptor(KEY,
                 List.of(new ActionDescriptor(READ, ExecutionMode.READ_ONLY),
                         new ActionDescriptor(WRITE, ExecutionMode.MUTATING)),
                 List.of(ScopeKind.ALL, ScopeKind.OBJECT_SET),
-                List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, false, false)),
+                List.of(new FieldCapability(PHONE, "手机号", List.of(FieldVisibility.values()), true, false, com.ingot.framework.commons.model.iam.MaskSpec.PHONE)),
                 Map.of(PHONE, MASKED), READ, false);
+        when(metadata.require(eq(KEY), anyBoolean())).thenAnswer(invocation -> metadata.requireFresh(KEY, false));
         when(metadata.resourceIds(anyList())).thenReturn(Set.of(BigInteger.TEN));
         when(metadata.load(anyCollection())).thenReturn(Map.of(RESOURCE, descriptor));
-        when(metadata.require(eq(KEY), anyBoolean())).thenReturn(new ResourceFieldMetadata.Entry(RESOURCE, descriptor));
+        when(metadata.requireFresh(eq(KEY), anyBoolean())).thenReturn(new ResourceFieldMetadata.Entry(RESOURCE, descriptor));
     }
 
     @Test
     void freezesSafeDefaultsAndRejectsUnregisteredFieldsResourcesAndEditing() {
         var grants = List.of(new ActionGrant("1", List.of(new ScopeExpression(ScopeKind.ALL, null, false))));
-        assertEquals(Map.of(RESOURCE, Map.of(PHONE, MASKED)), service.freeze(RoleKind.PLATFORM_CUSTOM, grants, null));
+        assertEquals(Map.of(RESOURCE, definition(PHONE, MASKED)), service.freeze(RoleKind.PLATFORM_CUSTOM, grants, null));
         assertThrows(BizException.class,
-                () -> service.freeze(RoleKind.PLATFORM_CUSTOM, grants, Map.of("other", Map.of(PHONE, FULL))));
+                () -> service.freeze(RoleKind.PLATFORM_CUSTOM, grants, Map.of("other", definition(PHONE, FULL))));
         assertThrows(BizException.class,
-                () -> service.freeze(RoleKind.PLATFORM_CUSTOM, grants, Map.of(RESOURCE, Map.of("unknown", FULL))));
+                () -> service.freeze(RoleKind.PLATFORM_CUSTOM, grants, Map.of(RESOURCE, definition("unknown", FULL))));
         assertThrows(BizException.class, () -> service.freeze(RoleKind.PLATFORM_CUSTOM, grants,
-                Map.of(RESOURCE, Map.of(PHONE, new FieldAccess(FieldVisibility.MASKED, true)))));
+                Map.of(RESOURCE, new com.ingot.framework.commons.model.iam.ResourceFieldDefinition(Map.of(PHONE, FieldVisibility.HIDDEN), Map.of(PHONE, new com.ingot.framework.commons.model.iam.FieldOperations(true, false))))));
         assertThrows(BizException.class,
-                () -> service.freeze(RoleKind.SHARED, grants, Map.of(RESOURCE, Map.of(PHONE, FULL))));
+                () -> service.freeze(RoleKind.SHARED, grants, Map.of(RESOURCE, definition(PHONE, FULL))));
     }
 
     @Test
@@ -113,13 +114,13 @@ class RoleFieldPermissionServiceTest {
     @Test
     void loadsVersionsOnceAndRetainsScopeAndWriteBoundaries() {
         when(roles.findRevisions(anyCollection()))
-            .thenReturn(List.of(revision(1, "{\"10\":{\"phone\":{\"visibility\":\"FULL\",\"editable\":true}}}"),
-                    revision(2, "{\"10\":{\"phone\":{\"visibility\":\"MASKED\",\"editable\":false}}}")));
+            .thenAnswer(invocation -> List.of(revision(1, "{\"10\":{\"visibility\":{\"phone\":\"FULL\"},\"operations\":{\"phone\":{\"editable\":true,\"filterable\":false}}}}"),
+                    revision(2, "{\"10\":{\"visibility\":{\"phone\":\"MASKED\"},\"operations\":{\"phone\":{\"editable\":false,\"filterable\":false}}}}")).stream().filter(row -> ((java.util.Collection<?>) invocation.getArgument(0)).contains(row.getId())).toList());
         var narrow = new ScopeClause(false, false, false, false, List.of(), false, List.of("A"));
         var contributions = List.of(source(1, READ, narrow), source(2, READ, ScopeClause.universe()),
                 source(2, WRITE, ScopeClause.universe()));
         var result = service.evaluate(KEY, ACTOR, view(contributions), List.of(READ, WRITE));
-        assertEquals(FULL, access(result.get(READ), "A"));
+        assertEquals(new FieldAccess(FieldVisibility.FULL, false), access(result.get(READ), "A"));
         assertEquals(MASKED, access(result.get(READ), "B"));
         assertEquals(MASKED, access(result.get(WRITE), "A"));
         verify(roles, times(1)).findRevisions(anyCollection());
@@ -128,6 +129,10 @@ class RoleFieldPermissionServiceTest {
         assertEquals(MASKED, access(removed.get(READ), "A"));
         var revoked = service.evaluate(KEY, ACTOR, view(List.of()), List.of(READ));
         assertEquals(FieldVisibility.HIDDEN, access(revoked.get(READ), "A").visibility());
+    }
+
+    private static com.ingot.framework.commons.model.iam.ResourceFieldDefinition definition(String key, FieldAccess value) {
+        return new com.ingot.framework.commons.model.iam.ResourceFieldDefinition(Map.of(key, value.visibility()), Map.of(key, new com.ingot.framework.commons.model.iam.FieldOperations(value.editable(), false)));
     }
 
     private static IamRoleRevisionEntity revision(long id, String fields) {
@@ -157,7 +162,7 @@ class RoleFieldPermissionServiceTest {
         var view = new AuthorizationEvaluator.AuthorizationView(List.of(READ, WRITE), List.of(READ, WRITE),
                 Map.of(), "administrator", Instant.now().plusSeconds(30), List.of(), true);
         var policies = service.evaluate(KEY, ACTOR, view, List.of(READ, WRITE));
-        assertEquals(FULL, access(policies.get(READ), "any-object"));
+        assertEquals(new FieldAccess(FieldVisibility.FULL, false), access(policies.get(READ), "any-object"));
         assertEquals(FULL, access(policies.get(WRITE), "other-object"));
         assertEquals(Set.of(PHONE), policies.get(READ).ceilings().keySet());
         verify(metadata).require(KEY, true);

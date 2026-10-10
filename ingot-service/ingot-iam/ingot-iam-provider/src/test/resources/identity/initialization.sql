@@ -23,4 +23,4 @@ INSERT INTO iam_platform_member(id,account_id,status) VALUES (1001,1,'ACTIVE');
 INSERT INTO iam_role_definition(id,domain,kind,code,name) VALUES (1,'TENANT','SYSTEM','tenant-admin','租户治理'),(2,'TENANT','SHARED','viewer','Viewer'),(3,'PLATFORM','SYSTEM','platform-admin','平台治理');
 INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES (11,1,'SYSTEM',1),(12,2,'SHARED',1),(13,3,'SYSTEM',1);
 INSERT INTO iam_application(id,domain,code,name,baseline) VALUES (1,'TENANT','iam-tenant','Tenant',TRUE),(2,'PLATFORM','iam-platform','Platform',FALSE);
-INSERT INTO iam_default_policy_revision(id,kind,revision,definition) VALUES (21,'DIRECTORY',1,'{"scope":"ALL"}'),(22,'FIELD',1,'{"fields":{"phone":{"visibility":"MASKED","editable":false},"email":{"visibility":"MASKED","editable":false}}}');
+INSERT INTO iam_default_policy_revision(id,kind,revision,definition) VALUES (21,'DIRECTORY',1,'{"scope":"ALL"}'),(22,'FIELD',1,'{"fields":{"phone":"MASKED","email":"MASKED"}}');

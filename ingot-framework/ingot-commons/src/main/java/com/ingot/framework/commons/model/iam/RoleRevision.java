@@ -46,13 +46,13 @@ public record RoleRevision(
         @Valid @Schema(description = "定制元数据覆盖，其余为空") RoleMetadataOverrides metadataOverrides,
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) @Schema(
                 description = "相对上一版本的展示差异，含操作名称；仅列表读填充") List<@NotNull @Valid RoleDisplayDelta> displayDeltas,
-        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, Map<String, @Valid FieldAccess>> resourceFieldPermissions,
-        @Schema(description = "相对上一版本的字段比较基线；仅版本历史读填充") Map<String, Map<String, @Valid FieldAccess>> previousResourceFieldPermissions) {
+        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, @Valid ResourceFieldDefinition> resourceFieldPermissions,
+        @Schema(description = "相对上一版本的字段比较基线；仅版本历史读填充") Map<String, @Valid ResourceFieldDefinition> previousResourceFieldPermissions) {
     /** 保留字段快照读写构造契约。 */
     public RoleRevision(String id, String roleId, String revision, RoleKind kind, String baseRevisionId,
             List<ActionGrant> grants, List<RoleDelta> deltas, List<RoleParameterDefinition> parameterDefinitions,
             RoleMetadataOverrides metadataOverrides, List<RoleDisplayDelta> displayDeltas,
-            Map<String, Map<String, FieldAccess>> resourceFieldPermissions) {
+            Map<String, ResourceFieldDefinition> resourceFieldPermissions) {
         this(id, roleId, revision, kind, baseRevisionId, grants, deltas, parameterDefinitions, metadataOverrides,
                 displayDeltas, resourceFieldPermissions, null);
     }

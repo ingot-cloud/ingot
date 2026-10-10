@@ -1,2 +1,3 @@
 com.ingot.framework.authorization.AuthorizationSdkConfiguration
 com.ingot.framework.authorization.ResourceRpcConfiguration
+com.ingot.framework.authorization.field.FieldSdkConfiguration

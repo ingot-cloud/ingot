@@ -18,9 +18,9 @@
           }
         ],
         "scopeBindings": {},
-        "visibility": "MASKED",
-        "editable": false
+        "visibility": "MASKED"
       }
-    ]
+    ],
+    "operationRules": []
   }
 }

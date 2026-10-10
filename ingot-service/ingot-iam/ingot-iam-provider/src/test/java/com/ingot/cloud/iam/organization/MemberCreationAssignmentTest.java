@@ -68,7 +68,7 @@ class MemberCreationAssignmentTest {
                             List.of()));
         var service = new MemberQueryService(access, mock(ResourceAccess.class), mock(ObjectCapabilities.class),
                 mock(FieldAccessEvaluator.class), mock(IamAuditWriter.class), members, mock(GroupRepository.class),
-                assignments, mock(GroupService.class), new DataSourceTransactionManager(source), platformFields);
+                assignments, mock(GroupService.class), new DataSourceTransactionManager(source), platformFields, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), mock(com.ingot.framework.authorization.field.FieldWriteExecutor.class));
         var role = new MemberRoleAssignmentDraft("7", new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, "8"), Map.of(),
                 null, null);
         assertThrows(BizException.class, () -> service.create(AuthorizationDomain.PLATFORM,

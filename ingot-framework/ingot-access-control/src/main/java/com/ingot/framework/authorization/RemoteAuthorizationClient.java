@@ -48,7 +48,12 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
     }
 
     @Override
-    public AuthorizationDecision evaluate(AuthorizationRequest request) {
+    public AuthorizationDecision evaluate(AuthorizationRequest request) { return evaluate(request, false); }
+
+    @Override
+    public AuthorizationDecision preview(AuthorizationRequest request) { return evaluate(request, true); }
+
+    private AuthorizationDecision evaluate(AuthorizationRequest request, boolean preview) {
         AuthorizationContext actor = current();
         if (actor.domain() != request.resource().domain())
             throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
@@ -62,10 +67,10 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
             throw new SdkAuthorizationException(IamReasonCode.INVALID_ARGUMENT);
         }
         try {
-            if (selected.stream().anyMatch(action -> action.mode() == ExecutionMode.MUTATING)) {
+            if (!preview && selected.stream().anyMatch(action -> action.mode() == ExecutionMode.MUTATING)) {
                 return load(remote, request, actor);
             }
-            String key = mapper.writeValueAsString(new CacheKey(actor, request));
+            String key = mapper.writeValueAsString(new CacheKey(actor, request, preview));
             AuthorizationDecision value = cache.get(key);
             if (expired(value)) {
                 cache.evict(key);
@@ -91,8 +96,14 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
      */
     public static AuthorizationDecision load(RemoteIamAuthorizationService remote, AuthorizationRequest request,
             AuthorizationContext actor) {
+        return load(remote, request, actor, false);
+    }
+
+    /** 服务器选定预览端点，缓存键与执行结论隔离。 */
+    public static AuthorizationDecision load(RemoteIamAuthorizationService remote, AuthorizationRequest request,
+            AuthorizationContext actor, boolean preview) {
         try {
-            var response = remote.evaluate(request);
+            var response = preview ? remote.preview(request) : remote.evaluate(request);
             if (response == null)
                 throw new SdkAuthorizationException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
             if (!response.isSuccess()) {
@@ -155,10 +166,13 @@ public final class RemoteAuthorizationClient implements AuthorizationClient {
      *
      * @param actor 可信身份
      * @param request 精确请求
+     * @param preview 交互预览目的
      * @author jy
      * @since 1.0.0
      */
-    public record CacheKey(AuthorizationContext actor, AuthorizationRequest request) {
+    public record CacheKey(AuthorizationContext actor, AuthorizationRequest request, boolean preview) {
+        /** 已有读执行调用使用执行目的。 */
+        public CacheKey(AuthorizationContext actor, AuthorizationRequest request) { this(actor, request, false); }
     }
 
 }

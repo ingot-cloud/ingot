@@ -66,7 +66,7 @@ class PlatformMemberContactsTest {
         when(capabilities.platformMember(any(), anyString())).thenReturn(Map.of());
         var fields = mock(FieldAccessEvaluator.class);
         // 字段投影由专用回归覆盖；此处核对进入投影前的成员资料来源。
-        when(fields.project(any(MemberRecord.class), anyMap())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fields.project(any(MemberRecord.class), anyMap(), any(), anyMap())).thenAnswer(invocation -> invocation.getArgument(0));
         policies = mock(RoleFieldPermissionService.class);
         policy(new FieldAccess(FieldVisibility.FULL, true));
         audits = mock(IamAuditWriter.class);
@@ -75,7 +75,18 @@ class PlatformMemberContactsTest {
         members = spy(IamMybatisTestAccess.memberQueries(source));
         service = new MemberQueryService(access, scopes, capabilities, fields, audits,
                 members, mock(GroupRepository.class), assignments,
-                mock(GroupService.class), new DataSourceTransactionManager(source), policies);
+                mock(GroupService.class), new DataSourceTransactionManager(source), policies, com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), new com.ingot.framework.authorization.field.FieldWriteExecutor(new com.ingot.framework.authorization.field.FieldPolicyProvider() {
+                    public com.ingot.framework.commons.model.iam.extension.AuthorizationDecision read(
+                            com.ingot.framework.commons.model.iam.extension.ResourceKey resource, String action) { return write(resource, action); }
+                    public com.ingot.framework.commons.model.iam.extension.AuthorizationDecision write(
+                            com.ingot.framework.commons.model.iam.extension.ResourceKey resource, String action) {
+                        return new com.ingot.framework.commons.model.iam.extension.AuthorizationDecision(resource, actor.context(),
+                                Map.of(action, new com.ingot.framework.commons.model.iam.extension.ActionDecision(true, true,
+                                        List.of(new com.ingot.framework.commons.model.iam.extension.ScopeCondition(true, List.of(), null, List.of())),
+                                        policies.evaluate(resource, actor.context(), IamAction.PLATFORM_MEMBER_UPDATE))),
+                                "current", java.time.Instant.now().plusSeconds(30));
+                    }
+                }));
     }
 
     @Test
@@ -160,6 +171,17 @@ class PlatformMemberContactsTest {
     }
 
     @Test
+    void explicitNullFromJsonClearsOnlySubmittedContact() throws Exception {
+        var input = new ObjectMapper().readValue("{\"expectedVersion\":\"0\",\"phone\":null}", MemberProfileInput.class);
+        var changed = service.patch(AuthorizationDomain.PLATFORM, "1001", input);
+        assertNull(changed.record().phone());
+        assertEquals("contact@example.com", changed.record().email());
+        assertNull(jdbc.queryForObject("SELECT phone FROM iam_platform_member WHERE id=1001", String.class));
+        assertEquals("contact@example.com", jdbc.queryForObject("SELECT email FROM iam_platform_member WHERE id=1001", String.class));
+        assertEquals("13800000001", jdbc.queryForObject("SELECT phone FROM iam_account WHERE id=1", String.class));
+    }
+
+    @Test
     void maskedAndReadonlyFieldsStillRejectContactChanges() {
         for (var field : List.of(new FieldAccess(FieldVisibility.MASKED, false), new FieldAccess(FieldVisibility.FULL, false))) {
             policy(field);
@@ -217,10 +239,15 @@ class PlatformMemberContactsTest {
     }
 
     private void policy(FieldAccess field) {
-        var values = Map.of(MemberFieldKey.VALUE_PHONE, field, MemberFieldKey.VALUE_EMAIL, field);
-        var decision = new FieldPolicyDecision(values, values, List.of());
+        var values = Map.of(MemberFieldKey.VALUE_PHONE, field, MemberFieldKey.VALUE_EMAIL, field,
+                MemberTimeFields.JOINED_AT, new FieldAccess(FieldVisibility.FULL, false),
+                MemberTimeFields.LAST_LOGIN_AT, new FieldAccess(FieldVisibility.FULL, false),
+                MemberTimeFields.UPDATED_AT, new FieldAccess(FieldVisibility.FULL, false));
+        var rules = values.entrySet().stream().map(entry -> new com.ingot.framework.commons.model.iam.extension.ResolvedFieldRule(
+                entry.getKey(), List.of(new com.ingot.framework.commons.model.iam.extension.ScopeCondition(true, List.of(), null, List.of())), entry.getValue())).toList();
+        var decision = new FieldPolicyDecision(values, values, rules, Map.of(), Map.of(), FieldMergeMode.GRANTS);
         when(policies.evaluate(any(), any(), any())).thenReturn(decision);
-        when(policies.evaluateAll(any(), any(), anyList()))
+        when(policies.previewAll(any(), any(), anyList()))
             .thenReturn(Map.of(IamAction.PLATFORM_MEMBER_READ, decision, IamAction.PLATFORM_MEMBER_UPDATE, decision));
     }
 }

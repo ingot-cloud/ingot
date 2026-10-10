@@ -7,6 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ingot.framework.authorization.AuthorizationAccess;
 import com.ingot.framework.authorization.FieldPolicyProcessor;
 import com.ingot.framework.authorization.ScopeSql;
+import com.ingot.framework.authorization.field.*;
+import com.ingot.framework.commons.annotation.field.*;
+import com.ingot.framework.commons.model.iam.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.PageResponse;
@@ -38,6 +43,9 @@ public class IncidentAPI {
     private final AuthorizationAccess authorization;
 
     private final IncidentMapper incidents;
+    private final FieldProjectionEngine projection;
+    private final FieldBindingRegistry bindings;
+    private final FieldWriteExecutor writes;
 
     /**
      * 范围SQL在分页和count之前生效。
@@ -47,13 +55,15 @@ public class IncidentAPI {
      * @return 投影页
      */
     @GetMapping
-    public PageResponse<Map<String, Object>> list(@RequestParam(defaultValue = "1") int page,
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = IncidentProvider.APPLICATION, resourceCode = IncidentProvider.RESOURCE, action = IncidentProvider.READ, valueType = IncidentViews.Row.class)
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = IncidentProvider.APPLICATION, resourceCode = IncidentProvider.RESOURCE, action = IncidentProvider.READ, valueType = IncidentViews.Filter.class, use = FieldUse.FILTER)
+    public PageResponse<ObjectNode> list(@RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize, @RequestParam(required = false) String title) {
         if (page < 1 || pageSize < 1 || pageSize > MAX_PAGE_SIZE)
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         var decision = authorization.require(IncidentProvider.KEY, IncidentProvider.READ);
         if (title != null && !title.isBlank())
-            FieldPolicyProcessor.requireOriginalLookup(FieldPolicyProcessor.forAction(decision, IncidentProvider.READ), IncidentProvider.TITLE);
+            FieldPolicyProcessor.requireOriginalLookup(FieldPolicyProcessor.forAction(decision, IncidentProvider.READ), IncidentProvider.TITLE, decision.actions().get(IncidentProvider.READ).scope());
         var query = Wrappers.<Incident>lambdaQuery().like(title != null && !title.isBlank(), Incident::getTitle, title);
         ScopeSql.restrict(query, decision, IncidentProvider.READ, Incident::getId, Incident::getOwnerMemberId, null,
                 null);
@@ -68,13 +78,14 @@ public class IncidentAPI {
      * @return 投影字段
      */
     @GetMapping("/{id}")
-    public Map<String, Object> detail(@PathVariable String id) {
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = IncidentProvider.APPLICATION, resourceCode = IncidentProvider.RESOURCE, action = IncidentProvider.READ, valueType = IncidentViews.Detail.class)
+    public ObjectNode detail(@PathVariable String id) {
         var decision = authorization.require(IncidentProvider.KEY, IncidentProvider.READ);
         var row = incidents.selectById(id);
         if (row == null)
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         authorization.requireTarget(decision, IncidentProvider.READ, target(row));
-        return project(decision, row, IncidentProvider.READ);
+        return project(decision, row, IncidentProvider.READ, new IncidentViews.Detail(row.getId(), row.getTitle(), row.getContact()));
     }
 
     /**
@@ -83,20 +94,21 @@ public class IncidentAPI {
      * @param submitted 实际提交字段
      */
     @PatchMapping("/{id}")
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = IncidentProvider.APPLICATION, resourceCode = IncidentProvider.RESOURCE, action = IncidentProvider.UPDATE, valueType = IncidentViews.Patch.class, use = FieldUse.WRITE)
     @Transactional
-    public void patch(@PathVariable String id, @RequestBody Map<String, Object> submitted) {
+    public void patch(@PathVariable String id, @RequestBody JsonNode submitted) {
         var row = incidents.lock(id);
         if (row == null)
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        var decision = authorization.require(IncidentProvider.KEY, IncidentProvider.UPDATE);
-        authorization.requireTarget(decision, IncidentProvider.UPDATE, target(row));
-        FieldPolicyProcessor.requireWritable(submitted, FieldPolicyProcessor.access(FieldPolicyProcessor.forAction(decision, IncidentProvider.UPDATE), target(row)));
+        var actual = FieldInputCollector.collect(submitted, bindings.require(IncidentViews.Patch.class, IncidentProvider.KEY, FieldUse.WRITE))
+                .getOrDefault(IncidentProvider.KEY, Map.of());
+        writes.require(IncidentProvider.KEY, IncidentProvider.UPDATE, target(row), actual);
         var update = Wrappers.<Incident>lambdaUpdate().eq(Incident::getId, row.getId());
-        if (submitted.containsKey(IncidentProvider.TITLE))
-            update.set(Incident::getTitle, text(submitted.get(IncidentProvider.TITLE)));
-        if (submitted.containsKey(IncidentProvider.CONTACT))
-            update.set(Incident::getContact, text(submitted.get(IncidentProvider.CONTACT)));
-        if (!submitted.isEmpty())
+        if (actual.containsKey(IncidentProvider.TITLE))
+            update.set(Incident::getTitle, text(actual.get(IncidentProvider.TITLE)));
+        if (actual.containsKey(IncidentProvider.CONTACT))
+            update.set(Incident::getContact, text(actual.get(IncidentProvider.CONTACT)));
+        if (!actual.isEmpty())
             incidents.update(null, update);
     }
 
@@ -106,7 +118,8 @@ public class IncidentAPI {
      * @return 投影导出页
      */
     @GetMapping("/export")
-    public List<Map<String, Object>> export(@RequestParam(defaultValue = "1") int page) {
+    @FieldControl(domain = AuthorizationDomain.PLATFORM, applicationCode = IncidentProvider.APPLICATION, resourceCode = IncidentProvider.RESOURCE, action = IncidentProvider.EXPORT, valueType = IncidentViews.Row.class)
+    public List<ObjectNode> export(@RequestParam(defaultValue = "1") int page) {
         if (page < 1)
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         var decision = authorization.require(IncidentProvider.KEY, IncidentProvider.EXPORT);
@@ -124,22 +137,36 @@ public class IncidentAPI {
         return new ScopeTarget(row.getId(), row.getOwnerMemberId(), null, List.of());
     }
 
-    private static Map<String, Object> project(AuthorizationDecision decision, Incident row, String action) {
-        Map<String, Object> raw = new java.util.LinkedHashMap<>();
-        raw.put(IncidentProvider.TITLE, row.getTitle());
-        raw.put(IncidentProvider.CONTACT, row.getContact());
-        var projected = new java.util.LinkedHashMap<>(FieldPolicyProcessor.project(raw,
-                FieldPolicyProcessor.access(FieldPolicyProcessor.forAction(decision, action), target(row)), Map.of()));
-        projected.put("id", row.getId());
-        return java.util.Collections.unmodifiableMap(projected);
+    private ObjectNode project(AuthorizationDecision decision, Incident row, String action) {
+        return project(decision, row, action, new IncidentViews.Row(row.getId(), row.getTitle(), row.getContact()));
     }
 
-    private static String text(Object value) {
-        if (value == null)
-            return null;
-        if (!(value instanceof String))
-            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        return (String) value;
+    private ObjectNode project(AuthorizationDecision decision, Incident row, String action, Object dto) {
+        var policy = FieldPolicyProcessor.forAction(decision, action);
+        return projection.project(dto, IncidentProvider.KEY, new FieldReadSnapshot(
+                Map.of(IncidentProvider.KEY, FieldPolicyProcessor.access(policy, target(row))), Map.of(IncidentProvider.KEY, policy.masks())));
     }
 
+    /** 提供全局能力；具体对象仍在业务事务中使用最新权限。 */
+    @GetMapping("/context")
+    public ResourceFieldContext context() {
+        var read = authorization.preview(IncidentProvider.KEY, IncidentProvider.READ);
+        var policy = FieldPolicyProcessor.forAction(read, IncidentProvider.READ);
+        Map<String, Map<String, FieldOperations>> operations = new java.util.LinkedHashMap<>();
+        operations.put(IncidentProvider.READ, policy.operations());
+        try { operations.put(IncidentProvider.UPDATE, FieldPolicyProcessor.forAction(authorization.preview(IncidentProvider.KEY, IncidentProvider.UPDATE), IncidentProvider.UPDATE).operations()); }
+        catch (com.ingot.framework.authorization.SdkAuthorizationException denied) {
+            if (!IamReasonCode.ACTION_DENIED.getCode().equals(denied.getCode())) throw denied;
+            operations.put(IncidentProvider.UPDATE, Map.of());
+        }
+        Map<String, FieldVisibility> visible = new java.util.LinkedHashMap<>();
+        policy.ceilings().forEach((key, value) -> visible.put(key, value.visibility()));
+        return new ResourceFieldContext(visible, operations, policy.masks());
+    }
+
+    private static String text(JsonNode value) {
+        if (value == null || value.isNull()) return null;
+        if (!value.isTextual()) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        return value.textValue();
+    }
 }

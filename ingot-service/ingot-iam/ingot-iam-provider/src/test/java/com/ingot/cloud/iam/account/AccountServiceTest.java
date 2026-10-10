@@ -55,6 +55,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -136,7 +137,7 @@ class AccountServiceTest {
         memberFields = mock(RoleFieldPermissionService.class);
         var full = new FieldAccess(FieldVisibility.FULL, true);
         var fields = Map.of("phone", full, "email", full);
-        when(memberFields.evaluate(any(), any(), any())).thenReturn(new FieldPolicyDecision(fields, fields, List.of()));
+        when(memberFields.previewAll(any(), any(), anyList())).thenReturn(Map.of(IamAction.PLATFORM_MEMBER_CREATE, new FieldPolicyDecision(fields, fields, List.of())));
         service = new AccountService(access, scopes, new ObjectCapabilities(evaluator, scopes),
                 IamMybatisTestAccess.accountQueries(dataSource),
                 IamMybatisTestAccess.accountWrites(dataSource, () -> 99L), IamMybatisTestAccess.accounts(dataSource),
@@ -144,7 +145,7 @@ class AccountServiceTest {
                 mock(RegisterUserUseCase.class), mock(ManageAccountStatusUseCase.class),
                 mock(LockAccountUseCase.class), mock(UnlockAccountUseCase.class),
                 mock(ChangePasswordUseCase.class), mock(InitialPasswordService.class),
-                new DataSourceTransactionManager(dataSource), memberFields);
+                new DataSourceTransactionManager(dataSource), memberFields, new com.ingot.framework.authorization.field.DefaultMaskStrategy());
         authenticate();
     }
 
@@ -203,14 +204,14 @@ class AccountServiceTest {
         var full = new FieldAccess(FieldVisibility.FULL, true);
         var masked = new FieldAccess(FieldVisibility.MASKED, false);
         var scope = List.of(new ScopeCondition(true, List.of(), null, List.of()));
-        when(memberFields.evaluate(any(), any(), any())).thenReturn(new FieldPolicyDecision(
+        when(memberFields.previewAll(any(), any(), anyList())).thenReturn(Map.of(IamAction.PLATFORM_MEMBER_CREATE, new FieldPolicyDecision(
                 Map.of("phone", hidden, "email", hidden), Map.of("phone", full, "email", full),
                 List.of(new ResolvedFieldRule("phone", scope, masked), new ResolvedFieldRule("email", scope, hidden)),
-                Set.of(), Set.of(), FieldMergeMode.GRANTS));
+                Map.of(), Map.of("phone", com.ingot.framework.commons.model.iam.MaskSpec.PHONE), FieldMergeMode.GRANTS)));
         jdbc.update("UPDATE iam_account SET phone='13900000002',email='bob@example.com' WHERE id=2");
         var result = service.lookup(new AccountLookupInput(AccountLookupPurpose.MEMBER_CREATE, "bob", null, null,
                 AuthorizationDomain.PLATFORM));
-        assertEquals("***", result.record().phone());
+        assertEquals("139****0002", result.record().phone());
         assertEquals(null, result.record().email());
         assertEquals(masked, result.fieldAccess().get("phone"));
         assertEquals(hidden, result.fieldAccess().get("email"));
@@ -225,7 +226,7 @@ class AccountServiceTest {
         var failure = assertThrows(BizException.class, () -> service.lookup(new AccountLookupInput(
                 AccountLookupPurpose.MEMBER_CREATE, "bob", null, null, AuthorizationDomain.PLATFORM)));
         assertEquals(IamReasonCode.ACTION_DENIED.getCode(), failure.getCode());
-        verify(memberFields, never()).evaluate(any(), any(), any());
+        verify(memberFields, never()).previewAll(any(), any(), anyList());
     }
 
     @Test

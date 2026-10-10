@@ -72,8 +72,8 @@ class IamPolicyContractTest {
             assertFalse(validator.validate(new FieldPolicyInput("v1",
                     new FieldPolicyDraft("default-2", null))).isEmpty());
             assertFalse(validator.validate(new FieldPolicyInput("v1", new FieldPolicyDraft("default-2",
-                    List.of(new FieldRule(PolicyScenario.MANAGEMENT, "phone", empty, List.of(),
-                            java.util.Map.of(), FieldVisibility.MASKED, true))))).isEmpty());
+                    List.of(new FieldRule(PolicyScenario.MANAGEMENT, " ", empty, List.of(),
+                            java.util.Map.of(), FieldVisibility.MASKED))))).isEmpty());
         }
     }
 

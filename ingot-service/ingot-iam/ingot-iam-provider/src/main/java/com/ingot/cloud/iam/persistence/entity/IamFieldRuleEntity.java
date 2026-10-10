@@ -53,7 +53,4 @@ public class IamFieldRuleEntity {
     @TableField("visibility")
     private FieldVisibility visibility;
 
-    /** 是否允许写入；仅 FULL 可为 true。 */
-    @TableField("editable")
-    private Boolean editable;
 }

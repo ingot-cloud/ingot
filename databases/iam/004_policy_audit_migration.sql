@@ -79,11 +79,13 @@ CREATE TABLE iam_field_policy (
     tenant_id BIGINT UNSIGNED NOT NULL,
     default_revision_id BIGINT UNSIGNED NOT NULL,
     default_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'FIELD',
+    operation_rules JSON NOT NULL DEFAULT (JSON_ARRAY()),
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (tenant_id),
     CONSTRAINT fk_iam_field_policy_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant (id),
     CONSTRAINT fk_iam_field_default FOREIGN KEY (default_revision_id, default_kind) REFERENCES iam_default_policy_revision (id, kind),
-    CONSTRAINT ck_iam_field_default_kind CHECK (default_kind = 'FIELD')
+    CONSTRAINT ck_iam_field_default_kind CHECK (default_kind = 'FIELD'),
+    CONSTRAINT ck_iam_field_operations CHECK (JSON_TYPE(operation_rules) = 'ARRAY')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE iam_field_rule (
@@ -95,14 +97,12 @@ CREATE TABLE iam_field_rule (
     target_scope JSON NOT NULL,
     scope_bindings JSON NOT NULL,
     visibility VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-    editable BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     KEY idx_iam_field_rule_match (tenant_id, scenario, field_key, id),
     CONSTRAINT fk_iam_field_rule_policy FOREIGN KEY (tenant_id) REFERENCES iam_field_policy (tenant_id),
     CONSTRAINT fk_iam_field_rule_viewer FOREIGN KEY (tenant_id, viewer_selector_id) REFERENCES iam_policy_selector (tenant_id, id),
     CONSTRAINT ck_iam_field_rule_scenario CHECK (scenario IN ('MANAGEMENT', 'DIRECTORY')),
     CONSTRAINT ck_iam_field_rule_visibility CHECK (visibility IN ('HIDDEN', 'MASKED', 'FULL')),
-    CONSTRAINT ck_iam_field_rule_editable CHECK (editable IN (0, 1) AND (editable = 0 OR visibility = 'FULL')),
     CONSTRAINT ck_iam_field_rule_scope CHECK (JSON_TYPE(target_scope) = 'ARRAY'),
     CONSTRAINT ck_iam_field_rule_bindings CHECK (JSON_TYPE(scope_bindings) = 'OBJECT')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

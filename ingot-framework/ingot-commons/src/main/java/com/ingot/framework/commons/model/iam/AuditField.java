@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AuditField {
     NAME("NAME"),
+    /** 字段配置及脱敏参数，不包含业务原值。 */
+    FIELD_CAPABILITIES("FIELD_CAPABILITIES"),
     STATUS("STATUS"),
     ROLE_REVISION("ROLE_REVISION"),
     SCOPE("SCOPE"),

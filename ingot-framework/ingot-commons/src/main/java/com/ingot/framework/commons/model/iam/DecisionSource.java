@@ -24,7 +24,7 @@ public record DecisionSource(@Schema(description = "可披露授权 ID，可空"
         @Schema(description = "可披露委派 ID，可空") String delegationId,
         @Valid @Schema(description = "可披露角色版本，可空") RoleRevisionRef roleRevisionRef,
         @NotBlank @Schema(description = "安全概括说明", requiredMode = Schema.RequiredMode.REQUIRED) String summary,
-        @Schema(description = "可披露固定版本字段快照；空引用表示历史安全默认") java.util.Map<String, java.util.Map<String, FieldAccess>> resourceFieldPermissions) {
+        @Schema(description = "可披露固定版本字段快照；空引用表示历史安全默认") java.util.Map<String, ResourceFieldDefinition> resourceFieldPermissions) {
     /** 兼容历史来源结论。 */
     public DecisionSource(String assignmentId, String delegationId, RoleRevisionRef roleRevisionRef, String summary) {
         this(assignmentId, delegationId, roleRevisionRef, summary, null);

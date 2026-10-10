@@ -29,8 +29,8 @@ import com.ingot.framework.commons.model.iam.ValidationIssue;
 public record AssignmentUpgradePreviewItem(String id, SubjectRef subject, RoleRevisionRef previousRevisionRef,
         Map<String, ScopeBinding> scopeBindings, List<ActionGrant> before, List<ActionGrant> after, boolean allowed,
         List<ValidationIssue> issues,
-        Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> beforeFieldPermissions,
-        Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> afterFieldPermissions) {
+        Map<String, com.ingot.framework.commons.model.iam.ResourceFieldDefinition> beforeFieldPermissions,
+        Map<String, com.ingot.framework.commons.model.iam.ResourceFieldDefinition> afterFieldPermissions) {
     /** 兼容旧范围升级预览。 */
     public AssignmentUpgradePreviewItem(String id, SubjectRef subject, RoleRevisionRef previousRevisionRef,
             Map<String, ScopeBinding> scopeBindings, List<ActionGrant> before, List<ActionGrant> after, boolean allowed,

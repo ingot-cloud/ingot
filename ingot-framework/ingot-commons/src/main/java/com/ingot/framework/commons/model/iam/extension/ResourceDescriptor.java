@@ -46,7 +46,7 @@ public record ResourceDescriptor(@NotNull @Valid ResourceKey key, @NotNull List<
         for (var field : fields) {
             var value = defaults.get(field.key());
             if (!field.visibilities().contains(value.visibility())
-                    || value.editable() && (!field.editable() || value.visibility() != FieldVisibility.FULL)) {
+                    || value.editable() && (!field.editable() || value.visibility() == FieldVisibility.HIDDEN)) {
                 throw new IllegalArgumentException("字段默认策略超出后端注册能力");
             }
         }

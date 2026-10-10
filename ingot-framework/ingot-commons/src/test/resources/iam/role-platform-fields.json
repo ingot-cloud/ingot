@@ -25,13 +25,19 @@
   "metadataOverrides": null,
   "resourceFieldPermissions": {
     "10": {
-      "phone": {
-        "visibility": "FULL",
-        "editable": false
+      "visibility": {
+        "phone": "FULL",
+        "email": "MASKED"
       },
-      "email": {
-        "visibility": "MASKED",
-        "editable": false
+      "operations": {
+        "phone": {
+          "editable": false,
+          "filterable": false
+        },
+        "email": {
+          "editable": false,
+          "filterable": false
+        }
       }
     }
   }

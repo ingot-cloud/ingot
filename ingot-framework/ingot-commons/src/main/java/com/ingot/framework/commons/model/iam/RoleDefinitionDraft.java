@@ -33,7 +33,7 @@ public record RoleDefinitionDraft(
         @NotNull @Schema(description = "命名参数定义，键及类型须一致",
                 requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
         @Valid @Schema(description = "定制元数据覆盖，完整版本为空") RoleMetadataOverrides metadataOverrides,
-        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, Map<String, @Valid FieldAccess>> resourceFieldPermissions) {
+        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, @Valid ResourceFieldDefinition> resourceFieldPermissions) {
     /** 兼容没有字段快照的历史定义。 */
     public RoleDefinitionDraft(List<ActionGrant> grants, List<RoleDelta> deltas,
             List<RoleParameterDefinition> parameterDefinitions, RoleMetadataOverrides metadataOverrides) {

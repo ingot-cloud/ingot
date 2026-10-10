@@ -21,11 +21,11 @@ public final class ResourceFieldPermissions {
      * @param source 资源 ID 到字段权限
      * @return 不可变快照
      */
-    public static Map<String, Map<String, FieldAccess>> copy(Map<String, Map<String, FieldAccess>> source) {
+    public static Map<String, ResourceFieldDefinition> copy(Map<String, ResourceFieldDefinition> source) {
         if (source == null)
             return Map.of();
-        Map<String, Map<String, FieldAccess>> result = new LinkedHashMap<>();
-        source.forEach((key, value) -> result.put(key, Map.copyOf(value)));
+        Map<String, ResourceFieldDefinition> result = new LinkedHashMap<>();
+        source.forEach((key, value) -> result.put(key, value));
         return Map.copyOf(result);
     }
 

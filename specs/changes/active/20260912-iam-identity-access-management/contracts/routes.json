@@ -1,17 +1,5 @@
 [
   {
-    "path": "/v1/me/password",
-    "method": "get",
-    "operationId": "currentPasswordState",
-    "summary": "当前账号改密状态",
-    "domain": "CURRENT",
-    "action": null,
-    "request": null,
-    "response": "RPasswordChangeState",
-    "execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
-    "implemented": true
-  },
-  {
     "path": "/v1/me/bootstrap",
     "method": "get",
     "operationId": "currentBootstrap",
@@ -20,7 +8,7 @@
     "action": null,
     "request": null,
     "response": "RBootstrap",
-    "execution": "认证当前身份；身份及账号同时有效；固定域；一致快照；必须改密时 HTTP 403 PasswordChangeRequired",
+    "execution": "认证当前身份；身份及账号同时有效；固定域；一致快照",
     "implemented": true
   },
   {
@@ -32,7 +20,7 @@
     "action": null,
     "request": null,
     "response": "RCurrentCapabilities",
-    "execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503；必须改密时 HTTP 403 PasswordChangeRequired",
+    "execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503",
     "implemented": true
   },
   {
@@ -44,7 +32,7 @@
     "action": null,
     "request": null,
     "response": "RAccountSelfProfile",
-    "execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份；必须改密时 HTTP 403 PasswordChangeRequired",
+    "execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份",
     "implemented": true
   },
   {
@@ -56,7 +44,7 @@
     "action": null,
     "request": "AccountSelfProfileInput",
     "response": "RAccountSelfProfile",
-    "execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段；必须改密时 HTTP 403 PasswordChangeRequired",
+    "execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段",
     "implemented": true
   },
   {
@@ -68,7 +56,7 @@
     "action": null,
     "request": "CurrentPasswordInput",
     "response": "RVoid",
-    "execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密；账号真实状态决定强制改密；确认密码必须一致；事务提交后撤销既有会话",
+    "execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密",
     "implemented": true
   },
   {
@@ -220,7 +208,7 @@
         "schema": {
           "type": "string"
         },
-        "description": "显示名包含匹配，要求整份读策略允许原值搜索"
+        "description": "显示名包含匹配，要求有效查询范围完整可见"
       },
       {
         "name": "status",
@@ -272,14 +260,13 @@
     "path": "/v1/platform/members/{id}",
     "method": "patch",
     "operationId": "platformPatchMember",
-    "summary": "原子编辑成员与角色差量",
+    "summary": "更新成员资料",
     "domain": "PLATFORM",
     "action": "iam-platform:member:update",
-    "request": "PlatformMemberEditInput",
+    "request": "MemberProfileInput",
     "response": "RResourceDetailMemberRecord",
-    "execution": "成员对象范围与字段校验；直接角色逐操作治理资格；授权首锁和成员行版本；整批事务与审计",
-    "implemented": true,
-    "example": "member-role-edit"
+    "execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
+    "implemented": true
   },
   {
     "path": "/v1/platform/members/{id}/status",
@@ -1047,28 +1034,6 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
-        }
-      },
-      {
-        "name": "effectiveStatus",
-        "required": false,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "PENDING",
-            "ACTIVE",
-            "EXPIRED",
-            "REVOKED",
-            "SOURCE_INVALID"
-          ]
-        }
-      },
-      {
-        "name": "directOnly",
-        "required": false,
-        "schema": {
-          "type": "boolean",
-          "default": false
         }
       }
     ]
@@ -4066,6 +4031,18 @@
     "implemented": true
   },
   {
+    "path": "/v1/me/password",
+    "method": "get",
+    "operationId": "currentPasswordState",
+    "summary": "当前账号改密状态",
+    "domain": "CURRENT",
+    "action": null,
+    "request": null,
+    "response": "RPasswordChangeState",
+    "execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/members/context",
     "method": "get",
     "operationId": "platformMemberContext",
@@ -4074,7 +4051,7 @@
     "action": "iam-platform:member:read",
     "request": null,
     "response": "RPlatformMemberContext",
-    "execution": "成员 READ/CREATE 任一准入；整份读策略列概览、创建字段权限与显示名原值查询资格；不替代逐对象校验",
+    "execution": "成员 READ/CREATE 任一准入；全局操作与潜在可见列；不替代逐对象校验",
     "implemented": true
   },
   {
@@ -4122,5 +4099,41 @@
     "execution": "无写入；资料字段与角色差量逐项重验；最终保存重新鉴权",
     "implemented": true,
     "example": "member-role-edit"
+  },
+  {
+    "path": "/v1/tenant/members/context",
+    "method": "get",
+    "operationId": "tenantMemberFieldContext",
+    "summary": "租户成员字段能力",
+    "domain": "TENANT",
+    "action": "iam-tenant:member:read",
+    "request": null,
+    "response": "RResourceFieldContext",
+    "execution": "可信身份；全局操作与完整查询范围FULL证明",
+    "implemented": true
+  },
+  {
+    "path": "/v1/directory/context",
+    "method": "get",
+    "operationId": "directoryFieldContext",
+    "summary": "通讯录字段能力",
+    "domain": "TENANT",
+    "action": "iam-tenant:directory:read",
+    "request": null,
+    "response": "RResourceFieldContext",
+    "execution": "可信身份；与实际通讯录查询范围相同",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/applications/{id}/resources/{resourceId}/field-bindings",
+    "method": "get",
+    "operationId": "platformResourceBindings",
+    "summary": "资源字段绑定清单",
+    "domain": "PLATFORM",
+    "action": "iam-platform:resource:read",
+    "request": null,
+    "response": "RFieldBindingManifest",
+    "execution": "固定服务清单；目录读取权；不包含业务原值",
+    "implemented": true
   }
 ]

@@ -54,6 +54,9 @@ public class ResourceRpcProperties {
          */
         private String secret;
 
+        /** 纯字段清单 RPC 的专用服务签名密钥，不能使用登录成员令牌替代。 */
+        private String manifestSecret;
+
     }
 
 }

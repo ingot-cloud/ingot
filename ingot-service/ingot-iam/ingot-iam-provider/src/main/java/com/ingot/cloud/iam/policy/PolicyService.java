@@ -36,6 +36,7 @@ import com.ingot.framework.commons.model.iam.DirectoryRule;
 import com.ingot.framework.commons.model.iam.FieldPolicyDraft;
 import com.ingot.framework.commons.model.iam.FieldPolicyInput;
 import com.ingot.framework.commons.model.iam.FieldRule;
+import com.ingot.framework.commons.model.iam.FieldOperationRule;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
@@ -72,6 +73,7 @@ public class PolicyService {
     private final IamAccess access;
     private final IamAuditWriter audits;
     private final FieldAccessEvaluator fields;
+    private final com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata;
     private final DirectoryVisibilityEvaluator directory;
     private final PolicyWriteRepository policies;
     private final TransactionTemplate transaction;
@@ -89,7 +91,8 @@ public class PolicyService {
      */
     public PolicyService(IamAccess access, IamAuditWriter audits, FieldAccessEvaluator fields,
                              DirectoryVisibilityEvaluator directory, PolicyWriteRepository policies,
-                             PlatformTransactionManager transactionManager) {
+                             PlatformTransactionManager transactionManager, com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata) {
+        this.fieldMetadata = fieldMetadata;
         this.access = access;
         this.audits = audits;
         this.fields = fields;
@@ -154,6 +157,7 @@ public class PolicyService {
             IamIds.requireExpected(input.expectedVersion(), current.version());
             requireDefault(input.policy().defaultRevisionId(), DefaultPolicyKind.FIELD);
             replaceField(actor, tenantId, input.policy());
+            access.authorizationChanged();
             audits.write(actor.context(), access.nextId(), FIELD_POLICY, IamIds.text(tenantId),
                     AuditChangeType.UPDATE, Map.of(AuditField.POLICY_VERSION, current.version()),
                     Map.of(AuditField.POLICY_VERSION, Long.toString(Long.parseLong(current.version()) + 1)),
@@ -197,13 +201,14 @@ public class PolicyService {
         List<DirectoryVisibility> visibilities = List.of(preview, operator);
         var membersPage = policies.pageVisibleMembers(tenantId, visibilities, null, null, IamPages.DEFAULT_PAGE,
                 IamPages.DEFAULT_SIZE);
+        var batch = fields.prepare(snapshot, viewerId, membersPage.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
         List<ResourceDetail<MemberRecord>> members = new ArrayList<>();
         for (IamTenantMemberEntity row : membersPage.getRecords()) {
             if (input.target() != null && !input.target().isBlank()
                     && !input.target().equals(row.getId().toString())) {
                 continue;
             }
-            members.add(member(row, viewerId, snapshot));
+            members.add(member(row, batch));
         }
         var departmentsPage = policies.pageVisibleDepartments(tenantId, visibilities, IamPages.DEFAULT_PAGE,
                 IamPages.DEFAULT_SIZE);
@@ -223,6 +228,18 @@ public class PolicyService {
         return kind == DefaultPolicyKind.DIRECTORY ? directory.version() : field.version();
     }
 
+    /** 返回与整份通讯录查询范围对应的全局能力。 */
+    public com.ingot.framework.commons.model.iam.ResourceFieldContext directoryContext() {
+        var actor = access.require(AuthorizationDomain.TENANT, IamAction.TENANT_DIRECTORY_READ);
+        long tenantId = IamIds.require(actor.context().tenantId()), viewerId = IamIds.require(actor.context().memberId());
+        var snapshot = fields.snapshot(tenantId, PolicyScenario.DIRECTORY);
+        var visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
+        var operations = fields.operations(snapshot, viewerId, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY,
+                IamAction.VALUE_TENANT_DIRECTORY_READ, visibility.toLookupScope());
+        return new com.ingot.framework.commons.model.iam.ResourceFieldContext(fields.contextVisibility(snapshot, viewerId),
+                Map.of(IamAction.VALUE_TENANT_DIRECTORY_READ, operations), snapshot.masks());
+    }
+
     /**
      * 分页列出当前查看者可见的普通通讯录成员。
      *
@@ -240,14 +257,16 @@ public class PolicyService {
         long viewerId = IamIds.require(actor.context().memberId());
         DirectoryVisibility visibility = directory.evaluate(tenantId, viewerId, loadDirectory(tenantId).record());
         FieldPolicySnapshot snapshot = fields.snapshot(tenantId, PolicyScenario.DIRECTORY);
-        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_PHONE, phone,
-                visibility.toLookupScope());
-        fields.requireOriginalLookup(snapshot, viewerId, MemberFieldKey.VALUE_EMAIL, email,
-                visibility.toLookupScope());
+        Map<String, String> submitted = new java.util.LinkedHashMap<>();
+        if (phone != null && !phone.isBlank()) submitted.put(MemberFieldKey.VALUE_PHONE, phone);
+        if (email != null && !email.isBlank()) submitted.put(MemberFieldKey.VALUE_EMAIL, email);
+        fields.requireFilters(snapshot, viewerId, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY,
+                IamAction.VALUE_TENANT_DIRECTORY_READ, visibility.toLookupScope(), submitted);
         var result = policies.pageVisibleMembers(tenantId, List.of(visibility), phone, email, page, pageSize);
+        var batch = fields.prepare(snapshot, viewerId, result.getRecords().stream().map(row -> row.getId().longValueExact()).toList());
         List<ResourceDetail<MemberRecord>> items = new ArrayList<>();
         for (IamTenantMemberEntity row : result.getRecords()) {
-            items.add(member(row, viewerId, snapshot));
+            items.add(member(row, batch));
         }
         return IamPages.details(items, result.getTotal(), page, pageSize);
     }
@@ -271,7 +290,7 @@ public class PolicyService {
         if (row == null) {
             throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
         }
-        return member(row, viewerId, fields.snapshot(tenantId, PolicyScenario.DIRECTORY));
+        return member(row, fields.prepare(fields.snapshot(tenantId, PolicyScenario.DIRECTORY), viewerId, List.of(memberId)));
     }
 
     /**
@@ -343,9 +362,10 @@ public class PolicyService {
                     selection(selectors, selectorId(item.getViewerSelectorId())),
                     IamJson.read(item.getTargetScope(), SCOPES),
                     IamJson.read(item.getScopeBindings(), BINDINGS),
-                    item.getVisibility(), Boolean.TRUE.equals(item.getEditable())));
+                    item.getVisibility()));
         }
-        return IamDetails.of(new FieldPolicyDraft(row.getDefaultRevisionId().toString(), rules),
+        return IamDetails.of(new FieldPolicyDraft(row.getDefaultRevisionId().toString(), rules,
+                IamJson.read(row.getOperationRules(), new TypeReference<List<FieldOperationRule>>() { })),
                 row.getVersion().toString());
     }
 
@@ -369,13 +389,51 @@ public class PolicyService {
 
     private void replaceField(ActiveIdentity actor, long tenantId, FieldPolicyDraft policy) {
         policies.deleteFieldRules(tenantId);
-        policies.upsertField(tenantId, IamIds.require(policy.defaultRevisionId()));
+        for (var operation : policy.operationRules()) {
+            requireOperationRule(operation);
+            writeSelector(actor, tenantId, operation.viewerSelection());
+        }
+        policies.upsertField(tenantId, IamIds.require(policy.defaultRevisionId()), IamJson.array(policy.operationRules()));
         for (FieldRule rule : policy.rules()) {
+            requireVisibilityRule(rule);
             long viewer = writeSelector(actor, tenantId, rule.viewerSelection());
             policies.insertFieldRule(access.nextId(), tenantId, rule.scenario(), rule.fieldKey(), viewer,
-                    IamJson.array(rule.targetScope()), IamJson.object(rule.scopeBindings()), rule.visibility(),
-                    rule.editable());
+                    IamJson.array(rule.targetScope()), IamJson.object(rule.scopeBindings()), rule.visibility());
         }
+    }
+
+    private void requireVisibilityRule(FieldRule rule) {
+        var resource = rule.scenario() == PolicyScenario.DIRECTORY
+                ? com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY
+                : com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
+        var field = fieldMetadata.requireFresh(resource, false).descriptor().fields().stream()
+                .filter(value -> value.key().equals(rule.fieldKey())).findFirst()
+                .orElseThrow(() -> new BizException(IamReasonCode.INVALID_ARGUMENT));
+        if (!field.visibilities().contains(rule.visibility())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+    }
+
+    private void requireOperationRule(FieldOperationRule rule) {
+        if (rule.resource().domain() != AuthorizationDomain.TENANT)
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var expected = rule.scenario() == PolicyScenario.DIRECTORY
+                ? com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY
+                : com.ingot.framework.commons.model.iam.MemberResources.TENANT_MEMBER;
+        if (!expected.equals(rule.resource())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var descriptor = fieldMetadata.requireFresh(rule.resource(), false).descriptor();
+        var manifest = fieldMetadata.bindings(rule.resource());
+        var write = manifest.bindings().stream().anyMatch(binding -> rule.actionCode().equals(binding.actionCode())
+                && rule.fieldKey().equals(binding.fieldKey()) && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE);
+        var filter = manifest.bindings().stream().anyMatch(binding -> rule.actionCode().equals(binding.actionCode())
+                && rule.fieldKey().equals(binding.fieldKey()) && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.FILTER);
+        var action = descriptor.actions().stream().filter(value -> value.code().equals(rule.actionCode()))
+                .findFirst().orElseThrow(() -> new BizException(IamReasonCode.INVALID_ARGUMENT));
+        var field = descriptor.fields().stream().filter(value -> value.key().equals(rule.fieldKey()))
+                .findFirst().orElseThrow(() -> new BizException(IamReasonCode.INVALID_ARGUMENT));
+        if (rule.operations().editable() && (!write || !field.editable()
+                    || action.mode() != com.ingot.framework.commons.model.iam.extension.ExecutionMode.MUTATING)
+                || rule.operations().filterable() && (!filter || !field.filterable()
+                    || action.mode() != com.ingot.framework.commons.model.iam.extension.ExecutionMode.READ_ONLY))
+            throw new BizException(IamReasonCode.INVALID_ARGUMENT);
     }
 
     private long writeSelector(ActiveIdentity actor, long tenantId, Selection selection) {
@@ -392,13 +450,12 @@ public class PolicyService {
         return id;
     }
 
-    private ResourceDetail<MemberRecord> member(IamTenantMemberEntity row, long viewerId,
-                                                FieldPolicySnapshot snapshot) {
+    private ResourceDetail<MemberRecord> member(IamTenantMemberEntity row, FieldAccessEvaluator.FieldBatch batch) {
         MemberRecord raw = new MemberRecord(row.getId().toString(), row.getDisplayName(), row.getAvatar(),
                 row.getPhone(), row.getEmail(), null, row.getStatus(), List.of());
-        Map<String, FieldAccess> access = fields.memberAccess(snapshot, viewerId, row.getId().longValueExact());
+        Map<String, FieldAccess> access = fields.memberAccess(batch, row.getId().longValueExact());
         String version = row.getVersion() == null ? "0" : row.getVersion().toString();
-        return IamDetails.of(fields.project(raw, access), access, Map.of(), version);
+        return IamDetails.of(fields.project(raw, access, com.ingot.framework.commons.model.iam.MemberResources.TENANT_DIRECTORY, batch.snapshot().masks()), access, Map.of(), version);
     }
 
     private void requireDefault(String revisionId, DefaultPolicyKind kind) {

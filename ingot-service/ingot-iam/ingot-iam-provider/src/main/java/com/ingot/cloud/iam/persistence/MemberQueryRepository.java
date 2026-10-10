@@ -458,17 +458,18 @@ public class MemberQueryRepository {
      * @param phone 平台联系手机号，可空表示不修改，空白清空
      * @param email 平台联系邮箱，可空表示不修改，空白清空
      * @param version 读取时的版本
+     * @param suppliedFields 实际提交字段，显式 null 清空 nullable 列
      * @return 受影响行数；为 0 表示版本已被并发改写
      */
     public int updatePlatform(long memberId, String displayName, String avatar, String phone, String email,
-            BigInteger version) {
+            BigInteger version, java.util.Set<String> suppliedFields) {
         return platformMembers.update(Wrappers.<IamPlatformMemberEntity>lambdaUpdate()
                 .eq(IamPlatformMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamPlatformMemberEntity::getVersion, version)
-                .set(displayName != null, IamPlatformMemberEntity::getDisplayName, displayName)
-                .set(avatar != null, IamPlatformMemberEntity::getAvatar, IamOssPaths.store(avatar))
-                .set(phone != null, IamPlatformMemberEntity::getPhone, phone == null || phone.isBlank() ? null : phone)
-                .set(email != null, IamPlatformMemberEntity::getEmail, email == null || email.isBlank() ? null : email)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_DISPLAY_NAME), IamPlatformMemberEntity::getDisplayName, displayName)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_AVATAR), IamPlatformMemberEntity::getAvatar, IamOssPaths.store(avatar))
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_PHONE), IamPlatformMemberEntity::getPhone, phone == null || phone.isBlank() ? null : phone)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_EMAIL), IamPlatformMemberEntity::getEmail, email == null || email.isBlank() ? null : email)
                 .set(IamPlatformMemberEntity::getVersion, version.add(BigInteger.ONE))
                 .set(IamPlatformMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
     }
@@ -483,19 +484,20 @@ public class MemberQueryRepository {
      * @param phone 手机号，可空引用表示不改
      * @param email 邮箱，可空引用表示不改
      * @param version 读取时的版本
+     * @param suppliedFields 实际提交字段，显式 null 清空 nullable 列
      * @return 受影响行数；为 0 表示版本已被并发改写或成员已移出
      */
     public int updateTenant(long tenantId, long memberId, String displayName, String avatar, String phone,
-                            String email, BigInteger version) {
+                            String email, BigInteger version, java.util.Set<String> suppliedFields) {
         return tenantMembers.update(Wrappers.<IamTenantMemberEntity>lambdaUpdate()
                 .eq(IamTenantMemberEntity::getTenantId, BigInteger.valueOf(tenantId))
                 .eq(IamTenantMemberEntity::getId, BigInteger.valueOf(memberId))
                 .eq(IamTenantMemberEntity::getVersion, version)
                 .ne(IamTenantMemberEntity::getStatus, MemberStatus.REMOVED)
-                .set(displayName != null, IamTenantMemberEntity::getDisplayName, displayName)
-                .set(avatar != null, IamTenantMemberEntity::getAvatar, IamOssPaths.store(avatar))
-                .set(phone != null, IamTenantMemberEntity::getPhone, phone)
-                .set(email != null, IamTenantMemberEntity::getEmail, email)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_DISPLAY_NAME), IamTenantMemberEntity::getDisplayName, displayName)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_AVATAR), IamTenantMemberEntity::getAvatar, IamOssPaths.store(avatar))
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_PHONE), IamTenantMemberEntity::getPhone, phone == null || phone.isBlank() ? null : phone)
+                .set(suppliedFields.contains(com.ingot.framework.commons.model.iam.MemberFieldKey.VALUE_EMAIL), IamTenantMemberEntity::getEmail, email == null || email.isBlank() ? null : email)
                 .set(IamTenantMemberEntity::getVersion, version.add(BigInteger.ONE))
                 .set(IamTenantMemberEntity::getUpdatedAt, LocalDateTime.now(ZoneOffset.UTC)));
     }

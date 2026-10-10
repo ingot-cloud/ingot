@@ -853,7 +853,7 @@ public class RoleService {
     }
 
     private List<RoleGrantRecord> toGrantRecords(List<ActionGrant> grants,
-            Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> fields) {
+            Map<String, com.ingot.framework.commons.model.iam.ResourceFieldDefinition> fields) {
         if (grants == null || grants.isEmpty()) {
             return List.of();
         }
@@ -877,7 +877,7 @@ public class RoleService {
                     action == null || action.scopeCapabilities() == null ? List.of() : action.scopeCapabilities(),
                     action == null ? null : action.status(), descriptor == null ? List.of() : descriptor.fields(),
                     descriptor == null ? Map.of() : descriptor.defaults(),
-                    fields == null || action == null ? Map.of() : fields.getOrDefault(action.resourceId(), Map.of())));
+                    fields == null || action == null ? com.ingot.framework.commons.model.iam.ResourceFieldDefinition.EMPTY : fields.getOrDefault(action.resourceId(), com.ingot.framework.commons.model.iam.ResourceFieldDefinition.EMPTY)));
         }
         return result;
     }
@@ -1049,7 +1049,7 @@ public class RoleService {
 
     private record RevisionData(String id, String baseRevisionId, List<ActionGrant> grants, List<RoleDelta> deltas,
             List<RoleParameterDefinition> parameters, RoleMetadataOverrides metadata,
-            Map<String, Map<String, com.ingot.framework.commons.model.iam.FieldAccess>> fields) {
+            Map<String, com.ingot.framework.commons.model.iam.ResourceFieldDefinition> fields) {
     }
 
 }

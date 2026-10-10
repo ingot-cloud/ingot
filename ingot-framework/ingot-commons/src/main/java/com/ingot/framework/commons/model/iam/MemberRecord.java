@@ -5,6 +5,8 @@ import java.util.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import com.ingot.framework.commons.annotation.field.FieldBinding;
+import com.ingot.framework.commons.annotation.field.PublicField;
 import jakarta.validation.constraints.*;
 
 /**
@@ -28,27 +30,31 @@ import jakarta.validation.constraints.*;
 @Schema(description = "返回经字段策略处理的成员资料，隐藏字段以空引用省略，脱敏字段只携带脱敏值")
 public record MemberRecord(
         @NotBlank @Schema(description = "成员 ID，不是账号 ID", requiredMode = Schema.RequiredMode.REQUIRED)
+        @PublicField
         String id,
          @Schema(description = "可见显示名称；隐藏时省略")
-        String displayName,
+        @FieldBinding(key = MemberFieldKey.VALUE_DISPLAY_NAME) String displayName,
          @Schema(description = "可见头像时效链接；隐藏时省略")
-        String avatar,
+        @FieldBinding(key = MemberFieldKey.VALUE_AVATAR) String avatar,
          @Schema(description = "当前域联系手机号；可能已脱敏，隐藏时省略")
-        String phone,
+        @FieldBinding(key = MemberFieldKey.VALUE_PHONE) String phone,
          @Schema(description = "当前域联系邮箱；可能已脱敏，隐藏时省略")
-        String email,
+        @FieldBinding(key = MemberFieldKey.VALUE_EMAIL) String email,
          @Schema(description = "已关联全局账号的登录名；平台成员填写，租户成员省略")
+        @PublicField
         String username,
         @NotNull @Schema(description = "该域的成员资格", requiredMode = Schema.RequiredMode.REQUIRED)
+        @PublicField
         MemberStatus status,
         @NotNull @Schema(description = "仅包含可见部门关系；平台成员为空数组", requiredMode = Schema.RequiredMode.REQUIRED)
+        @PublicField
         List<@NotNull @Valid MemberDepartmentView> departments,
         @Schema(description = "平台成员首次加入时间，UTC；仅平台详情填写", accessMode = Schema.AccessMode.READ_ONLY)
-        Instant joinedAt,
+        @FieldBinding(key = MemberTimeFields.JOINED_AT) Instant joinedAt,
         @Schema(description = "账号最近成功登录时间，UTC；包含平台及组织身份，仅平台详情填写", accessMode = Schema.AccessMode.READ_ONLY)
-        Instant lastLoginAt,
+        @FieldBinding(key = MemberTimeFields.LAST_LOGIN_AT) Instant lastLoginAt,
         @Schema(description = "成员记录更新时间，UTC；仅平台详情填写，不代表最后活跃时间", accessMode = Schema.AccessMode.READ_ONLY)
-        Instant updatedAt) {
+        @FieldBinding(key = MemberTimeFields.UPDATED_AT) Instant updatedAt) {
 
     /**
      * 构造不携带详情时间的成员投影，供列表及租户成员响应使用。

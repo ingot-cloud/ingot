@@ -9,6 +9,7 @@ import com.ingot.framework.commons.model.iam.DirectoryDefaultScope;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
+import com.ingot.framework.commons.model.iam.FieldOperations;
 
 /**
  * <p>解释固定默认策略版本的 JSON 定义体，空对象回落到全组织可见与手机邮箱脱敏。</p>
@@ -66,7 +67,9 @@ public final class DefaultPolicyDefinitions {
         if (MemberFieldKey.VALUE_PHONE.equals(fieldKey) || MemberFieldKey.VALUE_EMAIL.equals(fieldKey)) {
             return new FieldAccess(FieldVisibility.MASKED, false);
         }
-        return new FieldAccess(FieldVisibility.FULL, true);
+        if (MemberFieldKey.VALUE_DISPLAY_NAME.equals(fieldKey) || MemberFieldKey.VALUE_AVATAR.equals(fieldKey))
+            return new FieldAccess(FieldVisibility.FULL, true);
+        return new FieldAccess(FieldVisibility.HIDDEN, false);
     }
 
     /**
@@ -76,11 +79,12 @@ public final class DefaultPolicyDefinitions {
      * @return 完整可见且可编辑
      */
     public static FieldAccess openCeiling(String fieldKey) {
-        return new FieldAccess(FieldVisibility.FULL, true);
+        return java.util.Arrays.stream(MemberFieldKey.values()).anyMatch(field -> field.getValue().equals(fieldKey))
+                ? new FieldAccess(FieldVisibility.FULL, true) : new FieldAccess(FieldVisibility.HIDDEN, false);
     }
 
     /**
-     * 取更严格的可见性，可编辑性取逻辑与；非完整可见时不可编辑。
+     * 取更严格的可见性，可编辑性取逻辑与；隐藏时不可编辑。
      *
      * @param left 左侧；空则返回右侧
      * @param right 右侧；空则返回左侧
@@ -100,9 +104,9 @@ public final class DefaultPolicyDefinitions {
 
     static FieldAccess normalize(FieldAccess access) {
         if (access == null) {
-            return documented(MemberFieldKey.VALUE_DISPLAY_NAME);
+            return new FieldAccess(FieldVisibility.HIDDEN, false);
         }
-        if (access.visibility() != FieldVisibility.FULL) {
+        if (access.visibility() == FieldVisibility.HIDDEN) {
             return new FieldAccess(access.visibility(), false);
         }
         return access;
@@ -110,21 +114,39 @@ public final class DefaultPolicyDefinitions {
 
     private static Map<String, FieldAccess> fieldMap(String definition, boolean ceiling) {
         FieldBody body = IamJson.read(definition, FIELD);
-        Map<String, FieldAccess> configured = ceiling
+        Map<String, FieldVisibility> configured = ceiling
                 ? body == null || body.ceiling() == null ? Map.of() : body.ceiling()
                 : body == null || body.fields() == null ? Map.of() : body.fields();
         Map<String, FieldAccess> access = new LinkedHashMap<>();
         for (MemberFieldKey field : MemberFieldKey.values()) {
-            FieldAccess item = configured.get(field.getValue());
+            FieldVisibility item = configured.get(field.getValue());
             FieldAccess fallback = ceiling ? openCeiling(field.getValue()) : documented(field.getValue());
-            access.put(field.getValue(), item == null ? fallback : normalize(item));
+            access.put(field.getValue(), item == null ? fallback : new FieldAccess(item, item != FieldVisibility.HIDDEN));
         }
+        configured.forEach((key, value) -> access.putIfAbsent(key, value == null ? new FieldAccess(FieldVisibility.HIDDEN, false) : new FieldAccess(value, value != FieldVisibility.HIDDEN)));
         return Map.copyOf(access);
     }
 
     private record DirectoryBody(DirectoryDefaultScope scope) {
     }
 
-    private record FieldBody(Map<String, FieldAccess> fields, Map<String, FieldAccess> ceiling) {
+    /** 读取固定操作默认或上限，未注册字段始终关闭。 */
+    public static Map<String, FieldOperations> fieldOperations(String definition, boolean ceiling) {
+        FieldBody body = IamJson.read(definition, FIELD);
+        Map<String, FieldOperations> configured = body == null ? Map.of()
+                : ceiling ? body.operationCeiling() : body.operations();
+        configured = configured == null ? Map.of() : configured;
+        Map<String, FieldOperations> result = new LinkedHashMap<>();
+        for (var field : MemberFieldKey.values()) {
+            var fallback = new FieldOperations(ceiling || documented(field.getValue()).editable(),
+                    field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL);
+            result.put(field.getValue(), configured.getOrDefault(field.getValue(), fallback));
+        }
+        configured.forEach(result::putIfAbsent);
+        return Map.copyOf(result);
+    }
+
+    private record FieldBody(Map<String, FieldVisibility> fields, Map<String, FieldVisibility> ceiling,
+            Map<String, FieldOperations> operations, Map<String, FieldOperations> operationCeiling) {
     }
 }

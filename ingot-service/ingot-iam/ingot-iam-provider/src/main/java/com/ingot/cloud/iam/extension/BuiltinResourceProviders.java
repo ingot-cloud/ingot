@@ -21,6 +21,7 @@ import com.ingot.framework.commons.model.iam.AuthorizationOption;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.MaskSpec;
 import com.ingot.framework.commons.model.iam.IamAction;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.ScopeKind;
@@ -46,11 +47,18 @@ public final class BuiltinResourceProviders {
     /**
      * 内置平台应用的服务器命名空间。
      */
-    public static final String PLATFORM_APPLICATION = "iam-platform";
+    public static final String PLATFORM_APPLICATION = com.ingot.framework.commons.model.iam.MemberResources.PLATFORM_APPLICATION;
 
     /** 平台成员读写与创建查找共同使用的完整资源键。 */
     public static final ResourceKey PLATFORM_MEMBER_RESOURCE = new ResourceKey(AuthorizationDomain.PLATFORM,
             PLATFORM_APPLICATION, PlatformScopeObjectResource.MEMBER.getValue());
+
+    /** 租户成员资料的完整资源身份。 */
+    public static final ResourceKey TENANT_MEMBER_RESOURCE = new ResourceKey(AuthorizationDomain.TENANT,
+            com.ingot.framework.commons.model.iam.MemberResources.TENANT_APPLICATION, PlatformScopeObjectResource.MEMBER.getValue());
+    /** 通讯录场景使用自己的精确资源，不能借成员管理操作放行。 */
+    public static final ResourceKey TENANT_DIRECTORY_RESOURCE = new ResourceKey(AuthorizationDomain.TENANT,
+            com.ingot.framework.commons.model.iam.MemberResources.TENANT_APPLICATION, com.ingot.framework.commons.model.iam.MemberResources.DIRECTORY);
 
     private final AuthorizationCandidateMapper candidates;
 
@@ -84,17 +92,25 @@ public final class BuiltinResourceProviders {
         var object = key.domain() == AuthorizationDomain.PLATFORM ? objectResource(key.resourceCode()) : null;
         List<FieldCapability> fields = new ArrayList<>();
         Map<String, FieldAccess> defaults = new LinkedHashMap<>();
-        if (key.domain() == AuthorizationDomain.PLATFORM
-                && key.resourceCode().equals(PlatformScopeObjectResource.MEMBER.getValue())) {
+        if (key.equals(PLATFORM_MEMBER_RESOURCE) || key.equals(TENANT_MEMBER_RESOURCE) || key.equals(TENANT_DIRECTORY_RESOURCE)) {
             for (var field : MemberFieldKey.values()) {
-                fields.add(new FieldCapability(field.getValue(), fieldLabel(field), List.of(FieldVisibility.values()),
-                        true, field == MemberFieldKey.DISPLAY_NAME, false));
+                fields.add(new FieldCapability(field.getValue(), fieldLabel(field), field == MemberFieldKey.AVATAR ? List.of(FieldVisibility.HIDDEN, FieldVisibility.FULL) : List.of(FieldVisibility.values()),
+                        !key.equals(TENANT_DIRECTORY_RESOURCE), key.domain() == AuthorizationDomain.PLATFORM ? field == MemberFieldKey.DISPLAY_NAME : field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL, field == MemberFieldKey.PHONE ? MaskSpec.PHONE : field == MemberFieldKey.EMAIL ? MaskSpec.EMAIL : field == MemberFieldKey.AVATAR ? null : MaskSpec.ALL));
                 defaults.put(field.getValue(),
                         new FieldAccess(
                                 field == MemberFieldKey.PHONE || field == MemberFieldKey.EMAIL ? FieldVisibility.MASKED
                                         : FieldVisibility.FULL,
-                                field != MemberFieldKey.PHONE && field != MemberFieldKey.EMAIL));
+                                !key.equals(TENANT_DIRECTORY_RESOURCE) && field != MemberFieldKey.PHONE && field != MemberFieldKey.EMAIL));
             }
+        }
+        if (key.equals(PLATFORM_MEMBER_RESOURCE)) {
+            Map<String, String> times = Map.of(com.ingot.framework.commons.model.iam.MemberTimeFields.JOINED_AT, "加入时间",
+                    com.ingot.framework.commons.model.iam.MemberTimeFields.LAST_LOGIN_AT, "最近登录时间",
+                    com.ingot.framework.commons.model.iam.MemberTimeFields.UPDATED_AT, "更新时间");
+            times.forEach((field, label) -> {
+                fields.add(new FieldCapability(field, label, List.of(FieldVisibility.HIDDEN, FieldVisibility.FULL), false, false, null));
+                defaults.put(field, new FieldAccess(FieldVisibility.HIDDEN, false));
+            });
         }
         String read = object == null ? actions.getFirst().code() : object.getReadAction().getCode();
         return new ResourceDescriptor(key, actions,

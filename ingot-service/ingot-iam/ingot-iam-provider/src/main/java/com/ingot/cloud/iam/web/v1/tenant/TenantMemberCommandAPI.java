@@ -1,5 +1,10 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
+import com.ingot.framework.commons.annotation.field.*;
+import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.MemberResources;
+import com.ingot.framework.commons.model.iam.TenantMemberFilter;
+
 import com.ingot.cloud.iam.organization.MemberCommandService;
 import com.ingot.cloud.iam.organization.MemberExportService;
 import com.ingot.cloud.iam.organization.MemberQueryService;
@@ -46,6 +51,11 @@ public class TenantMemberCommandAPI implements RShortcuts {
     private final MemberQueryService queries;
     private final MemberExportService exports;
 
+    /** 返回当前身份与完整查询范围的字段操作能力。 */
+    @GetMapping("/context")
+    @Operation(summary = "字段能力上下文")
+    public R<com.ingot.framework.commons.model.iam.ResourceFieldContext> context() { return ok(queries.tenantContext()); }
+
     /**
      * 分页列出租户成员。
      *
@@ -57,6 +67,8 @@ public class TenantMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员列表")
     @GetMapping
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, use = FieldUse.FILTER, valueType = TenantMemberFilter.class)
     public R<PageResponse<ResourceDetail<MemberRecord>>> list(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
@@ -73,6 +85,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "创建成员资格")
     @PostMapping
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_CREATE, use = FieldUse.WRITE, valueType = MemberCreateInput.class)
     public R<CreatedResource> create(@Valid @RequestBody MemberCreateInput input) {
         return ok(queries.create(AuthorizationDomain.TENANT, input));
     }
@@ -85,6 +98,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "成员详情")
     @GetMapping("/{id}")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_READ, valueType = MemberRecord.class)
     public R<ResourceDetail<MemberRecord>> get(@PathVariable String id) {
         return ok(queries.get(AuthorizationDomain.TENANT, id));
     }
@@ -98,6 +112,7 @@ public class TenantMemberCommandAPI implements RShortcuts {
      */
     @Operation(summary = "更新成员资料")
     @PatchMapping("/{id}")
+    @FieldControl(domain = AuthorizationDomain.TENANT, applicationCode = MemberResources.TENANT_APPLICATION, resourceCode = MemberResources.MEMBER, action = IamAction.VALUE_TENANT_MEMBER_UPDATE, use = FieldUse.WRITE, valueType = MemberProfileInput.class)
     public R<ResourceDetail<MemberRecord>> patch(@PathVariable String id, @Valid @RequestBody MemberProfileInput input) {
         return ok(queries.patch(AuthorizationDomain.TENANT, id, input));
     }

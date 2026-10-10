@@ -211,6 +211,14 @@ public class PlatformApplicationAPI implements RShortcuts {
         return ok(catalog.listResources(id, page, pageSize, name, code));
     }
 
+    /** 返回资源已接入的字段与精确操作清单。 */
+    @GetMapping("/{id}/resources/{resourceId}/field-bindings")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_RESOURCE_READ)
+    @Operation(summary = "资源字段绑定清单")
+    public R<com.ingot.framework.commons.model.iam.extension.FieldBindingManifest> fieldBindings(@PathVariable String id, @PathVariable String resourceId) {
+        return ok(catalog.resourceBindings(id, resourceId));
+    }
+
     /**
      * 创建资源。
      *

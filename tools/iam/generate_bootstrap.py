@@ -65,14 +65,19 @@ SINGLETON_SCOPES = ['ALL']
 
 MEMBER_FIELDS = [
     {'key': 'displayName', 'label': '显示名', 'visibilities': ['HIDDEN', 'MASKED', 'FULL'],
-     'editable': True, 'filterable': True, 'sortable': True},
+     'editable': True, 'filterable': False, 'mask': {'kind': 'ALL'}},
     {'key': 'avatar', 'label': '头像', 'visibilities': ['HIDDEN', 'FULL'],
-     'editable': True, 'filterable': False, 'sortable': False},
+     'editable': True, 'filterable': False},
     {'key': 'phone', 'label': '手机号', 'visibilities': ['HIDDEN', 'MASKED', 'FULL'],
-     'editable': True, 'filterable': True, 'sortable': False},
+     'editable': True, 'filterable': True, 'mask': {'kind': 'PHONE'}},
     {'key': 'email', 'label': '邮箱', 'visibilities': ['HIDDEN', 'MASKED', 'FULL'],
-     'editable': True, 'filterable': True, 'sortable': False},
+     'editable': True, 'filterable': True, 'mask': {'kind': 'EMAIL'}},
 ]
+PLATFORM_MEMBER_FIELDS = [dict(field, filterable=field['key'] == 'displayName') for field in MEMBER_FIELDS] + [
+    {'key': key, 'label': label, 'visibilities': ['HIDDEN', 'FULL'], 'editable': False, 'filterable': False}
+    for key, label in [('joinedAt', '加入时间'), ('lastLoginAt', '最后登录'), ('updatedAt', '更新时间')]
+]
+DIRECTORY_FIELDS = [dict(field, editable=False) for field in MEMBER_FIELDS]
 
 RESOURCES = {
     'action': ('操作', OBJECT_SCOPES, []),
@@ -326,6 +331,8 @@ def build(check=False):
         for resource in sorted(catalog[application]):
             resource_count += 1
             name, scopes, fields = RESOURCES[resource]
+            if resource == 'member' and application == 'iam-platform': fields = PLATFORM_MEMBER_FIELDS
+            if resource == 'directory': fields = DIRECTORY_FIELDS
             if APPLICATIONS[application]['domain'] == 'PLATFORM':
                 scopes = [scope for scope in scopes if scope not in ('MEMBER_DEPARTMENTS', 'MANAGED_DEPARTMENTS')]
             lines.append(insert(
@@ -428,8 +435,9 @@ def build(check=False):
             ['id', 'role_id', 'kind', 'revision', 'base_revision_id', 'metadata_overrides', 'resource_field_permissions'],
             [str(role['revision_id']), 'role.id', quote('SYSTEM'), '1', 'NULL', json_literal({}),
              "(SELECT JSON_OBJECT(CAST(resource.id AS CHAR), " + json_literal({
-                 field['key']: {'visibility': 'FULL', 'editable': field['editable']}
-                 for field in MEMBER_FIELDS}) + ") FROM iam_resource resource JOIN iam_application app ON app.id=resource.application_id WHERE app.code='iam-platform' AND resource.code='member')"
+                 'visibility': {field['key']: 'FULL' for field in PLATFORM_MEMBER_FIELDS},
+                 'operations': {field['key']: {'editable': field['editable'], 'filterable': field['filterable']}
+                                for field in PLATFORM_MEMBER_FIELDS}}) + ") FROM iam_resource resource JOIN iam_application app ON app.id=resource.application_id WHERE app.code='iam-platform' AND resource.code='member')"
              if domain == 'PLATFORM' else json_literal({})],
             'role_id = role.id AND revision = 1',
             source='iam_role_definition role',
@@ -457,13 +465,8 @@ def build(check=False):
 
     lines.append('-- 默认策略版本：固定版本被租户策略引用；通讯录默认全组织，字段默认脱敏手机邮箱，上限缺省不额外收紧。')
     field_default = {
-        'fields': {
-            item['key']: {
-                'visibility': 'MASKED' if item['key'] in ('phone', 'email') else 'FULL',
-                'editable': item['key'] not in ('phone', 'email'),
-            }
-            for item in MEMBER_FIELDS
-        }
+        'fields': {item['key']: 'MASKED' if item['key'] in ('phone', 'email') else 'FULL' for item in MEMBER_FIELDS},
+        'operations': {item['key']: {'editable': True, 'filterable': item['filterable']} for item in MEMBER_FIELDS},
     }
     definitions = {
         'DIRECTORY': {'scope': 'ALL'},

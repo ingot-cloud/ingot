@@ -50,9 +50,9 @@ public class AuthorizationSdkConfiguration {
      */
     public static final Duration MAX_TTL = Duration.ofSeconds(30);
 
-    private static final String PREFIX = "in:iam:v2:";
+    private static final String PREFIX = "in:iam:fields-v3:";
 
-    private static final String CACHE_NAME = "iam-authorization-v2";
+    private static final String CACHE_NAME = "iam-authorization-fields-v3";
 
     private static final String ALL = "all";
 
@@ -103,7 +103,7 @@ public class AuthorizationSdkConfiguration {
                     if (!query.actor().equals(RemoteAuthorizationClient.current())) {
                         throw new RemoteUnavailableException("授权缓存身份不一致");
                     }
-                    return RemoteAuthorizationClient.load(remote, query.request(), query.actor());
+                    return RemoteAuthorizationClient.load(remote, query.request(), query.actor(), query.preview());
                 }
                 catch (IOException exception) {
                     throw new RemoteUnavailableException("授权缓存键无效", exception);

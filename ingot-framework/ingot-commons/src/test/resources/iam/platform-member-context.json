@@ -27,6 +27,22 @@
         "editable": false
       }
     },
-    "canSearchDisplayName": true
+    "canSearchDisplayName": true,
+    "fieldOperations": {
+      "iam-platform:member:read": {
+        "displayName": {
+          "editable": false,
+          "filterable": true
+        }
+      }
+    },
+    "masks": {
+      "phone": {
+        "kind": "PHONE"
+      },
+      "email": {
+        "kind": "EMAIL"
+      }
+    }
   }
 }

@@ -304,13 +304,14 @@ class IdentitySchemaTest(unittest.TestCase):
         self.sql("INSERT INTO iam_policy_selector_member VALUES (10, 1, 201)", error=1452)
         self.sql("INSERT INTO iam_directory_rule VALUES (1, 10, 'ALLOW', 1, 2)", error=1452)
 
-    def test_field_policy_never_allows_editable_hidden_or_masked_value(self):
+    def test_field_visibility_and_operations_are_independent(self):
         self.sql("INSERT INTO iam_default_policy_revision VALUES (2, 'FIELD', 1, '{}')")
         self.sql("INSERT INTO iam_policy_selector VALUES (1, 10)")
         self.sql("INSERT INTO iam_field_policy (tenant_id, default_revision_id) VALUES (10, 2)")
-        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'MANAGEMENT', 'phone', 1, '[]', '{}', 'MASKED', 0)")
-        self.sql("UPDATE iam_field_rule SET editable = 1 WHERE id = 1", error=3819)
-        self.sql("UPDATE iam_field_rule SET visibility = 'HIDDEN', editable = 1 WHERE id = 1", error=3819)
+        self.sql("INSERT INTO iam_field_rule VALUES (1, 10, 'MANAGEMENT', 'phone', 1, '[]', '{}', 'MASKED')")
+        self.assertEqual('MASKED', self.sql("SELECT visibility FROM iam_field_rule WHERE id=1"))
+        self.assertEqual('0', self.sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='iam_field_rule' AND column_name='editable'"))
+        self.sql("UPDATE iam_field_policy SET operation_rules='{}' WHERE tenant_id=10", error=3819)
 
     def test_platform_member_contacts_migrate_once_and_remain_independent(self):
         self.sql("UPDATE iam_account SET phone='13800000001',email='login@example.com' WHERE id=1")

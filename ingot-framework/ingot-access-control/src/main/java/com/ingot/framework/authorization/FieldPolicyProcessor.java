@@ -10,6 +10,7 @@ import java.util.function.Function;
 import com.ingot.framework.commons.model.iam.FieldAccess;
 import com.ingot.framework.commons.model.iam.FieldProjection;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
+import com.ingot.framework.commons.model.iam.FieldOperations;
 import com.ingot.framework.commons.model.iam.IamReasonCode;
 import com.ingot.framework.commons.model.iam.extension.FieldPolicyDecision;
 import com.ingot.framework.commons.model.iam.extension.ScopeCondition;
@@ -54,7 +55,7 @@ public final class FieldPolicyProcessor {
     }
 
     /**
-     * 查询或排序原值前检查整份查看者策略，不能用当前页样本证明全域可见。
+     * 查询原值前检查整份查看者策略，不能用当前页样本证明全域可见。
      * @param policy 当前查看者匹配策略
      * @param fieldKey 已注册字段
      */
@@ -64,15 +65,35 @@ public final class FieldPolicyProcessor {
         requireFullOriginal(policy, fieldKey);
     }
 
-    /**
-     * 原值排序同时检查注册/目录排序能力与当前策略。
-     * @param policy 当前策略
-     * @param fieldKey 注册字段
-     */
-    public static void requireOriginalSort(FieldPolicyDecision policy, String fieldKey) {
-        if (!policy.sortableFields().contains(fieldKey))
+    /** 原值筛选必须由 FULL 来源覆盖整份实际查询范围，缺失字段来源也关闭。 */
+    public static void requireOriginalLookup(FieldPolicyDecision policy, String fieldKey, List<ScopeCondition> queryScope) {
+        if (!policy.filterableFields().contains(fieldKey) || queryScope == null || queryScope.isEmpty()
+                || !policy.ceilings().containsKey(fieldKey) || policy.ceilings().get(fieldKey).visibility() != FieldVisibility.FULL)
             throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
-        requireFullOriginal(policy, fieldKey);
+        if (policy.mergeMode() == FieldMergeMode.GRANTS) {
+            var full = policy.rules().stream().filter(rule -> rule.fieldKey().equals(fieldKey)
+                    && rule.access().visibility() == FieldVisibility.FULL).flatMap(rule -> rule.scope().stream()).toList();
+            if (queryScope.stream().anyMatch(scope -> full.stream().noneMatch(upper -> covers(upper, scope))))
+                throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
+        } else {
+            // 服务端返回的 filterable 已证明当前查询范围；执行端再校验契约与上限。
+            if (!policy.operations().getOrDefault(fieldKey, FieldOperations.NONE).filterable())
+                throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
+        }
+    }
+
+    /**
+     * 生成全局交互能力，筛选结论按整份策略证明，不受当前页样本影响。
+     * @param policy 精确操作快照
+     * @return 实际可用操作能力
+     */
+    public static Map<String, FieldOperations> operations(FieldPolicyDecision policy) {
+        Map<String, FieldOperations> result = new LinkedHashMap<>();
+        policy.defaults().keySet().forEach(key -> {
+            var ability = policy.operations().getOrDefault(key, FieldOperations.NONE);
+            result.put(key, ability);
+        });
+        return Map.copyOf(result);
     }
 
     private static void requireFullOriginal(FieldPolicyDecision policy, String fieldKey) {
@@ -111,7 +132,7 @@ public final class FieldPolicyProcessor {
      */
     public static FieldPolicyDecision forAction(AuthorizationDecision decision, String actionCode) {
         var action = decision.actions().get(actionCode);
-        if (action == null || action.fields() == null
+        if (action == null || action.fields() == null || !java.time.Instant.now().isBefore(action.fields().expiresAt())
                 || decision.resource().domain() == com.ingot.framework.commons.model.iam.AuthorizationDomain.PLATFORM
                         && action.fields().mergeMode() != FieldMergeMode.GRANTS)
             throw new SdkAuthorizationException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
@@ -122,7 +143,7 @@ public final class FieldPolicyProcessor {
      * 合并同一操作和目标的有效字段授权。
      * @param a 已合并权限
      * @param b 本次贡献
-     * @return 可见性并集，编辑仅由完整可见贡献
+     * @return 可见性并集，编辑来自非隐藏贡献
      */
     public static FieldAccess broader(FieldAccess a, FieldAccess b) {
         if (a == null)
@@ -131,8 +152,8 @@ public final class FieldPolicyProcessor {
             return a;
         var visibility = a.visibility().ordinal() > b.visibility().ordinal() ? a.visibility() : b.visibility();
         return new FieldAccess(visibility,
-                visibility == FieldVisibility.FULL && (a.visibility() == FieldVisibility.FULL && a.editable()
-                        || b.visibility() == FieldVisibility.FULL && b.editable()));
+                visibility != FieldVisibility.HIDDEN && (a.visibility() != FieldVisibility.HIDDEN && a.editable()
+                        || b.visibility() != FieldVisibility.HIDDEN && b.editable()));
     }
 
     private static boolean covers(ScopeCondition upper, ScopeCondition lower) {
@@ -162,7 +183,7 @@ public final class FieldPolicyProcessor {
         if (b == null)
             return a;
         var visibility = a.visibility().ordinal() < b.visibility().ordinal() ? a.visibility() : b.visibility();
-        return new FieldAccess(visibility, visibility == FieldVisibility.FULL && a.editable() && b.editable());
+        return new FieldAccess(visibility, visibility != FieldVisibility.HIDDEN && a.editable() && b.editable());
     }
 
     /**
@@ -193,10 +214,8 @@ public final class FieldPolicyProcessor {
     public static void requireWritable(Map<String, ?> submitted, Map<String, FieldAccess> fields) {
         submitted.forEach((key, value) -> {
             var field = fields.get(key);
-            if (field == null || field.visibility() != FieldVisibility.FULL || !field.editable())
+            if (field == null || field.visibility() == FieldVisibility.HIDDEN || !field.editable())
                 throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
-            if (FieldProjection.MASKED_PLACEHOLDER.equals(value))
-                throw new SdkAuthorizationException(IamReasonCode.INVALID_ARGUMENT);
         });
     }
 

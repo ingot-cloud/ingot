@@ -69,7 +69,7 @@ class ResourceAuthorizationTest {
         assertEquals(Map.of("phone", "***", "name", "显示名"), output);
         assertThrows(BizException.class,
                 () -> FieldPolicyProcessor.requireWritable(Map.of("phone", "changed"), fields));
-        assertThrows(BizException.class, () -> FieldPolicyProcessor.requireWritable(Map.of("name", "***"), fields));
+        FieldPolicyProcessor.requireWritable(Map.of("name", "***"), fields);
         Map<String, Object> clear = new java.util.HashMap<>();
         clear.put("hidden", null);
         assertThrows(BizException.class, () -> FieldPolicyProcessor.requireWritable(clear, fields));
@@ -107,14 +107,13 @@ class ResourceAuthorizationTest {
     void rawLookupRequiresBothFullVisibilityAndRegisteredCapabilities() {
         var full = new FieldAccess(FieldVisibility.FULL, true);
         var policy = new FieldPolicyDecision(Map.of("title", full), Map.of("title", full), List.of(),
-                java.util.Set.of("title"), java.util.Set.of());
+                Map.of("title", new com.ingot.framework.commons.model.iam.FieldOperations(true, true)), Map.of(), com.ingot.framework.commons.model.iam.FieldMergeMode.RESTRICTIONS);
         FieldPolicyProcessor.requireOriginalLookup(policy, "title");
-        assertThrows(BizException.class, () -> FieldPolicyProcessor.requireOriginalSort(policy, "title"));
         var hidden = new FieldPolicyDecision(policy.defaults(), policy.ceilings(),
                 List.of(new ResolvedFieldRule("title",
                         List.of(new ScopeCondition(false, List.of("x"), null, List.of())),
                         new FieldAccess(FieldVisibility.HIDDEN, false))),
-                policy.filterableFields(), policy.sortableFields());
+                policy.operations(), policy.masks(), policy.mergeMode());
         assertThrows(BizException.class, () -> FieldPolicyProcessor.requireOriginalLookup(hidden, "title"));
     }
 

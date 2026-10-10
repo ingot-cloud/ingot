@@ -239,7 +239,7 @@ public final class IamMybatisTestAccess {
     /** 在当前夹具数据源上建立字段策略求值器。 */
     public static FieldAccessEvaluator fields(DataSource source) {
         return new FieldAccessEvaluator(policies(source), mapper(source, IamMemberDepartmentMapper.class),
-                new DepartmentClosure(mapper(source, IamDepartmentMapper.class)));
+                new DepartmentClosure(mapper(source, IamDepartmentMapper.class)), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache(), com.ingot.cloud.iam.persistence.FieldTestSupport.projection(), com.ingot.cloud.iam.persistence.FieldTestSupport.metadata(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
     }
 
     /** 在当前夹具数据源上建立通讯录与字段策略 Repository。 */
@@ -324,7 +324,7 @@ public final class IamMybatisTestAccess {
     public static com.ingot.cloud.iam.extension.ResourceFieldMetadata fieldMetadata(DataSource source) {
         return new com.ingot.cloud.iam.extension.ResourceFieldMetadata(mapper(source, IamApplicationMapper.class),
                 mapper(source, IamResourceMapper.class), mapper(source, IamActionMapper.class),
-                new com.ingot.framework.authorization.ResourceRegistry(java.util.List.of()));
+                new com.ingot.framework.authorization.ResourceRegistry(java.util.List.of()), com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
     }
 
     /** 无注册字段资源的角色快照服务。 */
@@ -333,7 +333,7 @@ public final class IamMybatisTestAccess {
                 new com.ingot.cloud.iam.extension.ScopeTransportCompiler(
                         new DepartmentClosure(mapper(source, IamDepartmentMapper.class)),
                         mapper(source, IamMemberDepartmentMapper.class)),
-                org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.AuthorizationEvaluator.class));
+                org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.AuthorizationEvaluator.class), com.ingot.cloud.iam.persistence.FieldTestSupport.manifests(), com.ingot.cloud.iam.persistence.FieldTestSupport.noCache());
     }
 
     /** 在当前夹具数据源上建立只读解析用的目录服务。 */

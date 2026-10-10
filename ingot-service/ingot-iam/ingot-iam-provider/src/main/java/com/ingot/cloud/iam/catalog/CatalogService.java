@@ -406,6 +406,17 @@ public class CatalogService {
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
+    /** 校验目录读取权与归属后返回服务清单；未绑定资源返回空清单。 */
+    public com.ingot.framework.commons.model.iam.extension.FieldBindingManifest resourceBindings(String applicationId, String resourceId) {
+        access.require(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_RESOURCE_READ);
+        requireApplication(IamIds.require(applicationId));
+        var app = catalog.findApplication(IamIds.require(applicationId));
+        var resource = catalog.findResource(IamIds.require(applicationId), IamIds.require(resourceId));
+        if (resource == null || !app.getId().equals(resource.getApplicationId())) throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        var key = new com.ingot.framework.commons.model.iam.extension.ResourceKey(app.getDomain(), app.getCode(), resource.getCode());
+        return fieldMetadata.bindings(key);
+    }
+
     /**
      * 在指定应用下创建资源。
      * @param applicationId 应用 ID
@@ -418,6 +429,7 @@ public class CatalogService {
         return transaction.execute(status -> {
             IamApplicationEntity application = requireLocked(catalog.lockApplication(appId));
             requireResourceScopes(application.getDomain(), input.scopeCapabilities());
+            requireFieldCapabilities(application, input.code(), input.fieldCapabilities());
             long id = access.nextId();
             IamResourceEntity entity = new IamResourceEntity();
             entity.setId(BigInteger.valueOf(id));
@@ -434,7 +446,8 @@ public class CatalogService {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
             }
             audits.write(actor.context(), access.nextId(), RESOURCE, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
-                    Map.of(AuditField.NAME, input.name()), Map.of(RESOURCE, "0"));
+                    Map.of(AuditField.NAME, input.name(), AuditField.FIELD_CAPABILITIES, input.fieldCapabilities()), Map.of(RESOURCE, "0"));
+            changes.markAll();
             return new CreatedResource(IamIds.text(id), "0");
         });
     }
@@ -455,13 +468,16 @@ public class CatalogService {
             IamResourceEntity current = requireLocked(catalog.lockResource(appId, id));
             IamApplicationEntity application = requireLocked(catalog.findApplication(appId));
             requireResourceScopes(application.getDomain(), input.scopeCapabilities());
+            requireFieldCapabilities(application, current.getCode(), input.fieldCapabilities());
             IamIds.requireVersion(input.expectedVersion(), version(current.getVersion()));
             catalog.updateResource(appId, id, input.name(), IamJson.array(input.scopeCapabilities()),
                     IamJson.array(input.fieldCapabilities()), current.getVersion());
             String next = nextVersion(current.getVersion());
             audits.write(actor.context(), access.nextId(), RESOURCE, resourceId, AuditChangeType.UPDATE,
-                    Map.of(AuditField.NAME, current.getName()), Map.of(AuditField.NAME, input.name()),
+                    Map.of(AuditField.NAME, current.getName(), AuditField.FIELD_CAPABILITIES, current.getFieldCapabilities() == null ? "[]" : current.getFieldCapabilities()),
+                    Map.of(AuditField.NAME, input.name(), AuditField.FIELD_CAPABILITIES, input.fieldCapabilities()),
                     Map.of(RESOURCE, next));
+            changes.markAll();
             return loadResource(appId, id);
         });
     }
@@ -1097,6 +1113,9 @@ public class CatalogService {
         for (ApplicationBundleResource resource : resources == null ? List.<ApplicationBundleResource>of()
                 : resources) {
             requireResourceScopes(domain, resource.scopeCapabilities());
+            var fieldApplication = new IamApplicationEntity();
+            fieldApplication.setDomain(domain); fieldApplication.setCode(applicationCode);
+            requireFieldCapabilities(fieldApplication, resource.code(), resource.fieldCapabilities());
             String resourceTempId = requireTempId(resource.tempId());
             if (!tempIds.add(resourceTempId) || !resourceCodes.add(resource.code())) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -1207,6 +1226,21 @@ public class CatalogService {
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         return ordered;
+    }
+
+    private void requireFieldCapabilities(IamApplicationEntity application, String resourceCode, List<FieldCapability> fields) {
+        if (fields == null) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        Set<String> keys = new HashSet<>();
+        for (var field : fields) if (!keys.add(field.key())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        var key = new com.ingot.framework.commons.model.iam.extension.ResourceKey(application.getDomain(), application.getCode(), resourceCode);
+        var manifest = fieldMetadata.bindings(key);
+        if (manifest == null) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        for (var field : fields) {
+            if (field.visibilities().contains(com.ingot.framework.commons.model.iam.FieldVisibility.MASKED)
+                    && manifest.bindings().stream().anyMatch(binding -> binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.READ
+                            && field.key().equals(binding.fieldKey()) && !binding.textual()))
+                throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+        }
     }
 
     private static void visitBundleMenu(ApplicationBundleMenu menu, Map<String, List<ApplicationBundleMenu>> children,

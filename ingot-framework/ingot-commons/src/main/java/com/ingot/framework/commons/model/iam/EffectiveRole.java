@@ -38,7 +38,7 @@ public record EffectiveRole(
                 requiredMode = Schema.RequiredMode.REQUIRED) List<@NotNull @Valid RoleParameterDefinition> parameterDefinitions,
         @NotNull @Valid @Schema(description = "允许披露的使用统计",
                 requiredMode = Schema.RequiredMode.REQUIRED) UsageSummary usage,
-        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, Map<String, @Valid FieldAccess>> resourceFieldPermissions) {
+        @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, @Valid ResourceFieldDefinition> resourceFieldPermissions) {
     /** 兼容没有字段快照的历史合成定义。 */
     public EffectiveRole(RoleSummary role, RoleRevisionRef revision, List<ActionGrant> grants,
             List<ActionOrigin> origins, List<RoleParameterDefinition> parameterDefinitions, UsageSummary usage) {

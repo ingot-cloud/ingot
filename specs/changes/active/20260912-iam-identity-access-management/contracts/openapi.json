@@ -11,194 +11,6 @@
     }
   ],
   "paths": {
-    "/v1/me/password": {
-      "get": {
-        "operationId": "currentPasswordState",
-        "summary": "当前账号改密状态",
-        "tags": [
-          "CURRENT"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "x-iam-domain": "CURRENT",
-        "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
-        "x-runtime-implemented": true,
-        "responses": {
-          "200": {
-            "description": "成功；使用既有 R 信封",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RPasswordChangeState"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "currentPutPassword",
-        "summary": "当前账号改密",
-        "tags": [
-          "CURRENT"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "x-iam-domain": "CURRENT",
-        "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密；账号真实状态决定强制改密；确认密码必须一致；事务提交后撤销既有会话",
-        "x-runtime-implemented": true,
-        "responses": {
-          "200": {
-            "description": "成功；使用既有 R 信封",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "稳定业务错误码；失败时 data 为 null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IamErrorEnvelope"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CurrentPasswordInput"
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/me/bootstrap": {
       "get": {
         "operationId": "currentBootstrap",
@@ -213,7 +25,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "认证当前身份；身份及账号同时有效；固定域；一致快照；必须改密时 HTTP 403 PasswordChangeRequired",
+        "x-iam-execution": "认证当前身份；身份及账号同时有效；固定域；一致快照",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -303,7 +115,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503；必须改密时 HTTP 403 PasswordChangeRequired",
+        "x-iam-execution": "认证当前身份；不得跨域聚合；无可用授权服务时返回 503",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -393,7 +205,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份；必须改密时 HTTP 403 PasswordChangeRequired",
+        "x-iam-execution": "AUTHENTICATED_SELF；只读当前认证账号联系资料，不含其他组织身份",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -481,7 +293,7 @@
         ],
         "x-iam-domain": "CURRENT",
         "x-iam-action": null,
-        "x-iam-execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段；必须改密时 HTTP 403 PasswordChangeRequired",
+        "x-iam-execution": "AUTHENTICATED_SELF；禁止提交其他账号 ID 或凭证字段",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -561,6 +373,194 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AccountSelfProfileInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/password": {
+      "put": {
+        "operationId": "currentPutPassword",
+        "summary": "当前账号改密",
+        "tags": [
+          "CURRENT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "CURRENT",
+        "x-iam-action": null,
+        "x-iam-execution": "AUTHENTICATED_SELF；沿用框架改密校验与事件；请求体加密",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentPasswordInput"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "currentPasswordState",
+        "summary": "当前账号改密状态",
+        "tags": [
+          "CURRENT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "CURRENT",
+        "x-iam-action": null,
+        "x-iam-execution": "AUTHENTICATED_SELF；必须改密期间仅允许密码 GET/PUT；只返回可信当前身份和改密状态，不含业务资料",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RPasswordChangeState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
               }
             }
           }
@@ -1274,7 +1274,7 @@
       },
       "patch": {
         "operationId": "platformPatchMember",
-        "summary": "原子编辑成员与角色差量",
+        "summary": "更新成员资料",
         "tags": [
           "PLATFORM"
         ],
@@ -1285,7 +1285,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:member:update",
-        "x-iam-execution": "成员对象范围与字段校验；直接角色逐操作治理资格；授权首锁和成员行版本；整批事务与审计",
+        "x-iam-execution": "可信当前域；成员管理操作；账号与成员分离；状态与任职覆盖全部关系并写审计",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -1364,49 +1364,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformMemberEditInput"
-              },
-              "example": {
-                "expectedVersion": "2",
-                "roleChanges": {
-                  "additions": [
-                    {
-                      "roleId": "24",
-                      "roleRevisionRef": {
-                        "kind": "PLATFORM_CUSTOM",
-                        "id": "31"
-                      },
-                      "scopeBindings": {
-                        "objects": {
-                          "kind": "OBJECTS",
-                          "ids": [
-                            "1001"
-                          ]
-                        }
-                      }
-                    }
-                  ],
-                  "updates": [
-                    {
-                      "assignmentId": "81",
-                      "expectedVersion": "3",
-                      "scopeBindings": {
-                        "objects": {
-                          "kind": "OBJECTS",
-                          "ids": [
-                            "1002"
-                          ]
-                        }
-                      }
-                    }
-                  ],
-                  "removals": [
-                    {
-                      "assignmentId": "82",
-                      "expectedVersion": "1"
-                    }
-                  ]
-                }
+                "$ref": "#/components/schemas/MemberProfileInput"
               }
             }
           }
@@ -6301,30 +6259,6 @@
               "minimum": 1,
               "maximum": 200,
               "default": 20
-            }
-          },
-          {
-            "name": "effectiveStatus",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "ACTIVE",
-                "EXPIRED",
-                "REVOKED",
-                "SOURCE_INVALID"
-              ]
-            }
-          },
-          {
-            "name": "directOnly",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           }
         ]
@@ -22045,7 +21979,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:member:read",
-        "x-iam-execution": "成员 READ/CREATE 任一准入；整份读策略列概览、创建字段权限与显示名原值查询资格；不替代逐对象校验",
+        "x-iam-execution": "成员 READ/CREATE 任一准入；全局操作与潜在可见列；不替代逐对象校验",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -22386,6 +22320,296 @@
         "parameters": [
           {
             "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ]
+      }
+    },
+    "/v1/tenant/members/context": {
+      "get": {
+        "operationId": "tenantMemberFieldContext",
+        "summary": "租户成员字段能力",
+        "tags": [
+          "TENANT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "TENANT",
+        "x-iam-action": "iam-tenant:member:read",
+        "x-iam-execution": "可信身份；全局操作与完整查询范围FULL证明",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RResourceFieldContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/directory/context": {
+      "get": {
+        "operationId": "directoryFieldContext",
+        "summary": "通讯录字段能力",
+        "tags": [
+          "TENANT"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "TENANT",
+        "x-iam-action": "iam-tenant:directory:read",
+        "x-iam-execution": "可信身份；与实际通讯录查询范围相同",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RResourceFieldContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/platform/applications/{id}/resources/{resourceId}/field-bindings": {
+      "get": {
+        "operationId": "platformResourceBindings",
+        "summary": "资源字段绑定清单",
+        "tags": [
+          "PLATFORM"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-iam-domain": "PLATFORM",
+        "x-iam-action": "iam-platform:resource:read",
+        "x-iam-execution": "固定服务清单；目录读取权；不包含业务原值",
+        "x-runtime-implemented": true,
+        "responses": {
+          "200": {
+            "description": "成功；使用既有 R 信封",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RFieldBindingManifest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "稳定业务错误码；失败时 data 为 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IamErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "resourceId",
             "in": "path",
             "required": true,
             "schema": {
@@ -23755,19 +23979,13 @@
           "beforeFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              }
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             }
           },
           "afterFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              }
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             }
           }
         }
@@ -24151,10 +24369,7 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              }
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             }
           }
         }
@@ -24244,6 +24459,34 @@
           }
         },
         "description": "角色分配树的最小展示节点"
+      },
+      "Binding": {
+        "type": "object",
+        "properties": {
+          "actionCode": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "READ",
+              "WRITE",
+              "FILTER"
+            ]
+          },
+          "valueType": {
+            "type": "string"
+          },
+          "property": {
+            "type": "string"
+          },
+          "fieldKey": {
+            "type": "string"
+          },
+          "textual": {
+            "type": "boolean"
+          }
+        }
       },
       "Bootstrap": {
         "required": [
@@ -24503,11 +24746,7 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              },
-              "description": "可披露固定版本字段快照；空引用表示历史安全默认"
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             },
             "description": "可披露固定版本字段快照；空引用表示历史安全默认"
           }
@@ -24871,11 +25110,7 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              },
-              "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             },
             "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
@@ -25123,10 +25358,27 @@
           },
           "editable": {
             "type": "boolean",
-            "description": "是否允许编辑，非 FULL 必须为 false"
+            "description": "是否允许编辑，HIDDEN 必须为 false"
           }
         },
         "description": "描述服务端计算后的字段输出与编辑能力，不独立授予对象或写操作权限"
+      },
+      "FieldBindingManifest": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "version": {
+            "type": "string"
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Binding"
+            }
+          }
+        }
       },
       "FieldCapability": {
         "required": [
@@ -25134,7 +25386,6 @@
           "filterable",
           "key",
           "label",
-          "sortable",
           "visibilities"
         ],
         "type": "object",
@@ -25168,12 +25419,71 @@
             "type": "boolean",
             "description": "完整可见时是否支持筛选"
           },
-          "sortable": {
-            "type": "boolean",
-            "description": "完整可见时是否支持排序"
+          "mask": {
+            "$ref": "#/components/schemas/MaskSpec"
           }
         },
         "description": "描述资源字段允许配置的可见性与编辑能力，不能代替对象级计算结果"
+      },
+      "FieldManifestInvocation": {
+        "type": "object",
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "callerService": {
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          }
+        }
+      },
+      "FieldOperationRule": {
+        "required": [
+          "actionCode",
+          "fieldKey",
+          "operations",
+          "resource",
+          "scenario",
+          "viewerSelection"
+        ],
+        "type": "object",
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/ResourceKey"
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "MANAGEMENT",
+              "DIRECTORY"
+            ]
+          },
+          "actionCode": {
+            "type": "string"
+          },
+          "fieldKey": {
+            "type": "string"
+          },
+          "viewerSelection": {
+            "$ref": "#/components/schemas/Selection"
+          },
+          "operations": {
+            "$ref": "#/components/schemas/FieldOperations"
+          }
+        }
+      },
+      "FieldOperations": {
+        "type": "object",
+        "properties": {
+          "editable": {
+            "type": "boolean"
+          },
+          "filterable": {
+            "type": "boolean"
+          }
+        }
       },
       "FieldPolicyDecision": {
         "type": "object",
@@ -25196,18 +25506,16 @@
               "$ref": "#/components/schemas/ResolvedFieldRule"
             }
           },
-          "filterableFields": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
+          "operations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldOperations"
             }
           },
-          "sortableFields": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
+          "masks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MaskSpec"
             }
           },
           "mergeMode": {
@@ -25216,12 +25524,17 @@
               "RESTRICTIONS",
               "GRANTS"
             ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
       "FieldPolicyDraft": {
         "required": [
           "defaultRevisionId",
+          "operationRules",
           "rules"
         ],
         "type": "object",
@@ -25235,6 +25548,12 @@
             "description": "完整字段规则；空数组恢复固定默认策略",
             "items": {
               "$ref": "#/components/schemas/FieldRule"
+            }
+          },
+          "operationRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldOperationRule"
             }
           }
         },
@@ -25305,10 +25624,6 @@
               "MASKED",
               "FULL"
             ]
-          },
-          "editable": {
-            "type": "boolean",
-            "description": "编辑上限，仍受对象、操作和平台规则限制"
           }
         },
         "description": "描述场景、字段、查看者和目标范围对应的字段限制"
@@ -25493,6 +25808,40 @@
           }
         },
         "description": "返回操作者允许知晓的变更影响，隐藏对象数量不通过统计泄露"
+      },
+      "MaskSpec": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PHONE",
+              "EMAIL",
+              "ALL",
+              "KEEP_EDGES",
+              "RANGE"
+            ]
+          },
+          "prefix": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "suffix": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "end": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "MemberBoundRole": {
         "type": "object",
@@ -27033,7 +27382,9 @@
         "required": [
           "canSearchDisplayName",
           "createFieldAccess",
-          "listFieldVisibility"
+          "fieldOperations",
+          "listFieldVisibility",
+          "masks"
         ],
         "type": "object",
         "properties": {
@@ -27060,6 +27411,21 @@
           "canSearchDisplayName": {
             "type": "boolean",
             "description": "允许按显示名原值搜索"
+          },
+          "fieldOperations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/FieldOperations"
+              }
+            }
+          },
+          "masks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MaskSpec"
+            }
           }
         }
       },
@@ -27775,6 +28141,23 @@
           },
           "data": {
             "$ref": "#/components/schemas/ExportTask"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RFieldBindingManifest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FieldBindingManifest"
           },
           "success": {
             "type": "boolean"
@@ -28694,6 +29077,23 @@
           }
         }
       },
+      "RResourceFieldContext": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceFieldContext"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RResourceObjectResult": {
         "type": "object",
         "properties": {
@@ -29450,6 +29850,63 @@
         },
         "description": "声明应用内资源及其允许配置的范围和字段能力"
       },
+      "ResourceFieldContext": {
+        "type": "object",
+        "properties": {
+          "fieldVisibility": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "HIDDEN",
+                "MASKED",
+                "FULL"
+              ]
+            }
+          },
+          "fieldOperations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/FieldOperations"
+              }
+            }
+          },
+          "masks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MaskSpec"
+            }
+          }
+        }
+      },
+      "ResourceFieldDefinition": {
+        "required": [
+          "operations",
+          "visibility"
+        ],
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "HIDDEN",
+                "MASKED",
+                "FULL"
+              ]
+            }
+          },
+          "operations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldOperations"
+            }
+          }
+        }
+      },
       "ResourceKey": {
         "required": [
           "applicationCode",
@@ -29732,11 +30189,7 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              },
-              "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             },
             "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           }
@@ -29912,11 +30365,7 @@
             "description": "资源安全默认值"
           },
           "fieldPermissions": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/FieldAccess"
-            },
-            "description": "本版本资源字段快照；未声明字段不授予权限"
+            "$ref": "#/components/schemas/ResourceFieldDefinition"
           }
         },
         "description": "角色当前绑定权限，带操作、应用与资源展示内容"
@@ -30050,22 +30499,14 @@
           "resourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              },
-              "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             },
             "description": "资源 ID 到字段 key 的固定权限快照；历史版本可为空"
           },
           "previousResourceFieldPermissions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/components/schemas/FieldAccess"
-              },
-              "description": "相对上一版本的字段比较基线；仅版本历史读填充"
+              "$ref": "#/components/schemas/ResourceFieldDefinition"
             },
             "description": "相对上一版本的字段比较基线；仅版本历史读填充"
           }

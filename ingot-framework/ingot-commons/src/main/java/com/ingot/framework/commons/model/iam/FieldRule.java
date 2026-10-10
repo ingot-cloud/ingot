@@ -16,7 +16,6 @@ import jakarta.validation.constraints.*;
  * @param targetScope 目标范围项的并集，不独立开放对象
  * @param scopeBindings 目标范围的命名参数值
  * @param visibility 字段可见程度
- * @param editable 编辑上限，仍受对象、操作和平台规则限制
  */
 @Schema(description = "描述场景、字段、查看者和目标范围对应的字段限制")
 public record FieldRule(
@@ -31,9 +30,7 @@ public record FieldRule(
         @NotNull @Schema(description = "目标范围的命名参数值", requiredMode = Schema.RequiredMode.REQUIRED)
         Map<@NotBlank String, @NotNull @Valid ScopeBinding> scopeBindings,
         @NotNull @Schema(description = "字段可见程度", requiredMode = Schema.RequiredMode.REQUIRED)
-        FieldVisibility visibility,
-        @Schema(description = "编辑上限，仍受对象、操作和平台规则限制")
-        boolean editable) {
+        FieldVisibility visibility) {
 
     /**
      * 复制输入集合，防止校验与消费之间被外部修改；必填空引用由 Bean Validation 拒绝。
@@ -47,15 +44,4 @@ public record FieldRule(
         }
     }
 
-    /**
-     * 可编辑字段必须完整可见。
-     *
-     * @return 是否满足结构约束
-     */
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @jakarta.validation.constraints.AssertTrue(message = "可编辑字段必须完整可见")
-    @Schema(hidden = true)
-    public boolean isEditableVisibilityValid() {
-        return !editable || visibility == FieldVisibility.FULL;
-    }
 }

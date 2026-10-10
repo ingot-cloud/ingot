@@ -36,6 +36,15 @@ public class AuthorizationAccess {
         return result;
     }
 
+    /** 读取交互能力，写操作最终仍须 require 或 FieldWriteExecutor。 */
+    public AuthorizationDecision preview(ResourceKey resource, String action) {
+        var result = client.preview(new AuthorizationRequest(resource, List.of(action)));
+        requireDecision(result, action);
+        if (!resource.equals(result.resource())) throw new SdkAuthorizationException(IamReasonCode.ACTION_DENIED);
+        FieldPolicyProcessor.forAction(result, action);
+        return result;
+    }
+
     /**
      * 使用同一有效决策检查目标。
      * @param decision 有效决策

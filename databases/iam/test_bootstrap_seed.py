@@ -188,7 +188,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(30, self.count("iam_menu"))
         self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
-                CONCAT('$."',resource.id,'".phone.visibility')))
+                CONCAT('$."',resource.id,'".visibility.phone')))
             FROM iam_role_revision revision JOIN iam_role_definition role ON role.id=revision.role_id
             JOIN iam_application app ON app.domain=role.domain AND app.code='iam-platform'
             JOIN iam_resource resource ON resource.application_id=app.id AND resource.code='member'
@@ -250,7 +250,7 @@ class BootstrapSeedTest(unittest.TestCase):
             "SELECT JSON_UNQUOTE(JSON_EXTRACT(definition, '$.scope')) "
             "FROM iam_default_policy_revision WHERE kind = 'DIRECTORY'"))
         self.assertEqual("MASKED", self.sql(
-            "SELECT JSON_UNQUOTE(JSON_EXTRACT(definition, '$.fields.phone.visibility')) "
+            "SELECT JSON_UNQUOTE(JSON_EXTRACT(definition, '$.fields.phone')) "
             "FROM iam_default_policy_revision WHERE kind = 'FIELD'"))
 
     def test_governance_grants_cover_own_domain_only(self):

@@ -38,4 +38,9 @@ public class InnerResourceAuthorizationAPI implements RShortcuts {
         return ok(authorization.evaluate(request));
     }
 
+    /** 预览当前认证身份的交互能力，不作为最终写放行依据。 */
+    @PostMapping("/preview")
+    public R<AuthorizationDecision> preview(@Valid @RequestBody AuthorizationRequest request) {
+        return ok(authorization.preview(request));
+    }
 }

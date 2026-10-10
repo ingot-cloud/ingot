@@ -17,6 +17,9 @@ import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.ActionGrant;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.FieldAccess;
+import com.ingot.framework.commons.model.iam.FieldOperations;
+import com.ingot.framework.commons.model.iam.MaskSpec;
+import com.ingot.framework.commons.model.iam.ResourceFieldDefinition;
 import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldMergeMode;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
@@ -43,7 +46,7 @@ public class RoleFieldPermissionService {
 
     private static final FieldAccess HIDDEN = new FieldAccess(FieldVisibility.HIDDEN, false);
 
-    private static final TypeReference<Map<String, Map<String, FieldAccess>>> SNAPSHOT = new TypeReference<>() {
+    private static final TypeReference<Map<String, ResourceFieldDefinition>> SNAPSHOT = new TypeReference<>() {
     };
 
     private final ResourceFieldMetadata metadata;
@@ -53,6 +56,8 @@ public class RoleFieldPermissionService {
     private final ScopeTransportCompiler compiler;
 
     private final AuthorizationEvaluator evaluator;
+    private final FieldManifestService manifests;
+    private final org.springframework.beans.factory.ObjectProvider<com.ingot.framework.cache.spi.LayeredCache<String, FrozenVersions>> cache;
 
     /**
      * 对精确操作求值；写操作使用最新授权事实。
@@ -76,7 +81,17 @@ public class RoleFieldPermissionService {
             List<IamAction> actions) {
         var view = evaluator.evaluateForExecution(actor,
                 actions.stream().anyMatch(action -> action.getOperation().isMutating()));
-        var values = evaluate(key, actor, view, actions.stream().map(IamAction::getCode).toList());
+        var values = evaluate(key, actor, view, actions.stream().map(IamAction::getCode).toList(),
+                actions.stream().anyMatch(action -> action.getOperation().isMutating()));
+        Map<IamAction, FieldPolicyDecision> result = new java.util.EnumMap<>(IamAction.class);
+        actions.forEach(action -> result.put(action, values.get(action.getCode())));
+        return Map.copyOf(result);
+    }
+
+    /** 批量计算界面预览，操作包含写类别也不触发执行路径的 fresh 读取。 */
+    public Map<IamAction, FieldPolicyDecision> previewAll(ResourceKey key, AuthorizationContext actor, List<IamAction> actions) {
+        var view = evaluator.evaluate(actor);
+        var values = evaluate(key, actor, view, actions.stream().map(IamAction::getCode).toList(), false);
         Map<IamAction, FieldPolicyDecision> result = new java.util.EnumMap<>(IamAction.class);
         actions.forEach(action -> result.put(action, values.get(action.getCode())));
         return Map.copyOf(result);
@@ -89,8 +104,8 @@ public class RoleFieldPermissionService {
      * @param input 可空草稿
      * @return 固定版本快照；其他管理域为空对象
      */
-    public Map<String, Map<String, FieldAccess>> freeze(RoleKind kind, List<ActionGrant> grants,
-            Map<String, Map<String, FieldAccess>> input) {
+    public Map<String, ResourceFieldDefinition> freeze(RoleKind kind, List<ActionGrant> grants,
+            Map<String, ResourceFieldDefinition> input) {
         if (kind != RoleKind.PLATFORM_CUSTOM) {
             if (input != null && !input.isEmpty())
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
@@ -103,28 +118,34 @@ public class RoleFieldPermissionService {
             .collect(java.util.stream.Collectors.toSet())
             .containsAll(input.keySet()))
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-        Map<String, Map<String, FieldAccess>> result = new LinkedHashMap<>();
+        Map<String, ResourceFieldDefinition> result = new LinkedHashMap<>();
         for (var id : ids) {
             String key = id.toString();
             var descriptor = descriptors.get(key);
-            var selected = input == null ? Map.<String, FieldAccess>of() : input.getOrDefault(key, Map.of());
+            var selected = input == null ? ResourceFieldDefinition.EMPTY : input.getOrDefault(key, ResourceFieldDefinition.EMPTY);
             if (descriptor == null) {
-                if (!selected.isEmpty())
+                if ((!selected.visibility().isEmpty() || !selected.operations().isEmpty()))
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
                 continue;
             }
-            if (!descriptor.defaults().keySet().containsAll(selected.keySet()))
+            if (!descriptor.defaults().keySet().containsAll(selected.visibility().keySet())
+                    || !descriptor.defaults().keySet().containsAll(selected.operations().keySet()))
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-            Map<String, FieldAccess> fields = new LinkedHashMap<>();
+            Map<String, FieldVisibility> visibility = new LinkedHashMap<>();
+            Map<String, FieldOperations> operations = new LinkedHashMap<>();
             for (var field : descriptor.fields()) {
-                var value = selected.getOrDefault(field.key(), descriptor.defaults().get(field.key()));
-                if (value == null || !field.visibilities().contains(value.visibility())
-                        || value.editable() && (!field.editable() || value.visibility() != FieldVisibility.FULL))
+                var value = selected.visibility().getOrDefault(field.key(), descriptor.defaults().get(field.key()).visibility());
+                var ability = selected.operations().getOrDefault(field.key(),
+                        new FieldOperations(descriptor.defaults().get(field.key()).editable(), field.filterable()));
+                if (value == null || !field.visibilities().contains(value)
+                        || ability.editable() && (!field.editable() || value == FieldVisibility.HIDDEN)
+                        || ability.filterable() && (!field.filterable() || value != FieldVisibility.FULL))
                     throw new BizException(IamReasonCode.INVALID_ARGUMENT);
-                fields.put(field.key(), value);
+                visibility.put(field.key(), value);
+                operations.put(field.key(), ability);
             }
-            if (!fields.isEmpty())
-                result.put(key, Map.copyOf(fields));
+            if (!visibility.isEmpty())
+                result.put(key, new ResourceFieldDefinition(visibility, operations));
         }
         return Map.copyOf(result);
     }
@@ -134,7 +155,7 @@ public class RoleFieldPermissionService {
      * @param json 数据库 JSON
      * @return 字段快照
      */
-    public static Map<String, Map<String, FieldAccess>> snapshot(String json) {
+    public static Map<String, ResourceFieldDefinition> snapshot(String json) {
         if (json == null || json.isBlank() || "null".equals(json.trim()))
             throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
         return IamJson.read(json, SNAPSHOT);
@@ -150,40 +171,50 @@ public class RoleFieldPermissionService {
      */
     public Map<String, FieldPolicyDecision> evaluate(ResourceKey key, AuthorizationContext actor,
             AuthorizationView view, Collection<String> actionCodes) {
-        var entry = metadata.require(key, view.platformAdministrator());
+        return evaluate(key, actor, view, actionCodes, false);
+    }
+
+    /** 执行端显式选择服务器确定的 fresh 写模式，不能由浏览器指定。 */
+    public Map<String, FieldPolicyDecision> evaluate(ResourceKey key, AuthorizationContext actor,
+            AuthorizationView view, Collection<String> actionCodes, boolean fresh) {
+        var entry = fresh ? metadata.requireFresh(key, view.platformAdministrator()) : metadata.require(key, view.platformAdministrator());
         var descriptor = entry.descriptor();
-        Map<Long, Map<String, Map<String, FieldAccess>>> versions = new HashMap<>();
-        var sources = view.fieldSources().stream().filter(s -> actionCodes.contains(s.actionCode())).toList();
-        roles.findRevisions(sources.stream().map(s -> BigInteger.valueOf(s.revisionId())).distinct().toList())
-            .forEach(row -> versions.put(row.getId().longValue(), snapshot(row.getResourceFieldPermissions())));
+        var sources = view.fieldSources().stream().filter(source -> actionCodes.contains(source.actionCode())).toList();
+        String versionKey = IamJson.array(sources.stream().map(source -> BigInteger.valueOf(source.revisionId())).distinct().sorted().toList());
+        var configured = cache.getIfAvailable();
+        var versions = (configured == null ? loadVersions(versionKey) : configured.get(versionKey)).values();
+        var manifest = manifests.require(key);
         Map<String, FieldAccess> ceilings = new LinkedHashMap<>();
         Map<String, FieldAccess> hidden = new LinkedHashMap<>();
         for (var field : descriptor.fields()) {
-            var visibility = view.platformAdministrator() ? FieldVisibility.FULL : field.visibilities()
+            var visibility = field.visibilities()
                 .stream()
                 .max(Comparator.comparingInt(Enum::ordinal))
                 .orElse(FieldVisibility.HIDDEN);
             ceilings.put(field.key(),
-                    new FieldAccess(visibility, visibility == FieldVisibility.FULL && field.editable()));
+                    new FieldAccess(visibility, visibility != FieldVisibility.HIDDEN && field.editable()));
             hidden.put(field.key(), HIDDEN);
         }
-        var filterable = descriptor.fields()
-            .stream()
-            .filter(FieldCapability::filterable)
-            .map(FieldCapability::key)
-            .collect(java.util.stream.Collectors.toSet());
-        var sortable = descriptor.fields()
-            .stream()
-            .filter(FieldCapability::sortable)
-            .map(FieldCapability::key)
-            .collect(java.util.stream.Collectors.toSet());
+        Map<String, MaskSpec> masks = new LinkedHashMap<>();
+        descriptor.fields().stream().filter(field -> field.mask() != null).forEach(field -> masks.put(field.key(), field.mask()));
         Map<String, FieldPolicyDecision> result = new LinkedHashMap<>();
         for (var action : actionCodes) {
+            var writable = manifest.bindings().stream().filter(binding -> action.equals(binding.actionCode())
+                    && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.WRITE)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            var filterable = manifest.bindings().stream().filter(binding -> action.equals(binding.actionCode())
+                    && binding.use() == com.ingot.framework.commons.annotation.field.FieldUse.FILTER)
+                    .map(com.ingot.framework.commons.model.iam.extension.FieldBindingManifest.Binding::fieldKey).collect(java.util.stream.Collectors.toSet());
+            Map<String, FieldAccess> actionCeilings = new LinkedHashMap<>();
+            ceilings.forEach((field, upper) -> actionCeilings.put(field, new FieldAccess(upper.visibility(), upper.editable() && writable.contains(field))));
             List<ResolvedFieldRule> rules = new ArrayList<>();
+            Map<String, FieldOperations> operations = new LinkedHashMap<>();
             if (view.platformAdministrator() && view.actionCodes().contains(action)) {
                 var scope = compiler.compile(actor, List.of(com.ingot.cloud.iam.evaluation.ScopeClause.universe()));
-                descriptor.fields().forEach(field -> rules.add(new ResolvedFieldRule(field.key(), scope,
-                        new FieldAccess(FieldVisibility.FULL, field.editable()))));
+                descriptor.fields().forEach(field -> {
+                    rules.add(new ResolvedFieldRule(field.key(), scope, new FieldAccess(FieldVisibility.FULL, field.editable())));
+                    operations.put(field.key(), new FieldOperations(field.editable() && writable.contains(field.key()), field.filterable() && filterable.contains(field.key())));
+                });
             }
             for (var source : sources) {
                 if (!source.actionCode().equals(action) || source.clauses().isEmpty())
@@ -191,15 +222,53 @@ public class RoleFieldPermissionService {
                 if (!versions.containsKey(source.revisionId()))
                     throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
                 var version = versions.get(source.revisionId());
-                var fields = version.getOrDefault(entry.id(), Map.of());
+                var fields = version.getOrDefault(entry.id(), ResourceFieldDefinition.EMPTY);
                 var scope = compiler.compile(actor, source.clauses());
-                for (var field : descriptor.fields())
-                    rules.add(new ResolvedFieldRule(field.key(), scope, fields.getOrDefault(field.key(), HIDDEN)));
+                for (var field : descriptor.fields()) {
+                    var visibility = fields.visibility().getOrDefault(field.key(), FieldVisibility.HIDDEN);
+                    var ability = fields.operations().getOrDefault(field.key(), FieldOperations.NONE);
+                    rules.add(new ResolvedFieldRule(field.key(), scope,
+                            new FieldAccess(visibility, ability.editable() && field.editable() && visibility != FieldVisibility.HIDDEN)));
+                    var previous = operations.getOrDefault(field.key(), FieldOperations.NONE);
+                    operations.put(field.key(), new FieldOperations(previous.editable() || ability.editable() && field.editable() && writable.contains(field.key()),
+                            previous.filterable() || ability.filterable() && field.filterable() && filterable.contains(field.key())));
+                }
             }
-            result.put(action,
-                    new FieldPolicyDecision(hidden, ceilings, rules, filterable, sortable, FieldMergeMode.GRANTS));
+            var policy = new FieldPolicyDecision(hidden, actionCeilings, rules, operations, masks, FieldMergeMode.GRANTS, entry.expiresAt());
+            var queryScope = compiler.compile(actor, view.scope(action).clauses());
+            Map<String, FieldOperations> proven = new LinkedHashMap<>();
+            operations.forEach((fieldKey, ability) -> {
+                boolean filter = ability.filterable();
+                if (filter) {
+                    try { com.ingot.framework.authorization.FieldPolicyProcessor.requireOriginalLookup(policy, fieldKey, queryScope); }
+                    catch (com.ingot.framework.authorization.SdkAuthorizationException denied) { filter = false; }
+                }
+                proven.put(fieldKey, new FieldOperations(ability.editable(), filter));
+            });
+            result.put(action, new FieldPolicyDecision(hidden, actionCeilings, rules, proven, masks, FieldMergeMode.GRANTS, entry.expiresAt()));
         }
         return Map.copyOf(result);
+    }
+    /** 固定角色版本只批量加载一次，解析产物不包含用户、原值或编译句柄。 */
+    public FrozenVersions loadVersions(String key) {
+        List<BigInteger> ids = IamJson.read(key, new TypeReference<List<BigInteger>>() { });
+        if (ids == null) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        Map<Long, Map<String, ResourceFieldDefinition>> values = new LinkedHashMap<>();
+        roles.findRevisions(ids).forEach(row -> values.put(row.getId().longValueExact(), snapshot(row.getResourceFieldPermissions())));
+        if (values.size() != ids.size()) throw new BizException(IamReasonCode.AUTHORIZATION_UNAVAILABLE);
+        return new FrozenVersions(values);
+    }
+
+    /**
+     * <p>不可变固定版本集合，可进入 L2；目标范围编译结果只留在请求内。</p>
+     * @param values 版本 ID 到资源字段定义
+     * @author jy
+     * @since 1.0.0
+     */
+    public record FrozenVersions(Map<Long, Map<String, ResourceFieldDefinition>> values) {
+        /** 防御复制两层索引。 */
+        public FrozenVersions { values = values.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(
+                Map.Entry::getKey, entry -> Map.copyOf(entry.getValue()))); }
     }
 
 }
