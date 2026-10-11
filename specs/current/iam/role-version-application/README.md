@@ -10,4 +10,7 @@
 - [数据库升级说明](../../../../databases/iam/migrations/README.md)
 - 关联前端能力：`ingot-admin/specs/current/base/role-version-application/`。
 
-后续调度优化仍由独立 [change](../../../changes/active/20261011-iam-role-application-scheduling/README.md) 管理，本次人工验收结论不替代其多节点验收。
+负责人 jy 于 2026-10-11 另行确认角色应用调度优化验收完成，提交后唤醒、低频补偿扫描及多节点运行规则已纳入本能力基线。
+
+- [调度优化变更与验收记录](../../../changes/archive/2026/20261011-iam-role-application-scheduling/README.md)
+- [调度配置与运行说明](../../../changes/archive/2026/20261011-iam-role-application-scheduling/OPERATIONS.md)

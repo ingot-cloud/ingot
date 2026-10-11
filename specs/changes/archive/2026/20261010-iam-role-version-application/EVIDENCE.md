@@ -39,4 +39,4 @@ python3 tools/iam/generate_database.py --check
 
 归档前再次核对后端契约及数据库生成检查、相关 Python 15 项测试、两端契约镜像一致、前端文档检查及 Git 差异检查，均通过。此前业务自动化及构建记录保留；本次未修改业务代码。
 
-关联代码提交为后端 `a6339cfe`、前端 `2d5e37e`。两端 current 已整理，任务 P5 完成，change 状态为 completed。后续角色应用调度优化的独立多节点验收仍待确认，不纳入此次归档。
+关联代码提交为后端 `a6339cfe`、前端 `2d5e37e`。两端 current 已整理，任务 P5 完成，change 状态为 completed。角色版本功能归档时，后续角色应用调度优化的独立多节点验收仍待确认，未纳入该次验收。2026-10-11，jy 随后另行确认调度优化验收完成，见其 [独立验收记录](../20261011-iam-role-application-scheduling/EVIDENCE.md)。

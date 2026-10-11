@@ -244,4 +244,4 @@ current/<domain>/<capability>/
 
 - [角色版本信息与批量应用](./changes/archive/2026/20261010-iam-role-version-application/README.md)（completed，2026-10-11 人工验收完成并归档）；[当前能力](./current/iam/role-version-application/README.md)
 
-- [角色版本应用调度优化](./changes/active/20261011-iam-role-application-scheduling/README.md)（validating，已实现，自动化通过，待实际多节点验收）
+- [角色版本应用调度优化](./changes/archive/2026/20261011-iam-role-application-scheduling/README.md)（completed，2026-10-11 验收完成并归档）；[当前运行规则](./current/iam/role-version-application/SPEC.md)

@@ -21,5 +21,7 @@
 - 当前能力：[iam/role-version-application](../../../../current/iam/role-version-application/README.md)，规则见 [SPEC.md](../../../../current/iam/role-version-application/SPEC.md)。
 - 关联代码提交：后端 `a6339cfe`；前端 `2d5e37e`。基线、契约及归档记录由后续 docs 提交保存。
 - 关联另一仓库变更：`specs/changes/archive/2026/20261010-base-role-version-application/`。
-- 最终实现说明：版本展示直接读取数据库，未增加独立展示缓存。已批准的后续调度优化采用提交后唤醒及低频补偿，仍作为独立 validating change 保留，其多节点验收不由本次归档替代。
+- 最终实现说明：版本展示直接读取数据库，未增加独立展示缓存。已批准的后续调度优化采用提交后唤醒及低频补偿，在本次角色版本归档时作为独立 validating change 保留，其多节点验收未由本次归档替代。
 - 既有 IAM 重构及其他独立变更保留原验收状态；租户/App/TSS 通用化讨论不在本次实施范围。
+
+后续独立验收：2026-10-11，jy 另行确认 [角色应用调度优化](../20261011-iam-role-application-scheduling/README.md) 已验收完成，该 change 已独立归档并更新相同 current 能力。
