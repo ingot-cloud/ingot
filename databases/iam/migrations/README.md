@@ -61,3 +61,8 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 回退前先停止新任务确认入口，并在所有 IAM 节点设置 `ingot.iam.role-applications.worker-enabled=false`，重启配置生效后确认旧进程全部退出、当前批次事务已结束。由运维在备份后将剩余 RUNNING 任务标记 PAUSED，清除租约并递增任务乐观锁；记录回退原因，保留已提交明细、所有新增表列及审计，然后回退应用。关闭浏览器不会停止任务，不得依赖租约到期代替停止全部领取器。需要恢复已经完成的授权调整时，使用新应用流程选择原固定版本与范围，不直接修改历史版本或删除任务记录。
 
 隔离验证：`python3 databases/iam/test_role_revision_application_migration.py`。测试使用自动清理、无网络的 MySQL 8.4 容器，验证重复迁移保留数据以及同一角色最多一个 RUNNING 任务；不连接现有库。
+
+
+## 018 授权审计菜单名称
+
+`018_authorization_audit_menu.sql` 将平台和组织的同一授权审计菜单名称改为“授权审计”，可重复执行。仅更新限定应用与路由的 name，不改权限、路径或历史审计，无结构迁移。新库种子已包含新名称。按目标库执行该脚本后重新 bootstrap/登录加载菜单；回退名称可分别恢复平台“事件与审计”及租户“审计”。审计格式兼容由新后端读取和写入代码完成，无需修改历史记录。

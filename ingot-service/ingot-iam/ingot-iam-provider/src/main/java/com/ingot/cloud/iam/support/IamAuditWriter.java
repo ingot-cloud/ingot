@@ -74,8 +74,8 @@ public class IamAuditWriter {
         row.setTargetType(targetType);
         row.setTargetId(targetId);
         row.setChangeType(changeType);
-        row.setSafeBefore(IamJson.object(before == null ? Map.of() : before));
-        row.setSafeAfter(IamJson.object(after == null ? Map.of() : after));
+        row.setSafeBefore(IamAuditValues.writeFields(auditId, IamAuditValues.BEFORE_COLUMN, before));
+        row.setSafeAfter(IamAuditValues.writeFields(auditId, IamAuditValues.AFTER_COLUMN, after));
         row.setRevisions(IamJson.object(revisions == null ? Map.of() : revisions));
         row.setDelegationId(optionalId(delegationId));
         row.setAssignmentId(optionalId(assignmentId));

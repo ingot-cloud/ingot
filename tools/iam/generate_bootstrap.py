@@ -178,7 +178,7 @@ PLATFORM_MENUS = [
          ['iam-platform:role:read', 'iam-platform:assignment:read', 'iam-platform:delegation:read']),
     ]),
     ('安全与运维', 'platform.iam.security', [
-        ('事件与审计', 'security.iam.authorization.audit', ['iam-platform:audit:read']),
+        ('授权审计', 'security.iam.authorization.audit', ['iam-platform:audit:read']),
     ]),
 ]
 
@@ -196,7 +196,7 @@ TENANT_MENUS = [
     ('安全与合规', 'org.iam.compliance', [
         ('成员权限', 'security.iam.member.permissions',
          ['iam-tenant:directory-policy:read', 'iam-tenant:field-policy:read']),
-        ('审计', 'security.iam.authorization.audit', ['iam-tenant:audit:read']),
+        ('授权审计', 'security.iam.authorization.audit', ['iam-tenant:audit:read']),
     ]),
     ('工作台', 'org.iam.workspace', [
         ('工作台', 'org.iam.workbench', ['iam-tenant:application:read']),

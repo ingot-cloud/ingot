@@ -91,6 +91,18 @@ class ContractTest(unittest.TestCase):
                     self.assertTrue(path.startswith('/v1/me/'))
         self.assertEqual(sum(1 for flag in self.routes.values() if flag), implemented)
 
+    def test_authorization_audit_filters_and_internal_error_are_explicit(self):
+        for domain in ('platform', 'tenant'):
+            operation = self.document['paths'][f'/v1/{domain}/authorization/audits']['get']
+            parameters = {item['name']: item for item in operation['parameters']}
+            self.assertEqual({'page', 'pageSize', 'actorMemberId', 'targetType', 'targetId', 'changeType', 'from', 'until'}, set(parameters))
+            self.assertTrue(all(not item['required'] for item in parameters.values()))
+            for point in ('from', 'until'):
+                self.assertEqual('date-time', parameters[point]['schema']['format'])
+            self.assertEqual(['S0500'], operation['responses']['500']['content']['application/json']['schema']['properties']['code']['enum'])
+            self.assertIn('400', operation['responses'])
+            self.assertIn('403', operation['responses'])
+
     def test_policy_updates_require_version_but_preview_has_no_write_command(self):
         for prefix in ['Directory', 'Field']:
             self.assertIn('expectedVersion', self.schemas[prefix + 'PolicyInput']['required'])

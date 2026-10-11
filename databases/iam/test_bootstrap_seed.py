@@ -88,6 +88,22 @@ class BootstrapSeedTest(unittest.TestCase):
     def bootstrap(self):
         self.sql(BOOTSTRAP.read_text())
 
+    def test_authorization_audit_name_migration_is_scoped_and_repeatable(self):
+        self.bootstrap()
+        condition = "route_name = 'security.iam.authorization.audit'"
+        original = self.sql(f"SELECT id, application_id, path, view_path, access_mode, match_mode, version FROM iam_menu WHERE {condition} ORDER BY id")
+        self.assertEqual(2, self.count('iam_menu', condition))
+        self.sql("UPDATE iam_menu SET name = '旧名称' WHERE " + condition)
+        other = self.sql("SELECT id, name FROM iam_menu WHERE " + condition.replace(' = ', ' <> ') + " ORDER BY id")
+        bindings = self.sql("SELECT * FROM iam_menu_action ORDER BY menu_id, action_id")
+        migration = (SCHEMA_DIRECTORY / 'migrations/018_authorization_audit_menu.sql').read_text()
+        self.sql(migration)
+        self.sql(migration)
+        self.assertEqual(2, self.count('iam_menu', condition + " AND name = '授权审计'"))
+        self.assertEqual(original, self.sql(f"SELECT id, application_id, path, view_path, access_mode, match_mode, version FROM iam_menu WHERE {condition} ORDER BY id"))
+        self.assertEqual(other, self.sql("SELECT id, name FROM iam_menu WHERE " + condition.replace(' = ', ' <> ') + " ORDER BY id"))
+        self.assertEqual(bindings, self.sql("SELECT * FROM iam_menu_action ORDER BY menu_id, action_id"))
+
     def test_generated_bundle_matches_component_schema_and_initial_data(self):
         for schema in sources('frameworkSchemas'):
             self.sql(read_source(schema))

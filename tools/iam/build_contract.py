@@ -71,6 +71,12 @@ def build(schemas):
             operation['responses'][status] = {
                 'description': '稳定业务错误码；失败时 data 为 null',
                 'content': {MEDIA_TYPE: {'schema': ref('IamErrorEnvelope')}}}
+        if route['path'] in ('/v1/platform/authorization/audits', '/v1/tenant/authorization/audits'):
+            operation['responses']['500'] = {
+                'description': '内部审计格式或存储读取异常；S0500，不表示客户端参数错误',
+                'content': {MEDIA_TYPE: {'schema': {'type': 'object', 'properties': {
+                    'code': {'type': 'string', 'enum': ['S0500']},
+                    'message': {'type': 'string'}, 'success': {'type': 'boolean', 'enum': [False]}}}}}}
         parameters = [{'name': name, 'in': 'path', 'required': True,
                        'schema': {'type': 'string', 'minLength': 1}}
                       for name in re.findall(r'\{([A-Za-z][A-Za-z0-9]*)\}', route['path'])]

@@ -23,6 +23,15 @@ PAGE = [
     {'name': 'page', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'default': 1}},
     {'name': 'pageSize', 'required': False, 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 200, 'default': 20}},
 ]
+AUDIT_QUERY = PAGE + [
+    {'name': 'actorMemberId', 'required': False, 'schema': {'type': 'string', 'pattern': '^[1-9][0-9]*$'}},
+    {'name': 'targetType', 'required': False, 'schema': {'type': 'string', 'maxLength': 64}},
+    {'name': 'targetId', 'required': False, 'schema': {'type': 'string', 'maxLength': 128}},
+    {'name': 'changeType', 'required': False, 'schema': {'type': 'string', 'enum': ['CREATE', 'UPDATE', 'ENABLE', 'DISABLE', 'REMOVE', 'REVOKE', 'PUBLISH', 'UPGRADE', 'OWNER_TRANSFER']}},
+    {'name': 'from', 'required': False, 'schema': {'type': 'string', 'format': 'date-time'}},
+    {'name': 'until', 'required': False, 'schema': {'type': 'string', 'format': 'date-time'}},
+]
+
 NAME_STATUS = PAGE + [
     {'name': 'name', 'required': False, 'schema': {'type': 'string'}},
     {'name': 'status', 'required': False, 'schema': {'type': 'string', 'enum': ['ENABLED', 'DISABLED']}},
@@ -286,7 +295,7 @@ def build():
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
         route('/v1/platform/authorization/audits', 'get', 'platformListAudits', '平台审计', 'PLATFORM',
               'iam-platform:audit:read', None, 'RPageResponseResourceDetailAuditEntry',
-              '审计脱敏；不记录凭证明文或敏感原值', query=PAGE),
+              '可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += member_routes('TENANT', '/v1/tenant', 'iam-tenant', PAGE + PHONE_EMAIL)
     routes += [
@@ -378,7 +387,7 @@ def build():
               '可信当前域解析身份；精确应用操作；限制对象及来源披露；无实际操作'),
         route('/v1/tenant/authorization/audits', 'get', 'tenantListAudits', '租户审计', 'TENANT',
               'iam-tenant:audit:read', None, 'RPageResponseResourceDetailAuditEntry',
-              '审计脱敏；不记录凭证明文或敏感原值', query=PAGE),
+              '可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值', query=AUDIT_QUERY),
     ]
     routes += delegation_routes('TENANT', '/v1/tenant', 'iam-tenant')
     retained = '保留既有领域实现；平台精确 ACTION；不改存储语义'

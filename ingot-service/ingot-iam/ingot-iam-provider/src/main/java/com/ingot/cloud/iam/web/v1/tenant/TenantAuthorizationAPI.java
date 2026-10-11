@@ -1,6 +1,9 @@
 package com.ingot.cloud.iam.web.v1.tenant;
 
+import java.time.Instant;
+
 import com.ingot.cloud.iam.diagnose.DiagnoseAuditService;
+import com.ingot.cloud.iam.diagnose.AuthorizationAuditQuery;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.model.iam.AuditEntry;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -51,13 +54,26 @@ public class TenantAuthorizationAPI implements RShortcuts {
      *
      * @param page 页码
      * @param pageSize 页大小
+     * @param actorMemberId 操作者成员 ID，精确匹配
+     * @param targetType 目标资源编码，精确匹配
+     * @param targetId 目标 ID，精确匹配
+     * @param changeType 变更类型
+     * @param from 时间起点，包含，ISO-8601 带时区
+     * @param until 时间终点，不包含，ISO-8601 带时区
      * @return 审计页
      */
     @Operation(summary = "租户审计")
     @GetMapping("/audits")
     public R<PageResponse<ResourceDetail<AuditEntry>>> audits(
             @RequestParam(defaultValue = "" + IamPages.DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize) {
-        return ok(diagnoses.listAudits(AuthorizationDomain.TENANT, page, pageSize));
+            @RequestParam(defaultValue = "" + IamPages.DEFAULT_SIZE) int pageSize,
+            @RequestParam(required = false) String actorMemberId,
+            @RequestParam(required = false) String targetType,
+            @RequestParam(required = false) String targetId,
+            @RequestParam(required = false) String changeType,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant until) {
+        return ok(diagnoses.listAudits(AuthorizationDomain.TENANT, page, pageSize,
+                AuthorizationAuditQuery.of(actorMemberId, targetType, targetId, changeType, from, until)));
     }
 }

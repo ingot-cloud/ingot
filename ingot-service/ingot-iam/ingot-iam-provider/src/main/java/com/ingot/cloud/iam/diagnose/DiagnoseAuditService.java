@@ -10,7 +10,6 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluationRepository;
 import com.ingot.cloud.iam.evaluation.AuthorizationEvaluator;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
@@ -32,12 +31,11 @@ import com.ingot.cloud.iam.policy.FieldPolicySnapshot;
 import com.ingot.cloud.iam.support.IamAccess;
 import com.ingot.cloud.iam.support.IamDetails;
 import com.ingot.cloud.iam.support.IamIds;
-import com.ingot.cloud.iam.support.IamJson;
+import com.ingot.cloud.iam.support.IamAuditValues;
 import com.ingot.cloud.iam.support.IamPages;
 import com.ingot.framework.commons.error.BizException;
 import com.ingot.framework.commons.model.iam.AuditActor;
 import com.ingot.framework.commons.model.iam.AuditEntry;
-import com.ingot.framework.commons.model.iam.AuditField;
 import com.ingot.framework.commons.model.iam.AuditTarget;
 import com.ingot.framework.commons.model.iam.AuthorizationContext;
 import com.ingot.framework.commons.model.iam.AuthorizationDomain;
@@ -65,8 +63,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class DiagnoseAuditService {
-    private static final TypeReference<Map<String, String>> TEXT_MAP = new TypeReference<>() {
-    };
     private static final String SCOPE_SUMMARY = "不包含越界对象明细";
     private final IamAccess access;
     private final AuthorizationEvaluator evaluator;
@@ -141,6 +137,19 @@ public class DiagnoseAuditService {
      * @return 审计页
      */
     public PageResponse<ResourceDetail<AuditEntry>> listAudits(AuthorizationDomain domain, int page, int pageSize) {
+        return listAudits(domain, page, pageSize, new AuthorizationAuditQuery(null, null, null, null, null, null));
+    }
+
+    /**
+     * 在可信域与租户边界内按精确条件和 UTC 半开时间范围分页，计数与列表使用相同 SQL 条件。
+     * @param domain 接口管理域
+     * @param page 页码
+     * @param pageSize 页大小
+     * @param query 已校验的筛选条件
+     * @return 脱敏审计页
+     */
+    public PageResponse<ResourceDetail<AuditEntry>> listAudits(AuthorizationDomain domain, int page, int pageSize,
+                                                             AuthorizationAuditQuery query) {
         ActiveIdentity actor = access.require(domain, domain == AuthorizationDomain.PLATFORM
                 ? IamAction.PLATFORM_AUDIT_READ : IamAction.TENANT_AUDIT_READ);
         IamPages.require(page, pageSize);
@@ -158,6 +167,26 @@ public class DiagnoseAuditService {
             wrapper.isNull(IamAuthorizationAuditEntity::getTenantId);
         } else {
             wrapper.eq(IamAuthorizationAuditEntity::getTenantId, id(IamIds.require(actor.context().tenantId())));
+        }
+        if (query.actorMemberId() != null) {
+            wrapper.eq(IamAuthorizationAuditEntity::getActorMemberId, id(IamIds.require(query.actorMemberId())));
+        }
+        if (query.targetType() != null) {
+            wrapper.eq(IamAuthorizationAuditEntity::getTargetType, query.targetType());
+        }
+        if (query.targetId() != null) {
+            wrapper.eq(IamAuthorizationAuditEntity::getTargetId, query.targetId());
+        }
+        if (query.changeType() != null) {
+            wrapper.eq(IamAuthorizationAuditEntity::getChangeType, query.changeType());
+        }
+        if (query.from() != null) {
+            wrapper.ge(IamAuthorizationAuditEntity::getOccurredAt,
+                    java.time.LocalDateTime.ofInstant(query.from(), ZoneOffset.UTC));
+        }
+        if (query.until() != null) {
+            wrapper.lt(IamAuthorizationAuditEntity::getOccurredAt,
+                    java.time.LocalDateTime.ofInstant(query.until(), ZoneOffset.UTC));
         }
         wrapper.orderByDesc(IamAuthorizationAuditEntity::getOccurredAt, IamAuthorizationAuditEntity::getId);
         Page<IamAuthorizationAuditEntity> result = audits.selectPage(new Page<>(page, pageSize), wrapper);
@@ -307,8 +336,9 @@ public class DiagnoseAuditService {
                         row.getActorMemberId().toString()),
                 new AuditTarget(row.getTargetType(), row.getTargetId()),
                 row.getChangeType(),
-                fields(row.getSafeBefore()), fields(row.getSafeAfter()),
-                revisions(row.getRevisions()),
+                IamAuditValues.readFields(row.getId().toString(), IamAuditValues.BEFORE_COLUMN, row.getSafeBefore()),
+                IamAuditValues.readFields(row.getId().toString(), IamAuditValues.AFTER_COLUMN, row.getSafeAfter()),
+                IamAuditValues.readRevisions(row.getId().toString(), row.getRevisions()),
                 text(row.getDelegationId()), text(row.getAssignmentId()), occurred, row.getTraceId());
     }
 
@@ -360,27 +390,6 @@ public class DiagnoseAuditService {
 
     private static String text(BigInteger value) {
         return value == null ? null : value.toString();
-    }
-
-    private static Map<AuditField, String> fields(String json) {
-        Map<String, String> raw = IamJson.read(json, TEXT_MAP);
-        Map<AuditField, String> result = new LinkedHashMap<>();
-        if (raw == null) {
-            return result;
-        }
-        for (Map.Entry<String, String> entry : raw.entrySet()) {
-            try {
-                result.put(AuditField.valueOf(entry.getKey()), entry.getValue());
-            } catch (IllegalArgumentException ignored) {
-                // 非白名单字段已由写入路径过滤，读取时忽略未知键。
-            }
-        }
-        return result;
-    }
-
-    private static Map<String, String> revisions(String json) {
-        Map<String, String> raw = IamJson.read(json, TEXT_MAP);
-        return raw == null ? Map.of() : raw;
     }
 
     private static BigInteger id(long value) {
