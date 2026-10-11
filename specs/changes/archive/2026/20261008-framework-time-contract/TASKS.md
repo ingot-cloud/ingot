@@ -16,9 +16,9 @@
 - [x] T6：TSS 显式 Cron 时区及 XXL Admin 配置；验收见 DESIGN。
 - [x] T7：前端公共时间工具、模型、输入和全部时间展示；验收见 DESIGN。
 - [x] T8：规范、接入文档、AGENTS/skill 与契约副本；验收见 DESIGN。
-- [ ] T9：时间相关自动化矩阵、真实 MySQL/Redis、构建已通过；全量回归仍有两项既有失败，见 ACCEPTANCE.md。
-- [ ] T10：浏览器矩阵和 XXL Admin 实际 Cron 预览已通过；全新环境的跨服务登录/刷新/退出/撤销/踢出仍待验收。
+- [x] T9：时间相关自动化矩阵、真实 MySQL/Redis、构建已通过；2026-10-11 用户接受既有问题另行跟踪，历史全量失败保留于 ACCEPTANCE.md，不宣称全仓回归通过。
+- [x] T10：浏览器矩阵和 XXL Admin 实际 Cron 预览已通过；2026-10-11，jy 确认跨服务登录/刷新/退出/撤销/踢出联调已验收。
 
-- [ ] Current 已在完整验收后更新，Change 已归档
+- [x] 2026-10-11 按最终验收决议更新 current/framework/time-contract，Change 已归档
 
-详细证据、命令及待验收项见 [验收记录](./ACCEPTANCE.md)。
+详细证据、命令及最终决议见 [验收记录](./ACCEPTANCE.md)，既有问题见 [独立跟踪](./FOLLOW_UP.md)。

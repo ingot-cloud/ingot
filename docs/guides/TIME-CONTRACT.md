@@ -32,7 +32,7 @@ Cron 时区和存储时区分别配置：TSS Spring 的 ingot.tss.spring.time-zo
 
 ## 新服务接入
 
-引入 ingot-core 及所需数据模块，自动继承 API mapper 和 MVC 转换；Feign 同一契约。数据源使用标准 UTC 配置，业务代码遵守 UTC 语义。自建 ObjectMapper 需保留业务模块并显式装配 InApiTimeModule；自建 data source 单独配 UTC。接入示例见 docs/guides/TIME-CONTRACT.md，完整变更验收记录见关联 time-contract active change。
+引入 ingot-core 及所需数据模块，自动继承 API mapper 和 MVC 转换；Feign 同一契约。数据源使用标准 UTC 配置，业务代码遵守 UTC 语义。自建 ObjectMapper 需保留业务模块并显式装配 InApiTimeModule；自建 data source 单独配 UTC。接入示例见下文，当前基线见 [统一时间契约](../../specs/current/framework/time-contract/README.md)，完整验收记录见本文末尾的归档链接。
 
 ## 独立业务服务示例
 
@@ -89,4 +89,4 @@ const picker = computed({
 - `RedisAuthorizationTimeContractTest` / `VerificationCodeUtcTest`：设置 TIME_TEST_REDIS_HOST/PORT/PASSWORD 后，用独立随机测试键验证内部编码、刷新/撤销和 TTL，并自动清理。
 - 前端 `pnpm test:time-browser`：需要 Playwright Chromium，覆盖三个浏览器时区、日期选择提交与夏令时。
 
-完成记录见 [时间变更验收](../../specs/changes/active/20261008-framework-time-contract/ACCEPTANCE.md)。
+完成记录见 [时间变更验收](../../specs/changes/archive/2026/20261008-framework-time-contract/ACCEPTANCE.md)，既有问题见 [独立跟踪](../../specs/changes/archive/2026/20261008-framework-time-contract/FOLLOW_UP.md)。

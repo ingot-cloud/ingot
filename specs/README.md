@@ -188,12 +188,12 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
-- [框架统一时间契约与 UTC 处理](./changes/active/20261008-framework-time-contract/README.md)（validating）
-
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 
 已归档（2026）：
+
+- [框架统一时间契约与 UTC 处理](./changes/archive/2026/20261008-framework-time-contract/README.md)（completed，2026-10-11 联调验收完成，既有问题独立跟踪）
 
 - [公共字段访问控制](./changes/archive/2026/20261010-framework-field-access-control/README.md)
 
@@ -224,6 +224,8 @@ current/<domain>/<capability>/
 - [PMS 应用授权旧字段破坏性清理（发布 B）](./changes/archive/2026/20260622-pms-authorization-ddl-cleanup/README.md)
 
 对应 current 能力：
+
+- [framework/time-contract](./current/framework/time-contract/README.md)
 
 - [framework/field-access-control](./current/framework/field-access-control/README.md)
 

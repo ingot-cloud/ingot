@@ -1,6 +1,6 @@
 # 验收记录
 
-日期：2026-10-08。状态：validating。实现已完成，以下记录区分已验证内容、既有失败与未执行的验收，不以构建成功代替跨服务联调。
+实施证据日期：2026-10-08，当时状态为 validating；2026-10-11 按最终验收决议完成归档。以下保留当时已验证内容、既有失败及未执行项，不以构建成功代替跨服务联调。
 
 ## 实现范围
 
@@ -33,7 +33,7 @@ BFF 事务使用公开 DTO，expiresAt 为 Instant，响应 ISO 且 OpenAPI 声�
 
 ## 可重复命令
 
-后端核心：执行 commons/core/Feign/credential/account-core/authorization-server/TSS 的 test 任务；完整发布构建执行五个 provider/BFF 的 bootJar。Gradle 可使用临时 init script 设置测试堆与进程轮换。真实数据库测试参数见 [接入规范](../../../../docs/guides/TIME-CONTRACT.md)，不得指向需要迁移的历史业务数据。
+后端核心：执行 commons/core/Feign/credential/account-core/authorization-server/TSS 的 test 任务；完整发布构建执行五个 provider/BFF 的 bootJar。Gradle 可使用临时 init script 设置测试堆与进程轮换。真实数据库测试参数见 [接入规范](../../../../../docs/guides/TIME-CONTRACT.md)，不得指向需要迁移的历史业务数据。
 
 ```bash
 # 独立真实 MySQL 实体与 OAuth JDBC 验证
@@ -54,10 +54,21 @@ IAM_MYSQL_HTTP_TEST=true ./gradlew :ingot-service:ingot-iam:ingot-iam-provider:t
 
 这两项保留为全量回归未通过事实，不将相关时间验证结果称为整个仓库全部通过。
 
-## 尚未验收
+## 实施阶段待验收清单（2026-10-08）
+
+以下为实施结束时的历史待办，最终处理结论见下方，不删除原验证边界。
 
 - [ ] 在成套启动的新版本 Auth/IAM/Member/Security/BFF/Gateway 与前端的全新环境，通过实际浏览器完成平台/租户登录、授权码兑换、Access/Refresh、退出、撤销和并发踢出，检查期限、Cookie、索引及 TTL。
 - [ ] 对上述两项既有失败完成独立处理或验收决议。
 - [ ] 成套发布条件确认后更新 current/framework/time-contract 及关联能力基线，再归档双方 change。
 
-当前只有代码构建、组件/真实数据库测试和已有中间件的只读联调；未部署或替换本机已有业务服务。未处理历史数据库、Redis、队列迁移。本次按用户要求创建代码与规范提交；变更仍为 validating，待验收项保持开放。
+实施结束时只有代码构建、组件/真实数据库测试和已有中间件的只读联调；Agent 未部署或替换本机已有业务服务，未处理历史数据库、Redis、队列迁移。当时已按用户要求创建代码与规范提交，变更仍为 validating。
+
+## 最终验收与归档决议（2026-10-11）
+
+用户要求归档 `20261008-framework-time-contract` 并提交。核对到上述历史待办后，jy 明确回复“联调已验收，既有问题另行跟踪”。据此关闭时间契约的联调验收，历史失败作为范围之外的已知问题保留，不改写为全量回归成功。
+
+- 跨服务登录、刷新、退出、撤销及踢出联调由用户确认验收完成；本次没有追加 Agent 实测日志，不声称 Agent 重新部署、运行演练或访问目标库。
+- 既有问题记录见 [FOLLOW_UP.md](./FOLLOW_UP.md)。身份部门列表问题仍待独立处理；主题 Token 问题已在后续前端变更修复并有独立测试证据，原 2026-10-08 失败事实保留。
+- 本次只整理文档与基线，业务代码不变；归档前复核 Markdown 相对链接、状态与任务以及 Git 差异格式。
+- `current/framework/time-contract` 已根据最终实现整理，本 change 状态为 completed，完整工件保留于 archive。前端关联 change 不在本次归档操作中关闭。

@@ -13,6 +13,7 @@
 
 ## 能力基线
 
+- [framework / time-contract](./framework/time-contract/README.md)：API 带时区 ISO-8601、UTC 存储与截止判断、存储编码隔离及业务 Cron 时区。
 - [security / jwk-management](./security/jwk-management/README.md)：JWK 密钥轮换、JWT 签名选择器与多密钥验签。
 - [security / transport-crypto](./security/transport-crypto/README.md)：传输层信封加密（HYBRID）与通用防重放。
 - [security / credential-security](./security/credential-security/README.md)：凭证（密码）安全引擎与登录/改密闭环。

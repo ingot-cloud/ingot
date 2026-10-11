@@ -32,4 +32,4 @@ Cron 时区和存储时区分别配置：TSS Spring 的 ingot.tss.spring.time-zo
 
 ## 新服务接入
 
-引入 ingot-core 及所需数据模块，自动继承 API mapper 和 MVC 转换；Feign 同一契约。数据源使用标准 UTC 配置，业务代码遵守 UTC 语义。自建 ObjectMapper 需保留业务模块并显式装配 InApiTimeModule；自建 data source 单独配 UTC。接入示例见 docs/guides/TIME-CONTRACT.md，完整变更验收记录见关联 time-contract active change。
+引入 ingot-core 及所需数据模块，自动继承 API mapper 和 MVC 转换；Feign 同一契约。数据源使用标准 UTC 配置，业务代码遵守 UTC 语义。自建 ObjectMapper 需保留业务模块并显式装配 InApiTimeModule；自建 data source 单独配 UTC。接入示例见 docs/guides/TIME-CONTRACT.md，当前基线见 specs/current/framework/time-contract/，完整验收记录见接入指南引用的时间契约归档。
