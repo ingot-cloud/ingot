@@ -6,8 +6,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.ingot.framework.eventbus.InvalidationBus;
+import com.ingot.framework.tss.common.registry.TaskRegistry;
+import com.ingot.framework.tss.spring.config.SpringTaskAutoConfiguration;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -20,9 +24,10 @@ import static org.mockito.Mockito.*;
 class RoleApplicationWorkerConfigurationTest {
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withUserConfiguration(RoleApplicationWorkerConfiguration.class)
-            .withBean(RoleApplicationService.class, () -> {
-                var service = mock(RoleApplicationService.class);
+            .withBean(RoleApplicationWork.class, () -> {
+                var service = mock(RoleApplicationWork.class);
                 when(service.discover(any(), anyInt())).thenReturn(List.of());
+                when(service.executeTask(any())).thenReturn(RoleApplicationWork.BatchResult.STOP);
                 return service;
             });
 
@@ -64,5 +69,64 @@ class RoleApplicationWorkerConfigurationTest {
         var fractional = new RoleApplicationWorkerProperties();
         fractional.setActiveBatchDelay(Duration.ofNanos(1));
         assertDoesNotThrow(fractional::validate);
+    }
+
+    @Test
+    void springTssDoesNotRegisterWorkerOrSupplyItsExecutionThreads() {
+        runner.withConfiguration(AutoConfigurations.of(SpringTaskAutoConfiguration.class)).run(context -> {
+            assertNull(context.getStartupFailure());
+            assertEquals(1, context.getBeansOfType(RoleApplicationScheduler.class).size());
+            assertTrue(context.getBean(TaskRegistry.class).getAllTaskNames().isEmpty());
+            assertTrue(context.getBean(com.ingot.framework.tss.common.scheduler.TaskScheduler.class).getAllTasks().isEmpty());
+            var tssPool = (ThreadPoolTaskScheduler) context.getBean(org.springframework.scheduling.TaskScheduler.class);
+            tssPool.shutdown();
+            var executed = new CountDownLatch(1);
+            when(context.getBean(RoleApplicationWork.class).executeTask(java.math.BigInteger.ONE)).thenAnswer(invocation -> {
+                assertTrue(Thread.currentThread().getName().startsWith("iam-role-application-worker"));
+                executed.countDown(); return RoleApplicationWork.BatchResult.STOP;
+            });
+            context.getBean(RoleApplicationScheduler.class).wake(java.math.BigInteger.ONE);
+            try { assertTrue(executed.await(2, TimeUnit.SECONDS)); }
+            catch (InterruptedException interrupted) { throw new AssertionError(interrupted); }
+        });
+    }
+
+    @Test
+    void tssTypeDoesNotSelectOrDisableRoleWorker() {
+        var withTss = runner.withConfiguration(AutoConfigurations.of(SpringTaskAutoConfiguration.class));
+        withTss.withPropertyValues("ingot.tss.type=xxljob").run(context -> {
+            assertNull(context.getStartupFailure());
+            assertTrue(context.getBean(RoleApplicationScheduler.class).isRunning());
+            assertTrue(context.getBeansOfType(TaskRegistry.class).isEmpty());
+        });
+        withTss.withPropertyValues("ingot.tss.type=spring", "ingot.iam.role-applications.worker-enabled=false").run(context -> {
+            assertNull(context.getStartupFailure());
+            assertTrue(context.getBeansOfType(RoleApplicationScheduler.class).isEmpty());
+            assertNotNull(context.getBean(TaskRegistry.class));
+            assertTrue(context.getBean(RoleApplicationWakeupNotifier.class).isRunning());
+        });
+    }
+
+    @Test
+    void productionDomainAdapterAndServiceWireAsSingleWorkImplementation() {
+        new ApplicationContextRunner().withUserConfiguration(RoleApplicationWorkerConfiguration.class,
+                        RoleApplicationService.class, PlatformRoleApplicationDomainSupport.class)
+                .withBean(com.ingot.cloud.iam.support.IamAccess.class, () -> mock(com.ingot.cloud.iam.support.IamAccess.class))
+                .withBean(RoleService.class, () -> mock(RoleService.class))
+                .withBean(com.ingot.cloud.iam.persistence.RoleRepository.class, () -> mock(com.ingot.cloud.iam.persistence.RoleRepository.class))
+                .withBean(com.ingot.cloud.iam.persistence.AssignmentRepository.class, () -> mock(com.ingot.cloud.iam.persistence.AssignmentRepository.class))
+                .withBean(com.ingot.cloud.iam.assignment.AssignmentService.class, () -> mock(com.ingot.cloud.iam.assignment.AssignmentService.class))
+                .withBean(com.ingot.cloud.iam.evaluation.ResourceAccess.class, () -> mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class))
+                .withBean(com.ingot.cloud.iam.identity.ActiveIdentityService.class, () -> mock(com.ingot.cloud.iam.identity.ActiveIdentityService.class))
+                .withBean(com.ingot.cloud.iam.authorization.IamActionAuthorizer.class, () -> mock(com.ingot.cloud.iam.authorization.IamActionAuthorizer.class))
+                .withBean(com.ingot.cloud.iam.persistence.RoleApplicationRepository.class, () -> mock(com.ingot.cloud.iam.persistence.RoleApplicationRepository.class))
+                .withBean(com.ingot.cloud.iam.support.IamAuditWriter.class, () -> mock(com.ingot.cloud.iam.support.IamAuditWriter.class))
+                .withBean(org.springframework.transaction.PlatformTransactionManager.class, () -> mock(org.springframework.transaction.PlatformTransactionManager.class))
+                .run(context -> {
+                    assertNull(context.getStartupFailure());
+                    assertEquals(1, context.getBeansOfType(RoleApplicationDomainSupport.class).size());
+                    assertSame(context.getBean(RoleApplicationService.class), context.getBean(RoleApplicationWork.class));
+                    assertTrue(context.getBean(RoleApplicationScheduler.class).isRunning());
+                });
     }
 }

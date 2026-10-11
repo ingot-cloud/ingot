@@ -433,6 +433,16 @@ public class QuartzTaskAutoConfiguration {
 
 **完成！** 业务代码无需修改。
 
+## 与 IAM 角色版本应用 worker 的边界
+
+TSS 提供任务注册、Cron 触发及 Spring/XXL-JOB 实现切换。IAM 角色版本应用另有持久计划、明细、数据库租约和提交后立即唤醒；当前 worker 不注册到 TSS，也不共用 TSS 的执行线程。`ingot.tss.type` 不控制角色 worker，后者使用 `ingot.iam.role-applications.worker-enabled`。
+
+角色业务规则由 IAM 内部平台适配器提供，共用流程负责任务状态和事务；任务明细、授权预检、冲突暂停、分配审计及缓存失效仍归 IAM。TSS 的触发记录不能替代这些业务结果。配置选择 XXL-JOB 不会自动把角色任务交给 Admin。
+
+未来确有必要接入 TSS 时，适配入口只请求发现或唤醒任务。补偿发现只能启用一个来源，必须保留错峰、错误退避和提交后立即唤醒；不能同时保留内部扫描又新增相同的 Cron 扫描。任何触发方式都不能绕过数据库租约、事务锁及当前身份和授权校验，触发成功也不表示角色应用全部完成。
+
+不同业务出现明确共用需求后，再评估向 TSS 提取执行能力；当前不新增通用持久任务引擎。角色运行说明见 [IAM 角色应用 worker](../iam/role-application-worker.md)。
+
 ## 总结
 
 这个架构实现了：

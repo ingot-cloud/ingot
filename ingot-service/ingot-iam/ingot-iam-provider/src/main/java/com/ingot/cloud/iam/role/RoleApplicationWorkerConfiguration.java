@@ -44,7 +44,7 @@ public class RoleApplicationWorkerConfiguration {
     @ConditionalOnProperty(prefix = RoleApplicationWorkerProperties.PREFIX,
             name = RoleApplicationWorkerProperties.WORKER_ENABLED,
             havingValue = RoleApplicationWorkerProperties.ENABLED_VALUE, matchIfMissing = true)
-    public RoleApplicationScheduler roleApplicationWorker(RoleApplicationService applications,
+    public RoleApplicationScheduler roleApplicationWorker(RoleApplicationWork applications,
             RoleApplicationWorkerProperties properties, RoleApplicationWorkerMetrics metrics) {
         return new RoleApplicationScheduler(applications, properties, timer(TIMER_THREAD),
                 Executors.newSingleThreadExecutor(threads(EXECUTION_THREAD)),

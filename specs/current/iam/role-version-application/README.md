@@ -14,3 +14,8 @@
 
 - [调度优化变更与验收记录](../../../changes/archive/2026/20261011-iam-role-application-scheduling/README.md)
 - [调度配置与运行说明](../../../changes/archive/2026/20261011-iam-role-application-scheduling/OPERATIONS.md)
+
+2026-10-11 完成角色应用引擎职责分离验收。共用流程通过内部适配接口调用平台规则，继续使用独立 worker；本轮没有开放租户批量应用，也没有接入 TSS 调度。
+
+- [职责分离变更与验收记录](../../../changes/archive/2026/20261011-iam-role-application-domain-support/README.md)
+- [worker 职责及 TSS 边界](../../../../docs/modules/iam/role-application-worker.md)

@@ -12,13 +12,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.ingot.cloud.iam.assignment.AssignmentService;
-import com.ingot.cloud.iam.authorization.IamActionAuthorizer;
 import com.ingot.cloud.iam.evaluation.ObjectScope;
-import com.ingot.cloud.iam.evaluation.ResourceAccess;
-import com.ingot.cloud.iam.identity.ActiveIdentityService;
-import com.ingot.cloud.iam.persistence.AssignmentRepository;
-import com.ingot.cloud.iam.persistence.RoleRepository;
 import com.ingot.cloud.iam.persistence.RoleApplicationRepository;
 import com.ingot.cloud.iam.persistence.entity.*;
 import com.ingot.cloud.iam.support.*;
@@ -34,8 +28,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * <p>平台自定义角色的版本应用：持久集合、全量预检、带租约的百条事务批次。</p>
- * <p>工作线程从服务端身份标识恢复有效身份，不使用HTTP上下文或登录令牌。</p>
+ * <p>编排角色版本应用的持久集合、全量预检和带租约的事务批次。</p>
+ * <p>业务域门禁由内部适配器提供；工作线程不使用HTTP上下文或登录令牌。</p>
  * @author jy
  * @since 1.0.0
  */
@@ -49,14 +43,8 @@ public class RoleApplicationService implements RoleApplicationWork {
     private static final TypeReference<AssignmentUpgradePreviewItem> PREVIEW = new TypeReference<>() { };
     private static final int MAX_REASON_LENGTH = 512;
     private final IamAccess access;
-    private final RoleService roles;
-    private final RoleRepository roleStore;
-    private final AssignmentRepository assignmentStore;
-    private final AssignmentService assignments;
+    private final RoleApplicationDomainSupport domain;
     private final RoleApplicationRepository store;
-    private final ResourceAccess resourceAccess;
-    private final ActiveIdentityService identities;
-    private final IamActionAuthorizer authorizer;
     private final TransactionTemplate transaction;
     private final IamAuditWriter audits;
     private final ApplicationEventPublisher events;
@@ -65,26 +53,16 @@ public class RoleApplicationService implements RoleApplicationWork {
 
     /**
      * 构造事务模板，所有依赖必需且通过构造器注入。
-     * @param access HTTP准入及ID生成
-     * @param roles 角色发布
-     * @param roleStore 角色持久化
-     * @param assignmentStore 分配持久化
-     * @param assignments 共用范围和委派门禁
+     * @param access ID生成，不用于业务域准入
+     * @param domain 业务域访问与门禁
      * @param store 任务存储
-     * @param resourceAccess 对象范围
-     * @param identities 可信身份恢复
-     * @param authorizer 实时授权
      * @param audits 审计写入
      * @param manager 事务管理器
      * @param events 提交后的领取提示
      */
-    public RoleApplicationService(IamAccess access, RoleService roles, RoleRepository roleStore,
-            AssignmentRepository assignmentStore, AssignmentService assignments, RoleApplicationRepository store,
-            ResourceAccess resourceAccess, ActiveIdentityService identities, IamActionAuthorizer authorizer,
+    public RoleApplicationService(IamAccess access, RoleApplicationDomainSupport domain, RoleApplicationRepository store,
             PlatformTransactionManager manager, IamAuditWriter audits, ApplicationEventPublisher events) {
-        this.access = access; this.roles = roles; this.roleStore = roleStore;
-        this.assignmentStore = assignmentStore; this.assignments = assignments; this.store = store;
-        this.resourceAccess = resourceAccess; this.identities = identities; this.authorizer = authorizer;
+        this.access = access; this.domain = domain; this.store = store;
         this.transaction = new TransactionTemplate(manager); this.audits = audits; this.events = events;
     }
 
@@ -116,7 +94,7 @@ public class RoleApplicationService implements RoleApplicationWork {
             lockRole(roleId, admission);
             var existing = store.findPrepared(IamIds.require(roleId), input.idempotencyKey());
             if (existing != null) return replay(existing, admission, IamJson.object(input));
-            var published = roles.publish(AuthorizationDomain.PLATFORM, false, roleId, input.publish());
+            var published = domain.publish(roleId, input.publish());
             var prepare = new RoleApplicationPrepareInput(published.id(), input.selection(), input.sourceRevisionIds(),
                     input.assignmentIds(), input.idempotencyKey());
             return prepareLocked(roleId, prepare, governed(), IamJson.object(input));
@@ -147,9 +125,9 @@ public class RoleApplicationService implements RoleApplicationWork {
      */
     public PageResponse<ResourceDetail<AssignmentRecord>> candidates(String roleId, int page, int size) {
         IamPages.require(page, size); var admission = governed(); requireRole(roleId, admission);
-        var rows = assignmentStore.pageRoleApplication(IamIds.require(roleId), page, size, readScope(admission));
+        var rows = domain.pageAssignments(IamIds.require(roleId), page, size, readScope(admission));
         return IamPages.details(rows.getRecords().stream().map(row -> IamDetails.of(
-                assignments.applicationSnapshot(admission, row), row.getVersion().toString())).toList(),
+                domain.snapshot(admission, row), row.getVersion().toString())).toList(),
                 rows.getTotal(), page, size);
     }
 
@@ -160,7 +138,7 @@ public class RoleApplicationService implements RoleApplicationWork {
      */
     public List<RoleRevisionDistribution> distribution(String roleId) {
         var admission = governed(); requireRole(roleId, admission);
-        return assignmentStore.applicationDistribution(IamIds.require(roleId), readScope(admission));
+        return domain.distribution(IamIds.require(roleId), readScope(admission));
     }
 
     /** 分页读取同一可见性边界下的计划明细及完整权限差异。 */
@@ -302,11 +280,11 @@ public class RoleApplicationService implements RoleApplicationWork {
             if (task.getStatus() != RoleApplicationStatus.RUNNING || !worker.equals(task.getLeaseOwner())) return false;
             if (!store.claim(task.getId(), worker)) return false;
             task = store.find(task.getId().longValueExact());
-            var admission = restore(task); requireRole(task.getRoleId().toString(), admission, true);
+            var admission = domain.restore(task); requireRole(task.getRoleId().toString(), admission, true);
             var batch = store.scan(task.getId().longValueExact(), BigInteger.ZERO, ObjectScope.all(), UNFINISHED);
             if (!batch.isEmpty()) {
                 var input = command(task, batch);
-                assignments.applyApplication(admission, input);
+                domain.apply(admission, input);
                 for (var row : batch) {
                     row.setStatus(RoleApplicationItemStatus.SUCCEEDED); row.setFailureReason(null); store.save(row);
                 }
@@ -341,10 +319,7 @@ public class RoleApplicationService implements RoleApplicationWork {
 
     private RoleApplicationTask prepareLocked(String roleId, RoleApplicationPrepareInput input,
             IamAdmission admission, String signature) {
-        var target = roleStore.findRevision(IamIds.require(input.targetRevisionId()));
-        if (target == null || target.getRoleId().longValueExact() != IamIds.require(roleId)
-                || target.getKind() != RoleKind.PLATFORM_CUSTOM)
-            throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
+        var target = domain.requireTarget(roleId, input.targetRevisionId());
         var sources = input.sourceRevisionIds() == null ? List.<BigInteger>of()
                 : input.sourceRevisionIds().stream().map(v -> BigInteger.valueOf(IamIds.require(v))).distinct().toList();
         var selected = input.assignmentIds() == null ? List.<BigInteger>of()
@@ -353,7 +328,7 @@ public class RoleApplicationService implements RoleApplicationWork {
                 || input.selection() == RoleApplicationSelection.ASSIGNMENTS && selected.isEmpty())
             throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         for (var source : sources) {
-            var row = roleStore.findRevision(source.longValueExact());
+            var row = domain.findRevision(source.longValueExact());
             if (row == null || !row.getRoleId().equals(target.getRoleId())) throw new BizException(IamReasonCode.INVALID_ARGUMENT);
         }
         var task = new IamRoleApplicationTaskEntity();
@@ -368,13 +343,13 @@ public class RoleApplicationService implements RoleApplicationWork {
         var scope = scope(admission);
         requireCollectionCoverage(roleId, input, sources, scope);
         while (true) {
-            var rows = assignmentStore.roleApplicationRows(IamIds.require(roleId), cursor,
+            var rows = domain.scanAssignments(IamIds.require(roleId), cursor,
                     input.selection() == RoleApplicationSelection.SOURCE_REVISIONS ? sources : null,
                     input.selection() == RoleApplicationSelection.ASSIGNMENTS ? selected : null, scope,
                     RoleApplicationRepository.BATCH_SIZE);
             if (rows.isEmpty()) break;
             for (var assignment : rows) {
-                var original = assignments.applicationSnapshot(admission, assignment);
+                var original = domain.snapshot(admission, assignment);
                 var row = new IamRoleApplicationItemEntity(); row.setId(BigInteger.valueOf(access.nextId()));
                 row.setTaskId(task.getId()); row.setAssignmentId(assignment.getId());
                 row.setOriginalSnapshot(IamJson.object(original)); row.setExpectedAssignmentVersion(assignment.getVersion());
@@ -402,7 +377,7 @@ public class RoleApplicationService implements RoleApplicationWork {
         if (scope.coversAll() || input.selection() == RoleApplicationSelection.ASSIGNMENTS) return;
         BigInteger cursor = BigInteger.ZERO;
         while (true) {
-            var rows = assignmentStore.roleApplicationRows(IamIds.require(roleId), cursor,
+            var rows = domain.scanAssignments(IamIds.require(roleId), cursor,
                     input.selection() == RoleApplicationSelection.SOURCE_REVISIONS ? sources : null,
                     null, ObjectScope.all(), RoleApplicationRepository.BATCH_SIZE);
             if (rows.isEmpty()) return;
@@ -433,10 +408,10 @@ public class RoleApplicationService implements RoleApplicationWork {
                 try {
                     if (!com.ingot.cloud.iam.persistence.ObjectScopeSql.matches(visible, row.getAssignmentId().longValueExact()))
                         throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-                    var current = assignmentStore.find(AuthorizationDomain.PLATFORM, null, row.getAssignmentId().longValueExact());
+                    var current = domain.findAssignment(row.getAssignmentId().longValueExact());
                     if (current == null) throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
                     if (refresh) {
-                        var latest = assignments.applicationSnapshot(admission, current);
+                        var latest = domain.snapshot(admission, current);
                         row.setOriginalSnapshot(IamJson.object(latest)); row.setExpectedAssignmentVersion(current.getVersion());
                         if (current.getRevisionId().equals(task.getTargetRevisionId())) {
                             row.setStatus(RoleApplicationItemStatus.ALREADY_TARGET); row.setFailureReason(null);
@@ -451,14 +426,14 @@ public class RoleApplicationService implements RoleApplicationWork {
             try {
                 var command = new AssignmentUpgradeInput(target(task), ready.stream().map(row -> new AssignmentUpgradeItem(
                         row.getAssignmentId().toString(), row.getExpectedAssignmentVersion().toString(), reuse ? null : bindings(row))).toList());
-                var result = assignments.previewApplication(admission, command);
+                var result = domain.preview(admission, command);
                 var previews = result.items().stream().collect(java.util.stream.Collectors.toMap(AssignmentUpgradePreviewItem::id, item -> item));
                 for (var row : ready) { var preview = previews.get(row.getAssignmentId().toString()); savePreview(row, preview); blocked |= !preview.allowed(); }
             } catch (BizException batchFailure) {
                 // 合法输入按百条预检。极少数结构错误以逐条定位，不能把一个错误误报到其他分配。
                 for (var row : ready) {
                     try {
-                        var result = assignments.previewApplication(admission, new AssignmentUpgradeInput(target(task),
+                        var result = domain.preview(admission, new AssignmentUpgradeInput(target(task),
                                 List.of(new AssignmentUpgradeItem(row.getAssignmentId().toString(), row.getExpectedAssignmentVersion().toString(), reuse ? null : bindings(row)))));
                         var preview = result.items().getFirst(); savePreview(row, preview); blocked |= !preview.allowed();
                     } catch (BizException failure) { blocked = true; block(row, failure); }
@@ -485,46 +460,29 @@ public class RoleApplicationService implements RoleApplicationWork {
                 r.getAssignmentId().toString(), r.getExpectedAssignmentVersion().toString(), bindings(r))).toList());
     }
     private RoleRevisionRef target(IamRoleApplicationTaskEntity task) {
-        return new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM, task.getTargetRevisionId().toString());
+        return domain.reference(task.getTargetRevisionId());
     }
     private IamAdmission governed() {
-        var result = access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
-        if (!result.governed()) throw new BizException(IamReasonCode.ACTION_DENIED);
-        return result;
-    }
-    private IamAdmission restore(IamRoleApplicationTaskEntity task) {
-        var context = new AuthorizationContext(AuthorizationDomain.PLATFORM, null, task.getActorAccountId().toString(),
-                task.getActorMemberId().toString());
-        var actor = identities.requireActive(context);
-        var admission = authorizer.admit(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
-        if (!admission.governed()) throw new BizException(IamReasonCode.ACTION_DENIED);
-        return new IamAdmission(actor, true);
+        return domain.admit();
     }
     private ObjectScope scope(IamAdmission admission) {
-        return resourceAccess.objectsForExecution(admission.actor().context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        return domain.scope(admission, true);
     }
     private ObjectScope readScope(IamAdmission admission) {
-        return resourceAccess.objects(admission.actor().context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        return domain.scope(admission, false);
     }
     private void requireRole(String roleId, IamAdmission admission) {
         requireRole(roleId, admission, false);
     }
     private void requireRole(String roleId, IamAdmission admission, boolean fresh) {
-        var role = roleStore.findDefinition(AuthorizationDomain.PLATFORM, false, null, IamIds.require(roleId));
-        if (role == null || role.getKind() != RoleKind.PLATFORM_CUSTOM) throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
-        var objects = fresh ? resourceAccess.objectsForExecution(admission.actor().context(), IamAction.PLATFORM_ROLE_READ)
-                : resourceAccess.objects(admission.actor().context(), IamAction.PLATFORM_ROLE_READ);
-        if (!com.ingot.cloud.iam.persistence.ObjectScopeSql.matches(objects, IamIds.require(roleId)))
-            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        domain.requireRole(roleId, admission, fresh);
     }
     private void lockRole(String roleId, IamAdmission admission) {
-        assignmentStore.lockAuthorization(AuthorizationDomain.PLATFORM);
-        roleStore.lockDefinition(AuthorizationDomain.PLATFORM, false, null, IamIds.require(roleId));
+        domain.lockRole(IamIds.require(roleId));
         requireRole(roleId, admission, true);
     }
     private void lockWorker(IamRoleApplicationTaskEntity task) {
-        assignmentStore.lockAuthorization(AuthorizationDomain.PLATFORM);
-        roleStore.lockDefinition(AuthorizationDomain.PLATFORM, false, null, task.getRoleId().longValueExact());
+        domain.lockRole(task.getRoleId().longValueExact());
     }
     private IamRoleApplicationTaskEntity requireTask(String roleId, String id, IamAdmission admission) {
         requireRole(roleId, admission); return sameRole(store.find(IamIds.require(id)), roleId);
@@ -567,7 +525,7 @@ public class RoleApplicationService implements RoleApplicationWork {
                 row.getFailureReason());
     }
     private RoleApplicationTask view(IamRoleApplicationTaskEntity task, ObjectScope scope) {
-        var target = roleStore.findRevision(task.getTargetRevisionId().longValueExact());
+        var target = domain.findRevision(task.getTargetRevisionId().longValueExact());
         return new RoleApplicationTask(task.getId().toString(), task.getRoleId().toString(), task.getTargetRevisionId().toString(),
                 task.getStatus(), task.getVersion().toString(), store.counts(task.getId().longValueExact(), scope),
                 task.getFailureReason(), task.getCreatedAt().toInstant(ZoneOffset.UTC), task.getUpdatedAt().toInstant(ZoneOffset.UTC),

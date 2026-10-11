@@ -232,8 +232,9 @@ class RoleWorkspaceMySqlHttpTest {
                 new AuthorizationChangeNotifier(event -> { }), roles, realRoles, assignments,
                 IamMybatisTestAccess.delegationAdmission(source), resources, mock(PlatformAuthorizationEditor.class),
                 mock(TenantScopeCandidates.class), new DataSourceTransactionManager(source));
-        applicationNode = () -> new RoleApplicationService(access, roles, realRoles, assignments, applicationPresenter, taskStore,
-                resources, applicationIdentities, applicationAuthorizer, new DataSourceTransactionManager(source),
+        var applicationDomain = new PlatformRoleApplicationDomainSupport(access, roles, realRoles, assignments,
+                applicationPresenter, resources, applicationIdentities, applicationAuthorizer);
+        applicationNode = () -> new RoleApplicationService(access, applicationDomain, taskStore, new DataSourceTransactionManager(source),
                 IamMybatisTestAccess.audits(source), event -> {
                     applicationEvents.add(event);
                     applicationEventSink.accept(event);

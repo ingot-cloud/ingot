@@ -6,6 +6,7 @@ apply from: 'ingot-assemble.gradle'
 dependencies {
     implementation project(ingot.framework_access_control)
     testRuntimeOnly("com.h2database:h2")
+    testImplementation project(ingot.framework_tss_spring)
     implementation(deps.spring.spring_boot.web_starter)
     implementation(deps.spring.spring_boot.actuator_starter)
     implementation(deps.spring.spring_boot.configuration_processor)
