@@ -353,3 +353,16 @@ MT01–MT04 的实施、契约/定向验证和人工验收在 [PLATFORM-MEMBER-T
 ACN01–ACN03 的命名决策、构建/文档调整与限定验证见 [ACCESS-CONTROL-MODULE-NAMING](./ACCESS-CONTROL-MODULE-NAMING.md)。本轮用户授权覆盖模块命名，不包含字段公共处理功能实施。
 
 ACN01–ACN03 已完成：25 个原有文件完整移动，17 项公共模块测试、两个消费模块编译和新名称 JAR 验证通过；详细证据见增量文档。
+
+
+## 2026-10-11 授权审计收敛（用户已批准）
+
+决策与验收见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。
+
+- [x] AU01 后端筛选及隔离/参数/时间验证
+- [x] AU02 审计格式兼容及错误语义回归
+- [x] AU03 前端当前域查询、筛选与完整展示
+- [x] AU04 菜单/契约来源同步及限定自动化验证
+- [ ] AU05 两站真实联调与部署验收
+
+2026-10-11：AU01–AU04 已完成，本增量 validating；证据见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。AU05 的真实服务发布/联调验收待执行，主 change 保持 implementing。

@@ -201,3 +201,10 @@ MT01–MT03 开发与定向自动化完成，时间增量进入 validating；用
 用户已授权选择并修改更明确的公共模块名称，需求、兼容范围和任务见 [ACCESS-CONTROL-MODULE-NAMING](./ACCESS-CONTROL-MODULE-NAMING.md)。模块更名为 `ingot-access-control`，Java 与运行时契约保持；本轮只实施命名调整，主 change 保持 implementing。
 
 ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示例编译、新名称 JAR 及两仓库格式检查通过；此前产品验收待办保持。
+
+
+## 2026-10-11 授权审计收敛
+
+用户已批准并要求实施 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。固定当前域、统一审计文本格式、补齐服务端筛选与页面状态；保留平台/租户隔离及历史审计。主 change 保持 implementing。
+
+2026-10-11：授权审计 AU01–AU04 开发与限定自动化完成，本增量 validating；AU05 真实服务发布和两站验收待执行。主 change 保持 implementing，证据见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。

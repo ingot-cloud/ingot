@@ -1818,7 +1818,7 @@
     "action": "iam-platform:audit:read",
     "request": null,
     "response": "RPageResponseResourceDetailAuditEntry",
-    "execution": "审计脱敏；不记录凭证明文或敏感原值",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
     "implemented": true,
     "query": [
       {
@@ -1838,6 +1838,64 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "actorMemberId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      {
+        "name": "targetType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "targetId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      {
+        "name": "changeType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CREATE",
+            "UPDATE",
+            "ENABLE",
+            "DISABLE",
+            "REMOVE",
+            "REVOKE",
+            "PUBLISH",
+            "UPGRADE",
+            "OWNER_TRANSFER"
+          ]
+        }
+      },
+      {
+        "name": "from",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "until",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     ]
@@ -2772,7 +2830,7 @@
     "action": "iam-tenant:audit:read",
     "request": null,
     "response": "RPageResponseResourceDetailAuditEntry",
-    "execution": "审计脱敏；不记录凭证明文或敏感原值",
+    "execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
     "implemented": true,
     "query": [
       {
@@ -2792,6 +2850,64 @@
           "minimum": 1,
           "maximum": 200,
           "default": 20
+        }
+      },
+      {
+        "name": "actorMemberId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      {
+        "name": "targetType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      {
+        "name": "targetId",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      {
+        "name": "changeType",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "CREATE",
+            "UPDATE",
+            "ENABLE",
+            "DISABLE",
+            "REMOVE",
+            "REVOKE",
+            "PUBLISH",
+            "UPGRADE",
+            "OWNER_TRANSFER"
+          ]
+        }
+      },
+      {
+        "name": "from",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "until",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     ]

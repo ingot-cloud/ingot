@@ -346,3 +346,8 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 ## 2026-10-09 菜单高级配置与步骤编辑
 
 用户已批准实施，增量需求、契约、决策、任务和验收见 [MENU-ADVANCED-CONFIGURATION](./MENU-ADVANCED-CONFIGURATION.md)。本增量 validating，MA01–MA05 与 MA06-A 已完成，MA06-B 真实服务联调及上线验收待执行；证据见 [MENU-ADVANCED-VERIFICATION](./MENU-ADVANCED-VERIFICATION.md)。主 change 保留原状态与未完成事项。
+
+
+## 2026-10-11 授权审计查询
+
+`GET /v1/platform/authorization/audits` 和 `GET /v1/tenant/authorization/audits` 新增可选 `actorMemberId`、`targetType`、`targetId`、`changeType`、`from`、`until`。精确匹配、长度、时间半开区间及错误规则见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。原响应/权限/缺省分页保持，不支持跨域或跨组织聚合。

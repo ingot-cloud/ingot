@@ -11153,7 +11153,7 @@
         ],
         "x-iam-domain": "PLATFORM",
         "x-iam-action": "iam-platform:audit:read",
-        "x-iam-execution": "审计脱敏；不记录凭证明文或敏感原值",
+        "x-iam-execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -11225,6 +11225,33 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "内部审计格式或存储读取异常；S0500，不表示客户端参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "S0500"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "parameters": [
@@ -11247,6 +11274,70 @@
               "minimum": 1,
               "maximum": 200,
               "default": 20
+            }
+          },
+          {
+            "name": "actorMemberId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "changeType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CREATE",
+                "UPDATE",
+                "ENABLE",
+                "DISABLE",
+                "REMOVE",
+                "REVOKE",
+                "PUBLISH",
+                "UPGRADE",
+                "OWNER_TRANSFER"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ]
@@ -17148,7 +17239,7 @@
         ],
         "x-iam-domain": "TENANT",
         "x-iam-action": "iam-tenant:audit:read",
-        "x-iam-execution": "审计脱敏；不记录凭证明文或敏感原值",
+        "x-iam-execution": "可信域与租户隔离；SQL精确筛选与半开时间区间；审计脱敏；不记录凭证明文或敏感原值",
         "x-runtime-implemented": true,
         "responses": {
           "200": {
@@ -17220,6 +17311,33 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "内部审计格式或存储读取异常；S0500，不表示客户端参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "S0500"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "parameters": [
@@ -17242,6 +17360,70 @@
               "minimum": 1,
               "maximum": 200,
               "default": 20
+            }
+          },
+          {
+            "name": "actorMemberId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "changeType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CREATE",
+                "UPDATE",
+                "ENABLE",
+                "DISABLE",
+                "REMOVE",
+                "REVOKE",
+                "PUBLISH",
+                "UPGRADE",
+                "OWNER_TRANSFER"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ]
