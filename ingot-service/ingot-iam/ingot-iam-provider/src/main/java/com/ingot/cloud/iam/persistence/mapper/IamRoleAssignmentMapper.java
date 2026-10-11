@@ -72,9 +72,9 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
      * @param size 页大小
      * @return 不披露组信息的摘要投影
      */
-    @Select("<script>SELECT r.role_id,d.name,r.id AS revision_id,r.kind,r.revision AS revision_number,"
+    @Select("<script>SELECT r.role_id,d.name,r.id AS revision_id,r.kind,r.revision AS revision_number,r.version_name,"
             + "SUM(ra.subject_type='MEMBER') AS direct_count,SUM(ra.subject_type='GROUP') AS group_count "
-            + MEMBER_BOUND_RELATION + " GROUP BY r.role_id,d.name,r.id,r.kind,r.revision ORDER BY r.role_id,r.id"
+            + MEMBER_BOUND_RELATION + " GROUP BY r.role_id,d.name,r.id,r.kind,r.revision,r.version_name ORDER BY r.role_id,r.id"
             + " LIMIT #{size} OFFSET #{offset}</script>")
     List<com.ingot.cloud.iam.persistence.projection.MemberBoundRoleRow> memberBoundRoles(
             @Param("memberId") BigInteger memberId, @Param("offset") int offset, @Param("size") int size);
@@ -265,7 +265,7 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                    d.name AS role_name,r.revision AS revision_number,au.actor_member_id AS author_id,
                    author.display_name AS author_name,
             """ + PlatformAssignmentStateSql.SOURCE_VALID + """
-                   AS source_valid
+                   AS source_valid,r.version_name
               FROM iam_role_assignment ra JOIN iam_role_revision r ON r.id=ra.revision_id
               JOIN iam_role_definition d ON d.id=r.role_id
               LEFT JOIN iam_platform_member m ON m.id=ra.platform_member_id
@@ -360,4 +360,28 @@ public interface IamRoleAssignmentMapper extends BaseMapper<IamRoleAssignmentEnt
                  AND ls.locked=TRUE AND (ls.locked_until IS NULL OR ls.locked_until>CURRENT_TIMESTAMP))
             """)
     long availablePermanentAdministrators(@Param("code") String code);
+    /**
+     * 同一关系和治理对象边界的有效分配版本聚合。
+     * @param roleId 角色ID
+     * @param all 是否覆盖全域
+     * @param ids 非全域时可治理的分配ID
+     * @return 含未来生效分配的版本分布
+     */
+    @Select("""
+        <script>
+        SELECT CAST(r.id AS CHAR) AS revision_id,CAST(r.revision AS CHAR) AS revision,r.version_name,COUNT(*) AS count
+        FROM iam_role_assignment a JOIN iam_role_revision r ON r.id=a.revision_id
+        WHERE a.domain='PLATFORM' AND a.tenant_id IS NULL AND r.role_id=#{roleId}
+          AND a.status='ACTIVE' AND (a.valid_until IS NULL OR a.valid_until&gt;CURRENT_TIMESTAMP)
+          <if test="!all">
+            <choose><when test="ids.size()>0">
+              AND a.id IN <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+            </when><otherwise>AND 1=0</otherwise></choose>
+          </if>
+        GROUP BY r.id,r.revision,r.version_name ORDER BY r.revision DESC
+        </script>
+        """)
+    List<com.ingot.framework.commons.model.iam.RoleRevisionDistribution> applicationDistribution(
+            @Param("roleId") BigInteger roleId, @Param("all") boolean all, @Param("ids") List<BigInteger> ids);
+
 }

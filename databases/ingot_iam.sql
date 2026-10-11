@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS `sys_social_details`;
 DROP TABLE IF EXISTS `security_event`;
 DROP TABLE IF EXISTS `platform_dict`;
 DROP TABLE IF EXISTS `biz_leaf_alloc`;
+DROP TABLE IF EXISTS `iam_role_application_item`;
+DROP TABLE IF EXISTS `iam_role_application_task`;
 DROP TABLE IF EXISTS `iam_migration_issue`;
 DROP TABLE IF EXISTS `iam_migration_mapping`;
 DROP TABLE IF EXISTS `iam_migration_batch`;
@@ -465,6 +467,9 @@ CREATE TABLE iam_role_revision (
         GENERATED ALWAYS AS (CASE WHEN base_revision_id IS NULL THEN NULL ELSE 'SHARED' END) STORED,
     metadata_overrides JSON NOT NULL,
     resource_field_permissions JSON NOT NULL DEFAULT (JSON_OBJECT()) COMMENT '固定资源字段权限快照，未声明字段不授予权限',
+    version_name VARCHAR(128) NULL COMMENT '版本显示名称；空值回退vN',
+    remark VARCHAR(512) NULL COMMENT '版本说明',
+    metadata_version BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '独立元数据乐观锁',
     published_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (id),
     UNIQUE KEY uk_iam_revision_number (role_id, revision),
@@ -619,6 +624,7 @@ CREATE TABLE iam_role_assignment (
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (id),
+    KEY ix_iam_assignment_revision_status (revision_id,status,id),
     KEY idx_iam_assignment_platform_member (platform_member_id, status, valid_until),
     KEY idx_iam_assignment_platform_group (platform_group_id, status, valid_until),
     KEY idx_iam_assignment_tenant_member (tenant_id, tenant_member_id, status, valid_until),
@@ -844,6 +850,53 @@ CREATE TABLE iam_migration_issue (
     CONSTRAINT ck_iam_issue_resolution CHECK (
         (disposition IS NULL AND resolved_by IS NULL AND resolution_reason IS NULL) OR
         (disposition IS NOT NULL AND resolved_by IS NOT NULL AND resolution_reason IS NOT NULL))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 持久角色版本应用：平台域，明细不展开组成员。
+CREATE TABLE IF NOT EXISTS iam_role_application_task (
+    id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    role_id BIGINT UNSIGNED NOT NULL,
+    target_revision_id BIGINT UNSIGNED NOT NULL,
+    actor_account_id BIGINT UNSIGNED NOT NULL,
+    actor_member_id BIGINT UNSIGNED NOT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    selection VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    selection_snapshot JSON NOT NULL,
+    status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    version BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    prepare_key VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    confirm_key VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    lease_owner VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    lease_until DATETIME(6) NULL,
+    failure_reason VARCHAR(512) NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    running_role_id BIGINT UNSIGNED GENERATED ALWAYS AS (CASE WHEN status='RUNNING' THEN role_id ELSE NULL END) STORED,
+    UNIQUE KEY uk_iam_role_application_prepare(role_id,prepare_key),
+    UNIQUE KEY uk_iam_role_application_running(running_role_id),
+    KEY ix_iam_role_application_role(role_id,id),
+    KEY ix_iam_role_application_claim(status,lease_until,id),
+    CONSTRAINT fk_iam_role_application_role FOREIGN KEY(role_id) REFERENCES iam_role_definition(id),
+    CONSTRAINT fk_iam_role_application_target FOREIGN KEY(target_revision_id) REFERENCES iam_role_revision(id),
+    CONSTRAINT ck_iam_role_application_status CHECK(status IN ('PREPARING','READY','BLOCKED','RUNNING','PAUSED','SUCCEEDED')),
+    CONSTRAINT ck_iam_role_application_selection CHECK(selection IN ('ALL','SOURCE_REVISIONS','ASSIGNMENTS'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS iam_role_application_item (
+    id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    task_id BIGINT UNSIGNED NOT NULL,
+    assignment_id BIGINT UNSIGNED NOT NULL,
+    original_snapshot JSON NOT NULL,
+    expected_assignment_version BIGINT UNSIGNED NOT NULL,
+    configured_bindings JSON NOT NULL,
+    preview_snapshot JSON NULL,
+    status VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    failure_reason VARCHAR(512) NULL,
+    UNIQUE KEY uk_iam_role_application_assignment(task_id,assignment_id),
+    KEY ix_iam_role_application_items(task_id,status,id),
+    CONSTRAINT fk_iam_role_application_item_task FOREIGN KEY(task_id) REFERENCES iam_role_application_task(id),
+    CONSTRAINT fk_iam_role_application_item_assignment FOREIGN KEY(assignment_id) REFERENCES iam_role_assignment(id),
+    CONSTRAINT ck_iam_role_application_item_status CHECK(status IN ('PENDING','BLOCKED','SUCCEEDED','EXCLUDED','REVOKED','EXPIRED','ALREADY_TARGET'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ====================================================================

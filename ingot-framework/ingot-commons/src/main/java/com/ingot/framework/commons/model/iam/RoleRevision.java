@@ -17,6 +17,10 @@ import jakarta.validation.constraints.NotNull;
  *
  * @author jy
  * @since 1.0.0
+ * @param versionName 可读版本名
+ * @param remark 版本备注
+ * @param metadataVersion 元数据乐观锁
+ * @param publishedAt UTC发布时间
  * @param id 版本 ID
  * @param roleId 角色定义 ID
  * @param revision 版本序号，字符串传输
@@ -47,7 +51,25 @@ public record RoleRevision(
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) @Schema(
                 description = "相对上一版本的展示差异，含操作名称；仅列表读填充") List<@NotNull @Valid RoleDisplayDelta> displayDeltas,
         @Schema(description = "资源 ID 到字段 key 的固定权限快照；历史版本可为空") Map<String, @Valid ResourceFieldDefinition> resourceFieldPermissions,
-        @Schema(description = "相对上一版本的字段比较基线；仅版本历史读填充") Map<String, @Valid ResourceFieldDefinition> previousResourceFieldPermissions) {
+        @Schema(description = "相对上一版本的字段比较基线；仅版本历史读填充") Map<String, @Valid ResourceFieldDefinition> previousResourceFieldPermissions,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        @Schema(description = "可读版本名称") String versionName,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        @Schema(description = "版本备注") String remark,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        @Schema(description = "独立元数据乐观锁") String metadataVersion,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        @Schema(description = "发布瞬时，UTC") java.time.Instant publishedAt) {
+    /** 保留固定权限版本的调用方式。 */
+    public RoleRevision(String id, String roleId, String revision, RoleKind kind, String baseRevisionId,
+            List<ActionGrant> grants, List<RoleDelta> deltas, List<RoleParameterDefinition> parameterDefinitions,
+            RoleMetadataOverrides metadataOverrides, List<RoleDisplayDelta> displayDeltas,
+            Map<String, ResourceFieldDefinition> resourceFieldPermissions,
+            Map<String, ResourceFieldDefinition> previousResourceFieldPermissions) {
+        this(id, roleId, revision, kind, baseRevisionId, grants, deltas, parameterDefinitions, metadataOverrides,
+                displayDeltas, resourceFieldPermissions, previousResourceFieldPermissions, null, null, null, null);
+    }
+
     /** 保留字段快照读写构造契约。 */
     public RoleRevision(String id, String roleId, String revision, RoleKind kind, String baseRevisionId,
             List<ActionGrant> grants, List<RoleDelta> deltas, List<RoleParameterDefinition> parameterDefinitions,

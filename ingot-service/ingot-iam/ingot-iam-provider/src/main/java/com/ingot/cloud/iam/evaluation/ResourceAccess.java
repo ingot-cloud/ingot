@@ -177,6 +177,18 @@ public class ResourceAccess {
     }
 
     /**
+     * 编译写操作的实时对象范围，跳过最长三十秒的普通读取缓存。
+     * @param actor 恢复后的可信身份
+     * @param action 精确治理操作
+     * @return 当次数据库事实编译的范围
+     */
+    public ObjectScope objectsForExecution(AuthorizationContext actor, IamAction action) {
+        var view = evaluator.evaluateForExecution(actor, true);
+        if (!view.actionCodes().contains(action.getCode())) throw new BizException(IamReasonCode.ACTION_DENIED);
+        return compiler.objects(actor, view.scope(action.getCode()));
+    }
+
+    /**
      * 确认目标对象对操作可见；不可见时按对象不存在处理。
      *
      * @param actor 当前身份

@@ -12,6 +12,7 @@
 | 015_menu_advanced_configuration.sql | iam_menu 尚无 hidden/is_cache/props/route_params 列；一次 ALTER，保留现有数据。 | 002 |
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |
 | 016_field_access_control.sql | 资源仍有sortable/缺mask、角色字段与FIELD默认版本仍为旧JSON，或租户策略缺operation_rules；保留数据并转换，支持重跑。 | 002/004/006 |
+| 017_role_revision_application.sql | 角色版本缺名称、备注、独立元数据锁，或缺持久版本应用任务表；只增加列、表及索引，支持重跑。 | 002/003/004 |
 
 014执行顺序为迁移→后端→前端；仅用于缺少两列的已有库，不能重复执行或用于新建库。DDL自动提交；若在DDL后中断，保持服务停止，确认列已新增后单独完成脚本回填语句。回退应用前冻结平台成员联系资料编辑，保留新增列和备份，不将独立联系资料写回账号。已有库禁止用完整初始化SQL替代迁移。
 
@@ -44,3 +45,19 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 数据转换处于一个事务内，异常会回滚；DDL会自动提交，不能整体ROLLBACK。中断时保持服务停止，修正原因后完整重跑；整体回退需要恢复迁移前数据库备份并回退整批应用。不要用`ingot_iam.sql`回退，它会重建并清空业务表。
 
 隔离验证：`python3 databases/iam/test_field_access_migration.py`，只使用自动清理且不联网的MySQL容器，不连接已有库。
+
+## 017 角色版本信息与批量应用
+
+适用于已完成现有 IAM 契约升级的库，MySQL 8.0.16 及以上。备份并明确选择目标库后执行；连接凭证使用本机配置，不用 `--force` 忽略错误：
+
+```sh
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/017_role_revision_application.sql
+```
+
+脚本需要 CREATE ROUTINE、ALTER、CREATE 权限，增加 `iam_role_revision.version_name/remark/metadata_version`、分配查询索引及 `iam_role_application_task/item`。历史权限 JSON、角色和版本 ID、系统版本号、分配和范围不改写；未命名版本继续显示 vN。DDL 自动提交，中断后修正原因再完整重跑。006 是目录初始化，不能补齐这里的表结构；新建库使用最新权威 DDL 或生成的 `ingot_iam.sql`，不再执行此补丁。
+
+发布顺序为数据库增量 → 全部后端节点 → 前端。不要在旧表结构上先启动新后端。新接口沿用现有角色更新和分配升级资格，不需要向治理角色自动追加操作授权。
+
+回退前先停止新任务确认入口，并在所有 IAM 节点设置 `ingot.iam.role-applications.worker-enabled=false`，重启配置生效后确认旧进程全部退出、当前批次事务已结束。由运维在备份后将剩余 RUNNING 任务标记 PAUSED，清除租约并递增任务乐观锁；记录回退原因，保留已提交明细、所有新增表列及审计，然后回退应用。关闭浏览器不会停止任务，不得依赖租约到期代替停止全部领取器。需要恢复已经完成的授权调整时，使用新应用流程选择原固定版本与范围，不直接修改历史版本或删除任务记录。
+
+隔离验证：`python3 databases/iam/test_role_revision_application_migration.py`。测试使用自动清理、无网络的 MySQL 8.4 容器，验证重复迁移保留数据以及同一角色最多一个 RUNNING 任务；不连接现有库。

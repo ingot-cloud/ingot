@@ -102,7 +102,7 @@ class BootstrapSeedTest(unittest.TestCase):
         for table in tables:
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
-        self.assertEqual(56, len(tables))
+        self.assertEqual(58, len(tables))
         self.assertEqual(138, self.count('iam_action'))
         self.assertEqual(30, self.count('iam_menu'))
         for table in ['iam_account', 'iam_tenant', 'iam_role_assignment', 'iam_authorization_audit',

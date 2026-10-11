@@ -88,6 +88,63 @@ public class AssignmentRepository {
     }
 
     /**
+     * 以同角色固定版本关系和同一对象范围建立分配集合，游标不会拉取全部成员。
+     * @param roleId 角色
+     * @param after 上次游标
+     * @param sourceIds 可选来源版本
+     * @param assignmentIds 可选分配ID
+     * @param scope 管理员可治理的分配对象范围
+     * @param limit 批次大小
+     * @return 按ID递增的同域记录
+     */
+    public List<IamRoleAssignmentEntity> roleApplicationRows(long roleId, BigInteger after,
+            List<BigInteger> sourceIds, List<BigInteger> assignmentIds,
+            com.ingot.cloud.iam.evaluation.ObjectScope scope, int limit) {
+        var query = scoped(AuthorizationDomain.PLATFORM, null)
+                .gt(IamRoleAssignmentEntity::getId, after)
+                .apply("revision_id IN (SELECT id FROM iam_role_revision WHERE role_id={0})", BigInteger.valueOf(roleId));
+        if (sourceIds != null) query.in(IamRoleAssignmentEntity::getRevisionId, sourceIds);
+        if (assignmentIds != null) query.in(IamRoleAssignmentEntity::getId, assignmentIds);
+        if (!scope.coversAll()) {
+            var ids = scope.clauses().stream().flatMap(c -> c.requiredIds().stream()).distinct().toList();
+            if (ids.isEmpty()) return List.of();
+            query.in(IamRoleAssignmentEntity::getId, ids);
+        }
+        return assignments.selectList(query.orderByAsc(IamRoleAssignmentEntity::getId).last("LIMIT " + limit));
+    }
+
+    /**
+     * 分页列出角色关联分配，候选和计数共用治理对象范围。
+     * @param roleId 角色ID
+     * @param page 页码
+     * @param size 页大小
+     * @param scope 治理范围
+     * @return 同一关系谓词的数据库页
+     */
+    public Page<IamRoleAssignmentEntity> pageRoleApplication(long roleId, int page, int size,
+            com.ingot.cloud.iam.evaluation.ObjectScope scope) {
+        var query = scoped(AuthorizationDomain.PLATFORM, null)
+                .apply("revision_id IN (SELECT id FROM iam_role_revision WHERE role_id={0})", BigInteger.valueOf(roleId));
+        if (!scope.coversAll()) {
+            var ids = scope.clauses().stream().flatMap(c -> c.requiredIds().stream()).distinct().toList();
+            if (ids.isEmpty()) query.apply("1=0"); else query.in(IamRoleAssignmentEntity::getId, ids);
+        }
+        return assignments.selectPage(new Page<>(page, size), query.orderByAsc(IamRoleAssignmentEntity::getId));
+    }
+
+    /**
+     * 汇总可治理的角色分配版本，不回查成员或组列表。
+     * @param roleId 角色
+     * @param scope 当前对象治理范围
+     * @return 同范围聚合
+     */
+    public List<com.ingot.framework.commons.model.iam.RoleRevisionDistribution> applicationDistribution(long roleId,
+            com.ingot.cloud.iam.evaluation.ObjectScope scope) {
+        return assignments.applicationDistribution(BigInteger.valueOf(roleId), scope.coversAll(),
+                scope.clauses().stream().flatMap(c -> c.requiredIds().stream()).distinct().toList());
+    }
+
+    /**
      * 分页列出当前域分配。
      *
      * @param domain 授权域

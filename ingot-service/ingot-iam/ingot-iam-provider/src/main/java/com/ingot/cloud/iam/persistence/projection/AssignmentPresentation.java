@@ -6,6 +6,7 @@ package com.ingot.cloud.iam.persistence.projection;
  * @param subjectName 接收对象
  * @param roleName 角色
  * @param revisionNumber 版本
+ * @param versionName 可读版本名称
  * @param authorId 实际授权人
  * @param authorName 实际授权人名称
  * @param sourceValid 当前来源有效性
@@ -13,4 +14,10 @@ package com.ingot.cloud.iam.persistence.projection;
  * @since 1.0.0
  */
 public record AssignmentPresentation(java.math.BigInteger id, String subjectName, String roleName,
-        java.math.BigInteger revisionNumber, java.math.BigInteger authorId, String authorName, boolean sourceValid) { }
+        java.math.BigInteger revisionNumber, java.math.BigInteger authorId, String authorName, boolean sourceValid, String versionName) {
+    /** 兼容既有投影测试。 */
+    public AssignmentPresentation(java.math.BigInteger id, String subjectName, String roleName,
+            java.math.BigInteger revisionNumber, java.math.BigInteger authorId, String authorName, boolean sourceValid) {
+        this(id, subjectName, roleName, revisionNumber, authorId, authorName, sourceValid, null);
+    }
+}

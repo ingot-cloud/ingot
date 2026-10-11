@@ -48,7 +48,7 @@ public class PlatformRoleWorkspace {
         var q = query(roleId, revisionId, type, null, keyword, page, pageSize, admission, groups);
         var items = mapper.page(q).stream().map(row -> new RoleSubjectSummary(row.id().toString(), row.name(),
                 IamJson.read(row.revisions(), REVISION_NUMBERS).stream().distinct().sorted().toList(),
-                IamJson.read(row.sourceTypes(), SOURCE_TYPES).stream().distinct().sorted().toList(), row.sourceCount())).toList();
+                IamJson.read(row.sourceTypes(), SOURCE_TYPES).stream().distinct().sorted().toList(), row.sourceCount(), versionNames(row.versionNames()))).toList();
         return new RoleSubjectPage(items, mapper.count(q), page, pageSize, groups != null);
     }
 
@@ -67,6 +67,14 @@ public class PlatformRoleWorkspace {
                 admission, visibleGroups(admission.actor()));
         return IamPages.details(presenter.presentPlatformRows(admission.actor(), mapper.sources(q)),
                 mapper.sourceCount(q), page, pageSize);
+    }
+    private java.util.Map<String, String> versionNames(String json) {
+        if (json == null) return java.util.Map.of();
+        List<java.util.Map<String, Object>> rows = IamJson.read(json, new TypeReference<>() { });
+        var names = new java.util.LinkedHashMap<String, String>();
+        for (var row : rows) names.put(row.get("revision").toString(),
+                row.get("name") == null ? "" : row.get("name").toString());
+        return java.util.Map.copyOf(names);
     }
     private IamAdmission admission(String roleId) {
         roles.get(AuthorizationDomain.PLATFORM, false, roleId);

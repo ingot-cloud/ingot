@@ -48,6 +48,15 @@ public class IamRoleRevisionEntity {
     @TableField("resource_field_permissions")
     private String resourceFieldPermissions;
 
+    /** 可读版本名称；历史记录允许为空。 */
+    private String versionName;
+
+    /** 版本备注，不属于权限定义。 */
+    private String remark;
+
+    /** 独立元数据乐观锁，默认零。 */
+    private BigInteger metadataVersion;
+
     /** 发布时间，使用 UTC。 */
     @TableField("published_at")
     private LocalDateTime publishedAt;

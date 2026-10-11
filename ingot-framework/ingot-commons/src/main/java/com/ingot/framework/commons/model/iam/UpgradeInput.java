@@ -19,6 +19,8 @@ import jakarta.validation.constraints.NotNull;
  * @param expectedVersion 升级预览使用的配置版本
  * @param newBaseRevisionId 目标共享基础版本
  * @param resolutions 全部冲突键的显式处置
+ * @param versionName 升级后版本展示名称
+ * @param remark 版本备注
  * @param assignmentIds 本次要改写的授权 ID；默认不选择既有授权
  */
 @Schema(description = "原子升级选定授权引用的共享基础版本，未解决冲突时拒绝提交")
@@ -30,7 +32,15 @@ public record UpgradeInput(
         @NotNull @Schema(description = "全部冲突键的显式处置", requiredMode = Schema.RequiredMode.REQUIRED)
         List<@NotNull @Valid UpgradeResolution> resolutions,
         @NotNull @Schema(description = "本次要改写的授权 ID；默认不选择既有授权", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<@NotBlank String> assignmentIds) {
+        List<@NotBlank String> assignmentIds,
+        @jakarta.validation.constraints.Size(max = 128) @Schema(description = "升级后版本名称") String versionName,
+        @jakarta.validation.constraints.Size(max = 512) @Schema(description = "升级备注") String remark) {
+    /** 保留共享基础升级的旧调用方式。 */
+    public UpgradeInput(String expectedVersion, String newBaseRevisionId, List<UpgradeResolution> resolutions,
+            List<String> assignmentIds) {
+        this(expectedVersion, newBaseRevisionId, resolutions, assignmentIds, null, null);
+    }
+
 
     /**
      * 复制提交集合，避免外部修改改变待执行命令。

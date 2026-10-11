@@ -309,6 +309,25 @@ public class RoleRepository {
     }
 
     /**
+     * 检查持久应用历史引用，避免删除版本时触发外键错误。
+     * @param roleId 已校验角色ID
+     * @return 引用数
+     */
+    public long countApplications(long roleId) {
+        return definitions.countApplications(BigInteger.valueOf(roleId));
+    }
+
+    /** 只更新说明信息，元数据并发冲突返回零。 */
+    public int updateRevisionMetadata(long id, String name, String remark, BigInteger expected) {
+        return revisions.update(null, Wrappers.<IamRoleRevisionEntity>lambdaUpdate()
+                .eq(IamRoleRevisionEntity::getId, BigInteger.valueOf(id))
+                .eq(IamRoleRevisionEntity::getMetadataVersion, expected)
+                .set(IamRoleRevisionEntity::getVersionName, name)
+                .set(IamRoleRevisionEntity::getRemark, remark)
+                .set(IamRoleRevisionEntity::getMetadataVersion, expected.add(BigInteger.ONE)));
+    }
+
+    /**
      * 插入角色版本，不写生成列。
      *
      * @param entity 待插入行

@@ -263,14 +263,18 @@ public class PlatformAuthorizationEditor {
         search = "%" + search.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
         var query = new AuthorizationCandidateSql.RoleQuery(parent, search, selected, allowed,
                 Math.multiplyExact(page - 1, pageSize), pageSize, minimumRevision, allowSystem);
-        List<AuthorizationRoleNode> nodes = candidates.rolePage(query).stream().map(row -> {
+        var candidateRows = candidates.rolePage(query);
+        var versionRows = parent == null ? Map.<BigInteger, com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity>of()
+                : roleStore.findRevisions(candidateRows.stream().map(row -> row.id()).toList()).stream()
+                        .collect(java.util.stream.Collectors.toMap(v -> v.getId(), v -> v));
+        List<AuthorizationRoleNode> nodes = candidateRows.stream().map(row -> {
             String id = row.id().toString();
             if (parent == null) {
                 return new AuthorizationRoleNode(id, row.roleId().toString(), row.name(), row.name(),
                         AuthorizationRoleNodeType.ROLE, null, null);
             }
             long number = row.revision().longValueExact();
-            return new AuthorizationRoleNode(id, row.roleId().toString(), row.name(), VERSION_LABEL_PREFIX + number,
+            return new AuthorizationRoleNode(id, row.roleId().toString(), row.name(), versionLabel(number, versionRows.get(row.id())),
                     AuthorizationRoleNodeType.REVISION, number, new RoleRevisionRef(row.kind(), id));
         }).toList();
         return new AuthorizationRoleCandidatePage(nodes, candidates.roleCount(query), page, pageSize);
@@ -606,7 +610,7 @@ public class PlatformAuthorizationEditor {
                         .collect(java.util.stream.Collectors.toSet());
                 var parameters = roleStore.listParameters(revision).stream()
                         .map(value -> new RoleParameterDefinition(value.getParameterKey(), value.getBindingKind())).toList();
-                return new AuthorizationOption(id, row.name() + " · v" + row.revision(), null,
+                return new AuthorizationOption(id, row.name() + " · " + versionLabel(row.revision().longValueExact(), fieldVersions.get(row.id())), null,
                         new RoleRevisionRef(row.kind(), id), parameters, grants,
                         operationOptions.stream().filter(option -> operationIds.contains(option.id())).toList(), null,
                         null, null, null, null, fieldVersions.containsKey(row.id())
@@ -820,4 +824,10 @@ public class PlatformAuthorizationEditor {
     private static AuthorizationCandidatePage unsupported(int page, int size) {
         return new AuthorizationCandidatePage(List.of(), 0, page, size, false, "该资源暂未接入范围对象查询，不能配置指定对象");
     }
+    private static String versionLabel(long number, com.ingot.cloud.iam.persistence.entity.IamRoleRevisionEntity row) {
+        String label = VERSION_LABEL_PREFIX + number;
+        return row == null || row.getVersionName() == null || row.getVersionName().isBlank()
+                || label.equals(row.getVersionName()) ? label : label + " · " + row.getVersionName();
+    }
+
 }

@@ -183,7 +183,30 @@ public class PlatformSharedRoleCommandAPI implements RShortcuts {
     @Operation(summary = "预览待发布定义")
     @PostMapping("/{id}/preview")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_PREVIEW)
-    public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input) {
-        return ok(roles.preview(AuthorizationDomain.PLATFORM, true, id, input));
+    public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input,
+            @RequestParam(required = false) String sourceRevisionId) {
+        return ok(roles.preview(AuthorizationDomain.PLATFORM, true, id, input, sourceRevisionId));
     }
+    /** 读取同角色固定版本详情。 */
+    @GetMapping("/{id}/revisions/{revisionId}")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_READ)
+    public R<ResourceDetail<RoleRevision>> revision(@PathVariable String id, @PathVariable String revisionId) {
+        return ok(roles.getRevision(AuthorizationDomain.PLATFORM, true, id, revisionId));
+    }
+
+    /** 独立更新版本说明，保持权限快照不变。 */
+    @PatchMapping("/{id}/revisions/{revisionId}/metadata")
+    @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_SHARED_ROLE_STATUS)
+    public R<CreatedResource> metadata(@PathVariable String id, @PathVariable String revisionId,
+            @Valid @RequestBody com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput input) {
+        return ok(roles.updateRevisionMetadata(AuthorizationDomain.PLATFORM, true, id, revisionId, input));
+    }
+
+    /** 固定历史版本的完整合成操作与字段权限。 */
+    @Operation(summary = "固定版本权限详情")
+    @GetMapping("/{id}/revisions/{revisionId}/grants")
+    public R<RoleGrantList> revisionGrants(@PathVariable String id, @PathVariable String revisionId) {
+        return ok(new RoleGrantList(roles.listRevisionGrants(AuthorizationDomain.PLATFORM, true, id, revisionId)));
+    }
+
 }

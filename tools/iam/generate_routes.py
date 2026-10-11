@@ -98,8 +98,11 @@ def role_routes(domain, prefix, ns, shared=False):
         route(f'{path}/{{id}}', 'patch', f'{prefix_id}PatchRoleStatus', '启停角色', domain, f'{ns}:{kind}:status', 'ConfigurationStatusInput', created, execution),
         route(f'{path}/{{id}}', 'delete', f'{prefix_id}DeleteRole', '删除未引用角色', domain, f'{ns}:{kind}:delete', None, created, execution),
         route(f'{path}/{{id}}/revisions', 'get', f'{prefix_id}ListRoleRevisions', '角色版本', domain, f'{ns}:{kind}:read', None, revision_page, execution, query=PAGE),
+        route(f'{path}/{{id}}/revisions/{{revisionId}}', 'get', f'{prefix_id}GetRoleRevision', '固定版本详情', domain, f'{ns}:{kind}:read', None, revision_detail, execution),
+        route(f'{path}/{{id}}/revisions/{{revisionId}}/grants', 'get', f'{prefix_id}ListRevisionGrants', '固定版本完整授权', domain, f'{ns}:{kind}:read', None, 'RRoleGrantList', execution),
+        route(f'{path}/{{id}}/revisions/{{revisionId}}/metadata', 'patch', f'{prefix_id}PatchRevisionMetadata', '独立修改版本名称及备注', domain, f'{ns}:{kind}:status', 'RoleRevisionMetadataInput', created, '仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存'),
         route(f'{path}/{{id}}/revisions', 'post', f'{prefix_id}PublishRoleRevision', '发布新版本', domain, f'{ns}:{kind}:publish', 'RolePublishInput', created, execution, 'role-publish'),
-        route(f'{path}/{{id}}/preview', 'post', f'{prefix_id}PreviewRole', '预览待发布定义', domain, f'{ns}:{kind}:preview', 'RoleDefinitionDraft', preview, execution),
+        route(f'{path}/{{id}}/preview', 'post', f'{prefix_id}PreviewRole', '预览待发布定义', domain, f'{ns}:{kind}:preview', 'RoleDefinitionDraft', preview, execution, query=[{'name': 'sourceRevisionId', 'required': False, 'schema': {'type': 'string'}}]),
     ]
     return items
 
@@ -532,6 +535,22 @@ def build():
         route('/v1/directory/context', 'get', 'directoryFieldContext', '通讯录字段能力', 'TENANT', 'iam-tenant:directory:read', None, 'RResourceFieldContext', '可信身份；与实际通讯录查询范围相同'),
         route('/v1/platform/applications/{id}/resources/{resourceId}/field-bindings', 'get', 'platformResourceBindings', '资源字段绑定清单', 'PLATFORM', 'iam-platform:resource:read', None, 'RFieldBindingManifest', '固定服务清单；目录读取权；不包含业务原值'),
     ]
+    application_path = '/v1/platform/roles/{roleId}/version-applications'
+    application_exec = '仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变'
+    for suffix, method, operation, summary, request, response, query in [
+        ('', 'post', 'Prepare', '准备版本应用', 'RoleApplicationPrepareInput', 'RRoleApplicationTask', None),
+        ('/publish', 'post', 'Publish', '发布并准备应用', 'RolePublishApplicationInput', 'RRoleApplicationTask', None),
+        ('', 'get', 'List', '版本应用任务记录', None, 'RPageResponseRoleApplicationTask', PAGE),
+        ('/candidates', 'get', 'Candidates', '角色关联分配候选', None, 'RPageResponseResourceDetailAssignmentRecord', PAGE),
+        ('/distribution', 'get', 'Distribution', '分配版本分布', None, 'RListRoleRevisionDistribution', None),
+        ('/{id}', 'get', 'Get', '版本应用计划详情', None, 'RRoleApplicationTask', None),
+        ('/{id}/items', 'get', 'Items', '版本应用分配明细', None, 'RPageResponseRoleApplicationItem', PAGE),
+        ('/{id}/items', 'patch', 'Configure', '配置应用范围及排除集合', 'RoleApplicationChangeInput', 'RRoleApplicationTask', None),
+        ('/{id}/preflight', 'post', 'Preflight', '重新预检未完成项', 'RoleApplicationRefreshInput', 'RRoleApplicationTask', None),
+        ('/{id}/confirm', 'post', 'Confirm', '确认执行版本应用', 'RoleApplicationConfirmInput', 'RRoleApplicationTask', None),
+    ]:
+        routes.append(route(application_path + suffix, method, 'platformRoleApplication' + operation,
+                            summary, 'PLATFORM', 'iam-platform:assignment:upgrade', request, response, application_exec, query=query))
     for item in routes:
         item['implemented'] = True
     seen = set()

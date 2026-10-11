@@ -20,6 +20,7 @@ import jakarta.validation.constraints.*;
  * @param delegationSummary 授权依据摘要
  * @param createdAt UTC 授权时间
  * @param grantedBy 创建审计授权人
+ * @param versionName 固定版本的可读名称
  * @param effectiveStatus 计算状态
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -40,7 +41,13 @@ public record AssignmentRecord(
         @Schema(description = "授权创建时间，ISO-8601 UTC", type = "string", format = "date-time", example = "2026-09-28T08:00:00Z")
         java.time.Instant createdAt,
         @Schema(description = "实际创建审计授权人") AssignmentAuthor grantedBy,
-        @Schema(description = "计算后的生效状态") AssignmentEffectiveStatus effectiveStatus) {
+        @Schema(description = "计算后的生效状态") AssignmentEffectiveStatus effectiveStatus, String versionName) {
+    /** 兼容既有分配显示投影。 */
+    public AssignmentRecord(String id, AssignmentInput assignment, GrantStatus status, AssignmentSource source,
+            String subjectName, String roleName, String revisionNumber, String delegationSummary,
+            java.time.Instant createdAt, AssignmentAuthor grantedBy, AssignmentEffectiveStatus effectiveStatus) {
+        this(id, assignment, status, source, subjectName, roleName, revisionNumber, delegationSummary, createdAt, grantedBy, effectiveStatus, null);
+    }
     /**
      * 保持租户与历史投影构造方式兼容。
      * @param id 分配 ID

@@ -232,6 +232,20 @@ public class RoleService {
     }
 
     /**
+     * 读取同角色任一已发布版本的完整合成授权与字段快照，供历史编辑使用。
+     * @param domain 管理域
+     * @param shared 是否共享入口
+     * @param id 角色ID
+     * @param revisionId 版本ID
+     * @return 不省略字段权限的固定授权
+     */
+    public List<RoleGrantRecord> listRevisionGrants(AuthorizationDomain domain, boolean shared, String id, String revisionId) {
+        getRevision(domain, shared, id, revisionId);
+        var data = loadRevision(IamIds.require(revisionId));
+        return toGrantRecords(synthesizedGrants(IamIds.require(revisionId)), data.fields());
+    }
+
+    /**
      * 创建角色并发布首个不可变版本，不能创建系统治理角色。
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
@@ -271,7 +285,7 @@ public class RoleService {
             catch (DuplicateKeyException exception) {
                 throw new BizException(IamReasonCode.INVALID_ARGUMENT.getCode(), "角色编码已存在");
             }
-            publishRevision(id, kind, 1, input.baseRevisionId(), input.definition());
+            publishRevision(id, kind, 1, input.baseRevisionId(), input.definition(), input.versionName(), input.remark());
             audits.write(actor.context(), access.nextId(), ROLE, IamIds.text(id), AuditChangeType.CREATE, Map.of(),
                     Map.of(AuditField.NAME, input.name()), Map.of(ROLE, "0"));
             return new CreatedResource(IamIds.text(id), "0");
@@ -357,7 +371,7 @@ public class RoleService {
             if (current.kind() == RoleKind.SYSTEM) {
                 throw new BizException(IamReasonCode.ACTION_DENIED);
             }
-            if (roles.countAssignments(roleId) > 0) {
+            if (roles.countAssignments(roleId) > 0 || current.kind() == RoleKind.PLATFORM_CUSTOM && roles.countApplications(roleId) > 0) {
                 throw new BizException(IamReasonCode.OBJECT_IN_USE);
             }
             roles.deleteRevisions(roleId);
@@ -409,6 +423,48 @@ public class RoleService {
         return IamPages.details(items, rows.getTotal(), page, pageSize);
     }
 
+    /** 读取同角色的固定版本，受当前域与对象查看权限约束。 */
+    public ResourceDetail<RoleRevision> getRevision(AuthorizationDomain domain, boolean shared, String id, String revisionId) {
+        var actor = access.require(domain, action(domain, shared, AccessKind.READ));
+        long roleId = IamIds.require(id);
+        loadSummary(domain, shared, actor, roleId);
+        var row = roles.findRevision(IamIds.require(revisionId));
+        if (row == null || row.getRoleId().longValueExact() != roleId)
+            throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+        return IamDetails.of(revision(row), version(row.getRevision()));
+    }
+
+    /** 修改非系统角色的版本说明；不改变权限定义或清理授权缓存。 */
+    public CreatedResource updateRevisionMetadata(AuthorizationDomain domain, boolean shared, String id, String revisionId,
+            com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput input) {
+        access.require(domain, action(domain, shared, AccessKind.STATUS));
+        return transaction.execute(status -> {
+            roles.lockAuthorization(domain);
+            var actor = access.require(domain, action(domain, shared, AccessKind.STATUS));
+            long roleId = IamIds.require(id);
+            var role = lock(domain, shared, actor, roleId);
+            if (role.kind() == RoleKind.SYSTEM) throw new BizException(IamReasonCode.ACTION_DENIED);
+            var row = roles.findRevision(IamIds.require(revisionId));
+            if (row == null || row.getRoleId().longValueExact() != roleId)
+                throw new BizException(IamReasonCode.OBJECT_NOT_FOUND);
+            IamIds.requireVersion(input.expectedMetadataVersion(), version(row.getMetadataVersion()));
+            String name = normalizeName(input.versionName(), row.getRevision().longValueExact());
+            if (roles.updateRevisionMetadata(row.getId().longValueExact(), name, input.remark(), row.getMetadataVersion()) != 1)
+                throw new BizException(IamReasonCode.REVISION_CONFLICT);
+            audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
+                    Map.of(AuditField.NAME, normalizeName(row.getVersionName(), row.getRevision().longValueExact()),
+                            AuditField.REMARK, row.getRemark() == null ? "" : row.getRemark()),
+                    Map.of(AuditField.NAME, name, AuditField.REMARK, input.remark() == null ? "" : input.remark()), Map.of(ROLE, input.expectedMetadataVersion()));
+            return new CreatedResource(revisionId, row.getMetadataVersion().add(BigInteger.ONE).toString());
+        });
+    }
+
+    private static final String REVISION_NAME_PREFIX = "v";
+
+    private static String normalizeName(String name, long revision) {
+        return name == null || name.isBlank() ? REVISION_NAME_PREFIX + revision : name.strip();
+    }
+
     /**
      * 发布新版本，不改写既有授权引用。
      * @param domain 接口管理域
@@ -429,7 +485,13 @@ public class RoleService {
             IamIds.requireVersion(input.expectedVersion(), version(current.version()));
             long last = roles.maxRevision(roleId);
             String baseId = current.kind() == RoleKind.TENANT_CUSTOM ? currentBase(roleId) : null;
-            long revisionId = publishRevision(roleId, current.kind(), last + 1, baseId, input.definition());
+            if (input.sourceRevisionId() != null) {
+                var source = roles.findRevision(IamIds.require(input.sourceRevisionId()));
+                if (source == null || source.getRoleId().longValueExact() != roleId)
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                baseId = text(source.getBaseRevisionId());
+            }
+            long revisionId = publishRevision(roleId, current.kind(), last + 1, baseId, input.definition(), input.versionName(), input.remark());
             roles.incrementVersion(roleId, current.version());
             audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
                     Map.of(AuditField.ROLE_REVISION, String.valueOf(last)),
@@ -449,12 +511,34 @@ public class RoleService {
      */
     public Preview<EffectiveRole> preview(AuthorizationDomain domain, boolean shared, String id,
             RoleDefinitionDraft input) {
+        return preview(domain, shared, id, input, null);
+    }
+
+    /**
+     * 按明确所选历史版本的固定共享基础预览，不误用最新基础。
+     * @param domain 管理域
+     * @param shared 共享入口
+     * @param id 角色ID
+     * @param input 草稿
+     * @param sourceRevisionId 可选历史来源
+     * @return 合成预览
+     */
+    public Preview<EffectiveRole> preview(AuthorizationDomain domain, boolean shared, String id,
+            RoleDefinitionDraft input, String sourceRevisionId) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.PREVIEW));
         ResourceDetail<RoleSummary> role = loadSummary(domain, shared, actor, IamIds.require(id));
         List<ValidationIssue> errors = new ArrayList<>();
         EffectiveRole effective = null;
         try {
-            RoleSynthesis.Result synthesized = synthesize(role.record(), input);
+            String base = currentBase(IamIds.require(id));
+            if (sourceRevisionId != null) {
+                var source = roles.findRevision(IamIds.require(sourceRevisionId));
+                if (source == null || source.getRoleId().longValueExact() != IamIds.require(id))
+                    throw new BizException(IamReasonCode.INVALID_ARGUMENT);
+                base = text(source.getBaseRevisionId());
+            }
+            RoleSynthesis.Result synthesized = based(base) ? RoleSynthesis.synthesize(baseGrants(base), input.deltas())
+                    : RoleSynthesis.synthesize(input.grants(), List.of());
             errors.addAll(validator.validate(grantDomain(role.record().kind()), synthesized.grants(),
                     input.parameterDefinitions()));
             effective = new EffectiveRole(role.record(), new RoleRevisionRef(role.record().kind(), role.record().id()),
@@ -551,7 +635,7 @@ public class RoleService {
             RoleDefinitionDraft definition = new RoleDefinitionDraft(List.of(), plan.nextDeltas(), latest.parameters(),
                     latest.metadata());
             long revisionId = publishRevision(roleId, RoleKind.TENANT_CUSTOM, last + 1, input.newBaseRevisionId(),
-                    definition);
+                    definition, input.versionName(), input.remark());
             moveAssignments(actor, roleId, revisionId, input.assignmentIds());
             roles.incrementVersion(roleId, current.version());
             audits.write(actor.context(), access.nextId(), ROLE, id, AuditChangeType.UPDATE,
@@ -583,7 +667,7 @@ public class RoleService {
     }
 
     private long publishRevision(long roleId, RoleKind kind, long revision, String baseRevisionId,
-            RoleDefinitionDraft definition) {
+            RoleDefinitionDraft definition, String versionName, String remark) {
         boolean based = based(baseRevisionId);
         requireShape(kind, based, definition);
         List<ActionGrant> synthesized = based
@@ -607,6 +691,9 @@ public class RoleService {
         entity.setMetadataOverrides(
                 IamJson.object(definition.metadataOverrides() == null ? Map.of() : definition.metadataOverrides()));
         entity.setResourceFieldPermissions(IamJson.object(fieldSnapshot));
+        entity.setVersionName(normalizeName(versionName, revision));
+        entity.setRemark(remark);
+        entity.setMetadataVersion(BigInteger.ZERO);
         entity.setPublishedAt(LocalDateTime.now(ZoneOffset.UTC));
         roles.insertRevision(entity);
         if (definition.parameterDefinitions() != null) {
@@ -840,7 +927,9 @@ public class RoleService {
         RevisionData data = loadRevision(row.getId().longValue());
         return new RoleRevision(text(row.getId()), text(row.getRoleId()), version(row.getRevision()), row.getKind(),
                 text(row.getBaseRevisionId()), data.grants(), data.deltas(), data.parameters(), data.metadata(),
-                List.of(), data.fields());
+                List.of(), data.fields(), null, normalizeName(row.getVersionName(), row.getRevision().longValueExact()),
+                row.getRemark(), version(row.getMetadataVersion()),
+                row.getPublishedAt() == null ? null : row.getPublishedAt() == null ? null : row.getPublishedAt().toInstant(ZoneOffset.UTC));
     }
 
     private RoleRevision olderRevision(long roleId, List<IamRoleRevisionEntity> records) {
@@ -950,7 +1039,8 @@ public class RoleService {
         return new RoleRevision(revision.id(), revision.roleId(), revision.revision(), revision.kind(),
                 revision.baseRevisionId(), revision.grants(), revision.deltas(), revision.parameterDefinitions(),
                 revision.metadataOverrides(), deltas, revision.resourceFieldPermissions(),
-                previous == null ? null : previous.resourceFieldPermissions());
+                previous == null ? null : previous.resourceFieldPermissions(), revision.versionName(), revision.remark(),
+                revision.metadataVersion(), revision.publishedAt());
     }
 
     private static String scopeFingerprint(List<ScopeExpression> scopes) {

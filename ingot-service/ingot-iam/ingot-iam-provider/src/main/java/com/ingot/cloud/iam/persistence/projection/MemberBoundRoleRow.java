@@ -16,6 +16,7 @@ public class MemberBoundRoleRow {
     /** 名称。 */ private String name;
     /** 固定版本 ID。 */ private BigInteger revisionId;
     /** 版本种类。 */ private RoleKind kind;
+    /** 可读版本名称。 */ private String versionName;
     /** 版本号。 */ private BigInteger revisionNumber;
     /** 直接分配数量。 */ private long directCount;
     /** 组继承数量。 */ private long groupCount;

@@ -20,7 +20,7 @@ public final class RoleWorkspaceSql {
     public static String page(Map<String, Object> params) {
         Query q = (Query) params.get("q");
         return "<script>SELECT x.id,x.name,JSON_ARRAYAGG(x.revision_number) AS revisions,"
-                + "JSON_ARRAYAGG(x.subject_type) AS source_types,COUNT(DISTINCT x.assignment_id) AS source_count "
+                + "JSON_ARRAYAGG(x.subject_type) AS source_types,COUNT(DISTINCT x.assignment_id) AS source_count,JSON_ARRAYAGG(JSON_OBJECT('revision',x.revision_number,'name',x.version_name)) AS version_names "
                 + "FROM (" + relations(q) + ") x GROUP BY x.id,x.name ORDER BY x.id LIMIT #{q.size} OFFSET #{q.offset}</script>";
     }
     /**
@@ -73,7 +73,7 @@ public final class RoleWorkspaceSql {
                 + "AND NOT EXISTS(SELECT 1 FROM iam_platform_group_member valid_gm LEFT JOIN iam_delegation_recipient_member rm "
                 + "ON rm.delegation_id=d.id AND rm.platform_member_id=valid_gm.member_id WHERE valid_gm.group_id=ra.platform_group_id "
                 + "AND (rm.platform_member_id IS NULL OR valid_gm.member_id=d.platform_administrator_id)))))) ";
-        String columns = ",r.revision AS revision_number,ra.subject_type,ra.id AS assignment_id";
+        String columns = ",r.revision AS revision_number,r.version_name,ra.subject_type,ra.id AS assignment_id";
         String groupVisibility = q.visibleGroupIds() == null ? "" : q.visibleGroupIds().isEmpty() ? " AND 1=0 "
                 : " AND ra.platform_group_id IN <foreach collection='q.visibleGroupIds' item='id' open='(' close=')' separator=','>#{id}</foreach> ";
         if (q.subjectType() == SubjectType.GROUP) {

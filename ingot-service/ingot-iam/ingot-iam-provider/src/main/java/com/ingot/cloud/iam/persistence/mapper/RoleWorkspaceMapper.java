@@ -49,9 +49,15 @@ public interface RoleWorkspaceMapper {
      * @param name 名称
      * @param revisions JSON 聚合版本号，服务层去重
      * @param sourceTypes JSON 聚合来源类型，服务层去重
+     * @param versionNames 同一可见关系的JSON版本号及名称
      * @param sourceCount 可见来源数
      * @author jy
      * @since 1.0.0
      */
-    record Row(BigInteger id, String name, String revisions, String sourceTypes, long sourceCount) { }
+    record Row(BigInteger id, String name, String revisions, String sourceTypes, long sourceCount, String versionNames) {
+        /** 兼容旧主体聚合测试。 */
+        public Row(BigInteger id, String name, String revisions, String sourceTypes, long sourceCount) {
+            this(id, name, revisions, sourceTypes, sourceCount, "[]");
+        }
+    }
 }

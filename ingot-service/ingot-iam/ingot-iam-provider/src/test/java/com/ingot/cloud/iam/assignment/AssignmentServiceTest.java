@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AssignmentServiceTest {
     private JdbcTemplate jdbc;
     private AssignmentService service;
+    private PlatformAuthorizationEditor platformEditor;
     /** 逐例设定，模拟当前操作者的 ACTION 是否来自非委派授权。 */
     private boolean governed;
     private boolean administrator;
@@ -102,7 +103,7 @@ class AssignmentServiceTest {
                 + " group_name VARCHAR(64), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT, kind VARCHAR(24),"
                 + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024), resource_field_permissions VARCHAR(16384) DEFAULT '{}',"
-                + " published_at TIMESTAMP)");
+                + " version_name VARCHAR(128), remark VARCHAR(512), metadata_version BIGINT DEFAULT 0, published_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(512))");
         jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32),"
                 + " scopes VARCHAR(512))");
@@ -163,10 +164,14 @@ class AssignmentServiceTest {
                 IamMybatisTestAccess.delegationAdmission(dataSource), IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
+        var objectAccess = org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class);
+        org.mockito.Mockito.when(objectAccess.objectsForExecution(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(com.ingot.cloud.iam.evaluation.ObjectScope.all());
+        platformEditor = org.mockito.Mockito.mock(PlatformAuthorizationEditor.class);
         service = new AssignmentService(access, audits, changes, roles, IamMybatisTestAccess.roles(dataSource),
                 IamMybatisTestAccess.assignments(dataSource), IamMybatisTestAccess.delegationAdmission(dataSource),
-                org.mockito.Mockito.mock(com.ingot.cloud.iam.evaluation.ResourceAccess.class),
-                org.mockito.Mockito.mock(PlatformAuthorizationEditor.class),
+                objectAccess,
+                platformEditor,
                 org.mockito.Mockito.mock(TenantScopeCandidates.class), transactions);
         governed = true;
         authenticate();
@@ -353,6 +358,46 @@ class AssignmentServiceTest {
         assertEquals(34L,jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81",Long.class));
         jdbc.update("UPDATE iam_role_assignment SET delegation_grant_id=NULL WHERE id=81");
         assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(),assertThrows(BizException.class,()->service.previewUpgrade(upgradeInput("0"))).getCode());
+    }
+
+    @Test
+    void applicationKeepsEachCompatibleObjectBindingAndDropsRemovedParameters() {
+        platformUpgradeFixture();
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,revision_id,revision_kind,scope_bindings,status,source,version) VALUES(82,'PLATFORM','MEMBER',1002,34,'PLATFORM_CUSTOM','{}','ACTIVE','MANUAL',0)");
+        jdbc.update("UPDATE iam_role_grant SET scopes='[{\"kind\":\"OBJECT_SET\",\"parameterKey\":\"targets\"}]' WHERE revision_id IN(34,35)");
+        jdbc.update("INSERT INTO iam_role_parameter VALUES(34,'targets','OBJECTS'),(34,'obsolete','OBJECTS'),(35,'targets','OBJECTS')");
+        jdbc.update("UPDATE iam_role_assignment SET scope_bindings='{\"targets\":{\"kind\":\"OBJECTS\",\"ids\":[\"101\"]},\"obsolete\":{\"kind\":\"OBJECTS\",\"ids\":[\"999\"]}}' WHERE id=81");
+        jdbc.update("UPDATE iam_role_assignment SET scope_bindings='{\"targets\":{\"kind\":\"OBJECTS\",\"ids\":[\"102\"]}}' WHERE id=82");
+        org.mockito.Mockito.when(platformEditor.actionOptions(org.mockito.ArgumentMatchers.anyList())).thenReturn(List.of(
+                new com.ingot.framework.commons.model.iam.AuthorizationActionOption("55","查看","1","应用","2","资源","app:resource:read",List.of(com.ingot.framework.commons.model.iam.ScopeKind.OBJECT_SET))));
+        var result = service.previewApplication(platformAdmission(), new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput(
+                new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM,"35"), List.of(
+                new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("81","0",null),
+                new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("82","0",null))));
+        assertEquals(Map.of("targets",new ScopeBinding(ScopeBindingKind.OBJECTS,List.of("101"))),result.items().get(0).scopeBindings());
+        assertEquals(Map.of("targets",new ScopeBinding(ScopeBindingKind.OBJECTS,List.of("102"))),result.items().get(1).scopeBindings());
+        jdbc.update("UPDATE iam_role_parameter SET binding_kind='DEPARTMENTS' WHERE revision_id=35");
+        assertTrue(service.previewApplication(platformAdmission(), upgradeInput("0")).items().getFirst().scopeBindings().isEmpty());
+        assertEquals(34L,jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=81",Long.class));
+    }
+
+    @Test
+    void governedApplicationStillRequiresDelegationWhitelistAndLegacyUpgradeRemainsUpwardOnly() {
+        platformUpgradeFixture(); platformUpgradeDelegation();
+        assertFalse(service.previewApplication(platformAdmission(),upgradeInput("0")).items().getFirst().allowed());
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM iam_delegation_role_revision WHERE delegation_id=61",Integer.class));
+        jdbc.update("INSERT INTO iam_delegation_role_revision VALUES(61,35,'PLATFORM_CUSTOM')");
+        assertTrue(service.previewApplication(platformAdmission(),upgradeInput("0")).items().getFirst().allowed());
+        jdbc.update("UPDATE iam_role_assignment SET revision_id=35 WHERE id=81");
+        var lower = new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeInput(new RoleRevisionRef(RoleKind.PLATFORM_CUSTOM,"34"),List.of(
+                new com.ingot.framework.commons.model.iam.extension.AssignmentUpgradeItem("81","0",null)));
+        assertFalse(service.previewUpgrade(lower).valid());
+        assertTrue(service.previewApplication(platformAdmission(),lower).items().getFirst().allowed());
+    }
+
+    private com.ingot.cloud.iam.support.IamAdmission platformAdmission() {
+        return new com.ingot.cloud.iam.support.IamAdmission(new com.ingot.cloud.iam.identity.ActiveIdentity(
+                new AuthorizationContext(AuthorizationDomain.PLATFORM,null,"1","1001"),"0","0","0"),true);
     }
 
     private void platformUpgradeDelegation() {

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param name 角色名称
  * @param roleRevisionRef 固定版本引用
  * @param revisionNumber 固定版本号
+ * @param versionName 可读版本名称
  * @param sourceTypes 直接或组继承来源种类
  */
 @Schema(description = "成员当前有效绑定的角色与版本摘要，不披露组标识或名称")
@@ -21,5 +22,9 @@ public record MemberBoundRole(
         @Schema(description = "角色名称") String name,
         @Schema(description = "固定版本引用") RoleRevisionRef roleRevisionRef,
         @Schema(description = "固定版本号") String revisionNumber,
-        @Schema(description = "直接或组继承来源种类") List<SubjectType> sourceTypes) {
+        @Schema(description = "直接或组继承来源种类") List<SubjectType> sourceTypes, String versionName) {
+    /** 兼容既有角色摘要。 */
+    public MemberBoundRole(String roleId, String name, RoleRevisionRef roleRevisionRef, String revisionNumber, List<SubjectType> sourceTypes) {
+        this(roleId, name, roleRevisionRef, revisionNumber, sourceTypes, null);
+    }
 }

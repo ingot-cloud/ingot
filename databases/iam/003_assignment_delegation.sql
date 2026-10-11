@@ -106,6 +106,7 @@ CREATE TABLE iam_role_assignment (
     version BIGINT UNSIGNED NOT NULL DEFAULT 0,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (id),
+    KEY ix_iam_assignment_revision_status (revision_id,status,id),
     KEY idx_iam_assignment_platform_member (platform_member_id, status, valid_until),
     KEY idx_iam_assignment_platform_group (platform_group_id, status, valid_until),
     KEY idx_iam_assignment_tenant_member (tenant_id, tenant_member_id, status, valid_until),

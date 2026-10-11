@@ -294,6 +294,9 @@ class IamAuthorizationContractTest {
                 GroupDraft.class, GroupUpdateInput.class, AudienceUpdateInput.class, AssignmentUpdateInput.class,
                 DelegationUpdateInput.class, AssignmentPreviewResult.class, OwnerTransferInput.class,
                 RoleCreateInput.class, RoleUpdateInput.class, RolePublishInput.class, RoleDefinitionDraft.class,
+                RoleRevisionMetadataInput.class, RoleApplicationPrepareInput.class, RolePublishApplicationInput.class,
+                RoleApplicationChangeInput.class, RoleApplicationConfirmInput.class, RoleApplicationRefreshInput.class,
+                RoleApplicationTask.class, RoleApplicationItem.class, RoleRevisionDistribution.class,
                 UpgradePreviewInput.class, UpgradeInput.class, MemberCreateInput.class, MemberProfileInput.class, PlatformMemberEditInput.class, PlatformMemberEditPreview.class, MemberBoundRole.class,
                 MemberRoleView.class, MemberRoleReplaceInput.class, MemberDepartmentInput.class,
                 TenantCreateInput.class, TenantUpdateInput.class, TenantSettingsInput.class, DepartmentDraft.class,
@@ -310,7 +313,12 @@ class IamAuthorizationContractTest {
             schemas.putAll(ModelConverters.getInstance().readAll(type));
         }
         for (java.lang.reflect.Type type : List
-            .of(new com.fasterxml.jackson.core.type.TypeReference<ResourceDetail<MemberRecord>>() {
+            .of(new com.fasterxml.jackson.core.type.TypeReference<R<RoleApplicationTask>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationTask>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<PageResponse<RoleApplicationItem>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<List<RoleRevisionDistribution>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<R<ResourceDetail<RoleRevision>>>() { }.getType(),
+                    new com.fasterxml.jackson.core.type.TypeReference<ResourceDetail<MemberRecord>>() {
             }.getType(),
                     new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ResourceDetail<MemberRecord>>>() {
                     }.getType(), new com.fasterxml.jackson.core.type.TypeReference<Preview<EffectiveRole>>() {

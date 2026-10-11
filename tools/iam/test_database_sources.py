@@ -31,7 +31,7 @@ class DatabaseSourcesTest(unittest.TestCase):
     def test_bundle_resets_each_manifest_table_before_creating_and_checks_seed_foreign_keys(self):
         bundle = render_bundle()
         tables = CREATE_TABLE.findall(bundle)
-        self.assertEqual(56, len(tables))
+        self.assertEqual(58, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertNotIn('iam_resource_field_policy', tables)
         self.assertIn('iam_field_policy', tables)

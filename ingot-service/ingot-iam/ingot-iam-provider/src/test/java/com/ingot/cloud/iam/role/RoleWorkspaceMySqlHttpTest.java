@@ -67,6 +67,13 @@ class RoleWorkspaceMySqlHttpTest {
     private ResourceAccess resources;
 
     private IamAccess access;
+    private RoleApplicationService applications;
+    private java.util.function.Supplier<RoleApplicationService> applicationNode;
+    private com.ingot.cloud.iam.identity.ActiveIdentityService applicationIdentities;
+    private IamActionAuthorizer applicationAuthorizer;
+    private RoleService applicationRoles;
+    private final List<Object> applicationEvents = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private java.util.function.Consumer<Object> applicationEventSink = event -> { };
 
     private final ObjectMapper json = new ObjectMapper().findAndRegisterModules()
             .registerModule(new com.ingot.framework.commons.jackson.InApiTimeModule());
@@ -140,6 +147,7 @@ class RoleWorkspaceMySqlHttpTest {
             return new IamCapabilities(admissions);
         });
         when(resources.objects(eq(actor.context()), any())).thenReturn(ObjectScope.all());
+        when(resources.objectsForExecution(eq(actor.context()), any())).thenReturn(ObjectScope.all());
         var assignments = IamMybatisTestAccess.assignments(source);
         var presenter = new AssignmentService(access, mock(IamAuditWriter.class),
                 new AuthorizationChangeNotifier(event -> {
@@ -212,6 +220,27 @@ class RoleWorkspaceMySqlHttpTest {
         web.registerBean(com.ingot.framework.authorization.field.FieldInputAdvice.class,
                 () -> new com.ingot.framework.authorization.field.FieldInputAdvice(json,
                         web.getBean(com.ingot.framework.authorization.field.FieldBindingRegistry.class)));
+        applicationRoles = roles;
+        var realRoles = IamMybatisTestAccess.roles(source);
+        var taskStore = new RoleApplicationRepository(IamMybatisTestAccess.mapper(source, IamRoleApplicationTaskMapper.class),
+                IamMybatisTestAccess.mapper(source, IamRoleApplicationItemMapper.class));
+        applicationIdentities = mock(com.ingot.cloud.iam.identity.ActiveIdentityService.class);
+        when(applicationIdentities.requireActive(actor.context())).thenReturn(actor);
+        applicationAuthorizer = mock(IamActionAuthorizer.class);
+        doReturn(new IamActionAuthorizer.Admission(true)).when(applicationAuthorizer).admit(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+        var applicationPresenter = new AssignmentService(access, IamMybatisTestAccess.audits(source),
+                new AuthorizationChangeNotifier(event -> { }), roles, realRoles, assignments,
+                IamMybatisTestAccess.delegationAdmission(source), resources, mock(PlatformAuthorizationEditor.class),
+                mock(TenantScopeCandidates.class), new DataSourceTransactionManager(source));
+        applicationNode = () -> new RoleApplicationService(access, roles, realRoles, assignments, applicationPresenter, taskStore,
+                resources, applicationIdentities, applicationAuthorizer, new DataSourceTransactionManager(source),
+                IamMybatisTestAccess.audits(source), event -> {
+                    applicationEvents.add(event);
+                    applicationEventSink.accept(event);
+                });
+        applications = applicationNode.get();
+        web.registerBean(com.ingot.cloud.iam.web.v1.platform.PlatformRoleApplicationAPI.class,
+                () -> new com.ingot.cloud.iam.web.v1.platform.PlatformRoleApplicationAPI(applications));
         web.register(Mvc.class);
         web.refresh();
     }
@@ -241,6 +270,7 @@ class RoleWorkspaceMySqlHttpTest {
         when(access.admit(AuthorizationDomain.PLATFORM, IamAction.PLATFORM_ASSIGNMENT_READ))
             .thenReturn(new IamAdmission(actor, true));
         when(resources.objects(eq(actor.context()), any())).thenReturn(ObjectScope.all());
+        when(resources.objectsForExecution(eq(actor.context()), any())).thenReturn(ObjectScope.all());
     }
 
     @Test
@@ -713,9 +743,9 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.execute(
                 "CREATE TABLE iam_platform_group_member(group_id BIGINT,member_id BIGINT,PRIMARY KEY(group_id,member_id))");
         jdbc.execute(
-                "CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),tenant_id BIGINT,enabled BOOLEAN,code VARCHAR(64),kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM')");
+                "CREATE TABLE iam_role_definition(id BIGINT UNSIGNED PRIMARY KEY,name VARCHAR(100),domain VARCHAR(16),tenant_id BIGINT,enabled BOOLEAN,code VARCHAR(64),kind VARCHAR(24) DEFAULT 'PLATFORM_CUSTOM')");
         jdbc.execute(
-                "CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY,role_id BIGINT,kind VARCHAR(32),revision BIGINT)");
+                "CREATE TABLE iam_role_revision(id BIGINT UNSIGNED PRIMARY KEY,role_id BIGINT,kind VARCHAR(32),revision BIGINT,version_name VARCHAR(128),remark VARCHAR(512),metadata_version BIGINT DEFAULT 0)");
         jdbc.execute(
                 "CREATE TABLE iam_delegation_grant(id BIGINT PRIMARY KEY,domain VARCHAR(16),tenant_id BIGINT,platform_administrator_id BIGINT,tenant_administrator_id BIGINT,version BIGINT DEFAULT 0,created_at DATETIME,status VARCHAR(16),valid_from DATETIME,valid_until DATETIME,assignment_duration_mode VARCHAR(16),max_assignment_duration_seconds BIGINT,max_assignment_duration_nanos INT)");
         jdbc.execute(
@@ -729,7 +759,7 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.execute(
                 "CREATE TABLE iam_authorization_audit(id BIGINT,assignment_id BIGINT,change_type VARCHAR(20),actor_member_id BIGINT,occurred_at DATETIME)");
         jdbc.execute(
-                "CREATE TABLE iam_role_assignment(id BIGINT PRIMARY KEY,domain VARCHAR(16),tenant_id BIGINT,subject_type VARCHAR(16),platform_member_id BIGINT,platform_group_id BIGINT,tenant_member_id BIGINT,tenant_group_id BIGINT,revision_id BIGINT,revision_kind VARCHAR(32),scope_bindings JSON,delegation_grant_id BIGINT,valid_from DATETIME,valid_until DATETIME,status VARCHAR(16),source VARCHAR(16),version BIGINT DEFAULT 0,created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+                "CREATE TABLE iam_role_assignment(id BIGINT UNSIGNED PRIMARY KEY,domain VARCHAR(16),tenant_id BIGINT,subject_type VARCHAR(16),platform_member_id BIGINT,platform_group_id BIGINT,tenant_member_id BIGINT,tenant_group_id BIGINT,revision_id BIGINT,revision_kind VARCHAR(32),scope_bindings JSON,delegation_grant_id BIGINT,valid_from DATETIME,valid_until DATETIME,status VARCHAR(16),source VARCHAR(16),version BIGINT DEFAULT 0,created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
         jdbc.update(
                 "INSERT INTO iam_platform_member VALUES(1,'A','ACTIVE'),(2,'B','ACTIVE'),(3,'C','ACTIVE'),(99,'Administrator','ACTIVE')");
         jdbc.update("INSERT INTO iam_platform_group VALUES(80,'Allowed'),(81,'Self group')");
@@ -737,7 +767,7 @@ class RoleWorkspaceMySqlHttpTest {
         jdbc.update(
                 "INSERT INTO iam_role_definition(id,name,domain,tenant_id,enabled,code) VALUES(400,'Role','PLATFORM',NULL,TRUE,'custom-role'),(401,'Other role','PLATFORM',NULL,TRUE,'other-role')");
         jdbc.update(
-                "INSERT INTO iam_role_revision VALUES(31,400,'PLATFORM_CUSTOM',1),(32,400,'PLATFORM_CUSTOM',2),(33,401,'PLATFORM_CUSTOM',1)");
+                "INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES(31,400,'PLATFORM_CUSTOM',1),(32,400,'PLATFORM_CUSTOM',2),(33,401,'PLATFORM_CUSTOM',1)");
         jdbc.update(
                 "INSERT INTO iam_delegation_grant(id,domain,tenant_id,platform_administrator_id,status,valid_from,valid_until,assignment_duration_mode,max_assignment_duration_seconds,max_assignment_duration_nanos) VALUES(60,'PLATFORM',NULL,99,'ACTIVE',NULL,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),'UNLIMITED',NULL,0)");
         jdbc.update(
@@ -777,9 +807,235 @@ class RoleWorkspaceMySqlHttpTest {
                 "INSERT INTO iam_resource(id,application_id,name,enabled,scope_capabilities,code,field_capabilities) VALUES(340,100,'成员',TRUE,'[\"ALL\",\"SELF\",\"OBJECT_SET\"]','member','[]')");
         jdbc.execute(
                 "ALTER TABLE iam_role_revision ADD base_revision_id BIGINT, ADD metadata_overrides JSON, ADD resource_field_permissions JSON NOT NULL DEFAULT (JSON_OBJECT()), ADD published_at DATETIME");
+        jdbc.execute("ALTER TABLE iam_role_definition ADD description VARCHAR(512), ADD group_name VARCHAR(128), ADD version BIGINT DEFAULT 0");
+        jdbc.execute("CREATE TABLE iam_role_parameter(revision_id BIGINT,parameter_key VARCHAR(128),binding_kind VARCHAR(32))");
+        try {
+            var root = java.nio.file.Path.of("").toAbsolutePath();
+            while (!java.nio.file.Files.exists(root.resolve("databases/iam/004_policy_audit_migration.sql"))) root = root.getParent();
+            String schema = java.nio.file.Files.readString(root.resolve("databases/iam/004_policy_audit_migration.sql"));
+            schema = schema.substring(schema.indexOf("-- 持久角色版本应用"));
+            for (String statement : schema.split(";")) if (!statement.isBlank()) jdbc.execute(statement);
+        } catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
         jdbc.update(
                 "UPDATE iam_role_revision SET resource_field_permissions='{\"340\":{\"visibility\":{\"phone\":\"MASKED\"},\"operations\":{\"phone\":{\"editable\":false,\"filterable\":false}}}}' WHERE id=32");
         jdbc.update("INSERT INTO iam_action VALUES(341,100,340,'查看成员','iam-platform:member:read',TRUE),(342,100,340,'更新成员','iam-platform:member:update',TRUE)");
+    }
+
+    @Test
+    void durableApplicationProcessesOverOneHundredAndRestartResumesWithoutDuplicateAudits() throws Exception {
+        var ids = applicationFixture(205);
+        try {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101", RoleApplicationSelection.ASSIGNMENTS,
+                    List.of(), ids, "large-run"));
+            assertEquals(RoleApplicationStatus.READY, task.status());
+            assertEquals(205L, task.counts().get(RoleApplicationItemStatus.PENDING));
+            assertEquals(task.id(), applications.prepare("90000", new RoleApplicationPrepareInput("90101", RoleApplicationSelection.ASSIGNMENTS,
+                    List.of(), ids, "large-run")).id());
+            // 快照之后新增的分配不会加入计划。
+            applicationAssignment(102999, false, 90100);
+            var running = applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "execute-large"));
+            assertEquals(RoleApplicationStatus.RUNNING, running.status());
+            assertEquals(running.id(), applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "execute-large")).id());
+            applications.executeAvailable();
+            assertEquals(100, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND revision_id=90101", Integer.class));
+            var restarted = applicationNode.get();
+            restarted.executeAvailable(); // 另一个节点不能领取仍有效的租约。
+            assertEquals(100, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND revision_id=90101", Integer.class));
+            jdbc.update("UPDATE iam_role_application_task SET lease_until=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE id=?", task.id());
+            restarted.executeAvailable();
+            assertEquals(200, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND revision_id=90101", Integer.class));
+            applications.executeAvailable(); // 旧节点不得抢回新节点的租约。
+            assertEquals(200, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND revision_id=90101", Integer.class));
+            restarted.executeAvailable(); restarted.executeAvailable();
+            var completed = applications.get("90000", task.id());
+            assertEquals(RoleApplicationStatus.SUCCEEDED, completed.status());
+            assertEquals(205L, completed.counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            assertEquals(205, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id BETWEEN 102000 AND 102204 AND change_type='UPDATE'", Integer.class));
+            assertEquals(90100, jdbc.queryForObject("SELECT revision_id FROM iam_role_assignment WHERE id=102999", Integer.class));
+            assertEquals(103, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND subject_type='MEMBER'", Integer.class));
+            assertEquals(102, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE id BETWEEN 102000 AND 102204 AND subject_type='GROUP'", Integer.class));
+            assertTrue(get("/v1/platform/roles/90000/version-applications/" + task.id()).path("status").asText().equals("SUCCEEDED"));
+            assertEquals(205, get("/v1/platform/roles/90000/version-applications/" + task.id() + "/items?page=2&pageSize=20").path("total").asInt());
+            verify(applicationIdentities, atLeast(3)).requireActive(actor.context());
+        } finally { clearApplications(); }
+    }
+
+    @Test
+    void confirmationOnlyWakesAfterCommitAndRollbackOrReplayDoesNotPublish() {
+        var ids = applicationFixture(1);
+        applicationEvents.clear();
+        try {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101",
+                    RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "commit-boundary"));
+            var transaction = new org.springframework.transaction.support.TransactionTemplate(
+                    new DataSourceTransactionManager(jdbc.getDataSource()));
+            transaction.executeWithoutResult(status -> {
+                applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "rolled-back"));
+                assertTrue(applicationEvents.isEmpty());
+                status.setRollbackOnly();
+            });
+            assertTrue(applicationEvents.isEmpty());
+            assertEquals(RoleApplicationStatus.READY, applications.get("90000", task.id()).status());
+            var confirmed = applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "committed"));
+            assertEquals(1, applicationEvents.size());
+            assertEquals(new RoleApplicationReadyEvent(new BigInteger(task.id()), BigInteger.valueOf(90000)), applicationEvents.getFirst());
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(confirmed.version(), "committed"));
+            assertEquals(1, applicationEvents.size());
+        } finally { clearApplications(); }
+    }
+
+    @Test
+    void localCommitWakeProcessesTwoHundredAndFiveByIdWithoutGlobalDiscovery() {
+        var ids = applicationFixture(205);
+        var execution = spy(applicationNode.get());
+        var runtime = new ManualRoleApplicationRuntime();
+        try (var worker = runtime.worker(execution, new RoleApplicationWorkerProperties(), Duration.ofSeconds(59).toNanos())) {
+            worker.start();
+            applicationEventSink = event -> worker.wake(((RoleApplicationReadyEvent) event).taskId());
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101",
+                    RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "local-scheduling"));
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "local-confirm"));
+            runtime.advance(Duration.ZERO);
+            assertEquals(100L, applications.get("90000", task.id()).counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            runtime.advance(Duration.ofMillis(500));
+            assertEquals(RoleApplicationStatus.SUCCEEDED, applications.get("90000", task.id()).status());
+            assertEquals(205, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id BETWEEN 102000 AND 102204 AND change_type='UPDATE'", Integer.class));
+            verify(execution, times(3)).executeTask(new BigInteger(task.id()));
+            verify(execution, never()).discover(any(), anyInt());
+        } finally { applicationEventSink = event -> { }; clearApplications(); }
+    }
+
+    @Test
+    void competingNodesClaimOneBatchAndExpiredLeaseTransfersWithoutDuplicateAudit() throws Exception {
+        var ids = applicationFixture(105);
+        var another = applicationNode.get();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101",
+                    RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "parallel-claim"));
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "parallel-confirm"));
+            var start = new java.util.concurrent.CountDownLatch(1);
+            var first = pool.submit(() -> { start.await(); return applications.executeTask(new BigInteger(task.id())); });
+            var second = pool.submit(() -> { start.await(); return another.executeTask(new BigInteger(task.id())); });
+            start.countDown();
+            var result1 = first.get(15, java.util.concurrent.TimeUnit.SECONDS);
+            var result2 = second.get(15, java.util.concurrent.TimeUnit.SECONDS);
+            assertNotEquals(result1.more(), result2.more());
+            assertEquals(100L, applications.get("90000", task.id()).counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            var winner = result1.more() ? applications : another;
+            var follower = result1.more() ? another : applications;
+            jdbc.update("UPDATE iam_role_application_task SET lease_until=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE id=?", task.id());
+            follower.executeTask(new BigInteger(task.id()));
+            winner.executeTask(new BigInteger(task.id()));
+            assertEquals(RoleApplicationStatus.SUCCEEDED, applications.get("90000", task.id()).status());
+            assertEquals(105, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id BETWEEN 102000 AND 102104 AND change_type='UPDATE'", Integer.class));
+        } finally { clearApplications(); }
+    }
+
+    @Test
+    void activeBatchTransactionBlocksTakeoverEvenWhenCommittedLeaseHasExpired() throws Exception {
+        var ids = applicationFixture(105);
+        var committed = new java.util.concurrent.CountDownLatch(1);
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101",
+                    RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "long-batch"));
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "long-confirm"));
+            applications.executeTask(new BigInteger(task.id()));
+            jdbc.update("UPDATE iam_role_application_task SET lease_until=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE id=?", task.id());
+            var written = new java.util.concurrent.CountDownLatch(1);
+            var current = pool.submit(() -> new org.springframework.transaction.support.TransactionTemplate(
+                    new DataSourceTransactionManager(jdbc.getDataSource())).execute(status -> {
+                applications.executeTask(new BigInteger(task.id()));
+                written.countDown();
+                try { assertTrue(committed.await(10, java.util.concurrent.TimeUnit.SECONDS)); }
+                catch (InterruptedException interrupted) { throw new IllegalStateException(interrupted); }
+                return true;
+            }));
+            assertTrue(written.await(10, java.util.concurrent.TimeUnit.SECONDS));
+            var another = applicationNode.get();
+            var entered = new java.util.concurrent.CountDownLatch(1);
+            var takeover = pool.submit(() -> { entered.countDown(); return another.executeTask(new BigInteger(task.id())); });
+            try {
+                assertTrue(entered.await(2, java.util.concurrent.TimeUnit.SECONDS));
+                assertThrows(java.util.concurrent.TimeoutException.class,
+                        () -> takeover.get(150, java.util.concurrent.TimeUnit.MILLISECONDS));
+            } finally { committed.countDown(); }
+            assertTrue(current.get(10, java.util.concurrent.TimeUnit.SECONDS));
+            assertFalse(takeover.get(10, java.util.concurrent.TimeUnit.SECONDS).more());
+            assertEquals(105, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id BETWEEN 102000 AND 102104 AND change_type='UPDATE'", Integer.class));
+        } finally { committed.countDown(); clearApplications(); }
+    }
+
+    @Test
+    void conflictOrRevokedGovernancePausesOnlyUncommittedItemsAndAllowsExplicitLowerVersion() {
+        var ids = applicationFixture(101);
+        try {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101", RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "pause-run"));
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "pause-confirm"));
+            applications.executeAvailable();
+            when(applicationAuthorizer.admit(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE))
+                    .thenThrow(new com.ingot.framework.commons.error.BizException(IamReasonCode.ACTION_DENIED));
+            applications.executeAvailable();
+            var paused = applications.get("90000", task.id());
+            assertEquals(RoleApplicationStatus.PAUSED, paused.status());
+            assertEquals(100L, paused.counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            assertEquals(1L, paused.counts().get(RoleApplicationItemStatus.BLOCKED));
+            doReturn(new IamActionAuthorizer.Admission(true)).when(applicationAuthorizer).admit(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE);
+            var refreshed = applications.refresh("90000", task.id(), new RoleApplicationRefreshInput(paused.version()));
+            applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(refreshed.version(), "resume-confirm")); applications.executeAvailable();
+            assertEquals(101L, applications.get("90000", task.id()).counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            var lower = applications.prepare("90000", new RoleApplicationPrepareInput("90100", RoleApplicationSelection.SOURCE_REVISIONS, List.of("90101"), List.of(), "lower-run"));
+            applications.confirm("90000", lower.id(), new RoleApplicationConfirmInput(lower.version(), "lower-confirm"));
+            applications.executeAvailable(); applications.executeAvailable();
+            assertEquals(101L, applications.get("90000", lower.id()).counts().get(RoleApplicationItemStatus.SUCCEEDED));
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE revision_id=90101", Integer.class));
+        } finally { doReturn(new IamActionAuthorizer.Admission(true)).when(applicationAuthorizer).admit(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE); clearApplications(); }
+    }
+
+    @Test
+    void preflightConcurrencyConflictLeavesEveryAssignmentUnchangedUntilRefreshed() {
+        var ids = applicationFixture(2);
+        try {
+            var task = applications.prepare("90000", new RoleApplicationPrepareInput("90101", RoleApplicationSelection.ASSIGNMENTS, List.of(), ids, "conflict-run"));
+            jdbc.update("UPDATE iam_role_assignment SET version=version+1 WHERE id=102001");
+            var blocked = applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(task.version(), "conflict-confirm"));
+            assertEquals(RoleApplicationStatus.BLOCKED, blocked.status());
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE revision_id=90101", Integer.class));
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_authorization_audit WHERE assignment_id IN (102000,102001)", Integer.class));
+            var fresh = applications.refresh("90000", task.id(), new RoleApplicationRefreshInput(blocked.version()));
+            assertEquals(RoleApplicationStatus.READY, fresh.status());
+            // 当前治理范围变窄后不能确认隐藏的未完成明细；公开计数与分页仍使用同一边界。
+            when(resources.objects(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE)).thenReturn(ObjectScope.none());
+            when(resources.objectsForExecution(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE)).thenReturn(ObjectScope.none());
+            assertEquals(0L, applications.get("90000", task.id()).counts().get(RoleApplicationItemStatus.PENDING));
+            assertEquals(0, applications.items("90000", task.id(), 1, 20).total());
+            var hidden = applications.confirm("90000", task.id(), new RoleApplicationConfirmInput(fresh.version(), "hidden-confirm"));
+            assertEquals(RoleApplicationStatus.BLOCKED, hidden.status());
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_assignment WHERE revision_id=90101", Integer.class));
+            var denied = assertThrows(com.ingot.framework.commons.error.BizException.class, () -> applications.prepare("90000",
+                    new RoleApplicationPrepareInput("90101", RoleApplicationSelection.ALL, List.of(), List.of(), "hidden-all")));
+            assertEquals(IamReasonCode.ACTION_DENIED.getCode(), denied.getCode());
+        } finally { when(resources.objects(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE)).thenReturn(ObjectScope.all()); when(resources.objectsForExecution(actor.context(), IamAction.PLATFORM_ASSIGNMENT_UPGRADE)).thenReturn(ObjectScope.all()); clearApplications(); }
+    }
+
+    private List<String> applicationFixture(int count) {
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,kind,name,code,enabled,version) VALUES(90000,'PLATFORM','PLATFORM_CUSTOM','版本应用测试','application-test',TRUE,0)");
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision,version_name) VALUES(90100,90000,'PLATFORM_CUSTOM',1,'历史查询'),(90101,90000,'PLATFORM_CUSTOM',2,'新版查询')");
+        when(applicationRoles.synthesizedGrants(90100)).thenReturn(List.of(new ActionGrant("331", List.of(new ScopeExpression(ScopeKind.ALL, null, false)))));
+        when(applicationRoles.synthesizedGrants(90101)).thenReturn(List.of(new ActionGrant("331", List.of(new ScopeExpression(ScopeKind.ALL, null, false)))));
+        List<String> ids = new ArrayList<>();
+        for (int index=0; index<count; index++) { applicationAssignment(102000 + index, index % 2 != 0, 90100); ids.add(Integer.toString(102000 + index)); }
+        return ids;
+    }
+    private void applicationAssignment(int id, boolean group, int revision) {
+        jdbc.update("INSERT INTO iam_role_assignment(id,domain,subject_type,platform_member_id,platform_group_id,revision_id,revision_kind,scope_bindings,valid_from,status,source) VALUES(?,'PLATFORM',?,?,?,?, 'PLATFORM_CUSTOM','{}',DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),'ACTIVE','MANUAL')",
+                id, group ? "GROUP" : "MEMBER", group ? null : 1, group ? 80 : null, revision);
+    }
+    private void clearApplications() {
+        jdbc.update("DELETE FROM iam_role_application_item WHERE task_id IN(SELECT id FROM iam_role_application_task WHERE role_id=90000)");
+        jdbc.update("DELETE FROM iam_role_application_task WHERE role_id=90000");
+        jdbc.update("DELETE FROM iam_authorization_audit WHERE assignment_id BETWEEN 102000 AND 103000 OR target_type='ROLE_VERSION_APPLICATION'");
+        jdbc.update("DELETE FROM iam_role_assignment WHERE revision_id IN(90100,90101)");
+        jdbc.update("DELETE FROM iam_role_revision WHERE role_id=90000"); jdbc.update("DELETE FROM iam_role_definition WHERE id=90000");
     }
 
     /**

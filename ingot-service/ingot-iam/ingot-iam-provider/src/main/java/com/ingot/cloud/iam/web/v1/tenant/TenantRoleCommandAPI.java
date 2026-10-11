@@ -162,8 +162,9 @@ public class TenantRoleCommandAPI implements RShortcuts {
      */
     @Operation(summary = "预览待发布定义")
     @PostMapping("/{id}/preview")
-    public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input) {
-        return ok(roles.preview(AuthorizationDomain.TENANT, false, id, input));
+    public R<Preview<EffectiveRole>> preview(@PathVariable String id, @Valid @RequestBody RoleDefinitionDraft input,
+            @RequestParam(required = false) String sourceRevisionId) {
+        return ok(roles.preview(AuthorizationDomain.TENANT, false, id, input, sourceRevisionId));
     }
 
     /**
@@ -192,4 +193,24 @@ public class TenantRoleCommandAPI implements RShortcuts {
     public R<CreatedResource> upgrade(@PathVariable String id, @Valid @RequestBody UpgradeInput input) {
         return ok(roles.upgrade(id, input));
     }
+    /** 读取同角色固定版本详情。 */
+    @GetMapping("/{id}/revisions/{revisionId}")
+        public R<ResourceDetail<RoleRevision>> revision(@PathVariable String id, @PathVariable String revisionId) {
+        return ok(roles.getRevision(AuthorizationDomain.TENANT, false, id, revisionId));
+    }
+
+    /** 独立更新版本说明，保持权限快照不变。 */
+    @PatchMapping("/{id}/revisions/{revisionId}/metadata")
+        public R<CreatedResource> metadata(@PathVariable String id, @PathVariable String revisionId,
+            @Valid @RequestBody com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput input) {
+        return ok(roles.updateRevisionMetadata(AuthorizationDomain.TENANT, false, id, revisionId, input));
+    }
+
+    /** 固定历史版本的完整合成操作与字段权限。 */
+    @Operation(summary = "固定版本权限详情")
+    @GetMapping("/{id}/revisions/{revisionId}/grants")
+    public R<RoleGrantList> revisionGrants(@PathVariable String id, @PathVariable String revisionId) {
+        return ok(new RoleGrantList(roles.listRevisionGrants(AuthorizationDomain.TENANT, false, id, revisionId)));
+    }
+
 }

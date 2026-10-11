@@ -40,7 +40,7 @@ class AssignmentStatusRepositoryTest {
         jdbc.execute("CREATE TABLE iam_platform_group(id BIGINT PRIMARY KEY,name VARCHAR(100))");
         jdbc.execute("CREATE TABLE iam_platform_group_member(group_id BIGINT,member_id BIGINT)");
         jdbc.execute("CREATE TABLE iam_role_definition(id BIGINT PRIMARY KEY,name VARCHAR(100),enabled BOOLEAN)");
-        jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY,role_id BIGINT,revision BIGINT)");
+        jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY,role_id BIGINT,revision BIGINT,version_name VARCHAR(128))");
         jdbc.execute("CREATE TABLE iam_delegation_grant(id BIGINT PRIMARY KEY,domain VARCHAR(16),tenant_id BIGINT,"
                 + "platform_administrator_id BIGINT,status VARCHAR(16),valid_from TIMESTAMP,valid_until TIMESTAMP,"
                 + "assignment_duration_mode VARCHAR(16),max_assignment_duration_seconds BIGINT,max_assignment_duration_nanos INT)");
@@ -57,7 +57,7 @@ class AssignmentStatusRepositoryTest {
         jdbc.update("INSERT INTO iam_platform_group VALUES(10,'运维组'),(11,'空组'),(12,'包含管理员组')");
         jdbc.update("INSERT INTO iam_platform_group_member VALUES(10,1),(10,2),(12,1),(12,90)");
         jdbc.update("INSERT INTO iam_role_definition VALUES(1,'启用角色',TRUE),(2,'停用角色',FALSE)");
-        jdbc.update("INSERT INTO iam_role_revision VALUES(11,1,1),(12,2,1)");
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,revision) VALUES(11,1,1),(12,2,1)");
         var now = LocalDateTime.now(ZoneOffset.UTC);
         for (long id : List.of(60L, 61L, 62L)) {
             jdbc.update("INSERT INTO iam_delegation_grant VALUES(?,'PLATFORM',NULL,?,?,?,?,'LIMITED',86400,0)",

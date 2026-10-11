@@ -18,6 +18,8 @@ import jakarta.validation.constraints.NotNull;
  * @param groupName 仅展示分组，可空
  * @param kind 允许 SHARED、PLATFORM_CUSTOM 或 TENANT_CUSTOM
  * @param baseRevisionId 租户定制时固定的共享基础版本；其余必须为空
+ * @param versionName 版本展示名称，不参与权限身份
+ * @param remark 版本备注
  * @param definition 首个版本定义
  */
 @Schema(description = "创建自定义或共享角色并提交首个不可变版本，不能创建系统治理角色")
@@ -35,7 +37,15 @@ public record RoleCreateInput(
         @Schema(description = "租户定制时固定的共享基础版本；其余必须为空")
         String baseRevisionId,
         @NotNull @Valid @Schema(description = "首个版本定义", requiredMode = Schema.RequiredMode.REQUIRED)
-        RoleDefinitionDraft definition) {
+        RoleDefinitionDraft definition,
+        @jakarta.validation.constraints.Size(max = 128) @Schema(description = "首版名称") String versionName,
+        @jakarta.validation.constraints.Size(max = 512) @Schema(description = "首版备注") String remark) {
+    /** 保留旧调用方式，版本名称回退为vN。 */
+    public RoleCreateInput(String code, String name, String description, String groupName, RoleKind kind,
+            String baseRevisionId, RoleDefinitionDraft definition) {
+        this(code, name, description, groupName, kind, baseRevisionId, definition, null, null);
+    }
+
 
     /**
      * 系统治理角色不经此命令创建。

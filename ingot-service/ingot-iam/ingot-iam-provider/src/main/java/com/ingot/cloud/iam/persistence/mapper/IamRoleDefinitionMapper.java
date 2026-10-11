@@ -68,4 +68,12 @@ public interface IamRoleDefinitionMapper extends BaseMapper<IamRoleDefinitionEnt
                                        @Param("tenantId") BigInteger tenantId, @Param("systemKind") RoleKind systemKind,
                                        @Param("sharedKind") RoleKind sharedKind,
                                        @Param("tenantCustomKind") RoleKind tenantCustomKind);
+    /**
+     * 统计角色的持久应用记录，历史任务阻止物理删除引用的角色。
+     * @param id 已校验角色ID
+     * @return 引用记录数
+     */
+    @Select("SELECT COUNT(*) FROM iam_role_application_task WHERE role_id=#{id}")
+    long countApplications(@Param("id") BigInteger id);
+
 }

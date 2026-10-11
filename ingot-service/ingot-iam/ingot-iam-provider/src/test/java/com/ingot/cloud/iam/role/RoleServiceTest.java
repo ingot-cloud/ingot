@@ -98,7 +98,7 @@ class RoleServiceTest {
                 + " group_name VARCHAR(64), enabled BOOLEAN DEFAULT TRUE, version BIGINT DEFAULT 0)");
         jdbc.execute("CREATE TABLE iam_role_revision(id BIGINT PRIMARY KEY, role_id BIGINT, kind VARCHAR(24),"
                 + " revision BIGINT DEFAULT 1, base_revision_id BIGINT, metadata_overrides VARCHAR(1024), resource_field_permissions VARCHAR(16384) DEFAULT '{}',"
-                + " published_at TIMESTAMP)");
+                + " version_name VARCHAR(128), remark VARCHAR(512), metadata_version BIGINT DEFAULT 0, published_at TIMESTAMP)");
         jdbc.execute("CREATE TABLE iam_role_grant(revision_id BIGINT, action_id BIGINT, scopes VARCHAR(512))");
         jdbc.execute("CREATE TABLE iam_role_delta(revision_id BIGINT, action_id BIGINT, operation VARCHAR(32),"
                 + " scopes VARCHAR(512))");
@@ -172,6 +172,53 @@ class RoleServiceTest {
                 IamMybatisTestAccess.catalogService(access, dataSource, transactions),
                 IamMybatisTestAccess.roleFields(dataSource), IamMybatisTestAccess.fieldMetadata(dataSource), transactions);
         authenticate();
+    }
+
+    @Test
+    void revisionMetadataHasIndependentOptimisticLockAndLeavesPermissionsAndRoleVersionUnchanged() {
+        var created = service.create(AuthorizationDomain.TENANT, false, input(null,
+                new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
+        var revision = service.listRevisions(AuthorizationDomain.TENANT, false, created.id(), 1, 20).items().getFirst().record();
+        assertEquals("v1", revision.versionName());
+        assertEquals("0", revision.metadataVersion());
+        var roleVersion = service.get(AuthorizationDomain.TENANT, false, created.id()).version();
+        var saved = service.updateRevisionMetadata(AuthorizationDomain.TENANT, false, created.id(), revision.id(),
+                new com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput("0", "日常查询", "仅查询订单"));
+        assertEquals("1", saved.version());
+        var latest = service.getRevision(AuthorizationDomain.TENANT, false, created.id(), revision.id()).record();
+        assertEquals("日常查询", latest.versionName()); assertEquals("仅查询订单", latest.remark());
+        assertEquals(revision.grants(), latest.grants()); assertEquals(revision.revision(), latest.revision());
+        assertEquals(roleVersion, service.get(AuthorizationDomain.TENANT, false, created.id()).version());
+        assertEquals(IamReasonCode.REVISION_CONFLICT.getCode(), assertThrows(BizException.class, () ->
+                service.updateRevisionMetadata(AuthorizationDomain.TENANT, false, created.id(), revision.id(),
+                        new com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput("0", "旧输入", null))).getCode());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM iam_role_revision WHERE role_id=?", Integer.class, created.id()));
+    }
+
+    @Test
+    void historicalTenantSourceKeepsItsOwnSharedBaseAndRejectsAnotherRolesRevision() {
+        based();
+        var newer = service.upgrade("22", new UpgradeInput("0", "31", List.of(), List.of(), "增加修改", "共享基础升级"));
+        assertEquals("31", service.getRevision(AuthorizationDomain.TENANT, false, "22", newer.id()).record().baseRevisionId());
+        var old = service.getRevision(AuthorizationDomain.TENANT, false, "22", "32").record();
+        var draft = new RoleDefinitionDraft(old.grants(), old.deltas(), old.parameterDefinitions(), old.metadataOverrides(), old.resourceFieldPermissions());
+        var preview = service.preview(AuthorizationDomain.TENANT, false, "22", draft, "32");
+        assertTrue(preview.valid());
+        assertEquals(List.of("11"), preview.effectiveResult().grants().stream().map(ActionGrant::actionId).toList());
+        var published = service.publish(AuthorizationDomain.TENANT, false, "22", new RolePublishInput("1", draft, "保留历史基础", "从旧定制复制", "32"));
+        var result = service.getRevision(AuthorizationDomain.TENANT, false, "22", published.id()).record();
+        assertEquals("30", result.baseRevisionId()); assertEquals("保留历史基础", result.versionName());
+        assertEquals(IamReasonCode.INVALID_ARGUMENT.getCode(), assertThrows(BizException.class, () ->
+                service.publish(AuthorizationDomain.TENANT, false, "22", new RolePublishInput("2", draft, null, null, "31"))).getCode());
+    }
+
+    @Test
+    void systemRevisionMetadataIsReadOnly() {
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version) VALUES(90,'TENANT',NULL,'SYSTEM','system','系统',TRUE,0)");
+        jdbc.update("INSERT INTO iam_role_revision(id,role_id,kind,revision) VALUES(91,90,'SYSTEM',1)");
+        assertEquals(IamReasonCode.ACTION_DENIED.getCode(), assertThrows(BizException.class, () ->
+                service.updateRevisionMetadata(AuthorizationDomain.TENANT, false, "90", "91",
+                        new com.ingot.framework.commons.model.iam.RoleRevisionMetadataInput("0", "修改系统", null))).getCode());
     }
 
     @AfterEach
