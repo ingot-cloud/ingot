@@ -1030,6 +1030,9 @@
             "type" : "string",
             "description" : "计算后的生效状态",
             "enum" : [ "PENDING", "ACTIVE", "EXPIRED", "REVOKED", "SOURCE_INVALID" ]
+          },
+          "versionName" : {
+            "type" : "string"
           }
         },
         "description" : "返回可见授权记录，保留主体、固定版本、范围及来源链"
@@ -2694,6 +2697,9 @@
               "description" : "直接或组继承来源种类",
               "enum" : [ "MEMBER", "GROUP" ]
             }
+          },
+          "versionName" : {
+            "type" : "string"
           }
         },
         "description" : "成员当前有效绑定的角色与版本摘要，不披露组标识或名称"
@@ -3810,6 +3816,54 @@
           }
         }
       },
+      "PageResponseRoleApplicationItem" : {
+        "required" : [ "items", "page", "pageSize", "total" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleApplicationItem"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PageResponseRoleApplicationTask" : {
+        "required" : [ "items", "page", "pageSize", "total" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleApplicationTask"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "PasswordChangeState" : {
         "type" : "object",
         "properties" : {
@@ -4721,6 +4775,26 @@
           }
         }
       },
+      "RListRoleRevisionDistribution" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleRevisionDistribution"
+            }
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RPageResponseGrantCatalogResource" : {
         "type" : "object",
         "properties" : {
@@ -5021,6 +5095,40 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/PageResponseResourceDetailTenantRecord"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RPageResponseRoleApplicationItem" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResponseRoleApplicationItem"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RPageResponseRoleApplicationTask" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResponseRoleApplicationTask"
           },
           "success" : {
             "type" : "boolean"
@@ -5582,6 +5690,23 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/ResourceObjectResult"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RRoleApplicationTask" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/RoleApplicationTask"
           },
           "success" : {
             "type" : "boolean"
@@ -6414,6 +6539,161 @@
         },
         "description" : "更新资源名称与能力声明，不能改写所属应用或编码"
       },
+      "RoleApplicationChangeInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string"
+          },
+          "all" : {
+            "type" : "boolean"
+          },
+          "itemIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "scopeBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            }
+          },
+          "excluded" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RoleApplicationConfirmInput" : {
+        "required" : [ "expectedVersion", "idempotencyKey" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string"
+          },
+          "idempotencyKey" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        }
+      },
+      "RoleApplicationItem" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "assignmentId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "BLOCKED", "SUCCEEDED", "EXCLUDED", "REVOKED", "EXPIRED", "ALREADY_TARGET" ]
+          },
+          "original" : {
+            "$ref" : "#/components/schemas/AssignmentRecord"
+          },
+          "configuredBindings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ScopeBinding"
+            }
+          },
+          "preview" : {
+            "$ref" : "#/components/schemas/AssignmentUpgradePreviewItem"
+          },
+          "failureReason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "RoleApplicationPrepareInput" : {
+        "required" : [ "idempotencyKey", "selection", "targetRevisionId" ],
+        "type" : "object",
+        "properties" : {
+          "targetRevisionId" : {
+            "type" : "string"
+          },
+          "selection" : {
+            "type" : "string",
+            "enum" : [ "ALL", "SOURCE_REVISIONS", "ASSIGNMENTS" ]
+          },
+          "sourceRevisionIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "assignmentIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "idempotencyKey" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        }
+      },
+      "RoleApplicationRefreshInput" : {
+        "required" : [ "expectedVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedVersion" : {
+            "type" : "string"
+          }
+        }
+      },
+      "RoleApplicationTask" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "roleId" : {
+            "type" : "string"
+          },
+          "targetRevisionId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PREPARING", "READY", "BLOCKED", "RUNNING", "PAUSED", "SUCCEEDED" ]
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "counts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "failureReason" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "targetRevisionNumber" : {
+            "type" : "string"
+          },
+          "targetVersionName" : {
+            "type" : "string"
+          }
+        }
+      },
       "RoleCreateInput" : {
         "required" : [ "code", "definition", "kind", "name" ],
         "type" : "object",
@@ -6445,6 +6725,18 @@
           },
           "definition" : {
             "$ref" : "#/components/schemas/RoleDefinitionDraft"
+          },
+          "versionName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "首版名称"
+          },
+          "remark" : {
+            "maxLength" : 512,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "首版备注"
           }
         },
         "description" : "创建自定义或共享角色并提交首个不可变版本，不能创建系统治理角色"
@@ -6666,6 +6958,36 @@
         },
         "description" : "声明角色版本中的命名范围参数及其绑定类型"
       },
+      "RolePublishApplicationInput" : {
+        "required" : [ "idempotencyKey", "publish", "selection" ],
+        "type" : "object",
+        "properties" : {
+          "publish" : {
+            "$ref" : "#/components/schemas/RolePublishInput"
+          },
+          "selection" : {
+            "type" : "string",
+            "enum" : [ "ALL", "SOURCE_REVISIONS", "ASSIGNMENTS" ]
+          },
+          "sourceRevisionIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "assignmentIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "idempotencyKey" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        }
+      },
       "RolePublishInput" : {
         "required" : [ "definition", "expectedVersion" ],
         "type" : "object",
@@ -6676,6 +6998,22 @@
           },
           "definition" : {
             "$ref" : "#/components/schemas/RoleDefinitionDraft"
+          },
+          "versionName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "版本名称，缺省显示vN"
+          },
+          "remark" : {
+            "maxLength" : 512,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "版本备注"
+          },
+          "sourceRevisionId" : {
+            "type" : "string",
+            "description" : "编辑来源，须为同角色固定版本"
           }
         },
         "description" : "发布新的不可变角色版本，不自动升级既有授权"
@@ -6749,9 +7087,63 @@
               "$ref" : "#/components/schemas/ResourceFieldDefinition"
             },
             "description" : "相对上一版本的字段比较基线；仅版本历史读填充"
+          },
+          "versionName" : {
+            "type" : "string",
+            "description" : "可读版本名称"
+          },
+          "remark" : {
+            "type" : "string",
+            "description" : "版本备注"
+          },
+          "metadataVersion" : {
+            "type" : "string",
+            "description" : "独立元数据乐观锁"
+          },
+          "publishedAt" : {
+            "type" : "string",
+            "description" : "发布瞬时，UTC",
+            "format" : "date-time"
           }
         },
         "description" : "传输不可变角色版本及原始定义，不持久化租户合成后的完整副本"
+      },
+      "RoleRevisionDistribution" : {
+        "type" : "object",
+        "properties" : {
+          "revisionId" : {
+            "type" : "string"
+          },
+          "revision" : {
+            "type" : "string"
+          },
+          "versionName" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "RoleRevisionMetadataInput" : {
+        "required" : [ "expectedMetadataVersion" ],
+        "type" : "object",
+        "properties" : {
+          "expectedMetadataVersion" : {
+            "type" : "string"
+          },
+          "versionName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "remark" : {
+            "maxLength" : 512,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        }
       },
       "RoleRevisionRef" : {
         "required" : [ "id", "kind" ],
@@ -6823,6 +7215,12 @@
           "sourceCount" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "versionNames" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -7290,6 +7688,18 @@
               "type" : "string",
               "description" : "本次要改写的授权 ID；默认不选择既有授权"
             }
+          },
+          "versionName" : {
+            "maxLength" : 128,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "升级后版本名称"
+          },
+          "remark" : {
+            "maxLength" : 512,
+            "minLength" : 0,
+            "type" : "string",
+            "description" : "升级备注"
           }
         },
         "description" : "原子升级选定授权引用的共享基础版本，未解决冲突时拒绝提交"

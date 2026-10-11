@@ -1317,6 +1317,42 @@
     ]
   },
   {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}",
+    "method": "get",
+    "operationId": "platformGetRoleRevision",
+    "summary": "固定版本详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RResourceDetailRoleRevision",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}/grants",
+    "method": "get",
+    "operationId": "platformListRevisionGrants",
+    "summary": "固定版本完整授权",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{id}/revisions/{revisionId}/metadata",
+    "method": "patch",
+    "operationId": "platformPatchRevisionMetadata",
+    "summary": "独立修改版本名称及备注",
+    "domain": "PLATFORM",
+    "action": "iam-platform:role:status",
+    "request": "RoleRevisionMetadataInput",
+    "response": "RCreatedResource",
+    "execution": "仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/roles/{id}/revisions",
     "method": "post",
     "operationId": "platformPublishRoleRevision",
@@ -1339,7 +1375,16 @@
     "request": "RoleDefinitionDraft",
     "response": "RPreviewEffectiveRole",
     "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
-    "implemented": true
+    "implemented": true,
+    "query": [
+      {
+        "name": "sourceRevisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
   },
   {
     "path": "/v1/platform/shared-roles",
@@ -1468,6 +1513,42 @@
     ]
   },
   {
+    "path": "/v1/platform/shared-roles/{id}/revisions/{revisionId}",
+    "method": "get",
+    "operationId": "platformSharedGetRoleRevision",
+    "summary": "固定版本详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RResourceDetailRoleRevision",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/revisions/{revisionId}/grants",
+    "method": "get",
+    "operationId": "platformSharedListRevisionGrants",
+    "summary": "固定版本完整授权",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/shared-roles/{id}/revisions/{revisionId}/metadata",
+    "method": "patch",
+    "operationId": "platformSharedPatchRevisionMetadata",
+    "summary": "独立修改版本名称及备注",
+    "domain": "PLATFORM",
+    "action": "iam-platform:shared-role:status",
+    "request": "RoleRevisionMetadataInput",
+    "response": "RCreatedResource",
+    "execution": "仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存",
+    "implemented": true
+  },
+  {
     "path": "/v1/platform/shared-roles/{id}/revisions",
     "method": "post",
     "operationId": "platformSharedPublishRoleRevision",
@@ -1490,7 +1571,16 @@
     "request": "RoleDefinitionDraft",
     "response": "RPreviewEffectiveRole",
     "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
-    "implemented": true
+    "implemented": true,
+    "query": [
+      {
+        "name": "sourceRevisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
   },
   {
     "path": "/v1/platform/assignments",
@@ -2345,6 +2435,42 @@
     ]
   },
   {
+    "path": "/v1/tenant/roles/{id}/revisions/{revisionId}",
+    "method": "get",
+    "operationId": "tenantGetRoleRevision",
+    "summary": "固定版本详情",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RResourceDetailRoleRevision",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/revisions/{revisionId}/grants",
+    "method": "get",
+    "operationId": "tenantListRevisionGrants",
+    "summary": "固定版本完整授权",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:read",
+    "request": null,
+    "response": "RRoleGrantList",
+    "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
+    "implemented": true
+  },
+  {
+    "path": "/v1/tenant/roles/{id}/revisions/{revisionId}/metadata",
+    "method": "patch",
+    "operationId": "tenantPatchRevisionMetadata",
+    "summary": "独立修改版本名称及备注",
+    "domain": "TENANT",
+    "action": "iam-tenant:role:status",
+    "request": "RoleRevisionMetadataInput",
+    "response": "RCreatedResource",
+    "execution": "仅改展示元数据及独立乐观锁；系统角色只读；不改变权限内容、引用或授权缓存",
+    "implemented": true
+  },
+  {
     "path": "/v1/tenant/roles/{id}/revisions",
     "method": "post",
     "operationId": "tenantPublishRoleRevision",
@@ -2367,7 +2493,16 @@
     "request": "RoleDefinitionDraft",
     "response": "RPreviewEffectiveRole",
     "execution": "固定版本发布不自动升级授权；系统治理角色禁止租户变更；提交重验版本",
-    "implemented": true
+    "implemented": true,
+    "query": [
+      {
+        "name": "sourceRevisionId",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ]
   },
   {
     "path": "/v1/tenant/roles/{id}/upgrade-preview",
@@ -4134,6 +4269,189 @@
     "request": null,
     "response": "RFieldBindingManifest",
     "execution": "固定服务清单；目录读取权；不包含业务原值",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications",
+    "method": "post",
+    "operationId": "platformRoleApplicationPrepare",
+    "summary": "准备版本应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "RoleApplicationPrepareInput",
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/publish",
+    "method": "post",
+    "operationId": "platformRoleApplicationPublish",
+    "summary": "发布并准备应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "RolePublishApplicationInput",
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications",
+    "method": "get",
+    "operationId": "platformRoleApplicationList",
+    "summary": "版本应用任务记录",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RPageResponseRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/candidates",
+    "method": "get",
+    "operationId": "platformRoleApplicationCandidates",
+    "summary": "角色关联分配候选",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RPageResponseResourceDetailAssignmentRecord",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/distribution",
+    "method": "get",
+    "operationId": "platformRoleApplicationDistribution",
+    "summary": "分配版本分布",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RListRoleRevisionDistribution",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}",
+    "method": "get",
+    "operationId": "platformRoleApplicationGet",
+    "summary": "版本应用计划详情",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/items",
+    "method": "get",
+    "operationId": "platformRoleApplicationItems",
+    "summary": "版本应用分配明细",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": null,
+    "response": "RPageResponseRoleApplicationItem",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true,
+    "query": [
+      {
+        "name": "page",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      {
+        "name": "pageSize",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      }
+    ]
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/items",
+    "method": "patch",
+    "operationId": "platformRoleApplicationConfigure",
+    "summary": "配置应用范围及排除集合",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "RoleApplicationChangeInput",
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/preflight",
+    "method": "post",
+    "operationId": "platformRoleApplicationPreflight",
+    "summary": "重新预检未完成项",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "RoleApplicationRefreshInput",
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
+    "implemented": true
+  },
+  {
+    "path": "/v1/platform/roles/{roleId}/version-applications/{id}/confirm",
+    "method": "post",
+    "operationId": "platformRoleApplicationConfirm",
+    "summary": "确认执行版本应用",
+    "domain": "PLATFORM",
+    "action": "iam-platform:assignment:upgrade",
+    "request": "RoleApplicationConfirmInput",
+    "response": "RRoleApplicationTask",
+    "execution": "仅平台自定义角色；独立分配升级治理资格及整个集合对象覆盖；固定版本双向切换；全量fresh预检；持久租约、百条事务、冲突暂停；主体期限来源不变",
     "implemented": true
   }
 ]
