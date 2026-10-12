@@ -33,6 +33,22 @@ class IamResponseContractTest {
     }
 
     @Test
+    void currentGrantSummaryIsLightweightAndOptionalWithoutChangingItems() {
+        var response = new RoleGrantList(List.of(), new RoleRevisionSummary("9007199254740993", "2", "客服"));
+        var json = mapper.valueToTree(response);
+        assertTrue(json.get("items").isArray());
+        assertEquals("9007199254740993", json.at("/revision/id").asText());
+        assertEquals("2", json.at("/revision/revision").asText());
+        assertEquals(3, json.get("revision").size());
+        assertFalse(mapper.valueToTree(new RoleGrantList(List.of())).has("revision"));
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            assertTrue(factory.getValidator().validate(response).isEmpty());
+            assertFalse(factory.getValidator().validate(new RoleGrantList(List.of(),
+                    new RoleRevisionSummary("", "2", null))).isEmpty());
+        }
+    }
+
+    @Test
     void responseFixturesPassNestedValidation() throws Exception {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             for (Object value : List.of(fixture("assignment-record", new TypeReference<AssignmentRecord>() {}),

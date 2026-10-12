@@ -55,12 +55,14 @@ import com.ingot.framework.commons.model.iam.RoleDelta;
 import com.ingot.framework.commons.model.iam.RoleDeltaOperation;
 import com.ingot.framework.commons.model.iam.RoleDisplayDelta;
 import com.ingot.framework.commons.model.iam.RoleGrantRecord;
+import com.ingot.framework.commons.model.iam.RoleGrantList;
 import com.ingot.framework.commons.model.iam.RoleKind;
 import com.ingot.framework.commons.model.iam.RoleMetadataOverrides;
 import com.ingot.framework.commons.model.iam.RoleParameterDefinition;
 import com.ingot.framework.commons.model.iam.RolePublishInput;
 import com.ingot.framework.commons.model.iam.RoleRevision;
 import com.ingot.framework.commons.model.iam.RoleRevisionRef;
+import com.ingot.framework.commons.model.iam.RoleRevisionSummary;
 import com.ingot.framework.commons.model.iam.RoleSummary;
 import com.ingot.framework.commons.model.iam.RoleUpdateInput;
 import com.ingot.framework.commons.model.iam.ScopeBinding;
@@ -213,22 +215,24 @@ public class RoleService {
      * @param domain 接口管理域
      * @param shared 是否共享角色入口
      * @param id 角色 ID
-     * @return 当前绑定权限；尚无版本时为空列表
+     * @return 同一固定版本的当前绑定权限及摘要；尚无版本时为空列表且省略摘要
      */
-    public List<RoleGrantRecord> listCurrentGrants(AuthorizationDomain domain, boolean shared, String id) {
+    public RoleGrantList listCurrentGrants(AuthorizationDomain domain, boolean shared, String id) {
         ActiveIdentity actor = access.require(domain, action(domain, shared, AccessKind.READ));
         long roleId = IamIds.require(id);
         loadSummary(domain, shared, actor, roleId);
         IamRoleRevisionEntity latest = roles.latestRevision(roleId);
         if (latest == null || latest.getId() == null) {
-            return List.of();
+            return new RoleGrantList(List.of());
         }
-        RevisionData data = loadRevision(latest.getId().longValue());
+        RevisionData data = loadRevision(latest);
         List<ActionGrant> grants = data.grants();
         if (grants.isEmpty() && based(data.baseRevisionId())) {
             grants = synthesizedGrants(latest.getId().longValue());
         }
-        return toGrantRecords(grants, data.fields());
+        var summary = new RoleRevisionSummary(text(latest.getId()), version(latest.getRevision()),
+                normalizeName(latest.getVersionName(), latest.getRevision().longValueExact()));
+        return new RoleGrantList(toGrantRecords(grants, data.fields()), summary);
     }
 
     /**
@@ -905,6 +909,11 @@ public class RoleService {
         if (row == null) {
             throw new BizException(IamReasonCode.ROLE_REVISION_UNAVAILABLE);
         }
+        return loadRevision(row);
+    }
+
+    private RevisionData loadRevision(IamRoleRevisionEntity row) {
+        long revisionId = row.getId().longValueExact();
         List<ActionGrant> grantRows = roles.listGrants(revisionId)
             .stream()
             .map(item -> new ActionGrant(text(item.getActionId()), IamJson.read(item.getScopes(), SCOPES)))

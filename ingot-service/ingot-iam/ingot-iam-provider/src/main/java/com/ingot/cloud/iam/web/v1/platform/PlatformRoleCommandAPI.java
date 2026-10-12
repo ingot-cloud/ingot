@@ -163,13 +163,13 @@ public class PlatformRoleCommandAPI implements RShortcuts {
      * 读取平台角色最新已发布版本的当前绑定权限。
      *
      * @param id 角色 ID
-     * @return 当前绑定权限
+     * @return 当前绑定权限及对应的固定版本摘要
      */
     @Operation(summary = "角色当前绑定权限")
     @GetMapping("/{id}/grants")
     @AdminOrHasAnyAuthority(IamAction.VALUE_PLATFORM_ROLE_READ)
     public R<RoleGrantList> grants(@PathVariable String id) {
-        return ok(new RoleGrantList(roles.listCurrentGrants(AuthorizationDomain.PLATFORM, false, id)));
+        return ok(roles.listCurrentGrants(AuthorizationDomain.PLATFORM, false, id));
     }
 
     /**

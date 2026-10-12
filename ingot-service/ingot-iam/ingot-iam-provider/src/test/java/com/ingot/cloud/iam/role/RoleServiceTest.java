@@ -231,7 +231,12 @@ class RoleServiceTest {
         var created = service.create(AuthorizationDomain.TENANT, false, input(null,
                 new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
 
-        List<RoleGrantRecord> grants = service.listCurrentGrants(AuthorizationDomain.TENANT, false, created.id());
+        var current = service.listCurrentGrants(AuthorizationDomain.TENANT, false, created.id());
+        List<RoleGrantRecord> grants = current.items();
+        assertEquals("1", current.revision().revision());
+        assertEquals("v1", current.revision().versionName());
+        assertEquals(List.of("11"), service.getRevision(AuthorizationDomain.TENANT, false,
+                created.id(), current.revision().id()).record().grants().stream().map(ActionGrant::actionId).toList());
         assertEquals(1, grants.size());
         assertEquals("11", grants.getFirst().actionId());
         assertEquals("读", grants.getFirst().actionName());
@@ -239,6 +244,37 @@ class RoleServiceTest {
         assertEquals("订单", grants.getFirst().resourceName());
         assertEquals(List.of(ScopeKind.ALL, ScopeKind.SELF, ScopeKind.MANAGED_DEPARTMENTS),
                 grants.getFirst().scopeCapabilities());
+    }
+
+    @Test
+    void currentGrantsSummaryFollowsTheSelectedLatestRevisionIncludingEmptyGrants() {
+        var created = service.create(AuthorizationDomain.TENANT, false, input(null,
+                new RoleDefinitionDraft(List.of(grant("11", ScopeKind.ALL)), List.of(), List.of(), null)));
+        var published = service.publish(AuthorizationDomain.TENANT, false, created.id(),
+                new RolePublishInput(created.version(), new RoleDefinitionDraft(
+                        List.of(grant("12", ScopeKind.ALL)), List.of(), List.of(), null), "最新授权", null, null));
+        var current = service.listCurrentGrants(AuthorizationDomain.TENANT, false, created.id());
+        assertEquals(published.id(), current.revision().id());
+        assertEquals("2", current.revision().revision());
+        assertEquals("最新授权", current.revision().versionName());
+        assertEquals(List.of("12"), current.items().stream().map(RoleGrantRecord::actionId).toList());
+        jdbc.update("DELETE FROM iam_role_grant WHERE revision_id=?", published.id());
+        var empty = service.listCurrentGrants(AuthorizationDomain.TENANT, false, created.id());
+        assertTrue(empty.items().isEmpty());
+        assertEquals(current.revision(), empty.revision());
+    }
+
+    @Test
+    void roleWithoutPublishedRevisionReturnsNoSummaryAndRemainsDomainScoped() {
+        jdbc.update("INSERT INTO iam_role_definition(id,domain,tenant_id,kind,code,name,enabled,version)"
+                + " VALUES(99,'TENANT',10,'TENANT_CUSTOM','no-version','尚未发布',TRUE,0)");
+        var current = service.listCurrentGrants(AuthorizationDomain.TENANT, false, "99");
+        assertTrue(current.items().isEmpty());
+        assertNull(current.revision());
+        jdbc.update("INSERT INTO iam_platform_member(id,account_id,status,version) VALUES (1,1,'ACTIVE',0)");
+        authenticatePlatform();
+        assertEquals(IamReasonCode.OBJECT_NOT_FOUND.getCode(), assertThrows(BizException.class, () ->
+                service.listCurrentGrants(AuthorizationDomain.PLATFORM, false, "99")).getCode());
     }
 
     @Test
