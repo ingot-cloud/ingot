@@ -32994,6 +32994,9 @@
             "items": {
               "$ref": "#/components/schemas/RoleGrantRecord"
             }
+          },
+          "revision": {
+            "$ref": "#/components/schemas/RoleRevisionSummary"
           }
         },
         "description": "角色当前绑定权限列表，不分页"
@@ -33368,6 +33371,28 @@
           }
         },
         "description": "引用明确来源的不可变角色版本，服务端还须校验域、状态及可分配性"
+      },
+      "RoleRevisionSummary": {
+        "required": [
+          "id",
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "固定版本 ID"
+          },
+          "revision": {
+            "type": "string",
+            "description": "发布序号，字符串传输"
+          },
+          "versionName": {
+            "type": "string",
+            "description": "可读版本名称"
+          }
+        },
+        "description": "当前授权对应的固定发布版本摘要，不含权限定义或历史差异"
       },
       "RoleSubjectPage": {
         "required": [

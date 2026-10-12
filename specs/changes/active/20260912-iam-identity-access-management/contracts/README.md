@@ -94,3 +94,7 @@ MemberCreateInput 增加固定版本分配草稿；平台成员关联分配增�
 公开快照仍为 **132 路径 / 200 操作**。MenuDraft、ApplicationBundleMenu 增加可省略的 hidden/isCache/props 与有序 routeParams；创建取默认值，更新省略时保留原值，显式 props=false 清空声明。MenuRecord 返回归一化开关/参数数组及只读 resolvedPath；Bootstrap MenuNode.path 为完整模板，并返回三个布尔开关。参数名和跨字段规则由 Bean Validation 与菜单业务校验共同约束；备注只用于配置回显。
 
 Java 契约导出、OpenAPI 一致性及 Python 契约检查已通过；真实服务验收状态见 [菜单验证记录](../MENU-ADVANCED-VERIFICATION.md)。
+
+## 2026-10-12 当前授权版本摘要
+
+RoleGrantList新增可选RoleRevisionSummary；Java导出与OpenAPI一致性、Python契约检查通过，管理面路径/操作数仍为152/222。首屏使用同一权限响应的版本摘要，不调用历史分页；版本标识与角色乐观锁分开，部署先后端再前端。真实验收见 [角色详情加载增量](../../../archive/2026/20261012-iam-role-detail-loading/README.md)。

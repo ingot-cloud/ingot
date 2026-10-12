@@ -330,3 +330,8 @@ IAM 通过 `BizInitializationIdAllocator` 的 `iam` 业务键使用 Leaf 号段�
 ## 2026-10-11 授权审计收敛
 
 用户已批准并要求实施 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。固定当前域、统一审计文本格式、补齐服务端筛选与页面状态；保留平台/租户隔离及历史审计。主 change 保持 implementing。
+
+
+## 2026-10-12 角色详情加载优化（用户已批准）
+
+需求、设计、兼容性及 RL 系列任务见 [角色详情加载增量](../../archive/2026/20261012-iam-role-detail-loading/README.md)。本轮沿用已批准 change；2026-10-12 人工验收通过，增量已更新 current 并单独归档。

@@ -251,3 +251,5 @@ current/<domain>/<capability>/
 - [角色版本应用调度优化](./changes/archive/2026/20261011-iam-role-application-scheduling/README.md)（completed，2026-10-11 验收完成并归档）；[当前运行规则](./current/iam/role-version-application/SPEC.md)
 
 - [角色版本应用引擎职责分离](./changes/archive/2026/20261011-iam-role-application-domain-support/README.md)（completed，2026-10-11 验收完成并归档）；[当前扩展边界](./current/iam/role-version-application/SPEC.md)
+
+- [角色详情加载优化](./changes/archive/2026/20261012-iam-role-detail-loading/README.md)（completed，2026-10-12 人工验收通过）；[当前能力](./current/iam/role-version-application/README.md)

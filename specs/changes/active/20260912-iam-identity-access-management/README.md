@@ -208,3 +208,10 @@ ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示�
 用户已批准并要求实施 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。固定当前域、统一审计文本格式、补齐服务端筛选与页面状态；保留平台/租户隔离及历史审计。主 change 保持 implementing。
 
 2026-10-11：授权审计 AU01–AU04 开发与限定自动化完成，本增量 validating；AU05 真实服务发布和两站验收待执行。主 change 保持 implementing，证据见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。
+
+
+## 2026-10-12 角色详情加载优化（用户已批准）
+
+需求、设计、兼容性及 RL 系列任务见 [角色详情加载增量](../../archive/2026/20261012-iam-role-detail-loading/README.md)。本轮沿用已批准 change；2026-10-12 人工验收通过，增量已更新 current 并单独归档。
+
+本增量已 completed，RL 系列任务及人工验收均完成，证据见上述归档。主 change 保持 implementing。

@@ -19,3 +19,7 @@
 
 - [职责分离变更与验收记录](../../../changes/archive/2026/20261011-iam-role-application-domain-support/README.md)
 - [worker 职责及 TSS 边界](../../../../docs/modules/iam/role-application-worker.md)
+
+2026-10-12，负责人 jy 确认角色详情加载优化人工测试通过。当前授权附带同一固定版本的轻量摘要，详情首屏不再借用历史分页读取最新版本。
+
+- [加载优化与验收记录](../../../changes/archive/2026/20261012-iam-role-detail-loading/README.md)

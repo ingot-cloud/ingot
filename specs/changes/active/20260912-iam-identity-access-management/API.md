@@ -58,7 +58,8 @@ Auth 复用既有授权码/PKCE，管理台新增双入口 BFF 编排与会话�
 | Selection | members[], departments[{id, includeDescendants}]；仅当前域合法引用，后台按操作返回候选 |
 | ScopeExpression | kind: ALL/SELF/MEMBER_DEPARTMENTS/MANAGED_DEPARTMENTS/OBJECT_SET, parameterKey?, includeDescendants?；资源验证合法组合 |
 | ActionGrant | actionId, scopes: ScopeExpression[]；范围并集，不能引用未选操作；写模型，不含目录展示字段 |
-| RoleGrantList | items: RoleGrantRecord[]；角色当前绑定权限读响应，不分页 |
+| RoleGrantList | items: RoleGrantRecord[]，revision?: RoleRevisionSummary；当前权限与摘要属于同一固定版本，不分页 |
+| RoleRevisionSummary | id, revision, versionName?；轻量发布版本标识，不含完整定义或历史差异 |
 | RoleGrantRecord | 角色当前绑定权限读模型：actionId 与 scopes，以及操作/应用/资源名称、范围能力与操作状态；操作已删除时仍保留该条，名称可空 |
 | RoleRevision | id, roleId, revision, kind, baseRevisionId?, grants(完整角色), deltas(定制角色), parameterDefinitions, metadataOverrides, displayDeltas?（仅列表读，相对上一版本的展示差异，含操作名称） |
 | RoleDelta | actionId, operation, scopes?；仅新增/替换携带范围 |
@@ -351,3 +352,8 @@ R data 为 `AuthorizationRoleCandidatePage { items, total, page, pageSize }`。i
 ## 2026-10-11 授权审计查询
 
 `GET /v1/platform/authorization/audits` 和 `GET /v1/tenant/authorization/audits` 新增可选 `actorMemberId`、`targetType`、`targetId`、`changeType`、`from`、`until`。精确匹配、长度、时间半开区间及错误规则见 [授权审计增量](./AUTHORIZATION-AUDIT-REFINEMENT.md)。原响应/权限/缺省分页保持，不支持跨域或跨组织聚合。
+
+
+## 2026-10-12 当前角色授权的版本摘要
+
+平台、共享及租户 `GET /roles/{id}/grants`（共享根路径为 shared-roles）增加可选 revision 摘要，与 items 由同一次最新版本选择生成。无已发布版本时省略，空权限版本仍返回摘要；固定版本 grants 保留 items，可省略摘要。详情首屏不再借用历史分页；完整编辑来源按固定版本读取。先后端再前端部署；权限、统计边界、锁、请求和 DDL 不变。详见 [角色详情加载增量](../../archive/2026/20261012-iam-role-detail-loading/README.md)。
