@@ -13,6 +13,8 @@
 | 014_platform_member_contacts.sql | 平台成员尚无phone/email列；停IAM写入后一次增加并从账号回填，后续不再同步。 | 001 |
 | 016_field_access_control.sql | 资源仍有sortable/缺mask、角色字段与FIELD默认版本仍为旧JSON，或租户策略缺operation_rules；保留数据并转换，支持重跑。 | 002/004/006 |
 | 017_role_revision_application.sql | 角色版本缺名称、备注、独立元数据锁，或缺持久版本应用任务表；只增加列、表及索引，支持重跑。 | 002/003/004 |
+| 018_authorization_audit_menu.sql | 两域授权审计菜单仍使用旧名称；仅调整名称，可重复执行。 | 006 |
+| 019_root_menu_icons.sql | 正式应用一级目录的icon为空；仅补齐空图标，可重复执行并保留自定义图标。 | 006 |
 
 014执行顺序为迁移→后端→前端；仅用于缺少两列的已有库，不能重复执行或用于新建库。DDL自动提交；若在DDL后中断，保持服务停止，确认列已新增后单独完成脚本回填语句。回退应用前冻结平台成员联系资料编辑，保留新增列和备份，不将独立联系资料写回账号。已有库禁止用完整初始化SQL替代迁移。
 
@@ -66,3 +68,15 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 ## 018 授权审计菜单名称
 
 `018_authorization_audit_menu.sql` 将平台和组织的同一授权审计菜单名称改为“授权审计”，可重复执行。仅更新限定应用与路由的 name，不改权限、路径或历史审计，无结构迁移。新库种子已包含新名称。按目标库执行该脚本后重新 bootstrap/登录加载菜单；回退名称可分别恢复平台“事件与审计”及租户“审计”。审计格式兼容由新后端读取和写入代码完成，无需修改历史记录。
+
+## 019 一级目录 Iconify 图标
+
+适用于 `iam-platform`、`iam-tenant`、`platform:develop` 三个正式应用的9个一级目录。按应用编码、路由名、`parent_id IS NULL` 与 `kind = 'DIRECTORY'` 定位，只填充NULL、空字符串或纯空格的icon，保留已有图标、子菜单、其他应用、路径及权限关联。实际补齐的菜单version递增一次，重复执行无额外修改。图标均来自两管理台已离线打包的ep集合。
+
+确认目标库并留存目标菜单原始icon/version后执行：
+
+```sh
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/019_root_menu_icons.sql
+```
+
+完成后重新bootstrap或登录加载菜单。需要回退时按菜单ID恢复留存的原始icon，并递增当前version；不重建数据库。新建库使用最新006或完整初始化文件，已有库不能用完整初始化文件代替本补齐脚本。定向隔离验证使用 `python3 databases/iam/test_bootstrap_seed.py BootstrapSeedTest.test_root_menu_icons BootstrapSeedTest.test_root_menu_icon_patch_is_scoped_and_preserves_custom_icons`。

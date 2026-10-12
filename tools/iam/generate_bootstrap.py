@@ -162,50 +162,51 @@ STANDALONE_VERBS = {'owner-transfer', 'departments', 'diagnose', 'reset-password
 # 菜单树按 change 的 FRONTEND.md 第 1 节：平台与组织各最多四个一级目录。
 # view_path 为前端 definePluginPages 生成的 canonical 键，path 为浏览器路由。
 # 目录节点携带其子页 ACTION 的并集并使用 ANY，子页全部不可见时目录随之隐藏。
+# 一级目录使用两管理台已离线打包的 ep 图标集。
 PLATFORM_MENUS = [
-    ('组织与租户', 'platform.iam.tenant', [
+    ('组织与租户', 'platform.iam.tenant', 'ep:office-building', [
         ('租户管理', 'platform.iam.tenants', ['iam-platform:tenant:read']),
     ]),
-    ('应用与配置', 'platform.iam.config', [
+    ('应用与配置', 'platform.iam.config', 'ep:setting', [
         ('应用目录', 'platform.iam.applications', ['iam-platform:application:read']),
         ('套餐', 'platform.iam.plans', ['iam-platform:plan:read']),
         ('共享角色', 'platform.iam.shared.roles', ['iam-platform:shared-role:read']),
     ]),
-    ('平台管理', 'platform.iam.manage', [
+    ('平台管理', 'platform.iam.manage', 'ep:monitor', [
         ('全局账号', 'platform.iam.accounts', ['iam-platform:account:read']),
         ('平台人员', 'platform.iam.personnel', ['iam-platform:member:read']),
         ('角色与授权', 'platform.iam.authorization',
          ['iam-platform:role:read', 'iam-platform:assignment:read', 'iam-platform:delegation:read']),
     ]),
-    ('安全与运维', 'platform.iam.security', [
+    ('安全与运维', 'platform.iam.security', 'ep:lock', [
         ('授权审计', 'security.iam.authorization.audit', ['iam-platform:audit:read']),
     ]),
 ]
 
 TENANT_MENUS = [
-    ('组织管理', 'org.iam.organization', [
+    ('组织管理', 'org.iam.organization', 'ep:office-building', [
         ('成员与部门', 'org.iam.members', ['iam-tenant:member:read', 'iam-tenant:department:read']),
         ('用户组', 'org.iam.groups', ['iam-tenant:group:read']),
         ('组织设置', 'org.iam.settings', ['iam-tenant:settings:read']),
     ]),
-    ('权限与应用', 'org.iam.authorization.root', [
+    ('权限与应用', 'org.iam.authorization.root', 'ep:connection', [
         ('角色与授权', 'org.iam.authorization',
          ['iam-tenant:role:read', 'iam-tenant:assignment:read', 'iam-tenant:delegation:read']),
         ('应用管理', 'org.iam.applications', ['iam-tenant:application:read']),
     ]),
-    ('安全与合规', 'org.iam.compliance', [
+    ('安全与合规', 'org.iam.compliance', 'ep:lock', [
         ('成员权限', 'security.iam.member.permissions',
          ['iam-tenant:directory-policy:read', 'iam-tenant:field-policy:read']),
         ('授权审计', 'security.iam.authorization.audit', ['iam-tenant:audit:read']),
     ]),
-    ('工作台', 'org.iam.workspace', [
+    ('工作台', 'org.iam.workspace', 'ep:grid', [
         ('工作台', 'org.iam.workbench', ['iam-tenant:application:read']),
         ('通讯录', 'org.iam.directory', ['iam-tenant:directory:read']),
     ]),
 ]
 
 DEVELOPER_MENUS = [
-    ('开发者平台', 'platform.develop', [
+    ('开发者平台', 'platform.develop', 'ep:cpu', [
         ('生成二维码', 'platform.develop.qrcode', ['platform:develop:qrcode']),
         ('客户端管理', 'platform.develop.client', ['platform:develop:client:query']),
         ('社交管理', 'platform.develop.social', ['iam-platform:social-config:read']),
@@ -365,17 +366,18 @@ def build(check=False):
     menu_count = 0
     menu_links = []
     for application, tree in MENUS.items():
-        for order, (directory_name, directory_key, pages) in enumerate(tree, start=1):
+        for order, (directory_name, directory_key, directory_icon, pages) in enumerate(tree, start=1):
             menu_count += 1
             directory_actions = sorted({code for _, _, codes in pages for code in codes})
             lines.append(insert(
                 'iam_menu',
                 ['id', 'application_id', 'parent_id', 'name', 'path', 'view_path', 'route_name',
-                 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
+                 'icon', 'kind', 'match_mode', 'access_mode', 'sort_order', 'enabled'],
                 [reserved_id('iam_menu', MENU_BASE + menu_count, MENU_BASE, ROLE_BASE),
                  'app.id', 'NULL', quote(directory_name),
                  quote(menu_path(directory_key)), quote(DIRECTORY_VIEW_PATH), quote(directory_key),
-                 quote('DIRECTORY'), quote('ANY'), quote('ACTION'), str(order), 'TRUE'],
+                 quote(directory_icon), quote('DIRECTORY'), quote('ANY'), quote('ACTION'),
+                 str(order), 'TRUE'],
                 f"application_id = app.id AND route_name = {quote(directory_key)}",
                 source='iam_application app', where=f"app.code = {quote(application)}"))
             menu_links += [(application, directory_key, code) for code in directory_actions]

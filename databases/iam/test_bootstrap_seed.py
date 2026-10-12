@@ -88,6 +88,75 @@ class BootstrapSeedTest(unittest.TestCase):
     def bootstrap(self):
         self.sql(BOOTSTRAP.read_text())
 
+    def test_root_menu_icons(self):
+        self.bootstrap()
+        self.assertEqual(
+            'iam-platform\tplatform.iam.config\tep:setting\n'
+            'iam-platform\tplatform.iam.manage\tep:monitor\n'
+            'iam-platform\tplatform.iam.security\tep:lock\n'
+            'iam-platform\tplatform.iam.tenant\tep:office-building\n'
+            'iam-tenant\torg.iam.authorization.root\tep:connection\n'
+            'iam-tenant\torg.iam.compliance\tep:lock\n'
+            'iam-tenant\torg.iam.organization\tep:office-building\n'
+            'iam-tenant\torg.iam.workspace\tep:grid\n'
+            'platform:develop\tplatform.develop\tep:cpu',
+            self.sql("""
+                SELECT app.code, menu.route_name, menu.icon FROM iam_menu menu
+                JOIN iam_application app ON app.id = menu.application_id
+                WHERE menu.parent_id IS NULL AND menu.kind = 'DIRECTORY'
+                ORDER BY app.code, menu.route_name
+            """))
+        self.assertEqual('0', self.sql("SELECT COUNT(*) FROM iam_menu "
+                                       "WHERE parent_id IS NOT NULL AND icon IS NOT NULL"))
+
+    def test_root_menu_icon_patch_is_scoped_and_preserves_custom_icons(self):
+        # Applications and menus can have IDs different from the seed's reserved IDs.
+        self.sql("INSERT INTO iam_application (id, code, domain, name) "
+                 "VALUES (500001, 'iam-platform', 'PLATFORM', '既有平台治理')")
+        self.bootstrap()
+        root_condition = "parent_id IS NULL AND kind = 'DIRECTORY'"
+        expected_icons = self.sql("SELECT id, icon FROM iam_menu WHERE " + root_condition
+                                  + " AND route_name <> 'org.iam.workspace' ORDER BY id")
+        self.sql("""
+            UPDATE iam_menu SET icon = CASE route_name
+                WHEN 'platform.iam.config' THEN ''
+                WHEN 'org.iam.organization' THEN '   '
+                WHEN 'org.iam.workspace' THEN 'mdi:home'
+                ELSE NULL END, version = 11
+            WHERE parent_id IS NULL AND kind = 'DIRECTORY';
+            INSERT INTO iam_application (id, code, domain, name)
+                VALUES (600001, 'custom-app', 'PLATFORM', '自定义应用');
+            INSERT INTO iam_menu (id, application_id, parent_id, name, route_name, kind)
+                VALUES (600002, 600001, NULL, '其他应用目录', 'platform.iam.config', 'DIRECTORY'),
+                       (600003, 500001, NULL, '一级页面', 'platform.iam.config', 'PAGE'),
+                       (600004, 500001, 600003, '子目录', 'platform.iam.config', 'DIRECTORY');
+        """)
+        unchanged_columns = """
+            SELECT id, application_id, parent_id, name, path, view_path, route_name, kind,
+                   match_mode, access_mode, sort_order, hidden, is_cache, props, route_params, enabled
+            FROM iam_menu ORDER BY id
+        """
+        before = self.sql(unchanged_columns)
+        bindings = self.sql('SELECT * FROM iam_menu_action ORDER BY menu_id, action_id')
+        untouched_condition = "parent_id IS NOT NULL OR kind = 'PAGE' OR application_id = 600001 "
+        untouched = self.sql('SELECT id, icon, version FROM iam_menu WHERE '
+                             + untouched_condition + ' ORDER BY id')
+        patch = (SCHEMA_DIRECTORY / 'migrations/019_root_menu_icons.sql').read_text()
+        self.sql(patch)
+        after = self.sql('SELECT id, icon, version FROM iam_menu ORDER BY id')
+        self.sql(patch)
+        self.assertEqual(after, self.sql('SELECT id, icon, version FROM iam_menu ORDER BY id'))
+        self.assertEqual(expected_icons, self.sql("SELECT id, icon FROM iam_menu WHERE "
+                         + root_condition + " AND route_name <> 'org.iam.workspace' "
+                         "AND application_id <> 600001 ORDER BY id"))
+        self.assertEqual('mdi:home\t11', self.sql("SELECT icon, version FROM iam_menu "
+                                               "WHERE route_name = 'org.iam.workspace'"))
+        self.assertEqual('8', self.sql('SELECT COUNT(*) FROM iam_menu WHERE version = 12'))
+        self.assertEqual(untouched, self.sql('SELECT id, icon, version FROM iam_menu WHERE '
+                                             + untouched_condition + ' ORDER BY id'))
+        self.assertEqual(before, self.sql(unchanged_columns))
+        self.assertEqual(bindings, self.sql('SELECT * FROM iam_menu_action ORDER BY menu_id, action_id'))
+
     def test_authorization_audit_name_migration_is_scoped_and_repeatable(self):
         self.bootstrap()
         condition = "route_name = 'security.iam.authorization.audit'"

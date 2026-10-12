@@ -96,3 +96,30 @@ Docker仅使用本地mysql:8.4镜像、临时容器、network=none及pull=never�
 - 隔离MySQL首次15项中14项通过，新增开发者用例因mysql批处理将GROUP_CONCAT中的制表符转义，造成断言格式差异；改为每行一个资源编码后，定向重跑该用例1项通过（11.359秒）。15个唯一用例均已验证，不将首轮失败记作全套通过。包含全局账号位置及菜单操作、独立开发者四页和15个操作、两个SYSTEM角色按真实应用管理域隔离、全量初始化/重复重建、006幂等和人工账号叠加。
 - 已核对现有前端页面均在platform插件注册，页面路径为 `platform.iam.accounts` 与 `platform.develop.qrcode/client/social/id`；本轮未修改前端业务代码和API请求契约。
 - SQL12来源副本同步后校验SHA-256与 `git diff --check`；SQL13实际库重建、页面/API人工验收保持未执行。未操作实际数据库、不更新current、不创建提交。
+
+## 2026-10-12 一级目录图标展示数据补齐
+
+用户要求为当前后台各应用的一级菜单目录增加Iconify图标，并补齐对应SQL数据。本次沿用已批准菜单契约中的 `icon` 字段及既有前端渲染路径，维护现有目录的展示数据。
+
+| 应用 | 一级目录 | Iconify |
+|---|---|---|
+| iam-platform | 组织与租户 | ep:office-building |
+| iam-platform | 应用与配置 | ep:setting |
+| iam-platform | 平台管理 | ep:monitor |
+| iam-platform | 安全与运维 | ep:lock |
+| iam-tenant | 组织管理 | ep:office-building |
+| iam-tenant | 权限与应用 | ep:connection |
+| iam-tenant | 安全与合规 | ep:lock |
+| iam-tenant | 工作台 | ep:grid |
+| platform:develop | 开发者平台 | ep:cpu |
+
+生成器为新建的9个根DIRECTORY写入图标，006与完整 `ingot_iam.sql` 同步生成。既有库使用 `019_root_menu_icons.sql`：按应用编码和路由定位根DIRECTORY，仅补NULL、空字符串或纯空格，保留自定义图标，实际更新行的version递增一次。单独重跑006继续跳过既有记录。回退按留存的原始icon恢复并递增当前version，详见数据库迁移说明。
+
+`apps/admin` 与 `apps/admin-platform` 均已配置离线打包ep集合；核对本地ep图标数据，所选7种图标全部存在。侧栏的多子项和单子项展示均读取根目录icon，单子项折叠时使用目录图标。无需前端代码调整。
+
+- [x] MI01 一级目录图标写入生成源，同步006及完整初始化文件
+- [x] MI02 提供保留自定义图标、可重复执行的已有库补齐脚本与执行/回退说明
+- [x] MI03 生成一致性、既有种子幂等及补齐边界定向验证
+- [ ] MI04 实际目标库补齐后，重新bootstrap/登录并验收两后台展开、收起及单子页目录图标
+
+自动化证据：生成/漂移检查通过；`tools/iam/test_database_sources.py` 4项、`tools/iam/test_generate_bootstrap.py` 4项通过；隔离MySQL定向3项通过（25.741秒），覆盖9个根目录图标、非保留应用ID、NULL/空/空格补齐、自定义图标保留、根PAGE/子DIRECTORY/其他应用隔离、version只递增一次、006重复执行和其余菜单字段/权限关联保持。容器使用本地mysql:8.4、network=none与pull=never，自动清理；未连接实际业务库。主change保持implementing，人工验收待完成。
