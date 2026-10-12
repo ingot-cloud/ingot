@@ -21,6 +21,12 @@ package com.ingot.framework.security.core.userdetails;
 public interface InUserMetaKeys {
 
     /**
+     * 凭证过期的提示原因，传输 {@link com.ingot.framework.commons.model.security.CredentialExpirationReason}
+     * 的稳定字符串；仅在凭证已过期时使用，不参与准入或 JWT。
+     */
+    String CREDENTIAL_EXPIRATION_REASON = "credentialExpirationReason";
+
+    /**
      * 临时锁定到期时间。
      * <p>传输形态为 ISO-8601 字符串（如 {@code 2026-02-13T12:34:56}），
      * 读取时通过 {@link InUser#getMetaValue(String, Class)} 传入

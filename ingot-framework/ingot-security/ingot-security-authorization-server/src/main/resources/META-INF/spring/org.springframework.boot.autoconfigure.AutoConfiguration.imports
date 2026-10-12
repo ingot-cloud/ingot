@@ -1,1 +1,2 @@
 com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.SessionConcurrencyInvalidationAutoConfiguration
+com.ingot.framework.security.oauth2.server.authorization.config.annotation.web.configuration.LoginFailureMessagesAutoConfiguration

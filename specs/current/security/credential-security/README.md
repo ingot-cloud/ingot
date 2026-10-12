@@ -8,6 +8,7 @@
 
 - 登录成功后，处于宽限期的软过期账号消费一次宽限次数；宽限耗尽的硬过期账号在认证阶段被拒。
 - 初始密码由统一策略生成（随机 / 固定），支持有效期与首登强制改密。
+- 密码硬过期登录提示区分初始／重置、普通、未知原因；平台与租户共用 Auth 文案配置，集中在独立 `in-security-messages.yml`，支持动态修改及缺省、空白、删除后默认回退。
 - `password_expiration.force_change` 与账号域 `must_change_pwd` 语义对齐：创建 / 重置置位，改密成功清除。
 - 强制改密期间通过签发**受限 scope**（`in:init_pwd`）约束仅可访问改密相关接口，无需独立拦截器。
 - 初始密码策略统一经 `CredentialPolicyLoader` 取值，与强度/历史/过期共享同一降级阶梯；`ADMIN_CREATE` 的强制改密由 `forceChangeOnFirstLogin` 驱动，登录期 `validHours` 硬超期拦截落在账号域单点。
@@ -16,7 +17,7 @@
 
 ## 边界
 
-- 本能力仅覆盖凭证（密码）安全：强度、历史、过期宽限、初始密码、强制改密对齐。
+- 本能力覆盖凭证（密码）安全：强度、历史、过期宽限、初始密码、强制改密对齐及密码过期阻断登录的场景化提示。
 - **不含**：弱密码 / 泄露库识别（凭证风险）、MFA、账号登录失败锁定（属账号保护闭环）、统一安全事件中心。
 - Member 侧为**域级对齐**：走账号域用例 + `AuthContextSupport` + 受限 scope；`PasswordExpirationService` / `PasswordHistoryService` 在 Member provider 为 NoOp，**尚无**独立凭证持久化（`ingot_member` 未建 `password_history` / `password_expiration`）。
 - 弹性降级仅覆盖策略**配置读取**（含初始密码配置）；不含运行时服务发现级探活切换、安全中心策略管理台，以及远程调用熔断（P2 可选，本期未接入）。
@@ -34,6 +35,8 @@
 |---|---|
 | 凭证服务统一入口（校验 / 历史 / 过期 / 强制改密 / 宽限扣减） | `ingot-security-credential/.../DefaultCredentialSecurityService.java` |
 | 初始密码生成与有效期判定 | `ingot-security-credential/.../DefaultInitialPasswordService.java` |
+| 内部过期原因与锁定上下文合并 | `ingot-security-account-web-support/.../AuthContextSupport.java`、`ingot-commons/.../CredentialExpirationReason.java` |
+| Auth 场景化提示与默认 checker 装配 | `ingot-security-common/.../CredentialExpirationMessageResolver.java`、`InUserDetailsChecker.java`；`ingot-security-authorization-server/.../LoginFailureMessagesAutoConfiguration.java` |
 | 密码过期持久化（`force_change` / 宽限次数） | `ingot-security-credential-data/.../PasswordExpirationServiceImpl.java` |
 | 弹性降级阶梯（remote → LKG → Nacos 地板） | `ingot-cache` `LayeredCache` + `ingot-security-credential/.../config/CredentialSecurityAutoConfiguration.java` |
 | LKG 最近成功快照（Redis 唯一源） | `ingot-cache` `LastKnownGoodStore`，key `in:credential:policy:lkg` |
@@ -47,10 +50,11 @@
 
 ## 文档索引
 
-- [SPEC](./SPEC.md)：策略配置、数据模型、宽限 / 强制改密 / 初始密码数据流、来源与弹性降级、可观测、Nacos 刷新
+- [SPEC](./SPEC.md)：策略配置、数据模型、宽限 / 强制改密 / 初始密码数据流、来源与弹性降级、可观测、Nacos 刷新及场景化过期提示
 - 配置落点：[config-governance](../config-governance/SPEC.md)
 - 模块说明：`ingot-framework/ingot-security/ingot-security-credential/README.md`
 - 来源变更：
   - `specs/changes/archive/2026/20260717-security-credential-closure/`（L1 收口）
   - `specs/changes/archive/2026/20260717-security-credential-resilience/`（弹性降级兜底与初始密码收口对齐）
   - `specs/changes/archive/2026/20260730-framework-layered-cache/`（内部实现迁入 `ingot-cache`，对外契约不变）
+  - [密码过期场景化提示与独立 Nacos 文案配置](../../../changes/archive/2026/20261011-security-credential-expiry-messages/README.md)（2026-10-12 用户确认验收）

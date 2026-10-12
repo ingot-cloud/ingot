@@ -57,13 +57,13 @@
 初始密码配置**不再直连降级源**，统一经 `CredentialPolicyLoader.getInitialPasswordConfig()` 取生效值（`INITIAL_PASSWORD` 策略类型），因此与 strength/history/expiration 共享同一「远程优先 + 兜底」降级阶梯（见 §7）。
 
 - `generate()`：`RANDOM` 生成长度 = `length`（保证含大写与数字，下限 6）；`FIXED` 返回 `fixedPassword`。ADMIN / Member 创建用户均改用此入口（替换原 `RandomUtil` / `randomPwd()`）。
-- `isExpired(issuedAt)`：`validHours<=0` 或 `issuedAt` 为空 → `false`；否则 `now > issuedAt + validHours` → `true`。
+- `isExpired(issuedAt)`：`validHours<=0` 或 `issuedAt` 为空 → `false`；否则 UTC `now >= issuedAt + validHours` → `true`，到达截止时刻即失效。
 - `isForceChangeOnFirstLogin()`：读取生效配置的 `forceChangeOnFirstLogin`。
 
 接线：
 
 - `RegisterUserUseCaseService` 的 `ADMIN_CREATE` 由 `isForceChangeOnFirstLogin()` 决定 `mustChangePwd`（命令显式值优先）；`SELF_REGISTER` 保持默认 `true`。
-- 登录期初始密码 `validHours` 硬超期拦截落点为 `AuthContextSupport`（账号域单点）：`mustChangePwd` 且 `passwordChangedAt + validHours < now` 时置 `credentialsNonExpired=false` 阻断并引导重置；可选依赖（`InitialPasswordService` / `UserAccountPort`）缺失时降级跳过。
+- 登录期初始密码 `validHours` 硬超期拦截落点为 `AuthContextSupport`（账号域单点）：`mustChangePwd` 且已到达 `passwordChangedAt + validHours` 时置 `credentialsNonExpired=false` 阻断并引导重置；可选依赖（`InitialPasswordService` / `UserAccountPort`）缺失时降级跳过。仅登录而不改密不延长有效期；创建与重置共用这个场景。
 
 ## 6. 强制改密访问限制（受限 scope）
 
@@ -119,7 +119,43 @@ L1 Caffeine(TTL) → L2 Redis(TTL) → ResilientCacheLayer
 - `CacheSourceHolder` 记录当前生效来源（`REMOTE` / `LAST_KNOWN_GOOD` / `LOCAL_FLOOR`）、LKG/地板降级计数与最近降级时间；走兜底时打 WARN 日志。
 - Actuator 端点 `credentialpolicy` 暴露上述状态（`@ConditionalOnClass` 守护，缺 actuator 依赖时不注册）；框架另提供汇总端点 `layeredcache`。
 
-## 9. 已知限制 / 后续跟踪
+## 9. 密码过期阻断登录提示
+
+### 9.1 原因与准入
+
+`AuthContextSupport` 将共享枚举 `CredentialExpirationReason` 的稳定字符串写入内部 `meta.credentialExpirationReason`：
+
+| 原因 | 判定 |
+| --- | --- |
+| `INITIAL_PASSWORD_EXPIRED` | 强制改密状态下初始／重置密码超过有效期 |
+| `PASSWORD_EXPIRED` | 普通凭证校验返回 `CredentialErrorCode.EXPIRED`，已无宽限登录机会 |
+| `UNKNOWN` | 凭证已过期，但没有可识别原因 |
+
+- 普通过期分类依据错误码，不匹配错误文案；两类同时命中时初始／重置原因优先。
+- 原有锁定信息与其他 meta 保留，并合并本次原因；原因经 RPC JSON 传递，不写入 JWT。
+- `credentialsNonExpired` 仍决定凭证过期阻断，原因仅选择提示。缺失、未知字面量或格式异常回退通用提示，不能解除已有阻断。
+- Auth 保留启用、账号有效期、凭证有效期、锁定的检查顺序及已有自定义 `UserDetailsChecker` 扩展入口。默认场景化 checker 仅在授权服务装配且没有自定义 checker 时注册。
+- 密码有效期、宽限次数、登录准入及强制改密流程使用现有策略；HTTP 状态、错误码与 `code/message` 响应结构沿用原契约，BFF 与前端透传提示。
+
+### 9.2 独立文案配置
+
+DEV、TEST、PROD Group 分别使用 `in-security-messages.yml`（`NacosConstants.IN_SECURITY_MESSAGES`）。平台与租户登录共用 Auth 配置；密码有效期等安全规则仍归属 `in-security-policy.yml`。
+
+配置前缀为 `ingot.security.login.messages`，三项相互独立，默认值如下：
+
+| 配置键 | 场景 | 内置默认 |
+| --- | --- | --- |
+| `initial-password-expired` | 初始／重置密码过期 | 初始密码或重置后的密码已过期，请联系管理员重置密码后再登录。 |
+| `password-expired` | 普通密码硬过期 | 密码已过期，当前无法登录，请联系管理员重置密码后再登录。 |
+| `credentials-expired` | 未知原因过期 | 登录密码已过期，请联系管理员重置密码后再登录。 |
+
+Auth 各环境使用 `optional:nacos:in-security-messages.yml?refreshEnabled=true` 导入。文件缺失时允许启动；缺项、空白或删除配置后使用对应内置默认。
+
+过期失败时从当前 `Environment` 新绑定 `LoginFailureMessageProperties`，不持有启动字段快照；Nacos 刷新完成后的登录读取最新配置。自定义文案按纯文本返回，`${...}`、`{0}` 等不执行替换。绑定失败使用默认文案，不改变认证准入。
+
+该文件集中管理面向用户的认证与安全提示，当前接入三类密码过期消息；其他服务仅在实际成为文案消费者时按需导入。
+
+## 10. 已知限制 / 后续跟踪
 
 1. Member 完整凭证持久化未落地：Member provider 未依赖 `ingot-security-credential-data`，`ingot_member` 未建 `password_history` / `password_expiration`；当前 Member 为域级对齐 + NoOp 持久化。
 2. 安全中心 `INITIAL_PASSWORD` 本期仅**预留类型 + 远程可读**，可视化管理台后续 change。

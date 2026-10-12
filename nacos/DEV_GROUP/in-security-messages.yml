@@ -1,0 +1,9 @@
+# 面向用户的认证与安全提示；实际文案消费者按需导入，支持动态刷新。
+# 缺省、删除或空白文案使用内置默认；纯文本，不执行模板。
+ingot:
+  security:
+    login:
+      messages:
+        initial-password-expired: "初始密码或重置后的密码已过期，请联系管理员重置密码后再登录。"
+        password-expired: "密码已过期，当前无法登录，请联系管理员重置密码后再登录。"
+        credentials-expired: "登录密码已过期，请联系管理员重置密码后再登录。"

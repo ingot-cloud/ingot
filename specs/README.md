@@ -193,6 +193,8 @@ current/<domain>/<capability>/
 
 已归档（2026）：
 
+- [密码过期场景化提示与独立 Nacos 文案配置](./changes/archive/2026/20261011-security-credential-expiry-messages/README.md)（completed，2026-10-12 用户确认测试成功）；[当前凭证安全契约](./current/security/credential-security/SPEC.md)
+
 - [框架统一时间契约与 UTC 处理](./changes/archive/2026/20261008-framework-time-contract/README.md)（completed，2026-10-11 联调验收完成，既有问题独立跟踪）
 
 - [公共字段访问控制](./changes/archive/2026/20261010-framework-field-access-control/README.md)

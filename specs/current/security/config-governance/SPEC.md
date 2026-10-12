@@ -13,17 +13,20 @@
 
 `mode=local|remote`：local 读 L1 地板；remote 读安全中心，L1 仅作末级地板。
 
+面向用户的安全提示独立于上述规则配置，统一归属 `in-security-messages.yml`，文案不参与安全决策。
+
 **import 规则**：classpath 会执行该能力，才 import 对应 dataId。不要为了「好找」给 Auth 挂凭证文件。
 
 ## 2. dataId 与消费者
 
-`spring.config.import` 顺序：common → database（若有） → crypto（若消费） → policy 或 gateway-policy（若消费） → `${spring.application.name}.yml`（最后覆盖）。
+规则配置的 `spring.config.import` 顺序：common → database（若有） → crypto（若消费） → policy 或 gateway-policy（若消费） → `${spring.application.name}.yml`（最后覆盖规则配置）。Auth 在服务配置之后额外 optional 导入 `in-security-messages.yml`，三类过期文案统一归属独立文件。
 
 | dataId | 内容 | import |
 |---|---|---|
 | `in-security-crypto.yml` | `ingot.security.crypto` | PMS、Member、BFF、Security |
 | `in-security-policy.yml` | `replay`、`credential`、`account.signal`、`event.delivery`/`mysql`、`ignoreTenantValidateRoleCodeList` | PMS、Member、Security、BFF |
 | `in-security-gateway.yml` | 限流 / 黑名单 / 违规升级 / 挑战**地板**（groups/rules/items，**不写**各域 `enabled`/`mode`） | 仅 Gateway |
+| `in-security-messages.yml` | 面向用户的认证与安全纯文本提示；当前为 `ingot.security.login.messages` 三类密码过期文案 | Auth；其他服务成为文案消费者时按需导入 |
 | `in-service-pms.yml` | `account.mode`/`lockout`、event L3 | PMS |
 | `in-service-member.yml` | `account.mode`/`lockout`、event L3 | Member |
 | `in-service-auth.yml` | `oauth2.auth`、`jwk`、`access`、`session`、event L3 | Auth（**不**挂 policy / crypto / gateway-policy） |
@@ -31,13 +34,16 @@
 | `in-service-bff.yml` | `oauth2.resource`、`account.bff` | BFF（policy 中会多带未执行的 `credential` 段，不在 BFF 上改） |
 | `in-service-security.yml` | event L3（中心库 retention） | Security |
 
-常量：`NacosConstants.IN_SECURITY_POLICY`、`IN_SECURITY_GATEWAY`、`IN_SECURITY_CRYPTO`。
+常量：`NacosConstants.IN_SECURITY_POLICY`、`IN_SECURITY_GATEWAY`、`IN_SECURITY_CRYPTO`、`IN_SECURITY_MESSAGES`。
+
+独立文案文件在 DEV、TEST、PROD Group 分别配置；Auth 使用 `optional:nacos:in-security-messages.yml?refreshEnabled=true`。缺文件、缺键、空白或删除配置回退内置默认；每次过期失败从当前 Environment 新绑定，刷新后后续登录读取新值。场景、默认值与纯文本规则见 [凭证安全提示契约](../credential-security/SPEC.md#9-密码过期阻断登录提示)。
 
 ## 3. 前缀地图
 
 | 前缀 | 层 | dataId | 消费者 |
 |---|---|---|---|
 | `ingot.security.credential` | L1 | `in-security-policy.yml` | PMS、Member、Security |
+| `ingot.security.login.messages` | 展示文案 | `in-security-messages.yml` | Auth（平台与租户共用） |
 | `ingot.security.replay` | L1 | `in-security-policy.yml` | PMS、Member、BFF、Security |
 | `ingot.security.account.signal` | L1 | `in-security-policy.yml` | PMS、Member 写；BFF（及 Auth 代码默认 TTL）读 |
 | `ingot.security.event.delivery` / `mysql` | L1 | `in-security-policy.yml` | PMS、Member、Security |

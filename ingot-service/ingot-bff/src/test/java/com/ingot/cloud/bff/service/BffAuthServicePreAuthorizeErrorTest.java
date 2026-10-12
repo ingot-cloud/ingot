@@ -1,5 +1,7 @@
 package com.ingot.cloud.bff.service;
 
+import java.util.stream.Stream;
+
 import com.ingot.cloud.auth.api.rpc.RemoteAuthSessionService;
 import com.ingot.cloud.auth.api.rpc.RemoteAuthTokenService;
 import com.ingot.cloud.bff.config.AccountLockBffProperties;
@@ -20,6 +22,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,6 +43,7 @@ class BffAuthServicePreAuthorizeErrorTest {
     private RemoteAuthTokenService remoteAuthTokenService;
     private BffAuthService service;
     private HttpServletRequest request;
+    private BffAppRegistration app;
 
     @BeforeEach
     void setUp() {
@@ -46,7 +52,7 @@ class BffAuthServicePreAuthorizeErrorTest {
         remoteAuthTokenService = mock(RemoteAuthTokenService.class);
 
         BffAppRegistry registry = mock(BffAppRegistry.class);
-        BffAppRegistration app = new BffAppRegistration();
+        app = new BffAppRegistration();
         app.setAppId("tenant-admin");
         app.setDomain(AuthorizationDomain.TENANT);
         app.setOauthClientId("in-bff-tenant");
@@ -106,6 +112,26 @@ class BffAuthServicePreAuthorizeErrorTest {
         assertFalse(result.isSuccess());
         assertEquals(BaseErrorCode.INTERNAL_SERVER_ERROR.getCode(), result.getCode());
         assertEquals(BaseErrorCode.INTERNAL_SERVER_ERROR.getText(), result.getMessage());
+    }
+
+    @ParameterizedTest
+    @MethodSource("expiredMessages")
+    void login_preservesExpiryMessageForPlatformAndTenant(AuthorizationDomain domain, String message) {
+        app.setDomain(domain);
+        when(remoteAuthTokenService.preAuthorize(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any())).thenThrow(new InFeignException(BaseErrorCode.BAD_REQUEST.getCode(), message));
+        String entry = domain == AuthorizationDomain.PLATFORM ? BffConstants.ENTRY_PLATFORM : BffConstants.ENTRY_TENANT;
+        R<?> result = service.login(entry, loginDto(), request, mock(HttpServletResponse.class));
+        assertFalse(result.isSuccess());
+        assertEquals(BaseErrorCode.BAD_REQUEST.getCode(), result.getCode());
+        assertEquals(message, result.getMessage());
+    }
+
+    static Stream<Arguments> expiredMessages() {
+        return Stream.of(AuthorizationDomain.PLATFORM, AuthorizationDomain.TENANT).flatMap(domain -> Stream.of(
+                "初始密码或重置后的密码已过期，请联系管理员重置密码后再登录。",
+                "密码已过期，当前无法登录，请联系管理员重置密码后再登录。",
+                "请联系服务台处理密码失效").map(message -> Arguments.of(domain, message)));
     }
 
     private static BffLoginDTO loginDto() {

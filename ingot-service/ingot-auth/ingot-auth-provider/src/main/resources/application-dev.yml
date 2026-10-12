@@ -21,3 +21,4 @@ spring:
       - optional:nacos:in-common.yml
       - optional:nacos:in-database.yml
       - optional:nacos:${spring.application.name}.yml
+      - optional:nacos:in-security-messages.yml

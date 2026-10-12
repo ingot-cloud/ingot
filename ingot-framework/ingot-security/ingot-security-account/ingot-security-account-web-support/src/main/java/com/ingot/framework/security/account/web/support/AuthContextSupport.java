@@ -4,24 +4,27 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.ingot.framework.commons.model.security.CredentialExpirationReason;
+import com.ingot.framework.commons.model.security.UserDetailsResponse;
+import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.account.domain.model.LockState;
 import com.ingot.framework.security.account.domain.model.LockoutPolicy;
 import com.ingot.framework.security.account.domain.model.UserAccount;
 import com.ingot.framework.security.account.domain.port.outbound.LockStatePort;
 import com.ingot.framework.security.account.domain.port.outbound.UserAccountPort;
 import com.ingot.framework.security.account.domain.service.AccountLockoutPolicyLoader;
-import com.ingot.framework.commons.model.security.UserDetailsResponse;
-import com.ingot.framework.commons.model.security.UserTypeEnum;
 import com.ingot.framework.security.core.userdetails.InUserMetaKeys;
+import com.ingot.framework.security.credential.model.CredentialErrorCode;
 import com.ingot.framework.security.credential.model.CredentialScene;
 import com.ingot.framework.security.credential.model.PasswordCheckResult;
 import com.ingot.framework.security.credential.model.request.CredentialValidateRequest;
 import com.ingot.framework.security.credential.service.CredentialSecurityService;
 import com.ingot.framework.security.credential.service.InitialPasswordService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 面向 IAM / Member 等“账号体系服务”的登录认证上下文填充工具。
+ * <p>填充 IAM / Member 登录认证状态、过期提示原因与锁定上下文。</p>
  * <p>
  * 仅在用户名/密码登录场景（{@code /inner/user/details}）调用一次，负责把账号的
  * “硬过期决策 + 软上下文 meta” 同步到 {@link UserDetailsResponse}，供 Auth 侧的
@@ -56,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2026-02-14
  */
 @Slf4j
+@RequiredArgsConstructor
 public class AuthContextSupport {
 
     private final CredentialSecurityService credentialSecurityService;
@@ -63,18 +67,6 @@ public class AuthContextSupport {
     private final AccountLockoutPolicyLoader lockoutPolicyLoader;
     private final InitialPasswordService initialPasswordService;
     private final UserAccountPort userAccountPort;
-
-    public AuthContextSupport(CredentialSecurityService credentialSecurityService,
-                              LockStatePort lockStatePort,
-                              AccountLockoutPolicyLoader lockoutPolicyLoader,
-                              InitialPasswordService initialPasswordService,
-                              UserAccountPort userAccountPort) {
-        this.credentialSecurityService = credentialSecurityService;
-        this.lockStatePort = lockStatePort;
-        this.lockoutPolicyLoader = lockoutPolicyLoader;
-        this.initialPasswordService = initialPasswordService;
-        this.userAccountPort = userAccountPort;
-    }
 
     /**
      * 填充认证上下文到 {@link UserDetailsResponse}
@@ -89,6 +81,12 @@ public class AuthContextSupport {
             return;
         }
 
+        Map<String, Object> meta = new HashMap<>();
+        if (result.getMeta() != null) {
+            meta.putAll(result.getMeta());
+        }
+        CredentialExpirationReason expirationReason = null;
+
         // 1. 硬过期判定：仅在账号可登录（已启用且未锁定）且注入了凭证服务时执行
         if (credentialSecurityService != null
                 && Boolean.TRUE.equals(result.getEnabled())
@@ -102,6 +100,8 @@ public class AuthContextSupport {
                                 .build());
                 if (!checkResult.isPassed()) {
                     result.setCredentialsNonExpired(false);
+                    expirationReason = checkResult.getFailureCode() == CredentialErrorCode.EXPIRED
+                            ? CredentialExpirationReason.PASSWORD_EXPIRED : CredentialExpirationReason.UNKNOWN;
                 }
             } catch (Exception e) {
                 log.warn("[AuthContextSupport] 凭证过期检查异常，放行登录 userId={}", userId, e);
@@ -109,38 +109,51 @@ public class AuthContextSupport {
 
             // 1.1 初始密码硬超期：持有初始/重置密码（mustChangePwd=true）且超过 validHours 未改密，
             //     视为初始密码失效，硬阻断登录，需管理员重置。
-            if (!Boolean.FALSE.equals(result.getCredentialsNonExpired())) {
-                fillInitialPasswordExpiry(result, userId, userType);
+            // 普通校验已阻断时仍识别初始密码原因；只补充提示分类，不解除已有阻断。
+            if (isInitialPasswordExpired(userId, userType)) {
+                result.setCredentialsNonExpired(false);
+                expirationReason = CredentialExpirationReason.INITIAL_PASSWORD_EXPIRED;
             }
         }
 
-        // 2. 软上下文：仅当锁定策略开启 + 端口可用时填充，否则 meta 为空、不设置
-        Map<String, Object> meta = buildMeta(userId, userType, result);
-        if (!meta.isEmpty()) {
+        // 2. 合并锁定上下文和本次过期原因，保留已有的其他 meta。
+        meta.putAll(buildMeta(userId, userType, result));
+        if (Boolean.FALSE.equals(result.getCredentialsNonExpired())) {
+            if (expirationReason != null) {
+                meta.put(InUserMetaKeys.CREDENTIAL_EXPIRATION_REASON, expirationReason.getValue());
+            } else {
+                meta.putIfAbsent(InUserMetaKeys.CREDENTIAL_EXPIRATION_REASON,
+                        CredentialExpirationReason.UNKNOWN.getValue());
+            }
+        } else {
+            meta.remove(InUserMetaKeys.CREDENTIAL_EXPIRATION_REASON);
+        }
+        if (!meta.isEmpty() || result.getMeta() != null) {
             result.setMeta(meta);
         }
     }
 
     /**
-     * 初始密码 {@code validHours} 硬超期判定：命中则置 {@code credentialsNonExpired=false}。
+     * 初始密码 {@code validHours} 硬超期判定，用于阻断及优先选择提示原因。
      * <p>依赖可选注入：缺少 {@link InitialPasswordService} 或 {@link UserAccountPort} 时跳过（降级）。</p>
      */
-    private void fillInitialPasswordExpiry(UserDetailsResponse result, Long userId, UserTypeEnum userType) {
+    private boolean isInitialPasswordExpired(Long userId, UserTypeEnum userType) {
         if (initialPasswordService == null || userAccountPort == null) {
-            return;
+            return false;
         }
         try {
             UserAccount account = userAccountPort.findById(userId, userType).orElse(null);
             if (account == null || !Boolean.TRUE.equals(account.getMustChangePwd())) {
-                return;
+                return false;
             }
             if (initialPasswordService.isExpired(account.getPasswordChangedAt())) {
-                result.setCredentialsNonExpired(false);
                 log.info("[AuthContextSupport] 初始密码已超期，阻断登录并需管理员重置 userId={}", userId);
+                return true;
             }
         } catch (Exception e) {
             log.warn("[AuthContextSupport] 初始密码超期检查异常，放行登录 userId={}", userId, e);
         }
+        return false;
     }
 
     private Map<String, Object> buildMeta(Long userId, UserTypeEnum userType, UserDetailsResponse result) {
