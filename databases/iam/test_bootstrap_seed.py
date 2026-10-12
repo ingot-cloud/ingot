@@ -93,13 +93,14 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(
             'iam-platform\tplatform.iam.config\tep:setting\n'
             'iam-platform\tplatform.iam.manage\tep:monitor\n'
-            'iam-platform\tplatform.iam.security\tep:lock\n'
             'iam-platform\tplatform.iam.tenant\tep:office-building\n'
+            'iam-platform\tplatform.settings\tep:setting\n'
             'iam-tenant\torg.iam.authorization.root\tep:connection\n'
             'iam-tenant\torg.iam.compliance\tep:lock\n'
             'iam-tenant\torg.iam.organization\tep:office-building\n'
             'iam-tenant\torg.iam.workspace\tep:grid\n'
-            'platform:develop\tplatform.develop\tep:cpu',
+            'platform:develop\tplatform.develop\tep:cpu\n'
+            'platform:security\tsecurity.root\tep:lock',
             self.sql("""
                 SELECT app.code, menu.route_name, menu.icon FROM iam_menu menu
                 JOIN iam_application app ON app.id = menu.application_id
@@ -115,7 +116,8 @@ class BootstrapSeedTest(unittest.TestCase):
                  "VALUES (500001, 'iam-platform', 'PLATFORM', '既有平台治理')")
         self.bootstrap()
         root_condition = "parent_id IS NULL AND kind = 'DIRECTORY'"
-        expected_icons = self.sql("SELECT id, icon FROM iam_menu WHERE " + root_condition
+        old_roots = " AND route_name NOT IN ('platform.settings','security.root')"
+        expected_icons = self.sql("SELECT id, icon FROM iam_menu WHERE " + root_condition + old_roots
                                   + " AND route_name <> 'org.iam.workspace' ORDER BY id")
         self.sql("""
             UPDATE iam_menu SET icon = CASE route_name
@@ -147,11 +149,11 @@ class BootstrapSeedTest(unittest.TestCase):
         self.sql(patch)
         self.assertEqual(after, self.sql('SELECT id, icon, version FROM iam_menu ORDER BY id'))
         self.assertEqual(expected_icons, self.sql("SELECT id, icon FROM iam_menu WHERE "
-                         + root_condition + " AND route_name <> 'org.iam.workspace' "
+                         + root_condition + old_roots + " AND route_name <> 'org.iam.workspace' "
                          "AND application_id <> 600001 ORDER BY id"))
         self.assertEqual('mdi:home\t11', self.sql("SELECT icon, version FROM iam_menu "
                                                "WHERE route_name = 'org.iam.workspace'"))
-        self.assertEqual('8', self.sql('SELECT COUNT(*) FROM iam_menu WHERE version = 12'))
+        self.assertEqual('7', self.sql('SELECT COUNT(*) FROM iam_menu WHERE version = 12'))
         self.assertEqual(untouched, self.sql('SELECT id, icon, version FROM iam_menu WHERE '
                                              + untouched_condition + ' ORDER BY id'))
         self.assertEqual(before, self.sql(unchanged_columns))
@@ -159,6 +161,7 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_authorization_audit_name_migration_is_scoped_and_repeatable(self):
         self.bootstrap()
+        self.sql("UPDATE iam_menu SET route_name='security.iam.authorization.audit' WHERE view_path IN ('platform.iam.authorization.audit','org.iam.authorization.audit')")
         condition = "route_name = 'security.iam.authorization.audit'"
         original = self.sql(f"SELECT id, application_id, path, view_path, access_mode, match_mode, version FROM iam_menu WHERE {condition} ORDER BY id")
         self.assertEqual(2, self.count('iam_menu', condition))
@@ -188,8 +191,8 @@ class BootstrapSeedTest(unittest.TestCase):
             self.assertEqual(definitions[table], self.sql(f'SHOW CREATE TABLE `{table}`'), table)
             self.assertEqual(counts[table], self.count(table), table)
         self.assertEqual(58, len(tables))
-        self.assertEqual(138, self.count('iam_action'))
-        self.assertEqual(30, self.count('iam_menu'))
+        self.assertEqual(154, self.count('iam_action'))
+        self.assertEqual(36, self.count('iam_menu'))
         for table in ['iam_account', 'iam_tenant', 'iam_role_assignment', 'iam_authorization_audit',
                       'account_lock_state', 'password_history', 'password_expiration', 'security_event']:
             self.assertEqual(0, self.count(table), table)
@@ -267,10 +270,10 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_empty_database_gets_complete_catalog_without_credentials(self):
         self.bootstrap()
-        self.assertEqual(3, self.count("iam_application"))
-        self.assertEqual(36, self.count("iam_resource"))
-        self.assertEqual(138, self.count("iam_action"))
-        self.assertEqual(30, self.count("iam_menu"))
+        self.assertEqual(4, self.count("iam_application"))
+        self.assertEqual(42, self.count("iam_resource"))
+        self.assertEqual(154, self.count("iam_action"))
+        self.assertEqual(36, self.count("iam_menu"))
         self.assertEqual('FULL', self.sql("""
             SELECT JSON_UNQUOTE(JSON_EXTRACT(revision.resource_field_permissions,
                 CONCAT('$."',resource.id,'".visibility.phone')))
@@ -340,7 +343,7 @@ class BootstrapSeedTest(unittest.TestCase):
 
     def test_governance_grants_cover_own_domain_only(self):
         self.bootstrap()
-        for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 92),
+        for role, domain, expected in ((ADMIN_ROLE_CODE, "PLATFORM", 108),
                                        ("tenant-governance", "TENANT", 46)):
             covered = self.sql(f"""
                 SELECT COUNT(*) FROM iam_role_grant grant_row
@@ -375,7 +378,7 @@ class BootstrapSeedTest(unittest.TestCase):
             JOIN iam_action action ON action.id = link.action_id
             WHERE menu.route_name = 'platform.iam.accounts'
         """))
-        self.assertEqual('platform.iam.accounts\nplatform.iam.personnel\nplatform.iam.authorization',
+        self.assertEqual('platform.iam.accounts\nplatform.iam.personnel\nplatform.iam.authorization\nplatform.iam.authorization.audit',
                          self.sql("""
             SELECT menu.route_name FROM iam_menu menu
             JOIN iam_menu parent ON parent.id = menu.parent_id
@@ -470,7 +473,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(15, self.count("iam_resource", "application_id = 500001"))
         self.assertEqual(46, self.count("iam_action", "application_id = 500001"))
         self.assertEqual(13, self.count("iam_menu", "application_id = 500001"))
-        self.assertEqual(138, self.count("iam_role_grant"))
+        self.assertEqual(154, self.count("iam_role_grant"))
 
     def test_manual_verification_seed_layers_on_the_cold_start_catalog(self):
         self.bootstrap()
@@ -479,7 +482,7 @@ class BootstrapSeedTest(unittest.TestCase):
         self.assertEqual(2, self.count("iam_account"))
         self.assertEqual(1, self.count("iam_platform_member"))
         self.assertEqual(2, self.count("iam_role_definition"))
-        self.assertEqual(138, self.count("iam_role_grant"))
+        self.assertEqual(154, self.count("iam_role_grant"))
         # The governance assignment resolves the platform revision from the seed, not a fixed id.
         self.assertEqual("1", self.sql("""
             SELECT COUNT(*) FROM iam_role_assignment assignment

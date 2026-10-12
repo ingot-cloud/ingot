@@ -2,6 +2,7 @@ package com.ingot.cloud.security.web.platform.security;
 
 import java.util.List;
 
+import com.ingot.cloud.security.authorization.SecurityGlobalAccess;
 import com.ingot.cloud.security.model.domain.AccountLockoutPolicyConfig;
 import com.ingot.cloud.security.service.account.AccountLockoutPolicyAdminService;
 import com.ingot.framework.commons.model.iam.IamAction;
@@ -34,10 +35,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "安全中心-账号锁定策略")
 public class AccountLockoutPolicyAPI implements RShortcuts {
 
+    private final SecurityGlobalAccess access;
+
     private final AccountLockoutPolicyAdminService adminService;
 
     /**
-     * 查询全部用户类型的锁定策略。
+     * 查询全部用户类型的锁定策略。 执行前校验平台身份、精确操作及有效 ALL 范围。
      *
      * @return 固定两行（ADMIN / APP）
      */
@@ -45,11 +48,12 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
     @Operation(summary = "查询账号锁定策略列表")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOCKOUT_POLICY_READ})
     public R<List<AccountLockoutPolicyConfig>> list() {
+        access.require(IamAction.PLATFORM_LOCKOUT_POLICY_READ);
         return ok(adminService.list());
     }
 
     /**
-     * 按用户类型查询一行。
+     * 按用户类型查询一行。 执行前校验平台身份、精确操作及有效 ALL 范围。
      *
      * @param userType {@code 0}（ADMIN）或 {@code 1}（APP）
      * @return 对应策略；不存在时 data 为 null
@@ -60,11 +64,12 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
     public R<AccountLockoutPolicyConfig> getByUserType(
             @Parameter(description = "用户类型：0=B端管理员，1=C端用户")
             @PathVariable String userType) {
+        access.require(IamAction.PLATFORM_LOCKOUT_POLICY_READ);
         return ok(adminService.getByUserType(resolveUserType(userType)));
     }
 
     /**
-     * 按 userType upsert 一行策略。
+     * 按 userType upsert 一行策略。 执行前校验平台身份、精确操作及有效 ALL 范围。
      *
      * @param policy 待写入内容，userType 必填
      * @return 持久化后的策略
@@ -73,6 +78,7 @@ public class AccountLockoutPolicyAPI implements RShortcuts {
     @Operation(summary = "更新账号锁定策略")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOCKOUT_POLICY_UPDATE})
     public R<AccountLockoutPolicyConfig> upsert(@RequestBody AccountLockoutPolicyConfig policy) {
+        access.require(IamAction.PLATFORM_LOCKOUT_POLICY_UPDATE);
         return ok(adminService.upsert(policy));
     }
 

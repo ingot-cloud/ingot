@@ -2,6 +2,7 @@ package com.ingot.cloud.security.web.platform.security;
 
 import java.util.List;
 
+import com.ingot.cloud.security.authorization.SecurityGlobalAccess;
 import com.ingot.cloud.security.model.domain.CredentialPolicyConfig;
 import com.ingot.cloud.security.service.PolicyConfigService;
 import com.ingot.framework.commons.model.iam.IamAction;
@@ -16,7 +17,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 策略配置管理 API
+ * <p>维护凭证策略配置，并校验安全中心的精确操作和全局范围。</p>
  *
  * @author jymot
  * @since 2026-01-22
@@ -27,15 +28,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "凭证策略配置管理")
 public class CredentialPolicyConfigAPI implements RShortcuts {
+
+    private final SecurityGlobalAccess access;
     private final PolicyConfigService policyConfigService;
 
-    /**
-     * 获所有策略配置
-     */
+    /** 获取所有策略配置；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping("/list")
     @Operation(summary = "获取所有策略配置")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_READ})
     public R<List<CredentialPolicyConfig>> getAllPolicyConfigs() {
+        access.require(IamAction.PLATFORM_CREDENTIAL_POLICY_READ);
         try {
             return ok(policyConfigService.getAllPolicyConfigs());
         } catch (Exception e) {
@@ -44,13 +46,12 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
         }
     }
 
-    /**
-     * 保存策略配置
-     */
+    /** 保存策略配置；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @PostMapping
     @Operation(summary = "保存策略配置")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_CREATE})
     public R<Void> savePolicyConfig(@RequestBody CredentialPolicyConfig config) {
+        access.require(IamAction.PLATFORM_CREDENTIAL_POLICY_CREATE);
         try {
             policyConfigService.savePolicyConfig(config);
             return ok();
@@ -63,13 +64,12 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
         }
     }
 
-    /**
-     * 保存或更新策略配置
-     */
+    /** 更新策略配置；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @PutMapping
     @Operation(summary = "更新策略配置")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_UPDATE})
     public R<Void> updatePolicyConfig(@RequestBody CredentialPolicyConfig config) {
+        access.require(IamAction.PLATFORM_CREDENTIAL_POLICY_UPDATE);
         try {
             policyConfigService.updatePolicyConfig(config);
             return ok();
@@ -79,13 +79,12 @@ public class CredentialPolicyConfigAPI implements RShortcuts {
         }
     }
 
-    /**
-     * 删除策略配置
-     */
+    /** 删除策略配置；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除策略配置")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_CREDENTIAL_POLICY_DELETE})
     public R<Void> deletePolicyConfig(@PathVariable Long id) {
+        access.require(IamAction.PLATFORM_CREDENTIAL_POLICY_DELETE);
         try {
             policyConfigService.deletePolicyConfig(id);
             return ok();

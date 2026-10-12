@@ -28,6 +28,8 @@ REVISION_BASE = 141000
 POLICY_BASE = 150000
 DIRECTORY_VIEW_PATH = 'layout.main'
 DEVELOPER_APPLICATION = 'platform:develop'
+SECURITY_APPLICATION = 'platform:security'
+SECURITY_RESOURCES = {'credential-policy', 'lockout-policy', 'login-failure-policy', 'session', 'session-policy', 'security-policy'}
 DEVELOPER_PLATFORM_RESOURCES = {'id-allocation', 'social-config'}
 
 APPLICATIONS = {
@@ -38,6 +40,7 @@ APPLICATIONS = {
     DEVELOPER_APPLICATION: {'id': APPLICATION_BASE + 3, 'domain': 'PLATFORM', 'name': '开发者平台', 'icon': 'ep:cpu',
                             'description': '二维码、OAuth2客户端、社交配置与业务ID管理',
                             'sort_order': 2, 'baseline': False},
+    SECURITY_APPLICATION: {'id': APPLICATION_BASE + 4, 'domain': 'PLATFORM', 'name': '安全中心', 'icon': 'ep:lock', 'description': '凭证、账号、访问防护及会话安全管理', 'sort_order': 3, 'baseline': False},
 }
 
 # 治理角色：每个域恰好一个启用的 SYSTEM 角色，组织初始化依赖这一唯一性。
@@ -177,9 +180,10 @@ PLATFORM_MENUS = [
         ('平台人员', 'platform.iam.personnel', ['iam-platform:member:read']),
         ('角色与授权', 'platform.iam.authorization',
          ['iam-platform:role:read', 'iam-platform:assignment:read', 'iam-platform:delegation:read']),
+        ('平台授权审计', 'platform.iam.authorization.audit', ['iam-platform:audit:read']),
     ]),
-    ('安全与运维', 'platform.iam.security', 'ep:lock', [
-        ('授权审计', 'security.iam.authorization.audit', ['iam-platform:audit:read']),
+    ('系统设置', 'platform.settings', 'ep:setting', [
+        ('字典管理', 'platform.settings.dictionaries', ['iam-platform:dictionary:read']),
     ]),
 ]
 
@@ -195,9 +199,9 @@ TENANT_MENUS = [
         ('应用管理', 'org.iam.applications', ['iam-tenant:application:read']),
     ]),
     ('安全与合规', 'org.iam.compliance', 'ep:lock', [
-        ('成员权限', 'security.iam.member.permissions',
+        ('成员访问策略', 'org.iam.member.policies',
          ['iam-tenant:directory-policy:read', 'iam-tenant:field-policy:read']),
-        ('授权审计', 'security.iam.authorization.audit', ['iam-tenant:audit:read']),
+        ('组织授权审计', 'org.iam.authorization.audit', ['iam-tenant:audit:read']),
     ]),
     ('工作台', 'org.iam.workspace', 'ep:grid', [
         ('工作台', 'org.iam.workbench', ['iam-tenant:application:read']),
@@ -214,8 +218,28 @@ DEVELOPER_MENUS = [
     ]),
 ]
 
+SECURITY_MENUS = [('安全中心', 'security.root', 'ep:lock', [
+    ('凭证策略', 'security.credential.policies', ['iam-platform:credential-policy:read']),
+    ('账号保护', 'security.account.protection', ['iam-platform:lockout-policy:read']),
+    ('访问防护', 'security.access.protection', ['iam-platform:security-policy:read', 'iam-platform:login-failure-policy:read']),
+    ('会话管理', 'security.sessions', ['iam-platform:session:read', 'iam-platform:session-policy:read']),
+])]
+
+DIRECTORY_PATHS = {'security.root': '/security', 'platform.settings': '/platform/settings'}
+
+PAGE_PATHS = {
+    'platform.settings.dictionaries': '/platform/settings/dictionaries',
+    'security.credential.policies': '/security/credential-policies',
+    'security.account.protection': '/security/account-protection',
+    'security.access.protection': '/security/access-protection',
+    'security.sessions': '/security/sessions',
+    'platform.iam.authorization.audit': '/platform/authorization-audit',
+    'org.iam.authorization.audit': '/org/authorization-audit',
+    'org.iam.member.policies': '/org/member-policies',
+}
+
 MENUS = {'iam-platform': PLATFORM_MENUS, 'iam-tenant': TENANT_MENUS,
-         DEVELOPER_APPLICATION: DEVELOPER_MENUS}
+         DEVELOPER_APPLICATION: DEVELOPER_MENUS, SECURITY_APPLICATION: SECURITY_MENUS}
 
 
 def quote(value):
@@ -230,7 +254,7 @@ def json_literal(value):
 
 def menu_path(view_key):
     """由 canonical 视图键推导默认浏览器路由，与前端 toDefaultMenuPath 一致。"""
-    return '/' + view_key.replace('.', '/')
+    return PAGE_PATHS.get(view_key, DIRECTORY_PATHS.get(view_key, '/' + view_key.replace('.', '/')))
 
 
 def route_name(view_key):
@@ -260,11 +284,18 @@ def collect(routes):
         application, resource, _ = code.split(':', 2)
         if application == 'iam-platform' and resource in DEVELOPER_PLATFORM_RESOURCES:
             application = DEVELOPER_APPLICATION
+        if application == 'iam-platform' and resource in SECURITY_RESOURCES:
+            application = SECURITY_APPLICATION
         if application not in catalog:
             raise SystemExit(f'未登记的应用命名空间 {application}')
         if resource not in RESOURCES:
             raise SystemExit(f'未登记的资源 {resource}，请补充 RESOURCES')
         catalog[application].setdefault(resource, set()).add(code)
+    action_source = (ROOT / 'ingot-framework/ingot-commons/src/main/java/com/ingot/framework/commons/model/iam/IamAction.java').read_text()
+    for code in re.findall(r'\"(iam-platform:[^\"]+)\"', action_source):
+        resource = code.split(':')[1]
+        if resource in SECURITY_RESOURCES:
+            catalog[SECURITY_APPLICATION].setdefault(resource, set()).add(code)
     for resource, actions in DEVELOPER_ACTIONS.items():
         catalog[DEVELOPER_APPLICATION].setdefault(resource, set()).update(actions)
     return catalog
@@ -321,7 +352,7 @@ def build(check=False):
         lines.append(insert(
             'iam_application',
             ['id', 'code', 'domain', 'name', 'icon', 'description', 'sort_order', 'baseline', 'enabled'],
-            [str(meta['id']), quote(code), quote(meta['domain']), quote(meta['name']),
+            [reserved_id('iam_application', meta['id'], APPLICATION_BASE, RESOURCE_BASE), quote(code), quote(meta['domain']), quote(meta['name']),
              quote(meta['icon']), quote(meta['description']), str(meta['sort_order']),
              'TRUE' if meta['baseline'] else 'FALSE', 'TRUE'],
             f"code = {quote(code)}"))

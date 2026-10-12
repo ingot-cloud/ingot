@@ -5,6 +5,7 @@ import argparse
 
 from database_sources import render_bundle, sources
 from generate_bootstrap import build
+from generate_capability_migration import build as build_migration
 
 
 def main():
@@ -12,6 +13,7 @@ def main():
     parser.add_argument('--check', action='store_true', help='只读核对种子和完整初始化文件')
     args = parser.parse_args()
     build(check=args.check)
+    build_migration(check=args.check)
     expected = render_bundle()
     target = sources('bundle')[0]
     if args.check:

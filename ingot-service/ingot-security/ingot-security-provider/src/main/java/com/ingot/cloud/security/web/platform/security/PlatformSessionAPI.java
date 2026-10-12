@@ -1,6 +1,7 @@
 package com.ingot.cloud.security.web.platform.security;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ingot.cloud.security.authorization.SecurityGlobalAccess;
 import com.ingot.cloud.security.api.model.dto.session.PlatformSessionQueryDTO;
 import com.ingot.cloud.security.api.model.dto.session.PlatformUserSessionRevokeDTO;
 import com.ingot.cloud.security.api.model.vo.session.PlatformSessionVO;
@@ -38,33 +39,43 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "安全中心-在线会话")
 public class PlatformSessionAPI implements RShortcuts {
 
+    private final SecurityGlobalAccess access;
+
     private final SessionAdminService sessionAdminService;
 
+    /** 分页查询在线会话；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping
     @Operation(summary = "分页查询在线会话")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_READ})
     public R<IPage<PlatformSessionVO>> page(PlatformSessionQueryDTO params) {
+        access.require(IamAction.PLATFORM_SESSION_READ);
         return ok(sessionAdminService.page(params));
     }
 
+    /** 查询会话详情；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping("/{sid}")
     @Operation(summary = "查询会话详情")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_READ})
     public R<PlatformSessionVO> getBySid(@PathVariable String sid) {
+        access.require(IamAction.PLATFORM_SESSION_READ);
         return ok(sessionAdminService.getBySid(sid));
     }
 
+    /** 强制下线指定会话；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @DeleteMapping("/{sid}")
     @Operation(summary = "强制下线指定会话")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_REVOKE})
     public R<Boolean> revokeBySid(@PathVariable String sid) {
+        access.require(IamAction.PLATFORM_SESSION_REVOKE);
         return ok(sessionAdminService.revokeBySid(sid, currentUserId()));
     }
 
+    /** 强制下线用户全部会话；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @DeleteMapping("/user")
     @Operation(summary = "强制下线用户全部会话")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_SESSION_REVOKE})
     public R<Integer> revokeByUser(PlatformUserSessionRevokeDTO params) {
+        access.require(IamAction.PLATFORM_SESSION_REVOKE);
         return ok(sessionAdminService.revokeByUser(params, currentUserId()));
     }
 

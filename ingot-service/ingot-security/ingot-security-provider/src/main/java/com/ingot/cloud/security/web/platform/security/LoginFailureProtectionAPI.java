@@ -1,5 +1,6 @@
 package com.ingot.cloud.security.web.platform.security;
 
+import com.ingot.cloud.security.authorization.SecurityGlobalAccess;
 import com.ingot.cloud.security.api.model.enums.LoginFailureDimension;
 import com.ingot.cloud.security.model.domain.LoginFailureProtectionPolicy;
 import com.ingot.cloud.security.service.access.LoginFailureProtectionAdminService;
@@ -31,26 +32,34 @@ import java.util.List;
 @Tag(name = "安全中心")
 public class LoginFailureProtectionAPI implements RShortcuts {
 
+    private final SecurityGlobalAccess access;
+
     private final LoginFailureProtectionAdminService adminService;
 
+    /** 查询登录失败保护策略列表；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping
     @Operation(summary = "查询登录失败保护策略列表")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOGIN_FAILURE_POLICY_READ})
     public R<List<LoginFailureProtectionPolicy>> list() {
+        access.require(IamAction.PLATFORM_LOGIN_FAILURE_POLICY_READ);
         return ok(adminService.list());
     }
 
+    /** 按维度查询登录失败保护策略；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @GetMapping("/{dimension}")
     @Operation(summary = "按维度查询登录失败保护策略")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOGIN_FAILURE_POLICY_READ})
     public R<LoginFailureProtectionPolicy> getByDimension(@PathVariable LoginFailureDimension dimension) {
+        access.require(IamAction.PLATFORM_LOGIN_FAILURE_POLICY_READ);
         return ok(adminService.getByDimension(dimension));
     }
 
+    /** 更新登录失败保护策略；执行前校验平台身份、精确操作及有效 ALL 范围。 */
     @PutMapping
     @Operation(summary = "更新登录失败保护策略")
     @HasAnyAuthority({IamAction.VALUE_PLATFORM_LOGIN_FAILURE_POLICY_UPDATE})
     public R<LoginFailureProtectionPolicy> upsert(@RequestBody LoginFailureProtectionPolicy policy) {
+        access.require(IamAction.PLATFORM_LOGIN_FAILURE_POLICY_UPDATE);
         return ok(adminService.upsert(policy));
     }
 }

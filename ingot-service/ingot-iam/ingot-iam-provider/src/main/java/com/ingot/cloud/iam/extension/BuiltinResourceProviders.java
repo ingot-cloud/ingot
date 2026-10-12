@@ -23,6 +23,7 @@ import com.ingot.framework.commons.model.iam.FieldCapability;
 import com.ingot.framework.commons.model.iam.FieldVisibility;
 import com.ingot.framework.commons.model.iam.MaskSpec;
 import com.ingot.framework.commons.model.iam.IamAction;
+import com.ingot.framework.commons.model.iam.SecurityResources;
 import com.ingot.framework.commons.model.iam.MemberFieldKey;
 import com.ingot.framework.commons.model.iam.ScopeKind;
 import com.ingot.framework.commons.model.iam.extension.ActionDescriptor;
@@ -71,6 +72,7 @@ public final class BuiltinResourceProviders {
         List<ResourceObjectProvider> all = new ArrayList<>(extensions);
         Map<ResourceKey, List<ActionDescriptor>> actions = new LinkedHashMap<>();
         for (var action : IamAction.values()) {
+            if (SecurityResources.key(action) != null) continue;
             String[] parts = action.getCode().split(":");
             var domain = parts[0].equals(PLATFORM_APPLICATION) ? AuthorizationDomain.PLATFORM
                     : AuthorizationDomain.TENANT;
@@ -81,6 +83,7 @@ public final class BuiltinResourceProviders {
         }
         actions.forEach((key, operations) -> all.add(new BuiltinProvider(descriptor(key, operations),
                 key.domain() == AuthorizationDomain.PLATFORM ? objectResource(key.resourceCode()) : null)));
+        SecurityResources.descriptors().forEach(d -> all.add(new BuiltinProvider(d, null)));
         return new ResourceRegistry(all);
     }
 

@@ -5,7 +5,7 @@ import json
 import re
 
 from generate_bootstrap import (ACTION_BASE, MENU_BASE, DEVELOPER_ACTIONS, DEVELOPER_APPLICATION,
-                                ROOT, ROUTES, collect, reserved_id)
+                                ROOT, ROUTES, collect, reserved_id, SECURITY_APPLICATION, SECURITY_RESOURCES, PAGE_PATHS, menu_path)
 
 
 class ReservedIdTest(unittest.TestCase):
@@ -42,6 +42,17 @@ class ReservedIdTest(unittest.TestCase):
         all_codes = [code for app in catalog.values() for codes in app.values() for code in codes]
         self.assertEqual(len(all_codes), len(set(all_codes)))
         self.assertTrue(all('*' not in code for code in all_codes))
+
+    def test_security_exact_codes_and_page_urls_are_complete(self):
+        catalog = collect(json.loads(ROUTES.read_text()))
+        resources = catalog[SECURITY_APPLICATION]
+        self.assertEqual(SECURITY_RESOURCES, set(resources))
+        self.assertEqual(16, sum(len(codes) for codes in resources.values()))
+        self.assertTrue(all(code.startswith('iam-platform:') for codes in resources.values() for code in codes))
+        self.assertTrue(SECURITY_RESOURCES.isdisjoint(catalog['iam-platform']))
+        self.assertEqual(8, len(PAGE_PATHS))
+        self.assertEqual('/security/credential-policies', menu_path('security.credential.policies'))
+        self.assertEqual('/platform/settings/dictionaries', menu_path('platform.settings.dictionaries'))
 
 
 if __name__ == '__main__':
