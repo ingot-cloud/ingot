@@ -14,6 +14,7 @@
 | 016_field_access_control.sql | 资源仍有sortable/缺mask、角色字段与FIELD默认版本仍为旧JSON，或租户策略缺operation_rules；保留数据并转换，支持重跑。 | 002/004/006 |
 | 017_role_revision_application.sql | 角色版本缺名称、备注、独立元数据锁，或缺持久版本应用任务表；只增加列、表及索引，支持重跑。 | 002/003/004 |
 | 018_authorization_audit_menu.sql | 两域授权审计菜单仍使用旧名称；仅调整名称，可重复执行。 | 006 |
+| 020_platform_capability_completion.sql | 平台能力补齐：新增安全应用、迁移六资源十六操作及八个页面，保留 ID/固定授权；先停写备份。 | 006 |
 | 019_root_menu_icons.sql | 正式应用一级目录的icon为空；仅补齐空图标，可重复执行并保留自定义图标。 | 006 |
 
 014执行顺序为迁移→后端→前端；仅用于缺少两列的已有库，不能重复执行或用于新建库。DDL自动提交；若在DDL后中断，保持服务停止，确认列已新增后单独完成脚本回填语句。回退应用前冻结平台成员联系资料编辑，保留新增列和备份，不将独立联系资料写回账号。已有库禁止用完整初始化SQL替代迁移。
@@ -80,3 +81,19 @@ mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migra
 ```
 
 完成后重新bootstrap或登录加载菜单。需要回退时按菜单ID恢复留存的原始icon，并递增当前version；不重建数据库。新建库使用最新006或完整初始化文件，已有库不能用完整初始化文件代替本补齐脚本。定向隔离验证使用 `python3 databases/iam/test_bootstrap_seed.py BootstrapSeedTest.test_root_menu_icons BootstrapSeedTest.test_root_menu_icon_patch_is_scoped_and_preserves_custom_icons`。
+
+
+## 020 平台能力与页面归属
+
+本补丁仅用于已有 IAM 库；新库使用最新001–006或初始化 bundle，不重放所有补丁。停止所有写入并完整备份目标库，禁止 mysql --force。脚本输出页面新增/迁移清单及资源移动 ID；应用域、重复资源、路径/注册键冲突、未知操作、跨应用自定义菜单关联会 SIGNAL，整笔业务更新回滚。临时外键桥接不关闭检查，普通角色与固定版本不变。
+
+先用同一脚本预演（事务最后回滚），再检查清单执行：
+
+```sh
+{ printf 'SET @iam_capability_dry_run=TRUE;\n'; cat databases/iam/migrations/020_platform_capability_completion.sql; } | mysql --default-character-set=utf8mb4 --database=ingot_iam
+mysql --default-character-set=utf8mb4 --database=ingot_iam < databases/iam/migrations/020_platform_capability_completion.sql
+```
+
+直接切换新 URL，不注册旧入口。发布顺序：备份停写→补丁→同批部署 IAM/Security/两管理台→广播授权失效、至少等待30秒并重新 bootstrap。回滚停止新版写入，按备份和输出 ID 恢复目录及菜单操作关联并回退应用，不重建库、不改历史角色版本；升级后已新增业务写入时先审查备份恢复范围。
+
+隔离验证：`python3 databases/iam/test_capability_migration.py`，使用无网络自动清理 MySQL 容器，不访问现有库。脚本由 `tools/iam/generate_database.py` 生成；`--check` 同时检查种子、迁移和 bundle。

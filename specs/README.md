@@ -188,6 +188,7 @@ current/<domain>/<capability>/
 
 ## 7. 当前活动变更
 
+- [平台能力补齐与页面归属](./changes/active/20261012-iam-platform-capability-completion/README.md)（validating；实现及自动化已通过，部署及真实角色人工验收后更新 current）
 - [IAM 多租户身份与访问管理重构](./changes/active/20260912-iam-identity-access-management/README.md)（implementing；全新系统授权补齐、框架复用与平台登录契约，历史迁移退出范围）
 - [DataScope SQL 谓词规模升级](./changes/active/20260912-mybatis-data-scope-predicate-scale/README.md)（draft）
 

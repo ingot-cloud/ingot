@@ -215,3 +215,5 @@ ACN01–ACN03 完成，增量 validating：公共模块 17 项测试、IAM/示�
 需求、设计、兼容性及 RL 系列任务见 [角色详情加载增量](../../archive/2026/20261012-iam-role-detail-loading/README.md)。本轮沿用已批准 change；2026-10-12 人工验收通过，增量已更新 current 并单独归档。
 
 本增量已 completed，RL 系列任务及人工验收均完成，证据见上述归档。主 change 保持 implementing。
+
+关联补齐：[平台能力与页面归属](../20261012-iam-platform-capability-completion/README.md)，本轮单独验收。
